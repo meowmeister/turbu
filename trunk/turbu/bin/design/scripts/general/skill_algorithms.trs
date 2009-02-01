@@ -1,0 +1,46 @@
+unit skill_algorithms;
+
+function skillSelectByLevel(Character: TRpgHero; Level, unused2, unused3, unused4: integer): boolean;
+begin
+   result := character.level >= Level;
+end;
+
+function skillSelectByEq(Character: TRpgHero; Item1, Item2, Item3, Item4: integer): boolean;
+var
+   values: array[1..4] of integer;
+   i: integer;
+begin
+   result := true;
+   values[1] := Item1;
+   values[2] := Item2;
+   values[3] := Item3;
+   values[4] := Item4;
+   for i := 1 to 4 do
+   begin
+      if values[i] > 0 then
+         result := result and (Character.equipped(values[i]))
+      else if (values[i] < -9990) and (values[i] >= -9995) then
+         result := result and (Character.equipment[-values[i] - 9990] = 0)
+      else if values[i] < 0 then
+         result := result and (not Character.equipped(values[i]));
+   end;
+end;
+
+function skillSelectByBoolean(Character: TRpgHero; which, unused2, unused3, unused4: integer): boolean;
+begin
+   if which > 0 then
+      result := switch[which]
+   else result := not (switch[-which]);
+end;
+
+function skillSelectByVar(Character: TRpgHero; which, value, unused3, unused4: integer): boolean;
+var
+   whichvar: integer;
+begin
+   whichvar := trunc(abs(which));
+   if which > 0 then
+      result := variable[whichvar] >= value
+   else result := variable[whichvar] <= value;
+end;
+
+end.

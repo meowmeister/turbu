@@ -1,0 +1,86 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{98f9c45d-3814-41dd-b1c4-d4201445334e}</ProjectGuid>
+		</PropertyGroup>
+		<ItemGroup>
+			<Projects Include="engines\basis\EngineBasis.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="engines\battle basis\battle_default.dproj">
+				<Dependencies>engines\basis\EngineBasis.dproj</Dependencies>
+			</Projects>
+			<Projects Include="mapview\mapshow.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="editor\Turbu.dproj">
+				<Dependencies>engines\basis\EngineBasis.dproj;engines\battle basis\battle_default.dproj</Dependencies>
+			</Projects>
+			<Projects Include="test harness\testing.dproj">
+				<Dependencies/>
+			</Projects>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Default.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<BorlandProject>
+					<Default.Personality/>
+				</BorlandProject>
+			</BorlandProject>
+		</ProjectExtensions>
+		<Target Name="EngineBasis">
+			<MSBuild Projects="engines\basis\EngineBasis.dproj"/>
+		</Target>
+		<Target Name="EngineBasis:Clean">
+			<MSBuild Targets="Clean" Projects="engines\basis\EngineBasis.dproj"/>
+		</Target>
+		<Target Name="EngineBasis:Make">
+			<MSBuild Targets="Make" Projects="engines\basis\EngineBasis.dproj"/>
+		</Target>
+		<Target DependsOnTargets="EngineBasis" Name="battle_default">
+			<MSBuild Projects="engines\battle basis\battle_default.dproj"/>
+		</Target>
+		<Target DependsOnTargets="EngineBasis:Clean" Name="battle_default:Clean">
+			<MSBuild Targets="Clean" Projects="engines\battle basis\battle_default.dproj"/>
+		</Target>
+		<Target DependsOnTargets="EngineBasis:Make" Name="battle_default:Make">
+			<MSBuild Targets="Make" Projects="engines\battle basis\battle_default.dproj"/>
+		</Target>
+		<Target Name="mapshow">
+			<MSBuild Projects="mapview\mapshow.dproj"/>
+		</Target>
+		<Target Name="mapshow:Clean">
+			<MSBuild Targets="Clean" Projects="mapview\mapshow.dproj"/>
+		</Target>
+		<Target Name="mapshow:Make">
+			<MSBuild Targets="Make" Projects="mapview\mapshow.dproj"/>
+		</Target>
+		<Target DependsOnTargets="EngineBasis;battle_default" Name="Turbu">
+			<MSBuild Projects="editor\Turbu.dproj"/>
+		</Target>
+		<Target DependsOnTargets="EngineBasis:Clean;battle_default:Clean" Name="Turbu:Clean">
+			<MSBuild Targets="Clean" Projects="editor\Turbu.dproj"/>
+		</Target>
+		<Target DependsOnTargets="EngineBasis:Make;battle_default:Make" Name="Turbu:Make">
+			<MSBuild Targets="Make" Projects="editor\Turbu.dproj"/>
+		</Target>
+		<Target Name="testing">
+			<MSBuild Projects="test harness\testing.dproj"/>
+		</Target>
+		<Target Name="testing:Clean">
+			<MSBuild Targets="Clean" Projects="test harness\testing.dproj"/>
+		</Target>
+		<Target Name="testing:Make">
+			<MSBuild Targets="Make" Projects="test harness\testing.dproj"/>
+		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="EngineBasis;battle_default;mapshow;Turbu;testing"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="EngineBasis:Clean;battle_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="EngineBasis:Make;battle_default:Make;mapshow:Make;Turbu:Make;testing:Make"/>
+		</Target>
+		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+	</Project>
