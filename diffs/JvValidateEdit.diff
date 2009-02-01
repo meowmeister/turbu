@@ -1,0 +1,115 @@
+--- 
++++ 
+@@ -43,13 +43,13 @@
+   SysUtils, Classes,
+   JvEdit, JvDataSourceIntf;
+ 
+ type
+   TJvValidateEditDisplayFormat = (dfAlphabetic, dfAlphaNumeric, dfBinary,
+     dfCheckChars, dfCurrency, dfCustom, dfFloat, dfFloatGeneral, dfHex, dfInteger,
+-    dfNonCheckChars, dfNone, dfOctal, dfPercent, dfScientific, dfYear, dfDecimal);
++    dfNonCheckChars, dfNone, dfOctal, dfPercent, dfScientific, dfYear, dfDecimal, dfIdentifier);
+ 
+   TJvValidateEditCriticalPointsCheck = (cpNone, cpMinValue, cpMaxValue, cpBoth);
+ 
+   TJvCustomValidateEdit = class;
+ 
+   TJvValidateEditDataConnector = class(TJvFieldDataConnector)
+@@ -583,12 +583,18 @@
+       dfAlphaNumeric:
+         begin
+           FCheckChars := Alphabet + Numbers;
+           if FAutoAlignment then
+             Alignment := taLeftJustify;
+         end;
++      dfIdentifier:
++        begin
++          FCheckChars := Alphabet + Numbers + '_';
++          if FAutoAlignment then
++            Alignment := taLeftJustify;
++        end;
+       dfBinary:
+         begin
+           FCheckChars := '01';
+           if FAutoAlignment then
+             Alignment := taRightJustify;
+         end;
+@@ -706,13 +712,13 @@
+   end;
+ end;
+ 
+ procedure TJvCustomValidateEdit.SetAsInteger(NewValue: Int64);
+ begin
+   case FDisplayFormat of
+-    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfCustom,
++    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfIdentifier, dfCustom,
+     dfNonCheckChars, dfNone:
+       EditText := IntToStr(NewValue);
+     dfBinary:
+       EditText := IntToBase(NewValue, 2);
+     dfHex:
+       EditText := IntToBase(NewValue, 16);
+@@ -737,13 +743,13 @@
+   end;
+ end;
+ 
+ procedure TJvCustomValidateEdit.SetAsCurrency(NewValue: Currency);
+ begin
+   case FDisplayFormat of
+-    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfCustom,
++    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfIdentifier, dfCustom,
+     dfNonCheckChars, dfNone:
+       EditText := CurrToStr(NewValue);
+     dfBinary:
+       EditText := IntToBase(Trunc(NewValue), 2);
+     dfHex:
+       EditText := IntToBase(Trunc(NewValue), 16);
+@@ -781,13 +787,13 @@
+   end;
+ end;
+ 
+ procedure TJvCustomValidateEdit.SetAsFloat(NewValue: Double);
+ begin
+   case FDisplayFormat of
+-    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfCustom,
++    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfIdentifier, dfCustom,
+     dfNonCheckChars, dfNone:
+       EditText := FloatToStr(NewValue);
+     dfBinary:
+       EditText := IntToBase(Trunc(NewValue), 2);
+     dfHex:
+       EditText := IntToBase(Trunc(NewValue), 16);
+@@ -840,13 +846,13 @@
+   end;
+ end;
+ 
+ procedure TJvCustomValidateEdit.SetValue(NewValue: Variant);
+ begin
+   case FDisplayFormat of
+-    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfNonCheckChars, dfNone, dfCustom:
++    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfNonCheckChars, dfIdentifier, dfNone, dfCustom:
+       EditText := NewValue;
+     dfBinary, dfHex, dfInteger, dfOctal, dfYear:
+       {$IFDEF COMPILER5}
+       SetAsInteger(Integer(NewValue));
+       {$ELSE}
+       SetAsInteger(NewValue);
+@@ -999,12 +1005,18 @@
+             Result := (Posn = 1) or (Posn = iPosE + 1)
+           else
+           if Key = '-' then
+             Result := (Posn = 1) or (Posn = iPosE + 1);
+         end;
+       end;
++    dfIdentifier:
++      begin
++        if Posn = 1 then
++          Result := (Key = '_') or (IsCharAlpha(Key))
++        else Result := Pos(Key, FCheckChars) > 0;
++      end
+   else
+     Result := False;
+   end;
+ end;
+ 
+ function TJvCustomValidateEdit.DoValidate(const Key: Char;

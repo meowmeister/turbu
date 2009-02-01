@@ -1,0 +1,44 @@
+--- 
++++ 
+@@ -6,12 +6,12 @@
+ {                                                       }
+ {*******************************************************}
+ 
+ unit DB;
+ 
+-{$R-,T-,H+,X+}
++{$A8,B-,C+,D+,E-,F-,G+,H+,I+,J-,K-,L+,M-,N-,O-,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y+,Z1}
+ 
+ interface
+ 
+ uses Windows, SysUtils, Classes, Variants, MaskUtils, SqlTimSt, FMTBcd,
+    DBCommonTypes, WideStrings;
+ 
+@@ -4003,13 +4005,26 @@
+ var
+   I: Integer;
+ begin
+   for I := 0 to FList.Count - 1 do
+   begin
+     Result := FList.Items[I];
+-    if WideCompareText(Result.FFieldName, FieldName) = 0 then Exit;
++    if WideCompareText(Result.FFieldName, FieldName) = 0 then
++      Exit
++    else if (Result is TObjectField) and (Pos(result.FFieldName, FieldName) = 1) then
++    begin
++      if result is TADTField then
++         Result := TObjectField(Result).FOwnedFields.FindField(StringReplace(FieldName, result.FieldName + '.', '', []))
++      else
++         Result := TObjectField(Result).FOwnedFields.FindField(FieldName);
++      if assigned(Result) then
++         if csLoading in Result.ComponentState then
++            Exit(nil)
++         else
++            Exit;
++    end;
+   end;
+   Result := nil;
+ end;
+ 
+ function TFields.FieldByName(const FieldName: string): TField;
+ begin
