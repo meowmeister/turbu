@@ -277,7 +277,7 @@ object frameClass: TframeClass
         Top = 16
         Width = 196
         Height = 186
-        ActivePage = tshRepertoire
+        ActivePage = tshEquipment
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 0
         object tshEquipment: TTabSheet

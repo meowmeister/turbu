@@ -38,6 +38,7 @@ type
     procedure mnuTestDatabasewindow1Click(Sender: TObject);
     procedure mnuTestConversion1Click(Sender: TObject);
     procedure mnuSetDefaultProjectClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
     folder, outFolder: string;
@@ -190,6 +191,12 @@ begin
    end;
 end;
 
+procedure TfrmTestConsole.FormCreate(Sender: TObject);
+begin
+   if getProjectFolder = '' then
+      createProjectFolder;
+end;
+
 procedure TfrmTestConsole.FormShow(Sender: TObject);
 type
    TBattleEngineClass = class of TBattleEngine;
@@ -209,7 +216,7 @@ type
 var
    dummy: string;
 begin
-   GProjectFolder := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)))) + 'editor');
+   GProjectFolder := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
    assert(GArchives.Add(openFolder(GProjectFolder + DESIGN_DB)) = BASE_ARCHIVE);
    addBattleEngine(T2kBattleEngine);
    addBattleEngine(T2k3BattleEngine);

@@ -275,10 +275,10 @@ begin
          followY := FEngine.worldY;
       end;
 //fixme
-{      if (X > followX + VisibleArea.Left)  and
+      if (X > followX + VisibleArea.Left)  and
          (Y > followY + VisibleArea.Top)   and
          (X < followX + VisibleArea.Right) and
-         (Y < followY + VisibleArea.Bottom)then}
+         (Y < followY + VisibleArea.Bottom)then
       begin
          if not Visible then Exit;
          if ImageName = '' then Exit;

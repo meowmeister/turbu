@@ -48,6 +48,7 @@ type
       procedure mnuExitClick(Sender: TObject);
       procedure mnuOpenClick(Sender: TObject);
       procedure FormDestroy(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
    private
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
@@ -83,6 +84,12 @@ end;
 procedure TfrmTurbuMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
    assert(true);
+end;
+
+procedure TfrmTurbuMain.FormCreate(Sender: TObject);
+begin
+   if getProjectFolder = '' then
+      createProjectFolder;
 end;
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);

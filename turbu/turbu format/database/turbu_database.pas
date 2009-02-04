@@ -65,7 +65,6 @@ type
       FSwitches: TSwitchSection;
       FVariables: TVarSection;
 
-//      FAlgorithms: TStringList;
       FUnits: TUnitDictionary;
       FAlgLookup: TStringList;
       FSkillAlgs: TStringList;
@@ -80,8 +79,6 @@ type
 
       function getClassCount: integer;
       procedure setClassCount(const Value: integer);
-      function getAlgs: string; deprecated;
-      procedure setAlgs(const Value: string); deprecated;
       procedure parseMeta;
       function getCommandCount: integer;
       procedure setCommandCount(const Value: integer);
@@ -875,20 +872,6 @@ begin
             Break;
       end;
    end;
-end;
-
-function TRpgDatabase.getAlgs: string;
-begin
-//   result := FAlgorithms.Text;
-end;
-
-procedure TRpgDatabase.setAlgs(const Value: string);
-begin
-//   FAlgorithms.SetText(PChar(value));
-   {$IFDEF EDITOR}
-   GDScriptEngine.script := ansiString(value);
-   {$ENDIF}
-   self.parseMeta;
 end;
 
 function TRpgDatabase.getClassCount: integer;

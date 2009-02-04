@@ -77,6 +77,10 @@
 			</BuildConfiguration>
 		</ItemGroup>
 		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<PropertyGroup>
+			<PostBuildEvent>copy &quot;$(OUTPUTPATH)&quot; &quot;$(OUTPUTDIR)$(OUTPUTNAME).tep&quot; /Y</PostBuildEvent>
+			<PreLinkEventIgnoreExitCode>true</PreLinkEventIgnoreExitCode>
+		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
 			<Borland.ProjectType>Package</Borland.ProjectType>
