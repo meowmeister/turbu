@@ -14,6 +14,7 @@ object frmTurbuMain: TfrmTurbuMain
   OldCreateOrder = False
   Position = poDesigned
   OnClose = FormClose
+  OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96

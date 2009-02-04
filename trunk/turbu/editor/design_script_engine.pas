@@ -17,6 +17,10 @@ unit design_script_engine;
 * www.turbu-rpg.com.
 *****************************************************************************}
 
+{$IFNDEF PS_USESSUPPORT}
+   {$MESSAGE FATAL This unit will not run properly without the PS_USESSUPPORT conditional define set.}
+{$ENDIF}
+
 interface
 uses
    types, sysUtils, classes, DB,

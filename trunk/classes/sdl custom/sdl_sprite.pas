@@ -16,7 +16,7 @@ unit sdl_sprite;
 
 interface
 uses
-   Types, Contnrs, SysUtils,
+   Types, SysUtils, Generics.Collections,
    SDL_ImageManager, SDL_canvas, SG_defs;
 
 type
@@ -29,24 +29,18 @@ type
    TParentSprite = class;
    TSprite = class;
 
+   TSpriteList = TObjectList<TSprite>;
+
    {***************************************************************************
    * Custom list optimized for fast access to TSprite objects.
-   *
-   * The list is sorted by Z order, then by memory address, to enable binary
-   * searching.  Because it is sorted by memory address, changing the list
-   * directly would will result in undefined behavior, so it's read-only.  Use
-   * the Add and Remove methods to add or remove new sprites.
-   * ( "List[5] := MySprite;" is bad.  "List[5].X := 30;" is fine, though.)
    ***************************************************************************}
-   TSpriteList = class(TObjectList)
+   TFastSpriteList = class(TObjectList<TSprite>)
    private
-      function GetItem(Index: Integer): TSprite; inline;
+      FSprites: array of TSpriteList;
    public
+      constructor Create;
       function Add(ASprite: TSprite): Integer;
-      function IndexOf(ASprite: TSprite): Integer;
       function Remove(ASprite: TSprite): Integer;
-
-      property Items[Index: Integer]: TSprite read GetItem; default;
    end;
 
    TSprite = class(TObject)
@@ -57,7 +51,7 @@ type
       FOrigin: TSgPoint;
       FName: string;
       FX, FY: Single;
-      FZ: Integer;
+      FZ: Cardinal;
       FZset: Boolean;
       FVisible: Boolean;
       FImageName: string;
@@ -73,6 +67,7 @@ type
       FOffsetX, FOffsetY: Single;
       FImageType: TImageType;
       FPinned: boolean;
+      FVisibleArea: TRect;
 
       function GetPatternWidth: Integer; inline;
       function GetPatternHeight: Integer; inline;
@@ -90,7 +85,7 @@ type
       procedure SetImageName(const Value: string); virtual;
       procedure SetX(const Value: Single); virtual;
       procedure SetY(const Value: Single); virtual;
-      procedure SetZ(const Value: Integer); virtual;
+      procedure SetZ(const Value: Cardinal); virtual;
       procedure SetPatternIndex(const Value: Integer); virtual;
    public
       constructor Create(const AParent: TParentSprite); virtual;
@@ -105,7 +100,7 @@ type
       property Visible: Boolean read FVisible write FVisible;
       property X: Single read FX write SetX;
       property Y: Single read FY write SetY;
-      property Z: Integer read FZ write SetZ;
+      property Z: Cardinal read FZ write SetZ;
       property ImageName: string read FImageName write SetImageName;
       property Image: TSdlImage read FImage write FImage;
       property ImageIndex : Integer read FPatternIndex write SetPatternIndex;
@@ -128,6 +123,7 @@ type
       property MirrorX: Boolean read FMirrorX write FMirrorX;
       property MirrorY: Boolean read FMirrorY write FMirrorY;
       property ImageType: TImageType read FImageType write FImageType;
+      property VisibleArea: TRect read FVisibleArea write FVisibleArea;
       property Pinned: boolean read FPinned write FPinned;
       property BoundsRect: TRect read GetBoundsRect;
       property DrawRect: TRect read GetDrawRect write SetDrawRect;
@@ -238,7 +234,7 @@ type
    TSpriteEngine = class(TParentSprite)
    private
       FAllCount: Integer;
-      FDeadList: TObjectList;
+      FDeadList: TSpriteList;
       FDrawCount: Integer;
       FWorldX, FWorldY: Single;
       FVisibleWidth: Integer;
@@ -429,7 +425,7 @@ begin
    Self.FY := Value;
 end;
 
-procedure TSprite.SetZ(const Value: Integer);
+procedure TSprite.SetZ(const Value: Cardinal);
 begin
    if (FZ <> Value) or (not FZset) then
    begin
@@ -765,78 +761,37 @@ end;
 
 { TSpriteList }
 
-function TSpriteList.GetItem(Index: Integer): TSprite;
-begin
-   Result := TSprite(inherited GetItem(index));
-end;
-
-function TSpriteList.Add(ASprite: TSprite): Integer;
+constructor TFastSpriteList.Create;
 var
-   Lo, Hi, Mid: Integer;
-   I: Integer;
-   Address: Cardinal;
+   i: integer;
 begin
-   Lo := 0;
-   Hi := Self.Count - 1;
-   Address := Cardinal(ASprite);
-   while Lo <= Hi do
-   begin
-      I := (Lo + Hi) div 2;
-      Mid := Self[I].Z - ASprite.Z;
-      if (Mid < 0) or ((Mid = 0) and (Cardinal(Self[I]) > Address)) then
-         Lo := I + 1
-      else
-         Hi := I - 1;
-   end;
-   inherited Insert(Lo, ASprite);
-   result := Lo;
+   inherited Create(true);
+   SetLength(FSprites, 11);
+   for I := 0 to 10 do
+      FSprites[i] := TSpriteList.Create(false);
 end;
 
-{$WARN USE_BEFORE_DEF OFF}
-function TSpriteList.IndexOf(ASprite: TSprite): Integer;
+function TFastSpriteList.Add(ASprite: TSprite): Integer;
 var
-   Lo, Hi, Mid: Integer;
-   I: Integer;
-   Address: Cardinal;
+   z: cardinal;
 begin
-   Result := -1;
-   if Self.Count = 0 then
-      Exit;
+   inherited Add(ASprite);
 
-   Lo := 0;
-   Hi := Self.Count - 1;
-   Address := Cardinal(ASprite);
-   while Lo <= Hi do
-   begin
-      I := (Lo + Hi) div 2;
-      if Self[I] = ASprite then
-      begin
-         Result := I;
-         Exit;
-      end;
+   z := ASprite.z;
+   if z > high(FSprites) then
+      SetLength(FSprites, z + 1);
+   if FSprites[z] = nil then
+      FSprites[z] := TSpriteList.Create(false);
 
-      Mid := Self[I].Z - ASprite.Z;
-      if (Mid > 0) then
-         Lo := I + 1
-      else if Mid < 0 then
-         Hi := I - 1
-      else if (Cardinal(Self[I]) > Address) then
-         Lo := I + 1
-      else Hi := I - 1;
-   end;
+   FSprites[z].Add(ASprite);
 end;
-{$WARN USE_BEFORE_DEF ON}
 
-function TSpriteList.Remove(ASprite: TSprite): Integer;
+function TFastSpriteList.Remove(ASprite: TSprite): Integer;
 begin
-   Result := Self.IndexOf(ASprite);
-   if Result = -1 then
-      Exit
-   else begin
-      if Self.OwnsObjects then
-         Self[Result].Free;
-      Self.Delete(Result);
-   end;
+   Assert(assigned(FSprites[ASprite.Z]));
+
+   FSprites[ASprite.Z].Remove(ASprite);
+   Result := inherited Remove(ASprite);
 end;
 
 { TAnimatedRectSprite }
