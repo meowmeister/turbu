@@ -45,6 +45,8 @@ type
       procedure upload(db: TDataSet); virtual;
       procedure download(db: TDataset); virtual;
 
+      function GetAllEvents: TStringList;
+
       property name: string read FName write FName;
       property id: smallint read FId write FId;
       property modified: boolean read FModified write FModified;
@@ -226,6 +228,27 @@ begin
    db.FieldByName('id').AsInteger := FId;
    db.FieldByName('name').AsString := FName;
    db.FieldByName('modified').AsBoolean := false;
+end;
+
+function TRpgDatafile.GetAllEvents: TStringList;
+var
+   list: PPropList;
+   i, count: integer;
+begin
+   GetMem(list, sizeof(pointer) * 100); //If you've got more than 100 events on
+                                        //one object, you're absolutely nuts :P
+   try
+      count := GetPropList(PTypeInfo(self.ClassInfo), [tkMethod], list, false);
+      assert(count <= 100, 'Some insane coder created a class with more than 100 events!');
+      result := TStringList.Create;
+      for I := 0 to Count - 1 do
+      begin
+         result.AddObject(string(list[i].Name), GetMethodProp(self, string(list[i].name)).Code);
+         assert(GetMethodProp(self, string(list[i].name)).Data = self);
+      end;
+   finally
+      freeMem(list);
+   end;
 end;
 
 function TRpgDatafile.getDatasetName: string;

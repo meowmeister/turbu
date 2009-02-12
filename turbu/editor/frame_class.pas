@@ -102,6 +102,7 @@ type
       procedure checkFor2Handed(Sender: TObject);
       procedure linkNav(Sender: TObject);
       procedure btnEditAttributesClick(Sender: TObject);
+    procedure lstScriptsDblClick(Sender: TObject);
    private
       FLoading: boolean;
       FLoaded: boolean;
@@ -337,6 +338,17 @@ begin
    else bitmap := FNameList.Objects[dummy] as TBitmap;
 
    imgMapSprite.Picture.Bitmap := bitmap;
+end;
+
+procedure TframeClass.lstScriptsDblClick(Sender: TObject);
+var
+   item: TListItem;
+begin
+   item := lstScripts.Selected;
+   if not assigned(item) then
+      Exit;
+
+
 end;
 
 procedure TframeClass.lstSkillsDblClick(Sender: TObject);
