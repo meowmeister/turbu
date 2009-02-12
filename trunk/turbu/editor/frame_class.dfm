@@ -462,6 +462,7 @@ object frameClass: TframeClass
           000000094F006E0055006E0065007100750069007000}
         TabOrder = 0
         ViewStyle = vsReport
+        OnDblClick = lstScriptsDblClick
       end
     end
     object grpUnarmed: TGroupBox

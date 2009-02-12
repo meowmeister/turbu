@@ -136,7 +136,6 @@ type
       property anim: TAnimArray read FAnims write FAnims;
       property attributes: TAttribList read FAttributes write FAttributes;
       property conditions: TConditionList read FConditions write FConditions;
-//      property algorithms: string read getAlgs write setAlgs;
       property command: TBattleCommandList read FCommand write FCommand;
       property commands: integer read getCommandCount write setCommandCount;
       property globalEventBlock: TEventBlock read FGlobalEvents;
