@@ -25,7 +25,8 @@ uses
    commons, frame_commands, turbu_sprites, turbu_characters, turbu_defs,
    conversion_table, dm_database,
    SDL_ImageManager,
-   JvListBox, JvExStdCtrls, JvExMask, JvSpin, JvDBSpinEdit, turbu_listGrid;
+   JvListBox, JvExStdCtrls, JvExMask, JvSpin, JvDBSpinEdit, turbu_listGrid,
+  DBClient, sdl_frame;
 
 type
    TframeClass = class(TFrame)
@@ -64,7 +65,6 @@ type
       tshConditions: TTabSheet;
       btnSetGfx: TButton;
       tmrAnim: TTimer;
-      imgMapSprite: TImage;
 
       dsCharClass: TDataSource;
       dsSkillset: TDataSource;
@@ -91,7 +91,11 @@ type
       btnEditAttributes: TButton;
       navDel: TDBNavigator;
       RpgListGrid1: TRpgListGrid;
-    cbxExpAlgorithm: TDBLookupComboBox;
+      cbxExpAlgorithm: TDBLookupComboBox;
+      dsEventName: TClientDataSet;
+      dsEventNamebaseMethod: TIntegerField;
+      dsEventNamemethodName: TStringField;
+      imgMapSprite: TSdlFrame;
 
       procedure tabGraphicsChange(Sender: TObject);
       procedure tmrAnimTimer(Sender: TObject);
@@ -102,7 +106,8 @@ type
       procedure checkFor2Handed(Sender: TObject);
       procedure linkNav(Sender: TObject);
       procedure btnEditAttributesClick(Sender: TObject);
-    procedure lstScriptsDblClick(Sender: TObject);
+      procedure lstScriptsDblClick(Sender: TObject);
+      procedure btnSetGfxClick(Sender: TObject);
    private
       FLoading: boolean;
       FLoaded: boolean;
@@ -112,6 +117,7 @@ type
       FTemplate: TClassTemplate;
       FSpriteData: TSpriteData;
       FMatrixPosition: TRpgPoint;
+      FCurrentTexture: integer;
 
       procedure loadPortrait(id: integer);
       procedure loadMapSprite(id: integer; frame: byte);
@@ -132,7 +138,7 @@ uses
    turbu_tbi_lib, turbu_sdl_image, turbu_decl_utils, turbu_classes,
    generic_algorithm_editor, design_script_engine, skill_settings,
    attributes_editor,
-   SDL, sdlstreams, sdl_gfx;
+   SDL, sdl_gfx, SDL_13;
 
 {$R *.dfm}
 
@@ -184,6 +190,8 @@ begin
       radWeaponStyle.Values.Add(intToStr(i));
    tshAttributes.Tag := integer(dsResist);
    tshConditions.Tag := integer(dsCondition);
+   dsEventName.CreateDataset;
+   dsEventName.AppendRecord([0]);
 end;
 
 destructor TframeClass.Destroy;
@@ -218,6 +226,7 @@ procedure TframeClass.initClasses;
 begin
    FLoading := true;
    try
+      lstScripts.Clear;
       if GDatabase.charClasses > 0 then
          loadClass(0);
    finally
@@ -234,12 +243,45 @@ end;
 procedure TframeClass.loadClass(data: word);
 var
    iterator: TDataSet;
+   events: TStringList;
+   i: integer;
+   item: TListItem;
 begin
    if data = 0 then
       Exit;
 
    FId := data;
    FTemplate := GDatabase.charClass[FId];
+
+   for I := 0 to lstScripts.Items.Count - 1 do
+      lstScripts.Items[i].SubItems.Clear;
+
+   events := FTemplate.GetAllEvents;
+   try
+      for I := 0 to events.Count - 1 do
+      begin
+         if lstScripts.Tag = 0 then
+         begin
+            //prepare the initial list
+            item := lstScripts.Items.Add;
+            item.Caption := events[i];
+            item.Data := FTemplate.signature[events[i]];
+         end
+         else item := lstScripts.Items[i];
+
+         if assigned(events.Objects[i]) then
+         begin
+            //use lookup dataset to look up the individual event handlers
+            dsEventName.Edit;
+            dsEventName.FieldByName('baseMethod').AsInteger := integer(events.Objects[i]);
+            dsEventName.Post;
+            item.SubItems.Add(dsEventName.FieldByName('methodName').AsString);
+         end;
+      end;
+   finally
+      events.Free;
+   end;
+
    tabGraphicsChange(tabGraphics); //load portrait or sprite
    frameHeroCommands.size := FTemplate.commands;
    cbxBaseStatsChange(cbxBaseStats);
@@ -257,18 +299,13 @@ end;
 procedure TframeClass.loadPortrait(id: integer);
 var
    filename: string;
-   data: ansiString;
-   size, dummy: integer;
+   dummy: integer;
    fileStream: TStream;
-   outStream: TStringStream;
-   decompressor: TDecompressionStream;
-   smallSurface, zoomedSurface: PSdl_Surface;
    image: TRpgSdlImage;
-   spriteRect: TSdl_Rect;
-   bitmap: TBitmap;
+   texture: TSdlTexture;
+   spriteRect: TRect;
 begin
    assert(assigned(GDatabase.portraitList));
-//   smallSurface := nil;
    if not assigned(FImageList) then
    begin
       FImageList := TSdlImages.Create;
@@ -282,22 +319,9 @@ begin
       try
          fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
          try
-            decompressor := TDecompressionStream.Create(fileStream);
-            try
-               decompressor.Read(size, 4);
-               setLength(data, size);
-               assert(decompressor.Read(data[1], size) = size);
-            finally
-               decompressor.free;
-            end;
+            image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, FImageList, PORTRAIT_SIZE);
          finally
-            fileStream.free;
-         end;
-         outStream := TStringStream.Create(data);
-         try
-            image := TRpgSdlImage.CreateSprite(loadFromTBI(outStream), filename, FImageList, PORTRAIT_SIZE);
-         finally
-            outStream.Free;
+            fileStream.Free;
          end;
       except
          on EArchiveError do
@@ -305,50 +329,30 @@ begin
       end;
    end
    else image := FImageList.image[filename] as TRpgSdlImage;
-
-   data := ansiString(filename) + ' ' + ansiString(intToStr(id mod 16));
-   dummy := FNameList.IndexOf(string(data));
-   if dummy = -1 then
+   if image.Texture.ID = 0 then
    begin
-      smallSurface := SDL_CreateRGBSurface(IMAGE_FORMAT, PORTRAIT_SIZE.x, PORTRAIT_SIZE.y, 8, 0,0,0,0);
-      try
-         with image.surface.format^ do
-         begin
-            if assigned(palette) then
-               SDL_SetPalette(smallSurface, SDL_LOGPAL, @palette.colors[0], 0, palette.ncolors);
-         end;
-         spriteRect := image.spriteRect[id mod 16];
-         SDL_BlitSurface(image.surface, @spriteRect, smallSurface, nil);
-         filestream := TMemoryStream.Create;
-         zoomedSurface := zoomSurface(smallSurface, 2, 2, 0);
-         try
-            SaveSDLBMPToStream(zoomedSurface, filestream);
-            bitmap := TBitmap.Create;
-            filestream.Seek(0, soFromBeginning);
-            bitmap.LoadFromStream(filestream);
-            FNameList.AddObject(string(data), bitmap);
-         finally
-            filestream.free;
-            SDL_FreeSurface(zoomedSurface);
-         end;
-      finally
-         SDL_FreeSurface(smallSurface);
-      end;
-   end
-   else bitmap := FNameList.Objects[dummy] as TBitmap;
+      imgMapSprite.AddTexture(image.surface, texture);
+      image.Texture := texture;
+   end;
 
-   imgMapSprite.Picture.Bitmap := bitmap;
+   spriteRect := image.spriteRect[id mod 16];
+   imgMapSprite.DrawTexture(image.Texture, @spriteRect);
 end;
 
 procedure TframeClass.lstScriptsDblClick(Sender: TObject);
 var
    item: TListItem;
+   i: integer;
 begin
    item := lstScripts.Selected;
    if not assigned(item) then
       Exit;
 
-
+   if item.SubItems.Count = 0 then
+//      frmAlgorithmEditor.newFunc( item.Data
+   else begin
+      //edit the current script
+   end;
 end;
 
 procedure TframeClass.lstSkillsDblClick(Sender: TObject);
@@ -362,6 +366,7 @@ var
    dummy: string;
 begin
    tmrAnim.Enabled := true;
+   imgMapSprite.Active := true;
    if not FLoaded then
    begin
       frameHeroCommands.dataSet := dsCharClass.DataSet;
@@ -387,23 +392,20 @@ end;
 procedure TframeClass.onHide;
 begin
    tmrAnim.Enabled := false;
+   imgMapSprite.Active := false;
 end;
 
 procedure TframeClass.loadMapSprite(id: integer; frame: byte);
 var
    filename: string;
-   data: ansiString;
-   size, dummy: integer;
-   fileStream: TStream;
-   outStream: TStringStream;
-   decompressor: TDecompressionStream;
-   smallSurface, zoomedSurface: PSdl_Surface;
+   dummy: integer;
    image: TRpgSdlImage;
-   spriteRect: TSdl_Rect;
-   bitmap: TBitmap;
+   fileStream: TStream;
+   spriteRect, destRect: TRect;
+   texture: TSdlTexture;
+   oldIndex: integer;
 begin
    assert(assigned(GDatabase.spriteList));
-//   smallSurface := nil;
    if not assigned(FImageList) then
    begin
       FImageList := TSdlImages.Create;
@@ -411,29 +413,17 @@ begin
    end;
 
    dummy := id;
+   oldIndex := FCurrentTexture;
    FSpriteData := extractSpriteData(GDatabase.spriteList[dummy]);
    filename := FSpriteData.name + '.tbi';
    if FImageList.IndexOf(filename) = -1 then
    begin
       try
+         fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
          try
-            fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
-            decompressor := TDecompressionStream.Create(fileStream);
-            try
-               decompressor.Read(size, 4);
-               setLength(data, size);
-               assert(decompressor.Read(data[1], size) = size);
-            finally
-               decompressor.free;
-            end;
+            image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, FImageList, SPRITE_SIZE);
          finally
-            fileStream.free;
-         end;
-         outStream := TStringStream.Create(data);
-         try
-            image := TRpgSdlImage.CreateSprite(loadFromTBI(outStream), filename, FImageList, SPRITE_SIZE);
-         finally
-            outStream.Free;
+            fileStream.Free;
          end;
       except
          on EArchiveError do
@@ -442,44 +432,26 @@ begin
       assert(frame in [0..image.count]);
    end
    else image := FImageList.image[filename] as TRpgSdlImage;
-
-   data := ansiString(filename) + ' ' + ansiString(intToStr(frame));
-   dummy := FNameList.IndexOf(string(data));
-   if dummy = -1 then
+   if image.Texture.ID = 0 then
    begin
-      smallSurface := SDL_CreateRGBSurface(IMAGE_FORMAT, SPRITE_SIZE.x, SPRITE_SIZE.y, 8, 0,0,0,0);
-      try
-         with image.surface.format^ do
-         begin
-            if assigned(palette) then
-               SDL_SetPalette(smallSurface, SDL_LOGPAL, @palette.colors[0], 0, palette.ncolors);
-         end;
-         spriteRect := image.spriteRect[frame];
-         SDL_BlitSurface(image.surface, @spriteRect, smallSurface, nil);
-         filestream := TMemoryStream.Create;
-         zoomedSurface := zoomSurface(smallSurface, 2, 2, 0);
-         try
-            SaveSDLBMPToStream(zoomedSurface, filestream);
-            bitmap := TBitmap.Create;
-            filestream.Seek(0, soFromBeginning);
-            bitmap.LoadFromStream(filestream);
-            FNameList.AddObject(string(data), bitmap);
-         finally
-            filestream.free;
-            SDL_FreeSurface(zoomedSurface);
-         end;
-      finally
-         SDL_FreeSurface(smallSurface);
-      end;
-   end
-   else bitmap := FNameList.Objects[dummy] as TBitmap;
+      imgMapSprite.AddTexture(image.surface, texture);
+      image.Texture := texture;
+   end;
+   FCurrentTexture := image.texture.ID;
 
-   imgMapSprite.Picture.Bitmap := bitmap;
+   spriteRect := image.spriteRect[frame];
+   destRect.left := (imgMapSprite.Width div 2) - (spriteRect.right);
+   destRect.top := (imgMapSprite.height div 2) - (spriteRect.bottom);
+   destRect.BottomRight := TRpgPoint(spriteRect.BottomRight) * 2;
+   if oldIndex <> FCurrentTexture then
+      imgMapSprite.fillColor(image.surface.Format.palette.colors[image.surface.ColorKey], 255);
+   imgMapSprite.DrawTexture(image.Texture, @spriteRect, @destRect);
 end;
 
 procedure TframeClass.radWeaponStyleClick(Sender: TObject);
 begin
-   cbxEquip2.DataField := '';
+   cbxEquip2.DataField := ''; //needed to make sure the display changes
+
    case TWeaponStyle(radWeaponStyle.ItemIndex) of
       ws_single: cbxEquip2.DataField := '';
       ws_shield:
@@ -540,6 +512,11 @@ end;
 procedure TframeClass.btnEditAttributesClick(Sender: TObject);
 begin
    frmAttributesEditor.ShowModal;
+end;
+
+procedure TframeClass.btnSetGfxClick(Sender: TObject);
+begin
+   imgMapSprite.Clear;
 end;
 
 procedure TframeClass.cbxBaseStatsChange(Sender: TObject);

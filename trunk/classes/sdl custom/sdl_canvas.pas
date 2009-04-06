@@ -23,7 +23,7 @@ interface
 uses
    types, contnrs,
    SDL_ImageManager, SG_Defs,
-   SDL;
+   SDL, SDL_13;
 
 type
    TSdlSurfaceMode = (cmSoftware, cmHardware);
@@ -35,7 +35,7 @@ type
       procedure SetBgColor(const Value: TSgColor);
       function GetBitDepth: byte;
    protected
-      FSurface: PSDL_Surface; //the actual SDL_Surface
+      FSurface: PSdlSurface; //the actual SDL_Surface
       FMustLock: Boolean;
       FStyle: TSdlSurfaceMode;
       FBgColor: TSgColor;
@@ -46,7 +46,7 @@ type
       procedure ClearClipRect; inline;
       procedure Clear;
 
-      property surface: PSDL_Surface read FSurface;
+      property surface: PSdlSurface read FSurface;
       property style: TSdlSurfaceMode read FStyle;
       property Width: Integer read GetWidth;
       property Height: Integer read GetHeight;
@@ -65,7 +65,7 @@ type
       FRenderStack: TObjectStack;
    private
       FRenderTarget: TSdlRenderTarget;
-      FRenderSurface: PSDL_Surface;
+      FRenderSurface: PSdlSurface;
       FFullscreen: boolean;
       procedure SetRenderTarget(const Value: TSdlRenderTarget);
       procedure SetFullscreen(const Value: boolean);
@@ -140,22 +140,22 @@ uses
 
 function TSdlRenderTarget.GetHeight: Integer;
 begin
-   result := FSurface^.h;
+   result := FSurface.height;
 end;
 
 function TSdlRenderTarget.GetWidth: Integer;
 begin
-   result := FSurface^.w;
+   result := FSurface.width;
 end;
 
 procedure TSdlRenderTarget.Clear;
 begin
-   SDL_FillRect(FSurface, nil, FBgColor);
+   FSurface.Fill(nil, FBgColor);
 end;
 
 procedure TSdlRenderTarget.ClearClipRect;
 begin
-   SDL_SetClipRect(FSurface, nil);
+   FSurface.ClearClipRect;
 end;
 
 constructor TSdlRenderTarget.Create(size: TSgPoint);
@@ -165,16 +165,14 @@ var
 begin
    inherited Create;
    assert(assigned(screenCanvas));
-   flags := screenCanvas.surface^.flags and SDL_HWSURFACE;
+   flags := 0; //screenCanvas.surface.flags and SDL_HWSURFACE;
    format := SDL_GetVideoInfo^.vfmt;
 
-   FSurface := SDL_CreateRGBSurface(flags, size.x, size.y, format^.BitsPerPixel, format^.RMask, format^.GMask, format^.BMask, format^.AMask);
-   if not assigned(FSurface) then
-      OutOfMemoryError;
-   if FSurface^.flags and SDL_HWSURFACE = SDL_HWSURFACE then
+   FSurface := TSdlSurface.Create(size.x, size.y, format^.BitsPerPixel, format^.RMask, format^.GMask, format^.BMask, format^.AMask);
+{   if FSurface.flags and SDL_HWSURFACE = SDL_HWSURFACE then
       FStyle := cmHardware
-   else FStyle := cmSoftware;
-   FMustLock := SDL_MustLock(FSurface);
+   else FStyle := cmSoftware;}
+   FMustLock := FSurface.MustLock;
 end;
 
 function TSdlRenderTarget.GetBitDepth: byte;
@@ -183,24 +181,18 @@ begin
 end;
 
 function TSdlRenderTarget.GetClipRect: TRect;
-var
-   dummy: TSdl_Rect;
 begin
-   SDL_GetClipRect(FSurface, @dummy);
-   result := dummy;
+   result := FSurface.ClipRect;
 end;
 
 procedure TSdlRenderTarget.SetBgColor(const Value: TSgColor);
 begin
-   FBgColor := SDL_MapRGBA(FSurface^.format, Value.rgba[1], Value.rgba[2], Value.rgba[3], Value.rgba[4])
+   FBgColor := SDL_MapRGBA(FSurface.format, Value.rgba[1], Value.rgba[2], Value.rgba[3], Value.rgba[4])
 end;
 
 procedure TSdlRenderTarget.SetClipRect(const Value: TRect);
-var
-   dummy: TSdl_Rect;
 begin
-   dummy := Value;
-   SDL_SetClipRect(FSurface, @dummy);
+   FSurface.ClipRect := Value;
 end;
 
 { TSdlCanvas }
@@ -260,13 +252,13 @@ begin
       cmHardware: flags := flags or SDL_HWSURFACE;
    end;
    SDL_putenv(PAnsiChar('SDL_VIDEO_WINDOW_POS=' + ansiString(intToStr(size.Left)) + ',' + ansiString(intToStr(size.Top))));
-   FSurface := SDL_SetVideoMode(size.right, size.bottom, pixelDepth, flags);
-   if not assigned(FSurface) then
+    FSurface := PSdlSurface(SDL_SetVideoMode(size.right, size.bottom, pixelDepth, flags));
+{   if not assigned(FSurface) then
       OutOfMemoryError;
    if FSurface^.flags and SDL_HWSURFACE = SDL_HWSURFACE then
       FStyle := cmHardware
-   else FStyle := cmSoftware;
-   FMustLock := SDL_MustLock(FSurface);
+   else FStyle := cmSoftware;}
+   FMustLock := FSurface.MustLock;
    screenCanvas := self;
    self.RenderTarget := self;
 end;
@@ -299,7 +291,7 @@ end;
 
 procedure TSdlCanvas.Flip;
 begin
-   SDL_Flip(FSurface);
+   SDL_Flip(PSdl_surface(FSurface));
 end;
 
 procedure TSdlCanvas.SetClipRect(const Value: TRect);
@@ -311,7 +303,7 @@ end;
 
 function TSdlCanvas.IsFullscreen: boolean;
 begin
-   result := FSurface.flags and SDL_FULLSCREEN = SDL_FULLSCREEN;
+   result := {FSurface.flags and SDL_FULLSCREEN = SDL_FULLSCREEN} false;
 end;
 
 procedure TSdlCanvas.popRenderTarget;
@@ -326,8 +318,9 @@ end;
 
 procedure TSdlCanvas.SetFullscreen(const Value: boolean);
 begin
-   if FFullscreen <> Value then
-      FSurface := SDL_SetVideoMode(self.width, self.height, self.depth, FSurface.flags xor SDL_FULLSCREEN);
+   raise Exception.Create('SetFullscreen not currently supported');
+{   if FFullscreen <> Value then
+      FSurface := SDL_SetVideoMode(self.width, self.height, self.depth, FSurface.flags xor SDL_FULLSCREEN);}
 end;
 
 function TSdlCanvas.GetClipRect: TRect;

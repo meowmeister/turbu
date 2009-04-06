@@ -56,7 +56,7 @@ type
       FCurveSec: array of word;
       FExpStandard: word;
       FExpAddition: word;
-      FExpCorrection: byte;
+      FExpCorrection: word;
       FInitialEQ: array[1..5] of word;
       FUnarmedAnim: word;
       FClassNum: integer;
@@ -104,7 +104,7 @@ type
       property portraitIndex: byte read FFaceNum write FFaceNum;
       property expStandard: word read FExpStandard write FExpStandard;
       property expAddition: word read FExpAddition write FExpAddition;
-      property expCorrection: byte read FExpCorrection write FExpCorrection;
+      property expCorrection: word read FExpCorrection write FExpCorrection;
       property skills: word read getSkillCount;
       property skill[x: word]: THeroSkillRecord read getSkill;
       property hasSkillName: boolean read FMagicRenamed;

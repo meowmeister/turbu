@@ -17,10 +17,6 @@ unit generic_algorithm_editor;
 * www.turbu-rpg.com.
 *****************************************************************************}
 
-{THIS UNIT IS CURRENTLY BROKEN
-Dependency on the old GDatabase.algorithms property needs to be replaced by
-a unit lookup.}
-
 interface
 
 uses
@@ -45,7 +41,6 @@ type
       txtHeader: TEdit;
       Button1: TButton;
       txtEditor: TJvHLEditor;
-      Label1: TLabel;
       dsRanges: TDataSource;
 
       procedure txtEditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -62,8 +57,10 @@ type
 
       function verifyNames: TNameChangeSet;
       procedure setHeader(header: string);
+      function runEditor: boolean;
    public
       function funcEdit(style: TScriptStyle; script: TDataSet; returnType: string): boolean;
+      function newFunc(script: TDataSet; decl: TRpgDecl): boolean;
       property script: TScriptRecord read FScript;
    end;
 
@@ -75,7 +72,7 @@ implementation
 uses
    windows, SysUtils, strUtils,
    turbu_database, turbu_characters, design_script_engine, turbu_script_basis,
-   function_header,
+   function_header, turbu_vartypes,
    uPSRuntime;
 
 {$R *.dfm}
@@ -141,14 +138,30 @@ begin
 end;
 
 function TfrmAlgorithmEditor.funcEdit(style: TScriptStyle; script: TDataSet; returnType: string): boolean;
-var
-   dummy: string;
-//   i: integer;
 begin
-   result := false;
    FReturnType := returnType;
    dsFunction := script;
    FScript := TObject(script.FieldByName('address').AsInteger) as TScriptRecord;
+   frmFuncHeader.setup(GDScriptEngine.decl.decl[FScript.name]);
+   result := runEditor;
+end;
+
+function TfrmAlgorithmEditor.newFunc(script: TDataSet; decl: TRpgDecl): boolean;
+begin
+   FReturnType := lookupType(decl.retval);
+   dsFunction := script;
+   FScript := TScriptRecord.create;
+   frmFuncHeader.setup(decl);
+   result := runEditor;
+end;
+
+{Return value does not denote success or failure; it denotes whether or not
+the basic identifying data of the script record has changed during the edit
+process.}
+function TfrmAlgorithmEditor.runEditor: boolean;
+var
+   dummy: string;
+begin
    dummy := '';
    if (assigned(FScript)) and (FScript.name <> '') then
    begin
@@ -167,20 +180,19 @@ begin
             inc(FPadding.Y);
          end;
       end;
-      frmFuncHeader.setup(GDScriptEngine.decl.decl[FScript.name]);
       txtCodeName.Text := FScript.name;
       txtDesignName.Text := FScript.designName;
    end;
    txtEditor.lines.Text := dummy;
    if self.ShowModal = mrOK then
    begin
-      result := not ((script.FieldByName('address').AsInteger = integer(FScript)) and
-                     (script.fieldByName('name').AsString = FScript.name) and
-                     (script.fieldByName('designName').AsString = FScript.designName));
+      result := not ((dsFunction.FieldByName('address').AsInteger = integer(FScript)) and
+                     (dsFunction.fieldByName('name').AsString = FScript.name) and
+                     (dsFunction.fieldByName('designName').AsString = FScript.designName));
       FScript.update(dsFunction);
    end
    else
-      ; {add more stuff here}
+      result := false; {add more stuff here}
 end;
 
 procedure TfrmAlgorithmEditor.txtEditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);

@@ -39,7 +39,7 @@ object frmFuncHeader: TfrmFuncHeader
     Top = 48
     Width = 173
     Height = 21
-    ItemHeight = 0
+    ItemHeight = 13
     TabOrder = 0
   end
   object cbxProcType: TComboBox
@@ -93,7 +93,8 @@ object frmFuncHeader: TfrmFuncHeader
     Alignment = taLeftJustify
     CriticalPoints.MaxValueIncluded = False
     CriticalPoints.MinValueIncluded = False
-    DisplayFormat = dfIdentifier
+    DisplayFormat = dfAlphaNumeric
+    EditText = '0'
     TabOrder = 3
   end
 end

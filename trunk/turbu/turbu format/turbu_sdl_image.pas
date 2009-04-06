@@ -20,12 +20,16 @@ unit turbu_sdl_image;
 interface
 uses
    types,
-   SDL_ImageManager;
+   SDL_ImageManager,
+   SDL_13;
 
 type
    TRpgSdlImage = class(TSdlImage)
+   private
+      FTexture: TSdlTexture;
    public
       procedure setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint); override;
+      property Texture: TSdlTexture read FTexture write FTexture;
    end;
 
 implementation
@@ -33,30 +37,25 @@ implementation
 { TRpgSdlImage }
 uses
    turbu_constants,
-   sdl_canvas,
-   SDL;
+   sdl_canvas;
 
 resourcestring
    BAD_LOAD = 'Unable to load image to video memory!';
 
 procedure TRpgSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint);
 var
-   dummy: PSDL_Surface;
+   dummy: PSdlSurface;
    colorkey: ^TSDL_Color;
 begin
    inherited setup(filename, imagename, container, spriteSize);
-   dummy := SDL_ConvertSurface(FSurface, FSurface.format, IMAGE_FORMAT);
-   if dummy = nil then
-      raise ESdlImageException.Create(BAD_LOAD);
-   SDL_FreeSurface(FSurface);
+   dummy := TSdlSurface.Convert(FSurface, FSurface.format);
+   FSurface.Free;
    FSurface := dummy;
-   FMustLock := SDL_MustLock(FSurface);
+   FMustLock := FSurface.MustLock;
    if assigned(FSurface.format.palette) then
    begin
       colorkey := @FSurface.format.palette.colors^[0];
-      if (SDL_SetColorKey(FSurface, SDL_SRCCOLORKEY or SDL_RLEACCEL,
-          SDL_MapRGB(FSurface^.format, colorkey^.r, colorkey^.g, colorkey^.b)) <> 0) then
-         raise ESdlImageException.Create(BAD_LOAD);
+      FSurface.ColorKey := SDL_MapRGB(FSurface.format, colorkey.r, colorkey.g, colorkey.b)
    end;
 end;
 

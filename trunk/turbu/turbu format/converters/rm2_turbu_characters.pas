@@ -68,7 +68,7 @@ var
 begin
    assert(GProjectFormat = pf_2k3);
    blocksize := 99;
-   self.Create(blocksize);
+   self.Create(blocksize, GStatSet);
    setLength(localArray, blocksize);
    blockPtr := cardinal(base.statBlock) + (blocksize * 2 * block);
    move(pointer(blockPtr), localArray[0], blocksize * 2); //2 bytes/element
@@ -93,7 +93,7 @@ begin
          assert(false);
       end;
    end;
-   self.Create(blocksize);
+   self.Create(blocksize, GStatSet);
    setLength(localArray, blocksize);
    blockPtr := cardinal(base.statBlock) + (blocksize * 2 * block);
    move(pointer(blockPtr)^, localArray[0], blocksize * 2); //2 bytes/element
@@ -108,7 +108,7 @@ constructor T2kCharClass.convert(base: TRm2CharClass);
 var
    i: integer;
    resistVal: integer;
-   newstat: TPosNegPointer;
+   newstat: TStatBlock;
 begin
    self.Create;
    self.id := base.id;
@@ -123,11 +123,10 @@ begin
          self.commands := self.commands + 1
       else Break;
    end;
-   {$IFNDEF 64BIT} newstat.dummy := 0; {$ENDIF}
    for i := 1 to STAT_COUNT do
    begin
-      newstat.address := TStatBlock.convert(base, i);
-      GStatSet.add(newstat.address);
+      newstat := TStatBlock.convert(base, i);
+      GStatSet.add(newstat);
       self.statblock[i] := newstat;
    end;
    self.expFunc := 'calcExp2k';
@@ -163,7 +162,7 @@ constructor T2kCharClass.convert(base: THeroRecord; baseDB: TLcfDataBase);
 var
    i: integer;
    resistVal: integer;
-   newstat: TPosNegPointer;
+   newstat: TStatBlock;
 begin
    self.Create;
    self.id := base.id;
@@ -192,11 +191,10 @@ begin
       with baseDB.charClass[base.classNum] do
          self.command[i] := command[i];
    end;
-   {$IFNDEF 64BIT} newstat.dummy := 0; {$ENDIF}
    for i := 1 to STAT_COUNT do
    begin
-      newstat.address := TStatBlock.convert(base, i);
-      GStatSet.add(newstat.address);
+      newstat := TStatBlock.convert(base, i);
+      GStatSet.add(newstat);
       self.statblock[i] := newstat;
    end;
    if GProjectFormat = pf_2k then

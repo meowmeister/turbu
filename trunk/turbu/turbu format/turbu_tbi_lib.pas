@@ -20,10 +20,10 @@ unit turbu_tbi_lib;
 interface
 uses
    classes,
-   SDL;
+   SDL_13;
 
-function saveToTBI(image: PSdl_Surface): TMemoryStream;
-function loadFromTBI(image: TStream): PSdl_Surface;
+function saveToTBI(image: PSdlSurface): TMemoryStream;
+function loadFromTBI(image: TStream): PSdlSurface;
 
 implementation
 uses
@@ -36,7 +36,7 @@ type
 const
    TBI_HEADER = $2A494254;
 
-function saveToTBI(image: PSdl_Surface): TMemoryStream;
+function saveToTBI(image: PSdlSurface): TMemoryStream;
 var
    xBorder, yBorder: array of boolean;
    yProgress, xSkip, ySkip: array of word;
@@ -50,12 +50,12 @@ var
 begin
    //check invariants
    assert(image.format.BitsPerPixel = 8);
-   assert(image.w > 0);
-   assert(image.h > 0);
+   assert(image.width > 0);
+   assert(image.height > 0);
 
    //initialization
-   x := image.w;
-   y := image.h;
+   x := image.width;
+   y := image.height;
    setLength(xBorder, x);
    setLength(yBorder, y);
    setLength(yProgress, x);
@@ -67,7 +67,7 @@ begin
    try
       for j := 0 to y - 1 do
       begin
-         current := pointer(cardinal(image.pixels) + (j * image.pitch));
+         current := pointer(cardinal(image.pixels) + (j * cardinal(image.pitch)));
          i := 0;
          while (current^ = 0) and (i < x) do
          begin
@@ -136,9 +136,9 @@ begin
       sizer := length(ySkip) * 2;
       result.Write(sizer, 2);
       result.write(ySkip[0], sizer);
-      assert(image.format.palette.ncolors <= 256);
-      result.write(image.format.palette.ncolors, 2);
-      for I := 0 to image.format.palette.ncolors - 1 do
+      assert(image.format.palette.count <= 256);
+      result.write(image.format.palette.count, 2);
+      for I := 0 to image.format.palette.count - 1 do
       begin
          result.write(image.format.palette.colors[i].r, 1);
          result.write(image.format.palette.colors[i].g, 1);
@@ -150,7 +150,7 @@ begin
          begin
             i := xSkip[0];
             i2 := 1;
-            current := pointer(cardinal(image.pixels) + (j * image.pitch) + i);
+            current := pointer(cardinal(image.pixels) + (j * cardinal(image.pitch)) + i);
             while i2 <= high(xSkip) do
             begin
                if i2 mod 2 = 1 then
@@ -174,7 +174,7 @@ begin
    end;
 end;
 
-function loadFromTBI(image: TStream): PSdl_Surface;
+function loadFromTBI(image: TStream): PSdlSurface;
 var
    buffer4: integer;
    buffer2: word;
@@ -184,9 +184,9 @@ var
    x, y: cardinal;
    i, j: cardinal;
    i2: integer;
-   colors: TSDL_Palette;
+   colors: TSdlPalette;
    current: ^byte;
-   intermediate: PSdl_Surface;
+   intermediate: PSdlSurface;
 begin
    image.Seek(0, soFromBeginning);
    image.Read(buffer4, 4);
@@ -204,7 +204,7 @@ begin
       inc(x, xSkip[i]);
    for I := 0 to high(ySkip) do
       inc(y, ySkip[i]);
-   intermediate := SDL_CreateRGBSurface(SDL_SWSURFACE, x, y, 8, 0, 0, 0, 0);
+   intermediate := TSdlSurface.Create(x, y, 8, 0, 0, 0, 0);
 
    //build yBorder table
    setLength(yBorder, y);
@@ -217,24 +217,24 @@ begin
       flag := not flag;
    end;
 
-   colors.ncolors := 0;
+   colors.Count := 0;
    new(colors.colors);
    try
-      image.Read(colors.ncolors, 2);
-      for I := 0 to colors.ncolors - 1 do
+      image.Read(colors.count, 2);
+      for I := 0 to colors.count - 1 do
       begin
          image.Read(colors.colors[i].r, 1);
          image.Read(colors.colors[i].g, 1);
          image.Read(colors.colors[i].b, 1);
       end;
-      SDL_SetPalette(intermediate, SDL_LOGPAL, @colors.colors[0], 0, colors.ncolors);
+      intermediate.SetPalette(colors.colors, 0, colors.count);
    finally
       dispose(colors.colors);
    end;
    with intermediate.format.palette.colors[0] do
-      SDL_FillRect(intermediate, nil, SDL_MapRGB(intermediate.format, r, g, b));
-   if SDL_MustLock(intermediate) then
-      SDL_LockSurface(intermediate);
+      intermediate.Fill(nil, SDL_MapRGB(intermediate.format, r, g, b));
+   if intermediate.MustLock then
+      intermediate.LockSurface;
 
    for j := ySkip[0] to y - 1 do
    begin
@@ -242,7 +242,7 @@ begin
       begin
          i := xSkip[0];
          i2 := 1;
-         current := pointer(cardinal(intermediate.pixels) + (j * intermediate.pitch) + i);
+         current := pointer(cardinal(intermediate.pixels) + (j * cardinal(intermediate.pitch)) + i);
             while i2 <= high(xSkip) do
             begin
                if i2 mod 2 = 1 then
@@ -253,18 +253,18 @@ begin
             assert(i = x);
          end;
       end;
-   if SDL_MustLock(intermediate) then
-      SDL_UnlockSurface(intermediate);
+   if intermediate.MustLock then
+      intermediate.UnlockSurface;
    //end with a 0
    buffer2 := 0;
    image.read(buffer2, 1);
    assert(buffer2 = 0);
-   result := SDL_CreateRGBSurface(IMAGE_FORMAT, x, y, 8, 0, 0, 0, 0);
-   SDL_SetPalette(result, SDL_LOGPAL, @intermediate.format.palette.colors[0], 0, intermediate.format.palette.ncolors);
+   result := TSdlSurface.Create({IMAGE_FORMAT,} x, y, 8, 0, 0, 0, 0);
+   result.SetPalette(intermediate.format.palette.colors, 0, intermediate.format.palette.count);
    with result.format.palette.colors[0] do
-      assert(SDL_SetColorKey(intermediate, SDL_SRCCOLORKEY or SDL_RLEACCEL, SDL_MapRGB(result.format, r, g, b)) = 0);
+      intermediate.ColorKey := SDL_MapRGB(result.format, r, g, b);
    SDL_BlitSurface(intermediate, nil, result, nil);
-   SDL_FreeSurface(intermediate);
+   intermediate.Free;
    image.Seek(0, soFromBeginning);
 end;
 

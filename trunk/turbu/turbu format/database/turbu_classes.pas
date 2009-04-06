@@ -20,38 +20,72 @@ unit turbu_classes;
 interface
 uses
    classes, sysUtils, generics.collections, DB,
-   turbu_defs, turbu_constants;
+   turbu_containers, turbu_defs, turbu_constants;
 
 type
-   TRpgDatafile = class abstract(TObject)
-   protected
-      type
-      TSetSaver = record
-         case boolean of
-            true: (aSet: TByteSet);
-            false: (aArray: packed array[1..32] of byte);
-      end;
-   class function getSetLength(mySet: TByteSet): byte;
+   TRpgDecl = class;
 
-   var
+   {$M+}
+   TRpgDatafile = class;
+   TRpgObject = class;
+   {$M-}
+
+   TDatafileClass = class of TRpgDatafile;
+
+   TScriptEvent = procedure(sender: TRpgObject) of object;
+
+   {$M+}
+   {If there ever was a time when it would be nice to have multiple inheritance
+   in Delphi, this is it.  TRpgObject is the base class for a class tree that
+   will mirror the TRpgDatafile tree in many (but not all) cases.  TRpgObjects
+   will be the actual objects used in the game engine, while TRpgDatafile exists
+   for the editor's benefit and consists of templates storing only the basic
+   data necessary to instantiate their associated TRpgObjects at runtime.}
+   TRpgObject = class abstract(TObject)
+   private
+      FTemplate: TRpgDatafile;
+      FOnCreate: TScriptEvent;
+      FOnDestroy: TScriptEvent;
+   protected
+      class function templateClass: TDatafileClass; virtual; abstract;
+   public
+      constructor Create(base: TRpgDatafile); overload; //marked as overload to
+                                                        //allow access to TObject.Create
+   published
+      property OnCreate: TScriptEvent read FOnCreate write FOnCreate;
+      property OnDestroy: TScriptEvent read FOnDestroy write FOnDestroy;
+   end;
+
+   TRpgDatafile = class abstract(TObject)
+   private
+      function getSignature(methodname: string): TRpgDecl;
+   protected
       FName: string;
       FId: smallint;
       FModified: boolean;
+      FOnCreate: TScriptEvent;
+      FOnDestroy: TScriptEvent;
 
+      class function getSetLength(mySet: TByteSet): byte;
       function getDatasetName: string; virtual;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); virtual;
       procedure upload(db: TDataSet); virtual;
       procedure download(db: TDataset); virtual;
-
       function GetAllEvents: TStringList;
 
+      property datasetName: string read getDatasetName;
+      property signature[methodname: string]: TRpgDecl read getSignature;
+   published
       property name: string read FName write FName;
       property id: smallint read FId write FId;
       property modified: boolean read FModified write FModified;
-      property datasetName: string read getDatasetName;
+
+      property OnCreate: TScriptEvent read FOnCreate write FOnCreate;
+      property OnDestroy: TScriptEvent read FOnDestroy write FOnDestroy;
    end;
+   {$M-}
 
    TScriptRecord = class abstract(TObject)
    private
@@ -105,26 +139,6 @@ type
       function eof: boolean;
    end;
 
-   TRpgList<T> = class(TList<T>)
-   private
-      function getHigh: integer;
-    function getLength: integer;
-   public
-      function Last: T;
-      property High: integer read getHigh;
-      property Length: integer read getLength;
-   end;
-
-   TRpgObjectList<T: class> = class(TObjectList<T>)
-   private
-      function getHigh: integer;
-      function getLength: integer;
-   public
-      function Last: T;
-      property High: integer read getHigh;
-      property Length: integer read getLength;
-   end;
-
    TRpgDataList<T: TRpgDatafile, constructor> = class(TRpgObjectList<TRpgDatafile>)
    public
       constructor Create;
@@ -176,11 +190,6 @@ type
       procedure postSafe;
    end;
 
-   TRpgDictionary<TKey,TValue> = class(TObjectDictionary<TKey,TValue>)
-   public
-      destructor Destroy; override;
-   end;
-
    ERpgLoadError = class(Exception);
 
    procedure lassert(cond: boolean);
@@ -188,8 +197,16 @@ type
 implementation
 uses
    Generics.Defaults, TypInfo,
-   commons,
+   commons, turbu_decl_utils,
    uPSRuntime;
+
+type
+   TSetSaver = record
+      case boolean of
+         true: (aSet: TByteSet);
+         false: (aArray: packed array[1..32] of byte);
+   end;
+
 
 threadvar
    currentloader: TStream;
@@ -234,17 +251,26 @@ function TRpgDatafile.GetAllEvents: TStringList;
 var
    list: PPropList;
    i, count: integer;
+   event: TMethod;
 begin
-   GetMem(list, sizeof(pointer) * 100); //If you've got more than 100 events on
-                                        //one object, you're absolutely nuts :P
+   GetMem(list, sizeof(pointer) * 50); //If you've got more than 50 events on
+                                       //one object, you're absolutely nuts :P
    try
+      //get all published methods (events)
       count := GetPropList(PTypeInfo(self.ClassInfo), [tkMethod], list, false);
-      assert(count <= 100, 'Some insane coder created a class with more than 100 events!');
+      assert(count <= 50, 'Some insane coder created a class with more than 50 events!');
+
+      //fill a TStringList with the method names and addresses
       result := TStringList.Create;
       for I := 0 to Count - 1 do
       begin
-         result.AddObject(string(list[i].Name), GetMethodProp(self, string(list[i].name)).Code);
-         assert(GetMethodProp(self, string(list[i].name)).Data = self);
+         if LowerCase(copy(string(list[i].Name), 1, 2)) = 'on' then
+         begin
+            event := GetMethodProp(self, string(list[i].name));
+            result.AddObject(string(list[i].Name), event.Code);
+            if assigned(event.data) then
+               assert(event.Data = self);
+         end;
       end;
    finally
       freeMem(list);
@@ -267,6 +293,16 @@ begin
    result := 32;
    while (result > 0) and (setSaver.aArray[result] = 0) do
       dec(result);
+end;
+
+function TRpgDatafile.getSignature(methodname: string): TRpgDecl;
+var
+   info: PPropInfo;
+begin
+   info := GetPropInfo(Self, methodname, [tkMethod]);
+   if not assigned(info) then
+      raise EPropertyError.CreateFmt('Event %s does not exist in class %s.', [methodname, self.ClassName]);
+   result := turbu_decl_utils.GetSignature(info.PropType^);
 end;
 
 {$Q-}{$R-}
@@ -412,23 +448,6 @@ begin
    self.update(db);
 end;
 
-{ TRpgList<T> }
-
-function TRpgList<T>.GetHigh: integer;
-begin
-   result := self.Count - 1;
-end;
-
-function TRpgList<T>.getLength: integer;
-begin
-   result := self.High + 1;
-end;
-
-function TRpgList<T>.Last: T;
-begin
-   result := Self[High];
-end;
-
 { TDeclList }
 
 function declComp(const Left, Right: TRpgDecl): Integer;
@@ -503,23 +522,6 @@ begin
          result := result and (FParams[i].typeVar = other.params[i].typeVar) and (FParams[i].flags = other.params[i].flags)
 end;
 
-{ TRpgObjectList<T> }
-
-function TRpgObjectList<T>.getHigh: integer;
-begin
-   result := Count - 1;
-end;
-
-function TRpgObjectList<T>.getLength: integer;
-begin
-   result := self.High + 1;
-end;
-
-function TRpgObjectList<T>.Last: T;
-begin
-   result := Self[High];
-end;
-
 { TFieldExt }
 
 function TFieldExt.getByteSet: TByteSet;
@@ -576,13 +578,12 @@ begin
       db.postSafe;
 end;
 
-{ TRpgDictionary<TKey, TValue> }
+{ TRpgObject }
 
-destructor TRpgDictionary<TKey, TValue>.Destroy;
+constructor TRpgObject.Create(base: TRpgDatafile);
 begin
-   self.Keys.Free;
-   self.Values.Free;
-   inherited Destroy;
+   FTemplate := base;
+   assert(base is self.templateClass);
 end;
 
 end.

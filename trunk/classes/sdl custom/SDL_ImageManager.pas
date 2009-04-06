@@ -31,7 +31,7 @@ interface
 uses
    classes, sysUtils,
    SG_Defs,
-   SDL;
+   SDL, sdl_13;
 
 const EMPTY: TPoint = (X: 0; Y: 0);
 
@@ -62,9 +62,10 @@ type
    private
    class var
       FRw: PSDL_RWops;
-    procedure setSurface(const Value: PSDL_Surface);
+   var
+      procedure setSurface(const Value: PSdlSurface);
    protected
-      FSurface: PSDL_Surface; //the actual SDL_Surface
+      FSurface: PSdlSurface; //the actual SDL_Surface
       FName: string; //Name for the image.  Must be unique!
       FMustLock: Boolean; //this will probably always be false, but just to be safe...
       FTextureSize: TSgPoint;
@@ -87,7 +88,7 @@ type
       * Like the previous constructor, except that it creates a TSdlImage from
       * a pre-existing SDL_Surface.
       ************************************************************************}
-      constructor Create(surface: PSDL_Surface; imagename: string; container: TSdlImages); overload;
+      constructor Create(surface: PSdlSurface; imagename: string; container: TSdlImages); overload;
 
       {************************************************************************
       * Like the previous constructor, except that it creates a TSdlImage from
@@ -107,7 +108,7 @@ type
       ************************************************************************}
       constructor CreateSprite(filename, imagename: string; container: TSdlImages; spriteSize: TPoint); overload;
       constructor CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TPoint); overload;
-      constructor CreateSprite(surface: PSDL_Surface; imagename: string; container: TSdlImages; spriteSize: TPoint); overload;
+      constructor CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TPoint); overload;
 
       constructor CreateBlankSprite(imagename: string; container: TSdlImages; spriteSize: TPoint; count: integer);
 
@@ -131,7 +132,7 @@ type
       procedure DrawSprite(dest: TPoint; index: integer);
 
       property name: string read FName write FName;
-      property surface: PSDL_Surface read FSurface write setSurface;
+      property surface: PSdlSurface read FSurface write setSurface;
       property mustLock: Boolean read FMustLock;
       property textureSize: TSgPoint read FTextureSize write SetTextureSize;
       property texPerRow: integer read FTexturesPerRow;
@@ -237,7 +238,7 @@ type
    * To set up routines to load images not covered by SDL_Image.  For advanced
    * users only!
    ***************************************************************************}
-   TImgLoadMethod = function(inFile: TStream): PSDL_Surface;
+   TImgLoadMethod = function(inFile: TStream): PSdlSurface;
 
    procedure registerImageLoader(extension: string; loader: TImgLoadMethod);
 
@@ -541,7 +542,7 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-constructor TSdlImage.Create(surface: PSDL_Surface; imagename: string; container: TSdlImages);
+constructor TSdlImage.Create(surface: PSdlSurface; imagename: string; container: TSdlImages);
 begin
    inherited Create;
    FSurface := surface;
@@ -555,7 +556,7 @@ begin
    setup(filename, imagename, container, spriteSize);
 end;
 
-constructor TSdlImage.CreateSprite(surface: PSDL_Surface; imagename: string; container: TSdlImages; spriteSize: TPoint);
+constructor TSdlImage.CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TPoint);
 begin
    inherited Create;
    FSurface := surface;
@@ -583,7 +584,7 @@ end;
 
 destructor TSdlImage.Destroy;
 begin
-   SDL_FreeSurface(FSurface);
+   FSurface.Free;
    inherited Destroy;
 end;
 
@@ -609,7 +610,7 @@ begin
             intFilename := PChar(filename);
             {$ENDIF}
             if dummy = -1 then
-               FSurface := IMG_Load(intFilename)
+               FSurface := PSdlSurface(IMG_Load(intFilename))
             else begin
                loader := TImgLoadMethod(loaders.Objects[dummy]);
                loadStream := TFileStream.Create(filename, fmOpenRead);
@@ -623,11 +624,7 @@ begin
          else begin
             if dummy = -1 then
             begin
-            {$IFDEF UNICODE}
-               FSurface := IMG_LoadTyped_RW(FRw, 0, PAnsiChar(ansiString(filename)));
-            {$ELSE}
-               FSurface := IMG_LoadTyped_RW(FRw, 0, PChar(filename));
-            {$ENDIF}
+               FSurface := PSdlSurface(IMG_LoadTyped_RW(FRw, 0, PAnsiChar(ansiString(filename))));
             end
             else begin
                loader := TImgLoadMethod(loaders.Objects[dummy]);
@@ -640,16 +637,15 @@ begin
             end;
          end;
       end
-      else begin
-         FSurface := SDL_CreateRGBSurface(screenCanvas.surface.flags, spritesize.x, spritesize.y, screenCanvas.surface.format.BitsPerPixel, 0, 0, 0, 0);
-      end;
+      else
+         FSurface := TSdlSurface.Create({screenCanvas.surface.flags, } spritesize.x, spritesize.y, screenCanvas.surface.format.BitsPerPixel, 0, 0, 0, 0);
    end;
 
    if FSurface = nil then
       raise ESdlImageException.Create(string(IMG_GetError));
-   FMustLock := SDL_MustLock(FSurface);
+   FMustLock := FSurface.MustLock;
    if (spriteSize.X = EMPTY.X) and (spriteSize.Y = EMPTY.Y) then
-      self.textureSize := point(FSurface.w, FSurface.h)
+      self.textureSize := point(FSurface.width, FSurface.height)
    else self.textureSize := spriteSize;
    if assigned(container) then
       container.add(self);
@@ -691,28 +687,28 @@ begin
    result := rect(point(x * FTextureSize.X, y * FTextureSize.y), FTextureSize);
 end;
 
-procedure TSdlImage.setSurface(const Value: PSDL_Surface);
+procedure TSdlImage.setSurface(const Value: PSdlSurface);
 begin
-   if textureSize = point(FSurface.w, FSurface.h) then
+   if textureSize = point(FSurface.width, FSurface.height) then
       FTextureSize := EMPTY;
    if (FSurface = Value) or (Value = nil) then
       Exit;
-   SDL_FreeSurface(FSurface);
+   FSurface.Free;
    FSurface := Value;
-   FMustLock := SDL_MustLock(FSurface);
+   FMustLock := FSurface.MustLock;
    if (textureSize.X = EMPTY.X) and (textureSize.Y = EMPTY.Y) then
-      self.textureSize := point(FSurface.w, FSurface.h);
+      self.textureSize := point(FSurface.width, FSurface.height);
 end;
 
 //---------------------------------------------------------------------------
 procedure TSdlImage.SetTextureSize(size: TSgPoint);
 begin
-   if (FSurface.w mod size.X > 0) or (FSurface.h mod size.Y > 0) then
+   if (FSurface.width mod size.X > 0) or (FSurface.height mod size.Y > 0) then
       raise ESdlImageException.Create('Texture size is not evenly divisible into base image size.');
 
    FTextureSize := size;
-   FTexturesPerRow := FSurface.w div size.X;
-   FTextureRows := FSurface.h div size.Y;
+   FTexturesPerRow := FSurface.width div size.X;
+   FTextureRows := FSurface.height div size.Y;
 end;
 {$ENDREGION}
 

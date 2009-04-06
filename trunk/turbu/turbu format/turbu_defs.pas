@@ -22,7 +22,7 @@ uses
    Types, TypInfo, Generics.Collections;
 
 type
-   TScriptEvent = procedure(character, party: TObject) of object;
+   TCharEvent = procedure(character, party: TObject) of object;
    TDamageCalcEvent = function(character, target: TObject; var1, var2, var3, var4: integer; offensive: boolean): integer of object;
    TToHitEvent = function(character, target: TObject; effectiveness: integer; offensive: boolean): boolean of object;
    TCondOnTurnEvent = procedure(character, condition: TObject; var1, var2, var3, var4: integer) of object;

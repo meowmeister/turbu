@@ -20,7 +20,7 @@ unit turbu_script_basis;
 interface
 uses
    sysUtils, db,
-   commons, turbu_classes;
+   commons, turbu_classes, turbu_containers;
 
 type
    EScriptError = class(Exception);

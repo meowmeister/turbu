@@ -48,7 +48,7 @@ begin
    FPath := path;
    FBasePath := path;
    FileMask := '*.*';
-   FileAttr := [ffaAnyFile];
+   FileAttr := [ffaReadOnly, ffaDirectory, ffaArchive];
    s := TStringList.Create;
    FDepth := -1;
 end;

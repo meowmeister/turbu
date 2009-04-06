@@ -79,12 +79,18 @@ end;
 
 procedure TfrmSkillLearning.btnEditClick(Sender: TObject);
 begin
-   frmAlgorithmEditor.funcEdit(sc_skill, nil, RETURN_TYPES[FFunctionType]);
+   frmAlgorithmEditor.funcEdit(sc_skill, dsForeign.DataSet, RETURN_TYPES[FFunctionType]);
 end;
 
 procedure TfrmSkillLearning.btnNewAlgorithmClick(Sender: TObject);
+var
+   bookmark: integer;
 begin
-   frmAlgorithmEditor.funcEdit(sc_skill, nil, RETURN_TYPES[FFunctionType]);
+   bookmark := (dsForeign.DataSet as TClientDataset).SavePoint;
+   dsForeign.DataSet.Append; //create a blank new record and
+   dsForeign.DataSet.Post;   //set it as the current record
+   if not frmAlgorithmEditor.funcEdit(sc_skill, nil, RETURN_TYPES[FFunctionType]) then
+      (dsForeign.DataSet as TClientDataset).SavePoint := bookmark;
 end;
 
 procedure TfrmSkillLearning.FormShow(Sender: TObject);

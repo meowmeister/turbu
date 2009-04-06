@@ -3,6 +3,9 @@
 			<ProjectGuid>{98f9c45d-3814-41dd-b1c4-d4201445334e}</ProjectGuid>
 		</PropertyGroup>
 		<ItemGroup>
+			<Projects Include="..\patcher\patcher.dproj">
+				<Dependencies/>
+			</Projects>
 			<Projects Include="engines\basis\EngineBasis.dproj">
 				<Dependencies/>
 			</Projects>
@@ -28,6 +31,15 @@
 				</BorlandProject>
 			</BorlandProject>
 		</ProjectExtensions>
+		<Target Name="patcher">
+			<MSBuild Projects="..\patcher\patcher.dproj"/>
+		</Target>
+		<Target Name="patcher:Clean">
+			<MSBuild Targets="Clean" Projects="..\patcher\patcher.dproj"/>
+		</Target>
+		<Target Name="patcher:Make">
+			<MSBuild Targets="Make" Projects="..\patcher\patcher.dproj"/>
+		</Target>
 		<Target Name="EngineBasis">
 			<MSBuild Projects="engines\basis\EngineBasis.dproj"/>
 		</Target>
@@ -74,13 +86,13 @@
 			<MSBuild Targets="Make" Projects="test harness\testing.dproj"/>
 		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="EngineBasis;battle_default;mapshow;Turbu;testing"/>
+			<CallTarget Targets="patcher;EngineBasis;battle_default;mapshow;Turbu;testing"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="EngineBasis:Clean;battle_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean"/>
+			<CallTarget Targets="patcher:Clean;EngineBasis:Clean;battle_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="EngineBasis:Make;battle_default:Make;mapshow:Make;Turbu:Make;testing:Make"/>
+			<CallTarget Targets="patcher:Make;EngineBasis:Make;battle_default:Make;mapshow:Make;Turbu:Make;testing:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

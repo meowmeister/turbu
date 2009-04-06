@@ -76,18 +76,19 @@ uses
   frame_commands in '..\editor\frame_commands.pas' {frameHeroCommands: TFrame},
   frame_items in '..\editor\frame_items.pas' {frameItems: TFrame},
   frame_params in '..\editor\frame_params.pas' {frameParams: TFrame},
-  function_header in '..\editor\function_header.pas' {frmFuncHeader},
   generic_algorithm_editor in '..\editor\generic_algorithm_editor.pas' {frmAlgorithmEditor},
   skill_settings in '..\editor\skill_settings.pas' {frmSkillLearning},
-  turbu_databaseCompileHack in '..\turbu format\database\turbu_databaseCompileHack.pas';
+  turbu_databaseCompileHack in '..\turbu format\database\turbu_databaseCompileHack.pas',
+  turbu_containers in '..\turbu format\turbu_containers.pas',
+  turbu_heroes in '..\engines\map engine\turbu_heroes.pas',
+  function_header in '..\editor\function_header.pas' {frmFuncHeader};
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
 
 begin
    ReportMemoryLeaksOnShutdown := true;
-   SDL_putenv('SDL_VIDEODRIVER=dummy');
-   if (SDL_Init(SDL_INIT_VIDEO) <> 0) or (SDL_SetVideoMode(1, 1, 32, 0) = nil) then
+   if (SDL_Init(SDL_INIT_VIDEO) <> 0) then
       raise EParseMessage.create('Unable to initialize graphics converter.');
    Application.Initialize;
    Application.MainFormOnTaskbar := True;
@@ -99,7 +100,5 @@ begin
    Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
    Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
    Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
-   TSdlCanvas.Create(cmHardware, false, rect(100, 100, 640, 480), 32);
    Application.Run;
-   SDL_Quit;
 end.

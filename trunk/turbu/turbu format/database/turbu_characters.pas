@@ -20,28 +20,15 @@ unit turbu_characters;
 interface
 uses
    types, classes, DB, Generics.Collections,
-   turbu_constants, turbu_defs, turbu_classes, turbu_skills;
+   turbu_constants, turbu_defs, turbu_classes, turbu_skills, turbu_containers,
+   turbu_heroes;
 
 type
-   TStatBlock = class;
-
    TExpCalcFunc = function(int1, int2, int3, int4, int5: integer): integer of object;
    TStatCalcFunc = function(a, b, c: smallint; d: shortint): integer of object;
 
    TCommandStyle = (cs_weapon, cs_skill, cs_defend, cs_item, cs_flee, cs_skillgroup, cs_special, cs_script);
    TWeaponStyle = (ws_single, ws_shield, ws_dual, ws_all);
-
-   TPosNegPointer = packed record
-   case byte of
-      0: ({$IFNDEF 64BIT}dummy: integer;{$ENDIF}
-              address: TStatBlock);
-      1: (index: shortint; //must be negative
-             val8: shortint;
-             val16: array[1..3] of smallint);
-      2: (fullvalue: int64); //last three values are for convenience only and
-      3: (bytes: array[1..8] of byte); //not to be used as actual options
-      4: (sBytes: array[1..8] of shortint);
-   end;
 
    TExpCalcRecord = class(TScriptRecord)
    private
@@ -69,37 +56,51 @@ type
       property value: smallint read FValue write FValue;
    end;
 
-   TStatBlock = class(TObject)
+   TStatBlock = class;
+   IStatBlock = interface;
+   TStatSet = class;
+
+   IStatBlock = interface //to allow reference counting done right
+      procedure setSize(const value: word);
+      function getSize: word;
+      function getBlock: TIntArray;
+      procedure setBlock(const Value: TIntArray);
+      function getIndex: integer;
+
+      property size: word read getSize write setSize;
+      property block: TIntArray read getBlock write setBlock;
+      property index: integer read getIndex;
+   end;
+
+   TStatBlock = class(TInterfacedObject, IStatBlock)
    private
-      FRefcount: word;
-      FSize: word;
       FBlock: TIntArray;
+      FParent: TStatSet;
 
       procedure setSize(const value: word);
+      function getSize: word;
+      function getBlock: TIntArray;
+      procedure setBlock(const Value: TIntArray);
+      function getIndex: integer;
    public
-      constructor Create(size: word);
-      destructor Destroy; override;
+      constructor Create(size: word; parent: TStatSet);
       function compare(other: TStatBlock): boolean;
 
-      property size: word read FSize write setSize;
-      property count: word read FRefCount;
-      property block: TIntArray read FBlock write FBlock;
+      property size: word read getSize write setSize;
+      property block: TIntArray read getBlock write setBlock;
+      property index: integer read getIndex;
    end;
 
    TStatSet = class(TRpgDatafile)
    private
       FBlocks: array of TStatBlock;
       function getSize: integer;
-      function inArray(index: TStatBlock): boolean;
    public
       constructor Load(savefile: TStream);
-      destructor Destroy; override;
       procedure save(savefile: TStream); override;
 
       function add(var newBlock: TStatBlock): integer;
       function indexOf(value: TStatBlock): smallint;
-      procedure incCount(index: TStatBlock);
-      procedure decCount(index: TStatBlock);
 
       property size: integer read getSize;
    end;
@@ -111,7 +112,7 @@ type
       FPortrait: integer;
       FCommandSet: packed array[1..COMMAND_COUNT] of smallint;
       FCommands: byte;
-      FStatBlocks: array[1..STAT_COUNT] of TPosNegPointer;
+      FStatBlocks: array[1..STAT_COUNT] of IStatBlock;
       FExpCalc: string;
       FExpVars: array[1..4] of integer;
       FSkillset: TSkillsetList;
@@ -122,11 +123,12 @@ type
       FStaticEq: boolean;
       FStrongDefense: boolean;
       FUnarmedAnim: integer;
+      FOnJoin: TPartyEvent;
 
       function getCommand(x: byte): smallint; inline;
       procedure setCommand(x: byte; const Value: smallint); inline;
-      function getStatBlock(x: byte): TPosNegPointer; inline;
-      procedure setStatBlock(x: byte; const Value: TPosNegPointer); inline;
+      function getStatBlock(x: byte): IStatBlock; inline;
+      procedure setStatBlock(x: byte; const Value: IStatBlock); inline;
       function getExpVar(x: byte): integer;
       procedure setExpVar(x: byte; const Value: integer);
       function getEq(x: byte): smallint;
@@ -144,23 +146,26 @@ type
       procedure addResist(const value: TPoint); inline;
       procedure addCondition(const value: TPoint); inline;
 
+      property command[x: byte]: smallint read getCommand write setCommand;
+      property statblock[x: byte]: IStatBlock read getStatBlock write setStatBlock;
+      property expVars[x: byte]: integer read getExpVar write setExpVar;
+      property eq[x: byte]: smallint read getEq write setEq;
+      property skillset: TSkillsetList read FSkillset write FSkillset;
+   published
       property clsName: string read FName write FName;
       property mapSprite: integer read FMapSprite write FMapSprite;
       property battleSprite: integer read FBattleSprite write FBattleSprite;
       property portrait: integer read FPortrait write FPortrait;
-      property command[x: byte]: smallint read getCommand write setCommand;
       property commands: byte read FCommands write FCommands;
-      property statblock[x: byte]: TPosNegPointer read getStatBlock write setStatBlock;
       property expFunc: string read FExpCalc write FExpCalc;
-      property expVars[x: byte]: integer read getExpVar write setExpVar;
-      property skillset: TSkillsetList read FSkillset write FSkillset;
       property resist: TPointArray read FResists write FResists;
       property condition: TPointArray read FConditions write FConditions;
-      property eq[x: byte]: smallint read getEq write setEq;
       property dualWield: TWeaponStyle read FDualWield write FDualWield;
       property staticEq: boolean read FStaticEq write FStaticEq;
       property strongDef: boolean read FStrongDefense write FStrongDefense;
       property unarmedAnim: integer read FUnarmedAnim write FUnarmedAnim;
+
+      property OnJoin: TPartyEvent read FOnJoin write FOnJoin;
    end;
 
    THeroTemplate = class(TClassTemplate)
@@ -198,30 +203,39 @@ uses
    sysUtils,
    turbu_database, design_script_engine;
 
-type
-   EStatBlockError = class(Exception);
-
 resourcestring
    NOT_IN_BLOCK = 'Stat block not found in stat set!';
 
 { TStatBlock }
 
-constructor TStatBlock.Create(size: word);
+constructor TStatBlock.Create(size: word; parent: TStatSet);
 begin
    setLength(FBlock, size);
-   FSize := size;
-   FRefcount := 1;
+   FParent := parent;
 end;
 
-destructor TStatBlock.Destroy;
+function TStatBlock.getBlock: TIntArray;
 begin
-   assert(FRefcount = 0);
-   Finalize(FBlock);
+   result := FBlock;
+end;
+
+function TStatBlock.getIndex: integer;
+begin
+   result := FParent.indexOf(self);
+end;
+
+function TStatBlock.getSize: word;
+begin
+   result := length(FBlock);
+end;
+
+procedure TStatBlock.setBlock(const Value: TIntArray);
+begin
+   FBlock := Value;
 end;
 
 procedure TStatBlock.setSize(const value: word);
 begin
-   FSize := Value;
    setLength(FBlock, value);
 end;
 
@@ -229,16 +243,16 @@ function TStatBlock.compare(other: TStatBlock): boolean;
 var
    i: integer;
 begin
-   if FSize <> other.FSize then
+   if self.size <> other.size then
    begin
       result := false;
       Exit;
    end;
 
    i := 0;
-   while (i < FSize) and (FBlock[i] = other.FBlock[i]) do
+   while (i < size) and (FBlock[i] = other.FBlock[i]) do
       inc(i);
-   result := i = FSize;
+   result := i = size;
 end;
 
 { TStatSet }
@@ -255,22 +269,11 @@ begin
    for I := 0 to len - 1 do
    begin
       lassert(savefile.readWord = i);
-      newblock := TStatBlock.Create(saveFile.readWord);
-      newblock.FRefcount := 0;
-      savefile.ReadBuffer(newblock.FBlock[0], newblock.FSize * 4);
+      newblock := TStatBlock.Create(saveFile.readWord, self);
+      savefile.ReadBuffer(newblock.FBlock[0], newblock.Size * 4);
       lassert(self.add(newblock) = i);
    end;
    lassert(savefile.readChar = 'S');
-end;
-
-destructor TStatSet.Destroy;
-var
-   i: integer;
-begin
-   for I := 0 to high(FBlocks) do
-      FBlocks[i].Free;
-   finalize(FBlocks);
-   inherited Destroy;
 end;
 
 procedure TStatSet.save(savefile: TStream);
@@ -284,8 +287,8 @@ begin
    for I := 0 to len - 1 do
    begin
       savefile.writeWord(i);
-      savefile.writeWord(FBlocks[i].FSize);
-      savefile.WriteBuffer(FBlocks[i].FBlock[0], FBlocks[i].FSize * 4);
+      savefile.writeWord(FBlocks[i].size);
+      savefile.WriteBuffer(FBlocks[i].FBlock[0], FBlocks[i].size * 4);
    end;
    savefile.writeChar('S');
 end;
@@ -303,10 +306,8 @@ begin
       FBlocks[high(FBlocks)] := newblock;
    end
    else begin
-      dec(newBlock.FRefcount);
       newBlock.Free;
       newBlock := FBlocks[i];
-      inc(FBlocks[i].FRefcount);
    end;
    result := i;
 end;
@@ -321,31 +322,6 @@ end;
 function TStatSet.getSize: integer;
 begin
    result := length(FBlocks);
-end;
-
-function TStatSet.inArray(index: TStatBlock): boolean;
-var
-   i: integer;
-begin
-   i := 0;
-   while (i <= high(FBlocks)) and (FBlocks[i] <> index) do
-      inc(i);
-   result := i <= high(FBlocks);
-end;
-
-procedure TStatSet.incCount(index: TStatBlock);
-begin
-   if not inArray(index) then
-      raise EStatBlockError.Create(NOT_IN_BLOCK);
-   inc(index.FRefcount);
-end;
-
-procedure TStatSet.decCount(index: TStatBlock);
-begin
-   if not inArray(index) then
-      raise EStatBlockError.Create(NOT_IN_BLOCK);
-   assert(index.FRefcount > 0);
-   dec(index.FRefcount);
 end;
 
 { TBattleCommand }
@@ -399,12 +375,13 @@ begin
    lassert(savefile.readByte = STAT_COUNT);
    for I := 1 to STAT_COUNT do
    begin
-      savefile.ReadBuffer(FStatBlocks[i].fullvalue, sizeof(int64));
+      FStatBlocks[i] := GStatSet.FBlocks[savefile.readInt];
+{      savefile.ReadBuffer(FStatBlocks[i].fullvalue, sizeof(int64));
       if FStatBlocks[i].index = 0 then
       begin
          FStatBlocks[i].address := GStatSet.FBlocks[integer(FStatBlocks[i].val16[3])];
          inc(FStatBlocks[i].address.FRefcount);
-      end;
+      end;}
    end;
    lassert(savefile.readChar = 'p');
    FExpCalc := savefile.readString;
@@ -440,15 +417,7 @@ begin
    savefile.writeByte(FCommands);
    savefile.writeByte(STAT_COUNT);
    for I := 1 to STAT_COUNT do
-   begin
-      if FStatBlocks[i].index < 0 then
-         savefile.WriteBuffer(FStatBlocks[i].fullvalue, sizeof(int64))
-      else begin
-         savefile.writeInt(0);
-         savefile.writeWord(0);
-         savefile.writeWord(GStatSet.indexOf(FStatBlocks[i].address));
-      end;
-   end;
+      savefile.WriteInt(FStatBlocks[i].index);
    savefile.writeChar('p');
    savefile.writeString(FExpCalc);
    savefile.WriteBuffer(FExpVars[1], 16);
@@ -472,12 +441,7 @@ begin
 end;
 
 destructor TClassTemplate.Destroy;
-var
-   i: integer;
 begin
-   for i := 1 to STAT_COUNT do
-      if (FStatBlocks[i].index >= 0) and (FStatBlocks[i].fullvalue <> 0) then
-         GStatSet.decCount(FStatBlocks[i].address);
    FSkillset.Free;
    inherited Destroy;
 end;
@@ -499,7 +463,7 @@ begin
    for i := 1 to high(FCommandSet) do
       (db.FieldByName('command') as TArrayField)[i - 1] := FCommandSet[i];
    for i := 1 to high(FStatBlocks) do
-      (db.FieldByName('statblock') as TArrayField).fields[i - 1].Value := FStatBlocks[i].fullvalue;
+      TLargeintField((db.FieldByName('statblock') as TArrayField).fields[i - 1]).AsLargeInt := nativeInt(pointer(FStatBlocks[i]));
    db.FieldByName('expFunc').AsString := FExpCalc;
    for i := 1 to 4 do
       (db.FieldByName('expVars') as TArrayField)[i - 1] := FExpVars[i];
@@ -577,7 +541,7 @@ begin
    result := FExpVars[x];
 end;
 
-function TClassTemplate.getStatBlock(x: byte): TPosNegPointer;
+function TClassTemplate.getStatBlock(x: byte): IStatBlock;
 begin
    result := FStatBlocks[x];
 end;
@@ -597,7 +561,7 @@ begin
    FExpVars[x] := value;
 end;
 
-procedure TClassTemplate.setStatBlock(x: byte; const Value: TPosNegPointer);
+procedure TClassTemplate.setStatBlock(x: byte; const Value: IStatBlock);
 begin
    FStatBlocks[x] := value;
 end;

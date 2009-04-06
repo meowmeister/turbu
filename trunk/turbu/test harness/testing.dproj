@@ -3,7 +3,7 @@
 			<ProjectGuid>{920169D8-3955-472E-B306-74E825F6E932}</ProjectGuid>
 			<ProjectVersion>12.0</ProjectVersion>
 			<MainSource>testing.dpr</MainSource>
-			<Config Condition="'$(Config)'==''">Memleak Report</Config>
+			<Config Condition="'$(Config)'==''">Debug</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -20,12 +20,18 @@
 			<Cfg_2>true</Cfg_2>
 			<Base>true</Base>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='External debug' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Cfg_2</CfgParent>
+			<Cfg_2>true</Cfg_2>
+			<Base>true</Base>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_ExeOutput>..\bin</DCC_ExeOutput>
 			<DCC_DcuOutput>..\dcus</DCC_DcuOutput>
 			<DCC_DcpOutput>..\dcus</DCC_DcpOutput>
 			<DCC_UsePackage>vcl;rtl;vclx;vclactnband;dbrtl;vcldb;vcldbx;bdertl;dsnap;dsnapcon;TeeUI;TeeDB;Tee;adortl;vclib;ibxpress;IndyCore;IndySystem;IndyProtocols;xmlrtl;inet;intrawebdb_100_120;Intraweb_100_120;VclSmp;vclie;websnap;webdsnap;inetdbbde;inetdbxpress;soaprtl;DbxCommonDriver;DbxClientDriver;DBXInterBaseDriver;DBXMySQLDriver;dbexpress;dbxcds;Jcl;JclVcl;JvCoreD12R;JvSystemD12R;JvStdCtrlsD12R;JvAppFrmD12R;JvBandsD12R;JvDBD12R;JvDlgsD12R;JvBDED12R;JvCmpD12R;JvCryptD12R;JvCtrlsD12R;JvCustomD12R;JvDockingD12R;JvEDID12R;JvGlobusD12R;JvHMID12R;JvInterpreterD12R;JvJansD12R;JvManagedThreadsD12R;JvMMD12R;JvNetD12R;JvPageCompsD12R;JvPluginD12R;JvPrintPreviewD12R;JvRuntimeDesignD12R;JvTimeFrameworkD12R;JvValidatorsD12R;JvWizardD12R;JvXPCtrlsD12R;turbu_components;vclAbsDBd12</DCC_UsePackage>
-			<DCC_Define>EDITOR;PS_USESSUPPORT;$(DCC_Define)</DCC_Define>
+			<DCC_Define>EDITOR;PS_USESSUPPORT;SDL_13;$(DCC_Define)</DCC_Define>
 			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\turbu\turbu format\database;..\..\turbu\editor;..\..\classes\sdl custom;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DependencyCheckOutputName>..\bin\testing.exe</DCC_DependencyCheckOutputName>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
@@ -48,6 +54,10 @@
 		<PropertyGroup Condition="'$(Cfg_3)'!=''">
 			<DCC_Define>FullDebugMode;LogMemoryLeakDetailToFile;$(DCC_Define)</DCC_Define>
 			<DCC_MapFile>3</DCC_MapFile>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_RemoteDebug>true</DCC_RemoteDebug>
+			<DCC_Inlining>off</DCC_Inlining>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="testing.dpr">
@@ -146,9 +156,6 @@
 				<Form>frameParams</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
-			<DCCReference Include="..\editor\function_header.pas">
-				<Form>frmFuncHeader</Form>
-			</DCCReference>
 			<DCCReference Include="..\editor\generic_algorithm_editor.pas">
 				<Form>frmAlgorithmEditor</Form>
 			</DCCReference>
@@ -156,16 +163,17 @@
 				<Form>frmSkillLearning</Form>
 			</DCCReference>
 			<DCCReference Include="..\turbu format\database\turbu_databaseCompileHack.pas"/>
-			<RcCompile Include="..\turbures.rc">
-				<Form>turbures.res</Form>
-			</RcCompile>
-			<None Include="..\mapview\scripts\battle_algorithms"/>
-			<None Include="..\mapview\scripts\menuscripts"/>
-			<None Include="..\mapview\scripts\plugins"/>
-			<None Include="..\mapview\scripts\dt_algorithms"/>
-			<None Include="..\mapview\scripts\skill_algorithms"/>
+			<DCCReference Include="..\turbu format\turbu_containers.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
+			<DCCReference Include="..\editor\function_header.pas">
+				<Form>frmFuncHeader</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="External debug">
+				<Key>Cfg_1</Key>
+				<CfgParent>Cfg_2</CfgParent>
 			</BuildConfiguration>
 			<BuildConfiguration Include="Memleak Report">
 				<Key>Cfg_3</Key>
@@ -215,10 +223,8 @@
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>
-						<Excluded_Packages Name="C:\Documents and Settings\Owner\My Documents\RAD Studio\components\Dcu\D11\PascalScript_Core_D11.bpl">RemObjects Pascal Script - Core Package</Excluded_Packages>
 						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k120.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
 						<Excluded_Packages Name="$(BDS)\bin\dclofficexp120.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-						<Excluded_Packages Name="C:\Documents and Settings\Owner\My Documents\RAD Studio\components\PascalScript\Pascal Script\Dcu\D12\PascalScript_Core_D12.bpl">File C:\Documents and Settings\Owner\My Documents\RAD Studio\components\PascalScript\Pascal Script\Dcu\D12\PascalScript_Core_D12.bpl not found</Excluded_Packages>
 					</Excluded_Packages>
 					<Source>
 						<Source Name="MainSource">testing.dpr</Source>
