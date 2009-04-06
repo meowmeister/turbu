@@ -52,7 +52,6 @@ uses
   rm2_turbu_resists in '..\turbu format\converters\rm2_turbu_resists.pas',
   turbu_classes in '..\turbu format\database\turbu_classes.pas',
   discInterface in '..\discInterface.pas',
-  function_header in 'function_header.pas' {frmFuncHeader},
   turbu_vartypes in '..\turbu format\turbu_vartypes.pas',
   frame_params in 'frame_params.pas' {frameParams: TFrame},
   dm_database in 'dm_database.pas' {dmDatabase: TDataModulet},
@@ -73,7 +72,8 @@ uses
   turbu_plugin_interface in '..\turbu format\plugins\turbu_plugin_interface.pas',
   Generics.Collections in '..\..\vclpatch\Generics.Collections.pas',
   DB in '..\..\vclpatch\DB.pas',
-  findfile in '..\..\classes\findfile\findfile.pas';
+  findfile in '..\..\classes\findfile\findfile.pas',
+  turbu_heroes in '..\engines\map engine\turbu_heroes.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -90,7 +90,6 @@ begin
   Application.CreateForm(TfrmDatabase, frmDatabase);
   Application.CreateForm(TfrmRmConverter, frmRmConverter);
   Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
-  Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
   Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
   Application.CreateForm(TdmDatabase, dmDatabase);
   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
@@ -101,5 +100,4 @@ begin
       raise EParseMessage.create('Unable to initialize graphics converter.');}
    TSdlCanvas.Create(cmHardware, false, rect(100, 100, 640, 480), 32);
    Application.Run;
-   SDL_Quit;
 end.

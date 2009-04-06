@@ -20,7 +20,7 @@ unit turbu_skills;
 interface
 uses
    types, classes, DB,
-   turbu_constants, turbu_defs, turbu_classes, turbu_sounds;
+   turbu_constants, turbu_defs, turbu_classes, turbu_sounds, turbu_containers;
 
 type
    TSkillGainDisplayFunc = function(one, two, three, four: integer): string of object;

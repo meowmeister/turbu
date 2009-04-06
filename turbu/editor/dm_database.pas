@@ -510,6 +510,14 @@ type
       charClasses_skillsetnum2: TIntegerField;
       charClasses_skillsetnum3: TIntegerField;
       charClasses_skillsetAlgName: TStringField;
+    charClasses_Events: TClientDataSet;
+    StringField6: TStringField;
+    StringField7: TStringField;
+    IntegerField5: TIntegerField;
+    IntegerField8: TIntegerField;
+    IntegerField9: TIntegerField;
+    IntegerField11: TIntegerField;
+    StringField8: TStringField;
       procedure DataModuleCreate(Sender: TObject);
       procedure restoreClone(DataSet: TDataSet);
       procedure charClasses_skillsetCalcFields(DataSet: TDataSet);

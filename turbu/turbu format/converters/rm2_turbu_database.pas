@@ -46,7 +46,7 @@ uses
    turbu_constants, turbu_sdl_image, turbu_tbi_lib,
    hero_data, locate_files,
    archiveInterface, formats, commons, turbu_battle_engine, turbu_engines, logs,
-   SDL_ImageManager, SDL;
+   SDL_ImageManager, SDL, SDL_13;
 
 var
    nameTable: TNameTable;
@@ -365,25 +365,25 @@ end;
 
 function convertImage(image: TRpgSdlImage; id: integer; frame, sprite, sheet: TPoint; style: string): boolean;
 var
-   blitSurface: PSdl_Surface;
+   blitSurface: PSdlSurface;
    framesPerSprite: integer;
    startingPoint: TPoint;
    i: integer;
    srcrect, dstrect: TSDL_Rect;
-   convertedImageIn, convertedImageOut: TMemoryStream;
-   compressor: TCompressionStream;
+   convertedImage: TStream;
    writename: string;
 begin
    framesPerSprite := SPRITE.X * SPRITE.Y;
-   blitSurface := SDL_CreateRGBSurface(IMAGE_FORMAT, FRAME.X, FRAME.Y * framesPerSprite, 8, 0, 0, 0, 0);
+   blitSurface := TSdlSurface.Create(FRAME.X, FRAME.Y * framesPerSprite, 8, 0, 0, 0, 0);
    try
-      if (SDL_SetColors(blitSurface, @image.surface.format.palette.colors[0], 0, image.surface.format.palette.ncolors) <> 1) or
-        (SDL_SetColorKey(blitSurface, SDL_SRCCOLORKEY or SDL_RLEACCEL, image.surface^.format^.colorkey) <> 0) then
+      if not blitSurface.SetPalette(image.surface.format.palette.colors, 0, image.surface.format.palette.count) then
          raise ESdlImageException.Create('Unable to convert sprite ' + image.name + ' due to colorkey failure!');
+      blitSurface.ColorKey := image.surface.colorkey;
+
       if id = -1 then
          startingPoint := point(0, 0)
       else startingPoint := point((id mod SHEET.X) * FRAME.X * SPRITE.X, (id div SHEET.X) * FRAME.Y * SPRITE.Y);
-      SDL_FillRect(blitSurface, nil, blitSurface.format^.colorkey);
+      blitSurface.Fill(nil, blitSurface.colorkey);
       for i := 0 to framesPerSprite - 1 do
       begin
          srcrect := rect(point(FRAME.X * (i mod SPRITE.X), FRAME.Y * (i div SPRITE.X)), FRAME);
@@ -392,27 +392,19 @@ begin
          dstrect := rect(point(0, i * FRAME.Y), FRAME);
          SDL_BlitSurface(image.surface, @srcRect, blitSurface, @dstRect);
       end;
-      convertedImageIn := saveToTBI(blitSurface);
-      convertedImageIn.Seek(0, soFromBeginning);
-      convertedImageOut := TMemoryStream.Create;
-      compressor := TCompressionStream.Create(clMax, convertedImageOut);
+      convertedImage := saveToTBI(blitSurface);
+      convertedImage.Seek(0, soFromBeginning);
       try
-         i := convertedImageIn.size;
-         compressor.Write(i, 4);
-         assert(compressor.Write(convertedImageIn.memory^, convertedImageIn.Size) = convertedImageIn.Size);
-         freeAndNil(compressor);
          writename := style + '\' + image.name;
          if id <> -1 then
             writename := writename + ' ' + intToStr(id);
          writename := writename + '.tbi';
-         archiveInterface.GArchives[IMAGE_ARCHIVE].writeFile(writename, convertedImageOut);
+         archiveInterface.GArchives[IMAGE_ARCHIVE].writeFile(writename, convertedImage);
       finally
-         compressor.free;
-         convertedImageIn.Free;
-         convertedImageOut.Free;
+         convertedImage.Free;
       end;
    finally
-      SDL_FreeSurface(blitSurface);
+      blitSurface.Free;
    end;
    result := true;
 end;
@@ -486,7 +478,7 @@ begin
       Exit;
    end;
    image := TRpgSdlImage.Create(name, oname, nil);
-   sprite := point(5, image.surface.w div 96);
+   sprite := point(5, image.surface.width div 96);
    try
       result := convertImage(image, -1, FRAME, sprite, SHEET, 'animation');
    finally

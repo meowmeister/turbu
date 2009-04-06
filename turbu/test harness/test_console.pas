@@ -130,7 +130,7 @@ begin
       if getString(database) <> 'LcfDataBase' then
          raise EParseMessage.create('RPG_RT.LDB is corrupt!');
       GProjectFormat := scanRmFormat(database);
-      assert(GProjectFormat = pf_2k);
+      assert(GProjectFormat in [pf_2k, pf_2k3]);
       FLdb := TLcfDataBase.Create(database);
       //end of format and database check
 

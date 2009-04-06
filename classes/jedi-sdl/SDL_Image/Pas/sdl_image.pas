@@ -285,6 +285,10 @@ function IMG_LoadPNG_RW(src: PSDL_RWops): PSDL_Surface;
 cdecl; external {$IFDEF __GPC__}name 'IMG_LoadPNG_RW'{$ELSE} SDL_ImageLibName{$ENDIF __GPC__};
 {$EXTERNALSYM IMG_LoadPNG_RW}
 
+function IMG_SavePNG_RW(surface: PSDL_Surface; src: PSDL_RWops): integer;
+cdecl; external {$IFDEF __GPC__}name 'IMG_SavePNG_RW'{$ELSE} SDL_ImageLibName{$ENDIF __GPC__};
+{$EXTERNALSYM IMG_LoadPNG_RW}
+
 function IMG_LoadTGA_RW(src: PSDL_RWops): PSDL_Surface;
 cdecl; external {$IFDEF __GPC__}name 'IMG_LoadTGA_RW'{$ELSE} SDL_ImageLibName{$ENDIF __GPC__};
 {$EXTERNALSYM IMG_LoadTGA_RW}

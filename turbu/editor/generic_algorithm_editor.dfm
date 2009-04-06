@@ -63,19 +63,6 @@ object frmAlgorithmEditor: TfrmAlgorithmEditor
     DesignSize = (
       514
       496)
-    object Label1: TLabel
-      Left = 25
-      Top = 90
-      Width = 343
-      Height = 24
-      Caption = 'THIS UNIT IS CURRENTLY BROKEN'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -19
-      Font.Name = 'MS Sans Serif'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
     object grpFuncNames: TGroupBox
       Left = 9
       Top = 14

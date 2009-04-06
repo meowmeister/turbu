@@ -246,12 +246,6 @@ object frameClass: TframeClass
           'Battle Sprite')
         TabIndex = 0
         OnChange = tabGraphicsChange
-        object imgMapSprite: TImage
-          Left = 8
-          Top = 24
-          Width = 96
-          Height = 96
-        end
         object btnSetGfx: TButton
           Left = 16
           Top = 126
@@ -259,6 +253,15 @@ object frameClass: TframeClass
           Height = 25
           Caption = '&Set'
           TabOrder = 0
+          OnClick = btnSetGfxClick
+        end
+        object imgMapSprite: TSdlFrame
+          Left = 8
+          Top = 24
+          Width = 96
+          Height = 96
+          Framerate = 16
+          Active = False
         end
       end
     end
@@ -393,6 +396,10 @@ object frameClass: TframeClass
         object tshRepertoire: TTabSheet
           Caption = 'Skills'
           ImageIndex = 2
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object lstSkills: TRpgListGrid
             Left = 4
             Top = 4
@@ -447,19 +454,6 @@ object frameClass: TframeClass
             Caption = 'Script'
             Width = 73
           end>
-        Items.ItemData = {
-          03760100000900000000000000FFFFFFFFFFFFFFFF00000000FFFFFFFF000000
-          00084F006E0043007200650061007400650000000000FFFFFFFFFFFFFFFF0000
-          0000FFFFFFFF00000000064F006E004A006F0069006E0000000000FFFFFFFFFF
-          FFFFFF00000000FFFFFFFF00000000074F006E004C0065006100760065000000
-          0000FFFFFFFFFFFFFFFF00000000FFFFFFFF00000000054F006E004400690065
-          0000000000FFFFFFFFFFFFFFFF00000000FFFFFFFF00000000084F006E005200
-          6500760069007600650000000000FFFFFFFFFFFFFFFF00000000FFFFFFFF0000
-          0000094F006E004700610069006E0045007800700000000000FFFFFFFFFFFFFF
-          FF00000000FFFFFFFF000000000B4F006E004700610069006E004C0065007600
-          65006C0000000000FFFFFFFFFFFFFFFF00000000FFFFFFFF00000000074F006E
-          004500710075006900700000000000FFFFFFFFFFFFFFFF00000000FFFFFFFF00
-          000000094F006E0055006E0065007100750069007000}
         TabOrder = 0
         ViewStyle = vsReport
         OnDblClick = lstScriptsDblClick
@@ -542,6 +536,10 @@ object frameClass: TframeClass
         object tshConditions: TTabSheet
           Caption = 'Conditions'
           ImageIndex = 1
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object RpgListGrid1: TRpgListGrid
             Left = 3
             Top = 3
@@ -651,5 +649,35 @@ object frameClass: TframeClass
     DataSet = dmDatabase.charClasses_Condition
     Left = 304
     Top = 456
+  end
+  object dsEventName: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'baseMethod'
+        DataType = ftInteger
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 376
+    Top = 456
+    Data = {
+      2D0000009619E0BD0100000018000000010000000000030000002D000A626173
+      654D6574686F6404000100000000000000}
+    object dsEventNamebaseMethod: TIntegerField
+      FieldName = 'baseMethod'
+    end
+    object dsEventNamemethodName: TStringField
+      FieldKind = fkLookup
+      FieldName = 'methodName'
+      LookupDataSet = dmDatabase.charClasses_Events
+      LookupKeyFields = 'baseMethod'
+      LookupResultField = 'name'
+      KeyFields = 'baseMethod'
+      Size = 32
+      Lookup = True
+    end
   end
 end

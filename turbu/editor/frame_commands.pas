@@ -21,8 +21,8 @@ interface
 
 uses
    Windows, SysUtils, Classes, Controls, StdCtrls, Forms, JvSpin, Mask, JvExMask,
-   DB,
-   dm_database, turbu_classes, DBCtrls;
+   DB, DBCtrls,
+   dm_database, turbu_classes, turbu_containers;
 
 type
    TframeHeroCommands = class(TFrame)

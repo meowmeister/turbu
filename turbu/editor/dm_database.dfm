@@ -2,7 +2,7 @@ object dmDatabase: TdmDatabase
   OldCreateOrder = False
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
-  Height = 553
+  Height = 600
   Width = 882
   object charClasses: TClientDataSet
     Aggregates = <>
@@ -533,6 +533,7 @@ object dmDatabase: TdmDatabase
     end
   end
   object charClasses_Resist: TClientDataSet
+    Active = True
     Aggregates = <>
     FieldDefs = <
       item
@@ -562,6 +563,10 @@ object dmDatabase: TdmDatabase
     StoreDefs = True
     Left = 8
     Top = 104
+    Data = {
+      530000009619E0BD0100000018000000030000000000030000005300066D6173
+      7465720400010000000000017804000100000000000179040001000000000001
+      000D44454641554C545F4F524445520200820000000000}
     object charClasses_Resistmaster: TIntegerField
       FieldName = 'master'
     end
@@ -3313,15 +3318,68 @@ object dmDatabase: TdmDatabase
     end
   end
   object items_junk: TClientDataSet
+    Active = True
     Aggregates = <>
     Filter = 'itemType = 0'
-    FieldDefs = <>
+    FieldDefs = <
+      item
+        Name = 'id'
+        DataType = ftInteger
+      end
+      item
+        Name = 'name'
+        DataType = ftString
+        Size = 32
+      end
+      item
+        Name = 'modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'desc'
+        DataType = ftString
+        Size = 50
+      end
+      item
+        Name = 'cost'
+        DataType = ftInteger
+      end
+      item
+        Name = 'tag'
+        ChildDefs = <
+          item
+            Name = 'tag[0]'
+            DataType = ftInteger
+          end>
+        DataType = ftArray
+        Size = 10
+      end
+      item
+        Name = 'tag[1]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'tag[2]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'tag[3]'
+        DataType = ftInteger
+      end>
     IndexDefs = <>
     Params = <>
     StoreDefs = True
     AfterOpen = restoreClone
     Left = 184
     Top = 60
+    Data = {
+      BD0000009619E0BD02000000180000000A000000000003000000BD0002696404
+      00010000000000046E616D650100490000000100055749445448020002002000
+      086D6F6469666965640200030000000000046465736301004900000001000557
+      4944544802000200320004636F73740400010000000000037461670A000D0300
+      000000067461675B305D0400010000000000067461675B315D04000100000000
+      00067461675B325D0400010000000000067461675B335D040001000000000000
+      00}
     object items_junkid: TIntegerField
       FieldName = 'id'
     end
@@ -4787,6 +4845,81 @@ object dmDatabase: TdmDatabase
       Lookup = True
     end
     object expCalcRecordsunit: TStringField
+      FieldKind = fkLookup
+      FieldName = 'unit'
+      LookupDataSet = scriptRange
+      LookupKeyFields = 'name'
+      LookupResultField = 'unit'
+      KeyFields = 'name'
+      Size = 32
+      Lookup = True
+    end
+  end
+  object charClasses_Events: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'name'
+        DataType = ftString
+        Size = 32
+      end
+      item
+        Name = 'designName'
+        DataType = ftString
+        Size = 32
+      end
+      item
+        Name = 'address'
+        DataType = ftInteger
+      end
+      item
+        Name = 'baseMethod'
+        DataType = ftInteger
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 8
+    Top = 552
+    Data = {
+      750000009619E0BD0100000018000000040000000000030000007500046E616D
+      6501004900000001000557494454480200020020000A64657369676E4E616D65
+      0100490000000100055749445448020002002000076164647265737304000100
+      000000000A626173654D6574686F6404000100000000000000}
+    object StringField6: TStringField
+      FieldName = 'name'
+      Size = 32
+    end
+    object StringField7: TStringField
+      FieldName = 'designName'
+      Size = 32
+    end
+    object IntegerField5: TIntegerField
+      FieldName = 'address'
+    end
+    object IntegerField8: TIntegerField
+      FieldName = 'baseMethod'
+    end
+    object IntegerField9: TIntegerField
+      FieldKind = fkLookup
+      FieldName = 'start'
+      LookupDataSet = scriptRange
+      LookupKeyFields = 'name'
+      LookupResultField = 'start'
+      KeyFields = 'name'
+      Lookup = True
+    end
+    object IntegerField11: TIntegerField
+      FieldKind = fkLookup
+      FieldName = 'end'
+      LookupDataSet = scriptRange
+      LookupKeyFields = 'name'
+      LookupResultField = 'end'
+      KeyFields = 'name'
+      Lookup = True
+    end
+    object StringField8: TStringField
       FieldKind = fkLookup
       FieldName = 'unit'
       LookupDataSet = scriptRange

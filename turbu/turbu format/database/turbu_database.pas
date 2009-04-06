@@ -24,7 +24,7 @@ uses
    dm_database,
    turbu_characters, turbu_items, turbu_db_var_arrays, turbu_skills, turbu_classes,
    turbu_battle_engine, turbu_sprites, turbu_animations, turbu_resists,
-   turbu_unit_dictionary;
+   turbu_unit_dictionary, turbu_containers;
 
 type
    TCharClassArray = array of TClassTemplate;
@@ -84,7 +84,6 @@ type
       procedure setCommandCount(const Value: integer);
       function getHeroCount: integer;
       procedure setHeroCount(const Value: integer);
-      function getSkillFunc(x: integer): TSkillGainRecord;
 
       function countItems: cardinal;
       procedure prepareBlanks;
@@ -164,7 +163,7 @@ uses
    strtok;
 
 const
-   DBVERSION = 16;
+   DBVERSION = 17;
 
 { TRpgDatabase }
 
@@ -963,11 +962,6 @@ end;
 function TRpgDatabase.getCommandCount: integer;
 begin
    result := FCommand.High;
-end;
-
-function TRpgDatabase.getSkillFunc(x: integer): TSkillGainRecord;
-begin
-   result := FSkillFuncs[x];
 end;
 
 procedure TRpgDatabase.addAnim;

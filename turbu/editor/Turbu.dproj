@@ -167,9 +167,6 @@
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_resists.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_classes.pas"/>
 			<DCCReference Include="..\discInterface.pas"/>
-			<DCCReference Include="function_header.pas">
-				<Form>frmFuncHeader</Form>
-			</DCCReference>
 			<DCCReference Include="..\turbu format\turbu_vartypes.pas"/>
 			<DCCReference Include="frame_params.pas">
 				<Form>frameParams</Form>
@@ -202,6 +199,7 @@
 			<DCCReference Include="..\..\vclpatch\Generics.Collections.pas"/>
 			<DCCReference Include="..\..\vclpatch\DB.pas"/>
 			<DCCReference Include="..\..\classes\findfile\findfile.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

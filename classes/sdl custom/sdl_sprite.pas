@@ -29,7 +29,7 @@ type
    TParentSprite = class;
    TSprite = class;
 
-   TSpriteList = TObjectList<TSprite>;
+   TSpriteList = class(TObjectList<TSprite>);
 
    {***************************************************************************
    * Custom list optimized for fast access to TSprite objects.
@@ -773,9 +773,9 @@ end;
 
 function TFastSpriteList.Add(ASprite: TSprite): Integer;
 var
-   z: cardinal;
+   z: integer;
 begin
-   inherited Add(ASprite);
+   result := inherited Add(ASprite);
 
    z := ASprite.z;
    if z > high(FSprites) then

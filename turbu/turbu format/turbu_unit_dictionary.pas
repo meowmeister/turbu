@@ -20,7 +20,7 @@ unit turbu_unit_dictionary;
 interface
 uses
    classes, generics.Collections,
-   turbu_classes;
+   turbu_containers;
 
 type
    TUnitDictionary = class(TRpgDictionary<string,TStringList>)

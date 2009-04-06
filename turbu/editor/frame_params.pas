@@ -20,9 +20,9 @@ unit frame_params;
 interface
 
 uses
-   Forms, Controls, StdCtrls, Classes,
-   turbu_classes, turbu_defs, JvExStdCtrls, JvEdit, JvValidateEdit, Mask,
-  JvExMask, JvSpin;
+   Forms, Controls, StdCtrls, Classes, JvExStdCtrls, JvEdit, JvValidateEdit,
+   Mask, JvExMask, JvSpin,
+   turbu_classes, turbu_defs, turbu_containers;
 
 type
    TParamRecord = record
@@ -167,7 +167,8 @@ begin
    begin
       dec(value);
       GroupBox1.Enabled := false;
-   end;
+   end
+   else GroupBox1.Enabled := true;
    spnCount.Value := value;
    Application.ProcessMessages;
 end;

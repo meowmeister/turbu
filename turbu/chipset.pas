@@ -48,7 +48,7 @@ procedure fillInChipsetBool(const expected: byte; out theResult: integer); forwa
 { TChipSet }
 constructor TChipSet.Create(var theLDB: TStream; const id: word);
 var
-   dummy: byte;
+   dummy: word;
    converter: intx80;
 begin
    inherited Create;
@@ -56,7 +56,9 @@ try
 with theLDB do
 begin
    incomplete := false;
-   Read(dummy, 1);
+   converter := intX80.Create(theLDB);
+   dummy := converter.getData;
+   converter.Free;
    if dummy <> id then
       raise EParseMessage.create('ChipSet section ' + intToStr(id) + ' of RPG_RT.LDB not found!');
    if peekAhead(theLDB, 0) = false then //blank chipset records just contain an x00 and nothing else
@@ -114,6 +116,7 @@ begin
       end;
       animation := getChboxSec($0b, theLDB, @fillInChipsetBool);
       hispeed := getChboxSec($0c, theLDB, @fillInChipsetBool);
+      dummy := 0;
       Read(dummy, 1);
       if dummy <> 0 then
          raise EParseMessage.create('Chipset section ' + intToStr(id) + ' final 0 not found');

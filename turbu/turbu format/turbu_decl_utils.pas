@@ -24,7 +24,7 @@ unit turbu_decl_utils;
 
 interface
 uses
-   types,
+   types, TypInfo,
    turbu_classes,
    script_backend;
 
@@ -43,11 +43,12 @@ type
    TSkillDualNumFunc = function(character: TRpgHero; int1, int2, int3, int4: integer): TPoint of object;
 
    function signatureMatch(func: TRpgDecl): TScriptSignature; overload;
+   function GetSignature(Event: PTypeInfo): TRpgDecl;
 
 implementation
 uses
-   TypInfo, Generics.Collections,
-   turbu_vartypes, turbu_defs;
+   Generics.Collections,
+   turbu_vartypes, turbu_defs, turbu_containers;
 
 type
 
@@ -116,7 +117,7 @@ begin
    end;
 end;
 
-function signatureMatch(func: TRpgDecl): TScriptSignature;
+function signatureMatch(func: TRpgDecl): TScriptSignature; overload;
 var
    iterator: TScriptSignature;
 begin
@@ -124,6 +125,11 @@ begin
    for iterator := high(TScriptSignature) downto low(TScriptSignature) do
       if (ord(iterator) >= 0) and (signatureMatch(func, iterator)) then
          Exit(iterator);
+end;
+
+function GetSignature(Event: PTypeInfo): TRpgDecl;
+begin
+   result := sigDict[Event];
 end;
 
 { TSignatureDictionary }

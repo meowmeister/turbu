@@ -615,7 +615,7 @@ begin
       //battle layout
       Read(dummy, 1);
       if dummy <> $1D then
-         raise EParseMessage.create('Class section of RPG_RT.LDB not found!');
+         raise EParseMessage.create('Battle Layout section of RPG_RT.LDB not found!');
       converter.read(theLDB); // read the length statement
       FBattleLayout := TBattleLayout.Create(theLDB);
 
@@ -999,7 +999,7 @@ begin
    skipSec($5B, input);
    if GProjectFormat = pf_2k3 then
    begin
-      for i := $5F to $65 do
+      for i := $5E to $65 do
          skipSec(i, input);
    end;
    if not peekAhead(input, 0) then
@@ -1181,7 +1181,7 @@ begin
    FDeathEvent := getChboxSec(4, input, fillInZeroInt);
    skipSec(6, input); //06 can be skipped; purely visual element
    FBattleStyle := getNumSec(7, input, fillInZeroInt);
-   assert(getNumSec(9, input, nil) = 0); //assert 09 = 0; not sure what it's for
+   assert(getNumSec(9, input, fillInZeroInt) = 0); //assert 09 = 0; not sure what it's for
    assert(peekAhead(input, $0A)); //battle commands section
    converter := intX80.Create(input); //discard length statement
    try
