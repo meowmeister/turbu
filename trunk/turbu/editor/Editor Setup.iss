@@ -18,7 +18,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\setup
-OutputBaseFilename=TURBU_Editor_0.6.0
+OutputBaseFilename=TURBU_Editor_0.6.3
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -30,26 +30,26 @@ Name: english; MessagesFile: compiler:Default.isl
 Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}; Flags: unchecked
 
 [Files]
-Source: .\Turbu.exe; DestDir: {app}; Flags: ignoreversion
-Source: .\battle_default.tep; DestDir: {app}; Flags: ignoreversion
-Source: .\EngineBasis.bpl; DestDir: {app}; Flags: ignoreversion
+Source: ..\bin\Turbu.exe; DestDir: {app}; Flags: ignoreversion
+Source: ..\bin\battle_default.tep; DestDir: {app}; Flags: ignoreversion
+Source: ..\bin\EngineBasis.bpl; DestDir: {app}; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 Source: ..\..\dlls\libogg-0.dll; DestDir: {sys}
 Source: ..\..\dlls\libpng12-0.dll; DestDir: {sys}
 Source: ..\..\dlls\libvorbis-0.dll; DestDir: {sys}
 Source: ..\..\dlls\libvorbisfile-3.dll; DestDir: {sys}
-Source: ..\..\dlls\SDL.dll; DestDir: {sys}
+Source: ..\..\dlls\SDL.dll; DestDir: {app}
 Source: ..\..\dlls\sdl_gfx.dll; DestDir: {sys}
-Source: ..\..\dlls\sdl_image.dll; DestDir: {sys}
+Source: ..\..\dlls\sdl_image.dll; DestDir: {app}
 Source: ..\..\dlls\SDL_mixer.dll; DestDir: {sys}
 Source: ..\..\dlls\smpeg.dll; DestDir: {sys}
 Source: ..\..\dlls\zlib1.dll; DestDir: {sys}
-Source: design\scripts\general\battle_algorithms.trs; DestDir: {app}\design\scripts\general
-Source: design\scripts\general\dt_algorithms.trs; DestDir: {app}\design\scripts\general
-Source: design\scripts\general\skill_algorithms.trs; DestDir: {app}\design\scripts\general
-Source: design\scripts\menu\menuscripts.trs; DestDir: {app}\design\scripts\menu
-Source: design\metadata; DestDir: {app}\design\
-Source: design\plugins; DestDir: {app}\design\
+Source: ..\bin\design\scripts\general\battle_algorithms.trs; DestDir: {app}\design\scripts\general
+Source: ..\bin\design\scripts\general\dt_algorithms.trs; DestDir: {app}\design\scripts\general
+Source: ..\bin\design\scripts\general\skill_algorithms.trs; DestDir: {app}\design\scripts\general
+Source: ..\bin\design\scripts\menu\menuscripts.trs; DestDir: {app}\design\scripts\menu
+Source: ..\bin\design\metadata; DestDir: {app}\design\
+Source: ..\bin\design\plugins; DestDir: {app}\design\
 Source: ..\..\..\..\6.0\Bpl\JvPluginD12R.bpl; DestDir: {sys}
 Source: ..\..\..\..\6.0\Bpl\JvCoreD12R.bpl; DestDir: {sys}
 Source: ..\..\..\..\6.0\Bpl\JclVcl120.bpl; DestDir: {sys}

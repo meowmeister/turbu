@@ -7,7 +7,7 @@
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<DCC_DependencyCheckOutputName>Turbu.exe</DCC_DependencyCheckOutputName>
 			<ProjectVersion>12.0</ProjectVersion>
-			<Config Condition="'$(Config)'==''">Debug</Config>
+			<Config Condition="'$(Config)'==''">Release</Config>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
 			<Base>true</Base>
@@ -105,6 +105,103 @@
 			<DelphiCompile Include="Turbu.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
+			<DCCReference Include="..\LMT.pas"/>
+			<DCCReference Include="..\fileIO.pas"/>
+			<DCCReference Include="..\commons.pas"/>
+			<DCCReference Include="..\LDB.pas"/>
+			<DCCReference Include="..\BER.pas"/>
+			<DCCReference Include="..\chipset.pas"/>
+			<DCCReference Include="..\LMU.pas"/>
+			<DCCReference Include="..\skill_data.pas"/>
+			<DCCReference Include="..\condition_data.pas"/>
+			<DCCReference Include="..\battle_anims.pas"/>
+			<DCCReference Include="..\events.pas"/>
+			<DCCReference Include="database.pas">
+				<Form>frmDatabase</Form>
+			</DCCReference>
+			<DCCReference Include="turbu_main.pas">
+				<Form>frmTurbuMain</Form>
+			</DCCReference>
+			<DCCReference Include="..\formats.pas"/>
+			<DCCReference Include="rm_converter.pas">
+				<Form>frmRmConverter</Form>
+			</DCCReference>
+			<DCCReference Include="..\archiveInterface.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_characters.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_characters.pas"/>
+			<DCCReference Include="..\turbu format\turbu_constants.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_database.pas"/>
+			<DCCReference Include="skill_settings.pas">
+				<Form>frmSkillLearning</Form>
+			</DCCReference>
+			<DCCReference Include="generic_algorithm_editor.pas">
+				<Form>frmAlgorithmEditor</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_database.pas"/>
+			<DCCReference Include="..\turbu format\converters\conversion_table.pas"/>
+			<DCCReference Include="..\turbu format\turbu_defs.pas"/>
+			<DCCReference Include="..\turbu format\turbu_sdl_image.pas"/>
+			<DCCReference Include="..\turbu format\turbu_tbi_lib.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_db_var_arrays.pas"/>
+			<DCCReference Include="frame_commands.pas">
+				<Form>frameHeroCommands</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="frame_class.pas">
+				<Form>frameClass</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\turbu_engines.pas"/>
+			<DCCReference Include="..\turbu format\turbu_sprites.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_items.pas"/>
+			<DCCReference Include="..\debug\turbu_debugging.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_items.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_sounds.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_sounds.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_skills.pas"/>
+			<DCCReference Include="..\logs.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_animations.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_animations.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_resists.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_resists.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_classes.pas"/>
+			<DCCReference Include="..\discInterface.pas"/>
+			<DCCReference Include="..\turbu format\turbu_vartypes.pas"/>
+			<DCCReference Include="frame_params.pas">
+				<Form>frameParams</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="dm_database.pas">
+				<Form>dmDatabase</Form>
+				<DesignClass>TDataModulet</DesignClass>
+			</DCCReference>
+			<DCCReference Include="attributes_editor.pas">
+				<Form>frmAttributesEditor</Form>
+			</DCCReference>
+			<DCCReference Include="frame_items.pas">
+				<Form>frameItems</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\turbu_script_basis.pas"/>
+			<DCCReference Include="design_script_engine.pas"/>
+			<DCCReference Include="..\turbu format\turbu_decl_utils.pas"/>
+			<DCCReference Include="..\turbu format\turbu_unit_dictionary.pas"/>
+			<DCCReference Include="..\mapview\libs\script engine\rpg_list.pas"/>
+			<DCCReference Include="..\mapview\libs\script engine\script_backend.pas"/>
+			<DCCReference Include="..\mapview\libs\script engine\script_interface.pas"/>
+			<DCCReference Include="..\mapview\libs\script engine\uPSI_script_interface.pas"/>
+			<DCCReference Include="..\mapview\libs\map engine\addition_sprite.pas"/>
+			<DCCReference Include="..\mapview\libs\timing.pas"/>
+			<DCCReference Include="..\turbu format\turbu_battle_engine.pas"/>
+			<DCCReference Include="..\turbu format\turbu_versioning.pas"/>
+			<DCCReference Include="..\turbu format\plugins\turbu_plugin_interface.pas"/>
+			<DCCReference Include="..\..\vclpatch\Generics.Collections.pas"/>
+			<DCCReference Include="..\..\vclpatch\DB.pas"/>
+			<DCCReference Include="..\..\classes\findfile\findfile.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
+			<DCCReference Include="function_header.pas">
+				<Form>frmFuncHeader</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -142,8 +239,8 @@
 						<VersionInfo Name="AutoIncBuild">True</VersionInfo>
 						<VersionInfo Name="MajorVer">0</VersionInfo>
 						<VersionInfo Name="MinorVer">6</VersionInfo>
-						<VersionInfo Name="Release">0</VersionInfo>
-						<VersionInfo Name="Build">251</VersionInfo>
+						<VersionInfo Name="Release">3</VersionInfo>
+						<VersionInfo Name="Build">253</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -155,7 +252,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc,</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">TURBU Editor</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">0.6.0.251</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.6.3.253</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">TURBU Editor</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
