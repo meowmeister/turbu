@@ -106,7 +106,7 @@ var
    savefile: TMemoryStream;
    stream: TStream;
    errorstring: string;
-   goodformat, badformat: ^string;
+   goodformat, badformat: string;
    filename, uFilename: string;
    dic: TUnitDictionary;
 begin
@@ -155,14 +155,14 @@ begin
       begin
          if GProjectFormat = pf_2k then
          begin
-            goodformat := @RM2K_FORMAT;
-            badformat := @RM2K3_FORMAT;
+            goodformat := RM2K_FORMAT;
+            badformat := RM2K3_FORMAT;
          end else
          begin
-            badformat := @RM2K_FORMAT;
-            goodformat := @RM2K3_FORMAT;
+            badformat := RM2K_FORMAT;
+            goodformat := RM2K3_FORMAT;
          end;
-         errorstring := UNEX_FORMAT_MESSAGE1 + goodformat^ + UNEX_FORMAT_MESSAGE2 + badformat^ + UNEX_FORMAT_MESSAGE3 + goodformat^ + UNEX_FORMAT_MESSAGE4;
+         errorstring := UNEX_FORMAT_MESSAGE1 + goodformat + UNEX_FORMAT_MESSAGE2 + badformat + UNEX_FORMAT_MESSAGE3 + goodformat + UNEX_FORMAT_MESSAGE4;
          case msgBox(errorstring, 'Unexpected format found', MB_OKCANCEL) of
             IDOK: FFormat := GProjectFormat;
             IDCANCEL:

@@ -369,7 +369,7 @@ var
    framesPerSprite: integer;
    startingPoint: TPoint;
    i: integer;
-   srcrect, dstrect: TSDL_Rect;
+   srcrect, dstrect: TSDLRect;
    convertedImage: TStream;
    writename: string;
 begin
@@ -387,8 +387,8 @@ begin
       for i := 0 to framesPerSprite - 1 do
       begin
          srcrect := rect(point(FRAME.X * (i mod SPRITE.X), FRAME.Y * (i div SPRITE.X)), FRAME);
-         inc(srcrect.x, startingPoint.x);
-         inc(srcrect.y, startingPoint.y);
+         inc(srcrect.left, startingPoint.x);
+         inc(srcrect.top, startingPoint.y);
          dstrect := rect(point(0, i * FRAME.Y), FRAME);
          SDL_BlitSurface(image.surface, @srcRect, blitSurface, @dstRect);
       end;

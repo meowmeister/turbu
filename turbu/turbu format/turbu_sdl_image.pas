@@ -45,12 +45,12 @@ resourcestring
 procedure TRpgSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint);
 var
    dummy: PSdlSurface;
-   colorkey: ^TSDL_Color;
+   colorkey: PSDL_Color;
 begin
    inherited setup(filename, imagename, container, spriteSize);
-   dummy := TSdlSurface.Convert(FSurface, FSurface.format);
+{   dummy := TSdlSurface.Convert(FSurface, FSurface.format);
    FSurface.Free;
-   FSurface := dummy;
+   FSurface := dummy;}
    FMustLock := FSurface.MustLock;
    if assigned(FSurface.format.palette) then
    begin

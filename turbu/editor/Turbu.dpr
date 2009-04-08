@@ -4,6 +4,7 @@ uses
   SimpleShareMem,
   Forms,
   dialogs,
+  SysUtils,
   sdl,
   sdl_canvas,
   types,
@@ -73,7 +74,8 @@ uses
   Generics.Collections in '..\..\vclpatch\Generics.Collections.pas',
   DB in '..\..\vclpatch\DB.pas',
   findfile in '..\..\classes\findfile\findfile.pas',
-  turbu_heroes in '..\engines\map engine\turbu_heroes.pas';
+  turbu_heroes in '..\engines\map engine\turbu_heroes.pas',
+  function_header in 'function_header.pas' {frmFuncHeader};
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -87,17 +89,18 @@ begin
    ReportMemoryLeaksOnShutdown := true;
    {$ENDIF}
    Application.CreateForm(TfrmTurbuMain, frmTurbuMain);
+  Application.CreateForm(TdmDatabase, dmDatabase);
   Application.CreateForm(TfrmDatabase, frmDatabase);
   Application.CreateForm(TfrmRmConverter, frmRmConverter);
   Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
+  Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
   Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
-  Application.CreateForm(TdmDatabase, dmDatabase);
   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
-  SDL_putenv('SDL_VIDEODRIVER=dummy');
-   if (SDL_Init(SDL_INIT_VIDEO) <> 0) or (SDL_SetVideoMode(1, 1, 32, 0) = nil) then
-      raise EParseMessage.create('Unable to initialize graphics converter.');
-{   if (SDL_Init(SDL_INIT_VIDEO) <> 0) then
-      raise EParseMessage.create('Unable to initialize graphics converter.');}
+   if (SDL_Init(SDL_INIT_VIDEO) <> 0) then
+      raise Exception.create('Unable to initialize graphics converter.');
+   {$IFDEF DEBUG}
+   //Create an SDL window for testing images on.
    TSdlCanvas.Create(cmHardware, false, rect(100, 100, 640, 480), 32);
+   {$ENDIF}
    Application.Run;
 end.

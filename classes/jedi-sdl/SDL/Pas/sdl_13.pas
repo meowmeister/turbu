@@ -229,7 +229,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     property AMask: UInt32 read FAMask;
   end;
 
-  TSdlSurfaceFlag = (sdlsfPrealloc, sdlsfRleAccel, sdlsfForce32 = 31);
+  TSdlSurfaceFlag = (sdlsfPrealloc, sdlsfRleAccel, sdlsfColorKey = 17, sdlsfForce32 = 31);
   TSdlSurfaceFlags = set of TSdlSurfaceFlag;
 
   PSdlSurface = ^TSdlSurface;
@@ -517,7 +517,7 @@ end;
 function TSdlSurface.SetPalette(colors: PSdlColorArray; start,
   count: integer): boolean;
 begin
-  result := SDL_SetPaletteColors(FFormat.palette, colors, 0, 255) = 0;
+  result := SDL_SetPaletteColors(FFormat.palette, colors, 0, count) = 0;
 end;
 
 function TSdlSurface.ClearClipRect: boolean;

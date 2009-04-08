@@ -43,7 +43,7 @@ var
    x, y: cardinal;
    i, j: cardinal;
    i2: integer;
-   current: ^byte;
+   current: PByte;
    flag: boolean;
    header: longint;
    sizer: word;

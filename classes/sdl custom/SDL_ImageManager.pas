@@ -127,7 +127,8 @@ type
       *
       * Invalid values for DrawSprite result in nothing being drawn.
       ************************************************************************}
-      procedure Draw(dest: TPoint);
+      procedure Draw; overload; virtual;
+      procedure Draw(dest: TPoint); overload;
       procedure DrawRect(dest: TPoint; source: TRect);
       procedure DrawSprite(dest: TPoint; index: integer);
 
@@ -658,6 +659,12 @@ begin
 end;
 
 //---------------------------------------------------------------------------
+procedure TSdlImage.Draw;
+begin
+   self.Draw(EMPTY);
+end;
+
+//---------------------------------------------------------------------------
 procedure TSdlImage.drawRect(dest: TPoint; source: TRect);
 begin
    screenCanvas.drawRect(self, dest, source);
@@ -728,12 +735,13 @@ begin
    loaders.Duplicates := dupError;
    loaders.CaseSensitive := false;
    rwMutex := SDL_CreateMutex;
+   assert(IMG_Init([imgPng]) = [imgPng]);
 end;
 
 finalization
 begin
+   IMG_Quit;
    loaders.Free;
    SDL_DestroyMutex(rwMutex);
 end;
-
 end.

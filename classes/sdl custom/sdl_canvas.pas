@@ -97,7 +97,7 @@ type
       * Like Draw, but only draws a portion of the image, as defined by the
       * source parameter.
       ************************************************************************}
-      procedure DrawRect(image: TSdlImage; dest: TSgPoint; source: TSDL_Rect);
+      procedure DrawRect(image: TSdlImage; dest: TSgPoint; source: TSDLRect);
 
       {************************************************************************
       * Copies data from the current render target to either a TSdlImage or
@@ -111,7 +111,7 @@ type
       {************************************************************************
       * Flips the buffer, rendering the canvas to the screen.
       ************************************************************************}
-      procedure Flip; inline;
+      procedure Flip; virtual;
 
       {************************************************************************
       * Pushes the current render target to the render target stack, or loads a
@@ -199,7 +199,7 @@ end;
 
 procedure TSdlCanvas.Copy(image: TSdlImage; dest: TSgPoint);
 var
-   dstRect: TSdl_Rect;
+   dstRect: TSdlRect;
 begin
    dstRect := rect(dest, point(0,0));
    SDL_UpperBlit(FRenderSurface, nil, image.surface, @dstRect);
@@ -207,7 +207,7 @@ end;
 
 procedure TSdlCanvas.Copy(image: TSdlRenderTarget; dest: TSgPoint);
 var
-   dstRect: TSdl_Rect;
+   dstRect: TSdlRect;
 begin
    dstRect := rect(dest, point(0,0));
    SDL_UpperBlit(FRenderSurface, nil, image.surface, @dstRect);
@@ -215,7 +215,7 @@ end;
 
 procedure TSdlCanvas.CopyRect(image: TSdlImage; dest: TSgPoint; source: TRect);
 var
-   srcRect, dstRect: TSdl_Rect;
+   srcRect, dstRect: TSdlRect;
 begin
    dstRect := rect(dest, point(0,0));
    srcRect := source;
@@ -225,7 +225,7 @@ end;
 procedure TSdlCanvas.CopyRect(image: TSdlRenderTarget; dest: TSgPoint;
   source: TRect);
 var
-   srcRect, dstRect: TSdl_Rect;
+   srcRect, dstRect: TSdlRect;
 begin
    dstRect := rect(dest, point(0,0));
    srcRect := source;
@@ -273,19 +273,17 @@ end;
 
 procedure TSdlCanvas.Draw(image: TSdlImage; dest: TSgPoint);
 var
-   dummy: TSDL_Rect;
+   dummy: TSDLRect;
 begin
-   dummy.x := dest.x;
-   dummy.y := dest.y;
+   dummy.TopLeft := dest;
    SDL_UpperBlit(image.surface, nil, FRenderSurface, @dummy);
 end;
 
-procedure TSdlCanvas.DrawRect(image: TSdlImage; dest: TSgPoint; source: TSDL_Rect);
+procedure TSdlCanvas.DrawRect(image: TSdlImage; dest: TSgPoint; source: TSDLRect);
 var
-   dummy: TSDL_Rect;
+   dummy: TSDLRect;
 begin
-   dummy.x := dest.x;
-   dummy.y := dest.y;
+   dummy.TopLeft := dest;
    SDL_UpperBlit(image.surface, @source, FRenderSurface, @dummy);
 end;
 

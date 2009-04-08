@@ -483,6 +483,8 @@ begin
       FHeroes[i].reviseConditions(converter.getData + 1);
    for i := 1 to high(FSkill) do
       FSkill[i].reviseConditions(converter.getData + 1);
+   for i := 1 to high(FClass) do
+      FClass[i].reviseConditions(converter.getData + 1);
 
    Read(dummy, 1); //Animations section
    if dummy <> $13 then

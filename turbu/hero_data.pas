@@ -393,7 +393,6 @@ begin
    else
       getArraySec($48, input, FConditionModifiers[0]);
    //end if
-   reviseConditions(TLcfDataBase(parent).conditions);
    setLength(FDtypeModifiers, getNumSec($49, input, fillInHeroInt) + 1);
    if length(FDtypeModifiers) > 1 then
       getArraySec($4a, input, FDtypeModifiers[1])

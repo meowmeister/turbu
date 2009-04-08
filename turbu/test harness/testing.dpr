@@ -93,12 +93,12 @@ begin
    Application.Initialize;
    Application.MainFormOnTaskbar := True;
    Application.CreateForm(TdmDatabase, dmDatabase);
-   Application.CreateForm(TfrmTestConsole, frmTestConsole);
-   Application.CreateForm(TfrmDatabase, frmDatabase);
-   Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
-   Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
-   Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
-   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
-   Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
-   Application.Run;
+  Application.CreateForm(TfrmTestConsole, frmTestConsole);
+  Application.CreateForm(TfrmDatabase, frmDatabase);
+  Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
+  Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
+  Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
+  Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
+  Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
+  Application.Run;
 end.
