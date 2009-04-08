@@ -185,6 +185,19 @@ function IMG_Linked_Version : PSDL_version;
 external {$IFDEF __GPC__}name 'IMG_Linked_Version'{$ELSE} SDL_ImageLibName{$ENDIF __GPC__};
 {$EXTERNALSYM IMG_Linked_Version}
 
+type
+   TImgInitFlags = set of (imgJpg, imgPng, imgTif, imgForce32 = 31);
+
+{ Loads dynamic libraries and prepares them for use. }
+function IMG_Init(flags: TImgInitFlags): TImgInitFlags;
+cdecl; external {$IFDEF __GPC__}name 'IMG_Init'{$ELSE} SDL_ImageLibName{$ENDIF __GPC__};
+{$EXTERNALSYM IMG_Init}
+
+{ Unloads libraries loaded with IMG_Init }
+procedure IMG_Quit;
+cdecl; external {$IFDEF __GPC__}name 'IMG_Quit'{$ELSE} SDL_ImageLibName{$ENDIF __GPC__};
+{$EXTERNALSYM IMG_Quit}
+
 { Load an image from an SDL data source.
    The 'type' may be one of: "BMP", "GIF", "PNG", etc.
 
