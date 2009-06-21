@@ -56,6 +56,8 @@ contains
   turbu_constants in 'turbu_constants.pas',
   turbu_game_data in 'database\turbu_game_data.pas',
   turbu_map_metadata in 'database\turbu_map_metadata.pas',
-  turbu_maps in 'turbu_maps.pas';
+  turbu_maps in 'turbu_maps.pas',
+  turbu_tilesets in 'database\turbu_tilesets.pas',
+  turbu_functional in '..\turbu_functional.pas';
 
 end.

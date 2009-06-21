@@ -84,6 +84,8 @@
 			<DCCReference Include="database\turbu_game_data.pas"/>
 			<DCCReference Include="database\turbu_map_metadata.pas"/>
 			<DCCReference Include="turbu_maps.pas"/>
+			<DCCReference Include="database\turbu_tilesets.pas"/>
+			<DCCReference Include="..\turbu_functional.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -137,6 +139,9 @@
 						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
+					<isVersionControl>
+						<isVersionControl Name="isVersionControlID"/>
+					</isVersionControl>
 				</Delphi.Personality>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
