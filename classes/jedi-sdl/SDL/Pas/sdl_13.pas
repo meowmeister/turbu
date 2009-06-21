@@ -253,6 +253,8 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     r, g, b, a: UInt8;
   end;
 
+{$HINTS OFF} //don't warn me that I'm declaring symbols I don't use. They're
+             //used internally by SDL and have to be declared here.
   PSdlBlitMap = ^TSdlBlitMap;
   TSdlBlitMap = record
   private
@@ -272,7 +274,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     FHeight: integer;
     FPitch: integer;
     FPixels: pointer;
-    FUserData: integer;
+    FUserData: pointer;
     FLocked: integer;
     FLockData: pointer;
     FClipRect: TSdlRect;
@@ -284,12 +286,14 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     function GetColorKey: TSdlColor32;
     procedure SetColorKey(const color: TSdlColor32);
   public
-    class function Create(width, height, depth: Integer; RMask, GMask, BMask, AMask: UInt32): PSdlSurface; static;
+    class function Create(width, height, depth: Integer; RMask: UInt32 = 0;
+                   GMask: UInt32 = 0; BMask: UInt32 = 0; AMask: UInt32 = 0): PSdlSurface; static;
     class function Convert(source: PSdlSurface; format: PSdlPixelFormat): PSdlSurface; static;
     procedure Free;
     function Fill(area: PSdlRect; color: TSdlColor32): boolean;
     function ClearClipRect: boolean;
     function SetPalette(colors: PSdlColorArray; start, count: integer): boolean;
+    procedure CopyPaletteFrom(const source: PSdlSurface);
     function LockSurface: boolean;
     procedure UnlockSurface;
 
@@ -299,7 +303,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     property Height: integer read FHeight;
     property Pitch: integer read FPitch;
     property Pixels: pointer read FPixels;
-    property Tag: integer read FUserData write FUserData;
+    property Tag: pointer read FUserData write FUserData;
     property Locked: integer read FLocked;
     property LockData: pointer read FLockData;
     property ClipRect: TSdlRect read FClipRect write SetClipRect;
@@ -309,8 +313,9 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
   end;
   SDL_Surface = TSdlSurface;
   {$EXTERNALSYM SDL_Surface}
+{$HINTS ON}
 
-  TSdlTextureID = UInt32;
+  TSdlTextureID = type UInt32;
   SDL_TextureID = TSdlTextureID;
   {$EXTERNALSYM SDL_TextureID}
 
@@ -325,13 +330,62 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     property ID: TSdlTextureID read FId;
   end;
 
+  // SDL_error.h types
+  TSDL_errorcode = (
+    SDL_ENOMEM,
+    SDL_EFREAD,
+    SDL_EFWRITE,
+    SDL_EFSEEK,
+    SDL_LASTERROR);
+
+  SDL_errorcode = TSDL_errorcode;
+{$EXTERNALSYM SDL_errorcode}
+
 function SDL_GetCurrentDisplayMode(var mode: TSdlDisplayMode): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetCurrentDisplayMode}
 
-function SDL_CreateWindowFrom(data: HWND): TSdlWindowId; cdecl; external SDLLibName;
+{**
+ * SDL_CreateWindow
+ *
+ * Create a window with the specified position, dimensions, and flags.
+ *
+ * title: The title of the window, in UTF-8 encoding
+ * x: The x position of the window, SDL_WINDOWPOS_CENTERED, or SDL_WINDOWPOS_UNDEFINED
+ * y: The y position of the window, SDL_WINDOWPOS_CENTERED, or SDL_WINDOWPOS_UNDEFINED
+ * w: The width of the window
+ * h: The height of the window
+ * flags: The flags for the window. Only the following flags will have any effect:
+ * [sdlwFullscreen, sdlwOpenGl, sdlwShown, sdlwBorderless, sdlwResizable,
+ * sdlwMinimized, sdlwMaximized, sdlwInputGrabbed]
+ * Any others will be ignored.
+ *
+ * Returns the id of the window created, or zero if window creation failed.
+ *}
+function SDL_CreateWindow(title: PAnsiChar; x, y, w, h: integer; flags: TSdlWindowFlags): TSdlWindowID;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_CreateWindow'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_CreateWindow}
+
+{**
+ * SDL_CreateWindowFrom
+ *
+ * Create an SDL window struct from an existing native window.
+ *
+ * data: A pointer to driver-dependent window creation data
+ *
+ * Returns the id of the window created, or zero if window creation failed.
+ *
+ * Warning: This function is NOT SUPPORTED, use at your own risk!
+ *}
+{$IFDEF WIN32}
+function SDL_CreateWindowFrom(data: HWND): TSdlWindowId;
+{$ELSE}
+function SDL_CreateWindowFrom(data: Pointer): TSdlWindowId;
+{$ENDIF}
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_CreateWindowFrom'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_CreateWindowFrom}
 
-procedure SDL_DestroyWindow(windowID: TSdlWindowID); cdecl; external SDLLibName;
+procedure SDL_DestroyWindow(windowID: TSdlWindowID);
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_DestroyWindow'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_DestroyWindow}
 
 function SDL_GetWindowFlags(windowID: TSdlWindowID): TSdlWindowFlags; cdecl; external SDLLibName;
@@ -413,6 +467,29 @@ function SDL_SetPaletteColors(palette: PSdlPalette;  colors: PSdlColorArray; fir
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetPaletteColors'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_SetPaletteColors}
 
+{------------------------------------------------------------------------------}
+{ error-handling }
+{------------------------------------------------------------------------------}
+// Public functions
+function SDL_GetError: PAnsiChar;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_GetError'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_GetError}
+procedure SDL_SetError(fmt: PAnsiChar);
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetError'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_SetError}
+procedure SDL_ClearError;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_ClearError'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_ClearError}
+
+{$IFNDEF WINDOWS}
+procedure SDL_Error(Code: TSDL_errorcode);
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_Error'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_Error}
+{$ENDIF}
+
+// Private error message function - used internally
+procedure SDL_OutOfMemory;
+
 implementation
 uses
    SysUtils;
@@ -464,6 +541,11 @@ begin
   result := SDL_ConvertSurface(source, format, 0);
   if not assigned(result) then
     OutOfMemoryError;
+end;
+
+procedure TSdlSurface.CopyPaletteFrom(const source: PSdlSurface);
+begin
+   self.SetPalette(source.Format.palette.colors, 0, source.Format.palette.count);
 end;
 
 class function TSdlSurface.Create(width, height, depth: Integer; RMask, GMask,
@@ -553,6 +635,13 @@ begin
     SDL_DestroyTexture(FId);
     FId := 0;
   end;
+end;
+
+procedure SDL_OutOfMemory;
+begin
+  {$IFNDEF WINDOWS}
+  SDL_Error(SDL_ENOMEM);
+  {$ENDIF}
 end;
 
 end.
