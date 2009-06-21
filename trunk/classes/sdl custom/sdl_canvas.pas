@@ -21,7 +21,7 @@ unit sdl_canvas;
 
 interface
 uses
-   types, contnrs,
+   types, classes, Generics.Collections,
    SDL_ImageManager, SG_Defs,
    SDL, SDL_13;
 
@@ -56,13 +56,20 @@ type
       property BgColor: TSgColor read FBgColor write SetBgColor;
    end;
 
+   TSdlRenderTargets = class(TObjectList<TSdlRenderTarget>)
+   public
+      function RenderOn(Index: Integer; Event: TNotifyEvent; Bkgrnd: Cardinal; FillBk: Boolean): Boolean;
+   end;
+
+   TRenderStack = class(TStack<TSdlRenderTarget>);
+
    {***************************************************************************
    * Encapsulates an SDL_Surface as the principal video buffer for an
    * application.
    ***************************************************************************}
    TSdlCanvas = class(TSdlRenderTarget)
    class var
-      FRenderStack: TObjectStack;
+      FRenderStack: TRenderStack;
    private
       FRenderTarget: TSdlRenderTarget;
       FRenderSurface: PSdlSurface;
@@ -134,7 +141,7 @@ var
 
 implementation
 uses
-   sysUtils, classes;
+   sysUtils;
 
 { TSdlRenderTarget }
 
@@ -166,9 +173,9 @@ begin
    inherited Create;
    assert(assigned(screenCanvas));
    flags := 0; //screenCanvas.surface.flags and SDL_HWSURFACE;
-   format := SDL_GetVideoInfo^.vfmt;
+   format := SDL_GetVideoInfo.vfmt;
 
-   FSurface := TSdlSurface.Create(size.x, size.y, format^.BitsPerPixel, format^.RMask, format^.GMask, format^.BMask, format^.AMask);
+   FSurface := TSdlSurface.Create(size.x, size.y, format.BitsPerPixel, format.RMask, format.GMask, format.BMask, format.AMask);
 {   if FSurface.flags and SDL_HWSURFACE = SDL_HWSURFACE then
       FStyle := cmHardware
    else FStyle := cmSoftware;}
@@ -238,7 +245,7 @@ var
 begin
    assert(screenCanvas = nil);
    inherited Create;
-   FRenderStack := TObjectStack.Create;
+   FRenderStack := TRenderStack.Create;
 
    if SDL_WasInit(SDL_INIT_VIDEO) <> SDL_INIT_VIDEO then
       SDL_InitSubSystem(SDL_INIT_VIDEO);
@@ -306,7 +313,7 @@ end;
 
 procedure TSdlCanvas.popRenderTarget;
 begin
-   setRenderTarget(TSdlRenderTarget(FRenderStack.Pop));
+   setRenderTarget(FRenderStack.Pop);
 end;
 
 procedure TSdlCanvas.pushRenderTarget;
@@ -335,6 +342,31 @@ begin
    else begin
       FRenderTarget := Value;
       FRenderSurface := Value.surface;
+   end;
+end;
+
+{ TSdlRenderTargets }
+
+function TSdlRenderTargets.RenderOn(Index: Integer; Event: TNotifyEvent;
+  Bkgrnd: Cardinal; FillBk: Boolean): Boolean;
+var
+   Target: TSdlRenderTarget;
+begin
+   result := false;
+   if not ((Index >= 0) and (Index < count)) then
+      Exit;
+
+   Target := self[Index];
+   if target.mustLock then
+      target.surface.LockSurface;
+   try
+      if (FillBk) then
+         if (not target.surface.Fill(nil, bkgrnd)) then
+            Exit;
+      Event(Self);
+   finally
+      if target.mustLock then
+         target.surface.UnlockSurface;
    end;
 end;
 

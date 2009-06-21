@@ -64,7 +64,7 @@ unit sdlstreams;
   Revision 1.1  2004/02/05 00:08:20  savage
   Module 1.0 release
 
-  
+
 }
 
 {$i jedi-sdl.inc}
@@ -74,8 +74,8 @@ interface
 uses
   Classes,
   SysUtils,
-  sdl,
-  sdlutils;
+  sdl{,
+  sdlutils};
 
 {$IFDEF FPC}
 type

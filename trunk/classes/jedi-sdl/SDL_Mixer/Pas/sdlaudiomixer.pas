@@ -379,7 +379,7 @@ end;
 procedure TSDLSoundEffect.LoadFromFile( const aFileName : string );
 begin
   inherited;
-  FMix_Chunk := Mix_LoadWAV( PAnsiChar( aFileName ) );
+  FMix_Chunk := Mix_LoadWAV( PAnsiChar( ansiString(aFileName) ) );
 end;
 
 procedure TSDLSoundEffect.LoadFromStream( aStream : TMemoryStream );
@@ -561,7 +561,7 @@ begin
   {$IFNDEF no_smpeg}
   if FIsMP3 then
   begin
-    FPSMPEG := SMPEG_new( PAnsiChar( aFileName ), nil, 0 );
+    FPSMPEG := SMPEG_new( PAnsiChar( ansiString(aFileName) ), nil, 0 );
 
     // Disable Audio
     SMPEG_enableaudio( FPSMPEG, 0 );
@@ -584,7 +584,7 @@ begin
   else
   {$ENDIF}
   {$ENDIF}
-    FMix_Music := Mix_LoadMUS( PAnsiChar( aFileName ) );
+    FMix_Music := Mix_LoadMUS( PAnsiChar( ansiString(aFileName) ) );
 end;
 
 procedure TSDLMusic.LoadFromStream( aStream : TMemoryStream );
