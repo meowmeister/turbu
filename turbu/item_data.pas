@@ -113,10 +113,11 @@ type
       function isUsableByClass(x: word): boolean;
       function getAnimData(x: word): TItemAnimData;
       function getAttribute(x: word): boolean;
-    function getConditions: word;
+      function getConditions: word;
    public
       constructor Create(theLDB: TStream; const id: word; parent: TObject);
       destructor Destroy; override;
+      procedure reviseConditions(size: integer);
 
       property incomplete: boolean read FIncomplete;
       property id: word read FId;
@@ -191,7 +192,7 @@ try
 with theLDB do
 begin
    FIncomplete := false;
-   converter := intX80.Create(theLDB);
+   converter := TBerConverter.Create(theLDB);
    dummy := converter.getData;
    if dummy <> id then
       raise EParseMessage.create('Item section ' + intToStr(id) + ' of RPG_RT.LDB not found!');
@@ -263,26 +264,18 @@ begin
       else assert(dummy = high(FUsableBy));
 
       setLength(FConditions, getNumSec($3F, theLDB, fillInZeroInt) + 1);
-      if length(FConditions) = 1 then
-         setLength(FConditions, TLcfDataBase(parent).conditions + 1);
-      dummy := getArraySec($40, theLDB, FConditions[1]);
-      if dummy = 0 then
-         for I := 1 to high(FConditions) do
-            FConditions[i] := false
-         //end for
-      //end if
-      else assert(dummy = high(FConditions));
+{      if length(FConditions) = 1 then
+         setLength(FConditions, TLcfDataBase(parent).conditions + 1);}
+      if length(FConditions) > 1 then
+         dummy := getArraySec($40, theLDB, FConditions[1])
+      else skipSec($40, theLDB);
 
       setLength(FAttributes, getNumSec($41, theLDB, fillInZeroInt) + 1);
-      if length(FAttributes) = 1 then
-         setLength(FAttributes, TLcfDataBase(parent).conditions + 1);
-      dummy := getArraySec($42, theLDB, FAttributes[1]);
-      if dummy = 0 then
-         for I := 1 to high(FAttributes) do
-            FAttributes[i] := false
-         //end for
-      //end if
-      else assert(dummy = high(FAttributes));
+{      if length(FAttributes) = 1 then
+         setLength(FAttributes, TLcfDataBase(parent).conditions + 1);}
+      if length(Fattributes) > 1 then
+         dummy := getArraySec($42, theLDB, Fattributes[1])
+      else skipSec($42, theLDB);
 
       FConditionInflictChance := getNumSec($43, theLDB, fillInZeroInt);
 
@@ -321,7 +314,6 @@ begin
          raise EParseMessage.create('Item section ' + intToStr(id) + ' final 0 not found. Position: 0x' + intToHex(theLDB.Position, 2));
       //end if
    end;
-   converter.free;
 end; // end of WITH block
 except
    on E: EParseMessage do
@@ -390,6 +382,19 @@ begin
    result := FUsableByClass[x];
 end;
 
+procedure TItem.reviseConditions(size: integer);
+var i, dummy: word;
+begin
+   if high(FConditions) < size then
+   begin
+      dummy := high(FConditions);
+      setLength(FConditions, size + 1);
+      for I := dummy + 1 to high(FConditions) do
+         FConditions[i] := false;
+      //end FOR
+   end;
+end;
+
 { TItemAnimData }
 
 constructor TItemAnimData.Create(theLDB: TStream; const id: word);
@@ -398,25 +403,21 @@ var
    converter: intx80;
 begin
    inherited Create;
-   converter := intX80.Create(theLDB);
+   converter := TBerConverter.Create(theLDB);
    dummy := converter.getData;
-   try
-      if dummy <> id then
-         raise EParseMessage.create('ItemAnimData section ' + intToStr(id) + ' not found!');
-      FAnimType := TWeaponAnimType(getNumSec(3, theLDB, fillInZeroInt));
-      FWhichWeapon := getNumSec(4, theLDB, fillInZeroInt);
-      FMovementMode := TMovementMode(getNumSec(5, theLDB, fillInZeroInt));
-      FAfterimage := getChboxSec(6, theLDB, fillInZeroInt);
-      FAttackNum := getNumSec(7, theLDB, fillInZeroInt);
-      FRanged := getChboxSec(8, theLDB, fillInZeroInt);
-      FRangedProjectile := getNumSec(9, theLDB, fillInZeroInt);
-      FRangedSPeed := getNumSec($C, theLDB, fillInZeroInt);
-      FBattleAnim := getNumSec($D, theLDB, fillInZeroInt);
-      if not peekAhead(theLDB, 0) then
-         raise EParseMessage.create('ItemAnimData section ' + intToStr(id) + ' final 0 not found. Position: 0x' + intToHex(theLDB.Position, 2));
-   finally
-      converter.free;
-   end;
+   if dummy <> id then
+      raise EParseMessage.create('ItemAnimData section ' + intToStr(id) + ' not found!');
+   FAnimType := TWeaponAnimType(getNumSec(3, theLDB, fillInZeroInt));
+   FWhichWeapon := getNumSec(4, theLDB, fillInZeroInt);
+   FMovementMode := TMovementMode(getNumSec(5, theLDB, fillInZeroInt));
+   FAfterimage := getChboxSec(6, theLDB, fillInZeroInt);
+   FAttackNum := getNumSec(7, theLDB, fillInZeroInt);
+   FRanged := getChboxSec(8, theLDB, fillInZeroInt);
+   FRangedProjectile := getNumSec(9, theLDB, fillInZeroInt);
+   FRangedSPeed := getNumSec($C, theLDB, fillInZeroInt);
+   FBattleAnim := getNumSec($D, theLDB, fillInZeroInt);
+   if not peekAhead(theLDB, 0) then
+      raise EParseMessage.create('ItemAnimData section ' + intToStr(id) + ' final 0 not found. Position: 0x' + intToHex(theLDB.Position, 2));
 end;
 
 { Classless }

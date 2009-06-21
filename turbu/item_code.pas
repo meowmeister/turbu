@@ -120,28 +120,28 @@ type
 
 implementation
 
-uses item_data, skill_data, script_interface, commons;
+uses turbu_items, turbu_skills, script_interface, commons, turbu_defs;
 
 { TEquipment }
 
 function TEquipment.getAgi: smallint;
 begin
-   result := template.speed;
+   result := TEquipmentTemplate(template).stat[6];
 end;
 
 function TEquipment.getAtk: smallint;
 begin
-   result := template.attack;
+   result := TEquipmentTemplate(template).stat[3];
 end;
 
 function TEquipment.getDef: smallint;
 begin
-   result := template.defense;
+   result := TEquipmentTemplate(template).stat[4];
 end;
 
 function TEquipment.getMind: smallint;
 begin
-   result := template.mind;
+   result := TEquipmentTemplate(template).stat[5];
 end;
 
 function TEquipment.getOnField: boolean;
@@ -151,14 +151,14 @@ end;
 
 function TEquipment.usableBy(hero: word): boolean;
 begin
-   result := self.template.usableBy[hero];
+   result := hero in TUsableItemTemplate(template).usableByHero;
 end;
 
 { TAppliedItem }
 
 function TAppliedItem.areaItem: boolean;
 begin
-   result := template.areaMedicine;
+   result := TMedicineTemplate(template).areaMedicine;
 end;
 
 function TAppliedItem.getOnField: boolean;
@@ -172,7 +172,7 @@ var
 begin
    result := false;
    for I := 1 to MAXPARTYSIZE do
-      if GParty[i] <> GCurrentEngine.hero[0] then
+      if GParty[i] <> GScriptEngine.hero[0] then
          result := result or usableBy(GParty[i].template.id);
       //end if
    //end for
@@ -180,11 +180,11 @@ end;
 
 function TAppliedItem.usableBy(hero: word): boolean;
 begin
-   result := self.template.usableBy[hero];
-   if GCurrentEngine.hero[hero].dead then
+   result := hero in TUsableItemTemplate(template).usableByHero;
+{   if GScriptEngine.hero[hero].dead then
       result := result and template.condition[CTN_DEAD]
    else if template.deadOnly then
-      result := false;
+      result := false;}
    //end if
 end;
 
@@ -200,7 +200,7 @@ var
    i: Integer;
 begin
    for I := 1 to MAXPARTYSIZE do
-      if GParty[i] <> GCurrentEngine.hero[0] then
+      if GParty[i] <> GScriptEngine.hero[0] then
          self.use(GParty[i]);
       //end if
    //end for
@@ -217,12 +217,12 @@ begin
 
    with self.template do
    begin
-      if (hpPercent > 0) or (hpHeal > 0) then
+{      if (hpPercent > 0) or (hpHeal > 0) then
          result := result or (GParty[hero].hp < GParty[hero].maxHp);
       if (mpPercent > 0) or (mpHeal > 0) then
          result := result or (GParty[hero].mp < GParty[hero].maxMp);
       if (outOfBattle) then
-         result := result and (GGameEngine.state <> in_battle);
+         result := result and (GGameEngine.state <> in_battle);}
    end;
 end;
 
@@ -231,7 +231,7 @@ var
    fraction: single;
    I: Integer;
 begin
-   for i := 1 to GDatabase.conditions + 1 do
+{   for i := 1 to GDatabase.conditions + 1 do
       if template.condition[i] then
          target.condition[i] := false;
       //end if
@@ -247,7 +247,7 @@ begin
       target.mp := target.mp + trunc(target.maxMp * fraction);
    end;
    target.hp := target.hp + template.hpHeal;
-   target.mp := target.mp + template.mpHeal;
+   target.mp := target.mp + template.mpHeal;}
    inherited use(target);
 end;
 
@@ -255,12 +255,12 @@ end;
 
 function TBookItem.usableBy(hero: word): boolean;
 begin
-   result := inherited usableBy(hero) and not GCurrentEngine.hero[hero].skill[self.template.skill];
+   result := inherited usableBy(hero) and not GScriptEngine.hero[hero].skill[TSkillBookTemplate(template).skill];
 end;
 
 procedure TBookItem.use(target: TRpgHero);
 begin
-   target.skill[template.skill] := true;
+   target.skill[TSkillBookTemplate(template).skill] := true;
    inherited;
 end;
 
@@ -275,12 +275,12 @@ end;
 
 procedure TStatItem.use(target: TRpgHero);
 begin
-   target.maxHp := target.maxHp + template.permHP;
-   target.maxMp := target.maxMP + template.permMP;
-   target.attack := target.attack + template.permAttack;
-   target.defense := target.defense + template.permDefense;
-   target.mind := target.mind + template.permMind;
-   target.agility := target.agility + template.permSpeed;
+   target.maxHp := target.maxHp + TUsableItemTemplate(template).stat[1];
+   target.maxMp := target.maxMP + TUsableItemTemplate(template).stat[2];
+   target.attack := target.attack + TUsableItemTemplate(template).stat[3];
+   target.defense := target.defense + TUsableItemTemplate(template).stat[4];
+   target.mind := target.mind + TUsableItemTemplate(template).stat[5];
+   target.agility := target.agility + TUsableItemTemplate(template).stat[6];
    inherited;
 end;
 
@@ -288,18 +288,18 @@ end;
 
 function TSkillItem.areaItem: boolean;
 begin
-   result := FSkill.template.range = sr_helpAll;
+   result := TNormalSkillTemplate(FSkill.template).range = sr_area;
 end;
 
 constructor TSkillItem.Create(const item, quantity: word);
 begin
    inherited;
-   FSkill := GSkills[template.skill];
+   FSkill := GSkills[TSkillItemTemplate(template).skill];
 end;
 
 function TSkillItem.getOnField: boolean;
 begin
-   result := self.skill.template.usableOnField;
+   result := self.skill.template.usableWhere = us_field;
 end;
 
 function TSkillItem.usableBy(hero: word): boolean;
@@ -323,7 +323,7 @@ end;
 
 function TSwitchItem.getOnField: boolean;
 begin
-   result := self.template.onField;
+   result := TUsableItemTemplate(template).usableWhere = us_field;
 end;
 
 function TSwitchItem.usableBy(hero: word): boolean;
@@ -333,7 +333,7 @@ end;
 
 procedure TSwitchItem.use;
 begin
-   GSwitches[self.template.switch] := true;
+   GSwitches[TVariableItemTemplate(template).which] := true;
    self.useOnce;
 end;
 

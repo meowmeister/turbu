@@ -20,7 +20,8 @@ unit transition_graphics;
 interface
 uses
    charset_data, chipset_graphics,
-   AsphyreTextures, AsphyreDevices;
+   {AsphyreTextures, AsphyreDevices;}
+   SDL_Canvas;
 
 type TDivideStyle = (ds_vert, ds_horiz, ds_both);
 
@@ -39,7 +40,7 @@ type TDivideStyle = (ds_vert, ds_horiz, ds_both);
    procedure wave(vanishing: boolean);
 
 var
-   GRenderTargets: TAsphyreTextures;
+   GRenderTargets: TSdlRenderTargets;
    GCurrentTarget: shortint;
 
 implementation
@@ -47,7 +48,7 @@ uses
    windows, types, graphics, math,
    commons, transitions, distortions,
    SDL,
-   AsphyreDef;
+   {AsphyreDef} SG_defs;
 
 const
    FADETIME: array[1..2] of integer = (1200, 1800);
@@ -129,7 +130,7 @@ begin
    //end if
    workload := high(GBlockArray) div (FADETIME[1] div GFrameLength);
    width := GGameEngine.Canvas.Width div BLOCKSIZE;
-   for i := location to lesserOf(location + workload, high(GBlockArray)) do
+   for i := location to min(location + workload, high(GBlockArray)) do
    begin
       corner := point((GBlockArray[i] mod width) * BLOCKSIZE, (GBlockArray[i] div width) * BLOCKSIZE);
 //fixme
@@ -151,7 +152,7 @@ begin
       initReveal;
    workload := high(GBlockArray) div (FADETIME[1] div GFrameLength);
    width := GGameEngine.Canvas.Width div BLOCKSIZE;
-   for i := location to lesserOf(location + workload, high(GBlockArray)) do
+   for i := location to min(location + workload, high(GBlockArray)) do
    begin
       corner := point((GBlockArray[i] mod width) * BLOCKSIZE, (GBlockArray[i] div width) * BLOCKSIZE);
 //fixme
@@ -271,7 +272,7 @@ begin
       color := clWhite
    else color := clBlack;
    workload := high(GStripeArray) div (FADETIME[1] div GFrameLength);
-   for i := location to lesserOf(location + workload, high(GStripeArray)) do
+   for i := location to min(location + workload, high(GStripeArray)) do
    begin
       if FVertical then
       begin
@@ -323,7 +324,7 @@ begin
    end;
    workload := (GGameEngine.Canvas.Height div 2) div max((FADETIME[1] div GFrameLength), 1);
    ratio := GGameEngine.Canvas.Width / GGameEngine.Canvas.Height;
-   i := lesserOf(location + workload, GGameEngine.Canvas.Height div 2);
+   i := min(location + workload, GGameEngine.Canvas.Height div 2);
    mask.TopLeft := point(round(i * ratio), i);
    mask.Right := GGameEngine.Canvas.Width - mask.Left;
    mask.Bottom := GGameEngine.Canvas.Height - mask.Top;
@@ -368,7 +369,7 @@ begin
    center := point(GGameEngine.Canvas.Width div 2, GGameEngine.Canvas.Height div 2);
    workload := (GGameEngine.Canvas.Height div 2) div max((FADETIME[1] div GFrameLength), 1);
    ratio := GGameEngine.Canvas.Width / GGameEngine.Canvas.Height;
-   i := lesserOf(location + workload, GGameEngine.Canvas.Height div 2);
+   i := min(location + workload, GGameEngine.Canvas.Height div 2);
    mask.TopLeft := point(center.x - round(i * ratio), center.y - i);
    mask.bottomRight := point(center.x + round(i * ratio), center.y + i);
 //fixme
@@ -664,8 +665,8 @@ begin
       end;
    workload := GGameEngine.Canvas.Width div (FADETIME[1] div GFrameLength);
    if FShowing then
-      location := lesserOf(location + workload, GGameEngine.Canvas.Width)
-   else location := greaterOf(location - workload, minimum);
+      location := min(location + workload, GGameEngine.Canvas.Width)
+   else location := max(location - workload, minimum);
    viewRect.BottomRight := point(location, round(location / ratio));
    if FShowing then
    begin
@@ -675,8 +676,8 @@ begin
       FCurrentX := FCurrentX + (FCenter.x / GGameEngine.Canvas.Width) * workload;
       FCurrentY := FCurrentY + (FCenter.Y / GGameEngine.Canvas.Height) * (workload / ratio);
    end;
-   viewRect.Left := greaterOf(round(FCurrentX), 0);
-   viewRect.Top := greaterOf(round(FCurrentY), 0);
+   viewRect.Left := max(round(FCurrentX), 0);
+   viewRect.Top := max(round(FCurrentY), 0);
 //fixme
 //   GGameEngine.Canvas.DrawRectStretch(GRenderTargets[2], 0, 0, GGameEngine.Canvas.Device.Width, GGameEngine.Canvas.Device.Height, viewRect, clWhite4, fxNone);
    if FShowing then

@@ -200,7 +200,7 @@ begin
    assert(parent is TLcfDataBase);
    inherited create;
    FID := id;
-   converter := intX80.Create(input);
+   converter := TBerConverter.Create(input);
    if converter.getData <> id then
       raise EParseMessage.create('Hero record' + intToStr(id) + ' of RPG_RT.LDB not found!');
    FName := getStrSec(1, input, fillInBlankStr);
@@ -266,7 +266,6 @@ begin
    if GProjectFormat = pf_2k3 then
       assert(getArraySec($50, input, FBattleCommands) = 28);
    assert(peekAhead(input, 0));
-   converter.free;
 end;
 
 destructor THeroRecord.Destroy;
@@ -274,10 +273,6 @@ var i: integer;
 begin
    for i := low(FSkillSection) to high(FSkillSection) do
       FSkillSection[i].Free;
-   finalize(FSkillSection);
-   finalize(FConditionModifiers);
-   finalize(FDtypeModifiers);
-   finalize(FCurveSec);
    inherited;
 end;
 
@@ -358,7 +353,7 @@ begin
    assert(parent is TLcfDataBase);
    inherited create;
    FID := id;                   
-   converter := intX80.Create(input);
+   converter := TBerConverter.Create(input);
    if converter.getData <> id then
       raise EParseMessage.create('Hero record' + intToStr(id) + ' of RPG_RT.LDB not found!');
    FName := getStrSec(1, input, fillInBlankStr);
@@ -401,7 +396,6 @@ begin
    if GProjectFormat = pf_2k3 then
       assert(getArraySec($50, input, FBattleCommands) = 28);
    assert(peekAhead(input, 0));
-   converter.free;
 end;
 
 destructor TRm2CharClass.Destroy;
@@ -409,10 +403,6 @@ var i: integer;
 begin
    for i := low(FSkillSection) to high(FSkillSection) do
       FSkillSection[i].Free;
-   finalize(FSkillSection);
-   finalize(FConditionModifiers);
-   finalize(FDtypeModifiers);
-   finalize(FCurveSec);
    inherited;
 end;
 
@@ -486,16 +476,12 @@ begin
    if input = nil then
       Exit;
 
-   converter := intX80.Create(input);
-   try
-      if converter.getData <> id then
-         raise EParseMessage.create('Hero skill record' + intToStr(id) + ' not found!');
-      FLevel := getNumSec(1, input, fillInHskillInt);
-      FSkill := getNumSec(2, input, fillInHSkillInt);
-      assert(peekAhead(input, 0));
-   finally
-      converter.free;
-   end;
+   converter := TBerConverter.Create(input);
+   if converter.getData <> id then
+      raise EParseMessage.create('Hero skill record' + intToStr(id) + ' not found!');
+   FLevel := getNumSec(1, input, fillInHskillInt);
+   FSkill := getNumSec(2, input, fillInHSkillInt);
+   assert(peekAhead(input, 0));
 end;
 
 {Classless}

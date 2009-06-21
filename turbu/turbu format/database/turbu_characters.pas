@@ -21,7 +21,7 @@ interface
 uses
    types, classes, DB, Generics.Collections,
    turbu_constants, turbu_defs, turbu_classes, turbu_skills, turbu_containers,
-   turbu_heroes;
+   turbu_heroes, turbu_script_interface;
 
 type
    TExpCalcFunc = function(int1, int2, int3, int4, int5: integer): integer of object;
@@ -47,6 +47,8 @@ type
    private
       FStyle: TCommandStyle;
       FValue: smallint;
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
@@ -95,6 +97,8 @@ type
    private
       FBlocks: array of TStatBlock;
       function getSize: integer;
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
@@ -124,6 +128,7 @@ type
       FStrongDefense: boolean;
       FUnarmedAnim: integer;
       FOnJoin: TPartyEvent;
+    FName: string;
 
       function getCommand(x: byte): smallint; inline;
       procedure setCommand(x: byte; const Value: smallint); inline;
@@ -135,6 +140,7 @@ type
       procedure setEq(x: byte; const Value: smallint);
    protected
       function getDatasetName: string; override;
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       constructor Create;
@@ -179,6 +185,8 @@ type
       FMinLevel: word;
       FMaxLevel: word;
       FGuest: boolean;
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
@@ -194,14 +202,28 @@ type
       property guest: boolean read FGuest write FGuest;
    end;
 
-var
-   GStatSet: TStatSet;
+procedure SetScriptEngine(value: IScriptEngine);
+procedure SetDatabase(value: TRpgDatafile);
 
 implementation
 
 uses
    sysUtils,
-   turbu_database, design_script_engine;
+   turbu_database;
+
+var
+   GScriptEngine: IScriptEngine;
+   GDatabase: TRpgDatabase;
+
+procedure SetScriptEngine(value: IScriptEngine);
+begin
+   GScriptEngine := value;
+end;
+
+procedure SetDatabase(value: TRpgDatafile);
+begin
+   GDatabase := value as TRpgDatabase;
+end;
 
 resourcestring
    NOT_IN_BLOCK = 'Stat block not found in stat set!';
@@ -319,12 +341,22 @@ begin
       dec(result);
 end;
 
+class function TStatSet.keyChar: ansiChar;
+begin
+   result := 's';
+end;
+
 function TStatSet.getSize: integer;
 begin
    result := length(FBlocks);
 end;
 
 { TBattleCommand }
+
+class function TBattleCommand.keyChar: ansiChar;
+begin
+   result := 'b';
+end;
 
 constructor TBattleCommand.Load(savefile: TStream);
 begin
@@ -375,7 +407,7 @@ begin
    lassert(savefile.readByte = STAT_COUNT);
    for I := 1 to STAT_COUNT do
    begin
-      FStatBlocks[i] := GStatSet.FBlocks[savefile.readInt];
+      FStatBlocks[i] := GDatabase.statSet.FBlocks[savefile.readInt];
 {      savefile.ReadBuffer(FStatBlocks[i].fullvalue, sizeof(int64));
       if FStatBlocks[i].index = 0 then
       begin
@@ -546,6 +578,11 @@ begin
    result := FStatBlocks[x];
 end;
 
+class function TClassTemplate.keyChar: ansiChar;
+begin
+   result := 'c';
+end;
+
 procedure TClassTemplate.setCommand(x: byte; const Value: smallint);
 begin
    FCommandSet[x] := value;
@@ -567,6 +604,11 @@ begin
 end;
 
 { THeroTemplate }
+
+class function THeroTemplate.keyChar: ansiChar;
+begin
+   result := 'h';
+end;
 
 constructor THeroTemplate.Load(savefile: TStream);
 begin
@@ -607,7 +649,7 @@ end;
 
 class function TExpCalcRecord.getExpFunc(name: string): TExpCalcFunc;
 begin
-   result := TExpCalcFunc(GDScriptEngine.exec.GetProcAsMethodN(rawByteString(name)));
+   result := TExpCalcFunc(GScriptEngine.exec.GetProcAsMethodN(rawByteString(name)));
 end;
 
 function TExpCalcRecord.getMethod: TExpCalcFunc;
@@ -619,16 +661,6 @@ procedure TExpCalcRecord.setName(const Value: string);
 begin
    inherited setName(value);
    FMethod := TRpgMethod(getExpFunc(value));
-end;
-
-initialization
-begin
-   GStatSet := TStatSet.Create;
-end;
-
-finalization
-begin
-   GStatSet.Free;
 end;
 
 end.

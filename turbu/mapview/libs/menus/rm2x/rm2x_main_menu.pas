@@ -59,7 +59,7 @@ type
 implementation
 
 uses
-   types, sysUtils, forms,
+   types, sysUtils, forms, math,
    commons, chipset_graphics, script_engine, script_interface, rm2X_menu_engine,
    text_graphics;
 
@@ -95,7 +95,7 @@ var
 begin
    inherited;
    i := 1;
-   while GParty[i] <> GCurrentEngine.hero[0] do
+   while GParty[i] <> GScriptEngine.hero[0] do
    begin
       FPortrait[i].Draw;
       origin2 := point(round(FPortrait[i].x - engine.WorldX) + 54, round(FPortrait[i].Y - engine.WorldY) + 2);
@@ -103,7 +103,7 @@ begin
       begin
          drawText(name, origin2.X, origin2.Y, 0);
          drawText(charClass, origin2.X + 92, origin2.Y, 0);
-         drawText(GDatabase.vocabulary[lvShort], origin2.x, origin2.Y + 16, 1);
+{         drawText(GDatabase.vocabulary[lvShort], origin2.x, origin2.Y + 16, 1);
          drawText(intToStr(level), origin2.X + 16, origin2.y + 16, 0);
          if highCondition = 0 then
             drawText(GDatabase.vocabulary[normalStatus], origin2.X + 38, origin2.Y + 16, 0)
@@ -119,7 +119,7 @@ begin
          drawTextTo(intToStr(exp), origin2.X + 54, origin2.Y + 32, 0);
          drawText('/', origin2.X + 54, origin2.Y + 32, 0);
          drawTextTo(intToStr(exp + expNeeded), origin2.X + 98, origin2.Y + 32, 0);
-         drawText(GDatabase.vocabulary[mpShort], origin2.X + 102, origin2.Y + 32, 1);
+         drawText(GDatabase.vocabulary[mpShort], origin2.X + 102, origin2.Y + 32, 1);}
          drawTextTo(intToStr(mp), origin2.X + 138, origin2.Y + 32, 0);
          drawText('/', origin2.X + 138, origin2.Y + 32, 0);
          drawTextTo(intToStr(maxMp), origin2.X + 162, origin2.Y + 32, 0);
@@ -186,9 +186,9 @@ var
   yVal: smallint;
 begin
    inherited;
-   for I := 0 to lesserOf(FParsedText.count - 1, 4) do
+   for I := 0 to min(FParsedText.count - 1, 4) do
    begin
-      yVal := 11 + i * (trunc(TGameMap(Engine).fontEngine[0].TextHeight('A') + 3));
+//      yVal := 11 + i * (trunc(TGameMap(Engine).fontEngine[0].TextHeight('A') + 3));
       if FOptionEnabled[i] then
          drawText(FParsedText[i], 12, yVal, 0)
       else drawText(FParsedText[i], 12, yVal, 3);
@@ -200,7 +200,7 @@ begin
    inherited doSetup(value);
    FOptionEnabled[1] := GParty.size > 0;
    FOptionEnabled[2] := GParty.size > 0;
-   FOptionEnabled[3] := GCurrentEngine.canSave;
+   FOptionEnabled[3] := GScriptEngine.canSave;
    self.placeCursor(FSetupValue);
 end;
 

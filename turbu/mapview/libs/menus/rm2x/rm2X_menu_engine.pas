@@ -91,9 +91,9 @@ uses
    uPSI_menus, uPSI_menu_components, uPSI_item_menu, uPSI_rm2x_inventory_menu,
    uPSI_script_interface, uPSI_item_code, uPSI_party_target_menu, uPSI_shop_menu,
    uPSCompiler,
-   asphyredef;
+   {asphyredef} turbu_defs;
 
-function scriptOnUses(Sender: TPSPascalCompiler; const Name: string): Boolean; forward;
+function scriptOnUses(Sender: TPSPascalCompiler; const Name: AnsiString): Boolean; forward;
 
 { TGameMenu }
 
@@ -110,7 +110,7 @@ var
 begin
    inherited Create(parent);
    FScriptEngine := TRmMenuScriptEngine.create(self);
-   assert(GDataArchive.ReadString('menuscripts', dummy));
+//   assert(GDataArchive.ReadString('menuscripts', dummy));
    FScriptEngine.script := dummy;
    GScriptExec := FScriptEngine.exec;
 
@@ -245,7 +245,7 @@ end;
 
 { Classless }
 
-function scriptOnUses(Sender: TPSPascalCompiler; const Name: string): Boolean;
+function scriptOnUses(Sender: TPSPascalCompiler; const Name: AnsiString): Boolean;
 {}
    function AddPointerVariable(const VarName, VarType: string): Boolean;
    var

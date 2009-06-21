@@ -22,8 +22,7 @@ interface
 uses
    SysUtils, Classes, Controls, Forms, Dialogs, ComCtrls,
    JvSelectDirectory, JvBaseDlg,
-   formats, StdCtrls, Mask, JvExMask, JvToolEdit, ExtCtrls,
-   LDB, LMT, LMU;
+   formats, StdCtrls, Mask, JvExMask, JvToolEdit, ExtCtrls;
 
 type
    TfrmRmConverter = class(TForm)
@@ -45,19 +44,13 @@ type
       btnCullSelectDB: TButton;
       btnCullClear: TButton;
       btnCullSelectGraphics: TButton;
-      prgConversion: TProgressBar;
-      lblProgress: TLabel;
       procedure FormShow(Sender: TObject);
       procedure tmrValidateTimer(Sender: TObject);
       procedure btnConvertClick(Sender: TObject);
-      procedure FormDestroy(Sender: TObject);
       procedure dirProjectLocationClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
    private
       FFormat: TProjectFormat;
-      FLdb: TLcfDataBase;
-      FLmt: TFullTree;
-      FLmu: TMapUnit;
       function validateDirectories: boolean; inline;
       procedure grabFormat;
       procedure setFormat(const Value: TProjectFormat);
@@ -75,11 +68,11 @@ implementation
 
 uses
    windows, inifiles, strUtils, Generics.Collections,
-   commons, fileIO,
+   commons, fileIO, rm2_turbu_converter_thread,
+   conversion_report_form, conversion_report,
    turbu_database, turbu_characters, turbu_constants, locate_files,
-   rm2_turbu_characters, rm2_turbu_database, discInterface,
-   archiveInterface, design_script_engine, turbu_engines, logs,
-   turbu_unit_dictionary,
+   discInterface,
+   archiveInterface, design_script_engine, logs,
    strtok,
    uPSCompiler,
    sdl;
@@ -91,28 +84,11 @@ resourcestring
 
 { TfrmRmConverter }
 
-resourcestring
-   UNEX_FORMAT_MESSAGE1 = 'The project in this folder appears to be a RPG Maker';
-   RM2K_FORMAT = '2000 ';
-   RM2K3_FORMAT = '2003 ';
-   UNEX_FORMAT_MESSAGE2 = 'project, where a RPG Maker ';
-   UNEX_FORMAT_MESSAGE3 = 'project was expected. Press OK to convert the project as an RPG Maker ';
-   UNEX_FORMAT_MESSAGE4 = 'project, or Cancel to change the import options.';
-
 procedure TfrmRmConverter.btnConvertClick(Sender: TObject);
 var
-   database, mapTree, mapUnit: TFileStream;
-   outFile: TFileStream;
-   savefile: TMemoryStream;
-   stream: TStream;
-   errorstring: string;
-   goodformat, badformat: string;
-   filename, uFilename: string;
-   dic: TUnitDictionary;
+   filename: string;
+   conversionReport: IConversionReport;
 begin
-   database := nil;
-   mapTree := nil;
-   mapUnit := nil;
    if not validateDirectories then
    begin
       btnConvert.Enabled := false;
@@ -135,109 +111,22 @@ begin
       filename := IncludeTrailingPathDelimiter(dirOutput.text) + IMAGE_DB;
       assert(GArchives.Add(newFolder(filename)) = IMAGE_ARCHIVE);
 
-      lblProgress.Visible := true;
-      prgConversion.Position := 0;
-      prgConversion.Visible := true;
-      Application.ProcessMessages;
-      filename := IncludeTrailingPathDelimiter(dirOutput.text);
-
       GCurrentFolder := dirProjectLocation.Text;
       GProjectFolder := dirOutput.Text;
       logs.closeLog;
-      if fileExists(logName) then
-         deleteFile(PChar(logName));
+{      if fileExists(logName) then
+         deleteFile(PChar(logName));}
 
-      database := openFile(dirProjectLocation.Text + '\RPG_RT.ldb');
-      if getString(database) <> 'LcfDataBase' then
-         raise EParseMessage.create('RPG_RT.LDB is corrupt!');
-      GProjectFormat := scanRmFormat(database);
-      if GProjectFormat <> FFormat then
-      begin
-         if GProjectFormat = pf_2k then
-         begin
-            goodformat := RM2K_FORMAT;
-            badformat := RM2K3_FORMAT;
-         end else
-         begin
-            badformat := RM2K_FORMAT;
-            goodformat := RM2K3_FORMAT;
-         end;
-         errorstring := UNEX_FORMAT_MESSAGE1 + goodformat + UNEX_FORMAT_MESSAGE2 + badformat + UNEX_FORMAT_MESSAGE3 + goodformat + UNEX_FORMAT_MESSAGE4;
-         case msgBox(errorstring, 'Unexpected format found', MB_OKCANCEL) of
-            IDOK: FFormat := GProjectFormat;
-            IDCANCEL:
-            begin
-               tmrValidate.Enabled := true;
-               Exit;
-            end;
-         end;
+      turbu_characters.SetScriptEngine(GDScriptEngine);
+      frmConversionReport := TfrmConversionReport.Create(Application);
+      ConversionReport := frmConversionReport;
+      frmConversionReport.thread := TConverterThread.Create(conversionReport, dirProjectLocation.Text, dirOutput.Text, FFormat);
+      case frmConversionReport.ShowModal of
+         mrOk:;
+         else ;
       end;
-      FLdb := TLcfDataBase.Create(database);
-      prgConversion.StepIt;
-      //end of format and database check
-
-      maptree := openFile(dirProjectLocation.Text + '\RPG_RT.lmt');
-      if getString(maptree) <> 'LcfMapTree' then
-         raise EParseMessage.create('RPG_RT.LMT is corrupt!');
-      FLmt := TFullTree.Create(maptree);
-      prgConversion.StepIt;
-      //done checking the map tree; now let's do some converting
-
-      GDatabase.Free;
-      dic := TUnitDictionary.Create([doOwnsValues], 10);
-      for filename in GArchives[0].allFiles('scripts\general\') do
-      begin
-         stream := GArchives[0].getFile(filename);
-         uFilename := StringReplace(filename, 'scripts\general\', '', []);
-         uFilename := StringReplace(uFilename, '.trs', '', []);
-         try
-            dic.Add(uFilename, TStringList.Create);
-            dic[uFilename].LoadFromStream(stream);
-         finally
-            stream.Free;
-         end;
-      end;
-
-      try
-         GDatabase := TRpgDatabase.convert(FLdb, dic, prgConversion.StepIt);
-      except
-         on E: EMissingPlugin do
-         begin
-            MsgBox(E.Message, 'Missing plugin');
-            GDatabase := nil;
-            Exit;
-         end;
-         else begin
-            GDatabase := nil;
-            raise;
-         end;
-      end;
-      savefile := TMemoryStream.Create;
-      try
-         GDatabase.save(savefile);
-         prgConversion.StepIt;
-         filename := IncludeTrailingPathDelimiter(dirOutput.text) + DBNAME;
-         if FileExists(filename) then
-            deleteFile(PChar(filename));
-         outFile := TFileStream.Create(filename, fmCreate);
-         try
-            outfile.CopyFrom(savefile, 0);
-         finally
-            outFile.Free;
-         end;
-         prgConversion.StepIt;
-      finally
-         savefile.free;
-      end;
-      MsgBox('No errors found.', 'Conversion complete!');
-      self.ModalResult := SUCCESSFUL_IMPORT;
    finally
-      database.free;
-      mapTree.free;
-      mapUnit.free;
       tmrValidate.Enabled := self.ModalResult = mrNone;
-      prgConversion.Visible := false;
-      lblProgress.Visible := false;
    end;
 end;
 
@@ -252,22 +141,12 @@ begin
                      'will be generated automatically based on the original project folder''s name.';
 end;
 
-procedure TfrmRmConverter.FormDestroy(Sender: TObject);
-begin
-   FLdb.Free;
-   FLmt.Free;
-   FLmu.free;
-end;
-
 procedure TfrmRmConverter.FormShow(Sender: TObject);
 var
    dummy: ansiString;
    stream: TStream;
 begin
    assert(fsModal in FFormState);
-   freeAndNil(FLdb);
-   freeAndNil(FLmt);
-   freeAndNil(FLmu);
    self.grabFormat;
    dirProjectLocation.Text := '';
    dirOutput.InitialDir := getPersonalFolder;

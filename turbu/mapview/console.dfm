@@ -54,10 +54,6 @@ object frmConsole: TfrmConsole
     TabOrder = 2
     object tcpSwitches: TTabSheet
       Caption = '&Switches'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object vleSwitches: TValueListEditor
         Left = 3
         Top = 0
@@ -86,10 +82,6 @@ object frmConsole: TfrmConsole
     object tcpVariables: TTabSheet
       Caption = '&Variables'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object vleVariables: TValueListEditor
         Left = 3
         Top = 0

@@ -19,14 +19,15 @@ unit turbu_2k3_battle_engine;
 
 interface
 uses
-   turbu_battle_engine;
+   turbu_battle_engine,
+   sdl_13;
 
 type
    T2k3BattleEngine = class(TBattleEngine)
    private
    public
       constructor Create; override;
-      procedure initialize; override;
+      procedure initialize(window: TSdlWindowId); override;
       function startBattle(party: {TRpgParty} TObject; foes: TObject; conditions: TBattleConditions): TBattleResultData; override;
    end;
 
@@ -41,7 +42,7 @@ begin
    self.data := TBattleEngineData.Create('Active-time battle engine', TVersion.Create(0, 1, 1), bv_side, bt_atb);
 end;
 
-procedure T2k3BattleEngine.initialize;
+procedure T2k3BattleEngine.initialize(window: TSdlWindowId);
 begin
    //fill this in
    FInitialized := true;

@@ -20,24 +20,24 @@ unit distortions;
 interface
 uses
    types,
-   dxTextures, rpg_image;
+   SDL_Canvas, rpg_image;
 
-procedure drawWave(image: TDxBaseTexture; source: TRect; amp, period, phase, DrawFx: Integer); overload;
+procedure drawWave(image: TSdlRenderTarget; source: TRect; amp, period, phase, DrawFx: Integer); overload;
 procedure drawWave(image: TRpgImage; amp, period, phase, DrawFx: Integer); overload;
 
 implementation
 uses
    commons, chipset_graphics,
-   AsphyreDef, {AsphyreImages} SDL_ImageManager;
+   {AsphyreDef, AsphyreImages} SG_Defs, SDL_ImageManager;
 
-procedure drawWave(image: TDxBaseTexture; source: TRect; amp, period, phase, DrawFx: Integer);
+procedure drawWave(image: TSdlRenderTarget; source: TRect; amp, period, phase, DrawFx: Integer);
 var
    i, shift: integer;
    width, height: word;
    viewRect: TRect;
 begin
-   width := image.Size.X;
-   height := image.Size.Y;
+   width := image.width;
+   height := image.height;
    for i := 0 to Height - 1 do
    begin
       shift := round(amp * sin((phase + i) / period));

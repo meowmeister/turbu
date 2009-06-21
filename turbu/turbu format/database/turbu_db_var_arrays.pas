@@ -35,7 +35,6 @@ type
       constructor create(input: TStream; size: word);
       property len: word read FLength;
 {$IFNDEF PRO}
-      destructor Destroy; override;
       property name[x: word]: string read getName write setname;
 {$ENDIF}
    end;
@@ -53,27 +52,26 @@ type
       constructor create(input: TStream; size: word);
       property len: word read FLength;
 {$IFNDEF PRO}
-      destructor Destroy; override;
       property name[x: word]: string read getName write setname;
 {$ENDIF}
    end;
 
 implementation
 uses
-   windows, sysUtils,
-   commons, BER, fileIO;
+   sysUtils{,
+   commons, BER, fileIO};
 
    procedure fillInSwitchStr(const expected: byte; out theResult: ansiString); forward;
 
 { TVarSection }
 {$IFNDEF PRO}
 constructor TVarSection.create(input: TStream; size: word);
-var
+{var
   I: Integer;
   dummy: string;
-  converter: intX80;
+  converter: intX80;}
 begin
-   FLength := size;
+{   FLength := size;
    setLength(FVarNames, size + 1);
    for I := 1 to size do
    begin
@@ -87,13 +85,7 @@ begin
       if not peekAhead(input, 0) then
          raise EParseMessage.create('Exceptional case found at LDB string x' + intToHex(i, 2) + '!');
       converter.free;
-   end;
-end;
-
-destructor TVarSection.Destroy;
-begin
-   finalize(FVarNames);
-   inherited;
+   end;}
 end;
 
 function TVarSection.getName(x: word): string;
@@ -110,9 +102,9 @@ end;
 constructor TVarSection.create(input: TStream; size: word);
 var
    I: Integer;
-   converter: intX80;
+//   converter: intX80;
 begin
-   FLength := size;
+{   FLength := size;
    for I := 1 to size do
    begin
       converter := intX80.create(input);
@@ -122,19 +114,19 @@ begin
       if not peekAhead(input, 0) then
          raise EParseMessage.create('Exceptional case found at LDB string x' + intToHex(i, 2) + '!');
    end;
-
+ }
 end;
 {$ENDIF}
 
 { TSwitchSection }
 {$IFNDEF PRO}
 constructor TSwitchSection.create(input: TStream; size: word);
-var
+{var
   I: Integer;
   dummy: string;
-  converter: intX80;
+  converter: intX80;}
 begin
-   FLength := size;
+{   FLength := size;
    setLength(FSwitchNames, size + 1);
    for I := 1 to size do
    begin
@@ -148,13 +140,7 @@ begin
       if not peekAhead(input, 0) then
          raise EParseMessage.create('Exceptional case found at LDB string x' + intToHex(i, 2) + '!');
       converter.free;
-   end;
-end;
-
-destructor TSwitchSection.Destroy;
-begin
-   finalize(FSwitchNames);
-   inherited;
+   end;}
 end;
 
 function TSwitchSection.getName(x: word): string;
@@ -172,9 +158,9 @@ end;
 constructor TSwitchSection.create(input: TStream; size: word);
 var
    I: Integer;
-   converter: intX80;
+//   converter: intX80;
 begin
-   FLength := size;
+{   FLength := size;
    for I := 1 to size do
    begin
       converter := intX80.Create(input);
@@ -183,7 +169,7 @@ begin
       skipSec(1, input);
       if not peekAhead(input, 0) then
          raise EParseMessage.create('Exceptional case found at LDB string x' + intToHex(i, 2) + '!');
-   end;
+   end;}
 end;
 {$ENDIF}
 
@@ -191,8 +177,8 @@ end;
 
 procedure fillInSwitchStr(const expected: byte; out theResult: ansiString);
 begin
-   msgBox ('No case implemented for x' + IntToHex(expected, 2) + '!', 'fillInSwitchStr says:', MB_OK);
-   raise EMessageAbort.Create
+{   msgBox ('No case implemented for x' + IntToHex(expected, 2) + '!', 'fillInSwitchStr says:', MB_OK);
+   raise EMessageAbort.Create}
 end;
 
 end.

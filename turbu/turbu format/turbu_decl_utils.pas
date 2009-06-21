@@ -25,8 +25,7 @@ unit turbu_decl_utils;
 interface
 uses
    types, TypInfo,
-   turbu_classes,
-   script_backend;
+   turbu_classes, turbu_heroes;
 
 type
    TScriptSignature = (ssNone = -1, ssScriptEvent, ssDamageCalcEvent,

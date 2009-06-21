@@ -45,7 +45,7 @@ resourcestring
 procedure TRpgSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint);
 var
    dummy: PSdlSurface;
-   colorkey: PSDL_Color;
+   colorkey: TSDL_Color;
 begin
    inherited setup(filename, imagename, container, spriteSize);
 {   dummy := TSdlSurface.Convert(FSurface, FSurface.format);
@@ -54,7 +54,7 @@ begin
    FMustLock := FSurface.MustLock;
    if assigned(FSurface.format.palette) then
    begin
-      colorkey := @FSurface.format.palette.colors^[0];
+      colorkey := FSurface.format.palette.colors^[0];
       FSurface.ColorKey := SDL_MapRGB(FSurface.format, colorkey.r, colorkey.g, colorkey.b)
    end;
 end;

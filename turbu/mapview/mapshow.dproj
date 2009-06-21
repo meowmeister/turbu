@@ -23,10 +23,13 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_ExeOutput>..\bin</DCC_ExeOutput>
+			<DCC_Inlining>off</DCC_Inlining>
+			<DCC_Define>PS_USESSUPPORT;$(DCC_Define)</DCC_Define>
 			<DCC_DcuOutput>..\dcus</DCC_DcuOutput>
 			<DCC_DcpOutput>..\dcus</DCC_DcpOutput>
 			<DCC_UnitSearchPath>..\..\classes\sdl custom;..\turbu format;..\turbu format\database;..\editor;..\turbu format\plugins;..\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_DependencyCheckOutputName>mapshow.exe</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>..\bin\mapshow.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<Version>7.0</Version>
@@ -100,7 +103,6 @@
 			<DCCReference Include="libs\script engine\RPG Script library\rs_map.pas"/>
 			<DCCReference Include="libs\map engine\transitions.pas"/>
 			<DCCReference Include="libs\map engine\transition_graphics.pas"/>
-			<DCCReference Include="libs\map engine\lost_transitions.pas"/>
 			<DCCReference Include="libs\map engine\distortions.pas"/>
 			<DCCReference Include="libs\general graphics\weather.pas"/>
 			<DCCReference Include="libs\general graphics\rpg_image.pas"/>
@@ -109,16 +111,21 @@
 			<DCCReference Include="libs\general graphics\rpg_anim.pas"/>
 			<DCCReference Include="..\xyz_lib.pas"/>
 			<DCCReference Include="..\move_data.pas"/>
-			<DCCReference Include="libs\script engine\rpg_character.pas"/>
 			<DCCReference Include="libs\map engine\map_unit.pas"/>
-			<DCCReference Include="libs\general graphics\preloader.pas"/>
 			<DCCReference Include="..\formats.pas"/>
 			<DCCReference Include="..\logs.pas"/>
 			<DCCReference Include="..\..\classes\sdl custom\SG_defs.pas"/>
 			<DCCReference Include="..\..\classes\sdl custom\sdl_sprite.pas"/>
-			<DCCReference Include="..\archiveInterface.pas"/>
 			<DCCReference Include="libs\general graphics\text_graphics.pas"/>
-			<None Include="..\specs.txt"/>
+			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
+			<DCCReference Include="..\archiveInterface.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_shop_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_item_code.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_item_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_menu_components.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_menus.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_party_target_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_rm2x_inventory_menu.pas"/>
 			<None Include="libs\menus\rm2x\menuscripts.txt"/>
 			<None Include="mapshow.todo"/>
 			<None Include="scripts\battle_algorithms"/>

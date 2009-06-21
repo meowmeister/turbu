@@ -31,6 +31,8 @@ type
       FDesc: string;
       FPrice: integer;
       FTag: T4IntArray;
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream); virtual;
       procedure save(savefile: TStream); override;
@@ -197,6 +199,11 @@ uses
    types;
 
 { TItemTemplate }
+
+class function TItemTemplate.keyChar: ansiChar;
+begin
+   result := 'i';
+end;
 
 constructor TItemTemplate.Load(savefile: TStream);
 begin

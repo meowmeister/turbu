@@ -104,7 +104,7 @@ function loadPortrait(const filename: string; const index: byte): TSystemMiniTil
 implementation
 
 uses
-   types, sysUtils,
+   types, sysUtils, math,
    commons, chipset_graphics, script_engine, script_interface, item_code,
    rm2X_menu_engine, text_graphics,
    SDL_ImageManager,
@@ -125,12 +125,12 @@ var
    xPos: word;
 begin
    inherited Draw;
-   with TGameMap(engine).fontEngine[0] do
+{   with TGameMap(engine).fontEngine[0] do
    begin
       dummy := IntToStr(GParty.money);
       xPos := drawTextTo(GDatabase.vocabulary[moneyUnit], origin.x + FBounds.Right - 10, origin.y + 10, 1);
       drawTextTo(dummy, xPos - 4, origin.y + 10, 0);
-   end;
+   end;}
 end;
 
 { TCustomScrollBox }
@@ -163,7 +163,7 @@ begin
    inherited Draw;
    origin := point(round(FCorners[topLeft].x - engine.WorldX), round(fcorners[topLeft].Y - engine.WorldY));
    max := FParsedText.count - (FLastLineColumns + 1);
-   for I := FTopPosition to lesserOf(max, FTopPosition + FDisplayCapacity - 1) do
+   for I := FTopPosition to min(max, FTopPosition + FDisplayCapacity - 1) do
    begin
       j := i - FTopPosition;
       if FOptionEnabled[i] then
@@ -244,9 +244,9 @@ var
    dummy: TRpgHero;
 begin
    inherited;
-   dummy := GCurrentEngine.hero[fchar];
+   dummy := GScriptEngine.hero[fchar];
    drawText(dummy.name, origin.x + 8, origin.y + 10, 0);
-   drawText(GDatabase.vocabulary[lvShort], origin.x + 86, origin.y + 10, 1);
+{   drawText(GDatabase.vocabulary[lvShort], origin.x + 86, origin.y + 10, 1);
    drawTextTo(IntToStr(dummy.level), origin.x + 116, origin.y + 10, 0);
    if dummy.highCondition = 0 then
       drawText(GDatabase.vocabulary[normalStatus], origin.X + 126, origin.y + 10, 0)
@@ -256,7 +256,7 @@ begin
    drawTextTo(intToStr(dummy.hp), origin.x + 222, origin.y + 10, 0);
    drawText('/', origin.x + 222, origin.y + 10, 0);
    drawTextTo(intToStr(dummy.maxHp), origin.X + 246, origin.y + 10, 0);
-   drawText(GDatabase.vocabulary[mpShort], origin.X + 254, origin.y + 10, 1);
+   drawText(GDatabase.vocabulary[mpShort], origin.X + 254, origin.y + 10, 1);}
    drawTextTo(intToStr(dummy.mp), origin.x + 290, origin.y + 10, 0);
    drawText('/', origin.x + 290, origin.y + 10, 0);
    drawTextTo(intToStr(dummy.maxMp), origin.X + 314, origin.y + 10, 0);
@@ -325,10 +325,10 @@ begin
    inherited doSetup(value);
    i := 1;
    FParsedText.Clear;
-   while GParty[i] <> GCurrentEngine.hero[0] do
+   while GParty[i] <> GScriptEngine.hero[0] do
    begin
       FPortrait[i].Free;
-      FPortrait[i] := loadPortrait(GParty[i].template.portrait, GParty[i].template.portraitIndex);
+//      FPortrait[i] := loadPortrait(GParty[i].template.portrait, GParty[i].template.portraitIndex);
       FPortrait[i].x := self.X + 8;
       FPortrait[i].Y := self.Y + 8 + ((i - 1) * 56);
       FParsedText.Add(GParty[i].name);
@@ -397,7 +397,7 @@ function loadPortrait(const filename: string; const index: byte): TSystemMiniTil
 var
    engine: TGameMap;
 begin
-   engine := GCurrentEngine.parent as TGameMap;
+   engine := GScriptEngine.parent as TGameMap;
    if Engine.Images.IndexOf('portrait ' + filename) = -1 then
       TGameMap(Engine).loadPortrait(filename);
    result := TSystemMiniTile.Create(Engine, nil);

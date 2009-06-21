@@ -63,7 +63,6 @@ uses
   ,menu_basis
   ,rm2X_menu_components
   ,rpg_list
-  ,asphyreSprite
   ,rm2x_item_menu
   ;
  

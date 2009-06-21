@@ -3,13 +3,16 @@
 			<ProjectGuid>{98f9c45d-3814-41dd-b1c4-d4201445334e}</ProjectGuid>
 		</PropertyGroup>
 		<ItemGroup>
-			<Projects Include="..\patcher\patcher.dproj">
-				<Dependencies/>
-			</Projects>
 			<Projects Include="engines\basis\EngineBasis.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="turbu format\default_format.dproj">
+				<Dependencies/>
+			</Projects>
 			<Projects Include="engines\battle basis\battle_default.dproj">
+				<Dependencies>engines\basis\EngineBasis.dproj</Dependencies>
+			</Projects>
+			<Projects Include="engines\map engine\map_default.dproj">
 				<Dependencies>engines\basis\EngineBasis.dproj</Dependencies>
 			</Projects>
 			<Projects Include="mapview\mapshow.dproj">
@@ -19,6 +22,12 @@
 				<Dependencies>engines\basis\EngineBasis.dproj;engines\battle basis\battle_default.dproj</Dependencies>
 			</Projects>
 			<Projects Include="test harness\testing.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\patcher\patcher.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\..\test\VMT.dproj">
 				<Dependencies/>
 			</Projects>
 		</ItemGroup>
@@ -31,15 +40,6 @@
 				</BorlandProject>
 			</BorlandProject>
 		</ProjectExtensions>
-		<Target Name="patcher">
-			<MSBuild Projects="..\patcher\patcher.dproj"/>
-		</Target>
-		<Target Name="patcher:Clean">
-			<MSBuild Targets="Clean" Projects="..\patcher\patcher.dproj"/>
-		</Target>
-		<Target Name="patcher:Make">
-			<MSBuild Targets="Make" Projects="..\patcher\patcher.dproj"/>
-		</Target>
 		<Target Name="EngineBasis">
 			<MSBuild Projects="engines\basis\EngineBasis.dproj"/>
 		</Target>
@@ -49,6 +49,15 @@
 		<Target Name="EngineBasis:Make">
 			<MSBuild Targets="Make" Projects="engines\basis\EngineBasis.dproj"/>
 		</Target>
+		<Target Name="default_format">
+			<MSBuild Projects="turbu format\default_format.dproj"/>
+		</Target>
+		<Target Name="default_format:Clean">
+			<MSBuild Targets="Clean" Projects="turbu format\default_format.dproj"/>
+		</Target>
+		<Target Name="default_format:Make">
+			<MSBuild Targets="Make" Projects="turbu format\default_format.dproj"/>
+		</Target>
 		<Target DependsOnTargets="EngineBasis" Name="battle_default">
 			<MSBuild Projects="engines\battle basis\battle_default.dproj"/>
 		</Target>
@@ -57,6 +66,15 @@
 		</Target>
 		<Target DependsOnTargets="EngineBasis:Make" Name="battle_default:Make">
 			<MSBuild Targets="Make" Projects="engines\battle basis\battle_default.dproj"/>
+		</Target>
+		<Target DependsOnTargets="EngineBasis" Name="map_default">
+			<MSBuild Projects="engines\map engine\map_default.dproj"/>
+		</Target>
+		<Target DependsOnTargets="EngineBasis:Clean" Name="map_default:Clean">
+			<MSBuild Targets="Clean" Projects="engines\map engine\map_default.dproj"/>
+		</Target>
+		<Target DependsOnTargets="EngineBasis:Make" Name="map_default:Make">
+			<MSBuild Targets="Make" Projects="engines\map engine\map_default.dproj"/>
 		</Target>
 		<Target Name="mapshow">
 			<MSBuild Projects="mapview\mapshow.dproj"/>
@@ -85,14 +103,32 @@
 		<Target Name="testing:Make">
 			<MSBuild Targets="Make" Projects="test harness\testing.dproj"/>
 		</Target>
+		<Target Name="patcher">
+			<MSBuild Projects="..\patcher\patcher.dproj"/>
+		</Target>
+		<Target Name="patcher:Clean">
+			<MSBuild Targets="Clean" Projects="..\patcher\patcher.dproj"/>
+		</Target>
+		<Target Name="patcher:Make">
+			<MSBuild Targets="Make" Projects="..\patcher\patcher.dproj"/>
+		</Target>
+		<Target Name="VMT">
+			<MSBuild Projects="..\..\test\VMT.dproj"/>
+		</Target>
+		<Target Name="VMT:Clean">
+			<MSBuild Targets="Clean" Projects="..\..\test\VMT.dproj"/>
+		</Target>
+		<Target Name="VMT:Make">
+			<MSBuild Targets="Make" Projects="..\..\test\VMT.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="patcher;EngineBasis;battle_default;mapshow;Turbu;testing"/>
+			<CallTarget Targets="EngineBasis;default_format;battle_default;map_default;mapshow;Turbu;testing;patcher;VMT"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="patcher:Clean;EngineBasis:Clean;battle_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean"/>
+			<CallTarget Targets="EngineBasis:Clean;default_format:Clean;battle_default:Clean;map_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean;patcher:Clean;VMT:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="patcher:Make;EngineBasis:Make;battle_default:Make;mapshow:Make;Turbu:Make;testing:Make"/>
+			<CallTarget Targets="EngineBasis:Make;default_format:Make;battle_default:Make;map_default:Make;mapshow:Make;Turbu:Make;testing:Make;patcher:Make;VMT:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

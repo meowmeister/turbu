@@ -20,7 +20,7 @@ unit rs_system;
 interface
 uses
    classes,
-   LDB;
+   commons, LDB;
 
    function heldItems(const index: word; const equipped: boolean): word;
    procedure removeItems(const value: word; const count: byte);
@@ -34,15 +34,18 @@ uses
    procedure memorizeBgm;
    procedure playMemorizedBgm;
    procedure playSound(name: string; volume, tempo, balance: word);
-   function keyScan(mask: word; wait: boolean): byte;
+   function keyScan(mask: TSet16; wait: boolean): byte;
    procedure callGlobalEvent(id: word);
    procedure callEvent(event, page: word);
-   
+
 implementation
 uses
    sysUtils,
-   commons, formats, script_engine, script_interface, chipset_graphics, rm_sound,
+   formats, script_engine, script_interface, chipset_graphics, rm_sound,
    mapview; //turbu libs
+
+var
+   GDatabase: TLcfDataBase; //temporary hack to get this to compile
 
 function heldItems(const index: word; const equipped: boolean): word;
 var
@@ -58,7 +61,7 @@ begin
       begin
          result := 0;
          for I := 1 to MAXPARTYSIZE do
-            if (GParty[i] <> GCurrentEngine.hero[0]) and (GParty[i].equipped(index)) then
+            if (GParty[i] <> GScriptEngine.hero[0]) and (GParty[i].equipped(index)) then
                inc(result);
             //end if
          //end for
@@ -79,30 +82,30 @@ end;
 procedure heroJoin(const id: byte);
 var i: byte;
 begin
-   if (not id in [1..GCurrentEngine.heroes])
+   if (not id in [1..GScriptEngine.heroes])
    or (GRsys.partySize = MAXPARTYSIZE) then
       Exit;
 
    for I := 1 to MAXPARTYSIZE do
-      if GParty[i] = GCurrentEngine.hero[id] then
+      if GParty[i] = GScriptEngine.hero[id] then
          Exit;
       //end if
    //end if
 
    i := GParty.openSlot;
    if i <> 0 then
-      GParty[i] := GCurrentEngine.hero[id];
+      GParty[i] := GScriptEngine.hero[id];
    //end if
 end;
 
 procedure heroLeave(const id: byte);
 var i: byte;
 begin
-   if (id = 0) or (id > GCurrentEngine.heroes) then
+   if (id = 0) or (id > GScriptEngine.heroes) then
       Exit;
 
    for I := 1 to MAXPARTYSIZE do
-      if GParty[i] = GCurrentEngine.hero[id] then
+      if GParty[i] = GScriptEngine.hero[id] then
          GParty[i] := nil;
       //end if
    //end if
@@ -120,7 +123,7 @@ end;
 
 function waitForMusicPlaying: boolean;
 begin
-   result := GCurrentEngine.mediaPlayer.syncWait = false;
+   result := GScriptEngine.mediaPlayer.syncWait = false;
 end;
 
 procedure playMusic(name: string; time, volume, tempo, balance: word);
@@ -130,10 +133,10 @@ begin
    song := nil;
    try
       if name = '(OFF)' then
-         GCurrentEngine.mediaPlayer.stopMusic
+         GScriptEngine.mediaPlayer.stopMusic
       else begin
          song := TRmMusic.Create(name, time, volume, tempo, balance);
-         GCurrentEngine.mediaPlayer.playMusic(song);
+         GScriptEngine.mediaPlayer.playMusic(song);
          GWaiting := @waitForMusicPlaying;
       end;
    finally
@@ -148,18 +151,18 @@ begin
    if name = '(OFF)' then
       Exit;
    sound := TRmSound.Create(name, 0, volume, tempo, balance);
-   GCurrentEngine.mediaPlayer.playSfx(sound);
+   GScriptEngine.mediaPlayer.playSfx(sound);
    sound.free;
 end;
 
 procedure fadeOutMusic(time: word);
 begin
-   GCurrentEngine.mediaPlayer.fadeOut(time);
+   GScriptEngine.mediaPlayer.fadeOut(time);
 end;
 
 procedure memorizeBgm;
 begin
-   GCurrentEngine.mediaPlayer.memorizeBgm;
+   GScriptEngine.mediaPlayer.memorizeBgm;
 end;
 
 procedure playMemorizedBgm;
@@ -167,40 +170,40 @@ begin
    //this must be run from the main thread to prevent a race
    //condition that keeps the song from playing the first time
    //if it's a MIDI
-   GCurrentThread.syncRun(GCurrentEngine.mediaPlayer.playMemorizedBgm);
+   GCurrentThread.syncRun(GScriptEngine.mediaPlayer.playMemorizedBgm);
 end;
 
 {$WARN NO_RETVAL OFF}
-function readKeyScan(mask: word): byte;
+function readKeyScan(mask: TSet16): byte;
 var
-   bitset, bitmask: TRpgBitset16;
+   bitset, bitmask: TSet16;
    i: integer;
-const LIMIT_MASK = $3F;
+const LIMIT_MASK: TSet16 = [0..5];
 begin
    bitset := GInputReader.scan;
-   if bitset = 0 then
+   if bitset = [] then
       result := 0
    else begin
       bitmask := mask;
-      bitset.bits[5] := bitset.bits[5] and not GGameEngine.enterLock;
-      bitset.bits[6] := bitset.bits[6] and not GGameEngine.enterLock;
-      bitset.bits[5] := bitset.bits[5] or bitset.bits[6];
-      bitset.bits[6] := bitset.bits[7] or bitset.bits[8];
-      bitset := bitset and bitmask and LIMIT_MASK;
-      if bitset = 0 then
+      if GGameEngine.enterLock then
+         bitset := bitset - [5, 6];
+      if 6 in bitset then
+         include(bitset, 5);
+      if 8 in bitset then
+         include(bitset, 7);
+      bitset := bitset * bitmask * LIMIT_MASK;
+      if bitset = [] then
          result := 0
-      else for I := 1 to 16 do
-         if bitset.bits[i] then
-            result := i;
-         //end if
+      else for I in bitset do
+         result := i;
       //end for
    end;
 end;
 {$WARN NO_RETVAL ON}
 
-function keyScan(mask: word; wait: boolean): byte;
+function keyScan(mask: TSet16; wait: boolean): byte;
 begin
-   if mask = 0 then
+   if mask = [] then
    begin
       result := 0;
       Exit;
@@ -227,12 +230,12 @@ begin
       case GProjectFormat of
          pf_2k:
          begin
-            GCurrentEngine.executeEvent(GGlobalEvent[id].event, nil);
+            GScriptEngine.executeEvent(GGlobalEvent[id].event, nil);
             GCurrentThread.Terminate;
          end;
          pf_2k3:
          begin
-            GCurrentEngine.executeEvent(GGlobalEvent[id].event, nil, GCurrentThread as TEventThread);
+            GScriptEngine.executeEvent(GGlobalEvent[id].event, nil, GCurrentThread as TEventThread);
             GCurrentThread.Suspend;
          end;
          else assert(false, 'Project format variable is corrupt!');
@@ -245,12 +248,12 @@ begin
    case GProjectFormat of
       pf_2k:
          begin
-            GCurrentEngine.executeEventPage(GRsys.event[event].base, page);
+            GScriptEngine.executeEventPage(GRsys.event[event].base, page);
             GCurrentThread.Terminate;
          end;
       pf_2k3:
          begin
-            GCurrentEngine.executeEventPage(GRsys.event[event].base, page, GCurrentThread as TEventThread);
+            GScriptEngine.executeEventPage(GRsys.event[event].base, page, GCurrentThread as TEventThread);
             GCurrentThread.Suspend;
          end;
       else assert(false, 'Project format variable is corrupt!');

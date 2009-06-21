@@ -20,7 +20,7 @@ unit battle_default_plugin;
 interface
 
 uses
-   Forms, Contnrs,
+   Contnrs,
    JvPlugin,
    turbu_plugin_interface;
 

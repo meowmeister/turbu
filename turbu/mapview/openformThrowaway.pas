@@ -49,8 +49,8 @@ begin
    ini := TIniFile.Create(GetRegistryValue('\Software\ASCII\RPG2000', 'ApplicationPath') + 'RPG2000.ini');
    try
       dlgOpen.InitialDir := ini.ReadString('RPG2000', 'ProjectBasePath', '');
-      assert(frmGameForm.fontDB.update);
-      assert(frmGameForm.fontEngine.loadFromASDb(frmGameForm.fontDB));
+{      assert(frmGameForm.fontDB.update);
+      assert(frmGameForm.fontEngine.loadFromASDb(frmGameForm.fontDB));}
       if dlgOpen.Execute then
       begin
          if init(dlgOpen.FileName) then

@@ -187,9 +187,9 @@ begin
    for i := 0 to GParty.inventory.Count - 1 do
    begin
       dummy := (GParty.inventory[i] as TRpgItem);
-      if (dummy.template.itemType = slot) and (dummy.usableBy(FChar.template.id)) then
+{      if (dummy.template.itemType = slot) and (dummy.usableBy(FChar.template.id)) then
          FParsedText.AddObject(dummy.template.name, dummy);
-      //end if
+      //end if}
    end;
    FParsedText.AddObject('', nil);
    setLength(FOptionEnabled, FParsedText.Count);
@@ -274,8 +274,8 @@ procedure TGameEquipmentMenu.doCursor(position: smallint);
 var
    coords: trect;
 begin
-   coords := rect(origin.x + 6, origin.y + trunc(position * TGameMap(Engine).fontEngine[0].TextHeight('A')) + 6 + (4 * position),
-      self.width - 12, trunc(TGameMap(Engine).fontEngine[0].TextHeight('J')) + 6);
+{   coords := rect(origin.x + 6, origin.y + trunc(position * TGameMap(Engine).fontEngine[0].TextHeight('A')) + 6 + (4 * position),
+      self.width - 12, trunc(TGameMap(Engine).fontEngine[0].TextHeight('J')) + 6);}
    with TGameMap(Engine).cursor do
    begin
       Visible := true;
@@ -283,9 +283,9 @@ begin
    end;
 
    FCursorPosition := position;
-   if FChar.equipment[position + 1] <> 0 then
+{   if FChar.equipment[position + 1] <> 0 then
       TEquipmentPage(FOwner).FDescBox.text := GDatabase.item[FChar.equipment[position + 1]].desc
-   else TEquipmentPage(FOwner).FDescBox.text := '';
+   else TEquipmentPage(FOwner).FDescBox.text := '';}
    if not((position = 1) and (FChar.dualWield)) then
       TEquipmentPage(FOwner).FInventoryMenu.show(TItemType(position + 1))
    else begin
@@ -300,11 +300,11 @@ var
    i: byte;
 begin
    inherited doSetup(value);
-   ourHero := GCurrentEngine.hero[FSetupValue];
+//   ourHero := GCurrentEngine.hero[FSetupValue];
    self.char := ourHero;
    for i := 0 to 4 do
       if ourHero.equipment[i + 1] <> 0 then
-         FParsedText[i] := GDatabase.item[ourHero.equipment[i + 1]].name
+//         FParsedText[i] := GDatabase.item[ourHero.equipment[i + 1]].name
       else FParsedText[i] := '';
    //end FOR
    self.doCursor(FCursorPosition);
@@ -319,14 +319,14 @@ begin
    if not self.focused then
       FPassiveCursor.Draw;
    FOrigin := point(round(FCorners[topLeft].x - engine.WorldX) + 10, round(FCorners[topLeft].y - engine.WorldY) + 9);
-   drawText(GDatabase.vocabulary[weapon], FOrigin.x, FOrigin.Y, 1);
+{   drawText(GDatabase.vocabulary[weapon], FOrigin.x, FOrigin.Y, 1);
    case FChar.dualWield of
       false: drawText(GDatabase.vocabulary[shield], FOrigin.x, FOrigin.Y + 16, 1);
       true: drawText(GDatabase.vocabulary[weapon], FOrigin.x, FOrigin.Y + 16, 1);
    end;
    drawText(GDatabase.vocabulary[armor], FOrigin.x, FOrigin.Y + 32, 1);
    drawText(GDatabase.vocabulary[helmet], FOrigin.x, FOrigin.Y + 48, 1);
-   drawText(GDatabase.vocabulary[relic], FOrigin.x, FOrigin.Y + 64, 1);
+   drawText(GDatabase.vocabulary[relic], FOrigin.x, FOrigin.Y + 64, 1);}
 
    for I := 0 to 4 do
       drawText(FParsedText[i], FOrigin.X + 52, FOrigin.Y + (i * 16), 0);
@@ -341,7 +341,7 @@ var
 begin
    inherited Draw;
    drawText(FChar.name, FOrigin.x, FOrigin.Y, 0);
-   database := GDatabase;
+//   database := GDatabase;
 
    drawText(database.vocabulary[attack], FOrigin.x, FOrigin.Y + 16, 1);
    drawText(database.vocabulary[defense], FOrigin.x, FOrigin.Y + 32, 1);

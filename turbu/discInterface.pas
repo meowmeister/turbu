@@ -37,6 +37,7 @@ type
       FFinder: TFindFile;
       FList: TList<string>;
 
+      procedure pureSetPath(const Value: string);
       procedure setPath(const Value: string);
    protected
       function DoGetEnumerator: TEnumerator<string>; override;
@@ -51,13 +52,18 @@ type
    private
       FRoot: string;
       FCollection: TFileCollection;
+      procedure setFilter(filter: string);
+   private //IArchive implementation
+      function getFile(key: string): TStream;
+      procedure writeFile(key: string; theFile: TStream);
+      function allFiles(folder: string = ''): TEnumerable<string>;
+      function countFiles(filter: string): integer;
+      function MakeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;
+      procedure setCurrentFolder(const value: string);
+      function getCurrentFolder: string;
    public
       constructor Create(root: string);
       destructor Destroy; override;
-
-      function getFile(key: string): TStream;
-      procedure writeFile(key: string; theFile: TStream);
-      function allFiles(folder: string): TEnumerable<string>;
    end;
 
 {$WARN SYMBOL_DEPRECATED OFF} {$WARN SYMBOL_PLATFORM OFF}
@@ -153,10 +159,32 @@ begin
    inherited;
 end;
 
-function TDiscArchive.allFiles(folder: string): TEnumerable<string>;
+procedure TDiscArchive.setCurrentFolder(const value: string);
 begin
-   FCollection.path := folder;
+   FCollection.pureSetPath(IncludeTrailingPathDelimiter(value));
+end;
+
+function TDiscArchive.getCurrentFolder: string;
+begin
+   result := FCollection.FPath;
+end;
+
+procedure TDiscArchive.setFilter(filter: string);
+begin
+   FCollection.path := filter;
+end;
+
+function TDiscArchive.allFiles(folder: string = ''): TEnumerable<string>;
+begin
+   if folder <> '' then
+      setFilter(folder);
    result := FCollection;
+end;
+
+function TDiscArchive.countFiles(filter: string): integer;
+begin
+   setFilter(filter);
+   result := FCollection.FList.Count;
 end;
 
 function TDiscArchive.getFile(key: string): TStream;
@@ -169,6 +197,54 @@ begin
       on E: Exception do
          raise EArchiveError.Create(E.Message);
    end;
+end;
+
+function TDiscArchive.MakeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;
+
+   function FindInvalidCharacters(const fileName : string): TSysCharset;
+   const
+      InvalidCharacters: TSysCharset = ['\', '/', ':', '*', '?', '"', '<', '>', '|'];
+   var
+      c: char;
+   begin
+      result := [];
+
+      if fileName <> '' then
+      begin
+         for c in fileName do
+         begin
+            if CharInSet(c, InvalidCharacters) then
+               include(result, ansiChar(c));
+         end;
+      end;
+   end;
+
+var
+   rogue: ansichar;
+   rogueChars: TSysCharset;
+   checkname, basename, ext: string;
+   duplicates: integer;
+begin
+   checkname := value;
+   rogueChars := FindInvalidCharacters(checkname);
+   for rogue in rogueChars do
+      checkname := StringReplace(checkname, char(rogue), '', [rfReplaceAll]);
+   ext := ExtractFileExt(checkname);
+   basename := Copy(checkname, 1, length(checkname) - length(ext));
+   checkname := basename;
+   if (expectedNumber = 1) or (fileExists(IncludeTrailingPathDelimiter(FRoot)
+                                + checkname + format(' (%d)', [expectedNumber]) + ext)) then
+   begin
+      duplicates := 1;
+      while fileExists(IncludeTrailingPathDelimiter(FRoot) + checkname + ext) do
+      begin
+         inc(duplicates);
+         checkname := basename + format(' (%d)', [duplicates]);
+      end;
+   end
+   else duplicates := expectedNumber;
+   result.name := checkName + ext;
+   result.duplicates := duplicates;
 end;
 
 procedure TDiscArchive.writeFile(key: string; theFile: TStream);
@@ -246,12 +322,21 @@ begin
    result := FList.GetEnumerator;
 end;
 
+procedure TFileCollection.pureSetPath(const Value: string);
+begin
+   FPath := Value;
+   FFinder.Path := FRoot + ExtractFilePath(FPath);
+end;
+
 procedure TFileCollection.setPath(const Value: string);
 var
    dummy: string;
 begin
-   FPath := Value;
-   FFinder.Path := FRoot + FPath;
+   pureSetPath(value);
+   dummy := ExtractFileName(FPath);
+   if dummy <> '' then
+      FFinder.FileMask := dummy
+   else FFinder.FileMask := '*.*';
    FList.clear;
    for dummy in FFinder.SearchForFiles do
       FList.Add(dummy);

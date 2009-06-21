@@ -43,7 +43,6 @@ type
       constructor Create(data: ansiString; loop: boolean); overload;
       constructor Create(direction: TFacing); overload;
       constructor Assign(copy: TMoveOrder);
-      destructor Destroy; override;
       function nextCommand: TMoveRecord;
       procedure setDirection(direction: TFacing);
 
@@ -60,6 +59,7 @@ type
 implementation
 uses
    classes, sysUtils,
+   BER, fileIO,
    strtok;
 
 { TMoveOrder }
@@ -122,76 +122,46 @@ end;
 
 constructor TMoveOrder.Create(data: ansiString; loop: boolean);
 var
-   i, j, len: word;
+   i: word;
+   converter: intX80;
    dummy: TMoveRecord;
-   numList: TStringList;
+   numStream: TStream;
 begin
    inherited Create;
-   numList := TStringList.Create;
+   numStream := TMemoryStream.Create;
    try
+      numStream.Write(data[1], length(data));
+      numStream.Seek(0, soFromBeginning);
       FString := data;
       FLoop := loop;
-      i := 0;
-      strtok.Split(unicodeString(data), ' ', numList);
-      while i < numList.count do
+      while numStream.Position < numStream.Size do
       begin
          dummy.name := ''; //this doesn't make any real difference in terms of
                            //program execution, but it makes it easier to read
                            //in the debugger
-         dummy.opcode := strToInt(numList[i]);
+         numStream.Read(dummy.opcode, 1);
          assert(dummy.opcode in [0..$29]);
          if dummy.opcode in [$20, $21] then
          begin
-            dummy.data[1] := strToInt(numList[i + 1]);
-            repeat
-               inc(i);
-               if strToInt(numList[i]) > 127 then
-                  dummy.data[1] := ((dummy.data[1] - 128) shl 7) + strToInt(numList[i + 1]);
-            until strToInt(numList[i]) <= 127;
+            converter := TBerConverter.Create(numStream);
+            dummy.data[1] := converter.getData;
          end
          else if dummy.opcode = $22 then
-         begin
-            len := strToInt(numList[i + 1]);
-            inc(i);
-            setLength(dummy.name, len);
-            for j := 1 to len do
-               dummy.name[j] := char(strToInt(numList[i + j]));
-            inc(i, len);
-            dummy.data[1] := strToInt(numList[i + 1]);
-            inc(i);
-         end
+            dummy.name := string(getString(numStream))
          else if dummy.opcode = $23 then
          begin
-            len := strToInt(numList[i + 1]);
-            assert(len > 3);
-            inc(i);
-            setLength(dummy.name, len);
-            for j := 1 to len do
-               dummy.name[j] := char(strToInt(numList[i + j]));
-            inc(i, len);
-            for j := 1 to 3 do
+            dummy.name := string(getString(numStream));
+            for i := 1 to 3 do
             begin
-               dummy.data[j] := strToInt(numList[i + j]);
-               while strToInt(numList[i + j]) > 127 do
-               begin
-                  inc(i);
-                  dummy.data[j] := ((dummy.data[j] - 128) shl 7) + strToInt(numList[i + j]);
-               end;
+               converter := TBerConverter.Create(numStream);
+               dummy.data[i] := converter.getData;
             end;
-            inc(i, 3);
          end;
          addOpcode(dummy);
-         inc(i);
       end;
    finally
-      numList.Free;
+      numStream.Free;
    end;
-end;
-
-destructor TMoveOrder.Destroy;
-begin
-   Finalize(FOpcodes);
-   inherited;
 end;
 
 end.

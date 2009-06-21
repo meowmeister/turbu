@@ -35,7 +35,7 @@ uses classes, frames;
 implementation
 uses
    windows,
-   commons, LDB, script_engine, chipset_graphics, locate_files;
+   commons, script_engine, chipset_graphics, locate_files, turbu_defs;
 
 var
    FMboxCautious: boolean;
@@ -71,11 +71,11 @@ var
 begin
    prepareMbox(oldValue);
    continuing := GGameEngine.messageBox(msg);
-   GCurrentEngine.waitForMboxReturn(sender as TEventThread);
+   GScriptEngine.waitForMboxReturn(sender as TEventThread);
    while continuing do
    begin
       continuing := GGameEngine.continueMessage;
-      GCurrentEngine.waitForMboxReturn(sender as TEventThread);
+      GScriptEngine.waitForMboxReturn(sender as TEventThread);
    end;
    setMessageBoxPosition(oldValue);
 end;
@@ -145,7 +145,7 @@ var
 begin
    prepareMbox(oldValue);
    GGameEngine.choiceBox(msg, acceptCancel);
-   GCurrentEngine.waitForMboxReturn(sender as TEventThread);
+   GScriptEngine.waitForMboxReturn(sender as TEventThread);
    setMessageBoxPosition(oldValue);
    result := GGameEngine.menuInt;
 end;
@@ -156,7 +156,7 @@ var
 begin
    prepareMbox(oldValue);
    GGameEngine.inputNumber(digits);
-   GCurrentEngine.waitForMboxReturn(sender as TEventThread);
+   GScriptEngine.waitForMboxReturn(sender as TEventThread);
    setMessageBoxPosition(oldValue);
    result := GGameEngine.menuInt;
 end;
@@ -168,23 +168,23 @@ var
 begin
    prepareMbox(oldValue);
    GGameEngine.inn(messageStyle, cost);
-   GCurrentEngine.waitForMboxReturn(sender as TEventThread);
+   GScriptEngine.waitForMboxReturn(sender as TEventThread);
    setMessageBoxPosition(oldValue);
    if GGameEngine.menuInt = 2 then
    begin
       GGameEngine.cutscene := GGameEngine.cutscene + 1;
       result := true;
-      for I := 1 to high(GCurrentEngine.heroes) do
-         GCurrentEngine.Hero[i].fullheal;
+      for I := 1 to high(GScriptEngine.heroes) do
+         GScriptEngine.Hero[i].fullheal;
       assert(GParty.money >= cost);
       GParty.money := GParty.money - cost;
       GGameEngine.fadeOut(1500);
-      GCurrentEngine.mediaPlayer.fadeOut(1500);
+      GScriptEngine.mediaPlayer.fadeOut(1500);
       TEventThread(GCurrentThread).threadSleep(1750);
-      GCurrentEngine.mediaPlayer.playSystemMusic(bgmInn);
+      GScriptEngine.mediaPlayer.playSystemMusic(bgmInn);
       TEventThread(GCurrentThread).threadSleep(MAXINNTIME);
       GGameEngine.fadeIn(1500);
-      GCurrentEngine.mediaPlayer.fadeIn(1500);
+      GScriptEngine.mediaPlayer.fadeIn(1500);
       TEventThread(GCurrentThread).threadSleep(1500);
       GGameEngine.cutscene := GGameEngine.cutscene - 1;
    end

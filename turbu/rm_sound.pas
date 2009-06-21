@@ -74,15 +74,13 @@ end;
 
 constructor TRmMusic.Create(id: word; input: TStream);
 var
-   converter: intX80;
    dummy: integer;
 begin
    inherited Create;
    if not peekAhead(input, id) then
       Exit;
 
-   converter := intX80.Create(input); //get size block and discard
-try
+   TBerConverter.Create(input); //get size block and discard
    filename := getStrSec(1, input, fillInBlankStr);
    FFadein := getNumSec(2, input, fillInRmSoundInt);
    FVolume := getNumSec(3, input, fillInRmSoundInt);
@@ -93,9 +91,6 @@ try
    FRightBalance := commons.round(FRightBalance * (FVolume / 100));
    FLeftBalance := commons.round(FLeftBalance * (FVolume / 100));
    assert(peekAhead(input, 0));
-finally
-   converter.Free;
-end;
 end;
 
 constructor TRmMusic.Create(name: string; time, volume, tempo, balance: word);

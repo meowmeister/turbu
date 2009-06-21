@@ -82,7 +82,6 @@ type
       constructor create(input: TStream; size: word);
       property len: word read FLength;
 {$IFNDEF PRO}
-      destructor Destroy; override;
       property name[x: word]: ansiString read getName write setname;
 {$ENDIF}
    end;
@@ -100,7 +99,6 @@ type
       constructor create(input: TStream; size: word);
       property len: word read FLength;
 {$IFNDEF PRO}
-      destructor Destroy; override;
       property name[x: word]: ansiString read getName write setname;
 {$ENDIF}
    end;
@@ -327,10 +325,9 @@ begin
 try
 with theLDB do
 begin
-   converter := intX80.Create(theLDB);
+   converter := TBerConverter.Create(theLDB);
    if converter.getData <> id then
       raise EParseMessage.create('MParty section ' + intToStr(id) + ' of RPG_RT.LDB not found!');
-   converter.free;
    name := getStrSec(1, theLDB, fillInBlankStr);
    skipSec(2, theLDB);
    skipSec(3, theLDB);
@@ -368,15 +365,13 @@ var
 begin
    inherited Create;
    dummy := 0;
-   converter := nil;
-try
 try
 with theLDB do
 begin
    Read(dummy, 1);
    if dummy <> $0b then
       raise EParseMessage.create('Hero section of RPG_RT.LDB not found!');
-   converter := intx80.Create(theLDB); // read the length statement
+   converter := TBerConverter.Create(theLDB); // read the length statement
    converter.read(theLDB); // this one is the number of heroes
    setLength(FHeroes, converter.getData + 1);
    FHeroes[0] := nil;
@@ -483,8 +478,13 @@ begin
       FHeroes[i].reviseConditions(converter.getData + 1);
    for i := 1 to high(FSkill) do
       FSkill[i].reviseConditions(converter.getData + 1);
-   for i := 1 to high(FClass) do
-      FClass[i].reviseConditions(converter.getData + 1);
+   for i := 1 to high(FItem) do
+      FItem[i].reviseConditions(converter.getData + 1);
+   if GProjectFormat = pf_2k3 then
+   begin
+      for i := 1 to high(FClass) do
+         FClass[i].reviseConditions(converter.getData + 1);
+   end;
 
    Read(dummy, 1); //Animations section
    if dummy <> $13 then
@@ -642,9 +642,6 @@ except
       raise EMessageAbort.Create
    end
 end // end of TRY block
-finally
-   converter.free;
-end;
 end;
 
 destructor TLcfDataBase.Destroy;
@@ -653,34 +650,24 @@ var
 begin
    for I := 0 to high(FHeroes) do
       FHeroes[i].Free;
-   finalize(FHeroes);
    for I := 0 to high(FItem) do
       FItem[i].Free;
-   finalize(FItem);
    for I := 0 to high(FSkill) do
       FSkill[i].Free;
-   finalize(FSkill);
    for I := 0 to high(FCondition) do
       FCondition[i].Free;
-   finalize(FCondition);
    for I := 0 to high(mParty) do
       mparty[i].free;
-   finalize(mparty);
    for I := 0 to high(FBattleAnim) do
       FBattleAnim[i].free;
-   finalize(FBattleAnim);
    for I := 0 to high(FAttribute) do
       FAttribute[i].free;
-   finalize(FAttribute);
    for I := 0 to high(FTerrain) do
       FTerrain[i].free;
-   finalize(FTerrain);
    for I := 0 to high(FClass) do
       FClass[i].free;
-   finalize(FClass);
    for I := 0 to high(chipSet) do
       chipSet[i].free;
-   finalize(chipSet);
    FBattleLayout.Free;
    FVariables.Free;
    FSwitches.Free;
@@ -786,12 +773,10 @@ begin
    result := FCondition[x];
 end;
 
-{$R-}
 function TLcfDataBase.getConditionCount: word;
 begin
    result := high(FCondition);
 end;
-{$R+}
 
 function TLcfDataBase.getHero(x: word): THeroRecord;
 begin
@@ -832,7 +817,7 @@ begin
    setLength(FVarNames, size + 1);
    for I := 1 to size do
    begin
-      converter := intX80.Create(input);
+      converter := TBerConverter.Create(input);
       if converter.getData <> i then
          raise EParseMessage.create('Switch value x' + intToHex(i, 2) + ' not found!');
       dummy := unicodeString(getStrSec(1, input, fillInSwitchStr));
@@ -841,14 +826,7 @@ begin
       FVarNames[i] := ansiString(dummy);
       if not peekAhead(input, 0) then
          raise EParseMessage.create('Exceptional case found at LDB string x' + intToHex(i, 2) + '!');
-      converter.free;
    end;
-end;
-
-destructor TVarSection.Destroy;
-begin
-   finalize(FVarNames);
-   inherited;
 end;
 
 function TVarSection.getName(x: word): ansiString;
@@ -870,7 +848,7 @@ begin
    FLength := size;
    for I := 1 to size do
    begin
-      converter := intX80.create(input);
+      converter := TBerConverter.Create(input);
       if converter.getData <> i then
          raise EParseMessage.create('Var value x' + intToHex(i, 2) + ' not found!');
       skipSec(1, input);
@@ -893,7 +871,7 @@ begin
    setLength(FSwitchNames, size + 1);
    for I := 1 to size do
    begin
-      converter := intX80.Create(input);
+      converter := TBerConverter.Create(input);
       if converter.getData <> i then
          raise EParseMessage.create('Switch value x' + intToHex(i, 2) + ' not found!');
       dummy := unicodeString(getStrSec(1, input, fillInSwitchStr));
@@ -902,14 +880,7 @@ begin
       FSwitchNames[i] := ansiString(dummy);
       if not peekAhead(input, 0) then
          raise EParseMessage.create('Exceptional case found at LDB string x' + intToHex(i, 2) + '!');
-      converter.free;
    end;
-end;
-
-destructor TSwitchSection.Destroy;
-begin
-   finalize(FSwitchNames);
-   inherited;
 end;
 
 function TSwitchSection.getName(x: word): ansiString;
@@ -932,7 +903,7 @@ begin
    FLength := size;
    for I := 1 to size do
    begin
-      converter := intX80.Create(input);
+      converter := TBerConverter.Create(input);
       if converter.getData <> i then
          raise EParseMessage.create('Switch value x' + intToHex(i, 2) + ' not found!');
       skipSec(1, input);
@@ -1086,7 +1057,7 @@ var
   I: Integer;
 begin
    inherited create;
-   converter := intX80.Create(input);
+   converter := TBerConverter.Create(input);
    assert(converter.getData = id, 'Terrain record' + intToStr(id) + ' of RPG_RT.LDB not found!');
 {$IFDEF EDITOR}
    FName := getStrSec(1, input, fillInBlankStr);
@@ -1108,7 +1079,6 @@ begin
          skipSec(i, input);
    end;
    assert(peekAhead(input, 0));
-   converter.free;
 end;
 
 destructor TTerrainInfo.Destroy;
@@ -1129,21 +1099,17 @@ var
    converter: intX80;
 begin
    inherited create;
-   converter := intX80.Create(theLDB);
-   try
-      if converter.getData <> id then
-         raise EParseMessage.create('Attribute record' + intToStr(id) + ' of RPG_RT.LDB not found!');
-      FName := getStrSec(1, theLDB, fillInBlankStr);
-      FWeaponRestrict := not getChboxSec(2, theLDB, fillInZeroInt);
-      FRateA := getNumSec($B, theLDB, fillInAttribInt);
-      FRateB := getNumSec($C, theLDB, fillInAttribInt);
-      FRateC := getNumSec($D, theLDB, fillInAttribInt);
-      FRateD := getNumSec($E, theLDB, fillInAttribInt);
-      FRateE := getNumSec($F, theLDB, fillInZeroInt);
-      assert(peekAhead(theLDB, 0));
-   finally
-      converter.free;
-   end;
+   converter := TBerConverter.Create(theLDB);
+   if converter.getData <> id then
+      raise EParseMessage.create('Attribute record' + intToStr(id) + ' of RPG_RT.LDB not found!');
+   FName := getStrSec(1, theLDB, fillInBlankStr);
+   FWeaponRestrict := not getChboxSec(2, theLDB, fillInZeroInt);
+   FRateA := getNumSec($B, theLDB, fillInAttribInt);
+   FRateB := getNumSec($C, theLDB, fillInAttribInt);
+   FRateC := getNumSec($D, theLDB, fillInAttribInt);
+   FRateD := getNumSec($E, theLDB, fillInAttribInt);
+   FRateE := getNumSec($F, theLDB, fillInZeroInt);
+   assert(peekAhead(theLDB, 0));
 end;
 
 {$WARN NO_RETVAL OFF}
@@ -1185,13 +1151,9 @@ begin
    FBattleStyle := getNumSec(7, input, fillInZeroInt);
    assert(getNumSec(9, input, fillInZeroInt) = 0); //assert 09 = 0; not sure what it's for
    assert(peekAhead(input, $0A)); //battle commands section
-   converter := intX80.Create(input); //discard length statement
-   try
-      converter.read(input);
-      SetLength(FCommands, converter.getData + 1);
-   finally
-      converter.free;
-   end;
+   converter := TBerConverter.Create(input); //discard length statement
+   converter.read(input);
+   SetLength(FCommands, converter.getData + 1);
    FCommands[0] := nil;
    for I := 1 to high(FCommands) do
       FCommands[i] := TBattleCommand.Create(input, i);
@@ -1212,7 +1174,6 @@ var
 begin
    for i := 0 to high(FCommands) do
       FCommands[i].Free;
-   finalize(FCommands);
    inherited;
 end;
 

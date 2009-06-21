@@ -59,7 +59,7 @@ type
       eventData: ansiString;
       modified: integer;
 
-      constructor Create(theLMU: TFileStream; database: TLcfDataBase; tree: TFullTree; id: word);
+      constructor Create(theLMU: TStream; database: TLcfDataBase; tree: TFullTree; id: word);
       destructor Destroy; override;
       property eventCount: word read FEventlen;
       property events[x: word]: TEvent read getEvent write setEvent;
@@ -85,11 +85,9 @@ uses windows, sysUtils, //system libs
 * a fileStream containing an LMU file as a parameter and reads in the
 * record from the file.
 *********************************************************************}
-constructor TMapUnit.Create(theLMU: TFileStream; database: TLcfDataBase; tree: TFullTree; id: word);
+constructor TMapUnit.Create(theLMU: TStream; database: TLcfDataBase; tree: TFullTree; id: word);
 var
    i, len: integer;
-   dummy: byte;
-   converter: intX80;
 begin
 try
    inherited Create;
@@ -118,19 +116,8 @@ try
       for i := $3C to $3E do
          skipSec(i, theLMU);
    end;
-   theLMU.read(dummy, 1);
-   assert(dummy = $47);
-   converter := intX80.Create(theLMU);
-   assert (converter.getData = len * 2);
-   for i := 1 to len do
-      theLMU.Read(lowChip[i-1], 2);
-   theLMU.read(dummy, 1);
-   assert(dummy = $48);
-   converter := intX80.Create(theLMU);
-   assert (converter.getData = len * 2);
-   converter.free;
-   for i := 1 to len do
-      theLMU.Read(highChip[i-1], 2);
+   getArraySec($47, theLMU, lowChip[0]);
+   getArraySec($48, theLMU, highChip[0]);
    eventData := getStrSec($51, theLMU, fillInLmuStr);
    FEvents := TEventBlock.create(eventData);
    modified := getNumSec($5b, theLMU, fillInLmuInt);
@@ -149,8 +136,6 @@ end;
 destructor TMapUnit.Destroy;
 begin
    FEvents.Free;
-   finalize(lowChip);
-   finalize(highChip);
    inherited;
 end;
 

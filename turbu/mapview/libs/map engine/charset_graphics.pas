@@ -187,7 +187,7 @@ const
 implementation
 uses sysUtils, classes, contnrs,
      chipset_graphics, locate_files, LMU, script_engine, LDB, rs_map,
-     asphyredef;
+     {asphyredef} turbu_defs;
 
 type
    TBoatTile = class(TVehicleTile)
@@ -339,7 +339,7 @@ begin
       eventPtr := (eventList[i] as TAdditionSprite).event;
       if (eventList[i] <> self) and assigned(eventPtr.lastCurrentPage) and (eventPtr.lastCurrentPage.hasScript)
          and (eventPtr.lastCurrentPage.startCondition = by_key) then
-         GCurrentEngine.executeEvent(eventPtr, eventList[i] as TAdditionSprite);
+         GScriptEngine.executeEvent(eventPtr, eventList[i] as TAdditionSprite);
       //end if
    end;
 end;
@@ -649,8 +649,8 @@ end;
 
 function TVehicleSprite.canMoveForward: boolean;
 begin
-   result := TGameMap(FEngine).edgeCheck(FLocation.X, FLocation.Y, self.facing) and
-      GDatabase.terrain[TGameMap(FEngine)[lower, inFront.x, inFront.y].terrain].vehiclePass[FTemplate.vehicleType];
+   result := TGameMap(FEngine).edgeCheck(FLocation.X, FLocation.Y, self.facing){ and
+      GDatabase.terrain[TGameMap(FEngine)[lower, inFront.x, inFront.y].terrain].vehiclePass[FTemplate.vehicleType]};
 end;
 
 constructor TVehicleSprite.Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle; tileClass: TTileClass);

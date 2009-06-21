@@ -98,17 +98,18 @@ begin
    if not areaSkill then
       Exit;
 
-   for I := 1 to MAXPARTYSIZE do
+{   for I := 1 to MAXPARTYSIZE do
       if GParty[i] <> GScriptEngine.hero[0] then
          result := result or usableOn(GParty[i].template.id);
       //end if
    //end for
+}
 end;
 
 function TRpgSkill.usableOn(id: word): boolean;
 var dummy: TRpgHero;
 begin
-   dummy := GScriptEngine.hero[id];
+//   dummy := GScriptEngine.hero[id];
 {   if self.FTemplate.skillType = sk_normal then
    begin
       result := self.FTemplate.range in [sr_self, sr_help1, sr_helpAll];
@@ -127,11 +128,12 @@ procedure TRpgSkill.useArea(caster: TRpgHero);
 var
    i: Integer;
 begin
-   for I := 1 to MAXPARTYSIZE do
+{   for I := 1 to MAXPARTYSIZE do
       if GParty[i] <> GScriptEngine.hero[0] then
          self.useHero(caster, GParty[i]);
       //end if
    //end for
+}
 end;
 
 procedure TRpgSkill.useHero(caster, target: TRpgHero);

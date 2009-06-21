@@ -207,9 +207,9 @@ const
 implementation
 
 uses
-   windows, sysUtils, contnrs,
-   LDB, chipset_graphics, locate_files, script_engine, strtok,
-   tempfile, text_graphics;
+   windows, sysUtils, contnrs, math,
+   chipset_graphics, locate_files, script_engine, strtok,
+   text_graphics, turbu_defs;
 
 const
    CORNER: TPoint = (x: 8; y: 8);
@@ -578,9 +578,9 @@ begin
       TGameMap(Engine).cursor.Draw;
       xVal := 12;
    end;
-   for I := 0 to lesserOf(FParsedText.count - 1, 3) do
+   for I := 0 to min(FParsedText.count - 1, 3) do
    begin
-      yVal := ord(FPosition) * 80 + 10 + (i * trunc(TGameMap(Engine).fontEngine[0].TextHeight('A') + 2));
+//      yVal := ord(FPosition) * 80 + 10 + (i * trunc(TGameMap(Engine).fontEngine[0].TextHeight('A') + 2));
       inc(yVal, FUDGEFACTOR[i]);
       if (FState = mb_prompt) and (i = 2) and (TGameMap(Engine).menuInt > GParty.money) then
          drawText(FParsedText[i], xVal, yVal, 3)
@@ -626,9 +626,9 @@ begin
       end;
       repeat
          dummy := '';
-         while (i < tempList.count) and
+{         while (i < tempList.count) and
                (TGameMap(Engine).fontEngine[whichFont].TextWidth(dummy) +
-                TGameMap(Engine).fontEngine[whichFont].TextWidth(tempList[i]) <= maxWidth) do
+                TGameMap(Engine).fontEngine[whichFont].TextWidth(tempList[i]) <= maxWidth) do}
          begin
             dummy := strtok.AddToken(tempList[i], dummy, ' ', MAXINT);
             inc(i);
@@ -658,10 +658,10 @@ begin
       mb_choice, mb_prompt: inherited placeCursor(position);
       mb_input:
       begin
-         coords := rect(7 + trunc((position * TGameMap(Engine).fontEngine[0].TextWidth('  0'))),
+{         coords := rect(7 + trunc((position * TGameMap(Engine).fontEngine[0].TextWidth('  0'))),
                    trunc(FCorners[topLeft].Y - engine.worldY) + 6,
                    trunc(TGameMap(Engine).fontEngine[0].TextWidth('0') + 9),
-                   trunc(TGameMap(Engine).fontEngine[0].TextHeight('J')) + 7);
+                   trunc(TGameMap(Engine).fontEngine[0].TextHeight('J')) + 7);}
          with TGameMap(Engine).cursor do
          begin
             Visible := true;
@@ -754,7 +754,7 @@ begin
                begin
                   TGameMap(Engine).menuInt := -1;
                   TGameMap(Engine).endMessage;
-                  GCurrentEngine.mediaPlayer.playSystemSound(sfxCancel);
+                  GScriptEngine.mediaPlayer.playSystemSound(sfxCancel);
                end;
             end;
             else begin
@@ -772,9 +772,9 @@ begin
                begin
                   TGameMap(Engine).menuInt := FCursorPosition;
                   TGameMap(Engine).endMessage;
-                  GCurrentEngine.mediaPlayer.playSystemSound(sfxAccept);
+                  GScriptEngine.mediaPlayer.playSystemSound(sfxAccept);
                end
-               else GCurrentEngine.mediaPlayer.playSystemSound(sfxBuzzer);;
+               else GScriptEngine.mediaPlayer.playSystemSound(sfxBuzzer);;
             end;
             btn_cancel:
             begin
@@ -782,7 +782,7 @@ begin
                begin
                   TGameMap(Engine).menuInt := 3;
                   TGameMap(Engine).endMessage;
-                  GCurrentEngine.mediaPlayer.playSystemSound(sfxCancel);
+                  GScriptEngine.mediaPlayer.playSystemSound(sfxCancel);
                end;
             end;
             btn_down, btn_up:
@@ -792,7 +792,7 @@ begin
                   placeCursor(3);
                end
                else placeCursor(2);
-               GCurrentEngine.mediaPlayer.playSystemSound(sfxCursor);
+               GScriptEngine.mediaPlayer.playSystemSound(sfxCursor);
             end
             else ;
          end;
@@ -803,33 +803,33 @@ begin
             begin
                TGameMap(Engine).menuInt := computeInputResult;
                TGameMap(Engine).endMessage;
-               GCurrentEngine.mediaPlayer.playSystemSound(sfxAccept);
+               GScriptEngine.mediaPlayer.playSystemSound(sfxAccept);
             end;
             btn_down:
             begin
                if inputResult[FCursorPosition] = 0 then
                   inputResult[FCursorPosition] := 9
                else inputResult[FCursorPosition] := inputResult[FCursorPosition] - 1;
-               GCurrentEngine.mediaPlayer.playSystemSound(sfxCursor);
+               GScriptEngine.mediaPlayer.playSystemSound(sfxCursor);
             end;
             btn_up:
             begin
                if inputResult[FCursorPosition] = 9 then
                   inputResult[FCursorPosition] := 0
                else inputResult[FCursorPosition] := inputResult[FCursorPosition] + 1;
-               GCurrentEngine.mediaPlayer.playSystemSound(sfxCursor);
+               GScriptEngine.mediaPlayer.playSystemSound(sfxCursor);
             end;
             btn_left:
             begin
                if FCursorPosition > 0 then
                   placeCursor(FCursorPosition - 1);
-               GCurrentEngine.mediaPlayer.playSystemSound(sfxCursor);
+               GScriptEngine.mediaPlayer.playSystemSound(sfxCursor);
             end;
             btn_right:
             begin
                if FCursorPosition < high(FInputResult) then
                   placeCursor(FCursorPosition + 1);
-               GCurrentEngine.mediaPlayer.playSystemSound(sfxCursor);
+               GScriptEngine.mediaPlayer.playSystemSound(sfxCursor);
             end
             else ;
          end;
@@ -999,9 +999,9 @@ begin
          if FOptionEnabled[FCursorPosition] then
          begin
             TGameMap(Engine).menuInt := FCursorPosition;
-            GCurrentEngine.mediaPlayer.playSystemSound(sfxAccept);
+            GScriptEngine.mediaPlayer.playSystemSound(sfxAccept);
          end else
-            GCurrentEngine.mediaPlayer.playSystemSound(sfxBuzzer);
+            GScriptEngine.mediaPlayer.playSystemSound(sfxBuzzer);
          //end if
       end;
       btn_down:
@@ -1048,7 +1048,7 @@ begin
    begin
       FButtonLock := TRpgTimestamp.Create(180);
       placeCursor(dummy);
-      GCurrentEngine.mediaPlayer.playSystemSound(sfxCursor);
+      GScriptEngine.mediaPlayer.playSystemSound(sfxCursor);
    end;
 end;
 

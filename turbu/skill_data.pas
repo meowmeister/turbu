@@ -128,10 +128,9 @@ var
    i, dummy: word;
 begin
    inherited create;
-   converter := intX80.Create(input);
+   converter := TBerConverter.Create(input);
    if converter.getData <> id then
       raise EParseMessage.create('Skill record' + intToStr(id) + ' of RPG_RT.LDB not found!');
-   converter.free;
    FId := id;
    FName := getStrSec(1, input, fillInBlankStr);
    FDesc := getStrSec(2, input, fillInBlankStr);
@@ -200,8 +199,6 @@ end;
 destructor TSkill.Destroy;
 begin
    FSfx.free;
-   finalize(FCondition);
-   finalize(FAttribute);
    inherited;
 end;
 

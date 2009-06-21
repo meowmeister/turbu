@@ -36,15 +36,20 @@ type
 implementation
 uses
    sysUtils, types,
-   strtok;
+   classes;
 
 function extractSpriteData(value: string): TSpriteData;
 var
-   index: integer;
+   list: TStringList;
 begin
-   index := 1;
-   result.name := strtok.GetNextToken(value, ',', index);
-   result.moveMatrix := strToInt(strtok.GetNextToken(value, ',', index));
+   list := TStringList.Create;
+   try
+      list.CommaText := value;
+      result.name := list[0];
+      result.moveMatrix := strToInt(list[1]);
+   finally
+      list.Free;
+   end;
 end;
 
 function nextPosition(matrix: TMoveMatrix; var current: TRpgPoint): byte;

@@ -128,7 +128,7 @@ begin
    FHeight := y - 1;
    FWidth := x - 1;
    counter := 0;
-   currentChipset := GDatabase.getChipset(FTemplate.terrain);
+//   currentChipset := GDatabase.getChipset(FTemplate.terrain);
    for y := 0 to FHeight do
       for x := 0 to FWidth do
       begin
@@ -202,11 +202,8 @@ begin
    //end}
    for x := low(FEvents) to high(FEvents) do
       FEvents[x].Free;
-   finalize(FTiles);
-   finalize(FEvents);
    for x := 0 to high(FRoutes) do
       FRoutes[x].free;
-   finalize(FRoutes);
    inherited Destroy;
 end;
 
@@ -256,7 +253,7 @@ begin
          true: FEvents[y] := TEventSprite.Create(FTemplate.events[x], FEngine, nil);
          false: FEvents[y] := TCharSprite.create(FTemplate.events[x], FEngine, nil);
       end;
-      GCurrentEngine.registerEvent(FEvents[y]);
+      GScriptEngine.registerEvent(FEvents[y]);
    end;
    FEvents[0] := nil;
 end;

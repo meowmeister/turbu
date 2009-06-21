@@ -21,80 +21,102 @@ interface
 uses windows, classes, //system libraries
      fileIO, charset_data, rm_sound; //modules
 
-   type
+type
+   {*********************************************************************
+   * MapTreeData class.  This object stores the LMT entry for one map.
+   *********************************************************************}
+   TMapTreeData = class (TObject)
+   private
+      FBgmData: TRmMusic;
+      FCanSave: radioSet;
+      FName: ansiString;
+      FBgmState: radioSet;
+      FCanPort: radioSet;
+      FParent: word;
+      FBattleBgName: ansiString;
+      FGen: byte;
+      FArea: boolean;
+      FCanEscape: radioSet;
+      FUnk06: integer;
+      FBattles: word;
+      FBattle: array of word;
+      FUnk05: integer;
+      FBgmName: ansiString;
+      FBattleBgState: radioSet;
+      FOpen: boolean;
+      FEncounterRate: word;
+      FAreaData: array [1..4] of integer;
+      function GetBattle(index: integer): word;
+      procedure SetBattle(index: integer; const Value: word);
+      function GetArea(x: byte): integer;
+      procedure SetArea(x: byte; const Value: integer);
+    function GetBoundsRect: TRect;
+   public
+      constructor Create(theLMT: TStream; id: word);
+      destructor Destroy; override;
 
-      {*********************************************************************
-      * MapTreeData class.  This object stores the LMT entry for one map.
-      * I know it's sorta bad coding to make all variables public, but it's
-      * the only way to avoid the necessity of making ten bajillion accessors.
-      *********************************************************************}
-      TMapTreeData = class (TObject)
-      private
-         FBgmData: TRmMusic;
-      public
-         name: ansiString;
-         parent: word;
-         generation: byte;
-         isArea: boolean;
-         unk05: integer;
-         unk06: integer;
-         treeOpen: boolean;
-         bgmState: radioSet;
-         bgmName: ansiString;
-         battleBgState: radioSet;
-         battleBgName: ansiString;
-         canPort: radioSet;
-         canEscape: radioSet;
-         canSave: radioSet;
-         battles: word;
-         battle: array of word;
-         encounterRate: word;
-         areaData: array [1..4] of integer;
-         constructor Create(theLMT: TStream; id: word);
-         destructor Destroy; override;
+      property bgmData: TRmMusic read FBgmData;
+      property name: ansiString read FName write FName;
+      property parent: word read FParent write FParent;
+      property generation: byte read FGen write FGen;
+      property isArea: boolean read FArea write FArea;
+      property unk05: integer read FUnk05 write FUnk05;
+      property unk06: integer read FUnk06 write FUnk06;
+      property treeOpen: boolean read FOpen write FOpen;
+      property bgmState: radioSet read FBgmState write FBgmState;
+      property bgmName: ansiString read FBgmName write FBgmName;
+      property battleBgState: radioSet read FBattleBgState write FBattleBgState;
+      property battleBgName: ansiString read FBattleBgName write FBattleBgName;
+      property canPort: radioSet read FCanPort write FCanPort;
+      property canEscape: radioSet read FCanEscape write FCanEscape;
+      property canSave: radioSet read FCanSave write FCanSave;
+      property battles: word read FBattles write FBattles;
+      property battle[index: integer]: word read GetBattle write SetBattle;
+      property encounterRate: word read FEncounterRate write FEncounterRate;
+      property AreaData[x: byte]: integer read GetArea write SetArea;
+      property BoundsRect: TRect read GetBoundsRect;
+   end;
 
-         property bgmData: TRmMusic read FBgmData;
-      end;
+   {*********************************************************************
+   * FullTree class.  This class contains all of the entries in the LMT.
+   * mapSet and projectLen have contain the data entries and the total number
+   * of elements in mapSet, respectively.
+   *********************************************************************}
+   TFullTree = class (TObject)
+   private
+      projectLen: word;
+      mapSet: array of TMapTreeData;
+      FHeroStartMap: smallint;
+      FHeroStartX, FHeroStartY: word;
+      FVhStartMap: array[TVehicleSet] of smallint;
+      FVhStartX, FVhStartY: array[TVehicleSet] of word;
+      FCurrentMap: word;
+      inserted: boolean;
+      translationTable: array of word;
+      function getVehicleStartX(x: TVehicleSet): word;
+      function getVehicleStartY(x: TVehicleSet): word;
+      function getVehicleStartMap(x: TVehicleSet): smallint;
+   public
+      nodeSet: array of word;
+      constructor Create(theLMT: TStream);
+      destructor Destroy; override;
+      function getMapData(id: word): TMapTreeData;
+      function getMax: word;
+      procedure searchBack(var id: word);
+      procedure searchForward(var id: word);
+      function getBgm(const whichMap: word): ansiString;
+      function lookup(x: word): word;
 
-      {*********************************************************************
-      * FullTree class.  This class contains all of the entries in the LMT.
-      * mapSet and projectLen have contain the data entries and the total number
-      * of elements in mapSet, respectively.
-      *********************************************************************}
-      TFullTree = class (TObject)
-      private
-         projectLen: word;
-         mapSet: array of TMapTreeData;
-         FHeroStartMap: smallint;
-         FHeroStartX, FHeroStartY: word;
-         FVhStartMap: array[TVehicleSet] of smallint;
-         FVhStartX, FVhStartY: array[TVehicleSet] of word;
-         currentMap: word;
-         inserted: boolean;
-         translationTable: array of word;
-         function getVehicleStartX(x: TVehicleSet): word;
-         function getVehicleStartY(x: TVehicleSet): word;
-         function getVehicleStartMap(x: TVehicleSet): smallint;
-      public
-         nodeSet: array of word;
-         constructor Create(theLMT: TStream);
-         destructor Destroy; override;
-         function getMapData(id: word): TMapTreeData;
-         function getMax: word;
-         function getSize: word;
-         procedure searchBack(var id: word);
-         procedure searchForward(var id: word);
-         function getBgm(const whichMap: word): ansiString;
-         function lookup(x: word): word;
-
-         property items[x: word]: TMapTreeData read getMapData; default;
-         property vhStartMap[x: TVehicleSet]: smallint read getVehicleStartMap;
-         property vhStartX[x: TVehicleSet]: word read getVehicleStartX;
-         property vhStartY[x: TVehicleSet]: word read getVehicleStartY;
-         property heroStartMap: smallint read FHeroStartMap;
-         property heroStartX: word read FHeroStartX;
-         property heroStartY: word read FHeroStartY;
-      end;
+      property getSize: word read projectLen;
+      property items[x: word]: TMapTreeData read getMapData; default;
+      property vhStartMap[x: TVehicleSet]: smallint read getVehicleStartMap;
+      property vhStartX[x: TVehicleSet]: word read getVehicleStartX;
+      property vhStartY[x: TVehicleSet]: word read getVehicleStartY;
+      property heroStartMap: smallint read FHeroStartMap;
+      property heroStartX: word read FHeroStartX;
+      property heroStartY: word read FHeroStartY;
+      property currentMap: word read FCurrentMap;
+   end;
 
 implementation
 
@@ -140,29 +162,28 @@ try
 
    {The following is a kludgy workaround involving the list header for the
    battle section.}
-   theLMT.read(dummy, 1);
-   if dummy <> $29 then
+   if not peekAhead(theLMT, $29) then
       raise EParseMessage.create('LMT field x29 not found for section ' + intToStr(id));
-   intX80.Create(theLMT).free;
+   TBerConverter.Create(theLMT);
    theLMT.read(dummy, 1);
    battles := dummy;
 
    {reads the section header, then uses getNumSec to retrieve the battle record.
    The records seem to be treated as lists; perhaps there will be a future problem
    found involving a second record.}
-   SetLength(battle, battles);
+   SetLength(FBattle, battles);
    for i := 1 to battles do
    begin
       theLMT.Read(dummy, 1);
       if dummy <> i then
          raise EParseMessage.create('LMT encounter record ' + intToStr(i) + 'not found in section ' + intToStr(id));
-      battle[i - 1] := getNumSec(1, theLMT, @fillInLmtInt);
+      battle[i - 1] := getNumSec(1, theLMT, fillInLmtInt);
       theLMT.Read(dummy, 1);
       if dummy <> 0 then
          raise EParseMessage.create('LMT x29 final section padding of \0 not found for section ' + intToStr(id) + ', encounter #' + intToStr(i))
    end;
 
-   encounterRate := getNumSec($2C, theLMT, @fillInLmtInt);
+   encounterRate := getNumSec($2C, theLMT, fillInLmtInt);
    theLMT.Read(dummy, 1);
    if dummy = $33 then
    begin
@@ -172,7 +193,7 @@ try
       else
       begin
          for dummy := 1 to 4 do
-            theLMT.Read(areaData[dummy], 4)
+            theLMT.Read(FAreaData[dummy], 4)
       end
    end
    else if dummy > $33 then
@@ -198,8 +219,37 @@ end;
 destructor TMapTreeData.Destroy;
 begin
    FBgmData.Free;
-   finalize(battle);
    inherited;
+end;
+
+function TMapTreeData.GetArea(x: byte): integer;
+begin
+   assert(x in [1..4]);
+   result := FAreaData[x];
+end;
+
+function TMapTreeData.GetBattle(index: integer): word;
+begin
+   result := FBattle[index];
+end;
+
+function TMapTreeData.GetBoundsRect: TRect;
+var
+   overlay: PRect;
+begin
+   pointer(overlay) := @FAreaData[1];
+   result := overlay^;
+end;
+
+procedure TMapTreeData.SetArea(x: byte; const Value: integer);
+begin
+   assert(x in [1..4]);
+   FAreaData[x] := value;
+end;
+
+procedure TMapTreeData.SetBattle(index: integer; const Value: word);
+begin
+   FBattle[index] := Value;
 end;
 
 constructor TFullTree.Create(theLMT: TStream);
@@ -213,7 +263,7 @@ begin
 try
    inherited Create;
    inserted := false;
-   converter := intX80.Create (theLMT);
+   converter := TBerConverter.Create (theLMT);
    projectLen := converter.getData;
    SetLength(mapSet, projectLen);
    setLength(translationtable, projectLen);
@@ -240,11 +290,10 @@ try
    end;
    assert(nodeSet[0] = 0);
    converter.read(theLMT);
-   currentMap := converter.getData;
-   converter.free;
-   FHeroStartMap := getNumSec(1, theLMT, @fillInLmtEndInt);
-   FHeroStartX := getNumSec(2, theLMT, @fillInLmtEndInt);
-   FHeroStartY := getNumSec(3, theLMT, @fillInLmtEndInt);
+   FCurrentMap := converter.getData;
+   FHeroStartMap := getNumSec(1, theLMT, fillInLmtEndInt);
+   FHeroStartX := getNumSec(2, theLMT, fillInZeroInt);
+   FHeroStartY := getNumSec(3, theLMT, fillInZeroInt);
    i := 3;
    for v := low(TVehicleSet) to high (TVehicleSet) do
    begin
@@ -291,12 +340,7 @@ function TFullTree.getMax: word;
 begin
    result := projectLen;
    while (mapSet[result].isArea = true) and (mapSet[result].name <> '') do
-      result := result - 1;
-end;
-
-function TFullTree.getSize: word;
-begin
-   result := projectLen;
+      dec(result);
 end;
 
 function TFullTree.getVehicleStartMap(x: TVehicleSet): smallint;
@@ -334,12 +378,11 @@ begin
 end;
 
 destructor TFullTree.Destroy;
-var i: integer;
+var
+   map: TMapTreeData;
 begin
-   for i := low(mapSet) to high(mapSet) do
-      mapSet[i].Free;
-   finalize(mapSet);
-   finalize(translationTable);
+   for map in mapSet do
+      map.Free;
    inherited Destroy;
 end;
 
@@ -361,7 +404,7 @@ procedure fillInLmtEndInt(const expected: byte; out theResult: integer);
 begin
    case expected of
       1, $B, $15, $1F: theResult := -1;
-      2, 3, $C, $D, $16, $17, $20, $21: theResult := 0;
+      $C, $D, $16, $17, $20, $21: theResult := 0;
    else
       begin
          msgBox ('No case implemented for x' + IntToHex(expected, 2) + '!', 'FillInLmtEndInt says:', MB_OK);
@@ -369,6 +412,5 @@ begin
       end
    end;
 end;
-
 
 end.

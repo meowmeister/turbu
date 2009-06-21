@@ -24,6 +24,7 @@ uses
 type
    EConversionTableError = class(Exception);
 
+   //replace this whole thing with TDictionaries once Update 3 comes out
    TConvertRecord = record
       before, after: integer;
    end;
@@ -34,7 +35,6 @@ type
       function getValue(x: integer): TConvertRecord; inline;
       function getLength: integer; inline;
    public
-      destructor Destroy; override;
       procedure add(const before, after: integer);
       function indexOf(value: integer): integer;
 
@@ -54,7 +54,6 @@ type
       function getValue(x: integer): TNameRecord; inline;
       function getLength: integer; inline;
    public
-      destructor Destroy; override;
       procedure add(const name: string; id: integer);
       procedure newDivision;
       function indexOf(name: string; division: integer): integer;
@@ -72,12 +71,6 @@ begin
    setLength(FTable, length(FTable) + 1);
    FTable[high(FTable)].before := before;
    FTable[high(FTable)].after := after;
-end;
-
-destructor TConversionTable.Destroy;
-begin
-   finalize(FTable);
-   inherited;
 end;
 
 function TConversionTable.getLength: integer;
@@ -106,12 +99,6 @@ begin
    FTable[high(FTable)].name := name;
    FTable[high(FTable)].id := id;
    inc(FDivMarkers[high(FDivMarkers)]);
-end;
-
-destructor TNameTable.Destroy;
-begin
-   finalize(FTable);
-   inherited;
 end;
 
 function TNameTable.getLength: integer;

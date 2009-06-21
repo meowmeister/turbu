@@ -23,7 +23,6 @@ uses
    turbu_plugin_interface, turbu_versioning;
 
 type
-   TEngineList = array[TEngineStyle] of array of TRpgMetadata;
 
    EMissingPlugin = class(Exception);
 
@@ -32,6 +31,9 @@ type
    procedure cleanupEngines;
 
 implementation
+
+type
+   TEngineList = array[TEngineStyle] of array of TRpgMetadata;
 
 var
    FEngineList: TEngineList;

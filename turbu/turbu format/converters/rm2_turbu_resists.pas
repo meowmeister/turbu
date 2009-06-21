@@ -41,7 +41,7 @@ constructor T2k2AttributeTemplate.Convert(base: TAttribute; id: word);
 begin
    inherited Create;
    self.id := id;
-   self.name := unicodeString(base.name);
+   self.name := string(base.name);
    self.requiredForSkills := base.weaponRestrict;
    self.standard := base.rate[3];
 end;
@@ -52,7 +52,7 @@ constructor T2k2ConditionTemplate.Convert(base: TCondition; id: word);
 begin
    inherited Create;
    self.id := id;
-   self.name := unicodeString(base.name);
+   self.name := string(base.name);
 end;
 
 end.

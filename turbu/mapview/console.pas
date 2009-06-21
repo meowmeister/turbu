@@ -27,7 +27,7 @@ type
    TConsoleEventThread = class(TEventThread)
    private
    public
-      constructor Create(script: string);
+      constructor Create(script: AnsiString);
    end;
 
    TfrmConsole = class(TForm)
@@ -59,7 +59,7 @@ var
 implementation
 uses
   sysutils, windows, //windows libs
-  mapview, LDB, preloader; //turbu libs
+  mapview, LDB; //turbu libs
 
 {$R *.dfm}
 
@@ -73,7 +73,7 @@ begin
       txtScriptLine.Text := '';
       try
          FConsoleScript := TConsoleEventThread.Create(script);
-         GCurrentEngine.registerConsoleThread(FConsoleScript);
+         GScriptEngine.registerConsoleThread(FConsoleScript);
       except
          on E: EThread do ;
       end;
@@ -99,7 +99,7 @@ begin
       vleSwitches.Strings.Add(dummy);
       vleSwitches.ItemProps[intToStr(i) + ': ' + mapEngine.database.switches.name[i]].ReadOnly := true;
    end;
-   lblMemAllocated.Caption := IntToStr(preloader.totalMemoryAllocated) + ' KB';
+//   lblMemAllocated.Caption := IntToStr(preloader.totalMemoryAllocated) + ' KB';
 end;
 
 procedure TfrmConsole.btnVariableRescanClick(Sender: TObject);
@@ -125,15 +125,15 @@ end;
 
 { TConsoleEventThread }
 
-constructor TConsoleEventThread.Create(script: string);
+constructor TConsoleEventThread.Create(script: AnsiString);
 begin
-   inherited Create(GCurrentEngine, nil, nil);
-   if not GCurrentEngine.compiler.Compile(script) then
+   inherited Create(GScriptEngine, nil, nil);
+   if not GScriptEngine.compiler.Compile(script) then
    begin
-   msgBox(GCurrentEngine.compiler.Msg[0].MessageToString, 'Error');
+   msgBox(GScriptEngine.compiler.Msg[0].MessageToString, 'Error');
       raise EFatalError.create('Could not compile event script!');
    end;
-   GCurrentEngine.compiler.getOutput(script);
+   GScriptEngine.compiler.getOutput(script);
    setupScript(script);
 end;
 

@@ -70,7 +70,6 @@ uses
   ,rm2x_main_menu
   ,rm2x_menu_components
   ,menu_basis
-  ,asphyreSprite
   ,rm2x_party_target_menu
   ;
  

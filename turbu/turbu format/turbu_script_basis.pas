@@ -33,7 +33,7 @@ type
       constructor Create(name: string; point: TRpgPoint);
       procedure upload(db: TDataSet); override;
 
-      property unitName: string read FUnit write FUnit;
+      property scriptUnitName: string read FUnit write FUnit;
       property range: TRpgPoint read FRange write FRange;
    end;
 

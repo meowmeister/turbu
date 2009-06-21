@@ -23,6 +23,8 @@ uses
    SysUtils, Classes, DBClient, DB, Generics.Collections;
 
 type
+  TDatasetList = TList<TClientDataSet>;
+
    TdmDatabase = class(TDataModule)
       charClasses: TClientDataset;
       charClasses_skillset: TClientDataset;
@@ -510,14 +512,14 @@ type
       charClasses_skillsetnum2: TIntegerField;
       charClasses_skillsetnum3: TIntegerField;
       charClasses_skillsetAlgName: TStringField;
-    charClasses_Events: TClientDataSet;
-    StringField6: TStringField;
-    StringField7: TStringField;
-    IntegerField5: TIntegerField;
-    IntegerField8: TIntegerField;
-    IntegerField9: TIntegerField;
-    IntegerField11: TIntegerField;
-    StringField8: TStringField;
+      charClasses_Events: TClientDataSet;
+      StringField6: TStringField;
+      StringField7: TStringField;
+      IntegerField5: TIntegerField;
+      IntegerField8: TIntegerField;
+      IntegerField9: TIntegerField;
+      IntegerField11: TIntegerField;
+      StringField8: TStringField;
       procedure DataModuleCreate(Sender: TObject);
       procedure restoreClone(DataSet: TDataSet);
       procedure charClasses_skillsetCalcFields(DataSet: TDataSet);
@@ -526,16 +528,16 @@ type
    private
       { Private declarations }
 
-      FDatasetList: TList<TClientDataSet>;
-      FViewList: TList<TClientDataSet>;
+      FDatasetList: TDatasetList;
+      FViewList: TDatasetList;
       function usableByFilter(field: TBytesField; master: TDataset): boolean;
    public
       { Public declarations }
       procedure beginUpload;
       procedure endUpload;
 
-      property datasets: TList<TClientDataset> read FDatasetList write FDatasetList;
-      property views: TList<TClientDataSet> read FViewList write FViewList;
+      property datasets: TDatasetList read FDatasetList write FDatasetList;
+      property views: TDatasetList read FViewList write FViewList;
    end;
 
 var
@@ -544,7 +546,7 @@ var
 implementation
 
 uses
-   design_script_engine, turbu_skills, turbu_defs, turbu_classes;
+   turbu_skills, turbu_defs, turbu_classes;
 
 {$R *.dfm}
 
@@ -553,13 +555,19 @@ var
    iterator: TComponent;
    clone: TClientDataset;
 begin
-   FDatasetList := TList<TClientDataset>.Create;
+   FDatasetList := TDatasetList.Create;
    for iterator in self do
       if iterator is TClientDataset then
          FDatasetList.Add(TClientDataset(iterator));
 
-   FViewList := TList<TClientDataSet>.Create;
-   FViewList.AddRange([shields, armors, helmets, accessories, weapons, offhands]);
+   FViewList := TDatasetList.Create;
+//   FViewList.AddRange([shields, armors, helmets, accessories, weapons, offhands]);
+   FViewList.Add(shields);
+   FViewList.Add(armors);
+   FViewList.Add(helmets);
+   FViewList.Add(accessories);
+   FViewList.Add(weapons);
+   FViewList.Add(offhands);
 
    shields.CloneCursor(items_armor, false, true);
    armors.CloneCursor(items_armor, false, true);

@@ -123,7 +123,7 @@ var
    i: Integer;
 begin
    inherited create;
-   converter := intX80.Create(input);
+   converter := TBerConverter.Create(input);
    if converter.getData <> id then
       raise EParseMessage.create('Condition record' + intToStr(id) + ' of RPG_RT.LDB not found!');
    FName := getStrSec(1, input, fillInBlankStr);
@@ -179,7 +179,6 @@ logs.logText('Unknown format data for TCondition #' + intToStr(id));
    FMpStepQuantity := getNumSec($44, input, fillInZeroInt);
    if not peekAhead(input, 0) then
       raise EParseMessage.create('Exceptional case found at LDB condition x' + intToHex(id, 2) + '!');
-   converter.free;
 end;
 
 function TCondition.getChance(x: byte): byte;

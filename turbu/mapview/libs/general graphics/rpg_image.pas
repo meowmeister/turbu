@@ -66,8 +66,6 @@ type
       property timer: cardinal read getTimer write setTimer;
    end;
 
-const
-   ROTATE_FACTOR = 30;
 
 implementation
 uses
@@ -75,8 +73,8 @@ uses
    {chipset_graphics, script_engine, distortions,}
    {asphyreImages} SDL_ImageManager;
 
-type
-   PRpgColor = ^TRpgColor;
+const
+   ROTATE_FACTOR = 30;
 
 { TRpgImage }
 

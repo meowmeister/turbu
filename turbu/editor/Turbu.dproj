@@ -7,7 +7,7 @@
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<DCC_DependencyCheckOutputName>Turbu.exe</DCC_DependencyCheckOutputName>
 			<ProjectVersion>12.0</ProjectVersion>
-			<Config Condition="'$(Config)'==''">Release</Config>
+			<Config Condition="'$(Config)'==''">Debug</Config>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
 			<Base>true</Base>
@@ -37,7 +37,7 @@
 			<DCC_DcuOutput>..\..\dcus</DCC_DcuOutput>
 			<DCC_DcpOutput>..\..\dcus</DCC_DcpOutput>
 			<DCC_Define>JCLINSTALL;PS_USESSUPPORT;$(DCC_Define)</DCC_Define>
-			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\classes\sdl custom;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\classes\sdl custom;..\bin;..\dcus;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_UsePackage>rtl;vcl;vclx;dbrtl;Rave76VCL;bdertl;vclactnband;xmlrtl;vcldb;vcldbx;dsnap;dsnapcon;TeeUI;TeeDB;Tee;adortl;vclib;ibxpress;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_100_120;Intraweb_100_120;vclie;websnap;webdsnap;inetdbbde;inetdbxpress;soaprtl;vclribbon;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DataSnapServer;DbxClientDriver;DBXSybaseASADriver;DBXInterBaseDriver;DBXMySQLDriver;dbxcds;DBXSybaseASEDriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver;Jcl;JclVcl;JvCoreD12R;JvSystemD12R;JvStdCtrlsD12R;JvAppFrmD12R;JvBandsD12R;JvDBD12R;JvDlgsD12R;JvBDED12R;JvCmpD12R;JvCryptD12R;JvCtrlsD12R;JvCustomD12R;JvDockingD12R;JvDotNetCtrlsD12R;JvEDID12R;JvGlobusD12R;JvHMID12R;JvInterpreterD12R;JvJansD12R;JvManagedThreadsD12R;JvMMD12R;JvNetD12R;JvPageCompsD12R;JvPluginD12R;JvPrintPreviewD12R;JvRuntimeDesignD12R;JvTimeFrameworkD12R;JvValidatorsD12R;JvWizardD12R;JvXPCtrlsD12R</DCC_UsePackage>
 			<DCC_DependencyCheckOutputName>..\bin\Turbu.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
@@ -195,13 +195,24 @@
 			<DCCReference Include="..\turbu format\turbu_battle_engine.pas"/>
 			<DCCReference Include="..\turbu format\turbu_versioning.pas"/>
 			<DCCReference Include="..\turbu format\plugins\turbu_plugin_interface.pas"/>
-			<DCCReference Include="..\..\vclpatch\Generics.Collections.pas"/>
 			<DCCReference Include="..\..\vclpatch\DB.pas"/>
 			<DCCReference Include="..\..\classes\findfile\findfile.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
 			<DCCReference Include="function_header.pas">
 				<Form>frmFuncHeader</Form>
 			</DCCReference>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_map_metadata.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_map_metadata.pas"/>
+			<DCCReference Include="..\turbu format\turbu_maps.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_maps.pas"/>
+			<DCCReference Include="..\turbu format\converters\conversion_report_form.pas">
+				<Form>frmConversionReport</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\converters\conversion_report.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_skills.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_converter_thread.pas"/>
+			<DCCReference Include="..\turbu_functional.pas"/>
+			<None Include="..\..\unfinished.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -240,7 +251,7 @@
 						<VersionInfo Name="MajorVer">0</VersionInfo>
 						<VersionInfo Name="MinorVer">6</VersionInfo>
 						<VersionInfo Name="Release">3</VersionInfo>
-						<VersionInfo Name="Build">253</VersionInfo>
+						<VersionInfo Name="Build">303</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -252,7 +263,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc,</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">TURBU Editor</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">0.6.3.253</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.6.3.303</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">TURBU Editor</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

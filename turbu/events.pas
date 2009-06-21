@@ -17,10 +17,10 @@ unit events;
 * www.turbu-rpg.com.
 *****************************************************************************}
 
-{$D+}
+{$D+} {$hints off}
 interface
 
-uses math, types, classes, Contnrs, //system libs
+uses math, types, classes, Contnrs, turbu_containers, //system libs
      charset_data, LDB, LMT, move_data, //turbu libs
      uPSCompiler, upsUtils; //PascalScript lib
 
@@ -154,11 +154,11 @@ type
       FEventText: ansiString;
       FScriptText: ansiString;
       FCompiledScript: ansiString;
-      FCommands: array of TEventCommand;
+      FCommands: TRpgObjectList<TEventCommand>;
       FParent: TEvent;
       FParseStack: TStack;
       FLoopDepth: byte;
-      FUseList: array[TUsesList] of boolean;
+      FUseList: set of TUsesList;
       FIndexList: array[1..10] of boolean;
       FLabelList: ansiString;
       FOverride: boolean;
@@ -352,7 +352,7 @@ var
 begin
    inherited create;
    data := TStringStream.Create(eventData);
-   converter := intX80.Create(data);
+   converter := TBerConverter.Create(data);
    try
       FLength := converter.getData;
       setLength(FEvents, FLength);
@@ -360,7 +360,6 @@ begin
          FEvents[i - 1] := TEvent.create(data, self);
    finally
       data.Free;
-      converter.Free;
    end; //end of overall try block
 end;
 
@@ -381,16 +380,12 @@ var
    i: integer;
 begin
    inherited Create;
-   converter := intX80.Create(input);
-   try
-      FLength := converter.getData;
-      setLength(FEvents, FLength);
-      for i := 1 to FLength do
-         FEvents[i - 1] := TEvent.createGlobal(input, i, self);
-      //end for
-   finally
-      converter.free;
-   end;
+   converter := TBerConverter.Create(input);
+   FLength := converter.getData;
+   setLength(FEvents, FLength);
+   for i := 1 to FLength do
+      FEvents[i - 1] := TEvent.createGlobal(input, i, self);
+   //end for
 end;
 
 destructor TEventBlock.destroy;
@@ -436,27 +431,23 @@ var
 begin
    inherited create;
    FParent := parent;
-   converter := intX80.Create(input);
+   converter := TBerConverter.Create(input);
    try
       self.FID := converter.getData;
       FName := fileIO.getStrSec(1, input, fillInBlankStr);
       FLocation.x := getNumSec(2, input, fillInEventInt);
       FLocation.Y := getNumSec(3, input, fillInEventInt);
       pagesData := TStringStream.Create(getStrSec(5, input, fillInBlankStr));
-      try
-         converter.read(pagesData);
-         FLength := converter.getData;
-         setLength(FPages, FLength);
-         for i := 0 to high(FPages) do
-            FPages[i] := TEventPage.Create(pagesData, i + 1, self);
-         finally
-            pagesData.Free;
-         end;
-      finally
-         converter.Free;
-      end;
-      assert(peekAhead(input, 0));
-      FCurrentPage := self[0];
+      converter.read(pagesData);
+      FLength := converter.getData;
+      setLength(FPages, FLength);
+      for i := 0 to high(FPages) do
+         FPages[i] := TEventPage.Create(pagesData, i + 1, self);
+   finally
+      pagesData.Free;
+   end;
+   assert(peekAhead(input, 0));
+   FCurrentPage := self[0];
 end;
 
 {$IFDEF ENGINE}
@@ -476,20 +467,16 @@ var
    converter: intX80;
 begin
    inherited create;
-   converter := intX80.Create(input);
-   try
-      if converter.getData <> expected then
-         raise EParseMessage.create('Expected global event ' + intToStr(expected) + ' not found!');
-      FID := expected;
-      FParent := parent;
-      FName := getStrSec(1, input, fillInBlankStr);
-      setLength(FPages, 1);
-      FPages[0] := TEventPage.createGlobal(input, self);
-      FPages[0].FGlobal := true;
-      FCurrentPage := self[0];
-   finally
-      converter.Free;
-   end;
+   converter := TBerConverter.Create(input);
+   if converter.getData <> expected then
+      raise EParseMessage.create('Expected global event ' + intToStr(expected) + ' not found!');
+   FID := expected;
+   FParent := parent;
+   FName := getStrSec(1, input, fillInBlankStr);
+   setLength(FPages, 1);
+   FPages[0] := TEventPage.createGlobal(input, self);
+   FPages[0].FGlobal := true;
+   FCurrentPage := self[0];
 end;
 
 destructor TEvent.destroy;
@@ -563,26 +550,18 @@ end;
 
 constructor TEventMoveBlock.Create(input: TStream);
 var
-   i: integer;
-   moveString, workspace: ansiString;
+   moveString: ansiString;
    loop: boolean;
 begin
    inherited create;
    if not peekAhead(input, $29) then
       raise EParseMessage.create('Event page movement block not found!');
-   intX80.create(input).free; //skip size info;
+   TBerConverter.create(input); //skip size info;
 
    skipSec($B, input);
-   workspace := getStrSec($C, input, fillInBlankStr);
-   if workspace <> '' then
-   begin   
-      moveString := '';
-      for i := 1 to length(workspace) do
-      begin
-         moveString := moveString + workspace[i];
-         if i <> length(workspace) then
-            moveString := moveString + ' ';
-      end;
+   moveString := getStrSec($C, input, fillInBlankStr);
+   if moveString <> '' then
+   begin
       loop := getChboxSec($15, input, fillInEMoveInt);
       FOrder := TMoveOrder.Create(moveString, loop);
    end else skipSec($15, input);
@@ -608,6 +587,7 @@ begin
    FParent := parent;
    if not peekAhead(input, expected) then
       raise EParseMessage.create('Expected event page ' + intToStr(expected) + 'not found!');
+   FCommands := TRpgObjectList<TEventCommand>.Create(true);
 
    FID := expected;
    conditionStream := TStringStream.Create(getStrSec(2, input, fillInBlankStr));
@@ -637,11 +617,9 @@ begin
 
    opStream := TStringStream.Create(FEventScript);
    try
-      setLength(FCommands, 0);
       if length(FEventScript) > 0 then
       repeat
-         setLength(FCommands, length(FCommands) + 1);
-         FCommands[high(FCommands)] := TEventCommand.create(opStream, self);
+         FCommands.Add(TEventCommand.create(opStream, self));
       until opStream.Position >= opStream.Size - 1;
    finally
       opStream.free;
@@ -663,6 +641,7 @@ var
 begin
    inherited create;
    FParent := parent;
+   FCommands := TRpgObjectList<TEventCommand>.Create(true);
    FStartCondition := TStartCondition(getNumSec($B, input, fillInEPageInt));
    FConditions := TEventConditions.createGlobal(input);
 //# 15 ought to be the size of section 34.  (Why so redundant?)
@@ -672,11 +651,9 @@ begin
 
    opStream := TStringStream.Create(FEventScript);
    try
-      setLength(FCommands, 0);
       if length(FEventScript) > 0 then
       repeat
-         setLength(FCommands, length(FCommands) + 1);
-         FCommands[high(FCommands)] := TEventCommand.create(opStream, self);
+         FCommands.Add(TEventCommand.create(opStream, self));
       until opStream.Position >= opStream.Size - 1;
    finally
       opStream.free;
@@ -690,6 +667,7 @@ constructor TEventPage.create(input: ansiString; const expected: word; parent: T
 begin
    inherited create;
    FParent := parent;
+   FCommands := TRpgObjectList<TEventCommand>.Create(true);
    FID := expected;
    FConditions := TEventConditions.create(nil);
    FEventText := '';
@@ -706,9 +684,7 @@ begin
    FParseStack.Free;
    FConditions.Free;
    FMoveScript.Free;
-   for I := low(FCommands) to high(FCommands) do
-      FCommands[i].free;
-   finalize(FCommands);
+   FCommands.free;
    inherited;
 end;
 
@@ -740,6 +716,7 @@ var
    i: integer;
    j: TUsesList;
    used: ansiString;
+   enumerator: TEventCommand;
 begin
    if FScriptText <> '' then
    begin
@@ -747,17 +724,16 @@ begin
       Exit;
    end;
 
-   for j := low(TUsesList) to high(TUsesList) do
-      FUseList[j] := false;
+   FUseList := [];
    used := '';
    result := 'begin' + LFCR + 'with rsys do' + LFCR + 'begin' + LFCR;
    TEventCommand.FCorrection := 0;
    FLoopDepth := 0;
-   for I := 0 to High(FCommands) do
+   for enumerator in FCommands do
    begin
-      if (FCommands[i].FOpcode = 22010) or (FCommands[i].FOpcode = 20721 ) or (FCommands[i].FOpcode = 20731) then
+      if (enumerator.FOpcode = 22010) or (enumerator.FOpcode = 20721 ) or (enumerator.FOpcode = 20731) then
          stripLastSem(result);
-      result := result + FCommands[i].getScript;
+      result := result + enumerator.getScript;
    end;
    //end FOR
    if FLabelList <> '' then
@@ -774,7 +750,7 @@ begin
 
    used := '';
    for j := low(TUsesList) to high(TUsesList) do
-      if FUseList[j] then
+      if j in FUseList then
       begin
          if used <> '' then
             used := used + ', ';
@@ -803,12 +779,12 @@ end;
 
 function TEventPage.getLength: word;
 begin
-   result := high(FCommands);
+   result := FCommands.high;
 end;
 
 function TEventPage.getOpcode(x: word): TEventCommand;
 begin
-   if x in [0..high(FCommands)] then
+   if x in [0..FCommands.high] then
       result := FCommands[x]
    else result := nil;
 end;
@@ -822,7 +798,7 @@ end;
 
 function TEventPage.hasScriptFunction: boolean;
 begin
-   result := FOverride or (high(FCommands) > 0);
+   result := FOverride or (FCommands.high > 0);
 end;
 
 {$IFDEF ENGINE}
@@ -853,7 +829,7 @@ end;
 
 procedure TEventPage.use(value: TUsesList);
 begin
-   FUseList[value] := true;
+   include(FUseList, value);
 end;
 
 { TEventConditions }
@@ -940,7 +916,7 @@ var
    I: Integer;
 begin
    FParent := parent;
-   converter := intX80.Create(input);
+   converter := TBerConverter.Create(input);
    FOpcode := converter.getData;
    FDepth := getNext(input);
    if not peekAhead(input, 0) then
@@ -957,7 +933,6 @@ begin
          FData[i-1] := converter.getData;
       end;
    end;
-   converter.Free;
 end;
 
 {$IFDEF EDITOR}
@@ -1007,8 +982,8 @@ begin
    i := -1;
    repeat
       inc(i);
-   until (i = high(parent.FCommands)) or (parent.FCommands[i] = self);
-   if i = high(parent.FCommands) then
+   until (i = parent.FCommands.high) or (parent.FCommands[i] = self);
+   if i = parent.FCommands.high then
       result := nil
    else result := parent.FCommands[i + 1];
 end;
@@ -2449,8 +2424,7 @@ end;
 
 { TCaseStackFrame }
 
-constructor TCaseStackFrame.Create(const depth, count: byte;
-  const elseCase: boolean);
+constructor TCaseStackFrame.Create(const depth, count: byte; const elseCase: boolean);
 begin
    FDepth := depth;
    FCount := count;
