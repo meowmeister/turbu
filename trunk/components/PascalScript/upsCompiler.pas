@@ -1173,7 +1173,9 @@ type
 
     property UTF8Decode: Boolean read FUtf8Decode write FUtf8Decode;
 
+{$WARN HIDING_MEMBER OFF}
     property UnitName: tbtString read FUnitName;
+{$WARN HIDING_MEMBER ON}
   end;
   TIFPSPascalCompiler = TPSPascalCompiler;
 
