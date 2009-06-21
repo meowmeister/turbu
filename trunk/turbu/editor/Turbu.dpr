@@ -71,11 +71,19 @@ uses
   turbu_battle_engine in '..\turbu format\turbu_battle_engine.pas',
   turbu_versioning in '..\turbu format\turbu_versioning.pas',
   turbu_plugin_interface in '..\turbu format\plugins\turbu_plugin_interface.pas',
-  Generics.Collections in '..\..\vclpatch\Generics.Collections.pas',
   DB in '..\..\vclpatch\DB.pas',
   findfile in '..\..\classes\findfile\findfile.pas',
   turbu_heroes in '..\engines\map engine\turbu_heroes.pas',
-  function_header in 'function_header.pas' {frmFuncHeader};
+  function_header in 'function_header.pas' {frmFuncHeader},
+  rm2_turbu_map_metadata in '..\turbu format\converters\rm2_turbu_map_metadata.pas',
+  turbu_map_metadata in '..\turbu format\database\turbu_map_metadata.pas',
+  turbu_maps in '..\turbu format\turbu_maps.pas',
+  rm2_turbu_maps in '..\turbu format\converters\rm2_turbu_maps.pas',
+  conversion_report_form in '..\turbu format\converters\conversion_report_form.pas' {frmConversionReport},
+  conversion_report in '..\turbu format\converters\conversion_report.pas',
+  turbu_skills in '..\turbu format\database\turbu_skills.pas',
+  rm2_turbu_converter_thread in '..\turbu format\converters\rm2_turbu_converter_thread.pas',
+  turbu_functional in '..\turbu_functional.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -96,7 +104,7 @@ begin
   Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
   Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
-   if (SDL_Init(SDL_INIT_VIDEO) <> 0) then
+  if (SDL_Init(SDL_INIT_VIDEO) <> 0) then
       raise Exception.create('Unable to initialize graphics converter.');
    {$IFDEF DEBUG}
    //Create an SDL window for testing images on.

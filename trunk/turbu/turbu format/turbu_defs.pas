@@ -39,13 +39,20 @@ type
    TPointArray = array of TPoint;
    TStringArray = array of string;
 
+   TLocation = packed record
+   case boolean of
+      false: ( map: integer;
+               x: smallint;
+               y: smallint;);
+      true:  ( value: int64);
+      end;
+
    TNameType = record
       name: string;
       flags: TParamFlags;
       typeVar: integer;
    end;
 
-//   PBoolArray = ^TPBoolArray;
    PByteArray = ^TPByteArray;
    PPointArray = ^TPointArray;
 

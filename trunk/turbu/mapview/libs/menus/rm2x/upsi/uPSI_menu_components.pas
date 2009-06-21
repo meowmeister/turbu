@@ -79,7 +79,6 @@ uses
   ,LDB
   ,script_backend
   ,rpg_list
-  ,asphyreSprite
   ,rm2X_menu_components
   ;
  

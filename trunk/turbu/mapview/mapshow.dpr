@@ -43,7 +43,6 @@ uses
   rs_map in 'libs\script engine\RPG Script library\rs_map.pas',
   transitions in 'libs\map engine\transitions.pas',
   transition_graphics in 'libs\map engine\transition_graphics.pas',
-  lost_transitions in 'libs\map engine\lost_transitions.pas',
   distortions in 'libs\map engine\distortions.pas',
   weather in 'libs\general graphics\weather.pas',
   rpg_image in 'libs\general graphics\rpg_image.pas',
@@ -52,15 +51,21 @@ uses
   rpg_anim in 'libs\general graphics\rpg_anim.pas',
   xyz_lib in '..\xyz_lib.pas',
   move_data in '..\move_data.pas',
-  rpg_character in 'libs\script engine\rpg_character.pas',
   map_unit in 'libs\map engine\map_unit.pas',
-  preloader in 'libs\general graphics\preloader.pas',
   formats in '..\formats.pas',
   logs in '..\logs.pas',
   SG_defs in '..\..\classes\sdl custom\SG_defs.pas',
   sdl_sprite in '..\..\classes\sdl custom\sdl_sprite.pas',
+  text_graphics in 'libs\general graphics\text_graphics.pas',
+  turbu_heroes in '..\engines\map engine\turbu_heroes.pas',
   archiveInterface in '..\archiveInterface.pas',
-  text_graphics in 'libs\general graphics\text_graphics.pas';
+  uPSI_shop_menu in 'libs\menus\rm2x\upsi\uPSI_shop_menu.pas',
+  uPSI_item_code in 'libs\menus\rm2x\upsi\uPSI_item_code.pas',
+  uPSI_item_menu in 'libs\menus\rm2x\upsi\uPSI_item_menu.pas',
+  uPSI_menu_components in 'libs\menus\rm2x\upsi\uPSI_menu_components.pas',
+  uPSI_menus in 'libs\menus\rm2x\upsi\uPSI_menus.pas',
+  uPSI_party_target_menu in 'libs\menus\rm2x\upsi\uPSI_party_target_menu.pas',
+  uPSI_rm2x_inventory_menu in 'libs\menus\rm2x\upsi\uPSI_rm2x_inventory_menu.pas';
 
 {$R *.res}
 

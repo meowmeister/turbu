@@ -17,6 +17,8 @@ unit script_backend;
 * www.turbu-rpg.com.
 *****************************************************************************}
 
+{$I ..\..\..\..\unfinished.inc}
+
 interface
 uses sysUtils,
      {addition_sprite, charset_data, item_data,} turbu_characters, rpg_list,
@@ -94,7 +96,7 @@ type
       procedure equip(id: word); overload;
       procedure equip(id, slot: word); overload;
       procedure unequip(id: byte);
-      function equipped(id: word): boolean;
+      function equipped(id: smallint): boolean;
       procedure fullheal;
       function takeDamage(power: word; defense, mDefense, variance: byte): word;
       procedure setSprite(filename: string; index: byte; translucent: boolean);
@@ -219,10 +221,6 @@ begin
          //end if
       FEquipment[i].free;
    end;
-   finalize(FConditionModifier);
-   finalize(FCondition);
-   finalize(FDtypeModifiers);
-   finalize(FSkill);
    inherited;
 end;
 
@@ -322,7 +320,7 @@ begin
    end;
 end;
 
-function TRpgHero.equipped(id: word): boolean;
+function TRpgHero.equipped(id: smallint): boolean;
 var
    i: Integer;
 begin

@@ -36,7 +36,7 @@ type
       hispeed: boolean;
       constructor Create(var theLDB: TStream; const id: word);
       function getName: ansiString;
-      function empty: bool;
+      function empty: boolean;
       class procedure skip(theLDB: TStream; id: word);
    end;
 
@@ -56,9 +56,8 @@ try
 with theLDB do
 begin
    incomplete := false;
-   converter := intX80.Create(theLDB);
+   converter := TBerConverter.Create(theLDB);
    dummy := converter.getData;
-   converter.Free;
    if dummy <> id then
       raise EParseMessage.create('ChipSet section ' + intToStr(id) + ' of RPG_RT.LDB not found!');
    if peekAhead(theLDB, 0) = false then //blank chipset records just contain an x00 and nothing else
@@ -77,9 +76,8 @@ begin
       end;
       if peekAhead(theLDB, 3) then
       begin
-         converter := intX80.Create(theLDB);
+         converter := TBerConverter.Create(theLDB);
          assert (converter.getData = 324, 'Chipset Terrain data segment size incorrect!');
-         converter.free;
          for dummy := 0 to 161 do
             read(terrain[dummy], 2);
       end
@@ -87,9 +85,8 @@ begin
          incomplete := true;
       if peekAhead(theLDB, 4) then
       begin
-         converter := intX80.Create(theLDB);
+         converter := TBerConverter.Create(theLDB);
          assert (converter.getData = 162, 'Chipset Tile Data segment size incorrect!');
-         converter.free;
          for dummy := 0 to 161 do
             read(blockData[dummy], 1);
       end
@@ -101,9 +98,8 @@ begin
       end;
       if peekAhead(theLDB, 5) then
       begin
-         converter := intX80.Create(theLDB);
+         converter := TBerConverter.Create(theLDB);
          assert (converter.getData = 144, 'Chipset Tile Data segment size incorrect!');
-         converter.free;
          for dummy := 0 to 143 do
             read(ublockData[dummy], 1);
       end
@@ -145,7 +141,7 @@ begin
    result := name;
 end;
 
-function TChipSet.empty: bool;
+function TChipSet.empty: boolean;
 var
    i: byte;
 begin

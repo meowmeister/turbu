@@ -20,7 +20,7 @@ unit xyz_lib;
 interface
 uses
    windows,
-   {pngimage,} zlib;
+   zlib;
 
 type
    TXyzImage = class(TObject)
@@ -31,13 +31,11 @@ type
       FData: array of byte;
    public
       constructor Create(filename: string);
-//      procedure saveToPng(png: TPngObject);
    end;
 
 implementation
 uses
-   classes, graphics,
-   commons;
+   classes, graphics, SysUtils;
 
 { TXyzImage }
 
@@ -51,11 +49,11 @@ begin
    inFile := nil;
    decStream := nil;
    try
-      inFile := TFileStream.Create(filename, OPEN_READ);
+      inFile := TFileStream.Create(filename, fmOpenRead);
       setLength(dummy, 4);
       inFile.Read(dummy[1], 4);
       if dummy <> 'XYZ1' then
-         raise EParseMessage.create('Invalid XYZ image.');
+         raise EInvalidGraphic.create('Invalid XYZ image.');
       inFile.read(FWidth, 2);
       inFile.Read(FHeight, 2);
       setLength(FData, FWidth * FHeight);
@@ -69,47 +67,5 @@ begin
       decStream.free;
    end;
 end;
-
-(*
-procedure TXyzImage.saveToPng(png: TPngObject);
-var
-   i, j: word;
-   thePalette: array[0..255] of TPaletteEntry;
-   dummy: TRgbTriple;
-   bitmap: TBitmap;
-begin
-   bitmap := TBitmap.Create;
-   bitmap.SetSize(FWidth, FHeight);
-   bitmap.PixelFormat := pf8bit;
-   for I := 0 to 255 do
-   begin
-      thePalette[i].peRed := FPalette[i].rgbtBlue;
-      thePalette[i].peGreen := FPalette[i].rgbtGreen;
-      thePalette[i].peBlue := FPalette[i].rgbtRed;
-      thePalette[i].peFlags := 0;
-   end;
-   png.assign(bitmap);
-//   windows.SetPaletteEntries(png.Palette, 0, 256, thePalette[0]);
-   for j := 0 to FHeight - 1 do
-   begin
-      for i := 0 to FWidth - 1 do
-      begin
-         dummy := FPalette[FData[(FWidth * j) + i]];
-         //yes, this looks backwards.  It's because TRgbTriple actually orders
-         //its bytes as GBR.
-         png.Pixels[i, j] := rgb(dummy.rgbtBlue, dummy.rgbtGreen, dummy.rgbtRed);
-      end;
-      //end FOR
-   end;
-//   windows.SetPaletteEntries(png.Palette, 0, 256, thePalette[0]);
-{   for I := 0 to 255 do
-      with TChunkPLTE(png.Chunks.ItemFromClass(TChunkPLTE)).Item[i] do
-      begin
-         rgbRed := thePalette[i].peRed;
-         rgbBlue := thePalette[i].peBlue;
-         rgbGreen := thePalette[i].peGreen;
-      end;}
-   png.SaveToFile('c:\test.png');
-end;*)
 
 end.

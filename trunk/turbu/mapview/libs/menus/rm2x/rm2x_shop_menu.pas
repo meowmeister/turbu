@@ -154,7 +154,7 @@ implementation
 uses
    classes, sysUtils,
    commons, LDB, chipset_graphics, text_graphics, rm2x_menu_engine,
-   script_engine, hero_data, rs_system;
+   script_engine, hero_data, rs_system, turbu_defs;
 
 { TShopModeBox }
 
@@ -177,7 +177,7 @@ begin
             owner.FInventoryBox.inventory := GParty.inventory;
             self.focusMenu(owner.FInventoryBox);
             owner.FInventoryBox.setup(0);
-            owner.FPromptBox.text := GDatabase.shopVocab[owner.FFormat, shp_sellWhat];
+//            owner.FPromptBox.text := GDatabase.shopVocab[owner.FFormat, shp_sellWhat];
          end;
          2: //equip
          begin
@@ -243,7 +243,7 @@ var
 begin
    inherited doSetup(value);
    which := TShopMenuPage(FOwner).FFormat;
-   with GDatabase do
+{   with GDatabase do
    begin
       if not FAccessed then
          FParsedText[0] := shopVocab[which, shp_greet]
@@ -252,7 +252,7 @@ begin
       FParsedText[2] := shopVocab[which, shp_sell];
 //      FParsedText[3] := vocabulary[equipment]
       FParsedText[4] := shopVocab[which, shp_leave];
-   end;
+   end;}
    self.placeCursor(0);
    FAccessed := true;
    for I := 0 to 3 do
@@ -287,7 +287,7 @@ begin
    else if (input = btn_enter) and (FOptionEnabled[FCursorPosition]) then
    begin
       owner.FTransactionBox.FState := ts_buying;
-      owner.FTransactionBox.item := TRpgItem.newItem(TWordWrap(FParsedText.Objects[FCursorPosition]).getData, 1);
+//      owner.FTransactionBox.item := TRpgItem.newItem(TWordWrap(FParsedText.Objects[FCursorPosition]).getData, 1);
       owner.state := ss_transaction;
       self.focusMenu(owner.FTransactionBox);
       owner.FTransactionBox.setup(0);
@@ -298,7 +298,7 @@ procedure TStockMenu.doCursor(position: smallint);
 var dummy: TRpgItem;
 begin
    inherited doCursor(position);
-   dummy := TRpgItem.newItem(TWordWrap(FParsedText.Objects[position]).getData, 1);
+//   dummy := TRpgItem.newItem(TWordWrap(FParsedText.Objects[position]).getData, 1);
    TShopMenuPage(FOwner).FCompat.item := dummy;
    TShopMenuPage(FOwner).FDescBox.text := dummy.desc;
 end;
@@ -311,20 +311,20 @@ begin
    inherited doSetup(value);
    inventory := (FOwner as TShopMenuPage).inventory;
    FParsedText.Clear;
-   for i := 0 to inventory.length - 1 do
-      FParsedText.AddObject(GDatabase.item[inventory[i]].name, tWordWrap.create(inventory[i]));
+{   for i := 0 to inventory.length - 1 do
+      FParsedText.AddObject(GDatabase.item[inventory[i]].name, tWordWrap.create(inventory[i]));}
    //end FOR
    setLength(FOptionEnabled, FParsedText.count);
    self.update(GParty.money);
    if self.focused then
       self.placeCursor(value);
-   TShopMenuPage(FOwner).FPromptBox.text := GDatabase.shopVocab[TShopMenuPage(FOwner).FFormat, shp_buyWhat];
+//   TShopMenuPage(FOwner).FPromptBox.text := GDatabase.shopVocab[TShopMenuPage(FOwner).FFormat, shp_buyWhat];
 end;
 
 procedure TStockMenu.drawItem(id, x, y: word; color: byte);
 var dummy: TItem;
 begin
-   dummy := GDatabase.item[TWordWrap(FParsedText.Objects[id]).getData];
+//   dummy := GDatabase.item[TWordWrap(FParsedText.Objects[id]).getData];
    drawText(dummy.name, x, y, color);
    drawTextTo(intToStr(dummy.cost), FBounds.Right - 10, y, color);
 end;
@@ -336,9 +336,9 @@ var
 begin
    for I := 0 to FParsedText.Count - 1 do
    begin
-      dummy := TWordWrap(FParsedText.Objects[i]).getData;
+{      dummy := TWordWrap(FParsedText.Objects[i]).getData;
       FOptionEnabled[i] := (GParty.money >= GDatabase.item[dummy].cost)
-                           and (GParty.inventory.quantityOf(dummy) < MAXITEMS);
+                           and (GParty.inventory.quantityOf(dummy) < MAXITEMS);}
    end;
 end;
 
@@ -357,7 +357,7 @@ begin
    drawText('x', origin.X + 136, origin.Y + 42, 0);
    drawTextTo(intToStr(FExistingQuantity), origin.X + 168, origin.Y + 42, 0);
 
-   dummy := drawTextTo(GDatabase.vocabulary[moneyUnit], self.rightside, origin.Y + 74, 1);
+//   dummy := drawTextTo(GDatabase.vocabulary[moneyUnit], self.rightside, origin.Y + 74, 1);
    if FState = ts_buying then
       drawTextTo(intToStr(FItem.cost * FExistingQuantity), dummy - 8, origin.Y + 74, 0)
    else drawTextTo(intToStr(trunc(FItem.cost * FExistingQuantity * SELLBACK_RATIO)), dummy - 8, origin.Y + 74, 0);
@@ -396,13 +396,13 @@ begin
       btn_enter:
          if FExistingQuantity > 0 then
          begin
-            GCurrentEngine.mediaPlayer.playSystemSound(sfxAccept);
+            GScriptEngine.mediaPlayer.playSystemSound(sfxAccept);
             FBlank := true;
             case FState of
                ts_off: assert(false);
                ts_buying:
                begin
-                  owner.FPromptBox.text := GDatabase.shopVocab[owner.FFormat, shp_bought];
+//                  owner.FPromptBox.text := GDatabase.shopVocab[owner.FFormat, shp_bought];
                   sleep(750);
                   FItem.quantity := FExistingQuantity;
                   GParty.inventory.Add(FItem);
@@ -411,13 +411,13 @@ begin
                end;
                ts_selling:
                begin
-                  owner.FPromptBox.text := GDatabase.shopVocab[owner.FFormat, shp_sold];
+//                  owner.FPromptBox.text := GDatabase.shopVocab[owner.FFormat, shp_sold];
                   sleep(750);
                   if FExistingQuantity < FItem.quantity then
                      FItem.quantity := FItem.quantity - FExistingQuantity
                   else GParty.inventory.Remove(FItem.id, FItem.quantity);
                   GParty.money := GParty.money + trunc(FExistingQuantity * FItem.cost * SELLBACK_RATIO);
-                  owner.FPromptBox.text := GDatabase.shopVocab[owner.FFormat, shp_sellWhat];
+//                  owner.FPromptBox.text := GDatabase.shopVocab[owner.FFormat, shp_sellWhat];
                end;
             end;
             owner.FTransactionComplete := true;
@@ -441,7 +441,7 @@ begin
       else assert(false);
    end;
    if FExistingQuantity <> current then
-      GCurrentEngine.mediaPlayer.playSystemSound(sfxCursor);
+      GScriptEngine.mediaPlayer.playSystemSound(sfxCursor);
 
    if input in [btn_cancel, btn_enter] then
    begin
@@ -474,8 +474,8 @@ begin
    inherited;
    case FState of
       ts_off: ;
-      ts_buying: TShopMenuPage(FOwner).FPromptBox.text := GDatabase.shopVocab[TShopMenuPage(FOwner).FFormat, shp_buyQty];
-      ts_selling: TShopMenuPage(FOwner).FPromptBox.text := GDatabase.shopVocab[TShopMenuPage(FOwner).FFormat, shp_sellQty];
+{      ts_buying: TShopMenuPage(FOwner).FPromptBox.text := GDatabase.shopVocab[TShopMenuPage(FOwner).FFormat, shp_buyQty];
+      ts_selling: TShopMenuPage(FOwner).FPromptBox.text := GDatabase.shopVocab[TShopMenuPage(FOwner).FFormat, shp_sellQty];}
    end;
    FBlank := false;
 end;
@@ -488,10 +488,10 @@ var
 begin
    inherited Create(AParent, nil);
    FTemplate := template;
-   dummy := template.template.sprite;
+//   dummy := template.template.sprite;
    GGameEngine.loadShopCharset(dummy);
    self.ImageName := 'shop ' + dummy;
-   self.imageIndex := 1 + (template.template.spriteIndex * 3);
+//   self.imageIndex := 1 + (template.template.spriteIndex * 3);
 end;
 
 procedure TCompatSprite.Draw;
@@ -503,7 +503,7 @@ begin
       inc(FTickCount);
    if FTickCount = 16 then
       FTickCount := 0;
-   if FItem.template.usableBy[FTemplate.template.id] then
+{   if FItem.template.usableBy[FTemplate.template.id] then
    begin
       i := FTemplate.template.spriteIndex * 3;
       case FTickCount div 4 of
@@ -513,7 +513,7 @@ begin
       end;
       imageIndex := i;
    end
-   else imageIndex := FTemplate.template.spriteIndex + 24;
+   else imageIndex := FTemplate.template.spriteIndex + 24;}
    inherited Draw;
 end;
 
@@ -528,7 +528,7 @@ begin
    begin
       FParty[i].Free;
       FParty[i] := nil;
-      if GParty[i] <> GCurrentEngine.hero[0] then
+      if GParty[i] <> GScriptEngine.hero[0] then
       begin
          FParty[i] := TCompatSprite.Create(self.engine, GParty[i]);
          FParty[i].X := FBounds.Left + 8 + ((i - 1) * 32);
@@ -589,9 +589,9 @@ begin
    if not assigned(FItem) then
       Exit;
 
-   drawText(GDatabase.vocabulary[ownedItems], origin.x + 10, origin.y + 10, 1);
+//   drawText(GDatabase.vocabulary[ownedItems], origin.x + 10, origin.y + 10, 1);
    drawTextTo(intToStr(rs_system.heldItems(FItem.id, false)), self.rightside, origin.Y + 10, 0);
-   drawText(GDatabase.vocabulary[equippedItems], origin.X + 10, origin.Y + 26, 1);
+//   drawText(GDatabase.vocabulary[equippedItems], origin.X + 10, origin.Y + 26, 1);
    drawTextTo(intToStr(rs_system.heldItems(FItem.id, true)), self.rightside, origin.Y + 26, 0);
 end;
 
@@ -660,7 +660,7 @@ end;
 procedure TShopMenuPage.setup(value: integer);
 var info: integer;
 begin
-   FInventory := GCurrentEngine.currentShop;
+   FInventory := GScriptEngine.currentShop;
    if not FOngoing then
       FTransactionComplete := false;
    FOngoing := true;

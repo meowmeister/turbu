@@ -23,15 +23,29 @@ package EngineBasis;
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$DESIGNONLY}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,
   vcl;
 
 contains
+  upsCompiler in '..\..\..\components\PascalScript\upsCompiler.pas',
+  uPSRuntime in '..\..\..\components\PascalScript\uPSRuntime.pas',
+  uPSUtils in '..\..\..\components\PascalScript\uPSUtils.pas',
   turbu_versioning in '..\..\turbu format\turbu_versioning.pas',
   turbu_plugin_interface in '..\battle basis\turbu_plugin_interface.pas',
-  turbu_battle_engine in '..\..\turbu format\turbu_battle_engine.pas';
+  turbu_battle_engine in '..\..\turbu format\turbu_battle_engine.pas',
+  turbu_map_engine in '..\..\turbu format\turbu_map_engine.pas',
+  sdl in '..\..\..\classes\jedi-sdl\SDL\Pas\sdl.pas',
+  sdl_13 in '..\..\..\classes\jedi-sdl\SDL\Pas\sdl_13.pas',
+  sdl_image in '..\..\..\classes\jedi-sdl\SDL_Image\Pas\sdl_image.pas',
+  turbu_database_interface in '..\..\turbu format\turbu_database_interface.pas',
+  turbu_script_interface in '..\..\turbu format\turbu_script_interface.pas',
+  sdl_canvas in '..\..\..\classes\sdl custom\sdl_canvas.pas',
+  SDL_ImageManager in '..\..\..\classes\sdl custom\SDL_ImageManager.pas',
+  SDL_rwStream in '..\..\..\classes\sdl custom\SDL_rwStream.pas',
+  sdl_sprite in '..\..\..\classes\sdl custom\sdl_sprite.pas',
+  SG_defs in '..\..\..\classes\sdl custom\SG_defs.pas';
 
 end.

@@ -19,12 +19,13 @@ unit turbu_database;
 
 interface
 uses
-   classes,
-   events,
-   dm_database,
+   classes, Generics.Collections,
+//   events,
+   dm_database, turbu_database_interface,
    turbu_characters, turbu_items, turbu_db_var_arrays, turbu_skills, turbu_classes,
    turbu_battle_engine, turbu_sprites, turbu_animations, turbu_resists,
-   turbu_unit_dictionary, turbu_containers;
+   turbu_unit_dictionary, turbu_containers, turbu_script_interface, turbu_game_data,
+   turbu_map_metadata, turbu_tilesets;
 
 type
    TCharClassArray = array of TClassTemplate;
@@ -38,6 +39,8 @@ type
    TAnimArray = array of TAnimTemplate;
    TAttribList = TRpgObjectList<TAttributeTemplate>;
    TConditionList = TRpgObjectList<TConditionTemplate>;
+   TTilesetList = TRpgObjectList<TTileset>;
+   TTileDictionary = TObjectDictionary<string, TTileGroup>;
 
    TRpgDataTypes = (rd_class, rd_hero, rd_command, rd_item, rd_skill, rd_anim,
                     rd_attrib, rd_condition, rd_switch, rd_int, rd_float,
@@ -49,7 +52,14 @@ type
       function indexOf (name: string): integer;
    end;
 
-   TRpgDatabase = class(TRpgDatafile)
+   TRpgDatabase = class;
+
+   I2kDatabase = interface(IRpgDatabase)
+   ['{756ECF13-2D52-4EB3-824A-CDAB7A063DBA}']
+      function dbObject: TRpgDatabase;
+   end;
+
+   TRpgDatabase = class(TRpgDatafile, I2kDatabase)
    private
       FClass: TCharClassArray;
       FHero: THeroTemplateArray;
@@ -61,7 +71,8 @@ type
       FAttributes: TAttribList;
       FConditions: TConditionList;
 
-      FGlobalEvents: TEventBlock;
+//      FGlobalEvents: TEventBlock;
+      FLayout: TGameLayout;
       FSwitches: TSwitchSection;
       FVariables: TVarSection;
 
@@ -72,10 +83,18 @@ type
       FSpriteList: TStringList;
       FPortraitList: TStringList;
       FAnimList: TStringList;
+      FMapTree: TMapTree;
 
       FMoveMatrix: TMoveMatrixArray;
       FBattleStyle: TBattleEngineArray;
       FExpRecordList: TExpRecordList;
+      FStatSet: TStatSet;
+      FTileGroup: TTileDictionary;
+      FTileset: TTilesetList;
+
+      function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+      function _AddRef: Integer; stdcall;
+      function _Release: Integer; stdcall;
 
       function getClassCount: integer;
       procedure setClassCount(const Value: integer);
@@ -89,6 +108,8 @@ type
       procedure prepareBlanks;
       function sumItems: integer;
       procedure setUnits(const Value: TUnitDictionary);
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Create;
       constructor Load(savefile: TStream);
@@ -97,6 +118,8 @@ type
       procedure copyToDB(db: TdmDatabase; typeSet: TRpgDataTypeSet = []);
       procedure copyTypeToDB(db: TdmDatabase; value: TRpgDataTypes);
       procedure loadFromDB(value: TdmDatabase);
+
+      procedure AfterConstruction; override;
 
       function addSkillFunc(data: TSkillGainRecord): integer;
       function skillFuncIndex(name: string): integer; inline;
@@ -124,6 +147,8 @@ type
 
       function scriptBuild: boolean;
 
+      function dbObject: TRpgDatabase;
+
       property skillFunc: TSkillGainList read FSkillFuncs;
       property charClasses: integer read getClassCount write setClassCount;
       property charClass: TCharClassArray read FClass write FClass;
@@ -137,11 +162,16 @@ type
       property conditions: TConditionList read FConditions write FConditions;
       property command: TBattleCommandList read FCommand write FCommand;
       property commands: integer read getCommandCount write setCommandCount;
-      property globalEventBlock: TEventBlock read FGlobalEvents;
+      property tileset: TTilesetList read FTileset write FTileset;
+//      property globalEventBlock: TEventBlock read FGlobalEvents;
+      property layout: TGameLayout read FLayout write FLayout;
       property variable: TVarSection read FVariables write FVariables;
       property switch: TSwitchSection read FSwitches write FSwitches;
       property battleStyle: TBattleEngineArray read FBattleStyle write FBattleStyle;
       property moveMatrix: TMoveMatrixArray read FMoveMatrix write FMoveMatrix;
+      property mapTree: TMapTree read FMapTree write FMapTree;
+      property statSet: TStatSet read FStatSet write FStatSet;
+      property tileGroup: TTileDictionary read FTileGroup write FTileGroup;
 
       property spriteList: TStringList read FSpriteList write FSpriteList;
       property portraitList: TStringList read FPortraitList write FPortraitList;
@@ -153,17 +183,17 @@ type
 
 var
    GDatabase: TRpgDatabase;
+   GScriptEngine: IScriptEngine;
 
 implementation
 uses
-   sysUtils, zlib, math, DB, Generics.Collections, TypInfo,
+   sysUtils, zlib, math, DB, TypInfo,
    {$IFDEF EDITOR}design_script_engine,{$ENDIF} archiveInterface, commons,
    turbu_constants, turbu_engines, turbu_versioning, turbu_plugin_interface,
-   turbu_decl_utils,
-   strtok;
+   turbu_decl_utils, turbu_functional;
 
 const
-   DBVERSION = 17;
+   DBVERSION = 20;
 
 { TRpgDatabase }
 
@@ -182,7 +212,14 @@ begin
    FAttributes := TAttribList.Create;
    FConditions := TConditionList.Create;
    FSkillFuncs := TSkillGainList.Create;
+   FLayout := TGameLayout.Create;
    self.prepareBlanks;
+end;
+
+function TRpgDatabase.dbObject: TRpgDatabase;
+begin
+   assert(assigned(self));
+   result := self;
 end;
 
 constructor TRpgDatabase.Load(savefile: TStream);
@@ -239,9 +276,19 @@ begin
    lassert(FName = 'TURBU RPG Database');
    lassert(FID = DBVERSION);
 
+   substream := GArchives[DATABASE_ARCHIVE].getFile('mapTree.tdf');
+   try
+      FMapTree := TMapTree.Load(subStream);
+      lassert(savefile.readChar = 'T');
+      lassert(FMapTree.Count = savefile.readInt);
+      lassert(savefile.readChar = 't');
+   finally
+      substream.free;
+   end;
+
    lassert(savefile.readChar = 'S');
-   GStatSet.free;
-   GStatSet := TStatSet.load(savefile);
+   FStatSet.free;
+   FStatSet := TStatSet.load(savefile);
    lassert(savefile.readChar = 's');
 
    substream := GArchives[DATABASE_ARCHIVE].getFile('lists.tdf');
@@ -440,6 +487,11 @@ begin
       FBattleStyle[i] := TBattleEngineData(requireEngine(et_battle, dummy, TVersion.Create(savefile.readInt)));
    end;
    lassert(savefile.readChar = 'b');
+
+   lassert(savefile.readChar = 'L');
+   FLayout := TGameLayout.Load(savefile);
+   lassert(savefile.readChar = 'l');
+
    lassert(savefile.readChar = 'd');
 end;
 
@@ -468,8 +520,19 @@ var
 begin
    inherited save(savefile);
 
+   substream := TMemoryStream.Create;
+   try
+      FMapTree.save(subStream);
+      savefile.writeChar('T');
+      savefile.writeInt(FMapTree.Count);
+      savefile.writeChar('t');
+      GArchives[DATABASE_ARCHIVE].writeFile('mapTree.tdf', subStream);
+   finally
+      substream.free;
+   end;
+
    savefile.writeChar('S');
-   GStatSet.save(savefile);
+   FStatSet.save(savefile);
    savefile.writeChar('s');
 
    savefile.writeInt(FSkillAlgs.Count);
@@ -665,6 +728,11 @@ begin
       savefile.writeInt(FBattleStyle[i].version.value);
    end;
    savefile.writeChar('b');
+
+   savefile.writeChar('L');
+   FLayout.save(savefile);
+   savefile.writeChar('l');
+
    savefile.writeChar('d');
 end;
 
@@ -739,7 +807,30 @@ begin
    FConditions.Free;
    FAttributes.Free;
    FAlgLookup.Free;
+   FLayout.Free;
+   FMapTree.Free;
+   FStatSet.Free;
+   FTileGroup.Free;
+   FTileset.Free;
    inherited Destroy;
+end;
+
+function TRpgDatabase.QueryInterface(const IID: TGUID; out Obj): HResult;
+begin
+  if GetInterface(IID, Obj) then
+    Result := 0
+  else
+    Result := E_NOINTERFACE;
+end;
+
+function TRpgDatabase._AddRef: Integer;
+begin
+   result := -1;
+end;
+
+function TRpgDatabase._Release: Integer;
+begin
+   result := -1;
 end;
 
 procedure TRpgDatabase.copyToDB(db: TdmDatabase; typeSet: TRpgDataTypeSet = []);
@@ -918,6 +1009,12 @@ begin
    result := high(FHero);
 end;
 
+class function TRpgDatabase.keyChar: ansiChar;
+begin
+   result := #0;
+   assert(false, 'Database files don''t require a key char.');
+end;
+
 procedure TRpgDatabase.setHeroCount(const Value: integer);
 var
    i: word;
@@ -1060,6 +1157,13 @@ begin
    else data.free;
 end;
 
+procedure TRpgDatabase.AfterConstruction;
+begin
+   inherited;
+   turbu_skills.setDatabase(self);
+   turbu_characters.SetDatabase(self);
+end;
+
 function TRpgDatabase.countItems: cardinal;
 var i: TItemType;
 begin
@@ -1069,9 +1173,11 @@ begin
 end;
 
 procedure TRpgDatabase.parseMeta;
+{$IFDEF EDITOR}
 var
    dummy: string;
    newDecl: TRpgDecl;
+{$ENDIF}
 begin
    {$IFDEF EDITOR}
    for newdecl in GDScriptEngine.decl do
@@ -1100,6 +1206,8 @@ begin
    FExpRecordList := TExpRecordList.Create;
    FCommand := TBattleCommandList.Create;
    FAlgLookup := TStringList.Create;
+   FTileGroup := TTileDictionary.Create([doOwnsValues]);
+   FTileset := TRpgObjectList<TTileSet>.Create;
 end;
 
 { TBattleCommandList }

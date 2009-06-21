@@ -68,7 +68,7 @@ implementation
 uses
    sysUtils, types,
    LDB, chipset_graphics, script_engine, script_backend, item_code, skill_data, text_graphics,
-   rm2X_menu_engine;
+   rm2X_menu_engine, turbu_defs;
 
 { TQuantityBox }
 
@@ -86,12 +86,12 @@ begin
 
    if assigned(FItem) then
    begin
-      drawText(GDatabase.vocabulary[ownedItems], origin.x + 10, origin.y + 10, 1);
+//      drawText(GDatabase.vocabulary[ownedItems], origin.x + 10, origin.y + 10, 1);
       drawTextTo(intToStr(FItem.quantity), origin.X + 116, origin.Y + 10, 0);
    end
    else begin
       assert(assigned(FSkill));
-      drawText(GDatabase.vocabulary[mpCost], origin.x + 10, origin.y + 10, 1);
+//      drawText(GDatabase.vocabulary[mpCost], origin.x + 10, origin.y + 10, 1);
       drawTextTo(intToStr(FSkill.template.cost), origin.X + 116, origin.Y + 10, 0);
    end;
 end;
@@ -168,15 +168,15 @@ begin
             end
             else sound := sfxBuzzer;
             if sound <> sfxNil then
-               GCurrentEngine.mediaPlayer.playSystemSound(sound)
+               GScriptEngine.mediaPlayer.playSystemSound(sound)
             else begin
                assert(FItem is TSkillItem);
-               GCurrentEngine.mediaPlayer.playSfx(TSkillItem(FItem).skill.firstSound);
+               GScriptEngine.mediaPlayer.playSfx(TSkillItem(FItem).skill.firstSound);
             end;
          end
          else begin
             assert(assigned(FSkill));
-            caster := GCurrentEngine.currentHero;
+            caster := GScriptEngine.currentHero;
             if caster.mp < FSkill.template.cost then
                sound := sfxBuzzer
             else begin
@@ -192,10 +192,10 @@ begin
                else sound := sfxBuzzer;
             end;
             if sound <> sfxNil then
-               GCurrentEngine.mediaPlayer.playSystemSound(sound)
+               GScriptEngine.mediaPlayer.playSystemSound(sound)
             else
             begin
-               GCurrentEngine.mediaPlayer.playSfx(FSkill.firstSound);
+               GScriptEngine.mediaPlayer.playSfx(FSkill.firstSound);
                caster.mp := caster.mp - FSkill.template.cost;
             end;
          end;
@@ -219,26 +219,26 @@ var
 begin
    inherited;
    i := 1;
-   while GParty[i] <> GCurrentEngine.hero[0] do
+   while GParty[i] <> GScriptEngine.hero[0] do
    begin
       FPortrait[i].Draw;
       origin := point(round(FPortrait[i].x - engine.WorldX) + 54, round(FPortrait[i].Y - engine.WorldY) + 2);
       with GParty[i] do
       begin
          drawText(name, origin.X + 1, origin.Y, 0);
-         drawText(GDatabase.vocabulary[lvShort], origin.x + 1, origin.Y + 16, 1);
+//         drawText(GDatabase.vocabulary[lvShort], origin.x + 1, origin.Y + 16, 1);
          drawText(intToStr(level), origin.X + 17, origin.y + 16, 0);
-         if highCondition = 0 then
+{         if highCondition = 0 then
             drawText(GDatabase.vocabulary[normalStatus], origin.X + 1, origin.Y + 32, 0)
          else with GDatabase.condition[highCondition] do
          begin
             drawText(name, origin.X + 1, origin.Y + 32, color);
          end;
-         drawText(GDatabase.vocabulary[hpShort], origin.x + 52, origin.Y + 16, 1);
+         drawText(GDatabase.vocabulary[hpShort], origin.x + 52, origin.Y + 16, 1);}
          drawTextTo(intToStr(hp), origin.X + 86, origin.Y + 16, 0);
          drawText('/', origin.X + 86, origin.Y + 16, 0);
          drawTextTo(intToStr(maxHp), origin.X + 110, origin.Y + 16, 0);
-         drawText(GDatabase.vocabulary[mpShort], origin.X + 52, origin.Y + 32, 1);
+//         drawText(GDatabase.vocabulary[mpShort], origin.X + 52, origin.Y + 32, 1);
          drawTextTo(intToStr(mp), origin.X + 86, origin.Y + 32, 0);
          drawText('/', origin.X + 86, origin.Y + 32, 0);
          drawTextTo(intToStr(maxMp), origin.X + 110, origin.Y + 32, 0);

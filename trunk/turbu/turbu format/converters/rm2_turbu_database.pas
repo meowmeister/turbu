@@ -19,16 +19,15 @@ unit rm2_turbu_database;
 
 interface
 uses
-   LDB, turbu_database, turbu_unit_dictionary;
+   LDB, LMT, turbu_database, turbu_unit_dictionary, conversion_report;
 
 type
-   TCallback = procedure of object;
 
    T2k2Database = class helper for TRpgDatabase
    private
-      procedure buildNameLists(base: TLcfDatabase; onProgress: TCallback);
+      procedure buildNameLists(base: TLcfDatabase; ConversionReport: IConversionReport);
    public
-      constructor convert(base: TLcfDatabase; dic: TUnitDictionary; onProgress: TCallback);
+      constructor convert(base: TLcfDatabase; tree: TFullTree; dic: TUnitDictionary; ConversionReport: IConversionReport);
       function lookupMapSprite(name: ansiString; index: byte): integer;
       function lookupPortrait(name: ansiString; index: byte): integer;
    end;
@@ -40,10 +39,11 @@ implementation
 uses
    sysUtils, classes, zlib,
    turbu_characters, turbu_items, turbu_skills, turbu_animations, conversion_table,
-   turbu_resists,
+   turbu_resists, turbu_map_metadata,
    rm2_turbu_items, rm2_turbu_characters, rm2_turbu_skills, rm2_turbu_animations,
-   rm2_turbu_resists, turbu_sprites, turbu_versioning, turbu_plugin_interface,
-   turbu_constants, turbu_sdl_image, turbu_tbi_lib,
+   rm2_turbu_resists, rm2_turbu_map_metadata, rm2_turbu_tilesets, turbu_sprites,
+   turbu_versioning, turbu_plugin_interface, turbu_constants, turbu_sdl_image,
+   turbu_tbi_lib, turbu_tilesets,
    hero_data, locate_files,
    archiveInterface, formats, commons, turbu_battle_engine, turbu_engines, logs,
    SDL_ImageManager, SDL, SDL_13;
@@ -63,7 +63,7 @@ function convertAnim(name: string): boolean; forward;
 
 { T2k2Database }
 
-procedure T2k2Database.buildNameLists(base: TLcfDatabase; onProgress: TCallback);
+procedure T2k2Database.buildNameLists(base: TLcfDatabase; ConversionReport: IConversionReport);
 var
    counter: integer;
    dummy: string;
@@ -124,26 +124,27 @@ var
 
 begin
    { Set up name table }
+   ConversionReport.newStep('Preparing name tables.');
+   ConversionReport.newStep('Hero sprites.');
    nameTable.newDivision;
    counter := 0;
    for I := 1 to base.heroes do
       if not scanMapSprite(base.hero[i].sprite, base.hero[i].spriteIndex) then
          base.hero[i].sprite := '';
-   onProgress;
 
+   ConversionReport.newStep('Hero portraits.');
    nameTable.newDivision;
    counter := 0;
    for I := 1 to base.heroes do
       if not scanPortrait(base.hero[i].portrait) then
          base.hero[i].portrait := '';
-   onProgress;
 
+   ConversionReport.newStep('Battle animations.');
    nameTable.newDivision;
    counter := 0;
    for I := 1 to base.anims do
       if not scanAnim(base.anim[i].filename) then
          base.anim[i].filename := '';
-   onProgress;
 
    {worry about battlesprites later}
 
@@ -172,7 +173,8 @@ begin
    else result.value := -1;
 end;
 
-constructor T2k2Database.convert(base: TLcfDatabase; dic: TUnitDictionary; onProgress: TCallback);
+constructor T2k2Database.convert(base: TLcfDatabase; tree: TFullTree;
+   dic: TUnitDictionary; ConversionReport: IConversionReport);
 var
    i, j: integer;
    counter, classes: integer;
@@ -233,11 +235,12 @@ begin
    nametable.free;
    nametable := TNameTable.Create;
    converter := nil;
+   self.statSet := TStatSet.Create;
 
    try
-      buildNameLists(base, onProgress);
-      onProgress;
+      buildNameLists(base, ConversionReport);
 
+      ConversionReport.newStep('Converting heroes');
       //COMMANDS
       self.command.Add(TBattleCommand.Create);
       if GProjectFormat = pf_2k3 then
@@ -270,7 +273,7 @@ begin
             if not isEmpty(base.charClass[i]) then
             begin
                charClass[i].Free;
-               charClass[i] := TClassTemplate.convert(base.charClass[i]);
+               charClass[i] := TClassTemplate.convert(base.charClass[i], self.statSet);
                classTable.add(i, i - counter);
             end
             else
@@ -287,7 +290,7 @@ begin
       begin
          if (not isEmpty(base.hero[i])) and (base.hero[i].classNum = 0) then
          begin
-            GDatabase.addClass(TClassTemplate.convert(base.hero[i], base));
+            GDatabase.addClass(TClassTemplate.convert(base.hero[i], base, self.statSet));
             inc(counter);
             heroClassTable.add(i, counter);
          end;
@@ -296,10 +299,10 @@ begin
       //HERO RECORDS
       for I := 1 to base.heroes do
          if base.hero[i].classNum <> 0 then
-            GDatabase.addHero(THeroTemplate.convert(base.hero[i], classTable, base))
-         else GDatabase.addHero(THeroTemplate.convert(base.hero[i], heroClassTable, base));
-      onProgress;
+            GDatabase.addHero(THeroTemplate.convert(base.hero[i], classTable, base, self.statSet))
+         else GDatabase.addHero(THeroTemplate.convert(base.hero[i], heroClassTable, base, self.statSet));
 
+      ConversionReport.newStep('Converting Items');
       //ITEMS
       for I := 1 to base.items do
          TItemTemplate.addNewItem(base.item[i]);
@@ -315,18 +318,18 @@ begin
 
       for I := 1 to base.heroes do
          self.hero[i].loadEq(base.hero[i]);
-      onProgress;
 
+      ConversionReport.newStep('Converting Skills');
       //SKILLS
       for I := 1 to base.skills do
          TSkillTemplate.addNewSkill(base.skill[i]);
-      onProgress;
 
+      ConversionReport.newStep('Converting Animations');
       //ANIMATIONS
       for i := 1 to base.anims do
          self.addAnim(TAnimTemplate.convert(base.anim[i], i));
-      onProgress;
 
+      ConversionReport.newStep('Converting Attributes and Conditions');
       //ATTRIBUTES
       for I := 1 to base.attributes do
          self.attributes.add(TAttributeTemplate.Convert(base.attribute[i], i));
@@ -334,8 +337,19 @@ begin
       //CONDITIONS
       for I := 1 to base.conditions do
          self.conditions.Add(TConditionTemplate.Convert(base.condition[i], i));
-      onProgress;
 
+      //TILESETS
+      for I := 1 to base.getMaxChipsets do
+         self.tileset.Add(TTileset.Convert(base.getChipset(i), i));
+
+      ConversionReport.newStep('Preparing layout');
+      self.layout.width := LOGICAL_SIZE.X;
+      self.layout.height := LOGICAL_SIZE.Y;
+      self.layout.physWidth := PHYSICAL_SIZE.X;
+      self.layout.physHeight := PHYSICAL_SIZE.Y;
+
+      ConversionReport.newStep('Converting map tree');
+      self.mapTree := TMapTree.Convert(tree, true);
    finally
       classTable.Free;
       heroClassTable.Free;

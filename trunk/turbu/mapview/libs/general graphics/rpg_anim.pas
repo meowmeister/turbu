@@ -21,7 +21,7 @@ interface
 uses
    math,
    commons, types, timing, battle_anims, script_interface, addition_sprite,
-   AsphyreDef, {AsphyreSprite} SDL_Sprite;
+   {AsphyreDef, AsphyreSprite} turbu_defs, SDL_Sprite;
 
 type
    TAnimSprite = class(TSprite)
@@ -49,7 +49,7 @@ uses
    windows, sysUtils,
    chipset_graphics, script_engine, distortions, rs_map,
    SDL,
-   asphyreImages;
+   {asphyreImages} sdl_imageManager;
 
 { TAnimSprite }
 
@@ -166,7 +166,7 @@ begin
       if currEffect.frame = frame then
       begin
          if currEffect.sound.filename <> '' then
-            GCurrentEngine.mediaPlayer.playSfx(currEffect.sound);
+            GScriptEngine.mediaPlayer.playSfx(currEffect.sound);
          case currEffect.flashWhere of
             fl_none: ;
             fl_target:

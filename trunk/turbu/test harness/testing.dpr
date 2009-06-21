@@ -78,10 +78,17 @@ uses
   frame_params in '..\editor\frame_params.pas' {frameParams: TFrame},
   generic_algorithm_editor in '..\editor\generic_algorithm_editor.pas' {frmAlgorithmEditor},
   skill_settings in '..\editor\skill_settings.pas' {frmSkillLearning},
-  turbu_databaseCompileHack in '..\turbu format\database\turbu_databaseCompileHack.pas',
   turbu_containers in '..\turbu format\turbu_containers.pas',
   turbu_heroes in '..\engines\map engine\turbu_heroes.pas',
-  function_header in '..\editor\function_header.pas' {frmFuncHeader};
+  function_header in '..\editor\function_header.pas' {frmFuncHeader},
+  rm2_turbu_map_metadata in '..\turbu format\converters\rm2_turbu_map_metadata.pas',
+  conversion_report in '..\turbu format\converters\conversion_report.pas',
+  conversion_report_form in '..\turbu format\converters\conversion_report_form.pas' {frmConversionReport},
+  rm2_turbu_converter_thread in '..\turbu format\converters\rm2_turbu_converter_thread.pas',
+  rm2_turbu_maps in '..\turbu format\converters\rm2_turbu_maps.pas',
+  turbu_maps in '..\turbu format\turbu_maps.pas',
+  turbu_tilesets in '..\turbu format\database\turbu_tilesets.pas',
+  rm2_turbu_tilesets in '..\turbu format\converters\rm2_turbu_tilesets.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -100,5 +107,6 @@ begin
   Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
   Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
+  Application.CreateForm(TfrmConversionReport, frmConversionReport);
   Application.Run;
 end.

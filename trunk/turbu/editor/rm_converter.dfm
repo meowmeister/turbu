@@ -13,18 +13,9 @@ object frmRmConverter: TfrmRmConverter
   OldCreateOrder = False
   Position = poDesigned
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object lblProgress: TLabel
-    Left = 8
-    Top = 222
-    Width = 58
-    Height = 13
-    Caption = 'Conversion:'
-    Visible = False
-  end
   object pagOptions: TPageControl
     Left = 0
     Top = 0
@@ -169,17 +160,6 @@ object frmRmConverter: TfrmRmConverter
     Enabled = False
     TabOrder = 2
     OnClick = btnConvertClick
-  end
-  object prgConversion: TProgressBar
-    Left = 80
-    Top = 217
-    Width = 209
-    Height = 25
-    Max = 13
-    Smooth = True
-    Step = 1
-    TabOrder = 3
-    Visible = False
   end
   object tmrValidate: TTimer
     Enabled = False

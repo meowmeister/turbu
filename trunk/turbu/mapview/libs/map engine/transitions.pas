@@ -99,7 +99,7 @@ var
    i: cardinal;
 begin
    for I := low(GBlockArray) to high(GBlockArray) do
-      swap(GBlockArray[i], GBlockArray[GCurrentEngine.rpgRandom(low(GBlockArray), high(GBlockArray))]);
+      swap(GBlockArray[i], GBlockArray[GScriptEngine.rpgRandom(low(GBlockArray), high(GBlockArray))]);
    //end for
 end;
 
@@ -116,11 +116,11 @@ begin
    rangeFloor := width * VERTICAL_RANGE;
    rangeCeiling := high(GBlockArray) - rangeFloor;
    for i := 0 to freeFloor do
-      swap(GBlockArray[i], GBlockArray[GCurrentEngine.rpgRandom(0, rangeFloor)]);
+      swap(GBlockArray[i], GBlockArray[GScriptEngine.rpgRandom(0, rangeFloor)]);
    for I := freeFloor + 1 to freeCeiling do
-      swap(GBlockArray[i], GBlockArray[GCurrentEngine.rpgRandom(i - (freeFloor), i + (freeFloor))]);
+      swap(GBlockArray[i], GBlockArray[GScriptEngine.rpgRandom(i - (freeFloor), i + (freeFloor))]);
    for i := freeCeiling + 1 to high(GBlockArray) do
-      swap(GBlockArray[i], GBlockArray[GCurrentEngine.rpgRandom(rangeCeiling, high(GBlockArray))]);
+      swap(GBlockArray[i], GBlockArray[GScriptEngine.rpgRandom(rangeCeiling, high(GBlockArray))]);
    //end FOR
 end;
 

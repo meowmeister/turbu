@@ -32,6 +32,8 @@ type
       FRightBalance: byte;
 
       procedure setFilename(value: string); virtual; abstract;
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
@@ -52,10 +54,12 @@ type
 
    TRpgMusic = class(TSoundTemplate)
    private
-//      procedure setFilename(value: string); override;
+      procedure setFilename(value: string); override;
    end;
 
 implementation
+uses
+   sysUtils;
 
 { TSoundTemplate }
 
@@ -69,6 +73,11 @@ begin
    FRightBalance := source.FRightBalance;
 end;
 
+class function TSoundTemplate.keyChar: ansiChar;
+begin
+   result := 'o';
+end;
+
 constructor TSoundTemplate.Load(savefile: TStream);
 begin
    inherited Load(savefile);
@@ -77,7 +86,7 @@ begin
    FVolume := savefile.readByte;
    FLeftBalance := savefile.readByte;
    FRightBalance := savefile.readByte;
-   lassert(savefile.readChar = 'O');
+   readEnd(savefile);
 end;
 
 procedure TSoundTemplate.save(savefile: TStream);
@@ -88,12 +97,20 @@ begin
    savefile.writeByte(FVolume);
    savefile.writeByte(FLeftBalance);
    savefile.writeByte(FRightBalance);
-   savefile.writeChar('O');
+   writeEnd(savefile);
 end;
 
 { TRpgSound }
 
 procedure TRpgSound.setFilename(value: string);
+begin
+   FName := value;
+   //fix this later
+end;
+
+{ TRpgMusic }
+
+procedure TRpgMusic.setFilename(value: string);
 begin
    FName := value;
    //fix this later

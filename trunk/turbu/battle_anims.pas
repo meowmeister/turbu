@@ -112,24 +112,20 @@ var
    converter: intX80;
 begin
    inherited create;
-   converter := intX80.Create(input);
-   try
-      if converter.getData <> id then
-         raise EParseMessage.create('Battle Animation FX record ' + intToStr(id) + ' of RPG_RT.LDB not found!');
-      FFrame := getNumSec(1, input, fillInAnimFxInt);
-      FSound := TRmSound.Create(2, input);
-      FFlashWhere := TFlashTarget(getNumSec(3, input, fillInZeroInt));
-      FRed := getNumSec(4, input, fillInAnimFxInt);
-      FGreen := getNumSec(5, input, fillInAnimFxInt);
-      FBlue := getNumSec(6, input, fillInAnimFxInt);
-      FPower := getNumSec(7, input, fillInAnimFxInt);
-      skipSec(8, input); //no idea what this does.  It showed up in Love and War's database
-      if not peekAhead(input, 0) then
-         raise EParseMessage.create('Exceptional case found at LDB anim fx x' + intToHex(id, 2) + '!');
+   converter := TBerConverter.Create(input);
+   if converter.getData <> id then
+      raise EParseMessage.create('Battle Animation FX record ' + intToStr(id) + ' of RPG_RT.LDB not found!');
+   FFrame := getNumSec(1, input, fillInAnimFxInt);
+   FSound := TRmSound.Create(2, input);
+   FFlashWhere := TFlashTarget(getNumSec(3, input, fillInZeroInt));
+   FRed := getNumSec(4, input, fillInAnimFxInt);
+   FGreen := getNumSec(5, input, fillInAnimFxInt);
+   FBlue := getNumSec(6, input, fillInAnimFxInt);
+   FPower := getNumSec(7, input, fillInAnimFxInt);
+   skipSec(8, input); //no idea what this does.  It showed up in Love and War's database
+   if not peekAhead(input, 0) then
+      raise EParseMessage.create('Exceptional case found at LDB anim fx x' + intToHex(id, 2) + '!');
    //end if
-   finally
-      converter.free;
-   end;
 end;
 
 destructor TAnimEffects.Destroy;
@@ -145,10 +141,9 @@ var
    converter: intX80;
 begin
    inherited create;
-   converter := intX80.Create(input);
+   converter := TBerConverter.Create(input);
    if converter.getData <> id then
       raise EParseMessage.create('Battle Animation FX record ' + intToStr(id) + ' of RPG_RT.LDB not found!');
-   converter.free;
    FUnknown := getNumSec(1, input, fillInZeroInt);
    assert(FUnknown = 0);
    FIndex := getNumSec(2, input, fillInZeroInt);
@@ -183,7 +178,7 @@ var
    i, j: word;
 begin
    inherited create;
-   converter := intX80.Create(input);
+   converter := TBerConverter.Create(input);
    if converter.getData <> id then
       raise EParseMessage.create('Battle Animation record ' + intToStr(id) + ' of RPG_RT.LDB not found!');
    FName := getStrSec(1, input, fillInBlankStr);
@@ -234,7 +229,6 @@ begin
    if not peekAhead(input, 0) then
       raise EParseMessage.create('Exceptional case found at LDB anim x' + intToHex(id, 2) + '!');
    //end if
-   converter.free;
 end;
 
 destructor TBattleAnim.Destroy;
@@ -243,14 +237,11 @@ var
 begin
    for I := low(FTimingSec) to high(FTimingSec) do
       FTimingSec[i].free;
-   finalize(FTimingSec);
    for j := low(FFrameSec) to high(FFrameSec) do
    begin
       for I := low(FFrameSec[j]) to high(FFrameSec[j]) do
          FFrameSec[j, i].free;
-      finalize(FFrameSec[j]);
    end;
-   finalize(FFrameSec);
    inherited;
 end;
 

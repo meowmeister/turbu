@@ -70,7 +70,6 @@ uses
   ,commons
   ,chipset_data
   ,frames
-  ,asphyreSprite
   ,menu_basis
   ;
  

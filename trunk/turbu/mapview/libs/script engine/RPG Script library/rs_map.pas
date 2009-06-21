@@ -71,7 +71,7 @@ begin
    if map = GGameEngine.currentMap.mapID then
    begin
       newpoint := point(x, y);
-      if GCurrentEngine.onMap(newpoint) then
+      if GScriptEngine.onMap(newpoint) then
       begin
          GGameEngine.currentParty.leaveTile;
          GGameEngine.currentParty.location := newpoint;
@@ -87,7 +87,7 @@ procedure teleportEvent(which: TRpgEvent; x, y: integer);
 var newpoint: TPoint;
 begin
    newpoint := point(x, y);
-   if GCurrentEngine.onMap(newpoint) then
+   if GScriptEngine.onMap(newpoint) then
       which.location := newpoint;
    //end if
 end;
@@ -99,7 +99,7 @@ begin
       Exit;
 
    newpoint := point(x, y);
-   if GCurrentEngine.onMap(newpoint, map) then
+   if GScriptEngine.onMap(newpoint, map) then
    begin
       which.gamesprite.leaveTile;
       which.map := map;
@@ -204,7 +204,7 @@ procedure setScreenTone(r, g, b, sat: byte; duration: cardinal; wait: boolean);
 
    function convert(number: smallint): smallint; inline;
    begin
-      number := lesserOf(number, 200);
+      number := min(number, 200);
       dec(number, 100);
       result := round(number * 2.55);
    end;
@@ -216,7 +216,7 @@ begin
    g2 := convert(g);
    b2 := convert(b);
    GGameEngine.fadeTo(r2, g2, b2, duration);
-   sat := round(lesserOf(sat, 100) * 2.55);
+   sat := round(min(sat, 100) * 2.55);
    GGameEngine.grayAlpha := 255 - sat;
    if wait then
       TEventThread(GCurrentThread).threadSleep(duration, true);
@@ -348,7 +348,7 @@ var
    dummy: TBattleAnim;
    sprite: TAnimSprite;
 begin
-   dummy := GDatabase.anim[which];
+//   dummy := GDatabase.anim[which];
    if (dummy = nil) or (target = nil) then
       Exit;
 

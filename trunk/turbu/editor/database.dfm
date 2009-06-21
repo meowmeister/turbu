@@ -73,6 +73,46 @@ object frmDatabase: TfrmDatabase
         TabOrder = 0
         TabStop = True
         ExplicitHeight = 459
+        inherited pnlClass: TPanel
+          inherited grpRepertoire: TGroupBox
+            inherited pageRepertoire: TPageControl
+              inherited tshEquipment: TTabSheet
+                ExplicitLeft = 4
+                ExplicitTop = 24
+                ExplicitWidth = 188
+                ExplicitHeight = 158
+              end
+              inherited tshSkills: TTabSheet
+                ExplicitLeft = 4
+                ExplicitTop = 24
+                ExplicitWidth = 188
+                ExplicitHeight = 158
+              end
+              inherited tshRepertoire: TTabSheet
+                ExplicitLeft = 4
+                ExplicitTop = 24
+                ExplicitWidth = 188
+                ExplicitHeight = 158
+              end
+            end
+          end
+          inherited grpResistVuln: TGroupBox
+            inherited pageResists: TPageControl
+              inherited tshAttributes: TTabSheet
+                ExplicitLeft = 4
+                ExplicitTop = 24
+                ExplicitWidth = 188
+                ExplicitHeight = 98
+              end
+              inherited tshConditions: TTabSheet
+                ExplicitLeft = 4
+                ExplicitTop = 24
+                ExplicitWidth = 188
+                ExplicitHeight = 98
+              end
+            end
+          end
+        end
         inherited navAdd: TDBNavigator
           Hints.Strings = ()
         end
@@ -84,10 +124,6 @@ object frmDatabase: TfrmDatabase
     object tshHero: TTabSheet
       Caption = '&Hero'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
     end
     object tshItems: TTabSheet
       Caption = 'Raw &Data Viewer'
@@ -107,9 +143,6 @@ object frmDatabase: TfrmDatabase
             Top = 3
             Height = 417
           end
-          inherited cboDatasets: TComboBox
-            ItemHeight = 0
-          end
         end
         inherited dsWeapons: TDataSource
           DataSet = dmDatabase.skillGainRecords
@@ -119,10 +152,6 @@ object frmDatabase: TfrmDatabase
     object tshGlobalEvents: TTabSheet
       Caption = '&Global Events'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblGlobalEvents: TLabel
         Left = 16
         Top = 16
@@ -186,7 +215,7 @@ object frmDatabase: TfrmDatabase
             Width = 169
             Height = 21
             Style = csDropDownList
-            ItemHeight = 0
+            ItemHeight = 13
             TabOrder = 0
             Items.Strings = (
               'Call'

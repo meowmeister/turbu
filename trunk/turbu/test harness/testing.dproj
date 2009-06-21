@@ -3,7 +3,7 @@
 			<ProjectGuid>{920169D8-3955-472E-B306-74E825F6E932}</ProjectGuid>
 			<ProjectVersion>12.0</ProjectVersion>
 			<MainSource>testing.dpr</MainSource>
-			<Config Condition="'$(Config)'==''">Debug</Config>
+			<Config Condition="'$(Config)'==''">Profiler</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -22,6 +22,12 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='External debug' or '$(Cfg_1)'!=''">
 			<Cfg_1>true</Cfg_1>
+			<CfgParent>Cfg_2</CfgParent>
+			<Cfg_2>true</Cfg_2>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Profiler' or '$(Cfg_4)'!=''">
+			<Cfg_4>true</Cfg_4>
 			<CfgParent>Cfg_2</CfgParent>
 			<Cfg_2>true</Cfg_2>
 			<Base>true</Base>
@@ -58,6 +64,9 @@
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<DCC_RemoteDebug>true</DCC_RemoteDebug>
 			<DCC_Inlining>off</DCC_Inlining>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_4)'!=''">
+			<DCC_Define>SAMPLING;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="testing.dpr">
@@ -162,14 +171,27 @@
 			<DCCReference Include="..\editor\skill_settings.pas">
 				<Form>frmSkillLearning</Form>
 			</DCCReference>
-			<DCCReference Include="..\turbu format\database\turbu_databaseCompileHack.pas"/>
 			<DCCReference Include="..\turbu format\turbu_containers.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
 			<DCCReference Include="..\editor\function_header.pas">
 				<Form>frmFuncHeader</Form>
 			</DCCReference>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_map_metadata.pas"/>
+			<DCCReference Include="..\turbu format\converters\conversion_report.pas"/>
+			<DCCReference Include="..\turbu format\converters\conversion_report_form.pas">
+				<Form>frmConversionReport</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_converter_thread.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_maps.pas"/>
+			<DCCReference Include="..\turbu format\turbu_maps.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_tilesets.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_tilesets.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Profiler">
+				<Key>Cfg_4</Key>
+				<CfgParent>Cfg_2</CfgParent>
 			</BuildConfiguration>
 			<BuildConfiguration Include="External debug">
 				<Key>Cfg_1</Key>

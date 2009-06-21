@@ -25,7 +25,6 @@ procedure findGraphic(var filename: string; const folder: string);
 
 var
    rtpLocation: string;
-   GXyzHack: boolean;
 
 implementation
 uses sysUtils,
@@ -33,42 +32,34 @@ uses sysUtils,
 
 const
    AUDIO_EXTENSION: array[1..8] of string = ('.mid', '.wav', '.ogg', '.mp3', '.it', '.xm', '.s3m', '.mod');
-   GRAPHIC_EXTENSION: array[1..3] of string = ('.png', '.bmp', '.xyz');
+   GRAPHIC_EXTENSION: array[1..4] of string = ('.png', '.bmp', '.xyz', '.gif');
+
+function scanFile(var filename: string; const folder: string; list: array of string): boolean;
+var
+   lFilename: string;
+   extension: string;
+begin
+   for extension in list do
+   begin
+      lFileName := folder + fileName + extension;
+      if FileExists(lFilename) then
+      begin
+         filename := lFilename;
+         Exit(true);
+      end;
+   end;
+   result := false;
+end;
+
 
 procedure findAudio(var filename: string; const folder: string);
-var
-   i: word;
-   found: boolean;
 begin
-   found := false;
-   i := 0;
-   while (not found) and (i < high(AUDIO_EXTENSION)) do
-   begin
-      inc(i);
-      if FileExists(GCurrentFolder + '\' + folder + '\' + fileName + AUDIO_EXTENSION[i]) then
-      begin
-         fileName := GCurrentFolder + '\' + folder + '\' + fileName + AUDIO_EXTENSION[i];
-         found := true;
-      end;
-   end;
+   if scanFile(filename, IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(GCurrentFolder) + folder), AUDIO_EXTENSION) then
+      Exit;
+   if scanFile(filename, IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(rtpLocation) + folder), AUDIO_EXTENSION) then
+      Exit;
 
-   if not found then
-   begin
-      i := 0;
-      while (not found) and (i < high(AUDIO_EXTENSION)) do
-      begin
-         inc(i);
-         if FileExists(rtpLocation + '\' + folder + '\' + fileName + AUDIO_EXTENSION[i]) then
-         begin
-            fileName := rtpLocation + '\' + folder + '\' + fileName + AUDIO_EXTENSION[i];
-            found := true;
-         end;
-      end;
-   end;
-
-   if not found then
-      filename := '';
-   //end if
+   filename := '';
 end;
 
 procedure findMusic(var filename: string);
@@ -82,56 +73,13 @@ begin
 end;
 
 procedure findGraphic(var filename: string; const folder: string);
-var
-   i: word;
-   found: boolean;
 begin
-   found := false;
-   i := 0;
-   while (not found) and (i < high(GRAPHIC_EXTENSION)) do
-   begin
-      inc(i);
-      if FileExists(GCurrentFolder + '\' + folder + '\' + fileName + GRAPHIC_EXTENSION[i]) then
-      begin
-         fileName := GCurrentFolder + '\' + folder + '\' + fileName + GRAPHIC_EXTENSION[i];
-         found := true;
-      end;
-   end;
+   if scanFile(filename, IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(GCurrentFolder) + folder), GRAPHIC_EXTENSION) then
+      Exit;
+   if scanFile(filename, IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(rtpLocation) + folder), GRAPHIC_EXTENSION) then
+      Exit;
 
-   if not found then
-   begin
-      i := 0;
-      while (not found) and (i < high(GRAPHIC_EXTENSION)) do
-      begin
-         inc(i);
-         if FileExists(rtpLocation + '\' + folder + '\' + fileName + GRAPHIC_EXTENSION[i]) then
-         begin
-            fileName := rtpLocation + '\' + folder + '\' + fileName + GRAPHIC_EXTENSION[i];
-            found := true;
-         end;
-      end;
-   end;
-{$IFDEF ENGINE}
-{
-   if ExtractFileExt(filename) = '.bmp' then
-      filename := bmpToPng(filename)
-   else if ExtractFileExt(filename) = '.xyz' then
-   begin
-      GXyzHack := true;
-      filename := xyzToPng(filename);
-   end;}
-
-   //code that's no longer necessary with SDL_Image available
-{$ENDIF}
-
-   if not found then
-      filename := '';
-   //end if
-end;
-
-initialization
-begin
-   GXyzHack := false;
+   filename := '';
 end;
 
 end.

@@ -23,30 +23,29 @@ uses
   SysUtils, Classes, Controls, Forms, Menus, StdCtrls, DBCtrls;
 
 type
-  TfrmTestConsole = class(TForm)
-    MainMenu1: TMainMenu;
-    Database1: TMenuItem;
-    mnuTestDatasets: TMenuItem;
-    mnuTestLoading: TMenuItem;
-    mnuTestDatabasewindow1: TMenuItem;
-    File1: TMenuItem;
-    mnuTestConversion1: TMenuItem;
-    mnuSetDefaultProject: TMenuItem;
-    procedure mnuTestDatasetsClick(Sender: TObject);
-    procedure mnuTestLoadingClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure mnuTestDatabasewindow1Click(Sender: TObject);
-    procedure mnuTestConversion1Click(Sender: TObject);
-    procedure mnuSetDefaultProjectClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-  private
-    { Private declarations }
-    folder, outFolder: string;
+   TfrmTestConsole = class(TForm)
+      MainMenu1: TMainMenu;
+      Database1: TMenuItem;
+      mnuTestDatasets: TMenuItem;
+      mnuTestLoading: TMenuItem;
+      mnuTestDatabasewindow1: TMenuItem;
+      File1: TMenuItem;
+      mnuTestConversion1: TMenuItem;
+      mnuSetDefaultProject: TMenuItem;
+      procedure mnuTestDatasetsClick(Sender: TObject);
+      procedure mnuTestLoadingClick(Sender: TObject);
+      procedure FormShow(Sender: TObject);
+      procedure mnuTestDatabasewindow1Click(Sender: TObject);
+      procedure mnuTestConversion1Click(Sender: TObject);
+      procedure mnuSetDefaultProjectClick(Sender: TObject);
+      procedure FormCreate(Sender: TObject);
+   private
+      { Private declarations }
+      folder, outFolder: string;
 
-    procedure DoNothing;
-  public
-    { Public declarations }
-  end;
+   public
+      { Public declarations }
+   end;
 
 var
   frmTestConsole: TfrmTestConsole;
@@ -57,8 +56,10 @@ uses
    Contnrs, DBClient, Generics.Collections, Registry, windows,
    dm_database, turbu_database, database, test_project,
    archiveInterface, discInterface,
-   turbu_constants,
+   turbu_constants, conversion_report, conversion_report_form,
+   rm2_turbu_converter_thread, design_script_engine,
    commons, fileIO, formats, LDB, LMT, LMU,
+   turbu_characters, locate_files,
    rm2_turbu_characters, rm2_turbu_database, turbu_unit_dictionary,
    turbu_engines, turbu_plugin_interface, turbu_battle_engine,
    turbu_2k3_battle_engine, turbu_2k_battle_engine,
@@ -79,11 +80,6 @@ begin
    frmDatabase.ShowModal;
 end;
 
-procedure TfrmTestConsole.DoNothing;
-begin
-   assert(true);
-end;
-
 procedure TfrmTestConsole.mnuSetDefaultProjectClick(Sender: TObject);
 begin
    frmTestProjLocation.getLocation(folder);
@@ -92,24 +88,9 @@ end;
 
 procedure TfrmTestConsole.mnuTestConversion1Click(Sender: TObject);
 var
-   database, mapTree, mapUnit: TFileStream;
-   outFile: TFileStream;
-   savefile: TMemoryStream;
-   filename, uFilename: string;
-   stream: TStream;
-   dic: TUnitDictionary;
-
-   FLdb: TLcfDataBase;
-   FLmt: TFullTree;
-   FLmu: TMapUnit;
+   filename: string;
+   conversionReport: IConversionReport;
 begin
-   database := nil;
-   mapTree := nil;
-   mapUnit := nil;
-   FLmt := nil;
-   FLdb := nil;
-   FLmu := nil;
-
    try
       filename := IncludeTrailingPathDelimiter(outFolder);
       assert(DirectoryExists(filename));
@@ -125,69 +106,18 @@ begin
 
       GCurrentFolder := folder;
       GProjectFolder := outFolder;
+      rtpLocation := GetRegistryValue('\Software\ASCII\RPG2000', 'RuntimePackagePath');
 
-      database := openFile(folder + '\RPG_RT.ldb');
-      if getString(database) <> 'LcfDataBase' then
-         raise EParseMessage.create('RPG_RT.LDB is corrupt!');
-      GProjectFormat := scanRmFormat(database);
-      assert(GProjectFormat in [pf_2k, pf_2k3]);
-      FLdb := TLcfDataBase.Create(database);
-      //end of format and database check
-
-      maptree := openFile(folder + '\RPG_RT.lmt');
-      if getString(maptree) <> 'LcfMapTree' then
-         raise EParseMessage.create('RPG_RT.LMT is corrupt!');
-      FLmt := TFullTree.Create(maptree);
-      //done checking the map tree; now let's do some converting
-
-      GDatabase.Free;
-      dic := TUnitDictionary.Create([doOwnsValues], 10);
-      for filename in GArchives[0].allFiles('scripts\general\') do
-      begin
-         stream := GArchives[0].getFile(filename);
-         uFilename := StringReplace(filename, 'scripts\general\', '', []);
-         uFilename := StringReplace(uFilename, '.trs', '', []);
-         try
-            dic.Add(uFilename, TStringList.Create);
-            dic[uFilename].LoadFromStream(stream);
-         finally
-            stream.Free;
-         end;
+      turbu_characters.SetScriptEngine(GDScriptEngine);
+      frmConversionReport := TfrmConversionReport.Create(Application);
+      ConversionReport := frmConversionReport;
+      frmConversionReport.thread := TConverterThread.Create(conversionReport, folder, outFolder, pf_2k);
+      case frmConversionReport.ShowModal of
+         mrOk:;
+         else ;
       end;
-
-      try
-         GDatabase := TRpgDatabase.convert(FLdb, dic, self.DoNothing);
-      except
-         on E: EMissingPlugin do
-         begin
-            MsgBox(E.Message, 'Missing plugin');
-            FreeAndNil(GDatabase);
-            Exit;
-         end;
-      end;
-      savefile := TMemoryStream.Create;
-      try
-         GDatabase.save(savefile);
-         filename := IncludeTrailingPathDelimiter(outFolder) + DBNAME;
-         if FileExists(filename) then
-            deleteFile(PChar(filename));
-         outFile := TFileStream.Create(filename, fmCreate);
-         try
-            outfile.CopyFrom(savefile, 0);
-         finally
-            outFile.Free;
-         end;
-      finally
-         savefile.free;
-      end;
-      Application.MessageBox('Test concluded successfully!', 'Finished.')
    finally
-      database.free;
-      mapTree.free;
-      mapUnit.free;
-      FLmt.Free;
-      FLdb.Free;
-      FLmu.Free;
+
    end;
 end;
 
@@ -207,15 +137,16 @@ type
       engine: TBattleEngine;
    begin
       engine := aClass.Create;
-      addEngine(et_battle, engine.getData);
+      addEngine(et_battle, engine.data);
       freeList.Add(engine);
-      freeList.Add(engine.getData);
+      freeList.Add(engine.data);
    end;
    {$WARN CONSTRUCTING_ABSTRACT ON}
 
 var
    dummy: string;
 begin
+   JITEnable := 0;
    GProjectFolder := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
    assert(GArchives.Add(openFolder(GProjectFolder + DESIGN_DB)) = BASE_ARCHIVE);
    addBattleEngine(T2kBattleEngine);

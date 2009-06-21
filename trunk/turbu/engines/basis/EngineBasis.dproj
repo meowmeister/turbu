@@ -23,9 +23,10 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_BplOutput>..\..\bin</DCC_BplOutput>
-			<DCC_DcuOutput>..\dcus</DCC_DcuOutput>
-			<DCC_DcpOutput>..\dcus</DCC_DcpOutput>
+			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
+			<DCC_BplOutput>..\..\bin\</DCC_BplOutput>
+			<DCC_DcuOutput>..\..\dcus\</DCC_DcuOutput>
+			<DCC_DcpOutput>..\..\dcus\</DCC_DcpOutput>
 			<DCC_DependencyCheckOutputName>..\..\bin\EngineBasis.bpl</DCC_DependencyCheckOutputName>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
@@ -64,6 +65,20 @@
 			<DCCReference Include="..\..\turbu format\turbu_versioning.pas"/>
 			<DCCReference Include="..\battle basis\turbu_plugin_interface.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_battle_engine.pas"/>
+			<DCCReference Include="..\..\turbu format\turbu_map_engine.pas"/>
+			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL\Pas\sdl.pas"/>
+			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL\Pas\sdl_13.pas"/>
+			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL_Image\Pas\sdl_image.pas"/>
+			<DCCReference Include="..\..\turbu format\turbu_database_interface.pas"/>
+			<DCCReference Include="..\..\turbu format\turbu_script_interface.pas"/>
+			<DCCReference Include="..\..\..\classes\sdl custom\sdl_canvas.pas"/>
+			<DCCReference Include="..\..\..\classes\sdl custom\SDL_ImageManager.pas"/>
+			<DCCReference Include="..\..\..\classes\sdl custom\SDL_rwStream.pas"/>
+			<DCCReference Include="..\..\..\classes\sdl custom\sdl_sprite.pas"/>
+			<DCCReference Include="..\..\..\classes\sdl custom\SG_defs.pas"/>
+			<DCCReference Include="..\..\..\components\PascalScript\upsCompiler.pas"/>
+			<DCCReference Include="..\..\..\components\PascalScript\uPSRuntime.pas"/>
+			<DCCReference Include="..\..\..\components\PascalScript\uPSUtils.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -78,8 +93,7 @@
 		</ItemGroup>
 		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
 		<PropertyGroup>
-			<PostBuildEvent>copy &quot;$(OUTPUTPATH)&quot; &quot;$(OUTPUTDIR)$(OUTPUTNAME).tep&quot; /Y</PostBuildEvent>
-			<PreLinkEventIgnoreExitCode>true</PreLinkEventIgnoreExitCode>
+			<PostBuildEvent><![CDATA[copy "$(OUTPUTPATH)" "$(OUTPUTDIR)$(OUTPUTNAME).tep" /Y]]></PostBuildEvent>
 		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>

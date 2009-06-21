@@ -24,8 +24,8 @@ uses
 type
    T2k2StatBlock = class helper for TStatBlock
    public
-      constructor convert(base: TRm2CharClass; block: byte); overload;
-      constructor convert(base: THeroRecord; block: byte); overload;
+      constructor convert(base: TRm2CharClass; block: byte; statSet: TStatSet); overload;
+      constructor convert(base: THeroRecord; block: byte; statSet: TStatSet); overload;
    end;
 
    T2k2BattleCommand = class helper for turbu_characters.TBattleCommand
@@ -35,14 +35,14 @@ type
 
    T2kCharClass = class helper for TClassTemplate
    public
-      constructor convert(base: TRm2CharClass); overload;
-      constructor convert(base: THeroRecord; baseDB: TLcfDataBase); overload;
+      constructor convert(base: TRm2CharClass; statSet: TStatSet); overload;
+      constructor convert(base: THeroRecord; baseDB: TLcfDataBase; statSet: TStatSet); overload;
       procedure loadEq(base: THeroRecord);
    end;
 
    T2k2Hero = class helper for THeroTemplate
    public
-      constructor convert(base: THeroRecord; classTable: TConversionTable; baseDB: TLcfDataBase);
+      constructor convert(base: THeroRecord; classTable: TConversionTable; baseDB: TLcfDataBase; statSet: TStatSet);
    end;
 
    function isEmpty(data: THeroRecord): boolean; overload;
@@ -59,7 +59,7 @@ uses
 
 { T2k2StatBlock }
 
-constructor T2k2StatBlock.Convert(base: TRm2CharClass; block: byte);
+constructor T2k2StatBlock.Convert(base: TRm2CharClass; block: byte; statSet: TStatSet);
 var
    blocksize: byte;
    blockPtr: cardinal;
@@ -68,16 +68,15 @@ var
 begin
    assert(GProjectFormat = pf_2k3);
    blocksize := 99;
-   self.Create(blocksize, GStatSet);
+   self.Create(blocksize, statSet);
    setLength(localArray, blocksize);
    blockPtr := cardinal(base.statBlock) + (blocksize * 2 * block);
    move(pointer(blockPtr), localArray[0], blocksize * 2); //2 bytes/element
    for I := 0 to blocksize - 1 do
       self.block[i] := localArray[i];
-   finalize(localArray);
 end;
 
-constructor T2k2StatBlock.Convert(base: THeroRecord; block: byte);
+constructor T2k2StatBlock.Convert(base: THeroRecord; block: byte; statSet: TStatSet);
 var
    blocksize: byte;
    blockPtr: cardinal;
@@ -93,18 +92,17 @@ begin
          assert(false);
       end;
    end;
-   self.Create(blocksize, GStatSet);
+   self.Create(blocksize, statSet);
    setLength(localArray, blocksize);
    blockPtr := cardinal(base.statBlock) + (blocksize * 2 * block);
    move(pointer(blockPtr)^, localArray[0], blocksize * 2); //2 bytes/element
    for I := 0 to blocksize - 1 do
       self.block[i] := localArray[i];
-   finalize(localArray);
 end;
 
 { T2kCharClass }
 
-constructor T2kCharClass.convert(base: TRm2CharClass);
+constructor T2kCharClass.convert(base: TRm2CharClass; statSet: TStatSet);
 var
    i: integer;
    resistVal: integer;
@@ -125,8 +123,8 @@ begin
    end;
    for i := 1 to STAT_COUNT do
    begin
-      newstat := TStatBlock.convert(base, i);
-      GStatSet.add(newstat);
+      newstat := TStatBlock.convert(base, i, statSet);
+      statSet.add(newstat);
       self.statblock[i] := newstat;
    end;
    self.expFunc := 'calcExp2k';
@@ -158,7 +156,7 @@ begin
    self.strongDef := base.strongDef;
 end;
 
-constructor T2kCharClass.convert(base: THeroRecord; baseDB: TLcfDataBase);
+constructor T2kCharClass.convert(base: THeroRecord; baseDB: TLcfDataBase; statSet: TStatSet);
 var
    i: integer;
    resistVal: integer;
@@ -193,8 +191,8 @@ begin
    end;
    for i := 1 to STAT_COUNT do
    begin
-      newstat := TStatBlock.convert(base, i);
-      GStatSet.add(newstat);
+      newstat := TStatBlock.convert(base, i, statSet);
+      statSet.add(newstat);
       self.statblock[i] := newstat;
    end;
    if GProjectFormat = pf_2k then
@@ -243,9 +241,9 @@ end;
 
 { T2k2Hero }
 
-constructor T2k2Hero.convert(base: THeroRecord; classTable: TConversionTable; baseDB: TLcfDataBase);
+constructor T2k2Hero.convert(base: THeroRecord; classTable: TConversionTable; baseDB: TLcfDataBase; statSet: TStatSet);
 begin
-   inherited convert(base, baseDB);
+   inherited convert(base, baseDB, statSet);
    self.charName := unicodeString(base.name);
    self.title := unicodeString(base.charClass);
    self.minLevel := base.startLevel;

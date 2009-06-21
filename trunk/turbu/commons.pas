@@ -24,15 +24,11 @@ unit.}
 interface
 
 uses
-   classes, types, Forms, sysUtils, Registry, math, windows, contnrs; //system libraries
+   types, classes, Forms, sysUtils, Registry, math, windows, contnrs; //system libraries
 
 const
    KEY_READ = $000F0019;
    HKEY_CURRENT_USER = $80000001;
-   OPEN_READ = fmOpenRead or fmShareDenyWrite;
-   OPEN_WRITE = fmOpenWrite or fmShareExclusive;
-   OPEN_CREATE = fmCreate or fmShareExclusive;
-   OPEN_READWRITE = fmOpenReadWrite or fmShareExclusive;
    LFCR = #13#10;
    ORIGIN: TPoint = (X: 0; Y: 0);
    MULTIPLIER_31 = 8.2258064516129032258064516129032;
@@ -42,6 +38,8 @@ const
 //   HKEY_LOCAL_MACHINE = $80000002;
 
 type
+   TSet16 = set of 0..15;
+
    TRpgColor = record
       constructor Create(r, g, b, a: byte);
    case boolean of
@@ -55,6 +53,7 @@ type
    end;
 
    TRpgPoint = record
+   public
       x, y: integer;
       class operator Equal(a, b: TRpgPoint): boolean; inline;
       class operator NotEqual(a, b: TRpgPoint): boolean; inline;
@@ -81,6 +80,8 @@ type
    end;
 
    TRpgThread = class(TThread)
+   protected
+      procedure Execute; override;
    public
       procedure syncRun(AMethod: TThreadMethod); inline;
    end;
@@ -89,7 +90,6 @@ type
    function MsgBox(text, caption: string; Flags: Word = MB_OK): Integer;
    function GetRegistryValue(KeyName, valueName: string): string;
    procedure SetRegistryValue(KeyName, valueName, value: string);
-   function openFile (const filename:string; const mode:word = OPEN_READ):TFileStream;
    function getPersonalFolder: string;
    function getProjectFolder: string;
    procedure createProjectFolder;
@@ -97,19 +97,40 @@ type
    function round(value: real): integer; inline;
    function pointInRect(const thePoint: types.TPoint; theRect: TRect): boolean;
    procedure clamp(var value: single; low, high: single); inline;
-   function makeMethod(AObject: TObject; proc: pointer): TMethod;
+
+   function GCurrentThread: TRpgThread;
+   procedure setCurrentThread(value: TRpgThread);
+   procedure runThreadsafe(closure: TThreadProcedure);
 
 var
    GCurrentFolder: string;
    GProjectFolder: string;
 
-threadvar
-   GCurrentThread: TRpgThread;
-
 implementation
 
 uses
    shlobj;
+
+threadvar
+   LCurrentThread: TRpgThread;
+
+function GCurrentThread: TRpgThread;
+begin
+   result := LCurrentThread;
+end;
+
+procedure setCurrentThread(value: TRpgThread);
+begin
+   assert(LCurrentThread = nil);
+   LCurrentThread := value;
+end;
+
+procedure runThreadsafe(closure: TThreadProcedure);
+begin
+   if assigned(LCurrentThread) then
+      TThread.Synchronize(LCurrentThread, closure)
+   else closure();
+end;
 
 {Constructor that does nothing, but is required due to the nature of Delphi's
 exception handling.}
@@ -168,10 +189,10 @@ var
 begin
    StrPCopy(tempCharArray1, Copy(text, 0, 299));
    StrPCopy(tempCharArray2, Copy(caption, 0, 299));
-   if assigned(GCurrentThread) then
+   if assigned(LCurrentThread) then
    begin
       syncMessager := TMessageBoxer.create(tempCharArray1, tempCharArray2, Flags);
-      GCurrentThread.syncRun(syncMessager.display);
+      LCurrentThread.syncRun(syncMessager.display);
       while not syncMessager.finished do
          sleep(100);
       result := syncMessager.result;
@@ -214,12 +235,6 @@ begin
    end;
 end;
 
-{Quick way to open a file}
-function openFile (const filename: string; const mode: word = OPEN_READ): TFileStream;
-begin
-   result := TFileStream.Create(filename, mode)
-end;
-
 function pointInRect(const thePoint: types.TPoint; theRect: TRect): boolean;
 begin
    result := (between(thePoint.x, theRect.Left, theRect.Right) = thePoint.x) and
@@ -234,7 +249,9 @@ end;
 //Replacement for Delphi's "banker's rounding" function
 function round(value: real): integer;
 begin
-   result := trunc(value + 0.5);
+   if value >= 0 then
+      result := trunc(value + 0.5)
+   else result := trunc(value - 0.5)
 end;
 
 { TRpgStack }
@@ -254,6 +271,11 @@ begin
 end;
 
 { TRpgThread }
+
+procedure TRpgThread.Execute;
+begin
+   LCurrentThread := self;
+end;
 
 procedure TRpgThread.syncRun(AMethod: TThreadMethod);
 begin
@@ -334,12 +356,6 @@ begin
    value := min(high, max(low, value));
 end;
 
-function makeMethod(AObject: TObject; proc: pointer): TMethod;
-begin
-   result.Data := AObject;
-   result.Code := proc;
-end;
-
 { TRpgColor }
 
 constructor TRpgColor.Create(r, g, b, a: byte);
@@ -352,7 +368,7 @@ end;
 
 initialization
 begin
-   GCurrentThread := nil;
+   LCurrentThread := nil;
 end;
 
 end.

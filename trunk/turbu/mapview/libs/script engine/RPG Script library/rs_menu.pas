@@ -51,7 +51,7 @@ end;
 
 function shop(style: word; messageStyle: byte; store: word): boolean;
 begin
-   GCurrentEngine.setCurrentShop(store);
+   GScriptEngine.setCurrentShop(store);
    if messageStyle >= SHOP_STYLES then
       messageStyle := 0;
    if style > 2 then
@@ -83,7 +83,6 @@ finalization
 begin
    for destroyer := low(GShops) to high(GShops) do
       GShops[destroyer].free;
-   finalize(GShops);
 end;
 
 end.

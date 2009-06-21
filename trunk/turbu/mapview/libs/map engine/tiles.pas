@@ -168,7 +168,7 @@ type
    TBackgroundSprite = class(TSprite)
    private
       FScroll: TScrollData;
-      FSavedOrigin: TSgPoint2;
+      FSavedOrigin: TSgFloatPoint;
    public
       constructor Create(parent: TSpriteEngine; input: TMapUnit); reintroduce; overload;
       constructor Create(parent: TSpriteEngine; x, y: shortint; autoX, autoY: boolean); reintroduce; overload;
@@ -550,7 +550,7 @@ try
 except
    on E: EParseMessage do
    begin
-      msgBox(E.getMessage, 'TBorderTile.Draw says:', MB_OK);
+      msgBox(E.message, 'TBorderTile.Draw says:', MB_OK);
       raise EMessageAbort.Create
    end
 end; // end of TRY block
@@ -954,13 +954,13 @@ begin
       begin
          dummy := FOccupied[i] as TAdditionSprite;
          if dummy.hasPage and (dummy.event.lastCurrentPage.startCondition in [by_touch, by_collision]) then
-            GCurrentEngine.executeEvent(dummy.event, dummy);
+            GScriptEngine.executeEvent(dummy.event, dummy);
          //end if
       end
    else if bumper.hasPage and (bumper.event.lastCurrentPage.startCondition = by_collision) then
       for I := 0 to FOccupied.Count - 1 do
          if FOccupied[i] = GGameEngine.currentParty then
-            GCurrentEngine.executeEvent(bumper.event, bumper);
+            GScriptEngine.executeEvent(bumper.event, bumper);
          //end if
       //end for
    //end if
@@ -1045,7 +1045,7 @@ begin
    if (FScroll.FAutoY) and (engine.WorldY <> FSavedOrigin.Y) then
       self.OffsetY := self.OffsetY + ((engine.worldY - FSavedOrigin.Y) / 2)
    else Self.OffsetY := Self.OffsetY + (FScroll.FY * BG_SCROLL_RATE);
-   FSavedOrigin := Point2(engine.WorldX, engine.WorldY);
+//   FSavedOrigin := Point2(engine.WorldX, engine.WorldY);
    while self.OffsetX > 0 do
       self.offsetX := self.offsetX - self.PatternWidth;
    while self.OffsetX < -self.patternWidth do

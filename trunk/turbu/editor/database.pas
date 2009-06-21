@@ -22,7 +22,7 @@ interface
 uses
    Classes, Controls, Forms, StdCtrls, ExtCtrls, ComCtrls,
    turbu_database, events, frame_commands, frame_class,
-   dm_database, frame_items, DB, JvMemoryDataset;
+   dm_database, frame_items, DB;
 
 type
    TfrmDatabase = class(TForm)
@@ -169,7 +169,7 @@ var
    header: string;
    eventBlock: TEventBlock;
 begin
-   eventBlock := FDatabase.globalEventBlock as TEventBlock;
+   eventBlock := {FDatabase.globalEventBlock as TEventBlock;} nil;
    if not assigned(eventBlock) then
       Exit;
 

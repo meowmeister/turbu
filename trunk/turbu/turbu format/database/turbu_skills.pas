@@ -63,6 +63,7 @@ type
       procedure setNum(x: byte; const Value: integer); inline;
    protected
       function getDatasetName: string; override;
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
@@ -84,6 +85,8 @@ type
       FSkillMessages: PSkillMessages;
       FUsableWhere: TUsableWhere;
       FTag: T4IntArray;
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream); virtual;
       procedure save(savefile: TStream); override;
@@ -182,10 +185,20 @@ type
       property event: TScriptEvent read FEvent write FEvent;
    end;
 
+procedure SetDatabase(value: TRpgDatafile);
+
 implementation
 uses
    sysutils,
-   turbu_databaseCompileHack, {$IFDEF EDITOR}design_script_engine,{$ENDIF} logs;
+   turbu_database {$IFDEF EDITOR}, design_script_engine{$ENDIF};
+
+var
+   GDatabase: TRpgDatabase;
+
+procedure SetDatabase(value: TRpgDatafile);
+begin
+   GDatabase := value as TRpgDatabase;
+end;
 
 { TSkillTemplate }
 
@@ -200,6 +213,11 @@ begin
    if assigned(FSkillMessages) then
       dispose(FSkillMessages);
    inherited;
+end;
+
+class function TSkillTemplate.keyChar: ansiChar;
+begin
+   result := 's';
 end;
 
 constructor TSkillTemplate.Load(savefile: TStream);
@@ -372,7 +390,7 @@ begin
    inherited Load(savefile);
    lassert((FId = 0) and (FName = ''));
    savefile.ReadBuffer(FStyle, sizeof(FStyle));
-   FPointer := getSkillFunc(savefile.readInt) as TSkillGainRecord;
+   FPointer := GDatabase.skillFunc[savefile.readInt];
    FSkill := savefile.readInt;
    savefile.ReadBuffer(FNums[1], 16);
    lassert(savefile.readChar = 'G');
@@ -382,7 +400,7 @@ procedure TSkillGainInfo.save(savefile: TStream);
 begin
    inherited save(savefile);
    savefile.WriteBuffer(FStyle, sizeof(FStyle));
-   savefile.writeInt(skillFuncIndexOf(FPointer));
+   savefile.writeInt(GDatabase.skillFunc.indexOf(FPointer));
    savefile.writeInt(FSkill);
    savefile.WriteBuffer(FNums[1], 16);
    savefile.writeChar('G');
@@ -419,6 +437,11 @@ end;
 function TSkillGainInfo.getNum(x: byte): integer;
 begin
    result := FNums[x];
+end;
+
+class function TSkillGainInfo.keyChar: ansiChar;
+begin
+   result := 'g';
 end;
 
 { TSkillGainFunction }

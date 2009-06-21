@@ -27,10 +27,10 @@ const
                'borders5', 'borders6', 'borders7', 'lowtile8', 'lowtile9',
                'lowtile10', 'hitile1', 'hitile2', 'hitile3');
 const
-   TILESET: tpoint = (x: 96; y: 128);
+   TILESET: TPoint = (x: 96; y: 128);
    TINY_TILESET: TPoint = (x:48; y:64);
-   SIZ_TILE: tpoint = (x:16; y:16);
-   TINY_TILE: tpoint = (x:8; y:8);
+   SIZ_TILE: TPoint = (x:16; y:16);
+   TINY_TILE: TPoint = (x:8; y:8);
 
 type
    dirs8 = (n, ne, e, se, s, sw, w, nw);

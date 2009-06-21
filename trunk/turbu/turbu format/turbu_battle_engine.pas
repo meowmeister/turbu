@@ -19,7 +19,8 @@ unit turbu_battle_engine;
 
 interface
 uses
-   turbu_plugin_interface, turbu_versioning;
+   turbu_plugin_interface, turbu_versioning,
+   sdl_13;
 
 type
    TBattleResult = (br_victory, br_escaped, br_defeated);
@@ -35,9 +36,10 @@ type
 
    IBattleEngine = interface(IInterface)
    ['{B4F083F0-B3F3-465D-930F-C9542CF1B9C0}']
-      procedure initialize;
       function startBattle(party: {TRpgParty} TObject; foes: TObject; conditions: TBattleConditions): TBattleResultData;
+      procedure initialize(window: TSdlWindowId);
       function getData: TBattleEngineData;
+      property data: TBattleEngineData read getData;
    end;
 
    TBattleConditions = class(TObject)
@@ -71,17 +73,17 @@ type
    TBattleEngine = class abstract(TRpgPlugBase, IBattleEngine)
    private
       FData: TBattleEngineData;
+      function getData: TBattleEngineData;
    protected
       FInitialized: boolean;
       procedure cleanup; virtual; abstract;
    public
       destructor Destroy; override;
-      procedure AfterConstruction; override; final;
-      procedure initialize; virtual; abstract;
+      procedure AfterConstruction; override;
+      procedure initialize(window: TSdlWindowId); virtual; abstract;
       function startBattle(party: {TRpgParty} TObject; foes: TObject; conditions: TBattleConditions): TBattleResultData; virtual; abstract;
-      function getData: TBattleEngineData;
 
-      property data: TBattleEngineData read FData write FData;
+      property data: TBattleEngineData read getData write FData;
    end;
 
 const

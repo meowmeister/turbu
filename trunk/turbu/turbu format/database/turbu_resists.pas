@@ -32,6 +32,8 @@ type
       FPriority: byte;
       FAttackLimit: TAttackLimitation;
       FTag: T4IntArray;
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
@@ -48,6 +50,8 @@ type
    private
       FRequiredForSkills: boolean;
       FStandard: smallint;
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
@@ -60,6 +64,11 @@ type
 implementation
 
 { TConditionTemplate }
+
+class function TConditionTemplate.keyChar: ansiChar;
+begin
+   result := 'c';
+end;
 
 constructor TConditionTemplate.Load(savefile: TStream);
 begin
@@ -97,6 +106,11 @@ begin
 end;
 
 { TAttributeTemplate }
+
+class function TAttributeTemplate.keyChar: ansiChar;
+begin
+   result := 'a';
+end;
 
 constructor TAttributeTemplate.Load(savefile: TStream);
 begin

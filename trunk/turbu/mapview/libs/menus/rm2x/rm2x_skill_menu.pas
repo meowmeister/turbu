@@ -86,14 +86,14 @@ procedure TGameSkillMenu.drawItem(id, x, y: word; color: byte);
 begin
    drawText(FParsedText[id], x, y, color);
    drawText('-', x + 112, y, color);
-   drawTextTo(intToStr(GDatabase.skill[FSkillIndex[id]].cost), x + 136, y, color);
+//   drawTextTo(intToStr(GDatabase.skill[FSkillIndex[id]].cost), x + 136, y, color);
 end;
 
 procedure TGameSkillMenu.doCursor(position: smallint);
 begin
    inherited doCursor(position);
-   if GCurrentEngine.hero[FWhichHero].skills > 0 then
-      TSkillMenuPage(FOwner).FEffectDisplay.text := GDatabase.skill[FSkillIndex[position]].desc;
+   if GScriptEngine.hero[FWhichHero].skills > 0 then
+//      TSkillMenuPage(FOwner).FEffectDisplay.text := GDatabase.skill[FSkillIndex[position]].desc;
 end;
 
 procedure TGameSkillMenu.doSetup(value: integer);
@@ -104,14 +104,14 @@ begin
    inherited doSetup(value);
    assert(FSetupValue > 0);
    FWhichHero := FSetupValue;
-   ourHero := GCurrentEngine.hero[FWhichHero];
-   GCurrentEngine.currentHero := ourHero;
+   ourHero := GScriptEngine.hero[FWhichHero];
+   GScriptEngine.currentHero := ourHero;
    TSkillMenuPage(FOwner).FCharData.character := FWhichHero;
    SetLength(FOptionEnabled, ourHero.skills);
    FParsedText.Clear;
    setLength(FSkillIndex, ourHero.skills);
    index := 0;
-   for i := 1 to GDatabase.skills do
+{   for i := 1 to GDatabase.skills do
       if ourHero.skill[i] then
       begin
          FSkillIndex[index] := i;
@@ -119,7 +119,7 @@ begin
          inc(index);
          FParsedText.Add(GDatabase.skill[i].name);
       end;
-   //end for
+   //end for}
    self.Visible := true;
    self.doCursor(0);
 end;

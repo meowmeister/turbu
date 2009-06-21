@@ -57,7 +57,7 @@ uses
    sysUtils, math, contnrs,
    chipset_graphics,
    SDL,
-   AsphyreDef;
+   {AsphyreDef} turbu_defs;
 
 const
    WEATHER_POWER: array[TWeatherEffects] of byte = (0, 20, 45, 0, 0);

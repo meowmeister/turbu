@@ -17,10 +17,12 @@ unit addition_sprite;
 * www.turbu-rpg.com.
 *****************************************************************************}
 
+{$I ..\..\..\..\unfinished.inc}
+
 interface
 uses
    types,
-   {tiles, } timing, events, charset_data, move_data, commons,
+   {tiles,} timing, events, charset_data, move_data, commons,
    {asphyreSprite} SDL_sprite, SG_defs;
 
 type
@@ -223,7 +225,7 @@ end;
 var dummy: TSgPoint;
 begin
    dummy := self.inFront;
-   result := TGameMap(FEngine)[lower, dummy.x, dummy.y];
+//   result := TGameMap(FEngine)[lower, dummy.x, dummy.y];
 end;}
 
 procedure TAdditionSprite.leaveTile;

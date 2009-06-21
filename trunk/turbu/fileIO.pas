@@ -35,19 +35,18 @@ function getStrSec (expected: word; theFile: TStream; handleUnex: PStrHandler) :
 function getRSetSec (expected: byte; theFile: TStream; handleUnex: PIntHandler) : radioSet;
 function getNumSec (expected: byte; theFile: TStream; handleUnex: PIntHandler) : integer;
 function getChboxSec (expected: byte; theFile: TStream; handleUnex: PIntHandler): boolean;
-function getArraySec (expected: byte; theFile: TStream; out theArray): word;
+function getArraySec (expected: byte; theFile: TStream; out theArray): integer;
 function getNext(theFile: TStream): byte;
 function loadString(inFile: TStream): string;
 function peekAhead(thefile: TStream; const expected: byte): boolean; overload;
 function peekAhead(thefile: TStream): byte; overload;
 procedure saveString(const theString: string; outFile: TStream);
-procedure writeNumSec (id: byte; value: integer; theFile: TStream);
-procedure writeBoolSec (id: byte; value: boolean; theFile: TStream);
-procedure writeStrSec (id: byte; value: string; theFile: TStream);
 procedure fillInBlankStr(const expected: byte; out theResult: ansiString);
 procedure fillInZeroInt(const expected: byte; out theResult: integer);
 
 implementation
+
+procedure foundWrongSection(callername: string; expected, actual: integer); forward;
 
 function unknownCheck (x, y, z: byte; theFile: TStream): boolean;
 var
@@ -87,31 +86,26 @@ begin
 //SEEKs back one and jumps to the end.
    if alreadyRead = false then
    begin
-      converter := intX80.Create(theFile);
-      try
-         dummy := converter.getData;
-         if dummy = expected then
-            alreadyRead := true
-         else if (dummy > expected) or (dummy = 0) then
-            if (dummy > 127) then
-               theFile.seek(-2, soFromCurrent)
-            else begin
-               theFile.Seek(-1, soFromCurrent)
-            end
-         else
-            raise EParseMessage.create('Attempted to skip section x' + intToHex(expected, 2)
-                  + ', but found section x' + intToHex(dummy, 2) + ' unexpectedly.');
-         //end if
-      finally
-         converter.Free;
-      end;
+      converter := TBerConverter.Create(theFile);
+      dummy := converter.getData;
+      if dummy = expected then
+         alreadyRead := true
+      else if (dummy > expected) or (dummy = 0) then
+         if (dummy > 127) then
+            theFile.seek(-2, soFromCurrent)
+         else begin
+            theFile.Seek(-1, soFromCurrent)
+         end
+      else
+         raise EParseMessage.create('Attempted to skip section x' + intToHex(expected, 2)
+               + ', but found section x' + intToHex(dummy, 2) + ' unexpectedly.');
+      //end if
    end;
 
    if alreadyRead = true then
    begin
-      converter := intX80.Create(theFile);
+      converter := TBerConverter.Create(theFile);
       theFile.Seek(converter.getData, soFromCurrent);
-      converter.free;
    end;
 end;
 
@@ -120,42 +114,35 @@ string as the resulting data type}
 function getString(theFile: TStream): ansiString;
 var
    recordLen: integer;
-   i: integer;
-   dummy: ansiString;
    converter: intX80;
 begin
-   with theFile do
-   begin
-      converter := intX80.create(theFile);
-      recordLen := converter.getData;
-      converter.free;
-      setLength (dummy, recordLen);
-      for i := 1 to recordLen do
-         read(dummy[i], 1)
-   end; //end of WITH block
-   result := dummy;
+   converter := TBerConverter.create(theFile);
+   recordLen := converter.getData;
+   setLength (result, recordLen);
+   if recordLen > 0 then
+      theFile.read(result[1], recordLen);
 end;
 
-function getArray (theFile: TStream; out theArray): word;
+function getArray (theFile: TStream; out theArray): integer;
 var
    recordLen: integer;
    converter: intX80;
 begin
    with theFile do
    begin
-      converter := intX80.create(theFile);
+      converter := TBerConverter.create(theFile);
       recordLen := converter.getData;
-      converter.free;
       read(theArray, recordLen);
    end; //end of WITH block
    result := recordLen;
 end;
 
-function getArraySec (expected: byte; theFile: TStream; out theArray): word;
+function getArraySec (expected: byte; theFile: TStream; out theArray): integer;
+const
+   callername = 'getArraySec';
 var
    i: byte;
 begin
-try
    i := 0;
    with theFile do
    begin
@@ -163,108 +150,90 @@ try
       if i = expected then
          result := getArray(theFile, theArray)
       else
-         raise EParseMessage.Create('Expected to find section x' + IntToHex(expected, 2) + ', but found x' + IntToHex(i, 2) + ' hidden away in there!');
+      begin
+         foundWrongSection(callername, expected, i);
+         Exit(-1);
+      end;
    end;
-except
-   on E: EParseMessage do
-   begin
-      msgBox(E.message, 'getArraySec says:', MB_OK);
-      raise EMessageAbort.Create;
-   end;
-end; //end of TRY block
 end;
 
 function getStrSec (expected: word; theFile: TStream; handleUnex: PStrHandler) : ansiString;
+const
+   callername = 'getStrSec';
 var
    i: word;
    converter: intX80;
-   dummy: ansiString;
 begin
-try
    with theFile do
    begin
-      converter := intX80.Create(theFile);
-      try
-         i := converter.getData;
-         if i = expected then
-            dummy := getString(theFile)
-         else if i > expected then
-         begin
-            Seek(-1 * converter.size, soFromCurrent);
-            handleUnex(expected, dummy);
-         end
-         else if i = 0 then
-         begin
-            dummy := '';
-            seek(-1, soFromCurrent);
-         end
-         else
-            raise EParseMessage.Create('Expected to find section x' + IntToHex(expected, 2) + ', but found x' + IntToHex(i, 2) + ' hidden away in there!');
-         //end if
-      finally
-         converter.Free;
+      converter := TBerConverter.Create(theFile);
+      i := converter.getData;
+      if i = expected then
+         result := getString(theFile)
+      else if i > expected then
+      begin
+         Seek(-1 * converter.size, soFromCurrent);
+         handleUnex(expected, result);
+      end
+      else if i = 0 then
+      begin
+         result := '';
+         seek(-1, soFromCurrent);
+      end
+      else
+      begin
+         foundWrongSection(callername, expected, i);
+         Exit;
       end;
    end;
-   result := dummy;
-except
-   on E: EParseMessage do
-   begin
-      msgBox(E.message, 'getStrSec says:', MB_OK);
-      raise EMessageAbort.Create;
-   end;
-end; //end of TRY block
 end;
 
 {Reads the next section of the LMU and returns an integer.  If
 it's not what's expected, use HandleUnex to fix this.}
 function getNumSec (expected: byte; theFile: TStream; handleUnex: PIntHandler) : integer;
+const
+   callername = 'getNumSec';
 var
    recordLen: byte;
-   dummy: integer;
    converter: intX80;
+   wasExpected: boolean;
 begin
-try
-   dummy := 0;
    result := 0;
    with theFile do
    begin
       Read(result, 1);
-      if result = expected then
+      wasExpected := result = expected;
+      if wasExpected then
       begin
          read(recordLen, 1);
-         read(dummy, recordlen);
+         read(result, recordlen);
       end
       else if (result > expected) or (result = 0) then
       begin
          Seek(-1, soFromCurrent);
-         handleUnex(expected, dummy);
+         handleUnex(expected, result);
       end
       else
-         raise EParseMessage.Create('Expected to find section x' + IntToHex(expected, 2) + ', but found x' + IntToHex(result, 2) + ' hidden away in there!');
-      if (((dummy > 128) or (dummy < 0)) and (result = expected)) then
+      begin
+         foundWrongSection(callername, expected, result);
+         Exit;
+      end;
+      if (((result > 128) or (result < 0)) and wasExpected) then
       begin
          Seek(-recordLen, soFromCurrent);
-         converter := intX80.Create(theFile);
-         dummy := converter.getData;
-         converter.free;
+         converter := TBerConverter.Create(theFile);
+         result := converter.getData;
       end;
    end;
-   result := dummy;
-except
-   on E: EParseMessage do
-   begin
-      msgBox(E.message, 'getNumSec says:', MB_OK);
-      raise EMessageAbort.Create;
-   end;
-end; //end of TRY block
 end;
 
 function getChboxSec (expected: byte; theFile: TStream; handleUnex: PIntHandler): boolean;
+const
+   callername = 'getChboxSec';
 var
    recordLen: byte;
    dummy: integer;
 begin
-try
    dummy := 0;
    with theFile do
    begin
@@ -282,24 +251,21 @@ try
          handleUnex(expected, dummy);
       end
       else
-         raise EParseMessage.Create('Expected to find section x' + IntToHex(expected, 2) + ', but found x' + IntToHex(dummy, 2) + ' hidden away in there!');
+      begin
+         foundWrongSection(callername, expected, dummy);
+         Exit(false);
+      end;
    end;
    result := (dummy = 1);
-except
-   on E: EParseMessage do
-   begin
-      msgBox(E.message, 'getChboxSec says:', MB_OK);
-      raise EMessageAbort.Create;
-   end;
-end; //end of TRY block
 end;
 
 function getRsetSec (expected: byte; theFile: TStream; handleUnex: PIntHandler): radioSet;
+const
+   callername = 'getRsetSec';
 var
    recordLen: byte;
    dummy: integer;
 begin
-try
    dummy := 0;
    with theFile do
    begin
@@ -317,16 +283,12 @@ try
          handleUnex(expected, dummy);
       end
       else
-         raise EParseMessage.Create('Expected to find section x' + IntToHex(expected, 2) + ', but found x' + IntToHex(dummy, 2) + ' hidden away in there!');
+      begin
+         foundWrongSection(callername, expected, dummy);
+         Exit(radioSet(-1));
+      end;
    end;
    result := radioSet(dummy);
-except
-   on E: EParseMessage do
-   begin
-      msgBox(E.message, 'getRsetSec says:', MB_OK);
-      raise EMessageAbort.Create;
-   end;
-end; //end of TRY block
 end;
 
 function getNext(theFile: TStream): byte;
@@ -362,12 +324,9 @@ var
    dummy: byte;
 begin
    theFile.Read(dummy, 1);
-   if dummy <> expected then
-   begin
+   result := dummy = expected;
+   if not result then
       theFile.seek(-1, soFromCurrent);
-      result := false
-   end
-   else result := true;
 end;
 
 function peekAhead(thefile: TStream): byte;
@@ -378,26 +337,11 @@ begin
    result := dummy;
 end;
 
-procedure writeNumSec (id: byte; value: integer; theFile: TStream);
+procedure foundWrongSection(callername: string; expected, actual: integer);
 begin
-   intX80.Write(id, theFile, false);
-   intX80.Write(value, theFile);
-end;
-
-procedure writeBoolSec (id: byte; value: boolean; theFile: TStream);
-var length: byte;
-begin
-   intX80.Write(id, theFile, false);
-   length := 1;
-   theFile.Write(length, 1);
-   theFile.Write(value, 1)
-end;
-
-procedure writeStrSec (id: byte; value: string; theFile: TStream);
-begin
-   intX80.Write(id, theFile, false);
-   intX80.Write(length(value), theFile, false);
-   theFile.Write(value[1], length(value));
+   MsgBox('Expected to find section x' + IntToHex(expected, 2) + ', but found x'
+   + IntToHex(actual, 2) + ' hidden away in there!', callername + 'says:');
+   raise EMessageAbort.create;
 end;
 
 procedure fillInBlankStr(const expected: byte; out theResult: ansiString);

@@ -67,6 +67,9 @@ type
       FOnDestroy: TScriptEvent;
 
       class function getSetLength(mySet: TByteSet): byte;
+      class function keyChar: ansiChar; virtual; abstract; //this should be a lower-case letter
+      procedure readEnd(savefile: TStream);
+      procedure writeEnd(savefile: TStream);
       function getDatasetName: string; virtual;
    public
       constructor Load(savefile: TStream);
@@ -124,8 +127,10 @@ type
 
    TStreamEx = class helper for TStream
    public
-      procedure writeString(data: string);
+      procedure writeString(const data: string);
       function readString: string;
+      procedure writeAString(data: AnsiString);
+      function readAString: AnsiString;
       procedure writeChar(data: ansiChar);
       function readChar: ansiChar;
       procedure writeBool(data: boolean);
@@ -135,21 +140,39 @@ type
       procedure writeWord(data: word);
       function readWord: word;
       procedure writeInt(data: integer);
+      procedure readList<T>(data: TList<T>);
+      procedure writeList<T>(data: TList<T>);
       function readInt: integer;
       function eof: boolean;
    end;
 
    TRpgDataList<T: TRpgDatafile, constructor> = class(TRpgObjectList<TRpgDatafile>)
+   private
+      type TEnumerator = record
+      private
+         FIndex: Integer;
+         FMyList: TRpgDataList<T>;
+      public
+         constructor Create(AMyList: TRpgDataList<T>);
+         function MoveNext: Boolean; inline;
+         function GetCurrent: T; inline;
+         property Current: T read GetCurrent;
+      end;
    public
-      constructor Create;
-      procedure upload(db: TDataSet);
+      constructor Create; virtual;
+      constructor Load(savefile: TStream); virtual;
+      procedure save(savefile: TStream); virtual;
+      procedure upload(db: TDataSet); virtual;
+      function GetEnumerator: TEnumerator;
    end;
 
-   TRpgDecl = class(TEnumerable<TNameType>)
+   TNameTypeList = class(TRpgList<TNameType>);
+
+   TRpgDecl = class(TEnumerable<TNameType> {TObject})
    private
       FName: string;
       FRetval: integer;
-      FParams: TRpgList<TNameType>;
+      FParams: TNameTypeList;
    protected
       function DoGetEnumerator: TEnumerator<TNameType>; override;
    public
@@ -160,7 +183,7 @@ type
 
       property name: string read FName write FName;
       property retval: integer read FRetval write FRetval;
-      property params: TRpgList<TNameType> read FParams write FParams;
+      property params: TNameTypeList read FParams write FParams;
    end;
 
    TDeclList = class(TRpgObjectList<TRpgDecl>)
@@ -196,8 +219,8 @@ type
 
 implementation
 uses
-   Generics.Defaults, TypInfo,
-   commons, turbu_decl_utils,
+   Generics.Defaults, TypInfo, math,
+   commons, turbu_decl_utils, turbu_functional,
    uPSRuntime;
 
 type
@@ -305,6 +328,16 @@ begin
    result := turbu_decl_utils.GetSignature(info.PropType^);
 end;
 
+procedure TRpgDatafile.writeEnd(savefile: TStream);
+begin
+   savefile.writeChar(upCase(keyChar));
+end;
+
+procedure TRpgDatafile.readEnd(savefile: TStream);
+begin
+   lassert(savefile.readChar = UpCase(keyChar));
+end;
+
 {$Q-}{$R-}
 constructor TRpgDatafile.Load(savefile: TStream);
 begin
@@ -328,6 +361,24 @@ begin
 end;
 
 {$Q-}{$R-}
+function TStreamEx.readAString: AnsiString;
+var
+   len: integer;
+begin
+   try
+      self.readBuffer(len, 4);
+      if len > 0 then
+      begin
+         setLength(result, len);
+         self.ReadBuffer(result[1], len);
+      end;
+   except
+      on EIntOverflow do
+         result := '';
+      else raise;
+   end;
+end;
+
 function TStreamEx.readBool: boolean;
 begin
    self.ReadBuffer(result, 1);
@@ -348,16 +399,33 @@ begin
    self.readBuffer(result, 4);
 end;
 
+procedure TStreamEx.readList<T>(data: TList<T>);
+var
+   i: integer;
+   value: T;
+begin
+
+   i := self.readInt;
+   data.Capacity := i;
+   for I := 0 to i - 1 do
+   begin
+      self.Read(value, sizeof(T));
+      data.Add(value);
+   end;
+end;
+
 function TStreamEx.readString: string;
 var
    len: integer;
+   iString: UTF8String;
 begin
    try
       self.readBuffer(len, 4);
       if len > 0 then
       begin
-         setLength(result, len);
-         self.ReadBuffer(result[1], len * sizeof(char));
+         setLength(iString, len);
+         self.ReadBuffer(iString[1], len);
+         result := string(iString);
       end;
    except
       on EIntOverflow do
@@ -371,6 +439,16 @@ begin
    self.readBuffer(result, 2);
 end;
 {$Q+}{$R+}
+
+procedure TStreamEx.writeAString(data: AnsiString);
+var
+   len: cardinal;
+begin
+   len := length(data);
+   self.WriteBuffer(len, 4);
+   if len > 0 then
+      self.WriteBuffer(data[1], len);
+end;
 
 procedure TStreamEx.writeBool(data: boolean);
 begin
@@ -392,14 +470,25 @@ begin
    self.WriteBuffer(data, 4);
 end;
 
-procedure TStreamEx.writeString(data: string);
+procedure TStreamEx.writeList<T>(data: TList<T>);
+var
+   value: T;
+begin
+   self.writeInt(data.Count);
+   for value in data do
+      self.write(value, sizeof(T));
+end;
+
+procedure TStreamEx.writeString(const data: string);
 var
    len: cardinal;
+   oString: UTF8String;
 begin
-   len := length(data);
+   oString := UTF8String(data);
+   len := length(oString);
    self.WriteBuffer(len, 4);
    if len > 0 then
-      self.WriteBuffer(data[1], len * sizeof(char));
+      self.WriteBuffer(oString[1], len);
 end;
 
 procedure TStreamEx.writeWord(data: word);
@@ -498,7 +587,7 @@ end;
 constructor TRpgDecl.Create(aName: string);
 begin
    FName := aName;
-   FParams := TRpgList<TNameType>.Create;
+   FParams := TNameTypeList.Create;
 end;
 
 destructor TRpgDecl.Destroy;
@@ -564,6 +653,36 @@ begin
    self.Add(T.Create);
 end;
 
+function TRpgDataList<T>.GetEnumerator: TEnumerator;
+begin
+   result := TEnumerator.Create(self);
+end;
+
+constructor TRpgDataList<T>.Load(savefile: TStream);
+var
+   i: integer;
+begin
+   self.Create;
+   lassert(savefile.readChar = UpCase(T.keyChar));
+   self.Capacity := savefile.readInt + 1;
+   for I := 1 to self.Capacity - 1 do
+      self.Add(T.load(savefile));
+   lassert(savefile.readChar = T.keyChar);
+end;
+
+procedure TRpgDataList<T>.save(savefile: TStream);
+var
+   iterator: T;
+begin
+   savefile.writeChar(UpCase(T.keyChar));
+   savefile.writeInt(self.High);
+   for iterator in self do
+      if iterator.id = 0 then
+         Continue
+      else iterator.save(savefile);
+   savefile.writeChar(T.keyChar);
+end;
+
 procedure TRpgDataList<T>.upload(db: TDataSet);
 var
    iterator: T;
@@ -584,6 +703,26 @@ constructor TRpgObject.Create(base: TRpgDatafile);
 begin
    FTemplate := base;
    assert(base is self.templateClass);
+end;
+
+{ TRpgDataList<T>.TEnumerator }
+
+constructor TRpgDataList<T>.TEnumerator.Create(AMyList: TRpgDataList<T>);
+begin
+   FMyList := AMyList;
+   FIndex := 0;
+end;
+
+function TRpgDataList<T>.TEnumerator.GetCurrent: T;
+begin
+   Result := FMyList[FIndex];
+end;
+
+function TRpgDataList<T>.TEnumerator.MoveNext: Boolean;
+begin
+  Result := FIndex < FMyList.Count - 1;
+  if Result then
+    Inc(FIndex);
 end;
 
 end.

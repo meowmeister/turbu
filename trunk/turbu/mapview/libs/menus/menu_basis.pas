@@ -107,7 +107,7 @@ type
    TMenuScriptEngine = class(TObject)
    private
       FParent: TMenuEngine;
-      FCompiledScript: string;
+      FCompiledScript: AnsiString;
    protected
       FScriptEngine: TPSExec;
       FImporter: TPSRuntimeClassImporter;
@@ -159,7 +159,7 @@ var
 
 implementation
 uses
-   LDB, chipset_graphics, script_engine;
+   chipset_graphics, script_engine, turbu_defs;
 
 { TGameMenuBox }
 
@@ -176,7 +176,7 @@ begin
    inherited button(input);
    if input = btn_cancel then
    begin
-      GCurrentEngine.mediaPlayer.playSystemSound(sfxCancel);
+      GScriptEngine.mediaPlayer.playSystemSound(sfxCancel);
       self.return;
    end;
 end;
@@ -328,7 +328,7 @@ procedure TMenuEngine.leave(const playSound: boolean = true);
 begin
    TGameMap(FParent).enterLock := true;
    if playSound then
-      GCurrentEngine.mediaPlayer.playSystemSound(sfxCancel);
+      GScriptEngine.mediaPlayer.playSystemSound(sfxCancel);
    FState := ms_fading;
    self.visible := false;
    TGameMap(FParent).wake;

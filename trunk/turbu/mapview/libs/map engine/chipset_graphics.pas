@@ -22,10 +22,10 @@ uses
    types, classes, contnrs, syncObjs, //windows libs
    commons, chipset_data, LMU, LDB, LMT, charset_data, addition_sprite, charset_graphics,
    script_engine, tiles, frames, rm2X_menu_engine, weather, timing,
-   rs_map, map_unit,//turbu libs
-   sdl_canvas, sdl_sprite, SDL_ImageManager, SG_Defs,
-   AsphyreDB, {AsphyreImages, AsphyreSprite,} AsphyreFonts, AsphyreDef,
-   AsphyreTextures, AsphyreDevices; //asphyre libs
+   rs_map, map_unit, archiveInterface, //turbu libs
+   sdl_canvas, sdl_sprite, SDL_ImageManager, SG_Defs//,
+   {AsphyreDB, AsphyreImages, AsphyreSprite, AsphyreFonts, AsphyreDef,
+   AsphyreTextures, AsphyreDevices}; //asphyre libs
 
 type
 {MAP ENGINE}
@@ -53,7 +53,7 @@ type
       FCursor: TAnimSysFrame;
 
       FWeatherEngine: TWeatherSystem;
-      FFontEngine: TAsphyreFonts;
+//      FFontEngine: TAsphyreFonts;
       FDatabase: TLcfDataBase;
       FMapTree: TFullTree;
       FCurrentMBox: TMessageBox;
@@ -115,8 +115,8 @@ type
       function getCharacters: word;
    public
       constructor create (theMap: TMapUnit; theLDB: TLcfDataBase; theLMT: TFullTree;
-                          canvas: TSdlCanvas; images: TSdlImages; const rtpLocation: string;
-                          fontEngine: TAsphyreFonts); overload;
+                          canvas: TSdlCanvas; images: TSdlImages; const rtpLocation: string{;
+                          fontEngine: TAsphyreFonts}); overload;
       destructor Destroy; override;
       procedure loadChipset(filename: string; chipList: TSdlImages);
       procedure loadBG(const filename, imageName: string);
@@ -194,7 +194,7 @@ type
       property cursor: TAnimSysFrame read FCursor;
       property menu: TGameMenu read FSystemMenu;
       property menuEnabled: boolean read FMenuEnabled write FMenuEnabled;
-      property fontEngine: TAsphyreFonts read FFontEngine;
+//      property fontEngine: TAsphyreFonts read FFontEngine;
       property currentParty: TCharSprite read FCurrentParty write FCurrentParty;
       property transProc: TTransProc read FTransProc write FTransProc;
       property renderProc: TRenderProc read FRenderProc write FRenderProc;
@@ -216,7 +216,7 @@ type
 
 var
    GFileLoader: TCriticalSection;
-   GDataArchive: TASDb;
+   GDataArchive: IArchive;
    GGameEngine: TGameMap;
    GFrameLength: word;
 
@@ -228,9 +228,9 @@ const
 implementation
 uses
    windows, forms, graphics, sysUtils, math, //windows libs
-   console, png_routines, locate_files, menu_basis, transition_graphics,
-   transitions, preloader, fileIO, //turbu libs
-   tempfile, pngimage,
+   console, {png_routines,} locate_files, menu_basis, transition_graphics,
+   transitions, fileIO, turbu_defs, //turbu libs
+   {tempfile,} pngimage,
    SDL;
 
 const
@@ -392,22 +392,22 @@ var
    pr, pg, pb, pa: byte;
    nr, ng, nb, na: byte;
 begin
-   pr := greaterOf(r, 0);
-   pg := greaterOf(g, 0);
-   pb := greaterOf(b, 0);
+   pr := max(r, 0);
+   pg := max(g, 0);
+   pb := max(b, 0);
    pa := (pr + pg + pb) div 3;
-   nr := abs(lesserOf(r, 0));
-   ng := abs(lesserOf(g, 0));
-   nb := abs(lesserOf(b, 0));
+   nr := abs(min(r, 0));
+   ng := abs(min(g, 0));
+   nb := abs(min(b, 0));
    na := (nr + ng + nb) div 3;
-   FFadeTarget.color := cRGB1(pr, pg, pb, pa);
-   FNegFadeTarget.color := cRGB1(nr, ng, nb, na);
+//   FFadeTarget.color := cRGB1(pr, pg, pb, pa);
+//   FNegFadeTarget.color := cRGB1(nr, ng, nb, na);
    FFadeTime := TRpgTimestamp.Create(time);
 end;
 
 procedure TGameMap.flashScreen(r, g, b, a: byte; time: integer);
 begin
-   FFlashColor := cRGB1(r, g, b, a);
+//   FFlashColor := cRGB1(r, g, b, a);
    FFlashTime := TRpgTimestamp.Create(time);
 end;
 
@@ -431,21 +431,21 @@ begin
    FSwitchState := sw_ready;
    if not assigned(FMapSet[newmap]) then
    begin
-      GPreloader.clear;
-      GPreloader.push(TPreloaderStackFrame.Create(pl_map, '', newmap, nil));
+{      GPreloader.clear;
+      GPreloader.push(TPreloaderStackFrame.Create(pl_map, '', newmap, nil));}
    end;
-   GCurrentEngine.killAll;
-   GCurrentEngine.unregisterEvents(GCurrentThread);
+{   GCurrentEngine.killAll;
+   GCurrentEngine.unregisterEvents(GCurrentThread);}
    while not FBlank do
       windows.sleep(10);
    FSwitchState := sw_switching;
-   if not assigned(FMapSet[newmap]) or (FMapSet[newmap] = preloader.PRELOADING) then
+{   if not assigned(FMapSet[newmap]) or (FMapSet[newmap] = preloader.PRELOADING) then
    begin
       GPreloader.haste;
       repeat
          windows.sleep(50);
       until assigned(FMapSet[newmap]) and (FMapSet[newmap] <> preloader.PRELOADING);
-   end;
+   end;}
    hero := FCurrMap.event[0];
    if assigned(hero) then
       (hero as THeroSprite).packUp;
@@ -470,15 +470,15 @@ begin
             dummy := FMapTree[dummy].parent;
          until (dummy = 0) or (FMapTree[dummy].bgmState <> first);
          if dummy = 0 then
-            GCurrentEngine.mediaPlayer.stopMusic
+            GScriptEngine.mediaPlayer.stopMusic
          else if FMapTree[dummy].bgmState = third then
-            GCurrentEngine.mediaPlayer.playMusic(FMapTree[dummy].bgmData);
+            GScriptEngine.mediaPlayer.playMusic(FMapTree[dummy].bgmData);
       end;
       second:;
-      third: GCurrentEngine.mediaPlayer.playMusic(FMapTree[newmap].bgmData);
+      third: GScriptEngine.mediaPlayer.playMusic(FMapTree[newmap].bgmData);
    end;
    FSwitchState := sw_noSwitch;
-   GCurrentEngine.resume;
+   GScriptEngine.resume;
 end;
 
 procedure TGameMap.choiceBox(const msg: string; const acceptCancel: boolean);
@@ -509,11 +509,11 @@ begin
    FCurrentMbox.state := mb_prompt;
    FCurrentMBox.canCancel := true;
    FMenuInt := cost;
-   with GDatabase do
+{   with GDatabase do
       FCurrentMBox.text := innVocab[style, inn_greet1] + ' ' + intToStr(cost)
                    + ' ' + vocabulary[moneyUnit] + ' ' + innVocab[style, inn_greet2]
                    + #3 + innVocab[style, inn_greet3] + #3 + innVocab[style, inn_stay]
-                   + #3 + innVocab[style, inn_cancel];
+                   + #3 + innVocab[style, inn_cancel];}
    FCurrentMBox.placeCursor(2);
 end;
 
@@ -528,15 +528,14 @@ begin
 end;
 
 constructor TGameMap.create(theMap: TMapUnit; theLDB: TLcfDataBase; theLMT: TFullTree;
-                            canvas: TSdlCanvas; images: TSdlImages; const rtpLocation: string;
-                            fontEngine: TAsphyreFonts);
+                            canvas: TSdlCanvas; images: TSdlImages; const rtpLocation: string);
 var
    sysName: string;
 begin
    inherited create(nil);
    GGameEngine := self;
    GFileLoader := TCriticalSection.Create;
-   GDatabase := theLDB;
+//   GDatabase := theLDB;
    FMapTree := theLMT;
    setLength(FMapSet, theLMT.getMax + 1);
    FCurrMap := TRpgMap.Create(theMap, self);
@@ -555,11 +554,11 @@ begin
    FWallpapers := TObjectList.Create;
    FWallpapers.Add(FSystemGraphic);
    FScriptEngine := TScriptEngine.create(self);
-   FFontEngine := fontEngine;
+{   FFontEngine := fontEngine;
    FFontEngine[0].Interleave := 1.5;
    FFontEngine[0].ShadowIntensity := 1.3;
    FFontEngine[1].Interleave := 1.5;
-   FFontEngine[1].ShadowIntensity := 1.3;
+   FFontEngine[1].ShadowIntensity := 1.3;}
    FCurrentMBox := TMessageBox.Create(self, rect(0, 160, 320, 80));
    FCurrentMbox.Visible := false;
    FCurrentMBox.boxVisible := true;
@@ -607,7 +606,7 @@ begin
    if FLoadedImages.IndexOf(filename) <> -1 then
       Exit;
 
-   theImage := TPNGObject.Create;
+{   theImage := TPNGObject.Create;
    try
       theImage.LoadFromFile(filename);
       texSize := point(theImage.Width, theImage.Height);
@@ -615,7 +614,7 @@ begin
    finally
       theImage.Free;
    end;
-   texSize := point(ceilPowerOfTwo(texSize.x), ceilPowerOfTwo(texSize.y));
+   texSize := point(ceilPowerOfTwo(texSize.x), ceilPowerOfTwo(texSize.y));}
    GFileLoader.Enter;
    try
 //fixme
@@ -642,8 +641,8 @@ begin
 try
    //get the BG image's size, since Asphyre wants it up-front
    checkmap.LoadFromFile(filename);
-   bigsize.X := CeilPowerOfTwo(checkmap.Width);
-   bigsize.Y := CeilPowerOfTwo(checkmap.Height);
+{   bigsize.X := CeilPowerOfTwo(checkmap.Width);
+   bigsize.Y := CeilPowerOfTwo(checkmap.Height);}
    realsize.X := checkmap.Width;
    realsize.Y := checkmap.Height;
 
@@ -680,7 +679,7 @@ try
       theImage.LoadFromFile(filename);
       bgColor := theImage.Pixels[0, 0];
       theImage.Free;
-   end else bgColor := getBGColor(filename);
+   end; //else bgColor := getBGColor(filename);
    //load files
 //fixme
 {   image.AddFromFile(filename, SPRITE, SPRITE, SPRITE_SET, aqHigh, alMask, true, bgColor, 1);}
@@ -695,7 +694,7 @@ end;
 procedure TGameMap.loadChipset(filename: string; chipList: TSdlImages);
 var
    bgColor: Tcolor;
-   fileList: TThirteenTemps;
+//   fileList: TThirteenTemps;
    theImage: TPngObject;
    i, currentSize: byte;
    tempFilename: string;
@@ -754,7 +753,7 @@ var
    imageSize, texSize: TPoint;
    bgcolor: cardinal;
    dummy: boolean;
-   alpha: TALphaLevel;
+//   alpha: TALphaLevel;
    inName, codeName: string;
 begin
    inName := filename;
@@ -774,14 +773,14 @@ begin
       try
          theImage.LoadFromFile(filename);
          imageSize := point(theImage.Width, theImage.Height);
-         bgcolor := getPaletteColor(theImage, 0, dummy);
+//         bgcolor := getPaletteColor(theImage, 0, dummy);
       finally
          theImage.Free;
       end;
-      texSize := point(ceilPowerOfTwo(imageSize.x), ceilPowerOfTwo(imageSize.y));
-      if mask then
+//      texSize := point(ceilPowerOfTwo(imageSize.x), ceilPowerOfTwo(imageSize.y));
+{      if mask then
          alpha := alMask
-      else alpha := alNone;
+      else alpha := alNone;}
 //fixme
 {      assert(image.AddFromFile(filename, imageSize, imageSize, texSize, aqHigh, alpha, mask, bgColor, 0));}
       images[images.Count - 1].Name := codename;
@@ -797,7 +796,7 @@ const
    SHOPSET: TPoint = (x: 1024; y: 32);
 var
    theImage: TPngObject;
-   temp1, temp2: TTempFileStream;
+   temp1, temp2: {TTempFileStream} TFileStream;
    tempImage: TPngObject;
    imagename, charsetName, tempFilename, tempFileName2: string;
    dummy: boolean;
@@ -830,14 +829,14 @@ try
       theImage.LoadFromFile(filename);
       bgColor := theImage.Pixels[0, 0];
       theImage.Free;
-   end else bgcolor := getPaletteColor(theImage, 0, dummy);
-   temp1 := getPNGRect(theImage, rect(0, 64, 288, 32));
+   end; //else bgcolor := getPaletteColor(theImage, 0, dummy);
+{   temp1 := getPNGRect(theImage, rect(0, 64, 288, 32));
    tempFilename := temp1.FileName;
    temp1.Free;
    temp1 := getPNGRect(theImage, rect(0, 192, 288, 32));
    tempFilename2 := temp1.FileName;
    temp1.Free;
-   temp1 := stitchPNGFiles(tempFilename, tempFileName2);
+   temp1 := stitchPNGFiles(tempFilename, tempFileName2);}
    DeleteFile(PAnsiChar(tempFilename));
    DeleteFile(PAnsiChar(tempFilename2));
    tempFilename := temp1.FileName;
@@ -846,12 +845,12 @@ try
    begin
       x := 24 + (72 * (i mod 4));
       y := 64 + (128 * (i div 4));
-      temp1 := getPNGRect(theImage, rect(x, y, CHAR.X, CHAR.Y));
+//      temp1 := getPNGRect(theImage, rect(x, y, CHAR.X, CHAR.Y));
       tempImage := TPNGObject.Create;
       try
          temp1.Seek(0, 0);
          tempImage.LoadFromStream(temp1);
-         png_routines.grayscale(tempImage);
+//         png_routines.grayscale(tempImage);
          temp1.Seek(0, 0);
          tempImage.SaveToStream(temp1);
       finally
@@ -859,7 +858,7 @@ try
       end;
       tempFileName2 := temp1.FileName;
       temp1.Free;
-      temp2 := stitchPNGFiles(tempFilename, tempFilename2);
+//      temp2 := stitchPNGFiles(tempFilename, tempFilename2);
       DeleteFile(PAnsiChar(tempFilename));
       DeleteFile(PAnsiChar(tempFilename2));
       tempFilename := temp2.FileName;
@@ -880,8 +879,8 @@ procedure TGameMap.adjustCoords(var x, y: integer);
 var
    halfwidth, halfheight, maxwidth, maxheight: integer;
 begin
-   halfwidth := lesserOf(round(canvas.width / 2), (width + 1) * 8);
-   halfheight := lesserOf(round(canvas.height / 2), (height + 1) * 8);
+   halfwidth := min(round(canvas.width / 2), (width + 1) * 8);
+   halfheight := min(round(canvas.height / 2), (height + 1) * 8);
    maxwidth := ((width + 1) * TILESIZE) - halfwidth;
    maxheight := ((height + 1) * TILESIZE) - halfheight;
    if x < halfwidth then
@@ -1130,7 +1129,7 @@ begin
       FShakeCounter := (FShakeCounter + FShakeSpeed) mod SHAKE_MAX;
       FShakeBias := round(FShakePower * LSineTable[FShakeCounter] * SHAKE_AMP);
       worldX := leftPoint + FShakeBias;
-      i := greaterOf(round(FShakeTime/32), 1);
+      i := max(round(FShakeTime/32), 1);
       dec(FShakeTime, FShakeTime div i);
    end else FShakeBias := 0;
 

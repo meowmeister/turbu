@@ -24,10 +24,20 @@ uses
 type
    EArchiveError = class(Exception);
 
+   TFilenameData = record
+      name: string;
+      duplicates: integer;
+   end;
+
    IArchive = interface(IInterface)
       function getFile(key: string): TStream;
       procedure writeFile(key: string; theFile: TStream);
-      function allFiles(folder: string): TEnumerable<string>;
+      function allFiles(folder: string = ''): TEnumerable<string>;
+      function countFiles(filter: string): integer;
+      function makeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;
+      procedure setCurrentFolder(const value: string);
+      function getCurrentFolder: string;
+      property currentFolder: string read getCurrentFolder write setCurrentFolder;
    end;
 
    TArchiveList = class(TList<IArchive>)

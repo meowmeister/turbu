@@ -24,7 +24,7 @@ uses
 type
    TProjectFormat = (pf_turbu, pf_2k, pf_2k3, pf_95, pf_sim, pf_xp, pf_vx);
 
-   function scanRmFormat(database: TFileStream): TProjectFormat;
+   function scanRmFormat(database: TStream): TProjectFormat;
 
 var
    GProjectFormat: TProjectFormat;
@@ -33,7 +33,7 @@ implementation
 uses
    fileIO;
 
-function scanRmFormat(database: TFileStream): TProjectFormat;
+function scanRmFormat(database: TStream): TProjectFormat;
 var
    i: Integer;
 begin

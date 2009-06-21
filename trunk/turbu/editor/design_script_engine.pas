@@ -18,18 +18,23 @@ unit design_script_engine;
 *****************************************************************************}
 
 {$IFNDEF PS_USESSUPPORT}
-   {$MESSAGE FATAL This unit will not run properly without the PS_USESSUPPORT conditional define set.}
+   {$MESSAGE FATAL 'This unit will not run properly without the PS_USESSUPPORT conditional define set.'}
 {$ENDIF}
 
 interface
 uses
    types, sysUtils, classes, DB,
    dm_database,
+   upsCompiler, upsRuntime, upsPreProcessor, upsUtils,
    turbu_defs, turbu_classes, commons, turbu_script_basis, turbu_unit_dictionary,
-   upsCompiler, upsRuntime, upsPreProcessor, upsUtils;
+   turbu_script_interface;
 
 type
-   TTurbuScriptEngine = class(TObject)
+   TTurbuScriptEngine = class(TObject, IScriptEngine)
+   private
+      function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+      function _AddRef: Integer; stdcall;
+      function _Release: Integer; stdcall;
    private
       FCompiledScript: tbtString;
       FIndices: TScriptList;
@@ -46,6 +51,7 @@ type
       function buildProcList(Sender: TPSPascalCompiler): Boolean;
       function getBounds(name: string): TRpgPoint;
       function tryUseFile(Sender: TPSPascalCompiler; const Name: tbtstring): Boolean;
+      function GetExec: TPSExec;
    protected
       FScriptEngine: TPSExec;
       FImporter: TPSRuntimeClassImporter;
@@ -64,7 +70,7 @@ type
       //properties
       property compiler: TPSPascalCompiler read FCompiler;
       property script: ansiString write setScript;
-      property exec: TPSExec read FScriptEngine;
+      property exec: TPSExec read GetExec;
       property units: TUnitDictionary read FUnits write FUnits;
       property func[name: string]: string read getFunc;
       property decl: TDeclList read FDeclarations;
@@ -162,7 +168,10 @@ end;
 procedure TTurbuScriptEngine.endFunction(name: tbtString; pos, column, row: integer);
 begin
    assert(name = FNameInProgress);
+   {$WARN CONSTRUCTING_ABSTRACT OFF} //this is created at runtime and never
+                                     //saved, so it doesn't need a keychar
    FIndices.Add(TScriptRange.Create(string(FNameInProgress), point(FPosInProgress, pos)));
+   {$WARN CONSTRUCTING_ABSTRACT ON}
 end;
 
 function TTurbuScriptEngine.tryUseFile(Sender: TPSPascalCompiler; const Name: tbtstring): Boolean;
@@ -206,6 +215,24 @@ begin
       iterator.upload(db.scriptRange);
 end;
 
+function TTurbuScriptEngine.QueryInterface(const IID: TGUID; out Obj): HResult;
+begin
+  if GetInterface(IID, Obj) then
+    Result := 0
+  else
+    Result := E_NOINTERFACE;
+end;
+
+function TTurbuScriptEngine._AddRef: Integer;
+begin
+   result := -1;
+end;
+
+function TTurbuScriptEngine._Release: Integer;
+begin
+   result := -1;
+end;
+
 function TTurbuScriptEngine.getBounds(name: string): TRpgPoint;
 var
    dummy: TScriptRange;
@@ -214,6 +241,11 @@ begin
    if dummy = nil then
       result := point(0,0)
    else result := dummy.range;
+end;
+
+function TTurbuScriptEngine.GetExec: TPSExec;
+begin
+   result := FScriptEngine;
 end;
 
 function TTurbuScriptEngine.getFunc(name: string): string;
@@ -278,6 +310,13 @@ begin
 
 end;
 
+function rpgRandom(one, two: integer): integer;
+var dummy: integer;
+begin
+   dummy := abs(two - one);
+   result := system.Random(dummy) + min(one, two);
+end;
+
 function scriptOnUses(Sender: TPSPascalCompiler; const Name: tbtString): Boolean;
 
    function AddPointerVariable(const VarName, VarType: ansiString): Boolean;
@@ -301,6 +340,7 @@ begin
       SIRegisterTObject(sender);
       sender.AddDelphiFunction('function min(const a, b: integer): integer;');
       sender.AddDelphiFunction('function max(const a, b: integer): integer;');
+      sender.AddDelphiFunction('function random(one, two: integer): integer;');
       SIRegister_script_interface(sender);
       dummy := sender.addtypeS('varArray', 'array of integer');
       dummy.ExportName := true;
@@ -316,6 +356,7 @@ procedure setupImportedFunctions(exec: TPSExec);
 begin
    exec.RegisterDelphiFunction(@math.min, 'MIN', cdRegister);
    exec.RegisterDelphiFunction(@math.max, 'MAX', cdRegister);
+   exec.RegisterDelphiFunction(@rpgRandom, 'RANDOM', cdRegister);
 end;
 
 function buildProcList(Sender: TPSPascalCompiler): Boolean;

@@ -23,33 +23,25 @@ uses
    Controls, Forms, Classes, contnrs, inifiles, //windows libs
    commons, console, LMU, LMT, LDB, chipset_graphics, script_engine, locate_files, //turbu libs
    SDL_ImageManager, SDL_canvas,
-   {AsphyreImages, AsphyreCanvas,} AsphyreDevices, AsphyreTimers, Asphyre2D,
-   AsphyreFonts, AsphyreDb, AsphyreTextures, AsphyreSubsc, //asphyre libs
-   uPSCompiler, AsphyreKeyboard, AsphyreScreener, AsphyreImages; //pascalScript
+   {AsphyreImages, AsphyreCanvas, AsphyreDevices, AsphyreTimers, Asphyre2D,
+   AsphyreFonts, AsphyreDb, AsphyreTextures, AsphyreSubsc,
+   AsphyreKeyboard, AsphyreScreener, AsphyreImages,} //asphyre libs
+   uPSCompiler; //pascalScript
 
 type
    TInputThread = class(TRpgThread)
    private
-      FScanVal: TRpgBitset16;
+      FScanVal: TSet16;
       FClear: boolean;
    public
       constructor Create;
       procedure Execute; override;
 
       property clear: boolean read FClear;
-      property scan: TRpgBitset16 read FScanVal;
+      property scan: TSet16 read FScanVal;
    end;
 
    TfrmGameForm = class(TForm)
-      device: TAsphyreDevice;
-      timer: TAsphyreTimer;
-//      canvas: TAsphyreCanvas;
-//      images: TAsphyreImages;
-      fontEngine: TAsphyreFonts;
-      fontDB: TASDb;
-      AsphyreTextures: TAsphyreTextures;
-      AsphyreKeyboard1: TAsphyreKeyboard;
-
       procedure FormDestroy(Sender: TObject);
       procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -89,12 +81,12 @@ var
 implementation
 
 uses
-   Windows, strUtils, sysUtils, dialogs, math, DirectInput, //windows libs
+   Windows, strUtils, sysUtils, dialogs, math, {DirectInput,} //windows libs
    fileIO, chipset_data, chipset, charset_graphics, charset_data,
-   rm_sound, tiles, rs_system, transitions, transition_graphics, png_routines,
-   preloader, formats, //turbu libs
+   rm_sound, tiles, rs_system, transitions, transition_graphics, {png_routines,}
+   {preloader,} formats, //turbu libs
    openformThrowaway, //other window
-   asphyreDef, //asphyre lib
+   {asphyreDef, //asphyre lib} SG_defs,
    SDL; //SDL library
 
 {$R *.dfm}
@@ -126,7 +118,7 @@ try
    end;
    ldbData := TLcfDataBase.Create(theLDB);
    chipsetMax := ldbData.getMaxChipsets;
-   GDataArchive := frmGameForm.fontDB;
+//   GDataArchive := frmGameForm.fontDB;
    if ExtractFileExt(filename) = '.lmt' then
    begin
       GInitializedHero := true;
@@ -151,7 +143,7 @@ try
 except
    on E: EParseMessage do
    begin
-      msgBox(E.getMessage, 'TopenForm.FormShow says:', MB_OK);
+      msgBox(E.Message, 'TopenForm.FormShow says:', MB_OK);
       raise EMessageAbort.Create
    end
 end; // end of TRY block
@@ -173,7 +165,7 @@ procedure TfrmGameForm.timerTimer(Sender: TObject);
 var dummy: boolean;
 begin
    inc(frames);
-   GFrameLength := max(commons.round(timer.latency), 1);
+//   GFrameLength := max(commons.round(timer.latency), 1);
    if assigned(mapEngine.transProc) then
       mapEngine.Draw
    else if mapEngine.blank then
@@ -181,16 +173,16 @@ begin
    else begin
       GRenderTargets.RenderOn(2, standardRender, 0, true);
    end;
-   dummy := device.Render(0, true);
-   timer.Process;
+//   dummy := device.Render(0, true);
+//   timer.Process;
    if dummy then
-      device.Flip;
+      screenCanvas.Flip;
    if frames > heartbeat then
    begin
       mapEngine.advanceFrame;
       frames := 0;
    end;
-   GCurrentEngine.eventTick;
+   GScriptEngine.eventTick;
    mapEngine.scriptEngine.timer.tick;
 end;
 {$R+}
@@ -230,14 +222,14 @@ begin
    frames := 0;
 try
 try
-   if not device.initialize then
-      raise EParseMessage.create('Asphyre Device failed to initialize.');
-   fontDB.FileName := ExtractFilePath(ParamStr(0)) + DIRMARK + fontDB.FileName;
+{   if not device.initialize then
+      raise EParseMessage.create('Asphyre Device failed to initialize.');}
+//   fontDB.FileName := ExtractFilePath(ParamStr(0)) + DIRMARK + fontDB.FileName;
    GInputReader := TInputThread.Create;
 except
    on E: EParseMessage do
    begin
-      msgBox(E.getMessage, 'TGameForm.FormShow says:', MB_OK);
+      msgBox(E.message, 'TGameForm.FormShow says:', MB_OK);
       raise EMessageAbort.Create
    end
 end; // end of TRY block
@@ -260,8 +252,8 @@ var
    multiplierX, multiplierY: single;
    whichTile: TPoint;
 begin
-   multiplierX := (clientWidth / device.Width);
-   multiplierY := (clientHeight / device.Height);
+   multiplierX := (clientWidth / ScreenCanvas.Width);
+   multiplierY := (clientHeight / ScreenCanvas.Height);
    x := round(x / multiplierX);
    y := round(y / multiplierY);
    inc (x, round(mapEngine.WorldX));
@@ -297,10 +289,10 @@ try
    FImages := TSdlImages.Create;
    currentMap := TMapUnit.Create(theMap, ldbData, mapTree, mapID);
    FCanvas := TSdlCanvas.Create(cmHardware, false, rect(100, 100, 320, 240), 16);
-   mapEngine := TGameMap.create(currentMap, ldbData, mapTree, FCanvas, FImages, rtpLocation, fontEngine);
+   mapEngine := TGameMap.create(currentMap, ldbData, mapTree, FCanvas, FImages, rtpLocation);
    transitions.init;
-   GRenderTargets := AsphyreTextures;
-   GRenderTargets.AddRenderTargets(4, device.Width, device.Height, aqHigh, alMask);
+   GRenderTargets := TSdlRenderTargets.Create;
+//   GRenderTargets.AddRenderTargets(4, device.Width, device.Height, aqHigh, alMask);
    mapEngine.Images := FImages;
    currentMap.eventBlock.compiler := mapEngine.scriptEngine.compiler;
    GGlobalEvents.compiler := mapEngine.scriptEngine.compiler;
@@ -345,7 +337,7 @@ try
    if GInitializedHero then
    begin
       if ldbData.SystemData.startingHeroes > 0 then
-         mapEngine.character[0] := THeroSprite.create(mapEngine, GCurrentEngine.hero[ldbData.SystemData.startingHero[1]], GParty)
+         mapEngine.character[0] := THeroSprite.create(mapEngine, GScriptEngine.hero[ldbData.SystemData.startingHero[1]], GParty)
       else mapEngine.character[0] := THeroSprite.create(mapEngine, nil, GParty);
       mapEngine.currentParty := mapEngine.character[0] as TCharSprite;
       for i := 1 to ldbData.SystemData.startingHeroes do
@@ -367,16 +359,13 @@ try
       end;
    end;
    mapEngine.currentMap.scanSquare;
-   GPreloader.Resume;
-   bmpCleanup;
-   timer.OnProcess := mapEngine.process;
-   timer.Enabled := true;
+{   timer.OnProcess := mapEngine.process;
+   timer.Enabled := true;}
    GInputReader.Resume;
-   GPreloader.push(TPreloaderStackFrame.Create(pl_map, '', currentMap.mapID, @preloader.scanMap));
 except
    on E: EParseMessage do
    begin
-      msgBox(E.getMessage, 'TGameForm.FormShow says:', MB_OK);
+      msgBox(E.message, 'TGameForm.FormShow says:', MB_OK);
       raise EMessageAbort.Create
    end
 end; // end of TRY block
@@ -394,7 +383,7 @@ end;
 
 procedure initializeHero;
 begin
-   mapEngine.character[0] := THeroSprite.create(mapEngine, GCurrentEngine.hero[1], GParty);
+   mapEngine.character[0] := THeroSprite.create(mapEngine, GScriptEngine.hero[1], GParty);
    mapEngine.currentParty := mapEngine.character[0] as TCharSprite;
    rs_system.heroJoin(1);
 end;
@@ -403,7 +392,7 @@ end;
 
 constructor TInputThread.Create;
 begin
-   frmGameForm.AsphyreKeyboard1.initialize;
+//   frmGameForm.AsphyreKeyboard1.initialize;
    inherited Create(true);
 end;
 
@@ -412,15 +401,15 @@ var
    buttonCode: TButtonCode;
    i: word;
    code: integer;
-const
-   BUTTON_LIST: array[1..9] of integer = (DIK_DOWN, DIK_LEFT, DIK_RIGHT, DIK_UP, DIK_RETURN, DIK_NUMPADENTER, DIK_ESCAPE, DIK_INSERT, DIK_SPACE);
+{const
+   BUTTON_LIST: array[1..9] of integer = (DIK_DOWN, DIK_LEFT, DIK_RIGHT, DIK_UP, DIK_RETURN, DIK_NUMPADENTER, DIK_ESCAPE, DIK_INSERT, DIK_SPACE);}
 begin
    inherited;
    GCurrentThread := self;
-   FScanVal := 0;
+   FScanVal := [];
    repeat
       if GetForegroundWindow = frmGameForm.Handle then
-      with frmGameForm.AsphyreKeyboard1 do
+{      with frmGameForm.AsphyreKeyboard1 do
       begin
          Update;
          code := -1;
@@ -454,7 +443,7 @@ begin
             sleep(12);
          end;
       end
-      else sleep(50);
+      else sleep(50);}
    until self.Terminated;
 end;
 

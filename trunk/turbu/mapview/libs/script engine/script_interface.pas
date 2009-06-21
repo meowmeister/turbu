@@ -17,10 +17,12 @@ unit script_interface;
 * www.turbu-rpg.com.
 *****************************************************************************}
 
+{$I ..\..\..\..\unfinished.inc}
+
 interface
 uses
    types, contnrs, //windows libs
-   turbu_database, {LMT,} hero_data, item_data, rpg_list, charset_data, script_backend,
+   turbu_database, {LMT,} LDB, hero_data, item_data, rpg_list, charset_data, script_backend,
    events, rm_sound, addition_sprite, {rpg_image,} commons, turbu_defs, //turbu libs
    {AsphyreSprite,} SDL_sprite, SG_Defs,//Asphyre libs
    sdl_mixer, sdlaudiomixer; //SDL libs
@@ -55,7 +57,7 @@ type
       procedure loadSystemSound(which: TSfxTypes; soundFile: TRmSound);
       procedure playSfx(soundFile: TRmSound);
       procedure setSystemSound(which: TSfxTypes; filename: string);
-      procedure playSystemSound(which: TSfxTypes);
+      procedure playSystemSound(which: turbu_defs.TSfxTypes);
       procedure playSystemMusic(which: TBgmTypes);
       procedure loadSystemMusic(which: TBgmTypes; soundFile: TRmMusic);
       procedure loop;
@@ -838,7 +840,7 @@ begin
    end;
 end;
 
-procedure TRpgMediaPlayer.playSystemSound(which: TSfxTypes);
+procedure TRpgMediaPlayer.playSystemSound(which: turbu_defs.TSfxTypes);
 begin
    if (FSystemSfx[which] <> nil) then
       FSystemSfx[which].Play;

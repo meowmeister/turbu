@@ -59,7 +59,7 @@ type
    public
       procedure Add(const id, number: word); reintroduce; overload;
       procedure Add(const value: TRpgItem); reintroduce; overload;
-      function indexOf(const id: word): smallint; overload;
+      function indexOf(const id: smallint): smallint; overload;
       function quantityOf(const id: word): byte;
       function contains(id: word): boolean;
       procedure Remove(const id, number: word); reintroduce;
@@ -213,7 +213,7 @@ begin
    result := indexOf(id) <> -1;
 end;
 
-function TRpgInventory.indexOf(const id: word): smallint;
+function TRpgInventory.indexOf(const id: smallint): smallint;
 var
   I: Integer;
 begin

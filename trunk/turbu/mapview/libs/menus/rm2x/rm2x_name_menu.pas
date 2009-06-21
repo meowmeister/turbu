@@ -78,7 +78,7 @@ type
 implementation
 uses
    classes,
-   commons, LDB, chipset_graphics, script_engine, text_graphics;
+   commons, LDB, chipset_graphics, script_engine, text_graphics, turbu_defs;
 
 { TPortraitPanel }
 
@@ -105,7 +105,7 @@ procedure TPortraitPanel.setID(const Value: word);
 begin
    FPortrait.Free;
    if value <> 0 then
-      FPortrait := loadPortrait(GParty[value].template.portrait, GParty[value].template.portraitIndex);
+;//      FPortrait := loadPortrait(GParty[value].template.portrait, GParty[value].template.portraitIndex);
    FPortrait.X := FBounds.left + 8;
    FPortrait.Y := FBounds.top + 8;
 end;
@@ -209,7 +209,7 @@ begin
    if input = btn_cancel then
    begin
       self.backspace;
-      GCurrentEngine.mediaPlayer.playSystemSound(sfxCancel);
+      GScriptEngine.mediaPlayer.playSystemSound(sfxCancel);
       self.evaluate;
    end;
    if (input = btn_enter) and (FOptionEnabled[FCursorPosition]) then

@@ -72,7 +72,6 @@ uses
   ,rm2x_menu_components
   ,menu_basis
   ,frames
-  ,asphyreSprite
   ,rm2x_inventory_menu
   ;
  

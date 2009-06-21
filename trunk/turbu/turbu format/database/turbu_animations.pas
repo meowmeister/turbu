@@ -31,6 +31,8 @@ type
       FSound: TRpgSound;
       FFlashWhere: TFlashTarget;
       FColor: TRpgColor;
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
@@ -47,6 +49,8 @@ type
       FZoom: TRpgPoint;
       FColor: TRpgColor;
       FSaturation: byte;
+   protected
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
@@ -70,6 +74,7 @@ type
       FYTarget: TAnimYTarget;
    protected
       function getDatasetName: string; override;
+      class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
@@ -86,6 +91,11 @@ type
 implementation
 
 { TAnimEffects }
+
+class function TAnimEffects.keyChar: ansiChar;
+begin
+   result := 'a';
+end;
 
 constructor TAnimEffects.Load(savefile: TStream);
 begin
@@ -122,20 +132,22 @@ var
 begin
    for I := low(FTimingSec) to high(FTimingSec) do
       FTimingSec[i].free;
-   finalize(FTimingSec);
    for j := low(FFrameSec) to high(FFrameSec) do
    begin
       for I := low(FFrameSec[j]) to high(FFrameSec[j]) do
          FFrameSec[j, i].free;
-      finalize(FFrameSec[j]);
    end;
-   finalize(FFrameSec);
    inherited;
 end;
 
 function TAnimTemplate.getDatasetName: string;
 begin
    result := 'animations';
+end;
+
+class function TAnimTemplate.keyChar: ansiChar;
+begin
+   result := 'a';
 end;
 
 constructor TAnimTemplate.Load(savefile: TStream);
@@ -195,6 +207,11 @@ begin
 end;
 
 { TAnimCell }
+
+class function TAnimCell.keyChar: ansiChar;
+begin
+   result := 'c';
+end;
 
 constructor TAnimCell.Load(savefile: TStream);
 begin

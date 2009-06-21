@@ -25,7 +25,6 @@ uses
 const
    //game "constant variables"
    STAT_COUNT = 6;
-   CONSUMABLE_STAT_COUNT = 2;
    COMMAND_COUNT = 7;
    WEAPON_SLOTS = 2;
    ARMOR_SLOTS = 3;
@@ -34,8 +33,10 @@ const
    SPRITES_PER_SHEET = 8;
 
    //sizes
-   PORTRAIT_SIZE: TPoint  = (X: 48; Y: 48);
-   SPRITE_SIZE: TPoint    = (X: 24; Y: 32);
+   PORTRAIT_SIZE: TPoint  = (X: 48;  Y: 48);
+   SPRITE_SIZE: TPoint    = (X: 24;  Y: 32);
+   LOGICAL_SIZE: TPoint   = (X: 320; Y: 240);
+   PHYSICAL_SIZE: TPoint  = (X: 640; Y: 480);
 
    //SDL constants
    IMAGE_FORMAT = SDL_HWSURFACE or SDL_SRCCOLORKEY or SDL_RLEACCEL;

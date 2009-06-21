@@ -322,20 +322,14 @@ begin
    FMediaPlayer.free;
    for I := low(FHeroPool) to high(FHeroPool) do
       FHeroPool[i].free;
-   finalize(FHeroPool);
    for i := low(GVehicles) to high(GVehicles) do
       GVehicles[i].free;
-   finalize(GVehicles);
    for i := low(GRpgEvents) to high(GRpgEvents) do
       GRpgEvents[i].free;
-   finalize(GRpgEvents);
    for i := low(GGlobalEvent) to high(GGlobalEvent) do
       GGlobalEvent[i].free;
-   finalize(GGlobalEvent);
 {   for i := low(GImages) to high(GImages) do
       GImages[i].free;}
-   finalize(GSwitches);
-   finalize(GVariables);
    FTimer.Free;
    FGlobalEventTimer.Free;
    GScriptEngine := nil;
@@ -449,7 +443,6 @@ begin
          GThreadCleanLock.Leave;
       end;
    until length(FEventThread) = 0;
-   finalize(FEventThread);
    FThreadsFinalized := true;
 end;
 
@@ -836,7 +829,7 @@ begin
          GGameEngine.cutscene := GGameEngine.cutscene + 1;}
       GDelay := nil;
       GWaiting := nil;
-      GCurrentThread := self;
+      SetCurrentThread(self);
       inherited;
       scriptExec.RunScript;
    finally
