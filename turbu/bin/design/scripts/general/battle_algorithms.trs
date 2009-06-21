@@ -1,5 +1,10 @@
 unit battle_algorithms;
 
+function randomEncounterSteps(party: TRpgParty; minSteps, maxSteps, unused3, unused4: integer): integer;
+begin
+   result := random(minSteps, maxSteps);
+end;
+
 function calcSkillDamage(character, target: TObject; var1, var2, var3, var4: integer; offensive: boolean): integer;
 begin
 {
