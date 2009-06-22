@@ -1,4 +1,4 @@
-	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{98f9c45d-3814-41dd-b1c4-d4201445334e}</ProjectGuid>
 		</PropertyGroup>
@@ -109,4 +109,14 @@
 		<Target Name="patcher:Make">
 			<MSBuild Targets="Make" Projects="..\patcher\patcher.dproj"/>
 		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="EngineBasis;default_format;battle_default;map_default;mapshow;Turbu;testing;patcher"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="EngineBasis:Clean;default_format:Clean;battle_default:Clean;map_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean;patcher:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="EngineBasis:Make;default_format:Make;battle_default:Make;map_default:Make;mapshow:Make;Turbu:Make;testing:Make;patcher:Make"/>
+		</Target>
+		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>
