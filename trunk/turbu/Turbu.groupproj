@@ -1,4 +1,4 @@
-﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{98f9c45d-3814-41dd-b1c4-d4201445334e}</ProjectGuid>
 		</PropertyGroup>
@@ -109,4 +109,4 @@
 		<Target Name="patcher:Make">
 			<MSBuild Targets="Make" Projects="..\patcher\patcher.dproj"/>
 		</Target>
-
+	</Project>

@@ -47,6 +47,7 @@ contains
   SDL_rwStream in '..\..\..\classes\sdl custom\SDL_rwStream.pas',
   sdl_sprite in '..\..\..\classes\sdl custom\sdl_sprite.pas',
   SG_defs in '..\..\..\classes\sdl custom\SG_defs.pas',
-  turbu_map_interface in '..\..\turbu format\turbu_map_interface.pas';
+  turbu_map_interface in '..\..\turbu format\turbu_map_interface.pas',
+  sdlstreams in '..\..\..\classes\jedi-sdl\SDL\Pas\sdlstreams.pas';
 
 end.

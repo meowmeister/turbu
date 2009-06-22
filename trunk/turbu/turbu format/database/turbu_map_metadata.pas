@@ -3,7 +3,7 @@ unit turbu_map_metadata;
 interface
 uses
    types, classes, DB, Generics.Collections,
-   turbu_defs, turbu_classes, turbu_sounds{, turbu_containers}, archiveInterface;
+   turbu_defs, turbu_classes, turbu_sounds, turbu_containers, archiveInterface;
 
 type
    TInheritedDecision = (id_yes, id_no, id_parent);
@@ -45,7 +45,7 @@ type
 
    TLocationList = class(TList<TLocation>);
 
-   TMapTree = class({TRpgDataList}TObjectList<TMapMetadata>)
+   TMapTree = class({TRpgDataList}TRpgObjectList<TMapMetadata>)
    private
       FCurrentMap: word;
       function getLookup(x: smallint): smallint;
