@@ -71,6 +71,11 @@ type
       procedure readEnd(savefile: TStream);
       procedure writeEnd(savefile: TStream);
       function getDatasetName: string; virtual;
+
+      {For any descendants that implement interfaces}
+      function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+      function _AddRef: Integer; stdcall;
+      function _Release: Integer; stdcall;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); virtual;
@@ -352,6 +357,24 @@ begin
    savefile.WriteString(FName);
 end;
 {$Q+}{$R+}
+
+function TRpgDatafile.QueryInterface(const IID: TGUID; out Obj): HResult;
+begin
+  if GetInterface(IID, Obj) then
+    Result := 0
+  else
+    Result := E_NOINTERFACE;
+end;
+
+function TRpgDatafile._AddRef: Integer;
+begin
+   result := -1;
+end;
+
+function TRpgDatafile._Release: Integer;
+begin
+   result := -1;
+end;
 
 { TStreamEx }
 

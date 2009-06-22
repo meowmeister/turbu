@@ -3,7 +3,7 @@ unit turbu_maps;
 interface
 uses
    types, classes, generics.collections, DB,
-   turbu_defs, turbu_classes;
+   turbu_defs, turbu_classes, turbu_map_interface;
 
 type
    TTileRef = packed record
@@ -44,7 +44,14 @@ type
 
    TRegionList = class(TObjectList<TMapRegion>);
 
-   TRpgMap = class(TRpgDatafile)
+   TRpgMap = class;
+
+   I2KMap = interface(IRpgMap)
+   ['{FA3822E8-3A65-4424-87BF-9EF1EF8F5CC0}']
+      function mapObject: TRpgMap;
+   end;
+
+   TRpgMap = class(TRpgDatafile, I2KMap)
    private
       FTileset: string;
       FSize: TPoint;
@@ -64,6 +71,7 @@ type
       procedure SetScriptFormat(const Value: TScriptFormat);
       function GetBattleCount: integer;
       procedure SetBattleCount(const Value: integer);
+      function mapObject: TRpgMap;
    protected
       FEncounters: T4IntArray;
       FBattles: TPWordArray;
@@ -134,6 +142,11 @@ begin
       lassert(savefile.readChar = UpCase(TMapRegion.keyChar));
    end;
    lassert(savefile.readChar = self.keyChar);
+end;
+
+function TRpgMap.mapObject: TRpgMap;
+begin
+   result := self;
 end;
 
 procedure TRpgMap.save(savefile: TStream);

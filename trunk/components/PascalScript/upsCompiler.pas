@@ -10148,11 +10148,11 @@ begin
         end;
       end;
     end;
-    if HasInvalidJumps(SPos, Length(BlockInfo.Proc.Data)) then
+{    if HasInvalidJumps(SPos, Length(BlockInfo.Proc.Data)) then
     begin
       Result := False;
       exit;
-    end;
+    end;}
     Result := True;
   end; {ProcessCase}
 	function ProcessGoto: Boolean;

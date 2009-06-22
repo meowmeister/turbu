@@ -737,8 +737,6 @@ begin
    FDeadList := TSpriteList.Create;
    FVisibleWidth := 800;
    FVisibleHeight := 600;
-   FImages := Images;
-   FCanvas := screenCanvas;
 end;
 
 destructor TSpriteEngine.Destroy;

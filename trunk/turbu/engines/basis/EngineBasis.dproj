@@ -62,6 +62,9 @@
 			</DelphiCompile>
 			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="..\..\..\components\PascalScript\upsCompiler.pas"/>
+			<DCCReference Include="..\..\..\components\PascalScript\uPSRuntime.pas"/>
+			<DCCReference Include="..\..\..\components\PascalScript\uPSUtils.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_versioning.pas"/>
 			<DCCReference Include="..\battle basis\turbu_plugin_interface.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_battle_engine.pas"/>
@@ -76,9 +79,7 @@
 			<DCCReference Include="..\..\..\classes\sdl custom\SDL_rwStream.pas"/>
 			<DCCReference Include="..\..\..\classes\sdl custom\sdl_sprite.pas"/>
 			<DCCReference Include="..\..\..\classes\sdl custom\SG_defs.pas"/>
-			<DCCReference Include="..\..\..\components\PascalScript\upsCompiler.pas"/>
-			<DCCReference Include="..\..\..\components\PascalScript\uPSRuntime.pas"/>
-			<DCCReference Include="..\..\..\components\PascalScript\uPSUtils.pas"/>
+			<DCCReference Include="..\..\turbu format\turbu_map_interface.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

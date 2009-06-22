@@ -167,12 +167,10 @@ end;
 
 constructor TSdlRenderTarget.Create(size: TSgPoint);
 var
-   flags: cardinal;
    format: PSDL_PixelFormat;
 begin
    inherited Create;
    assert(assigned(screenCanvas));
-   flags := 0; //screenCanvas.surface.flags and SDL_HWSURFACE;
    format := SDL_GetVideoInfo.vfmt;
 
    FSurface := TSdlSurface.Create(size.x, size.y, format.BitsPerPixel, format.RMask, format.GMask, format.BMask, format.AMask);
