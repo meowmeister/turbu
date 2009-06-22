@@ -92,10 +92,6 @@ type
       FTileGroup: TTileDictionary;
       FTileset: TTilesetList;
 
-      function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
-      function _AddRef: Integer; stdcall;
-      function _Release: Integer; stdcall;
-
       function getClassCount: integer;
       procedure setClassCount(const Value: integer);
       procedure parseMeta;
@@ -813,24 +809,6 @@ begin
    FTileGroup.Free;
    FTileset.Free;
    inherited Destroy;
-end;
-
-function TRpgDatabase.QueryInterface(const IID: TGUID; out Obj): HResult;
-begin
-  if GetInterface(IID, Obj) then
-    Result := 0
-  else
-    Result := E_NOINTERFACE;
-end;
-
-function TRpgDatabase._AddRef: Integer;
-begin
-   result := -1;
-end;
-
-function TRpgDatabase._Release: Integer;
-begin
-   result := -1;
 end;
 
 procedure TRpgDatabase.copyToDB(db: TdmDatabase; typeSet: TRpgDataTypeSet = []);

@@ -83,7 +83,9 @@ uses
   conversion_report in '..\turbu format\converters\conversion_report.pas',
   turbu_skills in '..\turbu format\database\turbu_skills.pas',
   rm2_turbu_converter_thread in '..\turbu format\converters\rm2_turbu_converter_thread.pas',
-  turbu_functional in '..\turbu_functional.pas';
+  turbu_functional in '..\turbu_functional.pas',
+  turbu_tilesets in '..\turbu format\database\turbu_tilesets.pas',
+  rm2_turbu_tilesets in '..\turbu format\converters\rm2_turbu_tilesets.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

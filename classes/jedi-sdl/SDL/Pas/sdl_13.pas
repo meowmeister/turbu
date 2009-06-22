@@ -448,6 +448,38 @@ procedure SDL_GetRGBA(pixel: TSdlColor32; fmt: PSdlPixelFormat; var r, g, b: UIn
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_GetRGBA'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_GetRGBA}
 
+function SDL_CreateRGBSurface(flags: UInt32; width, height, depth: Integer; RMask, GMask, BMask, AMask: UInt32): PSdlSurface;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_CreateRGBSurface'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_CreateRGBSurface}
+
+function SDL_ConvertSurface(src: PSdlSurface; fmt: PSdlPixelFormat; flags: Uint32): PSdlSurface;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_ConvertSurface'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_ConvertSurface}
+
+procedure SDL_FreeSurface(surface: PSdlSurface);
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_FreeSurface'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_FreeSurface}
+
+function SDL_FillRect(dst: PSdlSurface; dstrect: PSdlRect; color: TSdlColor32) : Integer;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_FillRect'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_FillRect}
+
+function SDL_SetColorKey(surface: PSdlSurface; flag: LongBool; key: TSdlColor32) : Integer;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetColorKey'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_SetColorKey}
+
+function SDL_SetClipRect(surface: PSdlSurface; rect: PSdlRect): boolean; cdecl;
+external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetClipRect'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_SetClipRect}
+
+function SDL_LockSurface(surface: PSdlSurface): Integer;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_LockSurface'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_LockSurface}
+
+procedure SDL_UnlockSurface(surface: PSdlSurface);
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_UnlockSurface'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_UnlockSurface}
+
 function SDL_BlitSurface(src: PSdlSurface; srcrect: PSdlRect; dst: PSdlSurface; dstrect: PSdlRect): Integer; inline;
 {$EXTERNALSYM SDL_BlitSurface}
 
@@ -466,6 +498,15 @@ cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_LowerBlit'{$ELSE} SDLLibN
 function SDL_SetPaletteColors(palette: PSdlPalette;  colors: PSdlColorArray; firstcolor, ncolors: integer): integer;
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetPaletteColors'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_SetPaletteColors}
+
+function SDL_CreateTexture(format: Uint32; access: TSdlTextureAccess; w, h: integer): TSdlTextureID; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_CreateTexture}
+
+function SDL_CreateTextureFromSurface(format: Uint32; surface: PSdlSurface): TSdlTextureID; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_CreateTextureFromSurface}
+
+procedure SDL_DestroyTexture(textureID: TSDLTextureID); cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_DestroyTexture}
 
 {------------------------------------------------------------------------------}
 { error-handling }
@@ -495,44 +536,6 @@ uses
    SysUtils;
 
 { TSdlSurface }
-
-function SDL_CreateRGBSurface(flags: UInt32; width, height, depth: Integer; RMask, GMask, BMask, AMask: UInt32): PSdlSurface;
-cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_CreateRGBSurface'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
-{$EXTERNALSYM SDL_CreateRGBSurface}
-
-function SDL_ConvertSurface(src: PSdlSurface; fmt: PSdlPixelFormat; flags: Uint32): PSdlSurface;
-cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_ConvertSurface'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
-{$EXTERNALSYM SDL_ConvertSurface}
-
-procedure SDL_FreeSurface(surface: PSdlSurface);
-cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_FreeSurface'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
-{$EXTERNALSYM SDL_FreeSurface}
-
-function SDL_BlitSurface(src: PSdlSurface; srcrect: PSdlRect; dst:
-  PSdlSurface; dstrect: PSdlRect): Integer;
-begin
-  Result := SDL_UpperBlit(src, srcrect, dst, dstrect);
-end;
-
-function SDL_FillRect(dst: PSdlSurface; dstrect: PSdlRect; color: TSdlColor32) : Integer;
-cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_FillRect'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
-{$EXTERNALSYM SDL_FillRect}
-
-function SDL_SetColorKey(surface: PSdlSurface; flag: LongBool; key: TSdlColor32) : Integer;
-cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetColorKey'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
-{$EXTERNALSYM SDL_SetColorKey}
-
-function SDL_SetClipRect(surface: PSdlSurface; rect: PSdlRect): boolean; cdecl;
-external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetClipRect'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
-{$EXTERNALSYM SDL_SetClipRect}
-
-function SDL_LockSurface(surface: PSdlSurface): Integer;
-cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_LockSurface'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
-{$EXTERNALSYM SDL_LockSurface}
-
-procedure SDL_UnlockSurface(surface: PSdlSurface);
-cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_UnlockSurface'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
-{$EXTERNALSYM SDL_UnlockSurface}
 
 class function TSdlSurface.Convert(source: PSdlSurface; format: PSdlPixelFormat): PSdlSurface;
 begin
@@ -609,15 +612,6 @@ end;
 
 { TSdlTexture }
 
-function SDL_CreateTexture(format: Uint32; access: TSdlTextureAccess; w, h: integer): TSdlTextureID; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_CreateTexture}
-
-function SDL_CreateTextureFromSurface(format: Uint32; surface: PSdlSurface): TSdlTextureID; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_CreateTextureFromSurface}
-
-procedure SDL_DestroyTexture(textureID: TSDLTextureID); cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_DestroyTexture}
-
 constructor TSdlTexture.Create(format: Uint32; access: TSdlTextureAccess; w, h: integer);
 begin
   FId := SDL_CreateTexture(format, access, w, h);
@@ -642,6 +636,12 @@ begin
   {$IFNDEF WINDOWS}
   SDL_Error(SDL_ENOMEM);
   {$ENDIF}
+end;
+
+function SDL_BlitSurface(src: PSdlSurface; srcrect: PSdlRect; dst:
+  PSdlSurface; dstrect: PSdlRect): Integer;
+begin
+  Result := SDL_UpperBlit(src, srcrect, dst, dstrect);
 end;
 
 end.

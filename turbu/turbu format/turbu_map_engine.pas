@@ -20,7 +20,8 @@ unit turbu_map_engine;
 interface
 uses
    Generics.Collections,
-   turbu_plugin_interface, turbu_versioning, turbu_battle_engine, turbu_database_interface,
+   turbu_plugin_interface, turbu_versioning, turbu_battle_engine,
+   turbu_database_interface, turbu_map_interface,
    sdl_13;
 
 type
@@ -29,6 +30,7 @@ type
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase);
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
+      function loadMap(map: IRpgMap): boolean;
    end;
 
    TMapEngineData = class(TRpgMetadata);
@@ -48,6 +50,7 @@ type
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase); virtual;
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
+      function loadMap(map: IRpgMap): boolean; virtual; abstract;
 
       property data: TMapEngineData read FData write FData;
    end;
