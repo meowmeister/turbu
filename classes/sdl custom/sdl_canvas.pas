@@ -73,7 +73,7 @@ type
    private
       FRenderTarget: TSdlRenderTarget;
       FRenderSurface: PSdlSurface;
-      FFullscreen: boolean;
+//      FFullscreen: boolean;
       procedure SetRenderTarget(const Value: TSdlRenderTarget);
       procedure SetFullscreen(const Value: boolean);
       function IsFullscreen: boolean;
@@ -133,7 +133,7 @@ type
       ************************************************************************}
       property RenderTarget: TSdlRenderTarget read FRenderTarget write SetRenderTarget;
 
-      property Fullscreen: boolean read IsFullscreen write SetFullscreen;
+//      property Fullscreen: boolean read IsFullscreen write SetFullscreen;
    end;
 
 var

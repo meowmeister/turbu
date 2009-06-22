@@ -80,6 +80,7 @@
 			<DCCReference Include="..\..\..\classes\sdl custom\sdl_sprite.pas"/>
 			<DCCReference Include="..\..\..\classes\sdl custom\SG_defs.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_map_interface.pas"/>
+			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL\Pas\sdlstreams.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
