@@ -22,7 +22,7 @@ uses
    turbu_map_engine, turbu_versioning,
    turbu_database_interface, turbu_map_interface,
    turbu_database, turbu_maps, turbu_tilesets,
-   SG_defs,
+   SG_defs, SDL_ImageManager,
    sdl_13;
 
 type
@@ -33,6 +33,7 @@ type
       FStretchRatio: TSgFloatPoint;
       FCurrentMap: TRpgMap;
       FWaitingMap: TRpgMap;
+      FImages: TSdlImages;
       procedure loadTileset(const value: TTileSet);
       procedure loadTileGroup(const value: TTileGroupRecord);
    protected
@@ -48,7 +49,23 @@ uses
    sysUtils, classes,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
    turbu_constants, turbu_map_metadata,
-   SDL, SDL_ImageManager, sdlstreams;
+   SDL, sdlstreams;
+
+{ Callbacks }
+
+function ALoader(filename, keyname: string): PSDL_RWops;
+var
+   stream: TStream;
+begin
+   stream := GArchives[IMAGE_ARCHIVE].getFile(filename);
+   result := sdlstreams.SDLStreamSetup(stream);
+end;
+
+procedure ACallback(var rw: PSdl_RWops);
+begin
+   (TObject(rw.unknown) as TStream).Free;
+   SDL_FreeRW(rw);
+end;
 
 { T2kMapEngine }
 
@@ -70,6 +87,7 @@ var
    layout: TGameLayout;
    mapTree: TMapTree;
    currentMap: TMapMetadata;
+   projectName: string;
 begin
    inherited initialize(window, database);
    if not supports(database, I2kDatabase, db) then
@@ -94,6 +112,9 @@ begin
    else FWindowHandle := window;
    FStretchRatio.x := layout.physWidth / layout.width;
    FStretchRatio.y := layout.physHeight / layout.height;
+   FImages := TSdlImages.Create();
+   FImages.ArchiveCallback := ACallback;
+   FImages.ArchiveLoader := ALoader;
 
    FInitialized := true;
 end;
@@ -217,20 +238,6 @@ except
 end // end of second TRY block
 end;
 *)
-end;
-
-function ArchiveLoader(filename, keyname: string): PSDL_RWops;
-var
-   stream: TStream;
-begin
-   stream := GArchives[IMAGE_ARCHIVE].getFile(filename);
-   result := sdlstreams.SDLStreamSetup(stream);
-end;
-
-procedure ArchiveCallback(var rw: PSdl_RWops);
-begin
-   (TObject(rw.unknown) as TStream).Free;
-   SDL_FreeRW(rw);
 end;
 
 procedure T2kMapEngine.loadTileGroup(const value: TTileGroupRecord);
