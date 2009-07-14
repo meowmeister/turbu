@@ -60,9 +60,12 @@
 			<DCCReference Include="JclVcl.dcp"/>
 			<DCCReference Include="EngineBasis.dcp"/>
 			<DCCReference Include="default_format.dcp"/>
-			<DCCReference Include="SimpleShareMem.pas"/>
+			<DCCReference Include="$(SystemRoot)\system32\SimpleShareMem.pas"/>
 			<DCCReference Include="map_default_plugin.pas"/>
 			<DCCReference Include="turbu_2k_map_engine.pas"/>
+			<DCCReference Include="turbu_2k_sprite_engine.pas"/>
+			<DCCReference Include="tiles.pas"/>
+			<DCCReference Include="..\..\charset_data.pas"/>
 			<DCCReference Include="$(SystemRoot)\system32\SimpleShareMem"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

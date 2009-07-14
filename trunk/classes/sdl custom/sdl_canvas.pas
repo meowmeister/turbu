@@ -26,34 +26,35 @@ uses
    SDL, SDL_13;
 
 type
-   TSdlSurfaceMode = (cmSoftware, cmHardware);
+   TSdlCanvas = class;
 
-   TSdlRenderTarget = class(TObject)
+   TSdlRenderSurface = class abstract(TObject)
    private
-      function GetWidth: Integer; inline;
-      function GetHeight: Integer; inline;
+      FParent: TSdlCanvas;
+      FSize: TSgPoint;
       procedure SetBgColor(const Value: TSgColor);
-      function GetBitDepth: byte;
+//      function GetBitDepth: byte;
    protected
-      FSurface: PSdlSurface; //the actual SDL_Surface
-      FMustLock: Boolean;
-      FStyle: TSdlSurfaceMode;
-      FBgColor: TSgColor;
-      function GetClipRect: TRect; virtual;
-      procedure SetClipRect(const Value: TRect); virtual;
+      function GetID: UInt32; virtual; abstract;
    public
-      constructor Create(size: TSgPoint); overload;
-      procedure ClearClipRect; inline;
       procedure Clear;
 
-      property surface: PSdlSurface read FSurface;
-      property style: TSdlSurfaceMode read FStyle;
-      property Width: Integer read GetWidth;
-      property Height: Integer read GetHeight;
-      property Depth: Byte read GetBitDepth;
-      property mustLock: Boolean read FMustLock;
-      property clipRect: TRect read GetClipRect write SetClipRect;
-      property BgColor: TSgColor read FBgColor write SetBgColor;
+      property Width: Integer read FSize.X;
+      property Height: Integer read FSize.Y;
+      property size: TSgPoint read FSize;
+//      property Depth: Byte read GetBitDepth;
+      property parent: TSdlCanvas read FParent;
+      property id: UInt32 read GetID;
+   end;
+
+   TSdlRenderTarget = class(TSdlRenderSurface)
+   private
+      FHandle: TSdlTexture;
+   protected
+      function GetID: UInt32; override;
+   public
+      constructor Create(size: TSgPoint); overload;
+      property handle: TSdlTexture read FHandle;
    end;
 
    TSdlRenderTargets = class(TObjectList<TSdlRenderTarget>)
@@ -67,30 +68,30 @@ type
    * Encapsulates an SDL_Surface as the principal video buffer for an
    * application.
    ***************************************************************************}
-   TSdlCanvas = class(TSdlRenderTarget)
+   TSdlCanvas = class(TSdlRenderSurface)
    class var
       FRenderStack: TRenderStack;
    private
-      FRenderTarget: TSdlRenderTarget;
-      FRenderSurface: PSdlSurface;
+      FRenderTarget: TSdlRenderSurface;
+      FRenderHandle: Cardinal;
 //      FFullscreen: boolean;
-      procedure SetRenderTarget(const Value: TSdlRenderTarget);
-      procedure SetFullscreen(const Value: boolean);
-      function IsFullscreen: boolean;
+      FWindow: TSdlWindowId;
+      procedure SetRenderTarget(const Value: TSdlRenderSurface);
+//      procedure SetFullscreen(const Value: boolean);
+//      function IsFullscreen: boolean;
    protected
       {************************************************************************
       * The ClipRect property of a canvas will return/set the clip rect for the
       * current render target, not for the canvas itself, if a render target is
       * selected.
       ************************************************************************}
-      function GetClipRect: TRect; override;
-      procedure SetClipRect(const Value: TRect); override;
+      function GetID: UInt32; override;
    public
       {************************************************************************
       * Creates a TSdlCanvas.  The parameters are pretty self-explanatory.
-      * PixelDepth is in bits per pixel.
       ************************************************************************}
-      constructor Create(mode: TSdlSurfaceMode; fullscreen: boolean; size: TRect; pixelDepth: cardinal);
+      constructor Create(title: UTF8String; size: TRect; flags: TSdlWindowFlags);
+      constructor CreateFrom(value: TSdlWindowId);
 
       destructor Destroy; override;
 
@@ -104,16 +105,7 @@ type
       * Like Draw, but only draws a portion of the image, as defined by the
       * source parameter.
       ************************************************************************}
-      procedure DrawRect(image: TSdlImage; dest: TSgPoint; source: TSDLRect);
-
-      {************************************************************************
-      * Copies data from the current render target to either a TSdlImage or
-      * another render target.
-      ************************************************************************}
-      procedure Copy(image: TSdlImage; dest: TSgPoint); overload;
-      procedure Copy(image: TSdlRenderTarget; dest: TSgPoint); overload;
-      procedure CopyRect(image: TSdlImage; dest: TSgPoint; source: TRect); overload;
-      procedure CopyRect(image: TSdlRenderTarget; dest: TSgPoint; source: TRect); overload;
+      procedure DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect);
 
       {************************************************************************
       * Flips the buffer, rendering the canvas to the screen.
@@ -131,148 +123,92 @@ type
       * The current render target.  Setting this property to nil will set the
       * render target back to the screen canvas.
       ************************************************************************}
-      property RenderTarget: TSdlRenderTarget read FRenderTarget write SetRenderTarget;
+      property RenderTarget: TSdlRenderSurface read FRenderTarget write SetRenderTarget;
 
 //      property Fullscreen: boolean read IsFullscreen write SetFullscreen;
    end;
 
-var
-   screenCanvas: TSdlCanvas;
+function currentRenderTarget: TSdlRenderSurface;
 
 implementation
 uses
    sysUtils;
 
-{ TSdlRenderTarget }
+var
+   lCurrentRenderTarget: TSdlRenderSurface;
 
-function TSdlRenderTarget.GetHeight: Integer;
-begin
-   result := FSurface.height;
-end;
+{ TSdlRenderSurface }
 
-function TSdlRenderTarget.GetWidth: Integer;
+procedure TSdlRenderSurface.Clear;
 begin
-   result := FSurface.width;
-end;
-
-procedure TSdlRenderTarget.Clear;
-begin
-   FSurface.Fill(nil, FBgColor);
-end;
-
-procedure TSdlRenderTarget.ClearClipRect;
-begin
-   FSurface.ClearClipRect;
+   assert(lCurrentRenderTarget = self);
+   SDL_RenderFill(nil);
 end;
 
 constructor TSdlRenderTarget.Create(size: TSgPoint);
 var
-   format: PSDL_PixelFormat;
+   window: TSdlCanvas;
 begin
    inherited Create;
-   assert(assigned(screenCanvas));
-   format := SDL_GetVideoInfo.vfmt;
+   assert(assigned(lCurrentRenderTarget));
+   window := lCurrentRenderTarget.parent;
 
-   FSurface := TSdlSurface.Create(size.x, size.y, format.BitsPerPixel, format.RMask, format.GMask, format.BMask, format.AMask);
-{   if FSurface.flags and SDL_HWSURFACE = SDL_HWSURFACE then
-      FStyle := cmHardware
-   else FStyle := cmSoftware;}
-   FMustLock := FSurface.MustLock;
+   FHandle := TSdlTexture.Create(0, sdltaRenderTarget, window.Width, window.Height);
+   FSize := FHandle.size;
 end;
 
-function TSdlRenderTarget.GetBitDepth: byte;
+function TSdlRenderTarget.GetID: UInt32;
+begin
+   result := FHandle.ID;
+end;
+
+{function TSdlRenderSurface.GetBitDepth: byte;
 begin
    result := FSurface.format.BitsPerPixel;
-end;
+end;}
 
-function TSdlRenderTarget.GetClipRect: TRect;
+procedure TSdlRenderSurface.SetBgColor(const Value: TSgColor);
 begin
-   result := FSurface.ClipRect;
-end;
-
-procedure TSdlRenderTarget.SetBgColor(const Value: TSgColor);
-begin
-   FBgColor := SDL_MapRGBA(FSurface.format, Value.rgba[1], Value.rgba[2], Value.rgba[3], Value.rgba[4])
-end;
-
-procedure TSdlRenderTarget.SetClipRect(const Value: TRect);
-begin
-   FSurface.ClipRect := Value;
+   assert(lCurrentRenderTarget = self);
+   SDL_SetRenderDrawColor(value.rgba[1], value.rgba[2], value.rgba[3], value.rgba[4]);
 end;
 
 { TSdlCanvas }
 
-procedure TSdlCanvas.Copy(image: TSdlImage; dest: TSgPoint);
-var
-   dstRect: TSdlRect;
+constructor TSdlCanvas.Create(title: UTF8String; size: TRect; flags: TSdlWindowFlags);
 begin
-   dstRect := rect(dest, point(0,0));
-   SDL_UpperBlit(FRenderSurface, nil, image.surface, @dstRect);
-end;
-
-procedure TSdlCanvas.Copy(image: TSdlRenderTarget; dest: TSgPoint);
-var
-   dstRect: TSdlRect;
-begin
-   dstRect := rect(dest, point(0,0));
-   SDL_UpperBlit(FRenderSurface, nil, image.surface, @dstRect);
-end;
-
-procedure TSdlCanvas.CopyRect(image: TSdlImage; dest: TSgPoint; source: TRect);
-var
-   srcRect, dstRect: TSdlRect;
-begin
-   dstRect := rect(dest, point(0,0));
-   srcRect := source;
-   SDL_UpperBlit(FRenderSurface, @srcRect, image.surface, @dstRect);
-end;
-
-procedure TSdlCanvas.CopyRect(image: TSdlRenderTarget; dest: TSgPoint;
-  source: TRect);
-var
-   srcRect, dstRect: TSdlRect;
-begin
-   dstRect := rect(dest, point(0,0));
-   srcRect := source;
-   SDL_UpperBlit(FRenderSurface, @srcRect, image.surface, @dstRect);
-end;
-
-constructor TSdlCanvas.Create(mode: TSdlSurfaceMode; fullscreen: boolean; size: TRect; pixelDepth: cardinal);
-var
-   flags: cardinal;
-begin
-   assert(screenCanvas = nil);
    inherited Create;
    FRenderStack := TRenderStack.Create;
 
    if SDL_WasInit(SDL_INIT_VIDEO) <> SDL_INIT_VIDEO then
       SDL_InitSubSystem(SDL_INIT_VIDEO);
 
-   flags := SDL_DOUBLEBUF;
-   if fullscreen then
-      flags := flags or SDL_FULLSCREEN
-   else flags := flags or SDL_RESIZABLE;
-   case mode of
-      cmSoftware: flags := flags or SDL_SWSURFACE;
-      cmHardware: flags := flags or SDL_HWSURFACE;
-   end;
-   SDL_putenv(PAnsiChar('SDL_VIDEO_WINDOW_POS=' + ansiString(intToStr(size.Left)) + ',' + ansiString(intToStr(size.Top))));
-    FSurface := PSdlSurface(SDL_SetVideoMode(size.right, size.bottom, pixelDepth, flags));
-{   if not assigned(FSurface) then
-      OutOfMemoryError;
-   if FSurface^.flags and SDL_HWSURFACE = SDL_HWSURFACE then
-      FStyle := cmHardware
-   else FStyle := cmSoftware;}
-   FMustLock := FSurface.MustLock;
-   screenCanvas := self;
+   FWindow := SDL_CreateWindow(PAnsiChar(title), size.Left, size.Top, size.Right, size.Bottom, flags);
+   if SDL_CreateRenderer(FWindow, -1, [sdlrPresentFlip2]) <> 0 then
+      raise EBadHandle.Create(string(SDL_GetError));
+   SDL_SelectRenderer(FWindow);
+   SDL_RenderPresent;
+
+   self.RenderTarget := self;
+end;
+
+constructor TSdlCanvas.CreateFrom(value: TSdlWindowId);
+begin
+   inherited Create;
+   FRenderStack := TRenderStack.Create;
+
+   if SDL_WasInit(SDL_INIT_VIDEO) <> SDL_INIT_VIDEO then
+      SDL_InitSubSystem(SDL_INIT_VIDEO);
+
+   FWindow := value;
+   SDL_GetWindowSize(FWindow, FSize.x, FSize.y);
+
    self.RenderTarget := self;
 end;
 
 destructor TSdlCanvas.Destroy;
 begin
-   SDL_QuitSubSystem(SDL_INIT_VIDEO);
    FRenderStack.Free;
-   screenCanvas := nil;
    inherited Destroy;
 end;
 
@@ -281,32 +217,28 @@ var
    dummy: TSDLRect;
 begin
    dummy.TopLeft := dest;
-   SDL_UpperBlit(image.surface, nil, FRenderSurface, @dummy);
+   dummy.BottomRight := image.surface.size;
+   SDL_RenderCopy(image.surface, nil, @dummy);
 end;
 
-procedure TSdlCanvas.DrawRect(image: TSdlImage; dest: TSgPoint; source: TSDLRect);
+procedure TSdlCanvas.DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect);
 var
    dummy: TSDLRect;
 begin
    dummy.TopLeft := dest;
-   SDL_UpperBlit(image.surface, @source, FRenderSurface, @dummy);
+   dummy.BottomRight := source.BottomRight;
+   SDL_RenderCopy(image.surface, @source, @dummy);
 end;
 
 procedure TSdlCanvas.Flip;
 begin
-   SDL_Flip(PSdl_surface(FSurface));
+   assert(lCurrentRenderTarget = self);
+   SDL_RenderPresent;
 end;
 
-procedure TSdlCanvas.SetClipRect(const Value: TRect);
+function TSdlCanvas.GetID: UInt32;
 begin
-   if FRenderTarget = self then
-      inherited SetClipRect(Value)
-   else FRenderTarget.SetClipRect(Value);
-end;
-
-function TSdlCanvas.IsFullscreen: boolean;
-begin
-   result := {FSurface.flags and SDL_FULLSCREEN = SDL_FULLSCREEN} false;
+   result := FWindow;
 end;
 
 procedure TSdlCanvas.popRenderTarget;
@@ -316,9 +248,10 @@ end;
 
 procedure TSdlCanvas.pushRenderTarget;
 begin
-   FRenderStack.Push(FRenderTarget);
+   FRenderStack.Push(FRenderTarget as TSdlRenderTarget);
 end;
 
+(*
 procedure TSdlCanvas.SetFullscreen(const Value: boolean);
 begin
    raise Exception.Create('SetFullscreen not currently supported');
@@ -326,21 +259,21 @@ begin
       FSurface := SDL_SetVideoMode(self.width, self.height, self.depth, FSurface.flags xor SDL_FULLSCREEN);}
 end;
 
-function TSdlCanvas.GetClipRect: TRect;
+function TSdlCanvas.IsFullscreen: boolean;
 begin
-   if FRenderTarget = self then
-      result := inherited GetClipRect
-   else result := FRenderTarget.ClipRect;
+   result := {FSurface.flags and SDL_FULLSCREEN = SDL_FULLSCREEN} false;
 end;
+*)
 
-procedure TSdlCanvas.SetRenderTarget(const Value: TSdlRenderTarget);
+procedure TSdlCanvas.SetRenderTarget(const Value: TSdlRenderSurface);
 begin
    if value = nil then
       SetRenderTarget(self)
    else begin
       FRenderTarget := Value;
-      FRenderSurface := Value.surface;
+      FRenderHandle := Value.id;
    end;
+   lCurrentRenderTarget := FRenderTarget;
 end;
 
 { TSdlRenderTargets }
@@ -355,27 +288,19 @@ begin
       Exit;
 
    Target := self[Index];
-   if target.mustLock then
-      target.surface.LockSurface;
-   try
-      if (FillBk) then
-         if (not target.surface.Fill(nil, bkgrnd)) then
-            Exit;
-      Event(Self);
-   finally
-      if target.mustLock then
-         target.surface.UnlockSurface;
+   if (FillBk) then
+   begin
+      target.SetBgColor(TSgColor(bkgrnd));
+      target.Clear;
    end;
+   Event(Self);
 end;
 
-initialization
-begin
-   screenCanvas := nil;
-end;
+{ Classless }
 
-finalization
+function currentRenderTarget: TSdlRenderSurface;
 begin
-   screenCanvas.free;
+   result := lCurrentRenderTarget;
 end;
 
 end.

@@ -21,6 +21,9 @@ interface
 type
    TRpgTimestamp = class(TObject)
    private
+      class var
+      FFrameLength: cardinal;
+   private
       FHour: word;
       FMin: word;
       FSec: word;
@@ -34,6 +37,8 @@ type
       function timeRemaining: cardinal;
       procedure pause; inline;
       procedure resume;
+
+      class property FrameLength: cardinal read FFrameLength write FFrameLength;
    end;
 
    procedure moveTowards(timer: cardinal; var current: extended; const goal: extended); overload;
@@ -43,7 +48,7 @@ type
 implementation
 uses
    sysUtils, math, windows,
-   commons{, chipset_graphics};
+   commons;
 
 { TRpgTimestamp }
 
@@ -57,8 +62,8 @@ procedure TRpgTimestamp.pause;
 begin
    if not FPaused then
    begin
-      FPaused := true;
       FPauseTime := self.timeRemaining;
+      FPaused := true;
    end;
 end;
 
@@ -156,7 +161,7 @@ var
    diff: extended;
    timefactor: integer;
 begin
-   timefactor := max(timer div 32 {GFrameLength}, 1);
+   timefactor := max(timer div TRpgTimeStamp.FrameLength, 1);
    diff := (current - goal) / timefactor;
    current := current - diff;
 end;
@@ -166,7 +171,7 @@ var
    diff: single;
    timefactor: integer;
 begin
-   timefactor := max(timer div 32 {GFrameLength}, 1);
+   timefactor := max(timer div TRpgTimeStamp.FrameLength, 1);
    diff := (current - goal) / timefactor;
    current := current - diff;
 end;
@@ -176,7 +181,7 @@ var
    diff: smallint;
    timefactor: integer;
 begin
-   timefactor := max(timer div 32{GFrameLength}, 1);
+   timefactor := max(timer div TRpgTimeStamp.FrameLength, 1);
    diff := commons.round((current - goal) / timefactor);
    assert(abs(diff) < 256);
    current := current - diff;

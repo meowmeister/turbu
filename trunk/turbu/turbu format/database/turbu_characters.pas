@@ -128,7 +128,6 @@ type
       FStrongDefense: boolean;
       FUnarmedAnim: integer;
       FOnJoin: TPartyEvent;
-    FName: string;
 
       function getCommand(x: byte): smallint; inline;
       procedure setCommand(x: byte; const Value: smallint); inline;

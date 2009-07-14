@@ -147,10 +147,7 @@ end;
 constructor TMapTree.Create;
 begin
    inherited Create;
-   self.Add(TMapMetadata.Create);
-   {Would not be necessary if Generics worked right}
 
-   self.Delete(0);
    FStartLocs := TLocationList.Create;
 end;
 
@@ -169,15 +166,18 @@ begin
    self.Create;
    lassert(savefile.readChar = UpCase(TMapMetadata.keyChar));
    self.Capacity := savefile.readInt + 1;
-   for I := 1 to self.Capacity - 1 do
+   for I := 0 to self.Capacity - 1 do
       self.Add(TMapMetadata.load(savefile));
    lassert(savefile.readChar = TMapMetadata.keyChar);
 {   inherited Load(savefile);}
 
    len := savefile.readWord;
    setLength(locs, len);
-   savefile.ReadBuffer(locs[0], len * sizeof(int64));
-   FStartLocs.AddRange(locs);
+   if len > 0 then
+   begin
+      savefile.ReadBuffer(locs[0], len * sizeof(int64));
+      FStartLocs.AddRange(locs);
+   end;
    FCurrentMap := savefile.readWord;
    setLength(FNodeSet, savefile.readWord);
    savefile.ReadBuffer(FNodeSet[0], (system.length(FNodeSet) * sizeof(word)));
@@ -195,9 +195,7 @@ begin
    savefile.writeChar(UpCase(TMapMetadata.keyChar));
    savefile.writeInt(self.count - 1{High});
    for iterator in self do
-      if iterator.id = 0 then
-         Continue
-      else iterator.save(savefile);
+      iterator.save(savefile);
    savefile.writeChar(TMapMetadata.keyChar);
 {   inherited Save(savefile);}
 

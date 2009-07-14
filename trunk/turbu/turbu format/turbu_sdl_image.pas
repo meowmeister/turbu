@@ -26,37 +26,36 @@ uses
 type
    TRpgSdlImage = class(TSdlImage)
    private
-      FTexture: TSdlTexture;
+      FOrigSurface: PSdlSurface;
+   protected
+      procedure processImage(image: PSdlSurface); override;
    public
-      procedure setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint); override;
-      property Texture: TSdlTexture read FTexture write FTexture;
+      destructor Destroy; override;
+      property Texture: TSdlTexture read FSurface;
+      property surface: PSdlSurface read FOrigSurface;
    end;
 
 implementation
 
 { TRpgSdlImage }
-uses
-   turbu_constants,
-   sdl_canvas;
 
-resourcestring
-   BAD_LOAD = 'Unable to load image to video memory!';
+destructor TRpgSdlImage.Destroy;
+begin
+   FOrigSurface.Free;
+   inherited;
+end;
 
-procedure TRpgSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint);
+procedure TRpgSdlImage.processImage(image: PSdlSurface);
 var
-   dummy: PSdlSurface;
    colorkey: TSDL_Color;
 begin
-   inherited setup(filename, imagename, container, spriteSize);
-{   dummy := TSdlSurface.Convert(FSurface, FSurface.format);
-   FSurface.Free;
-   FSurface := dummy;}
-   FMustLock := FSurface.MustLock;
-   if assigned(FSurface.format.palette) then
+   if assigned(image.format.palette) then
    begin
-      colorkey := FSurface.format.palette.colors^[0];
-      FSurface.ColorKey := SDL_MapRGB(FSurface.format, colorkey.r, colorkey.g, colorkey.b)
+      colorkey := image.format.palette.colors^[0];
+      image.ColorKey := SDL_MapRGB(image.format, colorkey.r, colorkey.g, colorkey.b)
    end;
+   FOrigSurface := image;
+   FOrigSurface.AcquireReference;
 end;
 
 end.

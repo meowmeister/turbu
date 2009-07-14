@@ -108,6 +108,7 @@ type
       procedure btnEditAttributesClick(Sender: TObject);
       procedure lstScriptsDblClick(Sender: TObject);
       procedure btnSetGfxClick(Sender: TObject);
+      procedure imgMapSpriteAvailable(Sender: TObject);
    private
       FLoading: boolean;
       FLoaded: boolean;
@@ -118,6 +119,7 @@ type
       FSpriteData: TSpriteData;
       FMatrixPosition: TRpgPoint;
       FCurrentTexture: integer;
+      FSpriteToLoad: integer;
 
       procedure loadPortrait(id: integer);
       procedure loadMapSprite(id: integer; frame: byte);
@@ -222,6 +224,12 @@ begin
    end;
 end;
 
+procedure TframeClass.imgMapSpriteAvailable(Sender: TObject);
+begin
+   if FSpriteToLoad > 0 then
+      loadPortrait(FSpriteToLoad);
+end;
+
 procedure TframeClass.initClasses;
 begin
    FLoading := true;
@@ -302,9 +310,13 @@ var
    dummy: integer;
    fileStream: TStream;
    image: TRpgSdlImage;
-   texture: TSdlTexture;
    spriteRect: TRect;
 begin
+   if not imgMapSprite.Available then
+   begin
+      FSpriteToLoad := id;
+      exit;
+   end;
    assert(assigned(GDatabase.portraitList));
    if not assigned(FImageList) then
    begin
@@ -329,14 +341,12 @@ begin
       end;
    end
    else image := FImageList.image[filename] as TRpgSdlImage;
-   if image.Texture.ID = 0 then
-   begin
-      imgMapSprite.AddTexture(image.surface, texture);
-      image.Texture := texture;
-   end;
+   assert(image.Texture.ID > 0);
+   imgMapSprite.Textures.Add(image.Texture);
 
    spriteRect := image.spriteRect[id mod 16];
    imgMapSprite.DrawTexture(image.Texture, @spriteRect);
+   imgMapSprite.Flip;
 end;
 
 procedure TframeClass.lstScriptsDblClick(Sender: TObject);
@@ -402,7 +412,6 @@ var
    image: TRpgSdlImage;
    fileStream: TStream;
    spriteRect, destRect: TRect;
-   texture: TSdlTexture;
    oldIndex: integer;
 begin
    assert(assigned(GDatabase.spriteList));
@@ -432,11 +441,8 @@ begin
       assert(frame in [0..image.count]);
    end
    else image := FImageList.image[filename] as TRpgSdlImage;
-   if image.Texture.ID = 0 then
-   begin
-      imgMapSprite.AddTexture(image.surface, texture);
-      image.Texture := texture;
-   end;
+   assert(image.Texture.ID > 0);
+   imgMapSprite.Textures.Add(image.Texture);
    FCurrentTexture := image.texture.ID;
 
    spriteRect := image.spriteRect[frame];
@@ -445,7 +451,9 @@ begin
    destRect.BottomRight := TRpgPoint(spriteRect.BottomRight) * 2;
    if oldIndex <> FCurrentTexture then
       imgMapSprite.fillColor(image.surface.Format.palette.colors[image.surface.ColorKey], 255);
+//   imgMapSprite.assignImage(image.surface);
    imgMapSprite.DrawTexture(image.Texture, @spriteRect, @destRect);
+   imgMapSprite.Flip;
 end;
 
 procedure TframeClass.radWeaponStyleClick(Sender: TObject);

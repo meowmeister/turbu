@@ -37,10 +37,13 @@ type
    TFastSpriteList = class(TObjectList<TSprite>)
    private
       FSprites: array of TSpriteList;
+      FSorted: boolean;
    public
       constructor Create;
+      destructor Destroy; override;
       function Add(ASprite: TSprite): Integer;
       function Remove(ASprite: TSprite): Integer;
+      function IndexOf(const Value: TSprite): Integer;
    end;
 
    TSprite = class(TObject)
@@ -61,8 +64,12 @@ type
       FTag: Integer;
       FImage: TSdlImage;
       FMirrorX, FMirrorY: Boolean;
-      FAlpha: Integer;
+      FRed: Byte;
+      FGreen: Byte;
+      FBlue: Byte;
+      FAlpha: Byte;
       FAngle: Single;
+      FDrawFX: TDrawFX;
       FScaleX, FScaleY: Single;
       FOffsetX, FOffsetY: Single;
       FImageType: TImageType;
@@ -79,7 +86,6 @@ type
 
       function GetDrawRect: TRect; virtual;
       procedure SetDrawRect(const Value: TRect); virtual;
-      procedure SetAlpha(const Value: Integer); virtual;
       procedure DoDraw; virtual;
       procedure DoMove(const MoveCount: Single); virtual;
       procedure SetImageName(const Value: string); virtual;
@@ -87,6 +93,7 @@ type
       procedure SetY(const Value: Single); virtual;
       procedure SetZ(const Value: Cardinal); virtual;
       procedure SetPatternIndex(const Value: Integer); virtual;
+      function InVisibleRect: boolean; virtual;
    public
       constructor Create(const AParent: TParentSprite); virtual;
       destructor Destroy; override;
@@ -114,7 +121,11 @@ type
       property Engine: TSpriteEngine read FEngine write FEngine;
       property Parent: TParentSprite read FParent;
       property Tag: Integer read FTag write FTag;
-      property Alpha: Integer read FAlpha write SetAlpha default 255;
+      property Red: Byte read FRed write FRed;
+      property Green: Byte read FGreen write FGreen;
+      property Blue: Byte read FBlue write FBlue;
+      property Alpha: Byte read FAlpha write FAlpha;
+      property DrawFx: TDrawFX read FDrawFX write FDrawFX;
       property Angle: Single read FAngle write FAngle;
       property ScaleX: Single read FScaleX write FScaleX;
       property ScaleY: Single read FScaleY write FScaleY;
@@ -134,7 +145,7 @@ type
       procedure UnDraw(sprite: TSprite);
    protected
       FList: TSpriteList;
-      FSpriteList: TSpriteList;
+      FSpriteList: TFastSpriteList;
       function GetCount: Integer;
       function GetItem(Index: Integer): TSprite;
       procedure AddDrawList(Sprite: TSprite); inline;
@@ -148,7 +159,7 @@ type
 
       property Items[Index: Integer]: TSprite read GetItem; default;
       property Count: Integer read GetCount;
-      property SpriteList: TSpriteList read FSpriteList;
+      property SpriteList: TFastSpriteList read FSpriteList;
    end;
 
    TAnimatedSprite = class(TParentSprite)
@@ -242,7 +253,7 @@ type
       FImages: TSdlImages;
       FCanvas: TSdlCanvas;
    public
-      constructor Create(const AParent: TSpriteEngine); reintroduce;
+      constructor Create(const AParent: TSpriteEngine; const ACanvas: TSdlCanvas); reintroduce;
       destructor Destroy; override;
       procedure Draw; override;
       procedure Dead; reintroduce;
@@ -257,6 +268,8 @@ type
    end;
 
 implementation
+uses
+   Generics.Defaults;
 
 {  TSprite }
 
@@ -309,16 +322,21 @@ begin
       DoMove(MoveCount);
 end;
 
+function TSprite.InVisibleRect: boolean;
+begin
+   result := (X > FEngine.WorldX - Width ) and
+   (Y > FEngine.WorldY - Height)    and
+   (X < FEngine.WorldX + FEngine.VisibleWidth)  and
+   (Y < FEngine.WorldY + FEngine.VisibleHeight);
+end;
+
 procedure TSprite.Draw;
 begin
    if FVisible then
    begin
       if FEngine <> nil then
       begin
-         if (X > FEngine.WorldX - Width ) and
-         (Y > FEngine.WorldY - Height)    and
-         (X < FEngine.WorldX + FEngine.VisibleWidth)  and
-         (Y < FEngine.WorldY + FEngine.VisibleHeight) then
+         if self.InVisibleRect then
          begin
             DoDraw;
             Inc(FEngine.FDrawCount);
@@ -448,11 +466,6 @@ begin
    end;
 end;
 
-procedure TSprite.SetAlpha(const Value: Integer);
-begin
-   FAlpha := Value;
-end;
-
 function TSprite.GetBoundsRect: TRect;
 begin
    Result := Bounds(Round(FX), Round(FY), Round(FX + Width), Round(FY + Height));
@@ -489,7 +502,7 @@ begin
    if Sprite.Z <> 0 then
    begin
       if FSpriteList = nil then
-         FSpriteList := TSpriteList.Create(false);
+         FSpriteList := TFastSpriteList.Create;
       FSpriteList.Add(Sprite);
    end;
 end;
@@ -517,7 +530,7 @@ end;
 procedure TParentSprite.AddDrawList(Sprite: TSprite);
 begin
    if not assigned(FSpriteList) then
-      FSpriteList := TSpriteList.Create(false);
+      FSpriteList := TFastSpriteList.Create;
    FSpriteList.Add(Sprite);
 end;
 
@@ -731,12 +744,13 @@ end;
 
 { TSpriteEngine }
 
-constructor TSpriteEngine.Create(const AParent: TSpriteEngine);
+constructor TSpriteEngine.Create(const AParent: TSpriteEngine; const ACanvas: TSdlCanvas);
 begin
    inherited Create(AParent);
    FDeadList := TSpriteList.Create;
    FVisibleWidth := 800;
    FVisibleHeight := 600;
+   FCanvas := ACanvas;
 end;
 
 destructor TSpriteEngine.Destroy;
@@ -757,16 +771,53 @@ begin
    inherited Draw;
 end;
 
+{ TSpriteComparer }
+
+type
+  TSpriteComparer = class(TInterfacedObject, IComparer<TSprite>)
+    function Compare(const Left, Right: TSprite): Integer;
+  end;
+
+{$Q-}{$R-}
+function TSpriteComparer.Compare(const Left, Right: TSprite): Integer;
+begin
+   result := Left.Z - Right.Z;
+   if result = 0 then
+      result := cardinal(left) - cardinal(right);
+end;
+{$Q+}{$R+}
+
 { TSpriteList }
 
 constructor TFastSpriteList.Create;
 var
    i: integer;
 begin
-   inherited Create(true);
+   inherited Create(TSpriteComparer.Create, false);
    SetLength(FSprites, 11);
    for I := 0 to 10 do
       FSprites[i] := TSpriteList.Create(false);
+end;
+
+destructor TFastSpriteList.Destroy;
+var
+   i: integer;
+begin
+   for I := 0 to high(FSprites) do
+      FSprites[i].Free;
+   inherited;
+end;
+
+function TFastSpriteList.IndexOf(const Value: TSprite): Integer;
+begin
+   if not FSorted then
+   begin
+      self.Sort;
+      FSorted := true;
+   end;
+
+   if not self.BinarySearch(value, result) then
+      result := -1;
 end;
 
 function TFastSpriteList.Add(ASprite: TSprite): Integer;
@@ -782,6 +833,7 @@ begin
       FSprites[z] := TSpriteList.Create(false);
 
    FSprites[z].Add(ASprite);
+   FSorted := false;
 end;
 
 function TFastSpriteList.Remove(ASprite: TSprite): Integer;

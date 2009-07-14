@@ -3,7 +3,8 @@ unit turbu_maps;
 interface
 uses
    types, classes, generics.collections, DB,
-   turbu_defs, turbu_classes, turbu_map_interface;
+   turbu_defs, turbu_classes, turbu_map_interface,
+   SG_defs;
 
 type
    TTileRef = packed record
@@ -18,6 +19,11 @@ type
 
    TMapScrollType = (stNone, stScroll, stAutoscroll);
    TScriptFormat = (sfEvents, sfScripts, sfCompiled);
+   TWraparound = set of (wrHorizontal, wrVertical);
+
+   TDirs8 = (n, ne, e, se, s, sw, w, nw);
+   TFuzzy = (no, yes, either);
+   TNeighbors = packed array [TDirs8] of TFuzzy;
 
    TMapRegion = class(TRpgDatafile)
    private
@@ -54,19 +60,20 @@ type
    TRpgMap = class(TRpgDatafile, I2KMap)
    private
       FTileset: string;
-      FSize: TPoint;
+      FSize: TSgPoint;
       FDepth: byte;
+      FWraparound: TWraparound;
       FTileMap: TTileMap;
       FHasBG: boolean;
       FBgName: string;
       FVScroll: TMapScrollType;
       FHScroll: TMapScrollType;
-      FScrollSpeed: TPoint;
+      FScrollSpeed: TSgPoint;
       FScriptFormat: TScriptFormat;
       FScriptBlock: ansiString;
       FRegions: TRegionList;
       FEncounterScript: string;
-      procedure SetSize(const Value: TPoint);
+      procedure SetSize(const Value: TSgPoint);
       procedure SetDepth(const Value: byte);
       procedure SetScriptFormat(const Value: TScriptFormat);
       function GetBattleCount: integer;
@@ -84,14 +91,15 @@ type
       destructor Destroy; override;
 
       property tileset: string read FTileset write FTileset;
-      property size: TPoint read FSize write SetSize;
+      property size: TSgPoint read FSize write SetSize;
       property depth: byte read FDepth write SetDepth;
+      property wraparound: TWraparound read FWraparound write FWraparound;
       property tileMap: TTileMap read FTileMap write FTileMap;
       property hasBackground: boolean read FHasBG write FHasBG;
       property bgName: string read FBgName write FBgName;
       property hScroll: TMapScrollType read FHScroll write FHScroll;
       property vScroll: TMapScrollType read FVScroll write FVScroll;
-      property scrollSpeed: TPoint read FScrollSpeed write FScrollSpeed;
+      property scrollSpeed: TSgPoint read FScrollSpeed write FScrollSpeed;
       property scriptFormat: TScriptFormat read FScriptFormat write SetScriptFormat;
       property scriptBlock: ansiString read FScriptBlock write FScriptBlock;
       property battles: TPWordArray read FBattles write FBattles;
@@ -111,19 +119,20 @@ constructor TRpgMap.Load(savefile: TStream);
 var
    i: integer;
    len: integer;
-   size: TPoint;
+   size: TSgPoint;
 begin
    inherited Load(savefile);
    FTileset := savefile.readString;
-   savefile.ReadBuffer(size, sizeof(TPoint));
+   savefile.ReadBuffer(size, sizeof(TSgPoint));
    self.SetSize(size);
    self.depth := savefile.readByte;
-   for I := 1 to self.depth do
+   savefile.readBuffer(FWraparound, sizeof(FWraparound));
+   for I := 0 to self.depth - 1 do
       savefile.ReadBuffer(FTileMap[i, 0], length(FTileMap[i]) * sizeof(TTileRef));
    FHasBG := savefile.readBool;
    savefile.ReadBuffer(FHScroll, sizeof(TMapScrollType));
    savefile.ReadBuffer(FVScroll, sizeof(TMapScrollType));
-   savefile.ReadBuffer(FScrollSpeed, sizeof(TPoint));
+   savefile.ReadBuffer(FScrollSpeed, sizeof(TSgPoint));
    savefile.ReadBuffer(FScriptFormat, sizeof(TScriptFormat));
    scriptBlock := savefile.ReadAString;
    battleCount := savefile.ReadInt;
@@ -156,14 +165,15 @@ var
 begin
    inherited Save(savefile);
    savefile.writeString(FTileset);
-   savefile.WriteBuffer(FSize, sizeof(TPoint));
+   savefile.WriteBuffer(FSize, sizeof(TSgPoint));
    savefile.writeByte(FDepth);
+   savefile.writeBuffer(FWraparound, sizeof(FWraparound));
    for tileList in FTileMap do
       savefile.WriteBuffer(tileList[0], length(tileList) * sizeof(TTileRef));
    savefile.writeBool(FHasBG);
    savefile.WriteBuffer(FHScroll, sizeof(TMapScrollType));
    savefile.WriteBuffer(FVScroll, sizeof(TMapScrollType));
-   savefile.WriteBuffer(FScrollSpeed, sizeof(TPoint));
+   savefile.WriteBuffer(FScrollSpeed, sizeof(TSgPoint));
    savefile.WriteBuffer(FScriptFormat, sizeof(TScriptFormat));
    savefile.WriteAString(scriptBlock);
    savefile.WriteInt(battleCount);
@@ -228,7 +238,7 @@ begin
    //do more here
 end;
 
-procedure TRpgMap.SetSize(const Value: TPoint);
+procedure TRpgMap.SetSize(const Value: TSgPoint);
 var
    i: integer;
 begin

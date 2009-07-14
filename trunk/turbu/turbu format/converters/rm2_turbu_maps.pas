@@ -23,10 +23,6 @@ uses
 type
    ETileError = class(Exception);
 
-   TDirs8 = (n, ne, e, se, s, sw, w, nw);
-   TFuzzy = (no, yes, either);
-   TNeighbors = packed array [TDirs8] of TFuzzy;
-
    TDecodeResult = record
       baseTile: word;
       neighbors: TNeighbors;
@@ -49,9 +45,10 @@ begin
    self.Create;
    self.name := string(metadata.name);
    self.id := id;
-   self.tileset := string(db.getChipset(base.terrain).filename);
+   self.tileset := string(db.getChipset(base.terrain).name);
    self.size := point(base.width, base.height);
    self.depth := 2;
+   self.wraparound := TWraparound(base.unk0b);
    for I := 0 to high(base.lowChip) do
       self.tileMap[0][i] := convertDecodeResult(decode(base.lowChip[i]));
    for I := 0 to high(base.highChip) do
@@ -407,6 +404,14 @@ var
    neighbors: set of TDirs8;
    i: TDirs8;
 begin
+   //mark blank tile so we can nil it later on
+   if (value.baseTile = 0) and (value.group = 10) then
+   begin
+      result.group := 255;
+      result.tile := 255;
+      Exit;
+   end;
+
    result.group := value.group;
    if result.group in [0..2, 4..6] then
    begin
@@ -421,8 +426,8 @@ begin
    else result.tile := value.baseTile;
    case result.group of
       0..3: ;
-      4..6: inc(result.group, ((result.group - 4) * 4) + value.baseTile);
-      else inc(result.group, 12);
+      4..6: result.group := 4 + ((result.group - 4) * 4) + value.baseTile;
+      else inc(result.group, 9);
    end;
 end;
 

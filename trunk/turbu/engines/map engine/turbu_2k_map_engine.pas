@@ -19,38 +19,43 @@ unit turbu_2k_map_engine;
 
 interface
 uses
+   types, syncObjs,
    turbu_map_engine, turbu_versioning,
    turbu_database_interface, turbu_map_interface,
-   turbu_database, turbu_maps, turbu_tilesets,
-   SG_defs, SDL_ImageManager,
+   turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine,
+   SG_defs, SDL_ImageManager, sdl_canvas,
    sdl_13;
 
 type
    T2kMapEngine = class(TMapEngine)
    private
       FDatabase: TRpgDatabase;
-      FWindowHandle: TSdlWindowId;
+      FCanvas: TSdlCanvas;
       FStretchRatio: TSgFloatPoint;
-      FCurrentMap: TRpgMap;
+      FCurrentMap: T2kSpriteEngine;
       FWaitingMap: TRpgMap;
       FImages: TSdlImages;
+      FMaps: array of T2kSpriteEngine;
+      FSignal: TSimpleEvent;
       procedure loadTileset(const value: TTileSet);
-      procedure loadTileGroup(const value: TTileGroupRecord);
+      function CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
    protected
       procedure cleanup; override;
    public
       constructor Create; override;
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase); override;
-      function loadMap(map: IRpgMap): boolean; override;
+      function loadMap(map: IRpgMap; startPosition: TSgPoint): boolean; override;
    end;
 
 implementation
 uses
    sysUtils, classes,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
-   turbu_constants, turbu_map_metadata,
-   SDL, sdlstreams;
+   turbu_constants, turbu_map_metadata, turbu_functional,
+image_callback_hack,
+   SDL, sdlstreams, sdl_sprite;
 
+(*
 { Callbacks }
 
 function ALoader(filename, keyname: string): PSDL_RWops;
@@ -66,13 +71,22 @@ begin
    (TObject(rw.unknown) as TStream).Free;
    SDL_FreeRW(rw);
 end;
+*)
 
 { T2kMapEngine }
 
+const TILE_SIZE = 16;
+
 procedure T2kMapEngine.cleanup;
+var i: integer;
 begin
-  assert(FInitialized);
-   //do something eventually
+   assert(FInitialized);
+   FCanvas.Free;
+   FImages.Free;
+   FSignal.Free;
+   for I := 0 to high(FMaps) do
+      FMaps[i].Free;
+   inherited;
 end;
 
 constructor T2kMapEngine.Create;
@@ -81,13 +95,34 @@ begin
   self.data := TMapEngineData.Create('TURBU basic map engine', TVersion.Create(0, 1, 0));
 end;
 
+function T2kMapEngine.CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
+var
+   screensize: TSgPoint;
+begin
+   screensize := FCanvas.size / TILE_SIZE;
+   center := center - (screensize / 2);
+   if not (wrHorizontal in map.wraparound) then
+   begin
+      if center.x < 0 then
+         center.x := 0
+      else if center.x + screensize.x >= map.size.X then
+         center.x := pred(map.size.x - screensize.x);
+   end;
+   if not (wrVertical in map.wraparound) then
+   begin
+      if center.Y < 0 then
+         center.Y := 0
+      else if center.Y + screensize.Y >= map.size.Y then
+         center.Y := pred(map.size.Y - screensize.Y);
+   end;
+   result.TopLeft := center;
+   result.BottomRight := screensize;
+end;
+
 procedure T2kMapEngine.initialize(window: TSdlWindowId; database: IRpgDatabase);
 var
    db: I2kDatabase;
    layout: TGameLayout;
-   mapTree: TMapTree;
-   currentMap: TMapMetadata;
-   projectName: string;
 begin
    inherited initialize(window, database);
    if not supports(database, I2kDatabase, db) then
@@ -96,161 +131,72 @@ begin
    layout := FDatabase.layout;
    if window = 0 then
    begin
-      FWindowHandle :=  SDL_CreateWindow(PAnsiChar(ansiString(format('TURBU engine - %s', [FDatabase.attributes[0].name]))),
+      window :=  SDL_CreateWindow(PAnsiChar(ansiString(format('TURBU engine - %s', [FDatabase.projectname]))),
                         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                         layout.physWidth, layout.physHeight,
-                        [sdlwOpenGl, sdlwShown, {sdlwResizable,} sdlwInputGrabbed]);
+                        [sdlwOpenGl, sdlwShown {,sdlwResizable, sdlwInputGrabbed}]);
       //In RM2K, project title is stored in the LMT.  I'll need to convert that
       //to grab a project title. This will do for now.
 
       //add sdlwResizable if Sam's able to add in a "logical size" concept, or
       //if I end up doing it on this end
 
-      if FWindowHandle = 0 then
-         raise ERpgPlugin.Create('Unable to initialize SDL window: ' + LFCR + string(SDL_GetError));
-   end
-   else FWindowHandle := window;
+      if window = 0 then
+         raise ERpgPlugin.CreateFmt('Unable to initialize SDL window: %s%s', [LFCR, SDL_GetError]);
+      if SDL_CreateRenderer(window, -1, [sdlrPresentFlip2, sdlrAccelerated]) <> 0 then
+         raise ERpgPlugin.CreateFmt('Unable to initialize SDL renderer: %s%s', [LFCR, SDL_GetError]);;
+      SDL_RenderPresent;
+   end;
+   FCanvas := TSdlCanvas.CreateFrom(window);
    FStretchRatio.x := layout.physWidth / layout.width;
    FStretchRatio.y := layout.physHeight / layout.height;
    FImages := TSdlImages.Create();
-   FImages.ArchiveCallback := ACallback;
-   FImages.ArchiveLoader := ALoader;
+   image_callback_hack.assignCallbacks(FImages);
+   setLength(FMaps, FDatabase.mapTree.Count);
+   FSignal := TSimpleEvent.Create;
+   FSignal.SetEvent;
 
    FInitialized := true;
 end;
 
-function T2kMapEngine.loadMap(map: IRpgMap): boolean;
+function T2kMapEngine.loadMap(map: IRpgMap; startPosition: TSgPoint): boolean;
 var
    lMap: I2kMap;
-   tileset: TTileSet;
+   viewport: TRect;
 begin
-   result := false;
    if not (FInitialized) then
       raise ERpgPlugin.Create('Can''t load a map on an uninitialized map engine.');
    if not supports(map, I2kMap, lMap) then
       raise ERpgPlugin.Create('Incompatible map object');
    FWaitingMap := lMap.mapObject;
-   for tileset in FDatabase.tileset do
-      if tileset.name = FWaitingMap.tileset then
-      begin
-         loadTileset(tileset);
-         break;
-      end;
-(*
-var
-   fileName: string;
-   i, j: smallint;
-   tileIndex: integer;
-   currentChipset: TChipSet;
-   bgm: TRmMusic;
-begin
-try
-try
-   FImages := TSdlImages.Create;
-   currentMap := TMapUnit.Create(theMap, ldbData, mapTree, mapID);
-   FCanvas := TSdlCanvas.Create(cmHardware, false, rect(100, 100, 320, 240), 16);
-   mapEngine := TGameMap.create(currentMap, ldbData, mapTree, FCanvas, FImages, rtpLocation);
-   transitions.init;
-   GRenderTargets := TSdlRenderTargets.Create;
-//   GRenderTargets.AddRenderTargets(4, device.Width, device.Height, aqHigh, alMask);
-   mapEngine.Images := FImages;
-   currentMap.eventBlock.compiler := mapEngine.scriptEngine.compiler;
-   GGlobalEvents.compiler := mapEngine.scriptEngine.compiler;
-   GGlobalEvents.compileAll;
-   if ldbData.getChipset(currentMap.terrain).hiSpeed then
-      heartbeat := 6
-   else heartbeat := 12;
-   fileName := ldbData.getChipset(currentMap.terrain).filename;
-   if filename <> '' then
-      mapEngine.loadChipset(fileName, FImages);
-//check for background image
-   if (currentmap.usesPano) and (currentMap.panoName <> '') then
+   viewport := createViewport(FWaitingMap, startPosition);
+   if not assigned(FMaps[FWaitingMap.id]) then
    begin
-      filename := currentMap.panoName;
-      findGraphic(filename, 'panorama');
-      if filename = '' then
-         raise EParseMessage.create('Panorama graphic file "' + fileName + '" not found!');
-      mapEngine.loadBG(filename, currentMap.panoName);
-      mapEngine.currentMap.setBG;
+      loadTileset(FDatabase.tileset[FWaitingMap.tileset]);
+      FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
+                               FCanvas, FDatabase.tileset[FWaitingMap.tileset],
+                               FImages);
    end;
-   for i := 0 to currentMap.eventCount - 1 do
+   FCurrentMap := FMaps[FWaitingMap.id];
+   result := FSignal.WaitFor(INFINITE) = wrSignaled;
+   if result then
    begin
-      filename := currentMap.events[i].page[0].filename;
-      if (currentMap.events[i].page[0].filename <> '') then
-      begin
-         findGraphic(filename, 'charset');
-         if filename <> '' then
-            mapEngine.loadCharset(currentMap.events[i].page[0].filename, filename);
-      end;
+      FSignal.ResetEvent;
+      FCurrentMap.Draw;
+      FCanvas.Flip;
    end;
-   mapEngine.currentMap.placeEvents;
-   for i := 1 to ldbData.heroes - 1 do
-   begin
-      filename := ldbData.hero[i].filename;
-      if (ldbData.hero[i].filename <> '') and (FImages.Image[filename + intToStr(0)] = nil) then
-      begin
-         findGraphic(filename, 'charset');
-         if filename <> '' then
-            mapEngine.loadCharset(ldbData.hero[i].filename, filename);
-      end;
-   end;
-   if GInitializedHero then
-   begin
-      if ldbData.SystemData.startingHeroes > 0 then
-         mapEngine.character[0] := THeroSprite.create(mapEngine, GScriptEngine.hero[ldbData.SystemData.startingHero[1]], GParty)
-      else mapEngine.character[0] := THeroSprite.create(mapEngine, nil, GParty);
-      mapEngine.currentParty := mapEngine.character[0] as TCharSprite;
-      for i := 1 to ldbData.SystemData.startingHeroes do
-         rs_system.heroJoin(ldbData.SystemData.startingHero[i]);
-   end;
-   bgm := mapTree[mapID].bgmData;
-   if bgm.filename <> '' then
-      mapEngine.scriptEngine.playMusic(bgm);
-   tileIndex := 0; //initial value
-   currentChipset := ldbData.getChipset(currentMap.terrain);
-   for j := 0 to currentMap.height - 1 do
-   begin
-      for i := 0 to currentMap.width - 1 do
-      begin
-         mapEngine[lower, i, j].place(i, j, lower, currentMap.lowChip[tileIndex], currentChipset);
-         if currentMap.highChip[tileIndex] <> 10000 then
-            TLowerTile(mapEngine[lower, i, j]).placeUpper(i, j, upper, currentMap.highChip[tileIndex], currentChipset);
-         inc(tileIndex);
-      end;
-   end;
-   mapEngine.currentMap.scanSquare;
-{   timer.OnProcess := mapEngine.process;
-   timer.Enabled := true;}
-   GInputReader.Resume;
-except
-   on E: EParseMessage do
-   begin
-      msgBox(E.message, 'TGameForm.FormShow says:', MB_OK);
-      raise EMessageAbort.Create
-   end
-end; // end of TRY block
-except
-   on EMessageAbort do
-   begin
-      ShowMessage('Aborting due to fatal error.');
-      application.Terminate
-   end
-end // end of second TRY block
-end;
-*)
-end;
-
-procedure T2kMapEngine.loadTileGroup(const value: TTileGroupRecord);
-begin
-
 end;
 
 procedure T2kMapEngine.loadTileset(const value: TTileSet);
-var
-   enumerator: TTileGroupRecord;
 begin
-   for enumerator in value.Records do
-      loadTileGroup(enumerator);
+   TFunctional.map<TTileGroupRecord>(value.Records,
+      procedure(const input: TTileGroupRecord)
+      var filename: string;
+      begin
+         filename := 'tileset\' + input.group.filename + '.png';
+         if not FImages.contains(filename) then
+            FImages.AddSpriteFromArchive(filename, '', input.group.filename, input.group.dimensions);
+      end);
 end;
 
 end.

@@ -58,6 +58,8 @@ contains
   turbu_map_metadata in 'database\turbu_map_metadata.pas',
   turbu_maps in 'turbu_maps.pas',
   turbu_tilesets in 'database\turbu_tilesets.pas',
-  turbu_functional in '..\turbu_functional.pas';
+  turbu_functional in '..\turbu_functional.pas',
+  image_callback_hack in '..\image_callback_hack.pas',
+  timing in '..\mapview\libs\timing.pas';
 
 end.

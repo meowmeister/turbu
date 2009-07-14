@@ -18,7 +18,7 @@ uses
    SDL_13 {$IF CompilerVersion >= 20}, Generics.Collections{$IFEND};
 
 type
-   TTextureList = {$IF CompilerVersion >= 20} class(TList<TSdlTexture>); {$ELSE} class(TList)
+   TTextureList = {$IF CompilerVersion >= 20} TList<TSdlTexture>; {$ELSE} class(TList)
    protected
       function Get(Index: Integer): TSdlTexture; inline;
       procedure Put(Index: Integer; Item: TSdlTexture); inline;
@@ -35,16 +35,16 @@ type
       FTimer: TTimer;
       FFramerate: word;
       FActive: boolean;
-      FHidden: boolean;
-      FBootLock: boolean;
+      FRenderer: boolean;
 
       FBuffer: TSdlTexture;
       FTextureList: TTextureList;
+      FOnTimer: TNotifyEvent;
+      FOnAvailable: TNotifyEvent;
 
       function CreateWindow: boolean;
       function CreateRenderer: boolean;
-      procedure OnTimer(Sender: TObject);
-      procedure Bootstrap(Sender: TObject);
+      procedure InternalOnTimer(Sender: TObject);
       procedure SetFramerate(Value: word);
       procedure SetActive(const Value: boolean);
    protected
@@ -61,13 +61,17 @@ type
       procedure assignImage(image: PSdlSurface); deprecated;
       function AddTexture(surface: PSdlSurface; out texture: TSdlTexture): integer;
       procedure DrawTexture(texture: TSdlTexture; src: PSdlRect = nil; dst: PSdlRect = nil);
+      procedure Flip;
 
+      property Available: boolean read FRenderer;
       property SdlWindow: TSdlWindowId read FWindowID;
       property Flags: TSdlWindowFlags read FFlags;
       property Textures: TTextureList read FTextureList;
    published
       property Framerate: word read FFramerate write SetFramerate;
       property Active: boolean read FActive write SetActive;
+      property OnTimer: TNotifyEvent read FOnTimer write FOnTimer;
+      property OnAvailable: TNotifyEvent read FOnAvailable write FOnAvailable;
    end;
 
 procedure Register;
@@ -89,11 +93,9 @@ constructor TSdlFrame.Create(AOwner: TComponent);
 begin
    inherited;
    FTimer := TTimer.Create(self);
-   FTimer.OnTimer := Self.Bootstrap;
-   FTimer.Enabled := true;
    FTimer.Interval := 100;
-   FHidden := true;
    FTextureList := TTextureList.Create;
+   FTimer.OnTimer := Self.InternalOnTimer;
 end;
 
 destructor TSdlFrame.Destroy;
@@ -106,10 +108,9 @@ end;
 procedure TSdlFrame.CreateWnd;
 begin
    inherited;
-   FHidden := true;
    if SDL_WasInit(SDL_INIT_VIDEO) <> SDL_INIT_VIDEO then
       SDL_InitSubSystem(SDL_INIT_VIDEO);
-   Bootstrap(Self);
+   self.CreateWindow;
 end;
 
 procedure TSdlFrame.DestroyWnd;
@@ -126,8 +127,11 @@ end;
 
 procedure TSdlFrame.DrawTexture(texture: TSdlTexture; src, dst: PSdlRect);
 begin
-   if SDL_SelectRenderer(FWindowID) = 0 then
-      SDL_RenderCopy(texture, src, dst);
+   if not FRenderer then
+      raise EBadHandle.Create('No renderer available.');
+   if not ((SDL_SelectRenderer(FWindowID) = 0) and
+          (SDL_RenderCopy(texture, src, dst) = 0)) then
+      raise EBadHandle.Create(string(SDL_GetError));
 end;
 
 procedure TSdlFrame.FillColor(color: SDL_Color; alpha: byte);
@@ -140,11 +144,17 @@ begin
    end;
 end;
 
+procedure TSdlFrame.Flip;
+begin
+   if not (SDL_SelectRenderer(FWindowID) = 0) then
+      raise EBadHandle.Create(string(SDL_GetError));
+   SDL_RenderPresent;
+end;
+
 procedure TSdlFrame.Paint;
 begin
    if SDL_SelectRenderer(FWindowID) = -1 then
-       CreateRenderer;
-   SDL_RenderCopy(FBuffer, nil, nil);
+      CreateRenderer;
    SDL_RenderPresent;
 end;
 
@@ -159,28 +169,36 @@ begin
 end;
 
 function TSdlFrame.CreateRenderer: boolean;
+const
+   SDL_BLACK: sdl_13.TSDL_Color = (r: 0; g: 0; b:0; unused: 0);
 begin
-   if (SDL_SelectRenderer(FWindowID) <> 0)
-       and (SDL_CreateRenderer(FWindowID, 1, [sdlrPresentCopy]) = 0) then
+   if (SDL_SelectRenderer(FWindowID) = 0) then
+   begin
+      result := true;
+      Exit;
+   end;
+   if (SDL_CreateRenderer(FWindowID, 1, [sdlrPresentCopy]) = 0) then
    begin
       SDL_ShowWindow(FWindowID);
       assert(SDL_SetRenderDrawColor(0, 0, 0, 0) = 0);
       assert(SDL_RenderFill(nil) = 0);
       FFlags := SDL_GetWindowFlags(FWindowID);
       FBuffer := TSdlTexture.Create(0, sdltaStreaming, self.Width, self.Height);
-   end;
+      FRenderer := true;
+      fillColor(SDL_BLACK, 255);
+      if assigned(FOnAvailable) then
+         FOnAvailable(self);
+   end
+   else outputDebugString(pChar(format('SDL_CreateRenderer failed: %s', [sdl_GetError])));
    result := SDL_SelectRenderer(FWindowID) = 0;
 end;
 
-procedure TSdlFrame.OnTimer(Sender: TObject);
+procedure TSdlFrame.InternalOnTimer(Sender: TObject);
 begin
    if csDestroying in self.ComponentState then
-   begin
-      FTimer.Enabled := false;
-      Exit;
-   end;
-   if CreateWindow then
-      self.PaintWindow(Canvas.Handle);
+      FTimer.Enabled := false
+   else if assigned(FOnTimer) then
+      FOnTimer(self);
 end;
 
 procedure TSdlFrame.SetActive(const Value: boolean);
@@ -223,23 +241,6 @@ begin
   FTimer.Enabled := false;
   FTimer.OnTimer := nil;
   inherited;
-end;
-
-procedure TSdlFrame.Bootstrap(Sender: TObject);
-begin
-   if FBootLock or (not self.Showing) then
-      Exit;
-   FBootLock := true;
-   try
-      if CreateWindow and CreateRenderer then
-      begin
-         SDL_RenderPresent;
-         FHidden := false;
-         FTimer.OnTimer := Self.OnTimer;
-      end;
-   finally
-      FBootLock := false;
-   end;
 end;
 
 procedure TSdlFrame.Clear;

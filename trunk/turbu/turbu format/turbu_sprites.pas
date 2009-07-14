@@ -44,6 +44,7 @@ var
 begin
    list := TStringList.Create;
    try
+      list.StrictDelimiter := true;
       list.CommaText := value;
       result.name := list[0];
       result.moveMatrix := strToInt(list[1]);
