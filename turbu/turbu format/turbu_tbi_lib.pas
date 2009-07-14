@@ -262,7 +262,7 @@ begin
    result := TSdlSurface.Create({IMAGE_FORMAT,} x, y, 8, 0, 0, 0, 0);
    result.SetPalette(intermediate.format.palette.colors, 0, intermediate.format.palette.count);
    with result.format.palette.colors[0] do
-      intermediate.ColorKey := SDL_MapRGB(result.format, r, g, b);
+      result.ColorKey := SDL_MapRGB(result.format, r, g, b);
    SDL_BlitSurface(intermediate, nil, result, nil);
    intermediate.Free;
    image.Seek(0, soFromBeginning);

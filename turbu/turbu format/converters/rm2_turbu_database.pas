@@ -340,7 +340,7 @@ begin
 
       //TILESETS
       for I := 1 to base.getMaxChipsets do
-         self.tileset.Add(TTileset.Convert(base.getChipset(i), i));
+         self.tileset.Add(string(base.getChipset(i).name), TTileset.Convert(base.getChipset(i), i));
 
       ConversionReport.newStep('Preparing layout');
       self.layout.width := LOGICAL_SIZE.X;

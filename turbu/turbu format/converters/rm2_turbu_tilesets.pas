@@ -44,10 +44,8 @@ begin
    self.name := string(base.name);
    self.Records := TTileGroupList.Create;
    self.HiSpeed := base.hispeed;
-   IMG_Init([imgPng]);
    //convert images here
    convertTileGroups(string(base.filename), base);
-   IMG_Quit;
 end;
 
 const
@@ -160,10 +158,12 @@ begin
          case i of
             0..2: newGroup.tileType := [tsBordered, tsAnimated];
             3: newGroup.tileType := [tsAnimated];
-            4..17: newGroup.tileType := [tsAnimated];
+            4..17: newGroup.tileType := [tsBordered];
             else newGroup.tileType := [];
          end;
-         newGroup.dimensions := point(16, 16);
+         if not (tsBordered in newGroup.tileType) then
+            newGroup.dimensions := point(16, 16)
+         else newGroup.dimensions := point(8, 8);
          GDatabase.tileGroup.Add(lFilename, newGroup);
       finally
          freeAndNil(outFile);
@@ -187,7 +187,7 @@ begin
    begin
       newRecord := TTileGroupRecord.Create;
       newRecord.group := GDatabase.tileGroup[format(KEYNAME, [filename, TILESET_NAME[i]])];
-      if i <= 10 then
+      if i <= 16 then
          newRecord.layers := [0]
       else newRecord.layers := [1];
       if base.animation then
@@ -195,7 +195,6 @@ begin
       else newRecord.animDir := pmForward;
       newRecord.attributes := TAttributeList.Create;
       newRecord.terrain := TList<integer>.Create;
-      if i <= 18 then
       case i of
          0..18:
          begin
@@ -209,7 +208,7 @@ begin
          begin
             for j := (i - 19) * 48 to ((i - 18) * 48) - 1 do
             begin
-               newRecord.attributes.Add(convertAttributes(base.blockData[j]));
+               newRecord.attributes.Add(convertAttributes(base.uBlockData[j]));
                newRecord.terrain.Add(-1);
             end;
          end;

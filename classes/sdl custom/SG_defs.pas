@@ -7,35 +7,38 @@ uses
 type
    TSgPoint = record //TPoint with equality tests and
       x, y: integer; //basic vector math operators defined
-      class operator Equal(a, b: TSgPoint): boolean; inline;
-      class operator NotEqual(a, b: TSgPoint): boolean; inline;
-      class operator Multiply(a: TSgPoint; b: integer): TSgPoint; inline;
-      class operator Divide(a: TSgPoint; b: integer): TSgPoint; inline;
-      class operator Add(a, b: TSgPoint): TSgPoint; inline;
-      class operator Subtract(a, b: TSgPoint): TSgPoint; inline;
-      class operator Implicit(a: TPoint): TSgPoint; inline;
-      class operator Implicit(a: TSgPoint): TPoint; inline;
+      class operator Equal(a, b: TSgPoint): boolean; inline; static;
+      class operator NotEqual(a, b: TSgPoint): boolean; inline; static;
+      class operator Multiply(a: TSgPoint; b: integer): TSgPoint; inline; static;
+      class operator Divide(a: TSgPoint; b: integer): TSgPoint; inline; static;
+      class operator Modulus(a, b: TSgPoint): TSgPoint; inline; static;
+      class operator Add(a, b: TSgPoint): TSgPoint; inline; static;
+      class operator Subtract(a, b: TSgPoint): TSgPoint; inline; static;
+      class operator Implicit(a: TPoint): TSgPoint; inline; static;
+      class operator Implicit(a: TSgPoint): TPoint; inline; static;
    end;
 
    TSgFloatPoint = record //TPoint with equality tests and
       x, y: single; //basic vector math operators defined
-      class operator Equal(a, b: TSgFloatPoint): boolean; inline;
-      class operator NotEqual(a, b: TSgFloatPoint): boolean; inline;
-      class operator Multiply(a: TSgFloatPoint; b: single): TSgFloatPoint; inline;
-      class operator Divide(a: TSgFloatPoint; b: single): TSgFloatPoint; inline;
-      class operator Add(a, b: TSgFloatPoint): TSgFloatPoint; inline;
-      class operator Subtract(a, b: TSgFloatPoint): TSgFloatPoint; inline;
-      class operator Implicit(a: TPoint): TSgFloatPoint; inline;
-      class operator Implicit(a: TSgFloatPoint): TPoint; inline;
+      class operator Equal(a, b: TSgFloatPoint): boolean; inline; static;
+      class operator NotEqual(a, b: TSgFloatPoint): boolean; inline; static;
+      class operator Multiply(a: TSgFloatPoint; b: single): TSgFloatPoint; inline; static;
+      class operator Divide(a: TSgFloatPoint; b: single): TSgFloatPoint; inline; static;
+      class operator Add(a, b: TSgFloatPoint): TSgFloatPoint; inline; static;
+      class operator Subtract(a, b: TSgFloatPoint): TSgFloatPoint; inline; static;
+      class operator Implicit(a: TPoint): TSgFloatPoint; inline; static;
+      class operator Implicit(a: TSgFloatPoint): TPoint; inline; static;
    end;
 
    TSgColor = record
-      class operator Implicit(a: Cardinal): TSgcolor; inline;
-      class operator Implicit(a: TSgcolor): Cardinal; inline;
+      class operator Implicit(a: Cardinal): TSgcolor; inline; static;
+      class operator Implicit(a: TSgcolor): Cardinal; inline; static;
    case boolean of
       false: (color: Cardinal);
       true: (rgba: packed array[1..4] of byte);
    end;
+
+function sgPoint(x, y: integer): TSgPoint;
 
 const
 //AsphyreDefs backwards compatibility. Replace this when possible
@@ -50,6 +53,11 @@ const
  fxRevSub      = $00020104;
  fxMax         = $00040101;
  fxMin         = $00030101;
+
+ fxOneColor    = $7FFFFFF6;
+
+type
+   TDrawFX = integer;
 
 implementation
 
@@ -75,8 +83,14 @@ end;
 
 class operator TSgPoint.Divide(a: TSgPoint; b: integer): TSgPoint;
 begin
-   result.x := round(a.x / b);
-   result.y := round(a.y / b);
+   result.x := a.x div b;
+   result.y := a.y div b;
+end;
+
+class operator TSgPoint.Modulus(a, b: TSgPoint): TSgPoint;
+begin
+   result.x := a.x mod b.x;
+   result.y := a.y mod b.y;
 end;
 
 class operator TSgPoint.Equal(a, b: TSgPoint): boolean;
@@ -97,6 +111,12 @@ end;
 class operator TSgPoint.NotEqual(a, b: TSgPoint): boolean;
 begin
    result := not (a = b);
+end;
+
+function sgPoint(x, y: integer): TSgPoint;
+begin
+   result.x := x;
+   result.y := y;
 end;
 
 { TSgFloatPoint }
@@ -121,8 +141,8 @@ end;
 
 class operator TSgFloatPoint.Divide(a: TSgFloatPoint; b: single): TSgFloatPoint;
 begin
-   result.x := round(a.x / b);
-   result.y := round(a.y / b);
+   result.x := a.x / b;
+   result.y := a.y / b;
 end;
 
 class operator TSgFloatPoint.Equal(a, b: TSgFloatPoint): boolean;

@@ -39,13 +39,14 @@ type
 
       procedure pureSetPath(const Value: string);
       procedure setPath(const Value: string);
+      function getPath: string;
    protected
       function DoGetEnumerator: TEnumerator<string>; override;
    public
       constructor Create(root: string);
       destructor Destroy; override;
 
-      property path: string write setPath;
+      property path: string read getPath write setPath;
    end;
 
    TDiscArchive = class(TInterfacedObject, IArchive)
@@ -177,7 +178,7 @@ end;
 function TDiscArchive.allFiles(folder: string = ''): TEnumerable<string>;
 begin
    if folder <> '' then
-      setFilter(folder);
+      setFilter(IncludeTrailingPathDelimiter(folder));
    result := FCollection;
 end;
 
@@ -320,6 +321,11 @@ end;
 function TFileCollection.DoGetEnumerator: TEnumerator<string>;
 begin
    result := FList.GetEnumerator;
+end;
+
+function TFileCollection.getPath: string;
+begin
+   result := IncludeTrailingPathDelimiter(FRoot) + IncludeTrailingPathDelimiter(FPath);
 end;
 
 procedure TFileCollection.pureSetPath(const Value: string);

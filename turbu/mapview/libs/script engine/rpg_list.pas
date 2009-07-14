@@ -116,8 +116,8 @@ end;
 
 {$WARN USE_BEFORE_DEF OFF}
 class function TRpgItem.newItem(const item, quantity: word): TRpgItem;
-var
-   subtype: TItemClass;
+{var
+   subtype: TItemClass;}
 begin
 {   case GDatabase.findItemById(item).itemType of
       commonItem: subtype := TJunkItem;

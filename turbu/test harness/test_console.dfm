@@ -13,6 +13,7 @@ object frmTestConsole: TfrmTestConsole
   Menu = MainMenu1
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -28,6 +29,21 @@ object frmTestConsole: TfrmTestConsole
       object mnuSetDefaultProject: TMenuItem
         Caption = '&Set Default Project'
         OnClick = mnuSetDefaultProjectClick
+      end
+    end
+    object Graphics1: TMenuItem
+      Caption = '&Graphics'
+      object mnuCreateSdlWindow: TMenuItem
+        Caption = '&Create SDL window'
+        OnClick = mnuCreateSdlWindowClick
+      end
+      object mnuTestSDL: TMenuItem
+        Caption = '&Test SDL window'
+        OnClick = mnuTestSDLClick
+      end
+      object mnuTestMapLoading: TMenuItem
+        Caption = 'Test &Map Loading'
+        OnClick = mnuTestMapLoadingClick
       end
     end
     object Database1: TMenuItem

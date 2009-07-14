@@ -20,7 +20,7 @@ unit test_console;
 interface
 
 uses
-  SysUtils, Classes, Controls, Forms, Menus, StdCtrls, DBCtrls;
+  SysUtils, Classes, Controls, Forms, Menus, StdCtrls, DBCtrls, Dialogs;
 
 type
    TfrmTestConsole = class(TForm)
@@ -32,6 +32,10 @@ type
       File1: TMenuItem;
       mnuTestConversion1: TMenuItem;
       mnuSetDefaultProject: TMenuItem;
+      Graphics1: TMenuItem;
+      mnuCreateSdlWindow: TMenuItem;
+      mnuTestSDL: TMenuItem;
+      mnuTestMapLoading: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -39,6 +43,10 @@ type
       procedure mnuTestConversion1Click(Sender: TObject);
       procedure mnuSetDefaultProjectClick(Sender: TObject);
       procedure FormCreate(Sender: TObject);
+      procedure mnuCreateSdlWindowClick(Sender: TObject);
+      procedure FormDestroy(Sender: TObject);
+      procedure mnuTestSDLClick(Sender: TObject);
+      procedure mnuTestMapLoadingClick(Sender: TObject);
    private
       { Private declarations }
       folder, outFolder: string;
@@ -62,13 +70,17 @@ uses
    turbu_characters, locate_files,
    rm2_turbu_characters, rm2_turbu_database, turbu_unit_dictionary,
    turbu_engines, turbu_plugin_interface, turbu_battle_engine,
-   turbu_2k3_battle_engine, turbu_2k_battle_engine,
+   turbu_2k3_battle_engine, turbu_2k_battle_engine, turbu_sprites,
+   turbu_map_engine, turbu_2k_map_engine, turbu_maps,
+   turbu_tbi_lib, turbu_sdl_image,
+   sdl_canvas, sdl_13,
    strtok;
 
 {$R *.dfm}
 
 var
    freeList: TObjectList;
+   lCanvas: TSdlCanvas;
 
 procedure TfrmTestConsole.mnuTestDatabasewindow1Click(Sender: TObject);
 begin
@@ -78,6 +90,14 @@ begin
       mnuTestLoadingClick(Sender);
    frmDatabase.init(GDatabase);
    frmDatabase.ShowModal;
+end;
+
+procedure TfrmTestConsole.mnuCreateSdlWindowClick(Sender: TObject);
+begin
+   if not assigned(lCanvas) then
+      lCanvas := TSdlCanvas.Create('TURBU testing canvas', rect(400, 400, 320, 240), [sdlwOpenGl, sdlwShown]);
+   if (sender = mnuCreateSdlWindow) and (assigned(lCanvas)) then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;
 
 procedure TfrmTestConsole.mnuSetDefaultProjectClick(Sender: TObject);
@@ -92,6 +112,7 @@ var
    conversionReport: IConversionReport;
 begin
    try
+      mnuCreateSdlWindowClick(self);
       filename := IncludeTrailingPathDelimiter(outFolder);
       assert(DirectoryExists(filename));
       GArchives.clearFrom(1);
@@ -121,10 +142,39 @@ begin
    end;
 end;
 
+procedure TfrmTestConsole.mnuTestMapLoadingClick(Sender: TObject);
+var
+   engine: IMapEngine;
+   map: I2kMap;
+   mapStream: TStream;
+begin
+   if not assigned(GDatabase) then
+      mnuTestLoadingClick(Sender);
+
+   engine := T2kMapEngine.Create;
+//   freeList.add(engine.
+   engine.initialize(0, gdatabase);
+   mapStream := GArchives[MAP_ARCHIVE].getFile(GDatabase.mapTree[2].internalFilename.name);
+   try
+      map := TRpgMap.Load(mapStream);
+   finally
+      mapStream.Free;
+   end;
+   engine.loadMap(map, point(0,0));
+
+   if sender = mnuTestMapLoading then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
 procedure TfrmTestConsole.FormCreate(Sender: TObject);
 begin
    if getProjectFolder = '' then
       createProjectFolder;
+end;
+
+procedure TfrmTestConsole.FormDestroy(Sender: TObject);
+begin
+   lCanvas.Free;
 end;
 
 procedure TfrmTestConsole.FormShow(Sender: TObject);
@@ -195,6 +245,7 @@ begin
       assert(GArchives.Add(openFolder(filename)) = IMAGE_ARCHIVE);
       loadStream := TFileStream.Create(IncludeTrailingPathDelimiter(location) + DBNAME, fmOpenRead);
 
+      turbu_characters.SetScriptEngine(GDScriptEngine);
       try
          freeAndNil(GDatabase);
          try
@@ -211,6 +262,34 @@ begin
          asm int 3 end;
    end;
    if sender = mnuTestLoading then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
+procedure TfrmTestConsole.mnuTestSDLClick(Sender: TObject);
+var
+   filename: string;
+   spriteData: TSpriteData;
+   filestream: TStream;
+   image: TRpgSdlImage;
+begin
+   if not assigned(GDatabase) then
+      mnuTestLoadingClick(Sender);
+   if not assigned(lCanvas) then
+      mnuCreateSdlWindowClick(Sender);
+
+   filename := GDatabase.spriteList[GDatabase.charClass[1].portrait];
+   spriteData := extractSpriteData(filename);
+   filename := spriteData.name + '.tbi';
+   fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
+   try
+      image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, nil, SPRITE_SIZE);
+   finally
+      fileStream.Free;
+   end;
+   lCanvas.Draw(image, point(0, 0));
+   SDL_RenderPresent;
+   image.Free;
+   if sender = mnuTestSdl then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;
 

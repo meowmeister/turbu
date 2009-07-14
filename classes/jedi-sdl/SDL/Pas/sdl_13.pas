@@ -1,7 +1,7 @@
 unit sdl_13;
 
 interface
-uses Windows;
+uses Windows, sysUtils;
 
 {$I jedi-sdl.inc}
 
@@ -31,6 +31,8 @@ const
   SDL_WINDOWPOS_CENTERED = $7FFFFFE;
 
 type
+
+  EBadHandle = class(Exception);
 
 {
  * SDL_WindowEventID
@@ -113,7 +115,8 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     SDL_TEXTUREACCESS_STATIC,    /**< Changes rarely, not lockable */
     SDL_TEXTUREACCESS_STREAMING  /**< Changes frequently, lockable */
 } SDL_TextureAccess; *)
-  TSdlTextureAccess = (sdltaStatic, sdltaStreaming);
+  PSdlTextureAccess = ^TSdlTextureAccess;
+  TSdlTextureAccess = (sdltaStatic, sdltaStreaming, sdltaRenderTarget);
   SDL_TextureAccess = TSdlTextureAccess;
   {$EXTERNALSYM SDL_TextureAccess}
 
@@ -296,6 +299,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     procedure CopyPaletteFrom(const source: PSdlSurface);
     function LockSurface: boolean;
     procedure UnlockSurface;
+    procedure AcquireReference;
 
     property Flags: TSdlSurfaceFlags read FFlags;
     property Format: PSdlPixelFormat read FFormat;
@@ -322,12 +326,16 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
   TSdlTexture = record
   private
     FId: TSdlTextureID;
+    function GetSize: TPoint;
+    function GetColor(index: byte): TSDL_Color;
   public
     constructor Create(format: Uint32; access: TSdlTextureAccess; w, h: integer); overload;
     constructor Create(format: Uint32; surface: PSdlSurface); overload;
     procedure Free;
 
     property ID: TSdlTextureID read FId;
+    property size: TPoint read GetSize;
+    property color[index: byte]: TSDL_Color read GetColor;
   end;
 
   // SDL_error.h types
@@ -394,20 +402,69 @@ function SDL_GetWindowFlags(windowID: TSdlWindowID): TSdlWindowFlags; cdecl; ext
 procedure SDL_ShowWindow(windowID: TSdlWindowID); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_ShowWindow}
 
+(**
+ * SDL_SetWindowSize
+ *
+ * Sets the size of the window's client area.
+ *
+ * NOTE: You can't change the size of a fullscreen window, it automatically
+ * matches the size of the display mode.
+ *)
+procedure SDL_SetWindowSize(windowID: TSdlWindowID; w, h: integer); cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_SetWindowSize}
+
+(**
+ * \SDL_GetWindowSize
+ *
+ * Gets the size of the window's client area.
+ *)
+procedure SDL_GetWindowSize(windowID: TSdlWindowID; var w, h: integer); cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetWindowSize}
+
 function SDL_GetNumRenderDrivers(): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetNumRenderDrivers}
 
 function SDL_GetRenderDriverInfo(index: integer; var info: TSDL_RendererInfo): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetRenderDriverInfo}
 
+(**
+ * SDL_CreateRenderer
+ *
+ * Creates and makes active a 2D rendering context for a window.
+ *
+ * windowID: The window used for rendering
+ * index: The index of the rendering driver to initialize, or -1 to initialize
+ *        the first one supporting the requested flags.
+ * flags: SDL_RendererFlags
+ *
+ * Returns 0 on success, -1 if there was an error creating the renderer.
+ *
+ *)
 function SDL_CreateRenderer(windowID: TSdlWindowID; index: integer; flags: TSdlRendererFlags): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_CreateRenderer}
 
 function SDL_SelectRenderer(windowID: TSdlWindowID): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_SelectRenderer}
 
+{*
+ * SDL_SetRenderDrawColor
+ *
+ * Set the color used for drawing operations (Fill and Line).
+ *
+ * Returns 0 on success, or -1 if there is no rendering context current
+ }
 function SDL_SetRenderDrawColor(r, g, b, a: byte): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_SetRenderDrawColor}
+
+{*
+ * SDL_GetRenderDrawColor
+ *
+ * Get the color used for drawing operations (Fill and Line).
+ *
+ * Returns 0 on success, or -1 if there is no rendering context current
+ }
+function SDL_GetRenderDrawColor(var r, g, b, a: byte): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetRenderDrawColor}
 
 function SDL_RenderFill(const rect: PSdlRect): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderFill}
@@ -508,6 +565,40 @@ function SDL_CreateTextureFromSurface(format: Uint32; surface: PSdlSurface): TSd
 procedure SDL_DestroyTexture(textureID: TSDLTextureID); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_DestroyTexture}
 
+function SDL_QueryTexture(textureID: TSdlTextureID; format: PCardinal;
+                          access: PSdlTextureAccess; w, h: PInteger): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_QueryTexture}
+
+(**
+ * SDL_SetTexturePalette
+ *
+ * Updates an indexed texture with a color palette
+ *
+ * texture: The texture to update
+ * colors: The array of RGB color data
+ * firstcolor: The first index to update
+ * ncolors: The number of palette entries to fill with the color data
+ * returns 0 on success, or -1 if the texture is not valid or not an indexed texture
+ *)
+function SDL_SetTexturePalette(textureID: TSdlTextureID; const colors: PSdlColorArray;
+                               firstcolor, ncolors: integer): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_SetTexturePalette}
+
+(**
+ * \fn int SDL_GetTexturePalette(SDL_TextureID textureID, SDL_Color * colors, int firstcolor, int ncolors)
+ *
+ * Retrieves the color palette from an indexed texture
+ *
+ * texture: The texture to update
+ * colors: The array of RGB color data
+ * firstcolor: The first index to update
+ * ncolors: The number of palette entries to fill with the color data
+ * returns 0 on success, or -1 if the texture is not valid or not an indexed texture
+ *)
+function SDL_GetTexturePalette(textureID: TSdlTextureID; const colors: PSdlColorArray;
+                               firstcolor, ncolors: integer): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetTexturePalette}
+
 {------------------------------------------------------------------------------}
 { error-handling }
 {------------------------------------------------------------------------------}
@@ -532,8 +623,6 @@ cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_Error'{$ELSE} SDLLibName{
 procedure SDL_OutOfMemory;
 
 implementation
-uses
-   SysUtils;
 
 { TSdlSurface }
 
@@ -605,6 +694,11 @@ begin
   result := SDL_SetPaletteColors(FFormat.palette, colors, 0, count) = 0;
 end;
 
+procedure TSdlSurface.AcquireReference;
+begin
+  inc(FRefcount);
+end;
+
 function TSdlSurface.ClearClipRect: boolean;
 begin
   result := SDL_SetClipRect(@self, nil);
@@ -620,6 +714,8 @@ end;
 constructor TSdlTexture.Create(format: Uint32; surface: PSdlSurface);
 begin
   FId := SDL_CreateTextureFromSurface(format, surface);
+  if FId = 0 then
+    raise EBadHandle.Create(string(SDL_GetError));
 end;
 
 procedure TSdlTexture.Free;
@@ -629,6 +725,20 @@ begin
     SDL_DestroyTexture(FId);
     FId := 0;
   end;
+end;
+
+function TSdlTexture.GetColor(index: byte): TSDL_Color;
+var
+   colors: TSdlColorArray;
+begin
+  SDL_GetTexturePalette(FId, @colors, 0, 255);
+  result := colors[index];
+end;
+
+function TSdlTexture.GetSize: TPoint;
+begin
+  if SDL_QueryTexture(FId, nil, nil, @result.X, @result.Y) <> 0 then
+    raise EBadHandle.Create('SDL_QueryTexture failed due to invalid texture.');
 end;
 
 procedure SDL_OutOfMemory;
@@ -644,4 +754,6 @@ begin
   Result := SDL_UpperBlit(src, srcrect, dst, dstrect);
 end;
 
+initialization
+sdl_getError; //do not smartlink this out!
 end.

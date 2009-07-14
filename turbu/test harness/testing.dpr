@@ -88,7 +88,11 @@ uses
   rm2_turbu_maps in '..\turbu format\converters\rm2_turbu_maps.pas',
   turbu_maps in '..\turbu format\turbu_maps.pas',
   turbu_tilesets in '..\turbu format\database\turbu_tilesets.pas',
-  rm2_turbu_tilesets in '..\turbu format\converters\rm2_turbu_tilesets.pas';
+  rm2_turbu_tilesets in '..\turbu format\converters\rm2_turbu_tilesets.pas',
+  tiles in '..\engines\map engine\tiles.pas',
+  turbu_2k_map_engine in '..\engines\map engine\turbu_2k_map_engine.pas',
+  turbu_2k_sprite_engine in '..\engines\map engine\turbu_2k_sprite_engine.pas',
+  turbu_plugin_interface in '..\engines\battle basis\turbu_plugin_interface.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

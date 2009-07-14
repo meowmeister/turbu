@@ -3,7 +3,7 @@
 			<ProjectGuid>{920169D8-3955-472E-B306-74E825F6E932}</ProjectGuid>
 			<ProjectVersion>12.0</ProjectVersion>
 			<MainSource>testing.dpr</MainSource>
-			<Config Condition="'$(Config)'==''">Profiler</Config>
+			<Config Condition="'$(Config)'==''">Memleak Report</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -45,7 +45,6 @@
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
-			<DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_Platform>x86</DCC_Platform>
@@ -186,6 +185,10 @@
 			<DCCReference Include="..\turbu format\turbu_maps.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_tilesets.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_tilesets.pas"/>
+			<DCCReference Include="..\engines\map engine\tiles.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_2k_map_engine.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_2k_sprite_engine.pas"/>
+			<DCCReference Include="..\engines\battle basis\turbu_plugin_interface.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

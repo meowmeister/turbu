@@ -62,20 +62,18 @@ type
    private
    class var
       FRw: PSDL_RWops;
-   var
-      procedure setSurface(const Value: PSdlSurface);
    protected
-      FSurface: PSdlSurface; //the actual SDL_Surface
+      FSurface: TSdlTexture; //the actual SDL_Surface
       FName: string; //Name for the image.  Must be unique!
-      FMustLock: Boolean; //this will probably always be false, but just to be safe...
       FTextureSize: TSgPoint;
       FTexturesPerRow: integer;
       FTextureRows: integer;
 
       function getSpriteRect(index: integer): TRect;
-      procedure setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint); virtual;
+      procedure setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint; lSurface: PSdlSurface); virtual;
       procedure SetTextureSize(size: TSgPoint);
       function GetCount: integer; inline;
+      procedure processImage(image: PSdlSurface); virtual;
    public
       {************************************************************************
       * Creates a TSdlImage.  Pass in the full filename and a logical name for
@@ -133,8 +131,7 @@ type
       procedure DrawSprite(dest: TPoint; index: integer);
 
       property name: string read FName write FName;
-      property surface: PSdlSurface read FSurface write setSurface;
-      property mustLock: Boolean read FMustLock;
+      property surface: TSdlTexture read FSurface;
       property textureSize: TSgPoint read FTextureSize write SetTextureSize;
       property texPerRow: integer read FTexturesPerRow;
       property texRows: integer read FTextureRows;
@@ -155,6 +152,7 @@ type
       FFreeOnClear: Boolean;
       FArchiveLoader: TArchiveLoader;
       FArchiveCallback: TArchiveCallback;
+      FUpdateMutex: PSDL_Mutex;
 
       function GetCount: Integer; inline;
       function GetItem(Num: Integer): TSdlImage;
@@ -170,9 +168,10 @@ type
       * Sets up the image list.  The FreeOnClear argument controls whether
       * images held in the list will be freed when the Clear method is called.
       ************************************************************************}
-      constructor Create(FreeOnClear: boolean = true);
+      constructor Create(FreeOnClear: boolean = true; loader: TArchiveLoader = nil; callback: TArchiveCallback = nil);
       destructor Destroy; override;
 
+      function Contains(const name: string): boolean; inline;
       function IndexOf(Element: TSdlImage): Integer; overload;
       function IndexOf(const Name: string): Integer; overload;
 
@@ -203,6 +202,7 @@ type
       * AddFromArchive will automatically free the RWops.
       ************************************************************************}
       function AddFromArchive(filename, keyname, imagename: string; loader: TArchiveLoader = nil): integer;
+      function AddSpriteFromArchive(filename, keyname, imagename: string; spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
 
       {************************************************************************
       * Frees the TSdlImage at the current index and removes it from the list.
@@ -255,17 +255,21 @@ var
 { TSdlImages }
 {$REGION TSdlImages}
 //---------------------------------------------------------------------------
-constructor TSdlImages.Create(FreeOnClear: boolean = true);
+constructor TSdlImages.Create(FreeOnClear: boolean = true; loader: TArchiveLoader = nil; callback: TArchiveCallback = nil);
 begin
    inherited Create;
    FSearchDirty := False;
    FFreeOnClear := FreeOnClear;
+   FArchiveLoader := loader;
+   FArchiveCallback := callback;
+   FUpdateMutex := SDL_CreateMutex;
 end;
 
 //---------------------------------------------------------------------------
 destructor TSdlImages.Destroy;
 begin
    self.Clear;
+   SDL_DestroyMutex(FUpdateMutex);
    inherited Destroy;
 end;
 
@@ -330,6 +334,12 @@ begin
          Hi := Mid - 1
       else Lo:= Mid + 1;
    end;
+end;
+
+//---------------------------------------------------------------------------
+function TSdlImages.Contains(const name: string): boolean;
+begin
+   result := self.IndexOf(name) <> -1;
 end;
 
 //---------------------------------------------------------------------------
@@ -461,29 +471,44 @@ end;
 //---------------------------------------------------------------------------
 function TSdlImages.Add(Element: TSdlImage): Integer;
 begin
-   Result := IndexOf(Element);
-   if Result = -1 then
-      Result := Insert(Element);
+   SDL_LockMutex(FUpdateMutex);
+   try
+      Result := IndexOf(Element);
+      if Result = -1 then
+         Result := Insert(Element);
+   finally
+      SDL_UnlockMutex(FUpdateMutex);
+   end;
 end;
 
 //---------------------------------------------------------------------------
 function TSdlImages.Extract(Num: integer): TSdlImage;
 begin
-   result := nil;
-   if (Num < 0) or (Num >= Length(FData)) then
-      Exit;
-   result := FData[num];
-   FData[num] := nil;
-   FSearchDirty := true;
+   SDL_LockMutex(FUpdateMutex);
+   try
+      result := nil;
+      if (Num < 0) or (Num >= Length(FData)) then
+         Exit;
+      result := FData[num];
+      FData[num] := nil;
+      FSearchDirty := true;
+   finally
+      SDL_UnlockMutex(FUpdateMutex);
+   end;
 end;
 
 //---------------------------------------------------------------------------
 procedure TSdlImages.Remove(Num: Integer);
 begin
-   if (Num < 0) or (Num >= Length(FData)) then
-      Exit;
-   freeAndNil(FData[Num]);
-   FSearchDirty := True;
+   SDL_LockMutex(FUpdateMutex);
+   try
+      if (Num < 0) or (Num >= Length(FData)) then
+         Exit;
+      freeAndNil(FData[Num]);
+      FSearchDirty := True;
+   finally
+      SDL_UnlockMutex(FUpdateMutex);
+   end;
 end;
 
 //---------------------------------------------------------------------------
@@ -497,29 +522,56 @@ begin
       dummy := FArchiveLoader(filename, keyname)
    else raise ESdlImageException.Create('No archive loader available!');
    if dummy = nil then
-      raise ESdlImageException.Create('Archive loader failed to extract "' + keyname + '" from the archive "' + filename + '".');
+      raise ESdlImageException.CreateFmt('Archive loader failed to extract "%s" from the archive "%s".', [keyname, filename]);
    result := self.Add(TSdlImage.Create(dummy, ExtractFileExt(filename), imagename, nil));
    if assigned(FArchiveCallback) then
       FArchiveCallback(dummy)
    else SDL_FreeRW(dummy);
 end;
 
+//---------------------------------------------------------------------------
+function TSdlImages.AddSpriteFromArchive(filename, keyname, imagename: string;
+  spritesize: TSgPoint; loader: TArchiveLoader): integer;
+var
+   dummy: PSDL_RWops;
+begin
+   if assigned(loader) then
+      dummy := loader(filename, keyname)
+   else if assigned(FArchiveLoader) then
+      dummy := FArchiveLoader(filename, keyname)
+   else raise ESdlImageException.Create('No archive loader available!');
+   if dummy = nil then
+      raise ESdlImageException.CreateFmt('Archive loader failed to extract "%s" from the archive "%s".', [keyname, filename]);
+
+   result := self.Add(TSdlImage.CreateSprite(dummy, ExtractFileExt(filename), imagename, nil, spriteSize));
+   if assigned(FArchiveCallback) then
+      FArchiveCallback(dummy)
+   else SDL_FreeRW(dummy);
+end;
+
+//---------------------------------------------------------------------------
 function TSdlImages.AddFromFile(filename, imagename: string): integer;
 begin
    result := self.Add(TSdlImage.Create(filename, filename, nil));
 end;
 
+//---------------------------------------------------------------------------
 procedure TSdlImages.Clear;
 var
    i: Integer;
 begin
-   if FFreeOnClear then
-      for i := 0 to Length(FData) - 1 do
-         freeAndNil(FData[i]);
+   SDL_LockMutex(FUpdateMutex);
+   try
+      if FFreeOnClear then
+         for i := 0 to Length(FData) - 1 do
+            FData[i].Free;
 
-   SetLength(FData, 0);
-   SetLength(FSearchObjects, 0);
-   FSearchDirty := False;
+      SetLength(FData, 0);
+      SetLength(FSearchObjects, 0);
+      FSearchDirty := False;
+   finally
+      SDL_LockMutex(FUpdateMutex);
+   end;
 end;
 {$ENDREGION}
 
@@ -529,39 +581,42 @@ end;
 constructor TSdlImage.Create(filename, imagename: string; container: TSdlImages);
 begin
    inherited Create;
-   setup(filename, imagename, container, EMPTY);
+   setup(filename, imagename, container, EMPTY, nil);
 end;
 
 //---------------------------------------------------------------------------
 constructor TSdlImage.Create(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages);
 begin
    SDL_LockMutex(rwMutex);
-   FRw := rw;
-   setup(ExtractFileExt(extension), imagename, container, EMPTY);
-   FRw := nil;
-   SDL_UnlockMutex(rwMutex);
+   try
+      FRw := rw;
+      setup(ExtractFileExt(extension), imagename, container, EMPTY, nil);
+      FRw := nil;
+   finally
+      SDL_UnlockMutex(rwMutex);
+   end;
 end;
 
 //---------------------------------------------------------------------------
 constructor TSdlImage.Create(surface: PSdlSurface; imagename: string; container: TSdlImages);
 begin
    inherited Create;
-   FSurface := surface;
-   setup('', imagename, container, EMPTY);
+   FSurface := TSdlTexture.Create(0, surface);
+   setup('', imagename, container, EMPTY, surface);
 end;
 
 //---------------------------------------------------------------------------
 constructor TSdlImage.CreateSprite(filename, imagename: string; container: TSdlImages; spriteSize: TPoint);
 begin
    inherited Create;
-   setup(filename, imagename, container, spriteSize);
+   setup(filename, imagename, container, spriteSize, nil);
 end;
 
 constructor TSdlImage.CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TPoint);
 begin
    inherited Create;
-   FSurface := surface;
-   setup('', imagename, container, spriteSize);
+   FSurface := TSdlTexture.Create(0, surface);
+   setup('', imagename, container, spriteSize, surface);
 end;
 
 constructor TSdlImage.CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TPoint);
@@ -569,7 +624,7 @@ begin
    inherited Create;
    SDL_LockMutex(rwMutex);
    FRw := rw;
-   setup(extension, imagename, container, spriteSize);
+   setup(extension, imagename, container, spriteSize, nil);
    FRw := nil;
    SDL_UnlockMutex(rwMutex);
 end;
@@ -578,7 +633,7 @@ constructor TSdlImage.CreateBlankSprite(imagename: string; container: TSdlImages
 begin
    inherited Create;
    spriteSize.Y := spriteSize.Y * count;
-   setup('', imagename, container, spriteSize);
+   setup('', imagename, container, spriteSize, nil);
    spriteSize.Y := spriteSize.Y div count;
    self.textureSize := spriteSize;
 end;
@@ -590,7 +645,7 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-procedure TSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint);
+procedure TSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint; lSurface: PSdlSurface);
 var
    dummy: integer;
    loader: TImgLoadMethod;
@@ -598,7 +653,7 @@ var
    intFilename: PAnsiChar; //internal version of the filename
 begin
    FName := imagename;
-   if not assigned(FSurface) then
+   if FSurface.ID = 0 then
    begin
       if filename <> '' then
       begin
@@ -606,17 +661,17 @@ begin
          if FRw = nil then
          begin
             {$IFDEF UNICODE}
-            intFilename := PAnsiChar(ansiString(filename));
+            intFilename := PAnsiChar(UTF8String(filename));
             {$ELSE}
             intFilename := PChar(filename);
             {$ENDIF}
             if dummy = -1 then
-               FSurface := PSdlSurface(IMG_Load(intFilename))
+               LSurface := PSdlSurface(IMG_Load(intFilename))
             else begin
                loader := TImgLoadMethod(loaders.Objects[dummy]);
                loadStream := TFileStream.Create(filename, fmOpenRead);
                try
-                  FSurface := loader(loadStream);
+                  LSurface := loader(loadStream);
                finally
                   loadStream.Free;
                end;
@@ -625,13 +680,13 @@ begin
          else begin
             if dummy = -1 then
             begin
-               FSurface := PSdlSurface(IMG_LoadTyped_RW(FRw, 0, PAnsiChar(ansiString(filename))));
+               LSurface := PSdlSurface(IMG_LoadTyped_RW(FRw, 0, PAnsiChar(ansiString(filename))));
             end
             else begin
                loader := TImgLoadMethod(loaders.Objects[dummy]);
                loadStream := TRWStream.Create(FRw, false);
                try
-                  FSurface := loader(loadStream);
+                  LSurface := loader(loadStream);
                finally
                   loadStream.Free;
                end;
@@ -639,14 +694,18 @@ begin
          end;
       end
       else
-         FSurface := TSdlSurface.Create({screenCanvas.surface.flags, } spritesize.x, spritesize.y, screenCanvas.surface.format.BitsPerPixel, 0, 0, 0, 0);
+         LSurface := TSdlSurface.Create(spritesize.x, spritesize.y, 32, 0, 0, 0, 0);
    end;
 
-   if FSurface = nil then
+   if LSurface = nil then
       raise ESdlImageException.Create(string(IMG_GetError));
-   FMustLock := FSurface.MustLock;
+   //Allow descendant classes to fix up the image, if desired.
+   processImage(LSurface);
+   if FSurface.ID = 0 then
+      FSurface := TSdlTexture.Create(0, LSurface);
+   LSurface.Free;
    if (spriteSize.X = EMPTY.X) and (spriteSize.Y = EMPTY.Y) then
-      self.textureSize := point(FSurface.width, FSurface.height)
+      self.textureSize := point(LSurface.width, LSurface.height)
    else self.textureSize := spriteSize;
    if assigned(container) then
       container.add(self);
@@ -655,7 +714,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TSdlImage.draw(dest: TPoint);
 begin
-   screenCanvas.draw(self, dest);
+   currentRenderTarget.parent.draw(self, dest);
 end;
 
 //---------------------------------------------------------------------------
@@ -667,7 +726,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TSdlImage.drawRect(dest: TPoint; source: TRect);
 begin
-   screenCanvas.drawRect(self, dest, source);
+   currentRenderTarget.parent.drawRect(self, dest, source);
 end;
 
 //---------------------------------------------------------------------------
@@ -676,7 +735,7 @@ begin
    if index >= count then
       Exit;
 
-   screenCanvas.drawRect(self, dest, self.spriteRect[index]);
+   currentRenderTarget.parent.drawRect(self, dest, self.spriteRect[index]);
 end;
 
 //---------------------------------------------------------------------------
@@ -694,28 +753,23 @@ begin
    result := rect(point(x * FTextureSize.X, y * FTextureSize.y), FTextureSize);
 end;
 
-procedure TSdlImage.setSurface(const Value: PSdlSurface);
+procedure TSdlImage.processImage(image: PSdlSurface);
 begin
-   if textureSize = point(FSurface.width, FSurface.height) then
-      FTextureSize := EMPTY;
-   if (FSurface = Value) or (Value = nil) then
-      Exit;
-   FSurface.Free;
-   FSurface := Value;
-   FMustLock := FSurface.MustLock;
-   if (textureSize.X = EMPTY.X) and (textureSize.Y = EMPTY.Y) then
-      self.textureSize := point(FSurface.width, FSurface.height);
+   //this method intentionally left blank
 end;
 
 //---------------------------------------------------------------------------
 procedure TSdlImage.SetTextureSize(size: TSgPoint);
+var
+   lSize: TPoint;
 begin
-   if (FSurface.width mod size.X > 0) or (FSurface.height mod size.Y > 0) then
+   lSize := FSurface.size;
+   if (lSize.X mod size.X > 0) or (lSize.Y mod size.Y > 0) then
       raise ESdlImageException.Create('Texture size is not evenly divisible into base image size.');
 
    FTextureSize := size;
-   FTexturesPerRow := FSurface.width div size.X;
-   FTextureRows := FSurface.height div size.Y;
+   FTexturesPerRow := lSize.X div size.X;
+   FTextureRows := lSize.Y div size.Y;
 end;
 {$ENDREGION}
 

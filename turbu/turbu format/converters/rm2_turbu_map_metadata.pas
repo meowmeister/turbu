@@ -85,8 +85,7 @@ begin
       inc(i);
    end;
    self.currentMap := base.currentMap;
-   setLength(TMapTreeConversionAid(self).FNodeSet, length(base.nodeSet));
-
+   setLength(TMapTreeConversionAid(self).FNodeSet, system.Length(base.nodeSet));
 end;
 
 end.

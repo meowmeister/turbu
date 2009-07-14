@@ -92,7 +92,7 @@
 			<DCCReference Include="libs\map engine\charset_graphics.pas"/>
 			<DCCReference Include="libs\map engine\chipset_graphics.pas"/>
 			<DCCReference Include="libs\script engine\script_engine.pas"/>
-			<DCCReference Include="libs\map engine\tiles.pas"/>
+			<DCCReference Include="..\engines\map engine\tiles.pas"/>
 			<DCCReference Include="libs\script engine\uPSI_script_interface.pas"/>
 			<DCCReference Include="libs\script engine\rpg_list.pas"/>
 			<DCCReference Include="libs\script engine\script_backend.pas"/>

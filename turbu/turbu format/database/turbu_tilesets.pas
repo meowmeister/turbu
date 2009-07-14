@@ -90,9 +90,19 @@ type
       property HiSpeed: boolean read FHiSpeed write FHiSpeed;
    end;
 
+procedure SetDatabase(value: TRpgDatafile);
+
 implementation
 uses
    turbu_database;
+
+var
+   GDatabase: TRpgDatabase;
+
+procedure SetDatabase(value: TRpgDatafile);
+begin
+   GDatabase := value as TRpgDatabase;
+end;
 
 { TTileGroup }
 
@@ -130,25 +140,57 @@ end;
 { TTileGroupRecord }
 
 constructor TTileGroupRecord.Load(savefile: TStream);
+var
+   i: integer;
+   dummy: TTileAttributes;
 begin
    inherited Load(savefile);
    savefile.readBuffer(FLayers, sizeof(FLayers));
    FGroup := GDatabase.TileGroup[savefile.readString];
    savefile.readBuffer(FAnimDir, sizeof(FAnimDir));
    FAttributes := TAttributeList.Create;
-   savefile.readList<TTileAttributes>(FAttributes);
+
+   //QC 75119
+{   savefile.readList<TTileAttributes>(FAttributes);
    FTerrain := TList<integer>.Create;
-   savefile.readList<integer>(FTerrain);
+   savefile.readList<integer>(FTerrain);}
+
+   i := savefile.readInt;
+   FAttributes.Capacity := i;
+   for I := 0 to i - 1 do
+   begin
+      savefile.read(dummy, sizeof(dummy));
+      FAttributes.add(dummy);
+   end;
+
+   FTerrain := TList<integer>.Create;
+   i := savefile.readInt;
+   FTerrain.Capacity := i;
+   for I := 0 to i - 1 do
+      FTerrain.add(savefile.readInt);
 end;
 
 procedure TTileGroupRecord.save(savefile: TStream);
+var
+   attribute: TTileAttributes;
+   i: integer;
 begin
    inherited Save(savefile);
    savefile.writeBuffer(FLayers, sizeof(FLayers));
    savefile.writeString(FGroup.FFilename);
    savefile.writeBuffer(FAnimDir, sizeof(FAnimDir));
-   savefile.writeList<TTileAttributes>(FAttributes);
-   savefile.writeList<integer>(FTerrain);
+
+   //QC 75119
+{   savefile.writeList<TTileAttributes>(FAttributes);
+   savefile.writeList<integer>(FTerrain);}
+
+   savefile.writeInt(FAttributes.Count);
+   for attribute in FAttributes do
+      savefile.Write(attribute, sizeof(attribute));
+
+   savefile.writeInt(FTerrain.Count);
+   for i in FTerrain do
+      savefile.writeInt(i);
 end;
 
 destructor TTileGroupRecord.Destroy;
@@ -183,7 +225,7 @@ begin
    {records.load(savefile); //Do this once QC 67762 gets fixed}
    lassert(savefile.readChar = TTileGroupRecord.keyChar);
    FRecords := TTileGroupList.Create;
-   for I := 0 to savefile.readInt do
+   for I := 1 to savefile.readInt do
       FRecords.Add(TTileGroupRecord.Load(savefile));
    lassert(savefile.readChar = UpCase(TTileGroupRecord.keyChar));
 

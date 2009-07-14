@@ -39,7 +39,7 @@ type
    TAnimArray = array of TAnimTemplate;
    TAttribList = TRpgObjectList<TAttributeTemplate>;
    TConditionList = TRpgObjectList<TConditionTemplate>;
-   TTilesetList = TRpgObjectList<TTileset>;
+   TTilesetDictionary = TObjectDictionary<string, TTileset>;
    TTileDictionary = TObjectDictionary<string, TTileGroup>;
 
    TRpgDataTypes = (rd_class, rd_hero, rd_command, rd_item, rd_skill, rd_anim,
@@ -59,7 +59,7 @@ type
       function dbObject: TRpgDatabase;
    end;
 
-   TRpgDatabase = class(TRpgDatafile, I2kDatabase)
+   TRpgDatabase = class(TRpgDatafile, I2kDatabase, IRpgDatabase)
    private
       FClass: TCharClassArray;
       FHero: THeroTemplateArray;
@@ -90,7 +90,7 @@ type
       FExpRecordList: TExpRecordList;
       FStatSet: TStatSet;
       FTileGroup: TTileDictionary;
-      FTileset: TTilesetList;
+      FTileset: TTilesetDictionary;
 
       function getClassCount: integer;
       procedure setClassCount(const Value: integer);
@@ -104,6 +104,10 @@ type
       procedure prepareBlanks;
       function sumItems: integer;
       procedure setUnits(const Value: TUnitDictionary);
+      function getProjectName: string;
+
+      procedure saveTileGroups(savefile: TStream);
+      procedure saveTilesets(savefile: TStream);
    protected
       class function keyChar: ansiChar; override;
    public
@@ -158,7 +162,7 @@ type
       property conditions: TConditionList read FConditions write FConditions;
       property command: TBattleCommandList read FCommand write FCommand;
       property commands: integer read getCommandCount write setCommandCount;
-      property tileset: TTilesetList read FTileset write FTileset;
+      property tileset: TTilesetDictionary read FTileset write FTileset;
 //      property globalEventBlock: TEventBlock read FGlobalEvents;
       property layout: TGameLayout read FLayout write FLayout;
       property variable: TVarSection read FVariables write FVariables;
@@ -175,6 +179,7 @@ type
       property expRecs: TExpRecordList read FExpRecordList;
       property units: TUnitDictionary read FUnits write setUnits;
       property algorithmLookup: TStringList read FAlgLookup write FAlgLookup;
+      property projectName: string read getProjectName;
    end;
 
 var
@@ -189,7 +194,7 @@ uses
    turbu_decl_utils, turbu_functional;
 
 const
-   DBVERSION = 20;
+   DBVERSION = 21;
 
 { TRpgDatabase }
 
@@ -332,6 +337,10 @@ begin
    self.scriptBuild;
    self.parseMeta;
 
+   turbu_characters.setDatabase(self);
+   turbu_skills.setDatabase(self);
+   turbu_tilesets.setDatabase(self);
+
    setLength(FClass, savefile.readInt + 1);
    if high(FClass) > 0 then
    begin
@@ -461,6 +470,24 @@ begin
          subStream.free;
       end;
    end;
+
+   lassert(savefile.readChar ='G');
+   for i := 1 to savefile.readInt do
+   begin
+      dummy := savefile.readString;
+      FTileGroup.Add(dummy, TTileGroup.Load(savefile));
+   end;
+//   savefile.readDict<TTileGroup>(FTileGroup);
+   lassert(savefile.readChar = 'g');
+
+   lassert(savefile.readChar = 'T');
+   for i := 1 to savefile.readInt do
+   begin
+      dummy := savefile.readString;
+      FTileSet.Add(dummy, TTileSet.Load(savefile));
+   end;
+//   savefile.readDict<TTileset>(FTileset);
+   lassert(savefile.readChar = 't');
 
    lassert(savefile.readChar = 'M');
    setLength(FMoveMatrix, savefile.readWord);
@@ -703,6 +730,16 @@ begin
       end;
    end;
 
+   savefile.writeChar('G');
+   saveTileGroups(savefile);
+//   savefile.writeDict<TTileGroup>(FTileGroup);
+   savefile.writeChar('g');
+
+   savefile.writeChar('T');
+   saveTilesets(savefile);
+//   savefile.writeDict<TTileset>(FTileset);
+   savefile.writeChar('t');
+
    savefile.writeChar('M');
    savefile.writeWord(length(FMoveMatrix));
    for I := 0 to high(FMoveMatrix) do
@@ -730,6 +767,30 @@ begin
    savefile.writeChar('l');
 
    savefile.writeChar('d');
+end;
+
+procedure TRpgDatabase.saveTileGroups(savefile: TStream);
+var
+   enumerator: TPair<string, TTileGroup>;
+begin
+   savefile.writeInt(FTileGroup.Count);
+   for enumerator in FTileGroup do
+   begin
+      savefile.writeString(enumerator.Key);
+      enumerator.Value.save(savefile);
+   end;
+end;
+
+procedure TRpgDatabase.saveTilesets(savefile: TStream);
+var
+   enumerator: TPair<string, TTileSet>;
+begin
+   savefile.writeInt(FTileSet.Count);
+   for enumerator in FTileSet do
+   begin
+      savefile.writeString(enumerator.Key);
+      enumerator.Value.save(savefile);
+   end;
 end;
 
 function TRpgDatabase.scriptBuild: boolean;
@@ -987,6 +1048,11 @@ begin
    result := high(FHero);
 end;
 
+function TRpgDatabase.getProjectName: string;
+begin
+   result := FMapTree[0].name;
+end;
+
 class function TRpgDatabase.keyChar: ansiChar;
 begin
    result := #0;
@@ -1140,6 +1206,7 @@ begin
    inherited;
    turbu_skills.setDatabase(self);
    turbu_characters.SetDatabase(self);
+   turbu_tilesets.setDatabase(self);
 end;
 
 function TRpgDatabase.countItems: cardinal;
@@ -1185,7 +1252,7 @@ begin
    FCommand := TBattleCommandList.Create;
    FAlgLookup := TStringList.Create;
    FTileGroup := TTileDictionary.Create([doOwnsValues]);
-   FTileset := TRpgObjectList<TTileSet>.Create;
+   FTileset := TTilesetDictionary.Create([doOwnsValues]);
 end;
 
 { TBattleCommandList }

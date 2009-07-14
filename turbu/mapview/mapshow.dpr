@@ -32,7 +32,7 @@ uses
   charset_graphics in 'libs\map engine\charset_graphics.pas',
   chipset_graphics in 'libs\map engine\chipset_graphics.pas',
   script_engine in 'libs\script engine\script_engine.pas',
-  tiles in 'libs\map engine\tiles.pas',
+  tiles in '..\engines\map engine\tiles.pas',
   uPSI_script_interface in 'libs\script engine\uPSI_script_interface.pas',
   rpg_list in 'libs\script engine\rpg_list.pas',
   script_backend in 'libs\script engine\script_backend.pas',

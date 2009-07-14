@@ -147,6 +147,8 @@ type
       procedure writeInt(data: integer);
       procedure readList<T>(data: TList<T>);
       procedure writeList<T>(data: TList<T>);
+      procedure readDict<T: TRpgDatafile, constructor>(data: TDictionary<string, T>);
+      procedure writeDict<T: TRpgDatafile>(data: TDictionary<string, T>);
       function readInt: integer;
       function eof: boolean;
    end;
@@ -171,7 +173,7 @@ type
       function GetEnumerator: TEnumerator;
    end;
 
-   TNameTypeList = class(TRpgList<TNameType>);
+   TNameTypeList = TRpgList<TNameType>;
 
    TRpgDecl = class(TEnumerable<TNameType> {TObject})
    private
@@ -437,6 +439,14 @@ begin
    end;
 end;
 
+procedure TStreamEx.readDict<T>(data: TDictionary<string, T>);
+var
+   i: integer;
+begin
+   for i := 1 to self.readInt do
+      data.Add(self.readString, T.Load(self));
+end;
+
 function TStreamEx.readString: string;
 var
    len: integer;
@@ -500,6 +510,18 @@ begin
    self.writeInt(data.Count);
    for value in data do
       self.write(value, sizeof(T));
+end;
+
+procedure TStreamEx.writeDict<T>(data: TDictionary<string, T>);
+var
+   enumerator: TPair<string, T>;
+begin
+   self.writeInt(data.Count);
+   for enumerator in data do
+   begin
+      self.writeString(enumerator.Key);
+      enumerator.Value.save(self);
+   end;
 end;
 
 procedure TStreamEx.writeString(const data: string);

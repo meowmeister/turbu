@@ -36,8 +36,11 @@ requires
   default_format;
 
 contains
-  SimpleShareMem,
+  SimpleShareMem in '$(SystemRoot)\system32\SimpleShareMem.pas',
   map_default_plugin in 'map_default_plugin.pas',
-  turbu_2k_map_engine in 'turbu_2k_map_engine.pas';
+  turbu_2k_map_engine in 'turbu_2k_map_engine.pas',
+  turbu_2k_sprite_engine in 'turbu_2k_sprite_engine.pas',
+  tiles in 'tiles.pas',
+  charset_data in '..\..\charset_data.pas';
 
 end.

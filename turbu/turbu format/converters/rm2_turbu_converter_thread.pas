@@ -45,7 +45,7 @@ var
 implementation
 uses
    Generics.Collections, SysUtils,
-   fileIO, archiveInterface, discInterface,
+   fileIO, archiveInterface, discInterface, logs,
    turbu_constants, turbu_database, turbu_unit_dictionary, turbu_engines,
    turbu_functional, turbu_maps, turbu_map_metadata,
    rm2_turbu_database, rm2_turbu_maps, rm2_turbu_map_metadata;
@@ -162,12 +162,16 @@ begin
          end;
 
          FReport.setCurrentTask('Converting maps', fromFolder.countFiles('*.lmu'));
+{         SysUtils.DateTimeToString(timestring, 'h:n:s:z', Now);
+         OutputDebugString(PChar(format('Map conversion begun at %s', [timeString])));}
          TFunctional.Map<string>(fromFolder.allFiles,
             procedure(const filename: string)
             begin
                FReport.newStep(filename);
                ConvertMap(filename, FLdb, FLmt, GDatabase.mapTree, fromFolder, toFolder);
             end);
+{         SysUtils.DateTimeToString(timestring, 'h:n:s:z', Now);
+         OutputDebugString(PChar(format('Map conversion ended at %s', [timeString])));}
 
          savefile := TMemoryStream.Create;
          try
@@ -256,7 +260,7 @@ begin
       dummy := 1;
       id := metadata.lookup[id];
       metadata[id].internalFilename := output.MakeValidFilename(cmap.name + '.tmf', dummy);
-      output.writeFile(format('maps\%s.tmf', [metadata[id].internalFilename.name]), outFile);
+      output.writeFile(format('maps\%s', [metadata[id].internalFilename.name]), outFile);
    finally
       mapFile.Free;
       map.Free;

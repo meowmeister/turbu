@@ -19,8 +19,7 @@ unit turbu_constants;
 
 interface
 uses
-   types,
-   SDL;
+   types;
 
 const
    //game "constant variables"
@@ -37,9 +36,7 @@ const
    SPRITE_SIZE: TPoint    = (X: 24;  Y: 32);
    LOGICAL_SIZE: TPoint   = (X: 320; Y: 240);
    PHYSICAL_SIZE: TPoint  = (X: 640; Y: 480);
-
-   //SDL constants
-   IMAGE_FORMAT = SDL_HWSURFACE or SDL_SRCCOLORKEY or SDL_RLEACCEL;
+   TILE_SIZE: TPoint = (X: 16; Y: 16);
 
    //archive constants
    BASE_ARCHIVE      = 0;
