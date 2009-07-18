@@ -339,7 +339,7 @@ begin
 
    turbu_characters.setDatabase(self);
    turbu_skills.setDatabase(self);
-   turbu_tilesets.setDatabase(self);
+//   turbu_tilesets.setDatabase(self);
 
    setLength(FClass, savefile.readInt + 1);
    if high(FClass) > 0 then
@@ -1206,7 +1206,7 @@ begin
    inherited;
    turbu_skills.setDatabase(self);
    turbu_characters.SetDatabase(self);
-   turbu_tilesets.setDatabase(self);
+//   turbu_tilesets.setDatabase(self);
 end;
 
 function TRpgDatabase.countItems: cardinal;

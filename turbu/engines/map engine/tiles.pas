@@ -45,7 +45,7 @@ type
    private
       class function DecodeZOrder(const value: TTileAttributes): byte; static;
    protected
-      function InVisibleRect: boolean;
+      function InVisibleRect: boolean; override;
    public
       constructor Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false); reintroduce; overload; virtual;
       destructor Destroy; override;
@@ -253,15 +253,15 @@ var
    corrected: TSgPoint;
    x, y: integer;
 begin
-   if not T2kSpriteEngine(FEngine).overlapping then
+   if T2kSpriteEngine(FEngine).overlapping = [] then
       result := inherited InVisibleRect
    else begin
-{      corrected := NormalizePoint(FGridLoc);
+      corrected := NormalizePoint(FGridLoc, T2kSpriteEngine(FEngine).mapRect);
 
-      result := (X > FEngine.WorldX - Width ) and
-      (Y > FEngine.WorldY - Height)    and
-      (X < FEngine.WorldX + FEngine.VisibleWidth)  and
-      (Y < FEngine.WorldY + FEngine.VisibleHeight);}
+      result := (corrected.X > FEngine.WorldX - Width ) and
+      (corrected.Y > FEngine.WorldY - Height)    and
+      (corrected.X < FEngine.WorldX + FEngine.VisibleWidth)  and
+      (corrected.Y < FEngine.WorldY + FEngine.VisibleHeight);
    end;
 end;
 
@@ -1045,7 +1045,7 @@ begin
    if (FScroll.FAutoY) and (engine.WorldY <> FSavedOrigin.Y) then
       self.OffsetY := self.OffsetY + ((engine.worldY - FSavedOrigin.Y) / 2)
    else Self.OffsetY := Self.OffsetY + (FScroll.FY * BG_SCROLL_RATE);
-//   FSavedOrigin := Point2(engine.WorldX, engine.WorldY);
+   FSavedOrigin := sgPointF(engine.WorldX, engine.WorldY);
    while self.OffsetX > 0 do
       self.offsetX := self.offsetX - self.PatternWidth;
    while self.OffsetX < -self.patternWidth do
