@@ -3,11 +3,13 @@ unit turbu_2k_sprite_engine;
 interface
 uses
    types, Generics.Collections,
-   turbu_maps, turbu_map_engine, tiles, turbu_tilesets,
+   charset_data, turbu_maps, turbu_map_engine, tiles, turbu_tilesets,
    sdl_sprite, sdl_canvas, SDL_ImageManager;
 
 type
    TTileMatrix = TMatrix<TTile>;
+
+   TFacingSet = set of TFacing;
 
    T2kSpriteEngine = class(TSpriteEngine)
    private
@@ -15,17 +17,21 @@ type
       FBgImage: TSdlImage;
       FTiles: TObjectList<TTileMatrix>;
       FTileset: TTileset;
-      FOverlapping: boolean;
+      FOverlapping: TFacingSet;
+      FViewport: TRect;
+      FMapRect: TRect;
 
+      procedure SetViewport(const viewport: TRect);
       procedure loadTileMatrix(value: TTileList; index: integer; const viewport: TRect);
       function CreateNewTile(value: TTileRef): TTile;
    public
       constructor Create(map: TRpgMap; const viewport: TRect;
                          canvas: TSdlCanvas; tileset: TTileset; images: TSdlImages);
       destructor Destroy; override;
-      procedure SetViewport(const viewport: TRect);
 
-      property overlapping: boolean read FOverlapping;
+      property overlapping: TFacingSet read FOverlapping;
+      property viewport: TRect read FViewport write SetViewport;
+      property mapRect: TRect read FMapRect;
    end;
 
 implementation
@@ -52,6 +58,7 @@ begin
    self.SetViewport(viewport);
    if map.bgName <> '' then
       FBgImage := TSdlImage.Create(map.bgName, map.bgName, images);
+   FMapRect := rect(0, 0, size.x, size.y);
 end;
 
 destructor T2kSpriteEngine.Destroy;
@@ -85,16 +92,23 @@ procedure T2kSpriteEngine.loadTileMatrix(value: TTileList; index: integer; const
 var
    size: TSgPoint;
 
-   function GetIndex(x, y: integer): integer;
+   procedure EquivalizeCoords(const x, y: integer; out equivX, equivY: integer);
    var
       adjustedCoords: TSgPoint;
    begin
       adjustedCoords := (sgPoint(x, y) + size) mod size;
+      equivX := adjustedCoords.x;
+      equivY := adjustedCoords.y;
+   end;
+
+   function GetIndex(x, y: integer): integer;
+   begin
       result := (y * size.x) + x;
    end;
 
 var
    x, y: integer;
+   equivX, equivY: integer;
    newTile: TTile;
    tileRef: TTileRef;
 begin
@@ -102,15 +116,16 @@ begin
    for y := viewport.top to viewport.bottom - 1 do
       for x := viewport.left to viewport.Right - 1 do
       begin
-         if assigned(FTiles[index][x, y]) then
+         EquivalizeCoords(x, y, equivX, equivY);
+         if assigned(FTiles[index][equivX, equivY]) then
             Continue;
-         tileRef := value[getIndex(x, y)];
+         tileRef := value[getIndex(equivX, equivY)];
          //don't create anything for the "blank tile"
          if smallint(tileref.value) = -1 then
             Continue;
          newTile := CreateNewTile(tileRef);
-         FTiles[index][x, y] := newTile;
-         newTile.place(x, y, index, tileRef, FTileset);
+         FTiles[index][equivX, equivY] := newTile;
+         newTile.place(equivX, equivY, index, tileRef, FTileset);
       end;
 end;
 
@@ -119,12 +134,22 @@ var
    i: integer;
 begin
    assert(assigned(FMap));
+   FViewport := viewport;
    self.WorldX := viewport.Left * TILE_SIZE.X;
    self.WorldY := viewport.Top * TILE_SIZE.Y;
+   if assigned(self.spriteList) then
+      self.SpriteList.Clear;
    for i := low(FMap.tileMap) to high(FMap.tileMap) do
       loadTileMatrix(FMap.tileMap[i], i, viewport);
-   FOverlapping := (viewport.Left < 0) or (viewport.Top < 0)
-      or (viewport.Right > self.Width) or (viewport.Top > self.Height);
+   FOverlapping := [];
+   if (viewport.Left < 0) then
+      include(FOverlapping, facing_left)
+   else if (viewport.Right > self.Width)  then
+      include(FOverlapping, facing_right);
+   if (viewport.Top < 0) then
+      include(FOverlapping, facing_up)
+   else if viewport.Top > self.Height then
+      include(FOverlapping, facing_down);
 
 end;
 

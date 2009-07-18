@@ -90,19 +90,19 @@ type
       property HiSpeed: boolean read FHiSpeed write FHiSpeed;
    end;
 
-procedure SetDatabase(value: TRpgDatafile);
+//procedure SetDatabase(value: TRpgDatafile);
 
 implementation
 uses
    turbu_database;
 
-var
+{var
    GDatabase: TRpgDatabase;
 
 procedure SetDatabase(value: TRpgDatafile);
 begin
    GDatabase := value as TRpgDatabase;
-end;
+end;}
 
 { TTileGroup }
 

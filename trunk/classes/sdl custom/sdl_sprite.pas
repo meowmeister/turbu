@@ -252,6 +252,7 @@ type
       FVisibleHeight: Integer;
       FImages: TSdlImages;
       FCanvas: TSdlCanvas;
+
    public
       constructor Create(const AParent: TSpriteEngine; const ACanvas: TSdlCanvas); reintroduce;
       destructor Destroy; override;

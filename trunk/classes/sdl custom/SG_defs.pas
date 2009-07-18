@@ -10,6 +10,7 @@ type
       class operator Equal(a, b: TSgPoint): boolean; inline; static;
       class operator NotEqual(a, b: TSgPoint): boolean; inline; static;
       class operator Multiply(a: TSgPoint; b: integer): TSgPoint; inline; static;
+      class operator Multiply(a, b: TSgPoint): TSgPoint; inline; static;
       class operator Divide(a: TSgPoint; b: integer): TSgPoint; inline; static;
       class operator Modulus(a, b: TSgPoint): TSgPoint; inline; static;
       class operator Add(a, b: TSgPoint): TSgPoint; inline; static;
@@ -39,6 +40,7 @@ type
    end;
 
 function sgPoint(x, y: integer): TSgPoint;
+function sgPointF(x, y: single): TSgFloatPoint;
 
 const
 //AsphyreDefs backwards compatibility. Replace this when possible
@@ -79,6 +81,12 @@ class operator TSgPoint.Multiply(a: TSgPoint; b: integer): TSgPoint;
 begin
    result.x := a.x * b;
    result.y := a.y * b;
+end;
+
+class operator TSgPoint.Multiply(a, b: TSgPoint): TSgPoint;
+begin
+   result.x := a.x * b.x;
+   result.y := a.y * b.y;
 end;
 
 class operator TSgPoint.Divide(a: TSgPoint; b: integer): TSgPoint;
@@ -163,6 +171,12 @@ end;
 class operator TSgFloatPoint.NotEqual(a, b: TSgFloatPoint): boolean;
 begin
    result := not (a = b);
+end;
+
+function sgPointF(x, y: single): TSgFloatPoint;
+begin
+   result.x := x;
+   result.y := y;
 end;
 
 { TSgColor }
