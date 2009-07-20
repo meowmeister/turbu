@@ -33,6 +33,8 @@ type
    TTileGroup = class(TRpgDatafile)
    private
       FFilename: string;
+      FLinkedFileName: string;
+      FOcean: boolean;
       FTileType: TTileType;
       FDimensions: TSgPoint;
    protected
@@ -44,6 +46,8 @@ type
       procedure download(db: TDataset); override;
 
       property filename: string read FFilename write FFilename;
+      property linkedFilename: string read FLinkedFilename write FLinkedFilename;
+      property ocean: boolean read FOcean write FOcean;
       property tileType: TTileType read FTileType write FTileType;
       property dimensions: TSgPoint read FDimensions write FDimensions;
    end;
@@ -90,19 +94,19 @@ type
       property HiSpeed: boolean read FHiSpeed write FHiSpeed;
    end;
 
-//procedure SetDatabase(value: TRpgDatafile);
+procedure SetDatabase(value: TRpgDatafile);
 
 implementation
 uses
    turbu_database;
 
-{var
+var
    GDatabase: TRpgDatabase;
 
 procedure SetDatabase(value: TRpgDatafile);
 begin
    GDatabase := value as TRpgDatabase;
-end;}
+end;
 
 { TTileGroup }
 
@@ -110,6 +114,8 @@ constructor TTileGroup.Load(savefile: TStream);
 begin
    inherited Load(savefile);
    FFilename := savefile.readString;
+   FlinkedFilename := savefile.readString;
+   FOcean := savefile.readBool;
    savefile.ReadBuffer(FTileType, SizeOf(FTileType));
    savefile.ReadBuffer(FDimensions, sizeof(FDimensions));
 end;
@@ -118,6 +124,8 @@ procedure TTileGroup.save(savefile: TStream);
 begin
    inherited Save(savefile);
    savefile.writeString(FFilename);
+   savefile.writeString(FLinkedFilename);
+   savefile.writeBool(FOcean);
    savefile.WriteBuffer(FTileType, SizeOf(FTileType));
    savefile.WriteBuffer(FDimensions, sizeof(FDimensions));
 end;

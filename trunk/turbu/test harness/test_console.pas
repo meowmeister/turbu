@@ -112,7 +112,6 @@ var
    conversionReport: IConversionReport;
 begin
    try
-      mnuCreateSdlWindowClick(self);
       filename := IncludeTrailingPathDelimiter(outFolder);
       assert(DirectoryExists(filename));
       GArchives.clearFrom(1);
@@ -154,7 +153,7 @@ begin
    engine := T2kMapEngine.Create;
 //   freeList.add(engine.
    engine.initialize(0, gdatabase);
-   mapStream := GArchives[MAP_ARCHIVE].getFile(GDatabase.mapTree[2].internalFilename.name);
+   mapStream := GArchives[MAP_ARCHIVE].getFile(GDatabase.mapTree[1].internalFilename.name);
    try
       map := TRpgMap.Load(mapStream);
    finally

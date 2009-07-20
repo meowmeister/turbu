@@ -131,7 +131,7 @@ begin
    oFilename := filename;
    outFile := nil;
    locate_files.findGraphic(filename, 'ChipSet');
-   if (filename = '') or (copy(filename, length(filename) - 4, 4) = '.xyx') then
+   if (filename = '') or (ExtractFileExt(filename) = '.xyx') then
       Exit;
    pointer(surface) := sdl_image.IMG_Load(PAnsiChar(ansiString(filename)));
    assert(assigned(surface));
@@ -155,10 +155,17 @@ begin
          newGroup := TTileGroup.Create;
          newGroup.name := lFilename;
          newGroup.filename := lFilename;
+         if i = 1 then
+         begin
+            newGroup.linkedFilename := format(KEYNAME, [oFilename, TILESET_NAME[0]]);
+            newGroup.ocean := true;
+         end
+         else if i in [0, 2] then
+            newGroup.linkedFilename := format(KEYNAME, [oFilename, TILESET_NAME[1]]);
          case i of
             0..2: newGroup.tileType := [tsBordered, tsAnimated];
             3: newGroup.tileType := [tsAnimated];
-            4..17: newGroup.tileType := [tsBordered];
+            4..15: newGroup.tileType := [tsBordered];
             else newGroup.tileType := [];
          end;
          if not (tsBordered in newGroup.tileType) then

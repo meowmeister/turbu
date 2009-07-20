@@ -89,8 +89,6 @@ type
       procedure DoDraw; virtual;
       procedure DoMove(const MoveCount: Single); virtual;
       procedure SetImageName(const Value: string); virtual;
-      procedure SetX(const Value: Single); virtual;
-      procedure SetY(const Value: Single); virtual;
       procedure SetZ(const Value: Cardinal); virtual;
       procedure SetPatternIndex(const Value: Integer); virtual;
       function InVisibleRect: boolean; virtual;
@@ -105,8 +103,8 @@ type
       procedure Dead; virtual;
 
       property Visible: Boolean read FVisible write FVisible;
-      property X: Single read FX write SetX;
-      property Y: Single read FY write SetY;
+      property X: Single read FX write FX;
+      property Y: Single read FY write FY;
       property Z: Cardinal read FZ write SetZ;
       property ImageName: string read FImageName write SetImageName;
       property Image: TSdlImage read FImage write FImage;
@@ -432,16 +430,6 @@ begin
          FImageIndex := FEngine.FImages.IndexOf(FImageName);
       end;
    end;
-end;
-
-procedure TSprite.SetX(const Value: Single);
-begin
-   Self.FX := Value;
-end;
-
-procedure TSprite.SetY(const Value: Single);
-begin
-   Self.FY := Value;
 end;
 
 procedure TSprite.SetZ(const Value: Cardinal);

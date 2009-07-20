@@ -34,7 +34,7 @@ type
 
 function decodeNeighbors(neighbors: byte): TNeighbors; forward;
 function decode(const readID: integer): TDecodeResult; forward;
-function convertDecodeResult(const value: TDecodeResult): TTileRef; forward;
+function convertDecodeResult(value: TDecodeResult): TTileRef; forward;
 
 { T2k2RpgMap }
 
@@ -399,7 +399,7 @@ begin
    end;//end of big CASE statement
 end;
 
-function convertDecodeResult(const value: TDecodeResult): TTileRef;
+function convertDecodeResult(value: TDecodeResult): TTileRef;
 var
    neighbors: set of TDirs8;
    i: TDirs8;
@@ -426,7 +426,15 @@ begin
    else result.tile := value.baseTile;
    case result.group of
       0..3: ;
-      4..6: result.group := 4 + ((result.group - 4) * 4) + value.baseTile;
+      4..6:
+      begin
+         //swap #1 and #2 to get them to convert right
+         if value.baseTile = 1 then
+            value.baseTile := 2
+         else if value.baseTile = 2 then
+            value.baseTile := 1;
+         result.group := 4 + ((result.group - 4) * 4) + value.baseTile;
+      end;
       else inc(result.group, 9);
    end;
 end;

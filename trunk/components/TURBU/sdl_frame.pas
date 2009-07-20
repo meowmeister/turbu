@@ -233,7 +233,10 @@ begin
    FBuffer.Free;
    FBuffer.Create(0, image);
    if SDL_SelectRenderer(FWindowID) = 0 then
+   begin
+      SDL_RenderCopy(FBuffer, nil, nil);
       SDL_RenderPresent;
+   end;
 end;
 
 procedure TSdlFrame.BeforeDestruction;

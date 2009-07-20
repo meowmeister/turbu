@@ -110,7 +110,7 @@ begin
       raise Exception.create('Unable to initialize graphics converter.');
    {$IFDEF DEBUG}
    //Create an SDL window for testing images on.
-   TSdlCanvas.Create(cmHardware, false, rect(100, 100, 640, 480), 32);
+//   TSdlCanvas.Create(cmHardware, false, rect(100, 100, 640, 480), 32);
    {$ENDIF}
    Application.Run;
 end.

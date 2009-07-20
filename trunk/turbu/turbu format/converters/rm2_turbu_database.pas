@@ -46,7 +46,7 @@ uses
    turbu_tbi_lib, turbu_tilesets,
    hero_data, locate_files,
    archiveInterface, formats, commons, turbu_battle_engine, turbu_engines, logs,
-   SDL_ImageManager, SDL, SDL_13;
+   SDL, SDL_13, sdl_image;
 
 var
    nameTable: TNameTable;
@@ -377,7 +377,7 @@ end;
 
 { Classless }
 
-function convertImage(image: TRpgSdlImage; id: integer; frame, sprite, sheet: TPoint; style: string): boolean;
+function convertImage(image: PSdlSurface; id: integer; frame, sprite, sheet: TPoint; name, style: string): boolean;
 var
    blitSurface: PSdlSurface;
    framesPerSprite: integer;
@@ -390,9 +390,9 @@ begin
    framesPerSprite := SPRITE.X * SPRITE.Y;
    blitSurface := TSdlSurface.Create(FRAME.X, FRAME.Y * framesPerSprite, 8, 0, 0, 0, 0);
    try
-      if not blitSurface.SetPalette(image.surface.format.palette.colors, 0, image.surface.format.palette.count) then
-         raise ESdlImageException.Create('Unable to convert sprite ' + image.name + ' due to colorkey failure!');
-      blitSurface.ColorKey := image.surface.colorkey;
+      if not blitSurface.SetPalette(image.format.palette.colors, 0, image.format.palette.count) then
+         raise EInvalidImage.Create('Unable to convert sprite ' + name + ' due to colorkey failure!');
+      blitSurface.ColorKey := image.colorkey;
 
       if id = -1 then
          startingPoint := point(0, 0)
@@ -404,12 +404,12 @@ begin
          inc(srcrect.left, startingPoint.x);
          inc(srcrect.top, startingPoint.y);
          dstrect := rect(point(0, i * FRAME.Y), FRAME);
-         SDL_BlitSurface(image.surface, @srcRect, blitSurface, @dstRect);
+         SDL_BlitSurface(image, @srcRect, blitSurface, @dstRect);
       end;
       convertedImage := saveToTBI(blitSurface);
       convertedImage.Seek(0, soFromBeginning);
       try
-         writename := style + '\' + image.name;
+         writename := style + '\' + name;
          if id <> -1 then
             writename := writename + ' ' + intToStr(id);
          writename := writename + '.tbi';
@@ -430,7 +430,7 @@ const
    SHEET: TPoint = (X: 4; Y: 2);
 var
    oname: string;
-   image: TRpgSdlImage;
+   image: PSdlSurface;
 begin
    result := false;
    oname := name;
@@ -440,9 +440,9 @@ begin
       logs.logText('Unable to locate charset image ' + oname + 'for conversion');
       Exit;
    end;
-   image := TRpgSdlImage.Create(name, oname, nil);
+   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(name))));
    try
-      result := convertImage(image, id, FRAME, SPRITE, SHEET, 'mapsprite');
+      result := convertImage(image, id, FRAME, SPRITE, SHEET, oname, 'mapsprite');
    finally
       image.Free;
    end;
@@ -455,7 +455,7 @@ const
    SHEET: TPoint = (X: 1; Y: 1);
 var
    oname: string;
-   image: TRpgSdlImage;
+   image: PSdlSurface;
 begin
    result := false;
    oname := name;
@@ -465,9 +465,9 @@ begin
       logs.logText('Unable to locate portrait image ' + oname + 'for conversion');
       Exit;
    end;
-   image := TRpgSdlImage.Create(name, oname, nil);
+   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(name))));
    try
-      result := convertImage(image, -1, FRAME, SPRITE, SHEET, 'portrait');
+      result := convertImage(image, -1, FRAME, SPRITE, SHEET, oname, 'portrait');
    finally
       image.Free;
    end;
@@ -479,7 +479,7 @@ const
    SHEET: TPoint = (X: 1; Y: 1);
 var
    oname: string;
-   image: TRpgSdlImage;
+   image: PSdlSurface;
    sprite: TPoint;
 
 begin
@@ -491,10 +491,10 @@ begin
       logs.logText(format('Unable to locate battle anim image %s for conversion', [oname]));
       Exit;
    end;
-   image := TRpgSdlImage.Create(name, oname, nil);
-   sprite := point(5, image.surface.width div 96);
+   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(name))));
+   sprite := point(5, image.width div 96);
    try
-      result := convertImage(image, -1, FRAME, sprite, SHEET, 'animation');
+      result := convertImage(image, -1, FRAME, sprite, SHEET, oname, 'animation');
    finally
       image.Free;
    end;

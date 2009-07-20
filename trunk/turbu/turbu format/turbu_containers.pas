@@ -5,11 +5,6 @@ uses
    generics.collections;
 
 type
-   TRpgDictionary<TKey,TValue> = class(TObjectDictionary<TKey,TValue>)
-   public
-      destructor Destroy; override;
-   end;
-
    TRpgList<T> = class (TList<T>)
    private
       function getHigh: integer;
@@ -31,15 +26,6 @@ type
    end;
 
 implementation
-
-{ TRpgDictionary<TKey, TValue> }
-
-destructor TRpgDictionary<TKey, TValue>.Destroy;
-begin
-   self.Keys.Free;
-   self.Values.Free;
-   inherited Destroy;
-end;
 
 { TRpgList<T> }
 
