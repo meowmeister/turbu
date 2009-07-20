@@ -54,7 +54,7 @@ type
    {This has to use a PTypeInfo record instead of the function type itself,
    since the function type doesn't really exist as an independent entity. The
    TypeInfo routine is compiler magic, not a real function}
-   TSignatureDictionary = class(TRpgDictionary<PTypeInfo, TRpgDecl>)
+   TSignatureDictionary = class(TObjectDictionary<PTypeInfo, TRpgDecl>)
    private
       function GetItem(const Key: PTypeInfo): TRpgDecl;
    public
@@ -77,6 +77,7 @@ begin
    Inc(PAnsiChar(NextField), SizeOf(Result^[0]) + Length(Result^));
 end;
 
+{$T-}
 function GetMethodSignature(Event: PTypeInfo): TRpgDecl;
 type
    PParamListRecord = ^TParamListRecord;
@@ -104,6 +105,7 @@ begin
    end;
    result.retval := lookupType(string(PackedShortString(ParamListRecord)^));
 end;
+{$T+}
 
 function signatureMatch(func: TRpgDecl; signature: TScriptSignature): boolean; overload;
 begin

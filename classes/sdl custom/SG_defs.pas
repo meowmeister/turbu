@@ -28,7 +28,7 @@ type
       class operator Add(a, b: TSgFloatPoint): TSgFloatPoint; inline; static;
       class operator Subtract(a, b: TSgFloatPoint): TSgFloatPoint; inline; static;
       class operator Implicit(a: TPoint): TSgFloatPoint; inline; static;
-      class operator Implicit(a: TSgFloatPoint): TPoint; inline; static;
+      class operator Implicit(a: TSgPoint): TSgFloatPoint; inline; static;
    end;
 
    TSgColor = record
@@ -158,14 +158,16 @@ begin
    result := (a.x = b.x) and (a.y = b.y);
 end;
 
-class operator TSgFloatPoint.Implicit(a: TSgFloatPoint): TPoint;
-begin
-   system.Move(a, result, sizeof(TPoint));
-end;
-
 class operator TSgFloatPoint.Implicit(a: TPoint): TSgFloatPoint;
 begin
-   system.Move(a, result, sizeof(TPoint));
+   result.x := a.X;
+   result.y := a.Y;
+end;
+
+class operator TSgFloatPoint.Implicit(a: TSgPoint): TSgFloatPoint;
+begin
+   result.x := a.X;
+   result.y := a.Y;
 end;
 
 class operator TSgFloatPoint.NotEqual(a, b: TSgFloatPoint): boolean;

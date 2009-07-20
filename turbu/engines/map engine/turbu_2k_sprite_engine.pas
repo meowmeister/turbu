@@ -73,9 +73,11 @@ var
    tileType: TTileType;
    tileClass: TTileClass;
    filename: string;
+   tileGroup: TTileGroup;
 begin
-   tileType := FTileset.Records[value.group].group.tileType;
-   filename := FTileset.Records[value.group].group.filename;
+   tileGroup := FTileset.Records[value.group].group;
+   tileType := tileGroup.tileType;
+   filename := tileGroup.filename;
    if tileType = [] then
       tileClass := TLowerTile
    else if tileType = [tsBordered] then
@@ -83,7 +85,11 @@ begin
    else if tileType = [tsAnimated] then
       tileClass := TAnimTile
    else if tileType = [tsBordered, tsAnimated] then
-      tileClass := TWaterTile
+   begin
+      if tileGroup.ocean then
+         tileClass := TOceanTile
+      else tileClass := TShoreTile;
+   end
    else raise ESpriteError.Create('Unknown tile type.');
    result := tileClass.Create(Self, filename)
 end;

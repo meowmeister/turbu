@@ -26,18 +26,18 @@ uses
 type
    TTile = class;
    TTileClass = class of TTile;
+   TNeighborSet = set of TDirs8;
 
    TTile = class abstract(TParentSprite) //ASPHYRE version of TTileData
    private
       FTileID: word; // which tile from the overall x,y grid of the chipset
-      FGridLoc: TPoint; //where this tile is located on the map
+      FGridLoc: TSgPoint; //where this tile is located on the map
       FTerrainID: word;
       FAttributes: TTileAttributes;
       FSavedFx: integer;
       FSavedColor: TRpgColor;
       FFlashColor: TRpgColor;
       FFlashTimer: TRpgTimestamp;
-      FTilesetName: string;
 
       procedure saveColor;
       procedure restoreColor(which: TRpgColor);
@@ -46,6 +46,7 @@ type
       class function DecodeZOrder(const value: TTileAttributes): byte; static;
    protected
       function InVisibleRect: boolean; override;
+      procedure DoDraw; override;
    public
       constructor Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false); reintroduce; overload; virtual;
       destructor Destroy; override;
@@ -58,7 +59,7 @@ type
       function canEnter: boolean; virtual;
 
       property id: word read FTileID write FTileID;
-      property location: TPoint read FGridLoc write FGridLoc;
+      property location: TSgPoint read FGridLoc write FGridLoc;
       property terrain: word read FTerrainID write FTerrainID;
       property attributes: TTileAttributes read FAttributes write FAttributes;
    end;
@@ -73,7 +74,7 @@ type
       function isOccupied: boolean;
       function hasCountertop: boolean; inline;
    protected
-      FNeighbors: TNeighbors;
+      FNeighbors: TNeighborSet;
    public
       constructor Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false); override;
       destructor Destroy; override;
@@ -111,8 +112,8 @@ type
    TBorderTile = class(TLowerTile)
    private
       minitiles: array[1..4] of TMiniTile;
-      function FindNeighbors: TNeighbors; //determines which of
-                                          //the 46 patterns it fits
+      function FindNeighbors: TNeighborSet; //determines which of
+                                            //the 46 patterns it fits
       procedure setEngine(newEngine: TSpriteEngine); override;
    protected
       procedure doPlace; virtual;
@@ -122,17 +123,28 @@ type
       procedure Draw; override;
       function place(const xCoord, yCoord: word; const layer: byte;
                     const tileData: TTileRef; chip_data: TTileSet): TTileAttributes; override;
-      property neighbors: TNeighbors read FindNeighbors write FNeighbors;
+      property neighbors: TNeighborSet read FindNeighbors write FNeighbors;
    end;
 
-   TWaterTile = class(TBorderTile)
+   TWaterTile = class abstract(TBorderTile)
    private
+      FLinkedFilename: string;
 {      function FindNeighbors: ANeighbors; //determines which of
                                           //the 46 patterns it fits}
+   public
+      function place(const xCoord, yCoord: word; const layer: byte;
+                    const tileData: TTileRef; chip_data: TTileSet): TTileAttributes; override;
+      procedure Draw; override;
+   end;
+
+   TShoreTile = class(TWaterTile)
    protected
       procedure doPlace; override;
-   public
-      procedure Draw; override;
+   end;
+
+   TOceanTile = class(TWaterTile)
+   protected
+      procedure doPlace; override;
    end;
 
 {   TEventTile = class(TTile)
@@ -201,7 +213,7 @@ constructor TTile.Create(const AParent: TSpriteEngine; tileset: string; const ad
 begin
    assert(AParent is T2kSpriteEngine);
    inherited create(AParent);
-   FTilesetName := tileset;
+   imageName := tileset;
 end;
 
 destructor TTile.Destroy;
@@ -228,6 +240,51 @@ begin
       result := result or (i in FAttributes);
 end;
 
+{$WARN USE_BEFORE_DEF OFF}
+procedure TTile.DoDraw;
+var
+   lX, lY: single;
+   overlap: TFacingSet;
+   viewport: TRect;
+   mapSize: TSgFloatPoint;
+begin
+   overlap := T2kSpriteEngine(FEngine).overlapping;
+   if overlap <> [] then
+   begin
+      viewport := T2kSpriteEngine(FEngine).viewport;
+      mapSize := TSgPoint(T2kSpriteEngine(FEngine).mapRect.BottomRight) * TILE_SIZE;
+      lX := self.X;
+      lY := self.Y;
+      if facing_left in overlap then
+      begin
+         if FGridLoc.X > viewport.Right then
+            self.X := lX - mapSize.x;
+      end
+      else if facing_right in overlap then
+      begin
+         if FGridLoc.X < viewport.Left then
+            self.X := lX + mapSize.x;
+      end;
+      if facing_up in overlap then
+      begin
+         if FGridLoc.Y > viewport.Bottom then
+            self.Y := lY - mapSize.Y;
+      end
+      else if facing_down in overlap then
+      begin
+         if FGridLoc.Y < viewport.Top then
+            self.Y := lY + mapSize.Y;
+      end;
+   end;
+   inherited DoDraw;
+   if overlap <> [] then
+   begin
+      self.X := lX;
+      self.Y := lY;
+   end;
+end;
+{$WARN USE_BEFORE_DEF ON}
+
 function TTile.InVisibleRect: boolean;
 
    function NormalizePoint(aPoint: TSgPoint; aRect: TRect): TSgPoint;
@@ -251,7 +308,6 @@ function TTile.InVisibleRect: boolean;
 
 var
    corrected: TSgPoint;
-   x, y: integer;
 begin
    if T2kSpriteEngine(FEngine).overlapping = [] then
       result := inherited InVisibleRect
@@ -316,15 +372,14 @@ var
 begin
    X := TILE_SIZE.X * xCoord;
    Y := TILE_SIZE.Y * yCoord;
+   FGridLoc.X := xCoord;
+   FGridLoc.Y := yCoord;
+   self.Width := TILE_SIZE.X;
+   self.Height := TILE_SIZE.Y;
 
    self.ImageIndex := tileData.tile;
    tileGroup := chip_data.Records[tiledata.group];
    imageName := tileGroup.group.filename;
-{   if self is TLowerTile then
-   begin
-      TLowerTile(self).neighbors := decodeResult.neighbors;
-      FTerrainID := decodeTerrain(readID, chip_data);
-   end;}
    result := tileGroup.attributes[tileData.tile];
    z := decodeZOrder(result);
 end;
@@ -361,11 +416,15 @@ end;
 { TBorderTile }
 
 constructor TBorderTile.Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false);
-var x: byte;
+var i: byte;
 begin
    inherited create(AParent, tileset, true);
-   for x := 1 to 4 do
-      minitiles[x] := TMiniTile.Create(self, tileset);
+   for i := 1 to 4 do
+   begin
+      minitiles[i] := TMiniTile.Create(self, tileset);
+      miniTiles[i].Width := TILE_SIZE.X div 2;
+      miniTiles[i].Height := TILE_SIZE.Y div 2;
+   end;
 end;
 
 destructor TBorderTile.destroy;
@@ -376,7 +435,7 @@ begin
    inherited destroy;
 end;
 
-function TBorderTile.FindNeighbors(): TNeighbors;
+function TBorderTile.FindNeighbors(): TNeighborSet;
 begin
    //fix this
    //owner's internal name is FEngine
@@ -391,6 +450,7 @@ begin
    tileRef.group := tileData.group;
    tileRef.tile := 0;
    result := inherited place(xCoord, yCoord, layer, tileRef, chip_data);
+   FNeighbors := TNeighborSet(tiledata.tile);
    doPlace;
 end;
 
@@ -408,20 +468,9 @@ var
    minis, base: array[1..4] of word;
    i: byte;
 begin
-   case ImageIndex of
-   0:
-      minis[1] := 50;
-   1:
-      minis[1] := 56;
-   2:
-      minis[1] := 146;
-   3:
-      minis[1] := 152;
-   else
-      raise EParseMessage.create('Don''t know how to draw minitiles for ' + intToStr(ImageIndex));
-   end;
+   minis[1] := 26;
    minis[2] := minis[1] + 1;
-   minis[3] := minis[1] + 12;
+   minis[3] := minis[1] + 6;
    minis[4] := minis[3] + 1;
    miniTiles[1].X := self.X;
    miniTiles[1].Y := self.Y;
@@ -432,88 +481,90 @@ begin
    miniTiles[4].X := self.X + 8;
    miniTiles[4].Y := self.Y + 8;
    for i := 1 to 4 do
+   begin
       miniTiles[i].ImageName := self.ImageName;
+      miniTiles[i].location := self.location;
+   end;
 //now comes the fun part
 //skip if there's nothing to change
-   if FTileID mod 50 > 0 then
+   if neighbors <> [] then
    begin
    //otherwise:
    //first: case 46: one-tile island
-      if (neighbors[n] = yes) and (neighbors[e] = yes) and (neighbors[w] = yes)
-         and (neighbors[s] = yes) then
+      if neighbors * [n, e, w, s] = [n, e, w, s] then
          for i := 1 to 4 do
-            dec(minis[i], 50)
+            dec(minis[i], 26)
          //end for
       else
    //3 wall cases
    //42:
-      if (neighbors[n] = yes) and (neighbors[e] = yes) and (neighbors[w] = yes) then
+      if neighbors * [n, e, w] = [n, e, w] then
       begin
-         dec(minis[1], 26);
-         dec(minis[2], 22);
-         dec(minis[3], 26);
-         dec(minis[4], 22);
+         dec(minis[1], 14);
+         dec(minis[2], 10);
+         dec(minis[3], 14);
+         dec(minis[4], 10);
       end else
    //43:
-      if (neighbors[n] = yes) and (neighbors[e] = yes) and (neighbors[s] = yes) then
+      if neighbors * [n, e, s] = [n, e, s] then
       begin
-         dec(minis[1], 22);
-         dec(minis[2], 22);
-         inc(minis[3], 26);
-         inc(minis[4], 26);
+         dec(minis[1], 10);
+         dec(minis[2], 10);
+         inc(minis[3], 14);
+         inc(minis[4], 14);
       end else
    //44
-      if (neighbors[s] = yes) and (neighbors[e] = yes) and (neighbors[w] = yes) then
+      if neighbors * [e, w, s] = [e, w, s] then
       begin
-         inc(minis[1], 22);
-         inc(minis[2], 26);
-         inc(minis[3], 22);
-         inc(minis[4], 26);
+         inc(minis[1], 10);
+         inc(minis[2], 14);
+         inc(minis[3], 10);
+         inc(minis[4], 14);
       end else
    //45:
-      if (neighbors[n] = yes) and (neighbors[w] = yes) and (neighbors[s] = yes) then
+      if neighbors * [n, w, s] = [n, w, s] then
       begin
-         dec(minis[1], 26);
-         dec(minis[2], 26);
-         inc(minis[3], 22);
-         inc(minis[4], 22);
+         dec(minis[1], 14);
+         dec(minis[2], 14);
+         inc(minis[3], 10);
+         inc(minis[4], 10);
       end else
    //full-corner cases
    //34:
-      if (neighbors[nw] = yes) and (neighbors[n] = yes) then
+      if neighbors * [n, nw] = [n, nw] then
       begin
-         dec(minis[1], 26);
-         dec(minis[2], 26);
-         dec(minis[3], 26);
-         if (neighbors[se]) = yes then
-            dec(minis[4], 46);
+         dec(minis[1], 14);
+         dec(minis[2], 14);
+         dec(minis[3], 14);
+         if se in neighbors then
+            dec(minis[4], 22);
       end else
    //36:
-      if (neighbors[ne] = yes) and (neighbors[n] = yes) then
+      if neighbors * [n, ne] = [n, ne] then
       begin
-         dec(minis[1], 22);
-         dec(minis[2], 22);
-         dec(minis[4], 22);
-         if (neighbors[sw]) = yes then
-            dec(minis[3], 46);
+         dec(minis[1], 10);
+         dec(minis[2], 10);
+         dec(minis[4], 10);
+         if sw in neighbors then
+            dec(minis[3], 22);
       end else
    //38:
-      if (neighbors[se] = yes) and (neighbors[s] = yes) then
+      if neighbors * [e, se] = [e, se] then
       begin
-         inc(minis[2], 26);
-         inc(minis[3], 26);
-         inc(minis[4], 26);
-         if (neighbors[nw]) = yes then
-            dec(minis[1], 46);
+         inc(minis[2], 14);
+         inc(minis[3], 14);
+         inc(minis[4], 14);
+         if nw in neighbors then
+            dec(minis[1], 22);
       end else
    //40:
-      if (neighbors[sw] = yes) and (neighbors[s] = yes) then
+      if neighbors * [s, sw] = [s, sw] then
       begin
-         inc(minis[1], 22);
-         inc(minis[3], 22);
-         inc(minis[4], 22);
-         if (neighbors[ne]) = yes then
-            dec(minis[2], 46);
+         inc(minis[1], 10);
+         inc(minis[3], 10);
+         inc(minis[4], 10);
+         if ne in neighbors then
+            dec(minis[2], 22);
       end else
    //miscellaneous cases, which can be handled individually
       begin
@@ -521,31 +572,31 @@ begin
          for i := 1 to 4 do
             base[i] := minis[i];
    //set lone corners
-         if neighbors[nw] = yes then
-            dec(base[1], 46);
-         if neighbors[ne] = yes then
-            dec(base[2], 46);
-         if neighbors[sw] = yes then
-            dec(base[3], 46);
-         if neighbors[se] = yes then
-            dec(base[4], 46);
+         if nw in neighbors then
+            dec(base[1], 22);
+         if ne in neighbors then
+            dec(base[2], 22);
+         if sw in neighbors then
+            dec(base[3], 22);
+         if se in neighbors then
+            dec(base[4], 22);
    //override values for walls
-         if neighbors[n] = yes then
+         if n in neighbors then
          begin
-            base[1] := minis[1] - 24;
-            base[2] := minis[2] - 24;
+            base[1] := minis[1] - 12;
+            base[2] := minis[2] - 12;
          end;
-         if neighbors[s] = yes then
+         if s in neighbors then
          begin
-            base[3] := minis[3] + 24;
-            base[4] := minis[4] + 24;
+            base[3] := minis[3] + 12;
+            base[4] := minis[4] + 12;
          end;
-         if neighbors[w] = yes then
+         if w in neighbors then
          begin
             base[1] := minis[1] - 2;
             base[3] := minis[3] - 2;
          end;
-         if neighbors[e] = yes then
+         if e in neighbors then
          begin
             base[2] := minis[2] + 2;
             base[4] := minis[4] + 2;
@@ -573,28 +624,46 @@ begin
    inherited;
 end;
 
+function TWaterTile.place(const xCoord, yCoord: word; const layer: byte;
+  const tileData: TTileRef; chip_data: TTileSet): TTileAttributes;
+begin
+   FLinkedFilename := chip_data.Records[tileData.group].group.linkedFilename;
+   result := inherited place(xCoord, yCoord, layer, tileData, chip_data);
+end;
+
 {function TWaterTile.FindNeighbors: ANeighbors;
 begin
    //do later
    //other types of water tiles count as homogenous
 end;}
 
+{ TShoreTile }
+
 {******************************************************************************
 * Complicated routine to place all the minitiles for a water map.  Bordered
-* tiles are pretty simple.  Deep ocean is a bit tougher, since it's treated
-* as water[0] by RM2K for borders, so a bunch of corrections have to be
-* introduced for that.
+* tiles are pretty simple.  Deep ocean is a bit tougher, since it needs a
+* linked image for shores.
 ******************************************************************************}
-procedure TWaterTile.doPlace;
+procedure TShoreTile.doPlace;
 var
    minis, base: array[1..4] of word;
-   i: byte;
-   ocean: boolean;
+   i: integer;
    changed: array[1..4] of boolean;
+
+   procedure ChangeBase(index, length: integer);
+   begin
+      inc(base[index], length);
+      changed[index] := false;
+   end;
+
+   procedure OffsetBase(index, length: integer);
+   begin
+      base[index] := minis[index] + length;
+      changed[index] := false;
+   end;
+
 begin
    minis[1] := 0;
-//   ocean := (imageName = tilesetMap[1]);
-   ocean := false;
    minis[2] := minis[1] + 1;
    minis[3] := minis[1] + 6;
    minis[4] := minis[3] + 1;
@@ -606,232 +675,146 @@ begin
    miniTiles[3].Y := self.Y + 8;
    miniTiles[4].X := self.X + 8;
    miniTiles[4].Y := self.Y + 8;
-   i := ImageIndex;
-   if i >= 8 then
-   begin
-      inc(minis[4], 12);
-      dec(i, 8)
-   end;
-   if i >= 4 then
-   begin
-      inc(minis[3], 12);
-      dec(i, 4)
-   end;
-   if i >= 2 then
-   begin
-      inc(minis[2], 12);
-      dec(i, 2)
-   end;
-   if i = 1 then
-      inc(minis[1], 12);
    for i := 1 to 4 do
    begin
-      miniTiles[i].ImageName := self.ImageName;
-      changed[i] := false;
+      miniTiles[i].location := self.location;
+      miniTiles[i].ImageName := FLinkedFilename;
+      changed[i] := true;
    end;
 //now comes the fun part
 //skip if there's nothing to change
-   if FTileID mod 50 > 0 then
+   if neighbors <> [] then
    begin
-{   if ocean then
-      self.ImageName := FBaseMap.chipsetName + ' ' + tilesetMap[0];}
-//otherwise:
-//first: case 46: one-tile island
-   if (neighbors[n] = yes) and (neighbors[e] = yes) and (neighbors[w] = yes)
-      and (neighbors[s] = yes) then
-      for i := 1 to 4 do
+   //otherwise:
+   //first: case 46: one-tile island
+      if neighbors * [n, e, w, s] = [n, e, w, s] then
       begin
-         miniTiles[i].ImageName := self.ImageName;
-         changed[i] := true;
+         for i := 1 to 4 do
+            changed[i] := false;
       end
-      //end for
-   else
-//3 wall cases
-//42:
-   if (neighbors[n] = yes) and (neighbors[e] = yes) and (neighbors[w] = yes) then
-   begin
-      inc(minis[3], 6);
-      inc(minis[4], 6);
-      for i := 1 to 4 do
-      begin
-         miniTiles[i].ImageName := self.ImageName;
-         changed[i] := true;
-      end
-   end else
-//43:
-   if (neighbors[n] = yes) and (neighbors[e] = yes) and (neighbors[s] = yes) then
-   begin
-      inc(minis[2], 6);
-      inc(minis[4], 6);
-      for i := 1 to 4 do
-      begin
-         miniTiles[i].ImageName := self.ImageName;
-         changed[i] := true;
-      end;
-   end else
-//44:
-   if (neighbors[s] = yes) and (neighbors[e] = yes) and (neighbors[w] = yes) then
-   begin
-      inc(minis[1], 6);
-      inc(minis[3], 6);
-      for i := 1 to 4 do
-      begin
-         miniTiles[i].ImageName := self.ImageName;
-         changed[i] := true;
-      end
-   end else
-//45:
-   if (neighbors[n] = yes) and (neighbors[w] = yes) and (neighbors[s] = yes) then
-   begin
-      inc(minis[1], 6);
-      inc(minis[3], 6);
-      for i := 1 to 4 do
-      begin
-         miniTiles[i].ImageName := self.ImageName;
-         changed[i] := true;
-      end
-   end else
-//full-corner cases
-//34:
-   if (neighbors[nw] = yes) and (neighbors[n] = yes) then
-   begin
-      inc(minis[2], 24);
-      inc(minis[3], 12);
-      for i := 1 to 3 do
-      begin
-         miniTiles[i].ImageName := self.ImageName;
-         changed[i] := true;
-      end;
-      if (neighbors[se]) = yes then
-      begin
-         inc(minis[4], 36);
-         miniTiles[4].ImageName := ImageName;
-         changed[4] := true;
-      end;
-   end else
-//36:
-   if (neighbors[ne] = yes) and (neighbors[n] = yes) then
-   begin
-      inc(minis[1], 24);
-      miniTiles[1].ImageName := ImageName;
-      changed[1] := true;
-      miniTiles[2].ImageName := ImageName;
-      changed[2] := true;
-      inc(minis[4], 12);
-      miniTiles[4].ImageName := ImageName;
-      changed[4] := true;
-      if (neighbors[sw]) = yes then
+      else
+   //3 wall cases
+   //42:
+      if neighbors * [n, e, w] = [n, e, w] then
       begin
          inc(minis[3], 36);
-         miniTiles[3].ImageName := ImageName;
-         changed[3] := true;
-      end;
-   end else
-//38:
-   if (neighbors[se] = yes) and (neighbors[s] = yes) then
-   begin
-      inc(minis[2], 12);
-      inc(minis[3], 24);
-      for i := 2 to 4 do
-      begin
-         miniTiles[i].ImageName := self.ImageName;
-         changed[i] := true;
-      end;
-      if (neighbors[nw]) = yes then
-      begin
-         inc(minis[1], 36);
-         miniTiles[1].ImageName := ImageName;
-         changed[1] := true;
-      end;
-   end else
-//40:
-   if (neighbors[sw] = yes) and (neighbors[s] = yes) then
-   begin
-      inc(minis[1], 12);
-      miniTiles[1].ImageName := self.ImageName;
-      changed[1] := true;
-      miniTiles[3].ImageName := self.ImageName;
-      changed[3] := true;
-      miniTiles[4].ImageName := self.ImageName;
-      inc(minis[4], 24);
-      changed[4] := true;
-      if (neighbors[ne]) = yes then
+         inc(minis[4], 36);
+      end else
+   //43:
+      if neighbors * [n, e, s] = [n, e, s] then
       begin
          inc(minis[2], 36);
-         miniTiles[2].ImageName := ImageName;
-         changed[2] := true;
-      end;
-   end else
-//miscellaneous cases, which can be handled individually
-   begin
-//store values for override
-      for i := 1 to 4 do
-         base[i] := minis[i];
-//set lone corners
-      if neighbors[nw] = yes then
+         inc(minis[4], 36);
+//         changeAll;
+      end else
+   //44:
+      if neighbors * [e, w, s] = [e, w, s] then
       begin
-         inc(base[1], 36);
-         miniTiles[1].ImageName := ImageName;
-         changed[1] := true;
-      end;
-      if neighbors[ne] = yes then
+         inc(minis[1], 36);
+         inc(minis[2], 36);
+//         changeAll;
+      end else
+   //45:
+      if neighbors * [n, w, s] = [n, w, s] then
       begin
-         inc(base[2], 36);
-         miniTiles[2].ImageName := ImageName;
-         changed[2] := true;
-      end;
-      if neighbors[sw] = yes then
+         inc(minis[2], 36);
+         inc(minis[3], 36);
+//         changeAll;
+      end else
+   //full-corner cases
+   //34:
+      if neighbors * [n, nw] = [n, nw] then
       begin
-         inc(base[3], 36);
-         miniTiles[3].ImageName := ImageName;
-         changed[3] := true;
-      end;
-      if neighbors[se] = yes then
+         inc(minis[1], 24);
+         inc(minis[2], 12);
+         for i := 1 to 3 do
+            changed[i] := false;
+         if se in neighbors then
+         begin
+            inc(minis[4], 30);
+            changed[4] := false;
+         end;
+      end else
+   //36:
+      if neighbors * [n, ne] = [n, ne] then
       begin
-         inc(base[4], 36);
-         miniTiles[4].ImageName := ImageName;
-         changed[4] := true;
-      end;
-//override values for walls
-      if neighbors[n] = yes then
+         inc(minis[1], 24);
+         inc(minis[4], 12);
+         changed[1] := false;
+         changed[2] := false;
+         changed[4] := false;
+         if sw in neighbors then
+         begin
+            inc(minis[3], 30);
+            changed[3] := false;
+         end;
+      end else
+   //38:
+      if neighbors * [s, se] = [s, se] then
       begin
-         base[1] := minis[1] + 24;
-         base[2] := minis[2] + 24;
-         miniTiles[1].ImageName := ImageName;
-         miniTiles[2].ImageName := ImageName;
-         changed[1] := true;
-         changed[2] := true;
-      end;
-      if neighbors[s] = yes then
+         inc(minis[2], 12);
+         inc(minis[3], 24);
+         changed[2] := false;
+         changed[3] := false;
+         changed[4] := false;
+         if nw in neighbors then
+         begin
+            inc(minis[1], 30);
+            changed[1] := false;
+         end;
+      end else
+   //40:
+      if neighbors * [s, sw] = [s, sw] then
       begin
-         base[3] := minis[3] + 24;
-         base[4] := minis[4] + 24;
-         miniTiles[3].ImageName := ImageName;
-         miniTiles[4].ImageName := ImageName;
-         changed[3] := true;
-         changed[4] := true;
-      end;
-      if neighbors[w] = yes then
+         inc(minis[1], 12);
+         inc(minis[4], 24);
+         changed[1] := false;
+         changed[3] := false;
+         changed[4] := false;
+         if ne in neighbors then
+         begin
+            inc(minis[3], 30);
+            changed[3] := false;
+         end;
+      end else
+   //miscellaneous cases, which can be handled individually
       begin
-         base[1] := minis[1] + 12;
-         base[3] := minis[3] + 12;
-         miniTiles[1].ImageName := ImageName;
-         miniTiles[3].ImageName := ImageName;
-         changed[1] := true;
-         changed[3] := true;
-      end;
-      if neighbors[e] = yes then
-      begin
-         base[2] := minis[2] + 12;
-         base[4] := minis[4] + 12;
-         miniTiles[2].ImageName := ImageName;
-         miniTiles[4].ImageName := ImageName;
-         changed[2] := true;
-         changed[4] := true;
-      end;
-      for i := 1 to 4 do
-         minis[i] := base[i];
-   end; //end of misc block
+   //store values for override
+         for i := 1 to 4 do
+            base[i] := minis[i];
+   //set lone corners
+         if nw in neighbors then
+            changeBase(1, 36);
+         if ne in neighbors then
+            changeBase(2, 36);
+         if sw in neighbors then
+            changeBase(3, 36);
+         if se in neighbors then
+            changeBase(4, 36);
+   //override values for walls
+         if n in neighbors then
+         begin
+            offsetBase(1, 24);
+            offsetBase(2, 24);
+         end;
+         if s in neighbors then
+         begin
+            offsetBase(3, 24);
+            offsetBase(4, 24);
+         end;
+         if w in neighbors then
+         begin
+            offsetBase(1, 12);
+            offsetBase(3, 12);
+         end;
+         if e in neighbors then
+         begin
+            offsetBase(2, 12);
+            offsetBase(4, 12);
+         end;
+         for i := 1 to 4 do
+            minis[i] := base[i];
+      end; //end of misc block
    end; //end of skip
 
 {   case TGameMap(Engine).animFrame of
@@ -845,18 +828,226 @@ begin
          inc(minis[i], 4);
       //end for
    end; }
-   if ocean then
-   begin
-//      self.ImageName := FBaseMap.chipsetName + ' ' + tilesetMap[1];
-      for i := 1 to 4 do
-         if not changed[i] then
-         begin
-            inc(minis[i], 36);
-//            miniTiles[i].ImageName := FBaseMap.chipsetName + ' ' + tilesetMap[1];
-         end;
-   end;
    for i := 1 to 4 do
+   begin
       miniTiles[i].ImageIndex := minis[i];
+      if not changed[i] then
+         miniTiles[i].ImageName := self.ImageName;
+   end;
+end;
+
+{ TOceanTile }
+
+procedure TOceanTile.doPlace;
+var
+   minis, base: array[1..4] of word;
+   i: byte;
+   changed: array[1..4] of boolean;
+
+   procedure ChangeAll;
+   var i: integer;
+   begin
+      for I := 1 to 4 do
+         changed[i] := true;
+   end;
+
+begin
+   minis[1] := 0;
+   minis[2] := minis[1] + 1;
+   minis[3] := minis[1] + 6;
+   minis[4] := minis[3] + 1;
+   miniTiles[1].X := self.X;
+   miniTiles[1].Y := self.Y;
+   miniTiles[2].X := self.X + 8;
+   miniTiles[2].Y := self.Y;
+   miniTiles[3].X := self.X;
+   miniTiles[3].Y := self.Y + 8;
+   miniTiles[4].X := self.X + 8;
+   miniTiles[4].Y := self.Y + 8;
+   for i := 1 to 4 do
+   begin
+      miniTiles[i].location := self.location;
+      changed[i] := false;
+   end;
+//now comes the fun part
+//skip if there's nothing to change
+   if neighbors <> [] then
+   begin
+//otherwise:
+//first: case 46: one-tile island
+      if neighbors * [n, e, w, s] = [n, e, w, s] then
+         changeAll
+      else
+   //3 wall cases
+   //42:
+      if neighbors * [n, e, w] = [n, e, w] then
+      begin
+         inc(minis[3], 6);
+         inc(minis[4], 6);
+         for i := 1 to 4 do
+         begin
+            miniTiles[i].ImageName := self.ImageName;
+            changed[i] := true;
+         end
+      end else
+   //43:
+      if neighbors * [n, e, s] = [n, e, s] then
+      begin
+         inc(minis[2], 6);
+         inc(minis[4], 6);
+         changeAll;
+      end else
+   //44:
+      if neighbors * [s, e, w] = [s, e, w] then
+      begin
+         inc(minis[1], 6);
+         inc(minis[3], 6);
+         changeAll;
+      end else
+   //45:
+      if neighbors * [n, s, w] = [n, s, w] then
+      begin
+         inc(minis[1], 6);
+         inc(minis[3], 6);
+         changeAll;
+      end else
+   //full-corner cases
+   //34:
+      if neighbors * [n, nw] = [n, nw] then
+      begin
+         inc(minis[2], 24);
+         inc(minis[3], 12);
+         for i := 1 to 3 do
+            changed[i] := true;
+         if se in neighbors then
+         begin
+            inc(minis[4], 36);
+            changed[4] := true;
+         end;
+      end else
+   //36:
+      if neighbors * [n, ne] = [n, ne] then
+      begin
+         inc(minis[1], 24);
+         changed[1] := true;
+         changed[2] := true;
+         inc(minis[4], 12);
+         changed[4] := true;
+         if sw in neighbors then
+         begin
+            inc(minis[3], 36);
+            changed[3] := true;
+         end;
+      end else
+   //38:
+      if neighbors * [s, se] = [s, se] then
+      begin
+         inc(minis[2], 12);
+         inc(minis[3], 24);
+         for i := 2 to 4 do
+            changed[i] := true;
+         if nw in neighbors then
+         begin
+            inc(minis[1], 36);
+            changed[1] := true;
+         end;
+      end else
+   //40:
+      if neighbors * [s, sw] = [s, sw] then
+      begin
+         inc(minis[1], 12);
+         changed[1] := true;
+         changed[3] := true;
+         inc(minis[4], 24);
+         changed[4] := true;
+         if ne in neighbors then
+         begin
+            inc(minis[2], 36);
+            changed[2] := true;
+         end;
+      end else
+   //miscellaneous cases, which can be handled individually
+      begin
+   //store values for override
+         for i := 1 to 4 do
+            base[i] := minis[i];
+   //set lone corners
+         if nw in neighbors then
+         begin
+            inc(base[1], 36);
+            changed[1] := true;
+         end;
+         if ne in neighbors then
+         begin
+            inc(base[2], 36);
+            changed[2] := true;
+         end;
+         if sw in neighbors then
+         begin
+            inc(base[3], 36);
+            changed[3] := true;
+         end;
+         if se in neighbors then
+         begin
+            inc(base[4], 36);
+            changed[4] := true;
+         end;
+   //override values for walls
+         if n in neighbors then
+         begin
+            base[1] := minis[1] + 24;
+            base[2] := minis[2] + 24;
+            changed[1] := true;
+            changed[2] := true;
+         end;
+         if s in neighbors then
+         begin
+            base[3] := minis[3] + 24;
+            base[4] := minis[4] + 24;
+            changed[3] := true;
+            changed[4] := true;
+         end;
+         if w in neighbors then
+         begin
+            base[1] := minis[1] + 12;
+            base[3] := minis[3] + 12;
+            changed[1] := true;
+            changed[3] := true;
+         end;
+         if e in neighbors then
+         begin
+            base[2] := minis[2] + 12;
+            base[4] := minis[4] + 12;
+            changed[2] := true;
+            changed[4] := true;
+         end;
+         for i := 1 to 4 do
+            minis[i] := base[i];
+      end; //end of misc block
+   end; //end of skip
+
+{   case TGameMap(Engine).animFrame of
+   1:;
+   2, 4:
+      for i := 1 to 4 do
+         inc(minis[i], 2);
+      //end for
+   3:
+      for i := 1 to 4 do
+         inc(minis[i], 4);
+      //end for
+   end;}
+
+   for i := 1 to 4 do
+   begin
+      if not changed[i] then
+      begin
+         inc(minis[i], 36);
+         miniTiles[i].ImageName := self.ImageName;
+      end
+      else miniTiles[i].ImageName := FLinkedFilename;
+      miniTiles[i].ImageIndex := minis[i];
+   end;
 end;
 
 { TAnimTile }
@@ -1013,7 +1204,7 @@ procedure TLowerTile.placeUpper(const xCoord, yCoord: word; const layer: byte;
                     const tileData: TTileRef; chip_data: TTileSet);
 begin
    assert (tileData.group > 18);
-   upperTile := TUpperTile.Create(Engine, FTilesetName, true);
+   upperTile := TUpperTile.Create(Engine, imageName, true);
    upperTile.place(xCoord, yCoord, layer, tileData, chip_data);
 end;
 
@@ -1079,7 +1270,7 @@ end;
 constructor TMiniTile.Create(const AParent: TBorderTile; tileset: string);
 begin
    inherited Create(AParent);
-   FTilesetName := tileset;
+   ImageName := tileset;
 end;
 
 end.

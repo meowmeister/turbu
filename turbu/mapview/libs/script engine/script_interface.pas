@@ -720,7 +720,7 @@ end;
 procedure TRpgMediaPlayer.fadeIn(time: integer);
 begin
    FCurrentTrack.FadeIn(time);
-   FCurrentTrack.OnMusicFinished := @musicLoopedHook;
+   FCurrentTrack.OnMusicFinished := musicLoopedHook;
    FBgmLooped := false;
 end;
 

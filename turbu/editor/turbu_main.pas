@@ -22,7 +22,8 @@ interface
 uses
    SysUtils, Classes, Controls, Forms, Menus, Contnrs,
    design_script_engine, Dialogs, JvComponentBase, JvPluginManager,
-   turbu_plugin_interface, turbu_engines, Graphics, ExtCtrls, StdCtrls;
+   turbu_plugin_interface, turbu_engines, Graphics, ExtCtrls, StdCtrls,
+  sdl_frame;
 
 type
    TfrmTurbuMain = class(TForm)
@@ -39,7 +40,7 @@ type
       mnuDatabase: TMenuItem;
       dlgOpen: TOpenDialog;
       pluginManager: TJvPluginManager;
-      imgLogo: TImage;
+    imgLogo: TSdlFrame;
       procedure mnu2KClick(Sender: TObject);
       procedure mnuSkillEditClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -48,7 +49,8 @@ type
       procedure mnuExitClick(Sender: TObject);
       procedure mnuOpenClick(Sender: TObject);
       procedure FormDestroy(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+      procedure FormCreate(Sender: TObject);
+    procedure imgLogoAvailable(Sender: TObject);
    private
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
@@ -64,10 +66,11 @@ var
 implementation
 
 uses
-   DBClient,
+   types, DBClient,
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_classes,
-   dm_database, discInterface, formats, strtok;
+   dm_database, discInterface, formats, strtok,
+   sdl_13, sdl, sdl_image, sdlstreams;
 
 {$R *.dfm}
 
@@ -91,6 +94,7 @@ begin
    if getProjectFolder = '' then
       createProjectFolder;
 end;
+
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
 begin
@@ -132,6 +136,26 @@ begin
          loadEngine(TEngineData(engines[j]));
       engines.free;
    end;
+end;
+
+procedure TfrmTurbuMain.imgLogoAvailable(Sender: TObject);
+var
+   surface: PSdlSurface;
+   rw: PSDL_RWops;
+   stream: TResourceStream;
+   texture: TSdlTexture;
+begin
+   stream := TResourceStream.Create(HInstance, 'logo', RT_RCDATA);
+   rw := SDLStreamSetup(stream);
+   surface := pointer(IMG_LoadPNG_RW(rw));
+   assert(assigned(surface));
+   texture := tsdlTexture.Create(0, surface);
+   SDLStreamCloseRWops(rw);
+   stream.Free;
+   surface.Free;
+
+   imgLogo.DrawTexture(texture);
+   imgLogo.Flip;
 end;
 
 procedure TfrmTurbuMain.loadEngine(data: TEngineData);

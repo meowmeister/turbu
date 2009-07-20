@@ -110,8 +110,8 @@ begin
          for dummy := 2 to 143 do
             ublockData[dummy] := $0F;
       end;
-      animation := getChboxSec($0b, theLDB, @fillInChipsetBool);
-      hispeed := getChboxSec($0c, theLDB, @fillInChipsetBool);
+      animation := getChboxSec($0b, theLDB, fillInChipsetBool);
+      hispeed := getChboxSec($0c, theLDB, fillInChipsetBool);
       dummy := 0;
       Read(dummy, 1);
       if dummy <> 0 then

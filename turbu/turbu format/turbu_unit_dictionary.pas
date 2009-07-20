@@ -19,11 +19,10 @@ unit turbu_unit_dictionary;
 
 interface
 uses
-   classes, generics.Collections,
-   turbu_containers;
+   classes, generics.Collections;
 
 type
-   TUnitDictionary = class(TRpgDictionary<string,TStringList>)
+   TUnitDictionary = class(TObjectDictionary<string,TStringList>)
    private
       FUnits: TStringList;
       function GetItem(const Key: string): TStringList;

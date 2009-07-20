@@ -70,7 +70,7 @@ type
       FTextureRows: integer;
 
       function getSpriteRect(index: integer): TRect;
-      procedure setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint; lSurface: PSdlSurface); virtual;
+      procedure setup(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint; lSurface: PSdlSurface); virtual;
       procedure SetTextureSize(size: TSgPoint);
       function GetCount: integer; inline;
       procedure processImage(image: PSdlSurface); virtual;
@@ -104,11 +104,11 @@ type
       * values of the SpriteSize parameters, or creation will fail and raise an
       * exception.
       ************************************************************************}
-      constructor CreateSprite(filename, imagename: string; container: TSdlImages; spriteSize: TPoint); overload;
-      constructor CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TPoint); overload;
-      constructor CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TPoint); overload;
+      constructor CreateSprite(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
+      constructor CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
+      constructor CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
 
-      constructor CreateBlankSprite(imagename: string; container: TSdlImages; spriteSize: TPoint; count: integer);
+      constructor CreateBlankSprite(imagename: string; container: TSdlImages; spriteSize: TSgPoint; count: integer);
 
       destructor Destroy; override;
 
@@ -126,9 +126,9 @@ type
       * Invalid values for DrawSprite result in nothing being drawn.
       ************************************************************************}
       procedure Draw; overload; virtual;
-      procedure Draw(dest: TPoint); overload;
-      procedure DrawRect(dest: TPoint; source: TRect);
-      procedure DrawSprite(dest: TPoint; index: integer);
+      procedure Draw(dest: TSgPoint); overload;
+      procedure DrawRect(dest: TSgPoint; source: TRect);
+      procedure DrawSprite(dest: TSgPoint; index: integer);
 
       property name: string read FName write FName;
       property surface: TSdlTexture read FSurface;
@@ -606,20 +606,20 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-constructor TSdlImage.CreateSprite(filename, imagename: string; container: TSdlImages; spriteSize: TPoint);
+constructor TSdlImage.CreateSprite(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint);
 begin
    inherited Create;
    setup(filename, imagename, container, spriteSize, nil);
 end;
 
-constructor TSdlImage.CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TPoint);
+constructor TSdlImage.CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TSgPoint);
 begin
    inherited Create;
    FSurface := TSdlTexture.Create(0, surface);
    setup('', imagename, container, spriteSize, surface);
 end;
 
-constructor TSdlImage.CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TPoint);
+constructor TSdlImage.CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TSgPoint);
 begin
    inherited Create;
    SDL_LockMutex(rwMutex);
@@ -629,7 +629,7 @@ begin
    SDL_UnlockMutex(rwMutex);
 end;
 
-constructor TSdlImage.CreateBlankSprite(imagename: string; container: TSdlImages; spriteSize: TPoint; count: integer);
+constructor TSdlImage.CreateBlankSprite(imagename: string; container: TSdlImages; spriteSize: TSgPoint; count: integer);
 begin
    inherited Create;
    spriteSize.Y := spriteSize.Y * count;
@@ -645,8 +645,9 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-procedure TSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TPoint; lSurface: PSdlSurface);
+procedure TSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint; lSurface: PSdlSurface);
 var
+   colorkey: TSDL_Color;
    dummy: integer;
    loader: TImgLoadMethod;
    loadStream: TStream;
@@ -700,9 +701,15 @@ begin
    if LSurface = nil then
       raise ESdlImageException.Create(string(IMG_GetError));
    //Allow descendant classes to fix up the image, if desired.
+   if assigned(LSurface.format.palette) then
+   begin
+      colorkey := LSurface.format.palette.colors^[0];
+      LSurface.ColorKey := SDL_MapRGB(LSurface.format, colorkey.r, colorkey.g, colorkey.b)
+   end;
    processImage(LSurface);
    if FSurface.ID = 0 then
       FSurface := TSdlTexture.Create(0, LSurface);
+
    LSurface.Free;
    if (spriteSize.X = EMPTY.X) and (spriteSize.Y = EMPTY.Y) then
       self.textureSize := point(LSurface.width, LSurface.height)
@@ -712,7 +719,7 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-procedure TSdlImage.draw(dest: TPoint);
+procedure TSdlImage.draw(dest: TSgPoint);
 begin
    currentRenderTarget.parent.draw(self, dest);
 end;
@@ -724,13 +731,13 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-procedure TSdlImage.drawRect(dest: TPoint; source: TRect);
+procedure TSdlImage.drawRect(dest: TSgPoint; source: TRect);
 begin
    currentRenderTarget.parent.drawRect(self, dest, source);
 end;
 
 //---------------------------------------------------------------------------
-procedure TSdlImage.DrawSprite(dest: TPoint; index: integer);
+procedure TSdlImage.DrawSprite(dest: TSgPoint; index: integer);
 begin
    if index >= count then
       Exit;
@@ -761,7 +768,7 @@ end;
 //---------------------------------------------------------------------------
 procedure TSdlImage.SetTextureSize(size: TSgPoint);
 var
-   lSize: TPoint;
+   lSize: TSgPoint;
 begin
    lSize := FSurface.size;
    if (lSize.X mod size.X > 0) or (lSize.Y mod size.Y > 0) then

@@ -548,6 +548,7 @@ begin
     result := Mix_VolumeMusic( -1 );
 end;
 
+{$T-}
 procedure TSDLMusic.LoadFromFile( const aFileName : string );
 var
   // Audio Specs
@@ -586,6 +587,7 @@ begin
   {$ENDIF}
     FMix_Music := Mix_LoadMUS( PAnsiChar( ansiString(aFileName) ) );
 end;
+{$T+}
 
 procedure TSDLMusic.LoadFromStream( aStream : TMemoryStream );
 begin
