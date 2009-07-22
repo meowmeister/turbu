@@ -20,10 +20,10 @@ unit turbu_main;
 interface
 
 uses
-   SysUtils, Classes, Controls, Forms, Menus, Contnrs,
+   SysUtils, Classes, Controls, Forms, Menus, Contnrs, Graphics, ExtCtrls, StdCtrls,
    design_script_engine, Dialogs, JvComponentBase, JvPluginManager,
-   turbu_plugin_interface, turbu_engines, Graphics, ExtCtrls, StdCtrls,
-  sdl_frame;
+   turbu_plugin_interface, turbu_engines, turbu_map_engine,
+   sdl_frame;
 
 type
    TfrmTurbuMain = class(TForm)
@@ -40,7 +40,7 @@ type
       mnuDatabase: TMenuItem;
       dlgOpen: TOpenDialog;
       pluginManager: TJvPluginManager;
-    imgLogo: TSdlFrame;
+      imgLogo: TSdlFrame;
       procedure mnu2KClick(Sender: TObject);
       procedure mnuSkillEditClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -50,8 +50,9 @@ type
       procedure mnuOpenClick(Sender: TObject);
       procedure FormDestroy(Sender: TObject);
       procedure FormCreate(Sender: TObject);
-    procedure imgLogoAvailable(Sender: TObject);
+      procedure imgLogoAvailable(Sender: TObject);
    private
+      FMapEngine: IMapEngine;
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
       procedure openProject(location: string);
@@ -175,7 +176,6 @@ begin
       et_minigame: assert(false);
       else assert(false);
    end;
-   //no need to clean up interfaces; when they go out of scope the refcount frees them
 end;
 
 procedure TfrmTurbuMain.loadProject;
@@ -223,6 +223,10 @@ begin
       closeProject;
       openProject(filename);
       mnuDatabase.Enabled := true;
+      if not assigned(FMapEngine) then
+      begin
+
+      end;
    end;
 end;
 

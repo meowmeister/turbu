@@ -71,6 +71,9 @@ implementation
 uses
    sysUtils;
 
+type
+   ERpgPlugin = class(Exception); //hack; remove when compiler's fixed
+
 { TMapEngine }
 
 procedure TMapEngine.AfterConstruction;

@@ -147,6 +147,7 @@ type
       function GetCount: Integer;
       function GetItem(Index: Integer): TSprite;
       procedure AddDrawList(Sprite: TSprite); inline;
+      procedure ClearSpriteList;
    public
       destructor Destroy; override;
       procedure Move(const movecount: single); override;
@@ -537,6 +538,13 @@ begin
    end;
    if assigned(FSpriteList) then
       FSpriteList.Clear;
+end;
+
+procedure TParentSprite.ClearSpriteList;
+begin
+   if assigned(FSpriteList) then
+      FSpriteList.Clear
+   else FSpriteList := TFastSpriteList.Create;
 end;
 
 procedure TParentSprite.Move(const movecount: single);
