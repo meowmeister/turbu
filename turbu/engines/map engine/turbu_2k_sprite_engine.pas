@@ -143,8 +143,7 @@ begin
    FViewport := viewport;
    self.WorldX := viewport.Left * TILE_SIZE.X;
    self.WorldY := viewport.Top * TILE_SIZE.Y;
-   if assigned(self.spriteList) then
-      self.SpriteList.Clear;
+   self.ClearSpriteList;
    for i := low(FMap.tileMap) to high(FMap.tileMap) do
       loadTileMatrix(FMap.tileMap[i], i, viewport);
    FOverlapping := [];
@@ -156,7 +155,6 @@ begin
       include(FOverlapping, facing_up)
    else if viewport.Top > self.Height then
       include(FOverlapping, facing_down);
-
 end;
 
 end.

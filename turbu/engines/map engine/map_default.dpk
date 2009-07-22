@@ -23,6 +23,7 @@ package map_default;
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$IMPLICITBUILD ON}
+{$DEFINE DEBUG}
 
 requires
   rtl,
@@ -36,7 +37,7 @@ requires
   default_format;
 
 contains
-   simpleShareMem,
+  simpleShareMem in 'simpleShareMem.pas',
   map_default_plugin in 'map_default_plugin.pas',
   turbu_2k_map_engine in 'turbu_2k_map_engine.pas',
   turbu_2k_sprite_engine in 'turbu_2k_sprite_engine.pas',
