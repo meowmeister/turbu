@@ -22,11 +22,6 @@
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
-		<PropertyGroup Condition="'$(Config)'=='Debug w/special exception handling' or '$(Cfg_3)'!=''">
-			<Cfg_3>true</Cfg_3>
-			<CfgParent>Base</CfgParent>
-			<Base>true</Base>
-		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Alpha release' or '$(Cfg_4)'!=''">
 			<Cfg_4>true</Cfg_4>
 			<CfgParent>Base</CfgParent>
@@ -34,8 +29,8 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_ExeOutput>..\bin</DCC_ExeOutput>
-			<DCC_DcuOutput>..\..\dcus</DCC_DcuOutput>
-			<DCC_DcpOutput>..\..\dcus</DCC_DcpOutput>
+			<DCC_DcuOutput>..\dcus\</DCC_DcuOutput>
+			<DCC_DcpOutput>..\dcus\</DCC_DcpOutput>
 			<DCC_Define>JCLINSTALL;PS_USESSUPPORT;$(DCC_Define)</DCC_Define>
 			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\classes\sdl custom;..\bin;..\dcus;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_UsePackage>rtl;vcl;vclx;dbrtl;Rave76VCL;bdertl;vclactnband;xmlrtl;vcldb;vcldbx;dsnap;dsnapcon;TeeUI;TeeDB;Tee;adortl;vclib;ibxpress;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_100_120;Intraweb_100_120;vclie;websnap;webdsnap;inetdbbde;inetdbxpress;soaprtl;vclribbon;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DataSnapServer;DbxClientDriver;DBXSybaseASADriver;DBXInterBaseDriver;DBXMySQLDriver;dbxcds;DBXSybaseASEDriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver;Jcl;JclVcl;JvCoreD12R;JvSystemD12R;JvStdCtrlsD12R;JvAppFrmD12R;JvBandsD12R;JvDBD12R;JvDlgsD12R;JvBDED12R;JvCmpD12R;JvCryptD12R;JvCtrlsD12R;JvCustomD12R;JvDockingD12R;JvDotNetCtrlsD12R;JvEDID12R;JvGlobusD12R;JvHMID12R;JvInterpreterD12R;JvJansD12R;JvManagedThreadsD12R;JvMMD12R;JvNetD12R;JvPageCompsD12R;JvPluginD12R;JvPrintPreviewD12R;JvRuntimeDesignD12R;JvTimeFrameworkD12R;JvValidatorsD12R;JvWizardD12R;JvXPCtrlsD12R</DCC_UsePackage>
@@ -73,21 +68,6 @@
 			<DCC_Define>EDITOR;DEBUG;FullDebugMode;$(DCC_Define)</DCC_Define>
 			<DCC_GenerateStackFrames>True</DCC_GenerateStackFrames>
 		</PropertyGroup>
-		<PropertyGroup Condition="'$(Cfg_3)'!=''">
-			<DCC_MapFile>3</DCC_MapFile>
-			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
-			<DCC_DebugDCUs>true</DCC_DebugDCUs>
-			<Version>7.0</Version>
-			<DCC_Optimize>False</DCC_Optimize>
-			<DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
-			<DCC_RangeChecking>True</DCC_RangeChecking>
-			<DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;..\..\..\..\Borland Studio Projects\components\Radio;C:\Program Files\Borland\BDS\4.0\source\Win32\Samples\Source;..\..\..\..\Borland Studio Projects\classes\asphyre\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_ResourcePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d11\debug;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Radio;C:\Program Files\Borland\BDS\4.0\source\Win32\Samples\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Pascal Script\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\asphyre\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\converters;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\plugins;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\engines\battle basis;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\jvcl\jcl\packages\d11;$(DCC_ResourcePath)</DCC_ResourcePath>
-			<DCC_ObjPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d11\debug;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Radio;C:\Program Files\Borland\BDS\4.0\source\Win32\Samples\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Pascal Script\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\asphyre\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\converters;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\plugins;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\engines\battle basis;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\jvcl\jcl\packages\d11;$(DCC_ObjPath)</DCC_ObjPath>
-			<DCC_IncludePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;$(BDS)\RaveReports\Lib;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d11\debug;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Radio;C:\Program Files\Borland\BDS\4.0\source\Win32\Samples\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Pascal Script\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\asphyre\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\converters;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\plugins;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\engines\battle basis;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\jvcl\jcl\packages\d11;$(DCC_IncludePath)</DCC_IncludePath>
-			<DCC_Define>EDITOR;DEBUG_EXCEPTIONS;DEBUG;FullDebugMode;$(DCC_Define)</DCC_Define>
-			<DCC_GenerateStackFrames>True</DCC_GenerateStackFrames>
-		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_4)'!=''">
 			<Version>7.0</Version>
 			<DCC_DebugInformation>False</DCC_DebugInformation>
@@ -105,125 +85,20 @@
 			<DelphiCompile Include="Turbu.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="..\LMT.pas"/>
-			<DCCReference Include="..\fileIO.pas"/>
-			<DCCReference Include="..\commons.pas"/>
-			<DCCReference Include="..\LDB.pas"/>
-			<DCCReference Include="..\BER.pas"/>
-			<DCCReference Include="..\chipset.pas"/>
-			<DCCReference Include="..\LMU.pas"/>
-			<DCCReference Include="..\skill_data.pas"/>
-			<DCCReference Include="..\condition_data.pas"/>
-			<DCCReference Include="..\battle_anims.pas"/>
-			<DCCReference Include="..\events.pas"/>
-			<DCCReference Include="database.pas">
-				<Form>frmDatabase</Form>
-			</DCCReference>
-			<DCCReference Include="turbu_main.pas">
-				<Form>frmTurbuMain</Form>
-			</DCCReference>
-			<DCCReference Include="..\formats.pas"/>
-			<DCCReference Include="rm_converter.pas">
-				<Form>frmRmConverter</Form>
-			</DCCReference>
-			<DCCReference Include="..\archiveInterface.pas"/>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_characters.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_characters.pas"/>
-			<DCCReference Include="..\turbu format\turbu_constants.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_database.pas"/>
-			<DCCReference Include="skill_settings.pas">
-				<Form>frmSkillLearning</Form>
-			</DCCReference>
-			<DCCReference Include="generic_algorithm_editor.pas">
-				<Form>frmAlgorithmEditor</Form>
-			</DCCReference>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_database.pas"/>
-			<DCCReference Include="..\turbu format\converters\conversion_table.pas"/>
-			<DCCReference Include="..\turbu format\turbu_defs.pas"/>
-			<DCCReference Include="..\turbu format\turbu_sdl_image.pas"/>
-			<DCCReference Include="..\turbu format\turbu_tbi_lib.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_db_var_arrays.pas"/>
-			<DCCReference Include="frame_commands.pas">
-				<Form>frameHeroCommands</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
-			<DCCReference Include="frame_class.pas">
-				<Form>frameClass</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
-			<DCCReference Include="..\turbu format\turbu_engines.pas"/>
-			<DCCReference Include="..\turbu format\turbu_sprites.pas"/>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_items.pas"/>
-			<DCCReference Include="..\debug\turbu_debugging.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_items.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_sounds.pas"/>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_sounds.pas"/>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_skills.pas"/>
-			<DCCReference Include="..\logs.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_animations.pas"/>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_animations.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_resists.pas"/>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_resists.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_classes.pas"/>
-			<DCCReference Include="..\discInterface.pas"/>
-			<DCCReference Include="..\turbu format\turbu_vartypes.pas"/>
-			<DCCReference Include="frame_params.pas">
-				<Form>frameParams</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
-			<DCCReference Include="dm_database.pas">
-				<Form>dmDatabase</Form>
-				<DesignClass>TDataModulet</DesignClass>
-			</DCCReference>
-			<DCCReference Include="attributes_editor.pas">
-				<Form>frmAttributesEditor</Form>
-			</DCCReference>
-			<DCCReference Include="frame_items.pas">
-				<Form>frameItems</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
-			<DCCReference Include="..\turbu format\turbu_script_basis.pas"/>
-			<DCCReference Include="design_script_engine.pas"/>
-			<DCCReference Include="..\turbu format\turbu_decl_utils.pas"/>
-			<DCCReference Include="..\turbu format\turbu_unit_dictionary.pas"/>
-			<DCCReference Include="..\mapview\libs\script engine\rpg_list.pas"/>
-			<DCCReference Include="..\mapview\libs\script engine\script_backend.pas"/>
-			<DCCReference Include="..\mapview\libs\script engine\script_interface.pas"/>
-			<DCCReference Include="..\mapview\libs\script engine\uPSI_script_interface.pas"/>
-			<DCCReference Include="..\mapview\libs\map engine\addition_sprite.pas"/>
-			<DCCReference Include="..\mapview\libs\timing.pas"/>
-			<DCCReference Include="..\turbu format\turbu_battle_engine.pas"/>
-			<DCCReference Include="..\turbu format\turbu_versioning.pas"/>
-			<DCCReference Include="..\turbu format\plugins\turbu_plugin_interface.pas"/>
-			<DCCReference Include="..\..\vclpatch\DB.pas"/>
-			<DCCReference Include="..\..\classes\findfile\findfile.pas"/>
-			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
-			<DCCReference Include="function_header.pas">
-				<Form>frmFuncHeader</Form>
-			</DCCReference>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_map_metadata.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_map_metadata.pas"/>
-			<DCCReference Include="..\turbu format\turbu_maps.pas"/>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_maps.pas"/>
-			<DCCReference Include="..\turbu format\converters\conversion_report_form.pas">
-				<Form>frmConversionReport</Form>
-			</DCCReference>
-			<DCCReference Include="..\turbu format\converters\conversion_report.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_skills.pas"/>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_converter_thread.pas"/>
-			<DCCReference Include="..\turbu_functional.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_tilesets.pas"/>
-			<DCCReference Include="..\turbu format\converters\rm2_turbu_tilesets.pas"/>
+			<RcCompile Include="..\turbures.rc">
+				<ContainerId>RC</ContainerId>
+				<Form>turbures.res</Form>
+			</RcCompile>
 			<None Include="..\..\unfinished.inc"/>
+			<RcItem Include="shield render.png">
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>logo</ResourceId>
+			</RcItem>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
 			<BuildConfiguration Include="Alpha release">
 				<Key>Cfg_4</Key>
-				<CfgParent>Base</CfgParent>
-			</BuildConfiguration>
-			<BuildConfiguration Include="Debug w/special exception handling">
-				<Key>Cfg_3</Key>
 				<CfgParent>Base</CfgParent>
 			</BuildConfiguration>
 			<BuildConfiguration Include="Debug">

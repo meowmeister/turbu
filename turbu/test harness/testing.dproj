@@ -96,7 +96,6 @@
 			<DCCReference Include="..\turbu format\turbu_defs.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_sounds.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_resists.pas"/>
-			<DCCReference Include="..\..\vclpatch\Generics.Collections.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_animations.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_db_var_arrays.pas"/>
 			<DCCReference Include="..\turbu format\turbu_engines.pas"/>

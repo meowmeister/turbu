@@ -27,6 +27,9 @@
 			<Projects Include="..\patcher\patcher.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="..\..\test\sdlFrame_test.dproj">
+				<Dependencies/>
+			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -109,14 +112,23 @@
 		<Target Name="patcher:Make">
 			<MSBuild Targets="Make" Projects="..\patcher\patcher.dproj"/>
 		</Target>
+		<Target Name="sdlFrame_test">
+			<MSBuild Projects="..\..\test\sdlFrame_test.dproj"/>
+		</Target>
+		<Target Name="sdlFrame_test:Clean">
+			<MSBuild Targets="Clean" Projects="..\..\test\sdlFrame_test.dproj"/>
+		</Target>
+		<Target Name="sdlFrame_test:Make">
+			<MSBuild Targets="Make" Projects="..\..\test\sdlFrame_test.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="EngineBasis;default_format;battle_default;map_default;mapshow;Turbu;testing;patcher"/>
+			<CallTarget Targets="EngineBasis;default_format;battle_default;map_default;mapshow;Turbu;testing;patcher;sdlFrame_test"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="EngineBasis:Clean;default_format:Clean;battle_default:Clean;map_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean;patcher:Clean"/>
+			<CallTarget Targets="EngineBasis:Clean;default_format:Clean;battle_default:Clean;map_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean;patcher:Clean;sdlFrame_test:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="EngineBasis:Make;default_format:Make;battle_default:Make;map_default:Make;mapshow:Make;Turbu:Make;testing:Make;patcher:Make"/>
+			<CallTarget Targets="EngineBasis:Make;default_format:Make;battle_default:Make;map_default:Make;mapshow:Make;Turbu:Make;testing:Make;patcher:Make;sdlFrame_test:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

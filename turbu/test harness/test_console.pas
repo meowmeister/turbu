@@ -95,7 +95,7 @@ end;
 procedure TfrmTestConsole.mnuCreateSdlWindowClick(Sender: TObject);
 begin
    if not assigned(lCanvas) then
-      lCanvas := TSdlCanvas.Create('TURBU testing canvas', rect(400, 400, 320, 240), [sdlwOpenGl, sdlwShown]);
+      lCanvas := TSdlCanvas.Create('TURBU testing canvas', rect(400, 400, 320, 240), [{sdlwOpenGl,} sdlwShown]);
    if (sender = mnuCreateSdlWindow) and (assigned(lCanvas)) then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;
@@ -201,7 +201,7 @@ begin
    addBattleEngine(T2kBattleEngine);
    addBattleEngine(T2k3BattleEngine);
    folder := IncludeTrailingPathDelimiter(GetRegistryValue('\Software\TURBU', 'TURBU Test Project'));
-   if folder <> '' then
+   if folder <> '\' then
    begin
       dummy := ExcludeTrailingPathDelimiter(folder);
       dummy := strtok.getLastToken(dummy, PathDelim);

@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DCC_DcuOutput>..\dcus\</DCC_DcuOutput>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_UnitSearchPath>..\bin\;..\dcus\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
@@ -45,6 +46,9 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_SymbolReferenceInfo>2</DCC_SymbolReferenceInfo>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<ItemGroup>
@@ -57,6 +61,7 @@
 			<DCCReference Include="vcldb.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="EngineBasis.dcp"/>
+			<DCCReference Include="SimpleShareMem_DefaultFormat.pas"/>
 			<DCCReference Include="database\turbu_database.pas"/>
 			<DCCReference Include="database\turbu_characters.pas"/>
 			<DCCReference Include="database\turbu_classes.pas"/>
@@ -70,7 +75,6 @@
 				<Form>dmDatabase</Form>
 				<DesignClass>TDataModule</DesignClass>
 			</DCCReference>
-			<DCCReference Include="..\commons.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
 			<DCCReference Include="..\archiveInterface.pas"/>
 			<DCCReference Include="turbu_sprites.pas"/>
@@ -88,6 +92,7 @@
 			<DCCReference Include="..\turbu_functional.pas"/>
 			<DCCReference Include="..\image_callback_hack.pas"/>
 			<DCCReference Include="..\mapview\libs\timing.pas"/>
+			<DCCReference Include="..\commons.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

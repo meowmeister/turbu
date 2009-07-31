@@ -20,10 +20,10 @@ unit turbu_main;
 interface
 
 uses
-   SysUtils, Classes, Controls, Forms, Menus, Contnrs, Graphics, ExtCtrls, StdCtrls,
+   SysUtils, Classes, Controls, Forms, Menus,
    design_script_engine, Dialogs, JvComponentBase, JvPluginManager,
-   turbu_plugin_interface, turbu_engines, turbu_map_engine,
-   sdl_frame;
+   turbu_plugin_interface, turbu_engines, Graphics, ExtCtrls, StdCtrls,
+  sdl_frame;
 
 type
    TfrmTurbuMain = class(TForm)
@@ -40,7 +40,7 @@ type
       mnuDatabase: TMenuItem;
       dlgOpen: TOpenDialog;
       pluginManager: TJvPluginManager;
-      imgLogo: TSdlFrame;
+    imgLogo: TSdlFrame;
       procedure mnu2KClick(Sender: TObject);
       procedure mnuSkillEditClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -50,9 +50,8 @@ type
       procedure mnuOpenClick(Sender: TObject);
       procedure FormDestroy(Sender: TObject);
       procedure FormCreate(Sender: TObject);
-      procedure imgLogoAvailable(Sender: TObject);
+    procedure imgLogoAvailable(Sender: TObject);
    private
-      FMapEngine: IMapEngine;
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
       procedure openProject(location: string);
@@ -67,11 +66,12 @@ var
 implementation
 
 uses
-   types, DBClient,
+   types, DBClient, windows, generics.Collections,
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_classes,
+   turbu_map_engine,
    dm_database, discInterface, formats, strtok,
-   sdl_13, sdl, sdl_image, sdlstreams;
+   sdl, sdl_13, sdl_image, sdlstreams;
 
 {$R *.dfm}
 
@@ -106,7 +106,7 @@ procedure TfrmTurbuMain.FormShow(Sender: TObject);
 var
    infile: TStream;
    plugins: TStringList;
-   engines: TObjectList;
+   engines: TList<TEngineData>;
    plugStr: string;
    i, j: integer;
    pluginIntf: ITurbuPluginInterface;
@@ -142,40 +142,70 @@ end;
 procedure TfrmTurbuMain.imgLogoAvailable(Sender: TObject);
 var
    surface: PSdlSurface;
+   convert1, convert2: PSdlSurface;
+   info: TSDL_RendererInfo;
    rw: PSDL_RWops;
    stream: TResourceStream;
    texture: TSdlTexture;
+   window: TSdlWindowId;
 begin
    stream := TResourceStream.Create(HInstance, 'logo', RT_RCDATA);
    rw := SDLStreamSetup(stream);
    surface := pointer(IMG_LoadPNG_RW(rw));
    assert(assigned(surface));
-   texture := tsdlTexture.Create(0, surface);
+   convert1 := TSdlSurface.Create(1, 1, 32);
+   convert2 := TSdlSurface.Convert(surface, convert1.Format);
+
+   SDL_SelectRenderer(imgLogo.SdlWindow);
+   outputDebugStringA(SDL_GetError);
+   SDL_GetRendererInfo(info);
+   texture := tsdlTexture.Create(0, convert2);
    SDLStreamCloseRWops(rw);
    stream.Free;
    surface.Free;
+   convert1.Free;
 
    imgLogo.DrawTexture(texture);
    imgLogo.Flip;
+   imgLogo.DrawTexture(texture);
+   imgLogo.Flip;
+   outputDebugStringA(SDL_GetError);
+
+   window := SDL_CreateWindow('', 20, 30, 750, 640, [sdlwOpenGl, sdlwShown]);
+   SDL_CreateRenderer(window, 0, [sdlrAccelerated]);
+   SDL_SelectRenderer(window);
+   SDL_GetRendererInfo(info);
+   texture := tsdlTexture.Create(0, convert2);
+   SDL_RenderFill(nil);
+   SDL_RenderPresent;
+   SDL_RenderCopy(texture, nil, nil);
+   SDL_RenderPresent;
+   convert2.Free;
 end;
 
 procedure TfrmTurbuMain.loadEngine(data: TEngineData);
 var
    iClass: TRpgPlugBase;
-   engine: IBattleEngine;
+   bEngine: IBattleEngine;
+   mEngine: IMapEngine;
 begin
    iClass := data.engine.Create;
    case data.style of
-      et_map: assert(false);
+      et_map:
+      begin
+         assert(iclass.GetInterface(IMapEngine, mEngine));
+         addEngine(et_battle, mEngine.getData);
+      end;
       et_battle:
       begin
-         assert(iclass.GetInterface(IBattleEngine, engine));
-         addEngine(et_battle, engine.getData);
+         assert(iclass.GetInterface(IBattleEngine, bEngine));
+         addEngine(et_battle, bEngine.getData);
       end;
       et_menu: assert(false);
       et_minigame: assert(false);
       else assert(false);
    end;
+   //no need to clean up interfaces; when they go out of scope the refcount frees them
 end;
 
 procedure TfrmTurbuMain.loadProject;
@@ -223,10 +253,6 @@ begin
       closeProject;
       openProject(filename);
       mnuDatabase.Enabled := true;
-      if not assigned(FMapEngine) then
-      begin
-
-      end;
    end;
 end;
 

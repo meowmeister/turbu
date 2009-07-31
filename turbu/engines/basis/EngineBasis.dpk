@@ -22,7 +22,7 @@ package EngineBasis;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESIGNONLY}
+{$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
@@ -30,11 +30,11 @@ requires
   vcl;
 
 contains
+  SimpleShareMem_EngineBasis in 'SimpleShareMem_EngineBasis.pas',
   upsCompiler in '..\..\..\components\PascalScript\upsCompiler.pas',
   uPSRuntime in '..\..\..\components\PascalScript\uPSRuntime.pas',
   uPSUtils in '..\..\..\components\PascalScript\uPSUtils.pas',
   turbu_versioning in '..\..\turbu format\turbu_versioning.pas',
-  turbu_plugin_interface in '..\battle basis\turbu_plugin_interface.pas',
   turbu_battle_engine in '..\..\turbu format\turbu_battle_engine.pas',
   turbu_map_engine in '..\..\turbu format\turbu_map_engine.pas',
   sdl in '..\..\..\classes\jedi-sdl\SDL\Pas\sdl.pas',
@@ -48,6 +48,7 @@ contains
   sdl_sprite in '..\..\..\classes\sdl custom\sdl_sprite.pas',
   SG_defs in '..\..\..\classes\sdl custom\SG_defs.pas',
   turbu_map_interface in '..\..\turbu format\turbu_map_interface.pas',
-  sdlstreams in '..\..\..\classes\jedi-sdl\SDL\Pas\sdlstreams.pas';
+  sdlstreams in '..\..\..\classes\jedi-sdl\SDL\Pas\sdlstreams.pas',
+  turbu_plugin_interface in '..\..\turbu format\plugins\turbu_plugin_interface.pas';
 
 end.

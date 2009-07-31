@@ -29,7 +29,6 @@ type
       procedure SetItem(const Key: string; const Value: TStringList);
    public
       constructor Create(Ownerships: TDictionaryOwnerships; ACapacity: Integer = 0);
-      destructor Destroy; override;
 
       procedure Add(const Key: string; const Value: TStringList);
       function ContainsKey(const Key: string): Boolean;
@@ -60,12 +59,6 @@ begin
    FUnits := TStringList.Create;
    FUnits.Sorted := true;
    FUnits.Duplicates := dupError;
-end;
-
-destructor TUnitDictionary.Destroy;
-begin
-   FUnits.Free;
-   inherited Destroy;
 end;
 
 function TUnitDictionary.GetItem(const Key: string): TStringList;

@@ -20,8 +20,9 @@ unit turbu_plugin_interface;
 interface
 
 uses
-   Contnrs,
-   turbu_versioning;
+   SysUtils, Generics.Collections,
+   turbu_versioning,
+   sdl_13;
 
 type
    TEngineStyle = (et_map, et_battle, et_menu, et_minigame);
@@ -33,7 +34,7 @@ type
 
    TPlugClass = class of TRpgPlugBase;
 
-   TRpgMetadata = class (TObject)
+   TRpgMetadata = class(TObject)
    private
       FName: string;
       FVersion: TVersion;
@@ -56,8 +57,10 @@ type
 
    ITurbuPluginInterface = interface(IInterface)
    ['{EC78AE5D-1B52-4982-9AC7-19D95D67A26E}']
-      function listPlugins: TObjectList;
+      function listPlugins: TList<TEngineData>;
    end;
+
+   ERpgPlugin = class(Exception);
 
 implementation
 
