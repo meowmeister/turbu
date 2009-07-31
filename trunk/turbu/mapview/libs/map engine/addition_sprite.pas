@@ -22,7 +22,7 @@ unit addition_sprite;
 interface
 uses
    types,
-   {tiles,} timing, events, charset_data, move_data, commons,
+   tiles, timing, events, charset_data, move_data, commons,
    {asphyreSprite} SDL_sprite, SG_defs;
 
 type
@@ -90,7 +90,7 @@ type
       FLocation: TSgPoint;
       FTarget: TSgPoint;
       FMoveDir: TFacing;
-      FTiles: array [TCharTiles] of TSprite;
+      FTiles: array [TCharTiles] of TTile;
       FMoving: byte;
       FEngine: TSpriteEngine;
       FMoveRate: byte;

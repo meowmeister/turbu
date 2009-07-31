@@ -20,7 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DCC_UnitSearchPath>..\..\bin;..\..\dcus;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DcuOutput>..\..\dcus\</DCC_DcuOutput>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
@@ -54,19 +54,19 @@
 			</DelphiCompile>
 			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
-			<DCCReference Include="JvPluginD12R.dcp"/>
+			<DCCReference Include="JvPluginD14R.dcp"/>
 			<DCCReference Include="vclx.dcp"/>
 			<DCCReference Include="Jcl.dcp"/>
-			<DCCReference Include="JvCoreD12R.dcp"/>
+			<DCCReference Include="JvCoreD14R.dcp"/>
 			<DCCReference Include="JclVcl.dcp"/>
 			<DCCReference Include="EngineBasis.dcp"/>
 			<DCCReference Include="default_format.dcp"/>
-			<DCCReference Include="simpleShareMem.pas"/>
 			<DCCReference Include="map_default_plugin.pas"/>
 			<DCCReference Include="turbu_2k_map_engine.pas"/>
 			<DCCReference Include="turbu_2k_sprite_engine.pas"/>
 			<DCCReference Include="tiles.pas"/>
 			<DCCReference Include="..\..\charset_data.pas"/>
+			<DCCReference Include="SimpleShareMem_MapDefault.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -80,6 +80,9 @@
 			</BuildConfiguration>
 		</ItemGroup>
 		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<PropertyGroup>
+			<PostBuildEvent><![CDATA[copy "$(OUTPUTPATH)" "$(OUTPUTDIR)$(OUTPUTNAME).tep" /Y]]></PostBuildEvent>
+		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
 			<Borland.ProjectType>Package</Borland.ProjectType>
@@ -120,6 +123,9 @@
 					<Source>
 						<Source Name="MainSource">map_default.dpk</Source>
 					</Source>
+					<isVersionControl>
+						<isVersionControl Name="isVersionControlID"/>
+					</isVersionControl>
 				</Delphi.Personality>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>

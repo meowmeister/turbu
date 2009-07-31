@@ -1,7 +1,6 @@
 program testing;
 
 uses
-  FastMM4,
   Forms,
   types,
   SDL,
@@ -29,7 +28,6 @@ uses
   turbu_defs in '..\turbu format\turbu_defs.pas',
   turbu_sounds in '..\turbu format\database\turbu_sounds.pas',
   turbu_resists in '..\turbu format\database\turbu_resists.pas',
-  Generics.Collections in '..\..\vclpatch\Generics.Collections.pas',
   turbu_animations in '..\turbu format\database\turbu_animations.pas',
   turbu_db_var_arrays in '..\turbu format\database\turbu_db_var_arrays.pas',
   turbu_engines in '..\turbu format\turbu_engines.pas',

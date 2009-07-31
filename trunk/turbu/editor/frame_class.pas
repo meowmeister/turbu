@@ -140,7 +140,7 @@ uses
    turbu_tbi_lib, turbu_sdl_image, turbu_decl_utils, turbu_classes,
    generic_algorithm_editor, design_script_engine, skill_settings,
    attributes_editor,
-   SDL, sdl_gfx, SDL_13;
+   SDL, SDL_13;
 
 {$R *.dfm}
 

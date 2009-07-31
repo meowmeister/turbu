@@ -16,7 +16,7 @@ unit turbu_engines;
 * This file was created by Mason Wheeler.  He can be reached for support at
 * www.turbu-rpg.com.
 *****************************************************************************}
-
+{$D+}
 interface
 uses
    SysUtils,

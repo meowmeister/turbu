@@ -177,7 +177,7 @@ begin
       result := true;
       Exit;
    end;
-   if (SDL_CreateRenderer(FWindowID, 1, [sdlrPresentCopy]) = 0) then
+   if (SDL_CreateRenderer(FWindowID, SDL_RendererIndex('opengl'), [sdlrPresentFlip3, sdlrAccelerated]) = 0) then
    begin
       SDL_ShowWindow(FWindowID);
       assert(SDL_SetRenderDrawColor(0, 0, 0, 0) = 0);

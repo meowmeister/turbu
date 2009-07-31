@@ -20,14 +20,14 @@ unit battle_default_plugin;
 interface
 
 uses
-   Contnrs,
+   Generics.Collections,
    JvPlugin,
    turbu_plugin_interface;
 
 type
    TRpgBasicBattlePlugin = class(TJvPlugin, ITurbuPluginInterface)
    public
-      function listPlugins: TObjectList;
+      function listPlugins: TList<TEngineData>;
    end;
 
 function RegisterPlugin: TRpgBasicBattlePlugin; stdcall;
@@ -48,9 +48,9 @@ end;
 
 { TRpgBasicBattlePlugin }
 
-function TRpgBasicBattlePlugin.listPlugins: TObjectList;
+function TRpgBasicBattlePlugin.listPlugins: TList<TEngineData>;
 begin
-   result := TObjectList.Create;
+   result := TList<TEngineData>.Create;
    result.Add(TEngineData.Create(et_battle, T2kBattleEngine));
    result.Add(TEngineData.Create(et_battle, T2k3BattleEngine));
 end;

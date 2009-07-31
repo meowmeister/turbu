@@ -184,7 +184,7 @@ begin
       SDL_InitSubSystem(SDL_INIT_VIDEO);
 
    FWindow := SDL_CreateWindow(PAnsiChar(title), size.Left, size.Top, size.Right, size.Bottom, flags);
-   if SDL_CreateRenderer(FWindow, -1, [sdlrPresentFlip2]) <> 0 then
+   if SDL_CreateRenderer(FWindow, -1, [sdlrPresentFlip3]) <> 0 then
       raise EBadHandle.Create(string(SDL_GetError));
    SDL_SelectRenderer(FWindow);
    SDL_RenderPresent;

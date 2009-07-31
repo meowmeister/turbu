@@ -1,3 +1,4 @@
+{$D-}
 (*
 
 Fast Memory Manager 4.90

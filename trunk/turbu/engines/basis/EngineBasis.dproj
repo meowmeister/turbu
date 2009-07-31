@@ -7,7 +7,7 @@
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<DCC_DependencyCheckOutputName>..\..\editor\EngineBasis.bpl</DCC_DependencyCheckOutputName>
 			<ProjectVersion>12.0</ProjectVersion>
-			<Config Condition="'$(Config)'==''">Release</Config>
+			<Config Condition="'$(Config)'==''">Debug</Config>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
 			<Base>true</Base>
@@ -23,6 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<DCC_BplOutput>..\..\bin\</DCC_BplOutput>
 			<DCC_DcuOutput>..\..\dcus\</DCC_DcuOutput>
@@ -31,7 +32,7 @@
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
 			<DCC_Optimize>false</DCC_Optimize>
-			<DesignOnlyPackage>true</DesignOnlyPackage>
+			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
 			<GenDll>true</GenDll>
 			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
@@ -45,16 +46,13 @@
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_DependencyCheckOutputName>..\..\editor\EngineBasis.bpl</DCC_DependencyCheckOutputName>
 			<Version>7.0</Version>
-			<DCC_UnitSearchPath>C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ResourcePath>C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;$(DCC_IncludePath)</DCC_IncludePath>
 			<DCC_Optimize>False</DCC_Optimize>
 			<DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
 			<DCC_RangeChecking>True</DCC_RangeChecking>
-			<DCC_BplOutput>..\..\editor</DCC_BplOutput>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="EngineBasis.dpk">
@@ -62,11 +60,11 @@
 			</DelphiCompile>
 			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="SimpleShareMem_EngineBasis.pas"/>
 			<DCCReference Include="..\..\..\components\PascalScript\upsCompiler.pas"/>
 			<DCCReference Include="..\..\..\components\PascalScript\uPSRuntime.pas"/>
 			<DCCReference Include="..\..\..\components\PascalScript\uPSUtils.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_versioning.pas"/>
-			<DCCReference Include="..\battle basis\turbu_plugin_interface.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_battle_engine.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_map_engine.pas"/>
 			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL\Pas\sdl.pas"/>
@@ -81,6 +79,7 @@
 			<DCCReference Include="..\..\..\classes\sdl custom\SG_defs.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_map_interface.pas"/>
 			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL\Pas\sdlstreams.pas"/>
+			<DCCReference Include="..\..\turbu format\plugins\turbu_plugin_interface.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -94,9 +93,6 @@
 			</BuildConfiguration>
 		</ItemGroup>
 		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
-		<PropertyGroup>
-			<PostBuildEvent><![CDATA[copy "$(OUTPUTPATH)" "$(OUTPUTDIR)$(OUTPUTNAME).tep" /Y]]></PostBuildEvent>
-		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
 			<Borland.ProjectType>Package</Borland.ProjectType>
@@ -106,7 +102,7 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
-						<Parameters Name="HostApplication">C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\editor\Turbu.exe</Parameters>
+						<Parameters Name="HostApplication">C:\Documents and Settings\Mason\My Documents\RAD Studio\Projects\turbu\turbu\bin\Turbu.exe</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

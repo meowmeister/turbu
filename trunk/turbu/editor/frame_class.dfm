@@ -66,7 +66,6 @@ object frameClass: TframeClass
         Width = 168
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         ItemIndex = 0
         TabOrder = 0
         Text = 'Hit Points'
@@ -286,6 +285,10 @@ object frameClass: TframeClass
         TabOrder = 0
         object tshEquipment: TTabSheet
           Caption = 'Equipment'
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object lblEquip1: TLabel
             Left = 8
             Top = 8
@@ -378,6 +381,10 @@ object frameClass: TframeClass
         object tshSkills: TTabSheet
           Caption = 'Commands'
           ImageIndex = 1
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           inline frameHeroCommands: TframeHeroCommands
             Left = 0
             Top = 0
@@ -397,6 +404,10 @@ object frameClass: TframeClass
         object tshRepertoire: TTabSheet
           Caption = 'Skills'
           ImageIndex = 2
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object lstSkills: TRpgListGrid
             Left = 4
             Top = 4
@@ -490,6 +501,10 @@ object frameClass: TframeClass
         object tshAttributes: TTabSheet
           Caption = 'Attributes'
           OnShow = linkNav
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object lstAttributes: TRpgListGrid
             Left = 3
             Top = 3
@@ -533,6 +548,10 @@ object frameClass: TframeClass
         object tshConditions: TTabSheet
           Caption = 'Conditions'
           ImageIndex = 1
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object RpgListGrid1: TRpgListGrid
             Left = 3
             Top = 3

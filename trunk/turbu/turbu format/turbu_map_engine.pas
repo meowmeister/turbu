@@ -26,19 +26,22 @@ uses
    sdl_13;
 
 type
+   TMapEngineData = class(TRpgMetadata);
+
    IMapEngine = interface(IInterface)
    ['{A5FDC982-D72E-448E-8E37-7865094C5B5E}']
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase);
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
       function loadMap(map: IRpgMap; startPosition: TSgPoint): boolean;
+      function getData: TMapEngineData;
+      property data: TMapEngineData read getData;
    end;
-
-   TMapEngineData = class(TRpgMetadata);
 
    TMapEngine = class abstract (TRpgPlugBase, IMapEngine)
    private
       FData: TMapEngineData;
+      function GetData: TMapEngineData;
    protected
       FBattleEngines: TDictionary<string, IBattleEngine>;
       FDefaultBattleEngine: IBattleEngine;
@@ -53,7 +56,7 @@ type
       function setDefaultBattleEngine(name: string): boolean;
       function loadMap(map: IRpgMap; startPosition: TSgPoint): boolean; virtual; abstract;
 
-      property data: TMapEngineData read FData write FData;
+      property data: TMapEngineData read GetData write FData;
    end;
 
    TMatrix<T> = class(TObject)
@@ -72,7 +75,7 @@ uses
    sysUtils;
 
 type
-   ERpgPlugin = class(Exception); //hack; remove when compiler's fixed
+   ERpgPlugin = class(Exception);
 
 { TMapEngine }
 
@@ -89,8 +92,12 @@ begin
    if FInitialized then
       self.cleanup;
    FBattleEngines.Free;
-   FData.Free;
    inherited Destroy;
+end;
+
+function TMapEngine.GetData: TMapEngineData;
+begin
+   Result := FData;
 end;
 
 procedure TMapEngine.initialize(window: TSdlWindowId; database: IRpgDatabase);

@@ -427,6 +427,9 @@ function SDL_GetNumRenderDrivers(): integer; cdecl; external SDLLibName;
 function SDL_GetRenderDriverInfo(index: integer; var info: TSDL_RendererInfo): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetRenderDriverInfo}
 
+function SDL_GetRendererInfo(var info: TSDL_RendererInfo): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetRenderDriverInfo}
+
 (**
  * SDL_CreateRenderer
  *
@@ -622,6 +625,8 @@ cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_Error'{$ELSE} SDLLibName{
 // Private error message function - used internally
 procedure SDL_OutOfMemory;
 
+function SDL_RendererIndex(name: AnsiString): integer;
+
 implementation
 
 { TSdlSurface }
@@ -752,6 +757,25 @@ function SDL_BlitSurface(src: PSdlSurface; srcrect: PSdlRect; dst:
   PSdlSurface; dstrect: PSdlRect): Integer;
 begin
   Result := SDL_UpperBlit(src, srcrect, dst, dstrect);
+end;
+
+function SDL_RendererIndex(name: AnsiString): integer;
+var
+  count: integer;
+  i: integer;
+  info: TSDL_RendererInfo;
+begin
+  count := SDL_GetNumRenderDrivers;
+  for I := 0 to count - 1 do
+  begin
+    SDL_GetRenderDriverInfo(i, info);
+    if info.name = name then
+    begin
+      result := i;
+      Exit;
+    end;
+  end;
+  result := -1;
 end;
 
 initialization
