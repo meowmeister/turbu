@@ -47,8 +47,8 @@ type
 
 implementation
 uses
-   sysUtils, math, windows{,
-   commons};
+   sysUtils, math, windows,
+   commons;
 
 { TRpgTimestamp }
 
@@ -182,7 +182,7 @@ var
    timefactor: integer;
 begin
    timefactor := max(timer div TRpgTimeStamp.FrameLength, 1);
-   diff := {commons.}round((current - goal) / timefactor);
+   diff := commons.round((current - goal) / timefactor);
    assert(abs(diff) < 256);
    current := current - diff;
 end;
