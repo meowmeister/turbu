@@ -4,6 +4,7 @@ object RpgBasicMapPlugin: TRpgBasicMapPlugin
   Commands = <>
   Description = 'Turbu plugin'
   Copyright = '(c) Mason Wheeler'
+  PluginID = 'Turbu.2K.MapEngine'
   PluginVersion = '1.0'
   Height = 165
   Width = 204

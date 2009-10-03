@@ -2436,6 +2436,7 @@ var
     var
       offs, l: Longint;
     begin
+      curr := nil;
       offs := 0;
       for l := 0 to Dta.FieldTypes.Count -1 do
       begin

@@ -21,6 +21,7 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<DCC_DcuOutput>..\dcus\</DCC_DcuOutput>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_UnitSearchPath>..\bin\;..\dcus\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
@@ -46,6 +47,8 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 			<DCC_SymbolReferenceInfo>2</DCC_SymbolReferenceInfo>
@@ -55,12 +58,8 @@
 			<DelphiCompile Include="default_format.dpk">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="rtl.dcp"/>
-			<DCCReference Include="dbrtl.dcp"/>
-			<DCCReference Include="dsnap.dcp"/>
-			<DCCReference Include="vcldb.dcp"/>
-			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="EngineBasis.dcp"/>
+			<DCCReference Include="dsnap.dcp"/>
 			<DCCReference Include="SimpleShareMem_DefaultFormat.pas"/>
 			<DCCReference Include="database\turbu_database.pas"/>
 			<DCCReference Include="database\turbu_characters.pas"/>
@@ -81,7 +80,6 @@
 			<DCCReference Include="turbu_unit_dictionary.pas"/>
 			<DCCReference Include="turbu_defs.pas"/>
 			<DCCReference Include="turbu_containers.pas"/>
-			<DCCReference Include="turbu_engines.pas"/>
 			<DCCReference Include="turbu_decl_utils.pas"/>
 			<DCCReference Include="turbu_vartypes.pas"/>
 			<DCCReference Include="turbu_constants.pas"/>
@@ -92,6 +90,8 @@
 			<DCCReference Include="..\turbu_functional.pas"/>
 			<DCCReference Include="..\image_callback_hack.pas"/>
 			<DCCReference Include="..\mapview\libs\timing.pas"/>
+			<DCCReference Include="turbu_engines.pas"/>
+			<DCCReference Include="turbu_script_interface.pas"/>
 			<DCCReference Include="..\commons.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

@@ -20,10 +20,10 @@ unit turbu_main;
 interface
 
 uses
-   SysUtils, Classes, Controls, Forms, Menus,
+   SysUtils, Classes, Controls, Forms, Menus, Graphics, ExtCtrls, StdCtrls,
    design_script_engine, Dialogs, JvComponentBase, JvPluginManager,
-   turbu_plugin_interface, turbu_engines, Graphics, ExtCtrls, StdCtrls,
-  sdl_frame;
+   turbu_plugin_interface, turbu_engines, turbu_map_engine, turbu_map_interface,
+   sdl_frame, ComCtrls, sdl, sdl_13;
 
 type
    TfrmTurbuMain = class(TForm)
@@ -40,22 +40,38 @@ type
       mnuDatabase: TMenuItem;
       dlgOpen: TOpenDialog;
       pluginManager: TJvPluginManager;
-    imgLogo: TSdlFrame;
+      sbxMain: TScrollBox;
+      imgLogo: TSdlFrame;
+    pnlSidebar: TPanel;
+      sbxPallette: TScrollBox;
+      splSidebar: TSplitter;
+      imgPalette: TSdlFrame;
+    trvMapTree: TTreeView;
+      sbPalette: TScrollBar;
       procedure mnu2KClick(Sender: TObject);
       procedure mnuSkillEditClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
-      procedure FormClose(Sender: TObject; var Action: TCloseAction);
       procedure mnuExitClick(Sender: TObject);
       procedure mnuOpenClick(Sender: TObject);
-      procedure FormDestroy(Sender: TObject);
       procedure FormCreate(Sender: TObject);
-    procedure imgLogoAvailable(Sender: TObject);
+      procedure imgLogoAvailable(Sender: TObject);
+      procedure FormDestroy(Sender: TObject);
+    procedure sbPaletteScroll(Sender: TObject; ScrollCode: TScrollCode;
+      var ScrollPos: Integer);
+    procedure splSidebarMoved(Sender: TObject);
    private
+      FMapEngine: IDesignMapEngine;
+      FCurrentMap: IRpgMap;
+      FPaletteTexture: integer;
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
       procedure openProject(location: string);
       procedure closeProject;
+
+      procedure assignPaletteImage(surface: PSdlSurface);
+      procedure displayPalette(height: integer);
+      procedure resizePalette;
    public
       { Public declarations }
    end;
@@ -66,17 +82,48 @@ var
 implementation
 
 uses
-   types, DBClient, windows, generics.Collections,
+   types, DBClient, windows, generics.Collections, math,
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_classes,
-   turbu_map_engine,
+   turbu_versioning, turbu_maps, turbu_tilesets,
    dm_database, discInterface, formats, strtok,
-   sdl, sdl_13, sdl_image, sdlstreams;
+   sdl_image, sdlstreams;
 
 {$R *.dfm}
 
-resourcestring
-   FILTER_TEXT = 'TURBU Projects (project.tdb)|project.tdb';
+procedure TfrmTurbuMain.DisplayPalette(height: integer);
+var
+   texture: TSdlTexture;
+   displayRect: TRect;
+begin
+   assert(FPaletteTexture > -1);
+   texture := imgPalette.textures[FPaletteTexture];
+   height := min(height, texture.size.Y - sbPalette.pageSize);
+   displayRect := rect(0, height, imgPalette.width div 2, imgPalette.height div 2);
+   imgPalette.drawTexture(texture, @displayRect, nil);
+   imgPalette.Flip;
+end;
+
+procedure TfrmTurbuMain.resizePalette;
+const
+   TILE_SIZE = 16;
+var
+   texture: TSdlTexture;
+begin
+   texture := imgPalette.textures[FPaletteTexture];
+   sbPalette.Max := texture.size.y;
+   sbPalette.PageSize := imgPalette.height div 2;
+   sbPalette.LargeChange := sbPalette.PageSize - TILE_SIZE;
+   DisplayPalette(sbPalette.Position);
+end;
+
+procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);
+var
+   dummy: TSdlTexture;
+begin
+   FPaletteTexture := imgPalette.AddTexture(surface, dummy);
+   resizePalette;
+end;
 
 procedure TfrmTurbuMain.closeProject;
 begin
@@ -85,35 +132,33 @@ begin
    GArchives.clearFrom(1);
 end;
 
-procedure TfrmTurbuMain.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-   assert(true);
-end;
-
 procedure TfrmTurbuMain.FormCreate(Sender: TObject);
 begin
    if getProjectFolder = '' then
       createProjectFolder;
+   FPaletteTexture := -1;
 end;
 
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
 begin
    cleanupEngines;
+   FCurrentMap := nil;
+   FMapEngine := nil;
+   GScriptEngine := nil;
 end;
 
 procedure TfrmTurbuMain.FormShow(Sender: TObject);
 var
    infile: TStream;
    plugins: TStringList;
-   engines: TList<TEngineData>;
+   engines: TEngineDataList;
    plugStr: string;
    i, j: integer;
-   pluginIntf: ITurbuPluginInterface;
+   pluginIntf: ITurbuPlugin;
 begin
    GProjectFolder := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
    assert(GArchives.Add(openFolder(GProjectFolder + DESIGN_DB)) = BASE_ARCHIVE);
-   dlgOpen.Filter := FILTER_TEXT;
    plugins := TStringList.Create;
    try
       inFile := GArchives[BASE_ARCHIVE].getFile('plugins');
@@ -131,10 +176,10 @@ begin
    end;
    for I := 0 to pluginManager.PluginCount - 1 do
    begin
-      assert(pluginManager.Plugins[i].GetInterface(ITurbuPluginInterface, pluginIntf));
+      assert(pluginManager.Plugins[i].GetInterface(ITurbuPlugin, pluginIntf));
       engines := pluginIntf.listPlugins;
       for j := 0 to engines.Count - 1 do
-         loadEngine(TEngineData(engines[j]));
+         loadEngine(engines[j]);
       engines.free;
    end;
 end;
@@ -143,11 +188,9 @@ procedure TfrmTurbuMain.imgLogoAvailable(Sender: TObject);
 var
    surface: PSdlSurface;
    convert1, convert2: PSdlSurface;
-   info: TSDL_RendererInfo;
    rw: PSDL_RWops;
    stream: TResourceStream;
    texture: TSdlTexture;
-   window: TSdlWindowId;
 begin
    stream := TResourceStream.Create(HInstance, 'logo', RT_RCDATA);
    rw := SDLStreamSetup(stream);
@@ -157,8 +200,6 @@ begin
    convert2 := TSdlSurface.Convert(surface, convert1.Format);
 
    SDL_SelectRenderer(imgLogo.SdlWindow);
-   outputDebugStringA(SDL_GetError);
-   SDL_GetRendererInfo(info);
    texture := tsdlTexture.Create(0, convert2);
    SDLStreamCloseRWops(rw);
    stream.Free;
@@ -166,21 +207,6 @@ begin
    convert1.Free;
 
    imgLogo.DrawTexture(texture);
-   imgLogo.Flip;
-   imgLogo.DrawTexture(texture);
-   imgLogo.Flip;
-   outputDebugStringA(SDL_GetError);
-
-   window := SDL_CreateWindow('', 20, 30, 750, 640, [sdlwOpenGl, sdlwShown]);
-   SDL_CreateRenderer(window, 0, [sdlrAccelerated]);
-   SDL_SelectRenderer(window);
-   SDL_GetRendererInfo(info);
-   texture := tsdlTexture.Create(0, convert2);
-   SDL_RenderFill(nil);
-   SDL_RenderPresent;
-   SDL_RenderCopy(texture, nil, nil);
-   SDL_RenderPresent;
-   convert2.Free;
 end;
 
 procedure TfrmTurbuMain.loadEngine(data: TEngineData);
@@ -194,26 +220,47 @@ begin
       et_map:
       begin
          assert(iclass.GetInterface(IMapEngine, mEngine));
-         addEngine(et_battle, mEngine.getData);
+         addEngine(et_map, mEngine.getData, mEngine);
       end;
       et_battle:
       begin
          assert(iclass.GetInterface(IBattleEngine, bEngine));
-         addEngine(et_battle, bEngine.getData);
+         addEngine(et_battle, bEngine.getData, bEngine);
       end;
       et_menu: assert(false);
       et_minigame: assert(false);
       else assert(false);
    end;
-   //no need to clean up interfaces; when they go out of scope the refcount frees them
 end;
 
 procedure TfrmTurbuMain.loadProject;
+var
+   mapStream: TStream;
+   tileset: TTileset;
+const
+   SDL_BLACK: SDL_Color = ();
 begin
    if GDatabase = nil then
       GDatabase := TRpgDatabase.Create;
    frmDatabase.init(GDatabase);
-   //do more
+   FMapEngine := retrieveEngine(et_map, GDatabase.mapTree[GDatabase.mapTree.CurrentMap].mapEngine,
+                 TVersion.Create(0, 0, 0)) as IDesignMapEngine;
+   FMapEngine.initialize(imgLogo.sdlWindow, GDatabase);
+   mapStream := GArchives[MAP_ARCHIVE].getFile(GDatabase.mapTree[GDatabase.mapTree.CurrentMap].internalFilename.name);
+   try
+      FCurrentMap := TRpgMap.Load(mapStream);
+   finally
+      mapStream.Free;
+   end;
+   FMapEngine.loadMap(FCurrentMap, point(0,0));
+
+   tileset := GDatabase.tileset[FCurrentMap.tileset];
+   //I don't know why this is necessary, but without the next two lines,
+   //nothing will ever actually show in imgPalette;
+   imgPalette.fillColor(SDL_BLACK, 255);
+   imgPalette.Flip;
+
+   assignPaletteImage(FMapEngine.tilesetImage[0]);
 end;
 
 procedure TfrmTurbuMain.mnu2KClick(Sender: TObject);
@@ -278,12 +325,12 @@ begin
    try
       try
          GDatabase := TRpgDatabase.Load(loadStream);
-         MsgBox('Project was loaded successfully.', 'Load complete!');
       except
          on ERpgLoadError do
          begin
             GDatabase := nil;
-            MsgBox('TDB file is using an outdated format and can''t be loaded.', 'Load error')
+            MsgBox('TDB file is using an outdated format and can''t be loaded.', 'Load error');
+            Abort;
          end
          else begin
             GDatabase := nil;
@@ -296,4 +343,19 @@ begin
    loadProject;
 end;
 
+procedure TfrmTurbuMain.sbPaletteScroll(Sender: TObject;
+  ScrollCode: TScrollCode; var ScrollPos: Integer);
+begin
+   if FPaletteTexture <> -1 then
+      displayPalette(ScrollPos);
+end;
+
+procedure TfrmTurbuMain.splSidebarMoved(Sender: TObject);
+begin
+   resizePalette;
+end;
+
+initialization
+finalization
+   frmTurbuMain := nil;
 end.

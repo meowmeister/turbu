@@ -16,7 +16,7 @@ unit turbu_engines;
 * This file was created by Mason Wheeler.  He can be reached for support at
 * www.turbu-rpg.com.
 *****************************************************************************}
-{$D+}
+
 interface
 uses
    SysUtils,
@@ -26,52 +26,77 @@ type
 
    EMissingPlugin = class(Exception);
 
-   procedure addEngine(slot: TEngineStyle; value: TRpgMetadata);
+   procedure addEngine(slot: TEngineStyle; value: TRpgMetadata; engine: IInterface);
    function requireEngine(slot: TEngineStyle; name: string; version: TVersion): TRpgMetadata;
+   function retrieveEngine(slot: TEngineStyle; name: string; version: TVersion): IInterface; overload;
+   function retrieveEngine(slot: TEngineStyle; value: TRpgMetadata): IInterface; overload;
    procedure cleanupEngines;
 
 implementation
+uses
+   Generics.Collections;
 
 type
-   TEngineList = array[TEngineStyle] of array of TRpgMetadata;
+   TEngineDict = class(TDictionary<TRpgMetadata, IInterface>);
+   TEngineList = array[TEngineStyle] of TEngineDict;
 
 var
    FEngineList: TEngineList;
 
-procedure addEngine(slot: TEngineStyle; value: TRpgMetadata);
+procedure addEngine(slot: TEngineStyle; value: TRpgMetadata; engine: IInterface);
 begin
-   setLength(FEngineList[slot], length(FEngineList[slot]) + 1);
-   FEngineList[slot][high(FEngineList[slot])] := value;
+   if not assigned(FEngineList[slot]) then
+      FEngineList[slot] := TEngineDict.Create;
+   FEngineList[slot].Add(value, engine);
 end;
 
 function requireEngine(slot: TEngineStyle; name: string; version: TVersion): TRpgMetadata;
+resourcestring
+  VERSION_TOO_LOW = 'This project requires the %s plugin at version %s or higher, but found version %s.';
+  PLUGIN_NOT_FOUND = 'Unable to load %s, which is required for this project.';
 var
-  i: integer;
+   enumerator: TRpgMetadata;
 begin
-   i := high(FEngineList[slot]);
-   while (i >= 0) and (TRpgMetadata(FEngineList[slot, i]).name <> name) do
-      dec(i);
-   if i >= 0 then
+   result := nil;
+   if assigned(FEngineList[slot]) then
+      for enumerator in FEngineList[slot].Keys do
+         if enumerator.name = name then
+		 begin
+            result := enumerator;
+			break;
+		 end;
+   if assigned(result) then
    begin
-      result := FEngineList[slot, i] as TRpgMetadata;
       if result.version < version then
-         raise EMissingPlugin.Create('This project requires the ' + name + 'plugin at version '
-            + version.name + ' or higher, but found version ' + result.version.name + '.')
+         raise EMissingPlugin.CreateFmt(VERSION_TOO_LOW, [name, version.name, result.version.name])
       else
          Exit;
    end
    else
-      raise EMissingPlugin.Create('Unable to load ' + name + ', which is required for this project.');
+      raise EMissingPlugin.CreateFmt(PLUGIN_NOT_FOUND, [name]);
+end;
+
+function retrieveEngine(slot: TEngineStyle; value: TRpgMetadata): IInterface;
+begin
+   result := FEngineList[slot][value];
+end;
+
+function retrieveEngine(slot: TEngineStyle; name: string; version: TVersion): IInterface;
+begin
+   result := retrieveEngine(slot, requireEngine(slot, name, version));
 end;
 
 procedure cleanupEngines;
 var
    i: TEngineStyle;
-   j: integer;
 begin
    for i := low(TEngineStyle) to high(TEngineStyle) do
-      for j := 0 to high(FEngineList[i]) do
-         FEngineList[i, j].free;
+      FreeAndNil(FEngineList[i]);
 end;
+
+
+initialization
+finalization
+   cleanupEngines;
 
 end.

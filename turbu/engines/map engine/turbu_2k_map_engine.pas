@@ -19,15 +19,28 @@ unit turbu_2k_map_engine;
 
 interface
 uses
-   types, syncObjs,
+   types, syncObjs, Generics.Collections,
    turbu_map_engine, turbu_versioning,
-   turbu_database_interface, turbu_map_interface,
+   turbu_database_interface, turbu_map_interface, turbu_sdl_image,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine,
    SG_defs, SDL_ImageManager, sdl_canvas,
    sdl_13;
 
 type
-   T2kMapEngine = class(TMapEngine)
+   TTileGroupPair = TPair<TTileGroupRecord, PSdlSurface>;
+
+   T2kMapEngine = class(TMapEngine, IDesignMapEngine)
+   private //design section
+      FTilesetListD: TList<TTileGroupPair>;
+      FTileSize: TSgPoint;
+      procedure initializeDesigner(window: TSdlWindowId; database: IRpgDatabase);
+      function GetTilesetImageSize(const index: byte): TSgPoint;
+      function GetTilesetImage(const index: byte): PSdlSurface;
+      function DesignLoadMap(map: IRpgMap; startPosition: TSgPoint): boolean;
+      function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
+
+      procedure IDesignMapEngine.initialize = initializeDesigner;
+      function IDesignMapEngine.loadMap = DesignLoadMap;
    private
       FDatabase: TRpgDatabase;
       FCanvas: TSdlCanvas;
@@ -39,6 +52,8 @@ type
       FSignal: TSimpleEvent;
       procedure loadTileset(const value: TTileSet);
       function CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
+      function doneLoadingMap: boolean;
+      procedure prepareMap(map: IRpgMap);
    protected
       procedure cleanup; override;
    public
@@ -49,13 +64,11 @@ type
 
 implementation
 uses
-   sysUtils, classes,
+   sysUtils, classes, math,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
    turbu_constants, turbu_map_metadata, turbu_functional,
-image_callback_hack,
    SDL, sdlstreams, sdl_sprite;
 
-(*
 { Callbacks }
 
 function ALoader(filename, keyname: string): PSDL_RWops;
@@ -70,8 +83,8 @@ procedure ACallback(var rw: PSdl_RWops);
 begin
    (TObject(rw.unknown) as TStream).Free;
    SDL_FreeRW(rw);
+   rw := nil;
 end;
-*)
 
 { T2kMapEngine }
 
@@ -86,6 +99,7 @@ begin
    FSignal.Free;
    for I := 0 to high(FMaps) do
       FMaps[i].Free;
+   FTilesetListD.Free;
    inherited;
 end;
 
@@ -121,22 +135,24 @@ end;
 
 procedure T2kMapEngine.initialize(window: TSdlWindowId; database: IRpgDatabase);
 var
-   db: I2kDatabase;
    layout: TGameLayout;
 begin
+   if FInitialized then
+      Exit;
+
    inherited initialize(window, database);
-   if not supports(database, I2kDatabase, db) then
+   FDatabase := TRpgDatabase(database);
+   if not assigned(FDatabase) then
       raise ERpgPlugin.Create('Incompatible project database');
-   FDatabase := db.dbObject;
    layout := FDatabase.layout;
    if window = 0 then
    begin
-      window :=  SDL_CreateWindow(PAnsiChar(ansiString(format('TURBU engine - %s', [FDatabase.projectname]))),
+      //In RM2K, project title is stored in the LMT.  I'll need to convert that
+      //to grab a project title. This will do for now.
+      window :=  SDL_CreateWindow(PAnsiChar(ansiString(format('TURBU engine - %s', [FDatabase.mapTree[0].name]))),
                         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                         layout.physWidth, layout.physHeight,
                         [sdlwOpenGl, sdlwShown {,sdlwResizable, sdlwInputGrabbed}]);
-      //In RM2K, project title is stored in the LMT.  I'll need to convert that
-      //to grab a project title. This will do for now.
 
       //add sdlwResizable if Sam's able to add in a "logical size" concept, or
       //if I end up doing it on this end
@@ -151,7 +167,8 @@ begin
    FStretchRatio.x := layout.physWidth / layout.width;
    FStretchRatio.y := layout.physHeight / layout.height;
    FImages := TSdlImages.Create();
-   image_callback_hack.assignCallbacks(FImages);
+   FImages.ArchiveCallback := aCallback;
+   FImages.ArchiveLoader := aLoader;
    setLength(FMaps, FDatabase.mapTree.Count);
    FSignal := TSimpleEvent.Create;
    FSignal.SetEvent;
@@ -161,14 +178,9 @@ end;
 
 function T2kMapEngine.loadMap(map: IRpgMap; startPosition: TSgPoint): boolean;
 var
-   lMap: I2kMap;
    viewport: TRect;
 begin
-   if not (FInitialized) then
-      raise ERpgPlugin.Create('Can''t load a map on an uninitialized map engine.');
-   if not supports(map, I2kMap, lMap) then
-      raise ERpgPlugin.Create('Incompatible map object');
-   FWaitingMap := lMap.mapObject;
+   prepareMap(map);
    viewport := createViewport(FWaitingMap, startPosition);
    if not assigned(FMaps[FWaitingMap.id]) then
    begin
@@ -177,11 +189,26 @@ begin
                                FCanvas, FDatabase.tileset[FWaitingMap.tileset],
                                FImages);
    end;
+   result := doneLoadingMap;
+end;
+
+procedure T2kMapEngine.prepareMap(map: IRpgMap);
+begin
+   if not (FInitialized) then
+      raise ERpgPlugin.Create('Can''t load a map on an uninitialized map engine.');
+   FWaitingMap := TRpgMap(map);
+   if not assigned(FWaitingMap) then
+      raise ERpgPlugin.Create('Incompatible map object');
+end;
+
+function T2kMapEngine.doneLoadingMap: boolean;
+begin
    FCurrentMap := FMaps[FWaitingMap.id];
    result := FSignal.WaitFor(INFINITE) = wrSignaled;
    if result then
    begin
       FSignal.ResetEvent;
+      FCanvas.SetRenderer;
       FCurrentMap.Draw;
       FCanvas.Flip;
    end;
@@ -197,6 +224,129 @@ begin
          if not FImages.contains(filename) then
             FImages.AddSpriteFromArchive(filename, '', input.group.filename, input.group.dimensions);
       end);
+end;
+
+//Design methods
+const
+   MAX_WIDTH: byte = 6; //assumed to be 6, but we can't be sure beforetime
+
+function T2kMapEngine.GetTilesetImageSize(const index: byte): TSgPoint;
+var
+   tileCount: integer;
+begin
+   //first calculate size
+   //TODO: we shouldn't have to do this at load time.  It should be calculated
+   //already and saved with the tileset
+   FTilesize := FTilesetListD.last.Key.group.dimensions;
+   MAX_WIDTH := FTilesetListD.Last.Value.Width div FTilesize.x;
+   tileCount := TFunctional.reduce2<TTileGroupPair, integer>(FTilesetListD,
+      function(const input1: TTileGroupPair; input2: integer): integer
+      var
+         kind: TTileType;
+      begin
+         if not (index in input1.Key.layers) then
+            Exit(input2);
+
+         kind := input1.Key.group.tileType;
+         if tsBordered in kind then
+            result := 1
+         else
+         begin
+            result := input1.Value.Width div FTilesize.x;
+            if kind = [] then
+               result := (input1.Value.Height div FTilesize.y) * result;
+         end;
+         result := result + input2;
+      end);
+   result := FTilesize * sgPoint(MAX_WIDTH, Ceil(tileCount / MAX_WIDTH));
+end;
+
+function T2kMapEngine.GetTilesetImage(const index: byte): PSdlSurface;
+var
+   pair: TTileGroupPair;
+   surfaceSize: TSgPoint;
+   srcRect, dstRect: TRect;
+   kind: TTileType;
+begin
+   assert(assigned(FTilesetListD));
+   surfaceSize := GetTilesetImageSize(index);
+
+   result := TSdlSurface.Create(surfaceSize.x, surfaceSize.y, 8);
+   result.Fill(nil, 0);
+//   result.ColorKey := FTilesetListD[0].Value.ColorKey;
+   result.CopyPaletteFrom(FTilesetListD.Last.Value);
+   dstRect := rect(point(0, 0), FTileSize);
+   for pair in FTilesetListD do
+   begin
+      if not (index in pair.Key.layers) then
+         Continue;
+
+      kind := pair.key.group.tileType;
+      if tsBordered in kind then
+         srcRect := rect(point(0,0), FTileSize)
+      else if kind = [tsAnimated] then
+         srcRect := rect(0, 0, pair.Value.Width, FTileSize.y)
+      else srcRect := rect(0, 0, pair.value.width, pair.value.height);
+      if srcRect.Right + dstRect.Left > result.Width then
+      begin
+         dstRect.Left := 0;
+         inc(dstRect.Top, FTileSize.y);
+      end;
+      dstRect.BottomRight := srcRect.BottomRight;
+      result.BlitFrom(pair.Value, @srcRect, @dstRect);
+      inc(dstRect.Left, srcRect.Right);
+      inc(dstRect.Top, srcRect.bottom - FTileSize.y);
+   end;
+//   result := FTilesetListD[0].Value;
+end;
+
+function T2kMapEngine.loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
+begin
+   result := TFunctional.mapF<TTileGroupRecord, TTileGroupPair>(value.Records,
+      function(const input: TTileGroupRecord): TTileGroupPair
+      var
+         filename: string;
+         rw: PSDL_RWops;
+      begin
+         filename := 'tileset\' + input.group.filename + '.png';
+         if not FImages.contains(filename) then
+         begin
+            rw := sdlstreams.SDLStreamSetup(GArchives[IMAGE_ARCHIVE].getFile(filename));
+            result := TTileGroupPair.Create(input,
+              TRpgSdlImage.CreateSprite(rw, '.png', input.group.filename, FImages,
+              input.group.dimensions).surface);
+            TStream(rw.unknown).Free;
+            SDLStreamCloseRWops(rw);
+         end
+         else
+         begin
+            result := TTileGroupPair.Create(input,
+              (FImages.Image[filename] as TRpgSdlImage).surface);
+         end;
+      end);
+end;
+
+procedure T2kMapEngine.initializeDesigner(window: TSdlWindowId; database: IRpgDatabase);
+begin
+   self.initialize(window, database);
+   //do more
+end;
+
+function T2kMapEngine.DesignLoadMap(map: IRpgMap; startPosition: TSgPoint): boolean;
+var
+   viewport: TRect;
+begin
+   prepareMap(map);
+   viewport := createViewport(FWaitingMap, startPosition);
+   if not assigned(FMaps[FWaitingMap.id]) then
+   begin
+      FTilesetListD.Free;
+      FTilesetListD := loadTilesetD(FDatabase.tileset[FWaitingMap.tileset]);
+      FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
+                               FCanvas, FDatabase.tileset[FWaitingMap.tileset],
+                               FImages);
+   end;
+   result := doneLoadingMap;
 end;
 
 end.

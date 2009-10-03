@@ -19,14 +19,13 @@ unit map_default_plugin;
 
 interface
 uses
-   Generics.Collections,
    JvPlugin,
    turbu_plugin_interface;
 
 type
-   TRpgBasicMapPlugin = class(TJvPlugin, ITurbuPluginInterface)
+   TRpgBasicMapPlugin = class(TJvPlugin, ITurbuPlugin)
    public
-      function listPlugins: TList<TEngineData>;
+      function listPlugins: TEngineDataList;
    end;
 
 function RegisterPlugin: TRpgBasicMapPlugin; stdcall;
@@ -46,9 +45,9 @@ end;
 
 { TRpgBasicMapPlugin }
 
-function TRpgBasicMapPlugin.listPlugins: TList<TEngineData>;
+function TRpgBasicMapPlugin.listPlugins: TEngineDataList;
 begin
-   result := TList<TEngineData>.Create;
+   result := TEngineDataList.Create;
    result.Add(TEngineData.Create(et_map, T2kMapEngine));
 end;
 

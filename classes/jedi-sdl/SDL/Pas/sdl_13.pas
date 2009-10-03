@@ -300,6 +300,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     function LockSurface: boolean;
     procedure UnlockSurface;
     procedure AcquireReference;
+    function BlitFrom(src: PSdlSurface; srcrect, dstrect: PSdlRect): integer; inline;
 
     property Flags: TSdlSurfaceFlags read FFlags;
     property Format: PSdlPixelFormat read FFormat;
@@ -707,6 +708,11 @@ end;
 function TSdlSurface.ClearClipRect: boolean;
 begin
   result := SDL_SetClipRect(@self, nil);
+end;
+
+function TSdlSurface.BlitFrom(src: PSdlSurface; srcrect: PSdlRect; dstrect: PSdlRect): integer;
+begin
+   result := sdl_upperBlit(src, srcRect, @self, dstRect);
 end;
 
 { TSdlTexture }

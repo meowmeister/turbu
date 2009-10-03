@@ -25,9 +25,9 @@ uses
    turbu_plugin_interface;
 
 type
-   TRpgBasicBattlePlugin = class(TJvPlugin, ITurbuPluginInterface)
+   TRpgBasicBattlePlugin = class(TJvPlugin, ITurbuPlugin)
    public
-      function listPlugins: TList<TEngineData>;
+      function listPlugins: TEngineDataList;
    end;
 
 function RegisterPlugin: TRpgBasicBattlePlugin; stdcall;
@@ -48,9 +48,9 @@ end;
 
 { TRpgBasicBattlePlugin }
 
-function TRpgBasicBattlePlugin.listPlugins: TList<TEngineData>;
+function TRpgBasicBattlePlugin.listPlugins: TEngineDataList;
 begin
-   result := TList<TEngineData>.Create;
+   result := TEngineDataList.Create;
    result.Add(TEngineData.Create(et_battle, T2kBattleEngine));
    result.Add(TEngineData.Create(et_battle, T2k3BattleEngine));
 end;

@@ -95,7 +95,7 @@ begin
       end;
    end;
    {$ELSE}
-      FThread.Resume;
+      FThread.Start;
    {$ENDIF}
 end;
 

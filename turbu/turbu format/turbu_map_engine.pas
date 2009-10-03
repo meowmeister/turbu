@@ -38,6 +38,12 @@ type
       property data: TMapEngineData read getData;
    end;
 
+   IDesignMapEngine = interface(IMapEngine)
+   ['{B68B1D70-D95E-4CEB-B009-2197D7EC7666}']
+      function GetTilesetImage(const index: byte): PSdlSurface;
+      property tilesetImage[const index: byte]: PSdlSurface read GetTilesetImage;
+   end;
+
    TMapEngine = class abstract (TRpgPlugBase, IMapEngine)
    private
       FData: TMapEngineData;
@@ -74,9 +80,6 @@ implementation
 uses
    sysUtils;
 
-type
-   ERpgPlugin = class(Exception);
-
 { TMapEngine }
 
 procedure TMapEngine.AfterConstruction;
@@ -92,6 +95,7 @@ begin
    if FInitialized then
       self.cleanup;
    FBattleEngines.Free;
+   FData.Free;
    inherited Destroy;
 end;
 

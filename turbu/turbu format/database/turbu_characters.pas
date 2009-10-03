@@ -492,12 +492,12 @@ begin
    db.FieldByName('battleSprite').AsInteger := FBattleSprite;
    db.FieldByName('portrait').AsInteger := FPortrait;
    for i := 1 to high(FCommandSet) do
-      (db.FieldByName('command') as TArrayField)[i - 1] := FCommandSet[i];
+      db.FieldByName(format('command[%d]', [i])).AsInteger := FCommandSet[i];
    for i := 1 to high(FStatBlocks) do
       TLargeintField((db.FieldByName('statblock') as TArrayField).fields[i - 1]).AsLargeInt := nativeInt(pointer(FStatBlocks[i]));
    db.FieldByName('expFunc').AsString := FExpCalc;
    for i := 1 to 4 do
-      (db.FieldByName('expVars') as TArrayField)[i - 1] := FExpVars[i];
+      db.FieldByName(format('expVars[%d]', [i])).asInteger := FExpVars[i];
    if FSkillSet.length > 0 then
    begin
       tempDB := db.Owner.FindComponent(db.Name + FSkillSet[0].datasetName) as TDataSet;
@@ -533,7 +533,7 @@ begin
       end;
    end;
    for i := 1 to 5 do
-      (db.FieldByName('equip') as TArrayField)[i - 1] := FInitialEq[i];
+      db.FieldByName(format('equip[%d]', [i - 1])).AsInteger := FInitialEq[i];
    db.FieldByName('dualWield').AsInteger := ord(FDualWield);
    db.FieldByName('staticEq').AsBoolean := FStaticEq;
    db.FieldByName('strongDef').AsBoolean := FStrongDefense;

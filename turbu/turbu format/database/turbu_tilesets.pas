@@ -19,7 +19,7 @@ unit turbu_tilesets;
 
 interface
 uses
-   classes, Generics.Collections, DB, contnrs,
+   classes, Generics.Collections, DB,
    turbu_classes,
    sg_defs, sdl_sprite;
 

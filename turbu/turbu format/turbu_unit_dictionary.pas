@@ -24,12 +24,9 @@ uses
 type
    TUnitDictionary = class(TObjectDictionary<string,TStringList>)
    private
-      FUnits: TStringList;
       function GetItem(const Key: string): TStringList;
       procedure SetItem(const Key: string; const Value: TStringList);
    public
-      constructor Create(Ownerships: TDictionaryOwnerships; ACapacity: Integer = 0);
-
       procedure Add(const Key: string; const Value: TStringList);
       function ContainsKey(const Key: string): Boolean;
 
@@ -44,31 +41,22 @@ uses
 
 procedure TUnitDictionary.Add(const Key: string; const Value: TStringList);
 begin
-   FUnits.Add(uppercase(key) + '=' + key);
-   inherited Add(key, value);
+   inherited Add(uppercase(key), value);
 end;
 
 function TUnitDictionary.ContainsKey(const Key: string): Boolean;
 begin
-   result := inherited ContainsKey(FUnits.Values[key]);
-end;
-
-constructor TUnitDictionary.Create(Ownerships: TDictionaryOwnerships; ACapacity: Integer);
-begin
-   inherited Create(Ownerships, ACapacity);
-   FUnits := TStringList.Create;
-   FUnits.Sorted := true;
-   FUnits.Duplicates := dupError;
+   result := inherited ContainsKey(uppercase(key));
 end;
 
 function TUnitDictionary.GetItem(const Key: string): TStringList;
 begin
-   result := inherited Items[FUnits.Values[key]];
+   result := inherited Items[uppercase(key)];
 end;
 
 procedure TUnitDictionary.SetItem(const Key: string; const Value: TStringList);
 begin
-   inherited Items[FUnits.Values[key]] := Value;
+   inherited Items[uppercase(key)] := Value;
 end;
 
 end.

@@ -3,7 +3,7 @@ object frmTurbuMain: TfrmTurbuMain
   Top = 38
   Caption = 'TURBU - The Ultimate Rpg BUilder'
   ClientHeight = 640
-  ClientWidth = 750
+  ClientWidth = 925
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,20 +13,107 @@ object frmTurbuMain: TfrmTurbuMain
   Menu = mnuMain
   OldCreateOrder = False
   Position = poDesigned
-  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object imgLogo: TSdlFrame
+  object sbxMain: TScrollBox
+    Left = 213
+    Top = 0
+    Width = 712
+    Height = 640
+    HorzScrollBar.Tracking = True
+    VertScrollBar.ButtonSize = 15
+    VertScrollBar.Margin = 10
+    VertScrollBar.Range = 100
+    VertScrollBar.Size = 15
+    VertScrollBar.Style = ssHotTrack
+    VertScrollBar.ThumbSize = 10
+    VertScrollBar.Tracking = True
+    Align = alClient
+    AutoScroll = False
+    Color = clBlack
+    ParentColor = False
+    TabOrder = 0
+    object imgLogo: TSdlFrame
+      Left = 0
+      Top = 0
+      Width = 708
+      Height = 636
+      Framerate = 0
+      Active = False
+      OnAvailable = imgLogoAvailable
+      Align = alClient
+    end
+  end
+  object pnlSidebar: TPanel
     Left = 0
     Top = 0
-    Width = 750
+    Width = 213
     Height = 640
-    Framerate = 0
-    Active = False
-    OnAvailable = imgLogoAvailable
+    Align = alLeft
+    BevelOuter = bvNone
+    TabOrder = 1
+    object splSidebar: TSplitter
+      Left = 0
+      Top = 384
+      Width = 213
+      Height = 3
+      Cursor = crVSplit
+      Align = alTop
+      OnMoved = splSidebarMoved
+      ExplicitLeft = 1
+      ExplicitTop = 385
+      ExplicitWidth = 194
+    end
+    object sbxPallette: TScrollBox
+      Left = 0
+      Top = 0
+      Width = 213
+      Height = 384
+      HorzScrollBar.Visible = False
+      VertScrollBar.ButtonSize = 15
+      VertScrollBar.Margin = 15
+      VertScrollBar.Range = 100
+      VertScrollBar.Size = 10
+      VertScrollBar.ThumbSize = 10
+      VertScrollBar.Tracking = True
+      Align = alTop
+      AutoScroll = False
+      Color = clGreen
+      ParentColor = False
+      TabOrder = 0
+      object imgPalette: TSdlFrame
+        Left = 0
+        Top = 0
+        Width = 192
+        Height = 380
+        Framerate = 0
+        Active = False
+        Align = alClient
+      end
+      object sbPalette: TScrollBar
+        Left = 192
+        Top = 0
+        Width = 17
+        Height = 380
+        Align = alRight
+        Kind = sbVertical
+        PageSize = 100
+        TabOrder = 1
+        OnScroll = sbPaletteScroll
+      end
+    end
+    object trvMapTree: TTreeView
+      Left = 0
+      Top = 387
+      Width = 213
+      Height = 253
+      Align = alClient
+      Indent = 19
+      TabOrder = 1
+    end
   end
   object mnuMain: TMainMenu
     Left = 336
@@ -72,6 +159,7 @@ object frmTurbuMain: TfrmTurbuMain
     end
   end
   object dlgOpen: TOpenDialog
+    Filter = 'TURBU Projects (project.tdb)|project.tdb'
     Left = 184
     Top = 96
   end

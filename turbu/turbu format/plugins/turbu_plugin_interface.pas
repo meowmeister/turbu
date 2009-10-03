@@ -55,9 +55,11 @@ type
       property engine: TPlugClass read FEngine;
    end;
 
-   ITurbuPluginInterface = interface(IInterface)
+   TEngineDataList = class(TObjectList<TEngineData>);
+
+   ITurbuPlugin = interface(IInterface)
    ['{EC78AE5D-1B52-4982-9AC7-19D95D67A26E}']
-      function listPlugins: TList<TEngineData>;
+      function listPlugins: TEngineDataList;
    end;
 
    ERpgPlugin = class(Exception);

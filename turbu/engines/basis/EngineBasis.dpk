@@ -24,9 +24,9 @@ package EngineBasis;
 {$IMAGEBASE $400000}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
+{$DEFINE PS_USESSUPPORT}
 
 requires
-  rtl,
   vcl;
 
 contains
@@ -41,7 +41,6 @@ contains
   sdl_13 in '..\..\..\classes\jedi-sdl\SDL\Pas\sdl_13.pas',
   sdl_image in '..\..\..\classes\jedi-sdl\SDL_Image\Pas\sdl_image.pas',
   turbu_database_interface in '..\..\turbu format\turbu_database_interface.pas',
-  turbu_script_interface in '..\..\turbu format\turbu_script_interface.pas',
   sdl_canvas in '..\..\..\classes\sdl custom\sdl_canvas.pas',
   SDL_ImageManager in '..\..\..\classes\sdl custom\SDL_ImageManager.pas',
   SDL_rwStream in '..\..\..\classes\sdl custom\SDL_rwStream.pas',
@@ -49,6 +48,7 @@ contains
   SG_defs in '..\..\..\classes\sdl custom\SG_defs.pas',
   turbu_map_interface in '..\..\turbu format\turbu_map_interface.pas',
   sdlstreams in '..\..\..\classes\jedi-sdl\SDL\Pas\sdlstreams.pas',
-  turbu_plugin_interface in '..\..\turbu format\plugins\turbu_plugin_interface.pas';
+  turbu_plugin_interface in '..\..\turbu format\plugins\turbu_plugin_interface.pas',
+  turbu_sdl_image in '..\..\turbu format\turbu_sdl_image.pas';
 
 end.

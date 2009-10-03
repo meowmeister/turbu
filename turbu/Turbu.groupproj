@@ -19,7 +19,7 @@
 				<Dependencies/>
 			</Projects>
 			<Projects Include="editor\Turbu.dproj">
-				<Dependencies>engines\basis\EngineBasis.dproj;engines\battle basis\battle_default.dproj</Dependencies>
+				<Dependencies>engines\basis\EngineBasis.dproj;turbu format\default_format.dproj</Dependencies>
 			</Projects>
 			<Projects Include="test harness\testing.dproj">
 				<Dependencies/>
@@ -85,13 +85,13 @@
 		<Target Name="mapshow:Make">
 			<MSBuild Targets="Make" Projects="mapview\mapshow.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis;battle_default" Name="Turbu">
+		<Target DependsOnTargets="EngineBasis;default_format" Name="Turbu">
 			<MSBuild Projects="editor\Turbu.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis:Clean;battle_default:Clean" Name="Turbu:Clean">
+		<Target DependsOnTargets="EngineBasis:Clean;default_format:Clean" Name="Turbu:Clean">
 			<MSBuild Targets="Clean" Projects="editor\Turbu.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis:Make;battle_default:Make" Name="Turbu:Make">
+		<Target DependsOnTargets="EngineBasis:Make;default_format:Make" Name="Turbu:Make">
 			<MSBuild Targets="Make" Projects="editor\Turbu.dproj"/>
 		</Target>
 		<Target Name="testing">

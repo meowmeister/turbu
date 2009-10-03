@@ -227,7 +227,10 @@ end;
 procedure TframeClass.imgMapSpriteAvailable(Sender: TObject);
 begin
    if FSpriteToLoad > 0 then
+   begin
       loadPortrait(FSpriteToLoad);
+      imgMapSprite.Flip;
+   end;
 end;
 
 procedure TframeClass.initClasses;
@@ -324,29 +327,33 @@ begin
       FNameList := TStringList.Create;
    end;
 
-   dummy := id div 16;
-   filename := GDatabase.portraitList[dummy] + '.tbi';
-   if FImageList.IndexOf(filename) = -1 then
+   if id >= 0 then
    begin
-      try
-         fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
-         try
-            image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, FImageList, PORTRAIT_SIZE);
-         finally
-            fileStream.Free;
-         end;
-      except
-         on EArchiveError do
-            image := TRpgSdlImage.CreateBlankSprite(filename, FImageList, SPRITE_SIZE, 18);
-      end;
-   end
-   else image := FImageList.image[filename] as TRpgSdlImage;
-   assert(image.Texture.ID > 0);
-   imgMapSprite.Textures.Add(image.Texture);
+     dummy := id div 16;
+     filename := GDatabase.portraitList[dummy] + '.tbi';
+     if FImageList.IndexOf(filename) = -1 then
+     begin
+        try
+           fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
+           try
+              image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, FImageList, PORTRAIT_SIZE);
+           finally
+              fileStream.Free;
+           end;
+        except
+           on EArchiveError do
+              image := TRpgSdlImage.CreateBlankSprite(filename, FImageList, SPRITE_SIZE, 18);
+        end;
+     end
+     else image := FImageList.image[filename] as TRpgSdlImage;
+     assert(image.Texture.ID > 0);
+     imgMapSprite.Textures.Add(image.Texture);
 
-   spriteRect := image.spriteRect[id mod 16];
-   imgMapSprite.DrawTexture(image.Texture, @spriteRect);
-   imgMapSprite.Flip;
+     spriteRect := image.spriteRect[id mod 16];
+     imgMapSprite.DrawTexture(image.Texture, @spriteRect);
+     imgMapSprite.Flip;
+   end
+   else imgMapSprite.Clear;
 end;
 
 procedure TframeClass.lstScriptsDblClick(Sender: TObject);
@@ -449,9 +456,7 @@ begin
    destRect.left := (imgMapSprite.Width div 2) - (spriteRect.right);
    destRect.top := (imgMapSprite.height div 2) - (spriteRect.bottom);
    destRect.BottomRight := TRpgPoint(spriteRect.BottomRight) * 2;
-   if oldIndex <> FCurrentTexture then
-      imgMapSprite.fillColor(image.surface.Format.palette.colors[image.surface.ColorKey], 255);
-//   imgMapSprite.assignImage(image.surface);
+   imgMapSprite.fillColor(image.surface.Format.palette.colors[image.surface.ColorKey], 255);
    imgMapSprite.DrawTexture(image.Texture, @spriteRect, @destRect);
    imgMapSprite.Flip;
 end;

@@ -72,7 +72,7 @@ uses
    turbu_engines, turbu_plugin_interface, turbu_battle_engine,
    turbu_2k3_battle_engine, turbu_2k_battle_engine, turbu_sprites,
    turbu_map_engine, turbu_2k_map_engine, turbu_maps,
-   turbu_tbi_lib, turbu_sdl_image,
+   turbu_tbi_lib, turbu_sdl_image, turbu_map_interface,
    sdl_canvas, sdl_13,
    strtok;
 
@@ -143,15 +143,15 @@ end;
 
 procedure TfrmTestConsole.mnuTestMapLoadingClick(Sender: TObject);
 var
-   engine: IMapEngine;
-   map: I2kMap;
+   engine: IDesignMapEngine;
+   map: IRpgMap;
    mapStream: TStream;
 begin
    if not assigned(GDatabase) then
       mnuTestLoadingClick(Sender);
 
    engine := T2kMapEngine.Create;
-//   freeList.add(engine.
+//   freeList.add(engine.data);
    engine.initialize(0, gdatabase);
    mapStream := GArchives[MAP_ARCHIVE].getFile(GDatabase.mapTree[1].internalFilename.name);
    try
@@ -179,6 +179,7 @@ end;
 procedure TfrmTestConsole.FormShow(Sender: TObject);
 type
    TBattleEngineClass = class of TBattleEngine;
+   TMapEngineClass = class of TMapEngine;
 
    {$WARN CONSTRUCTING_ABSTRACT OFF}
    procedure addBattleEngine(aClass: TBattleEngineClass);
@@ -186,9 +187,17 @@ type
       engine: TBattleEngine;
    begin
       engine := aClass.Create;
-      addEngine(et_battle, engine.data);
-      freeList.Add(engine);
-      freeList.Add(engine.data);
+      addEngine(et_battle, engine.data, engine);
+//      freeList.Add(engine.data);
+   end;
+
+   procedure AddMapEngine(aClass: TMapEngineClass);
+   var
+      engine: TMapEngine;
+   begin
+      engine := aClass.Create;
+      addEngine(et_map, engine.data, engine);
+//      freeList.Add(engine.data);
    end;
    {$WARN CONSTRUCTING_ABSTRACT ON}
 
@@ -200,6 +209,7 @@ begin
    assert(GArchives.Add(openFolder(GProjectFolder + DESIGN_DB)) = BASE_ARCHIVE);
    addBattleEngine(T2kBattleEngine);
    addBattleEngine(T2k3BattleEngine);
+   addMapEngine(T2kMapEngine);
    folder := IncludeTrailingPathDelimiter(GetRegistryValue('\Software\TURBU', 'TURBU Test Project'));
    if folder <> '\' then
    begin

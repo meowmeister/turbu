@@ -7,8 +7,12 @@ uses
 
 type
    TInheritedDecision = (id_yes, id_no, id_parent);
+   TMapTree = class;
 
    TMapMetadata = class(TRpgDatafile)
+   private
+      class var
+      FOwner: TMapTree;
    private
       FParent: word;
       FGen: byte;
@@ -21,6 +25,9 @@ type
       FCanEscape: TInheritedDecision;
       FCanSave: TInheritedDecision;
       FInternalFilename: TFilenameData;
+      FMapEngine: shortint;
+      function getMapEngine: string;
+      procedure setMapEngine(const Value: string);
    protected
       class function keyChar: ansiChar; override;
    public
@@ -41,6 +48,7 @@ type
       property canEscape: TInheritedDecision read FCanEscape write FCanEscape;
       property canSave: TInheritedDecision read FCanSave write FCanSave;
       property internalFilename: TFilenameData read FInternalFilename write FInternalFilename;
+      property mapEngine: string read getMapEngine write setMapEngine;
    end;
 
    TLocationList = class(TList<TLocation>);
@@ -54,6 +62,7 @@ type
       //made protected to allow access to conversion routines
       FStartLocs: TLocationList;
       FTranslationTable, FNodeSet: array of smallint;
+      FMapEngines: TStringList;
    public
       constructor Create;
       constructor Load(savefile: TStream);
@@ -96,6 +105,7 @@ begin
    FCanSave := TInheritedDecision(savefile.readByte);
    FInternalFilename.name := savefile.readString;
    FInternalFilename.duplicates := savefile.readInt;
+   FMapEngine := savefile.readByte;
    readEnd(savefile);
 end;
 
@@ -116,6 +126,7 @@ begin
    savefile.writeByte(ord(FCanSave));
    savefile.writeString(FInternalFilename.name);
    savefile.writeInt(FInternalFilename.duplicates);
+   savefile.writeByte(FMapEngine);
    writeEnd(savefile);
 end;
 
@@ -137,6 +148,17 @@ begin
    assert(false);
 end;
 
+function TMapMetadata.getMapEngine: string;
+begin
+   result := FOwner.FMapEngines[FMapEngine];
+end;
+
+procedure TMapMetadata.setMapEngine(const Value: string);
+begin
+   FMapEngine := FOwner.FMapEngines.IndexOf(Value);
+   assert(FMapEngine <> -1);
+end;
+
 class function TMapMetadata.keyChar: ansiChar;
 begin
    result := 'd';
@@ -149,11 +171,14 @@ begin
    inherited Create;
 
    FStartLocs := TLocationList.Create;
+   TMapMetadata.FOwner := self;
+   FMapEngines := TStringList.Create;
 end;
 
 destructor TMapTree.Destroy;
 begin
    FStartLocs.Free;
+   FMapEngines.Free;
    inherited Destroy;
 end;
 
@@ -171,6 +196,8 @@ begin
    lassert(savefile.readChar = TMapMetadata.keyChar);
 {   inherited Load(savefile);}
 
+   for i := 1 to savefile.readInt do
+      FMapEngines.Add(savefile.readString);
    len := savefile.readWord;
    setLength(locs, len);
    if len > 0 then
@@ -190,6 +217,7 @@ procedure TMapTree.save(savefile: TStream);
 var
    iterator: TMapMetadata;
    location: TLocation;
+   engine: string;
 begin
    //if generics worked right, this top block would be unnecessary
    savefile.writeChar(UpCase(TMapMetadata.keyChar));
@@ -199,6 +227,9 @@ begin
    savefile.writeChar(TMapMetadata.keyChar);
 {   inherited Save(savefile);}
 
+   savefile.writeInt(FMapEngines.Count);
+   for engine in FMapEngines do
+      savefile.writeString(engine);
    savefile.writeWord(FStartLocs.Count);
    for location in FStartLocs do
       savefile.writeBuffer(location, sizeof(int64));

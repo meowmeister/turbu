@@ -124,6 +124,10 @@ object frmDatabase: TfrmDatabase
     object tshHero: TTabSheet
       Caption = '&Hero'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tshItems: TTabSheet
       Caption = 'Raw &Data Viewer'
@@ -152,6 +156,10 @@ object frmDatabase: TfrmDatabase
     object tshGlobalEvents: TTabSheet
       Caption = '&Global Events'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblGlobalEvents: TLabel
         Left = 16
         Top = 16
@@ -215,7 +223,6 @@ object frmDatabase: TfrmDatabase
             Width = 169
             Height = 21
             Style = csDropDownList
-            ItemHeight = 13
             TabOrder = 0
             Items.Strings = (
               'Call'

@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_WriteableConstants>true</DCC_WriteableConstants>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DCC_UnitSearchPath>..\..\bin;..\..\dcus;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DcuOutput>..\..\dcus\</DCC_DcuOutput>
@@ -46,27 +47,22 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="map_default.dpk">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="rtl.dcp"/>
-			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="JvPluginD14R.dcp"/>
-			<DCCReference Include="vclx.dcp"/>
-			<DCCReference Include="Jcl.dcp"/>
-			<DCCReference Include="JvCoreD14R.dcp"/>
-			<DCCReference Include="JclVcl.dcp"/>
-			<DCCReference Include="EngineBasis.dcp"/>
 			<DCCReference Include="default_format.dcp"/>
+			<DCCReference Include="SimpleShareMem_MapDefault.pas"/>
 			<DCCReference Include="map_default_plugin.pas"/>
 			<DCCReference Include="turbu_2k_map_engine.pas"/>
 			<DCCReference Include="turbu_2k_sprite_engine.pas"/>
 			<DCCReference Include="tiles.pas"/>
 			<DCCReference Include="..\..\charset_data.pas"/>
-			<DCCReference Include="SimpleShareMem_MapDefault.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
