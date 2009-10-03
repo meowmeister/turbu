@@ -57,7 +57,6 @@ contains
   turbu_functional in '..\turbu_functional.pas',
   image_callback_hack in '..\image_callback_hack.pas',
   timing in '..\mapview\libs\timing.pas',
-  turbu_engines in 'turbu_engines.pas',
   turbu_script_interface in 'turbu_script_interface.pas',
   commons in '..\commons.pas';
 
