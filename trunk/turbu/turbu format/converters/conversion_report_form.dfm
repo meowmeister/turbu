@@ -89,19 +89,17 @@ object frmConversionReport: TfrmConversionReport
         Left = 5
         Top = 5
         Width = 28
-        Height = 19
+        Height = 13
         Align = alLeft
         Caption = 'Hints:'
-        ExplicitHeight = 13
       end
       object lblHintCount: TLabel
         Left = 62
         Top = 5
         Width = 6
-        Height = 19
+        Height = 13
         Align = alRight
         Caption = '0'
-        ExplicitHeight = 13
       end
     end
     object pnlWarnings: TPanel
@@ -118,19 +116,17 @@ object frmConversionReport: TfrmConversionReport
         Left = 5
         Top = 5
         Width = 32
-        Height = 19
+        Height = 13
         Align = alLeft
         Caption = 'Notes:'
-        ExplicitHeight = 13
       end
       object lblWarningCount: TLabel
         Left = 70
         Top = 5
         Width = 6
-        Height = 19
+        Height = 13
         Align = alRight
         Caption = '0'
-        ExplicitHeight = 13
       end
     end
     object pnlErrors: TPanel
@@ -147,19 +143,17 @@ object frmConversionReport: TfrmConversionReport
         Left = 5
         Top = 5
         Width = 29
-        Height = 19
+        Height = 13
         Align = alLeft
         Caption = 'Errors'
-        ExplicitHeight = 13
       end
       object lblErrorCount: TLabel
         Left = 70
         Top = 5
         Width = 6
-        Height = 19
+        Height = 13
         Align = alRight
         Caption = '0'
-        ExplicitHeight = 13
       end
     end
   end

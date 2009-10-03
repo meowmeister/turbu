@@ -50,14 +50,7 @@ type
 
    TRegionList = class(TObjectList<TMapRegion>);
 
-   TRpgMap = class;
-
-   I2KMap = interface(IRpgMap)
-   ['{FA3822E8-3A65-4424-87BF-9EF1EF8F5CC0}']
-      function mapObject: TRpgMap;
-   end;
-
-   TRpgMap = class(TRpgDatafile, I2KMap)
+   TRpgMap = class(TRpgDatafile, IRpgMap)
    private
       FTileset: string;
       FSize: TSgPoint;
@@ -78,7 +71,8 @@ type
       procedure SetScriptFormat(const Value: TScriptFormat);
       function GetBattleCount: integer;
       procedure SetBattleCount(const Value: integer);
-      function mapObject: TRpgMap;
+      function GetTileset: string;
+      procedure SetTileset(const Value: string);
    protected
       FEncounters: T4IntArray;
       FBattles: TPWordArray;
@@ -153,11 +147,6 @@ begin
    lassert(savefile.readChar = self.keyChar);
 end;
 
-function TRpgMap.mapObject: TRpgMap;
-begin
-   result := self;
-end;
-
 procedure TRpgMap.save(savefile: TStream);
 var
    region: TMapRegion;
@@ -215,6 +204,11 @@ begin
    result := Length(FBattles);
 end;
 
+function TRpgMap.GetTileset: string;
+begin
+  Result := FTileset;
+end;
+
 class function TRpgMap.keyChar: ansiChar;
 begin
    result := 'm';
@@ -245,6 +239,11 @@ begin
    FSize := Value;
    for i := low(FTileMap) to high(FTileMap) do
       setLength(FTileMap[i], value.x * value.y);
+end;
+
+procedure TRpgMap.SetTileset(const Value: string);
+begin
+  FTileset := Value;
 end;
 
 { TMapRegion }

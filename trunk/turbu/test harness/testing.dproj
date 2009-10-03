@@ -33,6 +33,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_WriteableConstants>true</DCC_WriteableConstants>
 			<DCC_ExeOutput>..\bin</DCC_ExeOutput>
 			<DCC_DcuOutput>..\dcus</DCC_DcuOutput>
 			<DCC_DcpOutput>..\dcus</DCC_DcpOutput>
@@ -81,7 +82,6 @@
 			<DCCReference Include="..\engines\turbu_2k3_battle_engine.pas"/>
 			<DCCReference Include="..\engines\turbu_2k_battle_engine.pas"/>
 			<DCCReference Include="..\turbu format\turbu_decl_utils.pas"/>
-			<DCCReference Include="..\..\vclpatch\DB.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_characters.pas"/>
 			<DCCReference Include="..\turbu format\turbu_script_basis.pas"/>
 			<DCCReference Include="..\mapview\libs\script engine\rpg_list.pas"/>

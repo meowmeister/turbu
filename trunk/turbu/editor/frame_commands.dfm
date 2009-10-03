@@ -29,7 +29,7 @@ object frameHeroCommands: TframeHeroCommands
     Top = 6
     Width = 96
     Height = 21
-    DataField = 'command[0]'
+    DataField = 'command[1]'
     DataSource = DataSource
     KeyField = 'id'
     ListField = 'name'

@@ -107,6 +107,7 @@ destructor TBattleEngine.Destroy;
 begin
    if FInitialized then
       self.cleanup;
+   FData.Free;
    inherited Destroy;
 end;
 

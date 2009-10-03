@@ -183,7 +183,7 @@ object frameClass: TframeClass
         Height = 21
         ButtonKind = bkClassic
         TabOrder = 2
-        DataField = 'expVars[0]'
+        DataField = 'expVars[1]'
         DataSource = dsCharClass
       end
       object spnExpVal2: TJvDBSpinEdit
@@ -193,7 +193,7 @@ object frameClass: TframeClass
         Height = 21
         ButtonKind = bkClassic
         TabOrder = 3
-        DataField = 'expVars[1]'
+        DataField = 'expVars[2]'
         DataSource = dsCharClass
       end
       object spnExpVal3: TJvDBSpinEdit
@@ -203,7 +203,7 @@ object frameClass: TframeClass
         Height = 21
         ButtonKind = bkClassic
         TabOrder = 4
-        DataField = 'expVars[2]'
+        DataField = 'expVars[3]'
         DataSource = dsCharClass
       end
       object spnExpVal4: TJvDBSpinEdit
@@ -213,7 +213,7 @@ object frameClass: TframeClass
         Height = 21
         ButtonKind = bkClassic
         TabOrder = 5
-        DataField = 'expVars[3]'
+        DataField = 'expVars[4]'
         DataSource = dsCharClass
       end
       object cbxExpAlgorithm: TDBLookupComboBox
@@ -341,7 +341,6 @@ object frameClass: TframeClass
             Height = 21
             DataField = 'helmetName'
             DataSource = dsCharClass
-            KeyField = 'id'
             ListField = 'name'
             TabOrder = 2
           end
@@ -352,7 +351,6 @@ object frameClass: TframeClass
             Height = 21
             DataField = 'armorName'
             DataSource = dsCharClass
-            KeyField = 'id'
             ListField = 'name'
             TabOrder = 3
           end
@@ -363,7 +361,6 @@ object frameClass: TframeClass
             Height = 21
             DataField = 'accessoryName'
             DataSource = dsCharClass
-            KeyField = 'id'
             ListField = 'name'
             TabOrder = 4
           end

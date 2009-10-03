@@ -5,6 +5,7 @@ object dmDatabase: TdmDatabase
   Height = 600
   Width = 882
   object charClasses: TClientDataSet
+    Active = True
     Aggregates = <>
     FieldDefs = <
       item
@@ -33,37 +34,31 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'command'
-        ChildDefs = <
-          item
-            Name = 'command[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 7
-      end
-      item
-        Name = 'commandField2'
+        Name = 'command[1]'
         DataType = ftInteger
       end
       item
-        Name = 'commandField3'
+        Name = 'command[2]'
         DataType = ftInteger
       end
       item
-        Name = 'commandField4'
+        Name = 'command[3]'
         DataType = ftInteger
       end
       item
-        Name = 'commandField5'
+        Name = 'command[4]'
         DataType = ftInteger
       end
       item
-        Name = 'commandField6'
+        Name = 'command[5]'
         DataType = ftInteger
       end
       item
-        Name = 'commandField7'
+        Name = 'command[6]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'command[7]'
         DataType = ftInteger
       end
       item
@@ -102,25 +97,19 @@ object dmDatabase: TdmDatabase
         Size = 32
       end
       item
-        Name = 'expVars'
-        ChildDefs = <
-          item
-            Name = 'expVars[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 4
-      end
-      item
-        Name = 'expVarsField2'
+        Name = 'expVars[1]'
         DataType = ftInteger
       end
       item
-        Name = 'expVarsField3'
+        Name = 'expVars[2]'
         DataType = ftInteger
       end
       item
-        Name = 'expVarsField4'
+        Name = 'expVars[3]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'expVars[4]'
         DataType = ftInteger
       end
       item
@@ -145,29 +134,23 @@ object dmDatabase: TdmDatabase
         Size = 32
       end
       item
-        Name = 'equip'
-        ChildDefs = <
-          item
-            Name = 'equip[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 5
-      end
-      item
-        Name = 'equipField2'
+        Name = 'equip[0]'
         DataType = ftInteger
       end
       item
-        Name = 'equipField3'
+        Name = 'equip[1]'
         DataType = ftInteger
       end
       item
-        Name = 'equipField4'
+        Name = 'equip[2]'
         DataType = ftInteger
       end
       item
-        Name = 'equipField5'
+        Name = 'equip[3]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'equip[4]'
         DataType = ftInteger
       end>
     IndexDefs = <>
@@ -175,6 +158,28 @@ object dmDatabase: TdmDatabase
     StoreDefs = True
     Left = 8
     Top = 8
+    Data = {
+      9B0200009619E0BD0200000018000000230000000000030000009B0202696404
+      00010000000000046E616D650100490000000100055749445448020002001400
+      086D6F6469666965640200030000000000096D61705370726974650400010000
+      0000000C626174746C65537072697465040001000000000008706F7274726169
+      7404000100000000000A636F6D6D616E645B315D04000100000000000A636F6D
+      6D616E645B325D04000100000000000A636F6D6D616E645B335D040001000000
+      00000A636F6D6D616E645B345D04000100000000000A636F6D6D616E645B355D
+      04000100000000000A636F6D6D616E645B365D04000100000000000A636F6D6D
+      616E645B375D04000100000000000973746174626C6F636B06000D0300000000
+      0C73746174626C6F636B5B305D08000100000000000253700800010000000000
+      0641747461636B080001000000000007446566656E7365080001000000000004
+      4D696E6408000100000000000553706565640800010000000000076578704675
+      6E6301004900000001000557494454480200020020000A657870566172735B31
+      5D04000100000000000A657870566172735B325D04000100000000000A657870
+      566172735B335D04000100000000000A657870566172735B345D040001000000
+      0000096475616C5769656C640400010000000000087374617469634571020003
+      0000000000097374726F6E6744656602000300000000000B756E61726D656441
+      6E696D040001000000000008616E696D4E616D65010049000000010005574944
+      54480200020020000865717569705B305D04000100000000000865717569705B
+      315D04000100000000000865717569705B325D04000100000000000865717569
+      705B335D04000100000000000865717569705B345D04000100000000000000}
     object charClassesid: TIntegerField
       FieldName = 'id'
     end
@@ -193,29 +198,26 @@ object dmDatabase: TdmDatabase
     object charClassesportrait: TIntegerField
       FieldName = 'portrait'
     end
-    object charClassescommand: TArrayField
-      FieldName = 'command'
-      object charClassescommand0: TIntegerField
-        FieldName = 'command[0]'
-      end
-      object charClassescommand1: TIntegerField
-        FieldName = 'command[1]'
-      end
-      object charClassescommand2: TIntegerField
-        FieldName = 'command[2]'
-      end
-      object charClassescommand3: TIntegerField
-        FieldName = 'command[3]'
-      end
-      object charClassescommand4: TIntegerField
-        FieldName = 'command[4]'
-      end
-      object charClassescommand5: TIntegerField
-        FieldName = 'command[5]'
-      end
-      object charClassescommand6: TIntegerField
-        FieldName = 'command[6]'
-      end
+    object charClassescommand1: TIntegerField
+      FieldName = 'command[1]'
+    end
+    object charClassescommand2: TIntegerField
+      FieldName = 'command[2]'
+    end
+    object charClassescommand3: TIntegerField
+      FieldName = 'command[3]'
+    end
+    object charClassescommand4: TIntegerField
+      FieldName = 'command[4]'
+    end
+    object charClassescommand5: TIntegerField
+      FieldName = 'command[5]'
+    end
+    object charClassescommand6: TIntegerField
+      FieldName = 'command[6]'
+    end
+    object charClassescommand0: TIntegerField
+      FieldName = 'command[7]'
     end
     object charClassesstatblock: TArrayField
       FieldName = 'statblock'
@@ -238,24 +240,36 @@ object dmDatabase: TdmDatabase
         FieldName = 'statblock[5]'
       end
     end
+    object charClassesSp: TLargeintField
+      FieldName = 'Sp'
+    end
+    object charClassesAttack: TLargeintField
+      FieldName = 'Attack'
+    end
+    object charClassesDefense: TLargeintField
+      FieldName = 'Defense'
+    end
+    object charClassesMind: TLargeintField
+      FieldName = 'Mind'
+    end
+    object charClassesSpeed: TLargeintField
+      FieldName = 'Speed'
+    end
     object charClassesexpFunc: TStringField
       FieldName = 'expFunc'
       Size = 32
     end
-    object charClassesexpVars: TArrayField
-      FieldName = 'expVars'
-      object charClassesexpVars0: TIntegerField
-        FieldName = 'expVars[0]'
-      end
-      object charClassesexpVars1: TIntegerField
-        FieldName = 'expVars[1]'
-      end
-      object charClassesexpVars2: TIntegerField
-        FieldName = 'expVars[2]'
-      end
-      object charClassesexpVars3: TIntegerField
-        FieldName = 'expVars[3]'
-      end
+    object charClassesexpVars1: TIntegerField
+      FieldName = 'expVars[1]'
+    end
+    object charClassesexpVars2: TIntegerField
+      FieldName = 'expVars[2]'
+    end
+    object charClassesexpVars3: TIntegerField
+      FieldName = 'expVars[3]'
+    end
+    object charClassesexpVars0: TIntegerField
+      FieldName = 'expVars[4]'
     end
     object charClassesdualWield: TIntegerField
       FieldName = 'dualWield'
@@ -269,23 +283,20 @@ object dmDatabase: TdmDatabase
     object charClassesunarmedAnim: TIntegerField
       FieldName = 'unarmedAnim'
     end
-    object charClassesequip: TArrayField
-      FieldName = 'equip'
-      object charClassesequip0: TIntegerField
-        FieldName = 'equip[0]'
-      end
-      object charClassesequip1: TIntegerField
-        FieldName = 'equip[1]'
-      end
-      object charClassesequip2: TIntegerField
-        FieldName = 'equip[2]'
-      end
-      object charClassesequip3: TIntegerField
-        FieldName = 'equip[3]'
-      end
-      object charClassesequip4: TIntegerField
-        FieldName = 'equip[4]'
-      end
+    object charClassesequip0: TIntegerField
+      FieldName = 'equip[0]'
+    end
+    object charClassesequip1: TIntegerField
+      FieldName = 'equip[1]'
+    end
+    object charClassesequip2: TIntegerField
+      FieldName = 'equip[2]'
+    end
+    object charClassesequip3: TIntegerField
+      FieldName = 'equip[3]'
+    end
+    object charClassesequip4: TIntegerField
+      FieldName = 'equip[4]'
     end
     object charClassesanimName: TStringField
       FieldKind = fkLookup
@@ -379,6 +390,7 @@ object dmDatabase: TdmDatabase
     end
   end
   object charClasses_skillset: TClientDataSet
+    Active = True
     Aggregates = <>
     FieldDefs = <
       item
@@ -459,6 +471,17 @@ object dmDatabase: TdmDatabase
     OnCalcFields = charClasses_skillsetCalcFields
     Left = 8
     Top = 56
+    Data = {
+      2F0100009619E0BD02000000180000000F0000000000030000002F01086D6F64
+      69666965640200030000000000057374796C650400010000000000066D657468
+      6F6405000C01000000000A6D6574686F644E616D650100490000000100055749
+      4454480200020020000961727261794172677302000300000000000B6D657468
+      6F645374796C650400010000000000076164647265737304000100000000000E
+      646973706C617941646472657373040001000000000005736B696C6C04000100
+      00000000066D61737465720400010000000000036E756D04000D030000000006
+      6E756D5B305D0400010000000000066E756D5B315D0400010000000000066E75
+      6D5B325D0400010000000000066E756D5B335D040001000000000001000D4445
+      4641554C545F4F524445520200820000000000}
     object charClasses_skillsetid: TStringField
       FieldKind = fkCalculated
       FieldName = 'id'
@@ -496,30 +519,27 @@ object dmDatabase: TdmDatabase
         FieldName = 'num[3]'
       end
     end
-    object charClasses_skillsetmethod: TADTField
-      FieldName = 'method'
-      object charClasses_skillsetmethodmethod_name: TStringField
-        FieldName = 'methodName'
-        Size = 32
-      end
-      object charClasses_skillsetmethodarrayArgs: TBooleanField
-        FieldName = 'arrayArgs'
-      end
-      object charClasses_skillsetmethodmethod_style: TIntegerField
-        FieldName = 'methodStyle'
-      end
-      object charClasses_skillsetmethodmethod_address: TIntegerField
-        FieldName = 'address'
-      end
-      object charClasses_skillsetmethod_displayAddress: TIntegerField
-        FieldName = 'displayAddress'
-      end
+    object charClasses_skillsetmethodName: TStringField
+      FieldName = 'method.methodName'
+      Size = 32
     end
-    object charClasses_skillsetskill: TIntegerField
-      FieldName = 'skill'
+    object charClasses_skillsetarrayArgs: TBooleanField
+      FieldName = 'method.arrayArgs'
+    end
+    object charClasses_skillsetmethodStyle: TIntegerField
+      FieldName = 'method.methodStyle'
+    end
+    object charClasses_skillsetaddress: TIntegerField
+      FieldName = 'method.address'
+    end
+    object charClasses_skillsetdisplayAddress: TIntegerField
+      FieldName = 'method.displayAddress'
     end
     object charClasses_skillsetmaster: TIntegerField
       FieldName = 'master'
+    end
+    object charClasses_skillsetskill: TIntegerField
+      FieldName = 'skill'
     end
     object charClasses_skillsetAlgName: TStringField
       FieldKind = fkLookup

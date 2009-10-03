@@ -19,21 +19,14 @@ package map_default;
 {$STACKFRAMES OFF}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
-{$WRITEABLECONST OFF}
+{$WRITEABLECONST ON}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
-  rtl,
-  vcl,
   JvPluginD14R,
-  vclx,
-  Jcl,
-  JvCoreD14R,
-  JclVcl,
-  EngineBasis,
   default_format;
 
 contains
@@ -45,3 +38,4 @@ contains
   charset_data in '..\..\charset_data.pas';
 
 end.
+

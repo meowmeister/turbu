@@ -52,13 +52,16 @@ type
       function getBounds(name: string): TRpgPoint;
       function tryUseFile(Sender: TPSPascalCompiler; const Name: tbtstring): Boolean;
       function GetExec: TPSExec;
+      function GetDeclarations: TDeclList;
+      function GetUnits: TUnitDictionary;
+      procedure SetUnits(const Value: TUnitDictionary);
    protected
       FScriptEngine: TPSExec;
       FImporter: TPSRuntimeClassImporter;
       FCompiler: TPSPascalCompiler;
       FPreprocessor: TPSPreProcessor;
 
-      procedure setScript(const Value: ansiString);
+      procedure setDBScript(const Value: ansiString);
       procedure setup;
       procedure SetPointerToData(const VarName: ansiString; Data: Pointer; aType: TIFTypeRec);
    public
@@ -69,9 +72,9 @@ type
 
       //properties
       property compiler: TPSPascalCompiler read FCompiler;
-      property script: ansiString write setScript;
+      property script: ansiString write setDBScript;
       property exec: TPSExec read GetExec;
-      property units: TUnitDictionary read FUnits write FUnits;
+      property units: TUnitDictionary read GetUnits write SetUnits;
       property func[name: string]: string read getFunc;
       property decl: TDeclList read FDeclarations;
       property bounds[name: string]: TRpgPoint read getBounds;
@@ -83,7 +86,8 @@ var
 implementation
 uses
    math, TypInfo,
-   logs, turbu_vartypes, turbu_constants,
+   logs, turbu_vartypes, turbu_constants, turbu_database,
+turbu_characters, //ugly hack
    uPSI_script_interface,
    strtok,
    uPSC_std, uPSR_std;
@@ -97,7 +101,7 @@ function buildProcList(Sender: TPSPascalCompiler): Boolean; forward;
 constructor TTurbuScriptEngine.Create;
 begin
    inherited Create;
-   GDScriptEngine := self;
+   GScriptEngine := self;
 
    FIndices := TScriptList.Create;
    FDeclarations := TDeclList.Create;
@@ -115,12 +119,14 @@ end;
 
 destructor TTurbuScriptEngine.Destroy;
 begin
+   turbu_characters.SetScriptEngine(nil);
    FCompiler.free;
    FImporter.Free;
    FScriptEngine.Free;
    FIndices.Free;
    FDeclarations.Free;
    FPreprocessor.Free;
+   GScriptEngine := nil;
    inherited Destroy;
 end;
 
@@ -243,6 +249,11 @@ begin
    else result := dummy.range;
 end;
 
+function TTurbuScriptEngine.GetDeclarations: TDeclList;
+begin
+  result := FDeclarations;
+end;
+
 function TTurbuScriptEngine.GetExec: TPSExec;
 begin
    result := FScriptEngine;
@@ -256,6 +267,11 @@ begin
    if range.Y > 0 then
       result := string(Copy(FScript, range.X, (range.y - 1) - range.x))
    else result := '';
+end;
+
+function TTurbuScriptEngine.GetUnits: TUnitDictionary;
+begin
+  Result := FUnits;
 end;
 
 procedure TTurbuScriptEngine.SetPointerToData(const VarName: ansiString;
@@ -273,7 +289,12 @@ begin
    VNSetPointerTo(t, Data, aType);
 end;
 
-procedure TTurbuScriptEngine.setScript(const Value: ansiString);
+procedure TTurbuScriptEngine.SetUnits(const Value: TUnitDictionary);
+begin
+  FUnits := Value;
+end;
+
+procedure TTurbuScriptEngine.setDBScript(const Value: ansiString);
 begin
    FScript := value;
    FIndices.Clear;
@@ -371,7 +392,7 @@ end;
 
 finalization
 begin
-   GDScriptEngine.Free;
+  FreeAndNil(GDScriptEngine);
 end;
 
 end.

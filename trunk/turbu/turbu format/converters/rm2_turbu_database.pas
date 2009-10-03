@@ -1,23 +1,24 @@
 unit rm2_turbu_database;
-{*****************************************************************************
-* The contents of this file are used with permission, subject to
-* the Mozilla Public License Version 1.1 (the "License"); you may
-* not use this file except in compliance with the License. You may
-* obtain a copy of the License at
-* http://www.mozilla.org/MPL/MPL-1.1.html
-*
-* Software distributed under the License is distributed on an
-* "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-* implied. See the License for the specific language governing
-* rights and limitations under the License.
-*
-*****************************************************************************
-*
-* This file was created by Mason Wheeler.  He can be reached for support at
-* www.turbu-rpg.com.
-*****************************************************************************}
+{ *****************************************************************************
+  * The contents of this file are used with permission, subject to
+  * the Mozilla Public License Version 1.1 (the "License"); you may
+  * not use this file except in compliance with the License. You may
+  * obtain a copy of the License at
+  * http://www.mozilla.org/MPL/MPL-1.1.html
+  *
+  * Software distributed under the License is distributed on an
+  * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  * implied. See the License for the specific language governing
+  * rights and limitations under the License.
+  *
+  *****************************************************************************
+  *
+  * This file was created by Mason Wheeler.  He can be reached for support at
+  * www.turbu-rpg.com.
+  ***************************************************************************** }
 
 interface
+
 uses
    LDB, LMT, turbu_database, turbu_unit_dictionary, conversion_report;
 
@@ -33,7 +34,7 @@ type
    end;
 
 var
-   GLcfDatabase: TLcfDataBase;
+   GLcfDatabase: TLcfDatabase;
 
 implementation
 uses
@@ -46,6 +47,7 @@ uses
    turbu_tbi_lib, turbu_tilesets,
    hero_data, locate_files,
    archiveInterface, formats, commons, turbu_battle_engine, turbu_engines, logs,
+   turbu_map_engine,
    SDL, SDL_13, sdl_image;
 
 var
@@ -68,7 +70,7 @@ var
    counter: integer;
    dummy: string;
    i, j: integer;
-//   converter: TMemoryStream;
+   // converter: TMemoryStream;
 
    function scanMapSprite(name: ansiString; index: byte): boolean;
    begin
@@ -116,7 +118,7 @@ var
          dummy := nameTable[i].name;
          if appendZero then
             dummy := dummy + ', 0';
-         result.Add(dummy);
+         result.add(dummy);
          inc(i);
          inc(j);
       end;
@@ -128,25 +130,25 @@ begin
    ConversionReport.newStep('Hero sprites.');
    nameTable.newDivision;
    counter := 0;
-   for I := 1 to base.heroes do
+   for i := 1 to base.heroes do
       if not scanMapSprite(base.hero[i].sprite, base.hero[i].spriteIndex) then
          base.hero[i].sprite := '';
 
    ConversionReport.newStep('Hero portraits.');
    nameTable.newDivision;
    counter := 0;
-   for I := 1 to base.heroes do
+   for i := 1 to base.heroes do
       if not scanPortrait(base.hero[i].portrait) then
          base.hero[i].portrait := '';
 
    ConversionReport.newStep('Battle animations.');
    nameTable.newDivision;
    counter := 0;
-   for I := 1 to base.anims do
+   for i := 1 to base.anims do
       if not scanAnim(base.anim[i].filename) then
          base.anim[i].filename := '';
 
-   {worry about battlesprites later}
+   { worry about battlesprites later }
 
    i := 0;
 
@@ -182,11 +184,10 @@ var
    converter: TMemoryStream;
    reader: TStream;
    battleEngine: TBattleEngineData;
-   engineArray: ^TBattleEngineArray;
    defMoveMatrix: TMoveMatrix;
    moveArray: ^TMoveMatrixArray;
 begin
-   //setup
+   // setup
    self.Create;
    GDatabase := self;
    GLcfDatabase := base;
@@ -196,30 +197,29 @@ begin
    finally
       reader.free;
    end;
-   self.units.Free;
+   self.units.free;
    self.units := dic;
    self.scriptBuild;
    self.parseMeta;
-//   self.algorithms := algorithms;
+   // self.algorithms := algorithms;
    assert(SDL_WasInit(SDL_INIT_VIDEO) = SDL_INIT_VIDEO);
 
-   //make sure required battle engine is available from plugins
+   // make sure required battle engine is available from plugins
    case GProjectFormat of
-      pf_2k: battleEngine := TBattleEngineData(requireEngine(et_battle, 'First-person battle engine', TVersion.Create(0, 1, 1)));
-      pf_2k3: battleEngine := TBattleEngineData(requireEngine(et_battle, 'Active-time battle engine', TVersion.Create(0, 1, 1)));
-      else
+      pf_2k: battleEngine := requireEngine(et_battle, 'First-person battle engine', TVersion.Create(0, 1, 1)) as TBattleEngineData;
+      pf_2k3: battleEngine := requireEngine(et_battle, 'Active-time battle engine', TVersion.Create(0, 1, 1)) as TBattleEngineData;
+   else
       begin
          battleEngine := nil;
          assert(false);
       end;
    end;
-   engineArray := @self.battleStyle;
-   setLength(engineArray^, length(engineArray^) + 1);
-   self.battleStyle[high(self.battleStyle)] := battleEngine;
+   self.battleStyle.add(battleEngine);
+   self.mapEngines.add(requireEngine(et_map, 'TURBU basic map engine', TVersion.Create(0, 1, 0)) as TMapEngineData);
 
-   //define default move matrix
+   // define default move matrix
    setLength(defMoveMatrix, length(MOVE_MATRIX));
-   for I := 0 to high(MOVE_MATRIX) do
+   for i := 0 to high(MOVE_MATRIX) do
    begin
       setLength(defMoveMatrix[i], length(MOVE_MATRIX[i]));
       for j := 0 to high(MOVE_MATRIX[i]) do
@@ -227,13 +227,13 @@ begin
    end;
    moveArray := @self.moveMatrix;
    setLength(moveArray^, length(moveArray^) + 1);
-   self.moveMatrix[high(self.moveMatrix)] := defMoveMatrix;
+   self.moveMatrix[ high(self.moveMatrix)] := defMoveMatrix;
 
-   //create conversion tables
+   // create conversion tables
    classTable := TConversionTable.Create;
    heroClassTable := TConversionTable.Create;
-   nametable.free;
-   nametable := TNameTable.Create;
+   nameTable.free;
+   nameTable := TNameTable.Create;
    converter := nil;
    self.statSet := TStatSet.Create;
 
@@ -241,29 +241,29 @@ begin
       buildNameLists(base, ConversionReport);
 
       ConversionReport.newStep('Converting heroes');
-      //COMMANDS
-      self.command.Add(TBattleCommand.Create);
+      // COMMANDS
+      self.command.add(TBattleCommand.Create);
       if GProjectFormat = pf_2k3 then
       begin
-         for I := 1 to base.commands do
+         for i := 1 to base.commands do
             command.add(TBattleCommand.convert(base.command[i], i));
       end else
       begin
-         for I := 1 to 4 do
-            command.Add(setup2kCommand(i));
-         for I := 1 to base.heroes do
+         for i := 1 to 4 do
+            command.add(setup2kCommand(i));
+         for i := 1 to base.heroes do
             if base.hero[i].hasSkillName then
             begin
-               command.Add(TBattleCommand.Create);
-               command.Last.id := command.High;
+               command.add(TBattleCommand.Create);
+               command.Last.id := command. High;
                command.Last.name := (string(base.hero[i].skillName));
                command.Last.style := cs_skillgroup;
-               command.Last.value := command.High;
+               command.Last.value := command. High;
             end;
-         //end FOR
+         // end FOR
       end;
 
-      //CLASS RECORDS
+      // CLASS RECORDS
       if GProjectFormat = pf_2k3 then
       begin
          self.charClasses := base.charClasses;
@@ -286,7 +286,7 @@ begin
          counter := 0;
          classes := 0;
       end;
-      for I := 1 to base.heroes do
+      for i := 1 to base.heroes do
       begin
          if (not isEmpty(base.hero[i])) and (base.hero[i].classNum = 0) then
          begin
@@ -296,18 +296,18 @@ begin
          end;
       end;
 
-      //HERO RECORDS
-      for I := 1 to base.heroes do
+      // HERO RECORDS
+      for i := 1 to base.heroes do
          if base.hero[i].classNum <> 0 then
             GDatabase.addHero(THeroTemplate.convert(base.hero[i], classTable, base, self.statSet))
          else GDatabase.addHero(THeroTemplate.convert(base.hero[i], heroClassTable, base, self.statSet));
 
       ConversionReport.newStep('Converting Items');
-      //ITEMS
-      for I := 1 to base.items do
+      // ITEMS
+      for i := 1 to base.items do
          TItemTemplate.addNewItem(base.item[i]);
 
-      //LOAD ITEMS INTO CLASS/HERO RECORDS
+      // LOAD ITEMS INTO CLASS/HERO RECORDS
       j := classes;
       for i := j + 1 to self.charClasses do
          if (not isEmpty(base.hero[i - classes])) and (base.hero[i - classes].classNum = 0) then
@@ -316,27 +316,27 @@ begin
             self.charClass[j].loadEq(base.hero[i - classes]);
          end;
 
-      for I := 1 to base.heroes do
+      for i := 1 to base.heroes do
          self.hero[i].loadEq(base.hero[i]);
 
       ConversionReport.newStep('Converting Skills');
-      //SKILLS
-      for I := 1 to base.skills do
+      // SKILLS
+      for i := 1 to base.skills do
          TSkillTemplate.addNewSkill(base.skill[i]);
 
       ConversionReport.newStep('Converting Animations');
-      //ANIMATIONS
+      // ANIMATIONS
       for i := 1 to base.anims do
          self.addAnim(TAnimTemplate.convert(base.anim[i], i));
 
       ConversionReport.newStep('Converting Attributes and Conditions');
-      //ATTRIBUTES
-      for I := 1 to base.attributes do
-         self.attributes.add(TAttributeTemplate.Convert(base.attribute[i], i));
+      // ATTRIBUTES
+      for i := 1 to base.attributes do
+         self.attributes.add(TAttributeTemplate.convert(base.attribute[i], i));
 
-      //CONDITIONS
-      for I := 1 to base.conditions do
-         self.conditions.Add(TConditionTemplate.Convert(base.condition[i], i));
+      // CONDITIONS
+      for i := 1 to base.conditions do
+         self.conditions.add(TConditionTemplate.convert(base.condition[i], i));
 
       //TILESETS
       for I := 1 to base.getMaxChipsets do
@@ -349,10 +349,10 @@ begin
       self.layout.physHeight := PHYSICAL_SIZE.Y;
 
       ConversionReport.newStep('Converting map tree');
-      self.mapTree := TMapTree.Convert(tree, true);
+      self.mapTree := TMapTree.convert(tree, true);
    finally
-      classTable.Free;
-      heroClassTable.Free;
+      classTable.free;
+      heroClassTable.free;
       assert(converter = nil);
    end;
 end;
@@ -361,9 +361,9 @@ function T2k2Database.lookupMapSprite(name: ansiString; index: byte): integer;
 begin
    assert(assigned(nameTable));
    assert(index in [0..7]);
-   result := nameTable.indexOf('mapsprite\' + unicodeString(name) + ' ' + intToStr(index), INDEX_SPRITE);
+   result := nameTable.indexOf(format('mapsprite\%s %d', [name, index]), INDEX_SPRITE);
    if result < 0 then
-      raise EConversionTableError.Create('Sprite name "' + unicodeString(name) + '" not found in conversion table!');
+      raise EConversionTableError.CreateFmt('Sprite name "%s" not found in conversion table!', [name]);
 end;
 
 function T2k2Database.lookupPortrait(name: ansiString; index: byte): integer;
@@ -372,7 +372,7 @@ begin
    assert(index in [0..15]);
    result := (nameTable.indexOf('portrait\' + unicodeString(name), INDEX_PORTRAIT) * 16) + index;
    if result < 0 then
-      raise EConversionTableError.Create('Portrait name "' + unicodeString(name) + '" not found in conversion table!');
+      raise EConversionTableError.CreateFmt('Portrait name "%s" not found in conversion table!', [name]);
 end;
 
 { Classless }
@@ -387,24 +387,25 @@ var
    convertedImage: TStream;
    writename: string;
 begin
-   framesPerSprite := SPRITE.X * SPRITE.Y;
-   blitSurface := TSdlSurface.Create(FRAME.X, FRAME.Y * framesPerSprite, 8, 0, 0, 0, 0);
+   framesPerSprite := sprite.X * sprite.Y;
+   blitSurface := TSdlSurface.Create(frame.X, frame.Y * framesPerSprite, 8, 0, 0, 0, 0);
    try
       if not blitSurface.SetPalette(image.format.palette.colors, 0, image.format.palette.count) then
-         raise EInvalidImage.Create('Unable to convert sprite ' + name + ' due to colorkey failure!');
-      blitSurface.ColorKey := image.colorkey;
+         raise EInvalidImage.CreateFmt('Unable to convert sprite %s due to colorkey failure!', [name]);
+      blitSurface.ColorKey := image.ColorKey;
 
       if id = -1 then
          startingPoint := point(0, 0)
-      else startingPoint := point((id mod SHEET.X) * FRAME.X * SPRITE.X, (id div SHEET.X) * FRAME.Y * SPRITE.Y);
-      blitSurface.Fill(nil, blitSurface.colorkey);
+      else
+         startingPoint := point((id mod sheet.X) * frame.X * sprite.X, (id div sheet.X) * frame.Y * sprite.Y);
+      blitSurface.Fill(nil, blitSurface.ColorKey);
       for i := 0 to framesPerSprite - 1 do
       begin
-         srcrect := rect(point(FRAME.X * (i mod SPRITE.X), FRAME.Y * (i div SPRITE.X)), FRAME);
-         inc(srcrect.left, startingPoint.x);
-         inc(srcrect.top, startingPoint.y);
-         dstrect := rect(point(0, i * FRAME.Y), FRAME);
-         SDL_BlitSurface(image, @srcRect, blitSurface, @dstRect);
+         srcrect := rect(point(frame.X * (i mod sprite.X), frame.Y * (i div sprite.X)), frame);
+         inc(srcrect.left, startingPoint.X);
+         inc(srcrect.top, startingPoint.Y);
+         dstrect := rect(point(0, i * frame.Y), frame);
+         SDL_BlitSurface(image, @srcrect, blitSurface, @dstrect);
       end;
       convertedImage := saveToTBI(blitSurface);
       convertedImage.Seek(0, soFromBeginning);
@@ -415,10 +416,10 @@ begin
          writename := writename + '.tbi';
          archiveInterface.GArchives[IMAGE_ARCHIVE].writeFile(writename, convertedImage);
       finally
-         convertedImage.Free;
+         convertedImage.free;
       end;
    finally
-      blitSurface.Free;
+      blitSurface.free;
    end;
    result := true;
 end;
@@ -437,14 +438,14 @@ begin
    findGraphic(name, 'charset');
    if name = '' then
    begin
-      logs.logText('Unable to locate charset image ' + oname + 'for conversion');
+      logs.logText(format('Unable to locate charset image %s for conversion', [oname]));
       Exit;
    end;
    image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(name))));
    try
       result := convertImage(image, id, FRAME, SPRITE, SHEET, oname, 'mapsprite');
    finally
-      image.Free;
+      image.free;
    end;
 end;
 
@@ -462,14 +463,14 @@ begin
    findGraphic(name, 'faceset');
    if name = '' then
    begin
-      logs.logText('Unable to locate portrait image ' + oname + 'for conversion');
+      logs.logText(format('Unable to locate portrait image %s for conversion', [oname]));
       Exit;
    end;
    image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(name))));
    try
       result := convertImage(image, -1, FRAME, SPRITE, SHEET, oname, 'portrait');
    finally
-      image.Free;
+      image.free;
    end;
 end;
 
@@ -496,13 +497,13 @@ begin
    try
       result := convertImage(image, -1, FRAME, sprite, SHEET, oname, 'animation');
    finally
-      image.Free;
+      image.free;
    end;
 end;
 
 initialization
 begin
-   nametable := nil;
+   nameTable := nil;
 end;
 
 finalization

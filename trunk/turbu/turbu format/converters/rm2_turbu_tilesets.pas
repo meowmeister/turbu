@@ -194,7 +194,7 @@ begin
    begin
       newRecord := TTileGroupRecord.Create;
       newRecord.group := GDatabase.tileGroup[format(KEYNAME, [filename, TILESET_NAME[i]])];
-      if i <= 16 then
+      if i <= 18 then
          newRecord.layers := [0]
       else newRecord.layers := [1];
       if base.animation then

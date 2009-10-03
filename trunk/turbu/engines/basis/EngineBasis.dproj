@@ -23,6 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_Define>PS_USESSUPPORT;$(DCC_Define)</DCC_Define>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<DCC_BplOutput>..\..\bin\</DCC_BplOutput>
@@ -46,6 +47,8 @@
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<Version>7.0</Version>
 			<DCC_ResourcePath>C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;$(DCC_ObjPath)</DCC_ObjPath>
@@ -58,7 +61,6 @@
 			<DelphiCompile Include="EngineBasis.dpk">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="SimpleShareMem_EngineBasis.pas"/>
 			<DCCReference Include="..\..\..\components\PascalScript\upsCompiler.pas"/>
@@ -71,7 +73,6 @@
 			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL\Pas\sdl_13.pas"/>
 			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL_Image\Pas\sdl_image.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_database_interface.pas"/>
-			<DCCReference Include="..\..\turbu format\turbu_script_interface.pas"/>
 			<DCCReference Include="..\..\..\classes\sdl custom\sdl_canvas.pas"/>
 			<DCCReference Include="..\..\..\classes\sdl custom\SDL_ImageManager.pas"/>
 			<DCCReference Include="..\..\..\classes\sdl custom\SDL_rwStream.pas"/>
@@ -80,6 +81,7 @@
 			<DCCReference Include="..\..\turbu format\turbu_map_interface.pas"/>
 			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL\Pas\sdlstreams.pas"/>
 			<DCCReference Include="..\..\turbu format\plugins\turbu_plugin_interface.pas"/>
+			<DCCReference Include="..\..\turbu format\turbu_sdl_image.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -102,7 +104,6 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
-						<Parameters Name="HostApplication">C:\Documents and Settings\Mason\My Documents\RAD Studio\Projects\turbu\turbu\bin\Turbu.exe</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

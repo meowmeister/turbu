@@ -57,6 +57,7 @@ begin
    self.canPort := TInheritedDecision(base.canPort);
    self.canEscape := TInheritedDecision(base.canEscape);
    self.canSave := TInheritedDecision(base.canSave);
+   self.mapEngine := 'TURBU basic map engine';
 end;
 
 { T2k2MapTree }
@@ -66,6 +67,7 @@ var
    i, j: integer;
 begin
    self.Create;
+   TMapTreeConversionAid(self).FMapEngines.Add('TURBU basic map engine');
    addLookup(0);
    self.Capacity := base.getSize;
    i := 0;

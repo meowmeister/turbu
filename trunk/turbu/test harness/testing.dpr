@@ -13,7 +13,6 @@ uses
   turbu_2k3_battle_engine in '..\engines\turbu_2k3_battle_engine.pas',
   turbu_2k_battle_engine in '..\engines\turbu_2k_battle_engine.pas',
   turbu_decl_utils in '..\turbu format\turbu_decl_utils.pas',
-  DB in '..\..\vclpatch\DB.pas',
   turbu_characters in '..\turbu format\database\turbu_characters.pas',
   turbu_script_basis in '..\turbu format\turbu_script_basis.pas',
   rpg_list in '..\mapview\libs\script engine\rpg_list.pas',

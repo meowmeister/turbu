@@ -88,7 +88,7 @@ function SDL_Swap16( D : UInt16 ) : Uint16;
 function SDL_Swap32( D : UInt32 ) : Uint32;
 function SDLStreamSetup( stream : TStream ) : PSDL_RWops;
 // this only closes the SDL_RWops part of the stream, not the stream itself
-procedure SDLStreamCloseRWops( SDL_RWops : PSDL_RWops );
+procedure SDLStreamCloseRWops( SDL_RWops : PSDL_RWops ); inline;
 
 implementation
 

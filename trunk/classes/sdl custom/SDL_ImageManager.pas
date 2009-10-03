@@ -531,7 +531,7 @@ end;
 
 //---------------------------------------------------------------------------
 function TSdlImages.AddSpriteFromArchive(filename, keyname, imagename: string;
-  spritesize: TSgPoint; loader: TArchiveLoader): integer;
+  spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
 var
    dummy: PSDL_RWops;
 begin
@@ -700,12 +700,12 @@ begin
 
    if LSurface = nil then
       raise ESdlImageException.Create(string(IMG_GetError));
-   //Allow descendant classes to fix up the image, if desired.
    if assigned(LSurface.format.palette) then
    begin
       colorkey := LSurface.format.palette.colors^[0];
       LSurface.ColorKey := SDL_MapRGB(LSurface.format, colorkey.r, colorkey.g, colorkey.b)
    end;
+   //Allow descendant classes to fix up the image, if desired.
    processImage(LSurface);
    if FSurface.ID = 0 then
       FSurface := TSdlTexture.Create(0, LSurface);
@@ -762,7 +762,7 @@ end;
 
 procedure TSdlImage.processImage(image: PSdlSurface);
 begin
-   //this method intentionally left blank
+   //this virtual method intentionally left blank
 end;
 
 //---------------------------------------------------------------------------

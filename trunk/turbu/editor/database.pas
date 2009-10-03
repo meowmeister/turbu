@@ -250,7 +250,7 @@ begin
       Exit;
 
    needs3 := false;
-   for I := 0 to high(GDatabase.battleStyle) do
+   for I := 0 to GDatabase.battleStyle.High do
       needs3 := (needs3) or (GDatabase.battleStyle[i].view in NEED_BATTLE_SPRITES);
    if (needs3) and (frmClass.tabGraphics.Tabs.Count = 2) then
       frmClass.tabGraphics.Tabs.Add('Battle Sprite')

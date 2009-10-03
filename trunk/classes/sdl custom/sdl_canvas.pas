@@ -69,9 +69,8 @@ type
    * application.
    ***************************************************************************}
    TSdlCanvas = class(TSdlRenderSurface)
-   class var
-      FRenderStack: TRenderStack;
    private
+      FRenderStack: TRenderStack;
       FRenderTarget: TSdlRenderSurface;
       FRenderHandle: Cardinal;
 //      FFullscreen: boolean;
@@ -111,6 +110,11 @@ type
       * Flips the buffer, rendering the canvas to the screen.
       ************************************************************************}
       procedure Flip; virtual;
+
+      {************************************************************************
+      * Sets the canvas as the current rendering device.
+      ************************************************************************}
+      procedure SetRenderer;
 
       {************************************************************************
       * Pushes the current render target to the render target stack, or loads a
@@ -264,6 +268,11 @@ begin
    result := {FSurface.flags and SDL_FULLSCREEN = SDL_FULLSCREEN} false;
 end;
 *)
+
+procedure TSdlCanvas.SetRenderer;
+begin
+   SDL_SelectRenderer(FRenderTarget.ID);
+end;
 
 procedure TSdlCanvas.SetRenderTarget(const Value: TSdlRenderSurface);
 begin

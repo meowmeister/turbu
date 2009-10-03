@@ -28,6 +28,8 @@ type
    end;
    {$IFEND}
 
+   TRendererType = (rtSoftware, rtGDI, rtOpenGL, rtD3D);
+
    TSdlFrame = class(TCustomControl)
    private
       FWindowID: TSdlWindowId;
@@ -41,6 +43,7 @@ type
       FTextureList: TTextureList;
       FOnTimer: TNotifyEvent;
       FOnAvailable: TNotifyEvent;
+      FRendererType: TRendererType;
 
       function CreateWindow: boolean;
       function CreateRenderer: boolean;
@@ -70,8 +73,12 @@ type
    published
       property Framerate: word read FFramerate write SetFramerate;
       property Active: boolean read FActive write SetActive;
+      property RendererType: TRendererType read FRendererType write FRendererType default rtOpenGL;
       property OnTimer: TNotifyEvent read FOnTimer write FOnTimer;
       property OnAvailable: TNotifyEvent read FOnAvailable write FOnAvailable;
+   published
+      property Align;
+      property Anchors;
    end;
 
 procedure Register;
@@ -96,6 +103,7 @@ begin
    FTimer.Interval := 100;
    FTextureList := TTextureList.Create;
    FTimer.OnTimer := Self.InternalOnTimer;
+   FRendererType := rtOpenGL;
 end;
 
 destructor TSdlFrame.Destroy;
@@ -140,7 +148,6 @@ begin
    begin
       assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
       assert(SDL_RenderFill(nil) = 0);
-      SDL_RenderPresent;
    end;
 end;
 
@@ -171,21 +178,35 @@ end;
 function TSdlFrame.CreateRenderer: boolean;
 const
    SDL_BLACK: sdl_13.TSDL_Color = (r: 0; g: 0; b:0; unused: 0);
+   pf: tagPIXELFORMATDESCRIPTOR = (nSize: sizeof(pf); nVersion: 1;
+       dwFlags: PFD_DRAW_TO_WINDOW or PFD_SUPPORT_OPENGL or PFD_DOUBLEBUFFER;
+       iPixelType: PFD_TYPE_RGBA; cColorBits: 24; cAlphaBits: 8;
+       iLayerType: PFD_MAIN_PLANE);
+
+   RENDERERS: array[TRendererType] of AnsiString = ('software', 'gdi', 'opengl', 'd3d');
+var
+  pFormat: integer;
 begin
    if (SDL_SelectRenderer(FWindowID) = 0) then
    begin
       result := true;
       Exit;
    end;
-   if (SDL_CreateRenderer(FWindowID, SDL_RendererIndex('opengl'), [sdlrPresentFlip3, sdlrAccelerated]) = 0) then
+   if FRendererType = rtOpenGL then
+   begin
+      pFormat := ChoosePixelFormat(canvas.Handle, @pf);
+      if not SetPixelFormat(canvas.Handle, pFormat, @pf) then
+         outputDebugString(PChar(SysErrorMessage(GetLastError)));
+      if wglCreateContext(canvas.Handle) = 0 then
+         outputDebugString(PChar(SysErrorMessage(GetLastError)));
+   end;
+   if (SDL_CreateRenderer(FWindowID, SDL_RendererIndex(RENDERERS[FRendererType]), [sdlrPresentFlip3, sdlrAccelerated]) = 0) then
    begin
       SDL_ShowWindow(FWindowID);
       assert(SDL_SetRenderDrawColor(0, 0, 0, 0) = 0);
-      assert(SDL_RenderFill(nil) = 0);
       FFlags := SDL_GetWindowFlags(FWindowID);
       FBuffer := TSdlTexture.Create(0, sdltaStreaming, self.Width, self.Height);
       FRenderer := true;
-      fillColor(SDL_BLACK, 255);
       if assigned(FOnAvailable) then
          FOnAvailable(self);
    end
@@ -221,6 +242,7 @@ begin
    if not assigned(surface) then
       Exit(-1);
 
+   SDL_SelectRenderer(FWindowID);
    texture := TSdlTexture.Create(0, surface);
    result := FTextureList.Add(texture);
 end;
@@ -247,13 +269,16 @@ begin
 end;
 
 procedure TSdlFrame.Clear;
+var
+   i: integer;
 begin
    if CreateRenderer then
-   begin
-      assert(SDL_SetRenderDrawColor(0, 0, 0, 255) = 0);
-      assert(SDL_RenderFill(nil) = 0);
-      SDL_RenderPresent;
-   end;
+      for I := 1 to 3 do
+      begin
+         assert(SDL_SetRenderDrawColor(0, 0, 0, 255) = 0);
+         assert(SDL_RenderFill(nil) = 0);
+         SDL_RenderPresent;
+      end;
 end;
 
 {$IF CompilerVersion < 20}

@@ -21,6 +21,9 @@ interface
 type
    IRpgMap = interface(IInterface)
    ['{8B9CDCC2-AFB6-408C-88C3-2E50D145C901}']
+      function GetTileset: string;
+      procedure SetTileset(const Value: string);
+      property tileset: string read GetTileset write SetTileset;
    end;
 
 implementation

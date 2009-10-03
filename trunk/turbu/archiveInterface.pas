@@ -67,7 +67,7 @@ end;
 
 finalization
 begin
-   GArchives.Free;
+   FreeAndNil(GArchives);
 end;
 
 end.

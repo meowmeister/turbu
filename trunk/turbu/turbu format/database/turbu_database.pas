@@ -23,14 +23,15 @@ uses
 //   events,
    dm_database, turbu_database_interface,
    turbu_characters, turbu_items, turbu_db_var_arrays, turbu_skills, turbu_classes,
-   turbu_battle_engine, turbu_sprites, turbu_animations, turbu_resists,
+   turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations, turbu_resists,
    turbu_unit_dictionary, turbu_containers, turbu_script_interface, turbu_game_data,
    turbu_map_metadata, turbu_tilesets;
 
 type
    TCharClassArray = array of TClassTemplate;
    THeroTemplateArray = array of THeroTemplate;
-   TBattleEngineArray = array of TBattleEngineData;
+   TBattleEngineList = TRpgList<TBattleEngineData>;
+   TMapEngineList = TRpgList<TMapEngineData>;
    TMoveMatrixArray = array of TMoveMatrix;
    TItemList = TRpgObjectList<TItemTemplate>;
    TSkillGainList = TRpgObjectList<TSkillGainRecord>;
@@ -52,14 +53,7 @@ type
       function indexOf (name: string): integer;
    end;
 
-   TRpgDatabase = class;
-
-   I2kDatabase = interface(IRpgDatabase)
-   ['{756ECF13-2D52-4EB3-824A-CDAB7A063DBA}']
-      function dbObject: TRpgDatabase;
-   end;
-
-   TRpgDatabase = class(TRpgDatafile, I2kDatabase, IRpgDatabase)
+   TRpgDatabase = class(TRpgDatafile, IRpgDatabase)
    private
       FClass: TCharClassArray;
       FHero: THeroTemplateArray;
@@ -86,7 +80,8 @@ type
       FMapTree: TMapTree;
 
       FMoveMatrix: TMoveMatrixArray;
-      FBattleStyle: TBattleEngineArray;
+      FBattleStyle: TBattleEngineList;
+      FMapEngines: TMapEngineList;
       FExpRecordList: TExpRecordList;
       FStatSet: TStatSet;
       FTileGroup: TTileDictionary;
@@ -147,8 +142,6 @@ type
 
       function scriptBuild: boolean;
 
-      function dbObject: TRpgDatabase;
-
       property skillFunc: TSkillGainList read FSkillFuncs;
       property charClasses: integer read getClassCount write setClassCount;
       property charClass: TCharClassArray read FClass write FClass;
@@ -167,7 +160,8 @@ type
       property layout: TGameLayout read FLayout write FLayout;
       property variable: TVarSection read FVariables write FVariables;
       property switch: TSwitchSection read FSwitches write FSwitches;
-      property battleStyle: TBattleEngineArray read FBattleStyle write FBattleStyle;
+      property battleStyle: TBattleEngineList read FBattleStyle;
+      property mapEngines: TMapEngineList read FMapEngines;
       property moveMatrix: TMoveMatrixArray read FMoveMatrix write FMoveMatrix;
       property mapTree: TMapTree read FMapTree write FMapTree;
       property statSet: TStatSet read FStatSet write FStatSet;
@@ -194,7 +188,7 @@ uses
    turbu_decl_utils, turbu_functional;
 
 const
-   DBVERSION = 23;
+   DBVERSION = 25;
 
 { TRpgDatabase }
 
@@ -213,14 +207,10 @@ begin
    FAttributes := TAttribList.Create;
    FConditions := TConditionList.Create;
    FSkillFuncs := TSkillGainList.Create;
+   FBattleStyle := TBattleEngineList.Create;
+   FMapEngines := TMapEngineList.Create;
    FLayout := TGameLayout.Create;
    self.prepareBlanks;
-end;
-
-function TRpgDatabase.dbObject: TRpgDatabase;
-begin
-   assert(assigned(self));
-   result := self;
 end;
 
 constructor TRpgDatabase.Load(savefile: TStream);
@@ -270,6 +260,8 @@ begin
    FAttributes := TAttribList.Create;
    FConditions := TConditionList.Create;
    FSkillFuncs := TSkillGainList.Create;
+   FBattleStyle := TBattleEngineList.Create;
+   FMapEngines := TMapEngineList.Create;
    self.prepareBlanks;
    GDatabase := self;
 
@@ -331,10 +323,8 @@ begin
       end;
    end;
    lassert(k = FUnits.Count);
-   {$IFDEF EDITOR}
-   GDScriptEngine.units := FUnits;
-   turbu_characters.setScriptEngine(GDScriptEngine);
-   {$ENDIF}
+   GScriptEngine.units := FUnits;
+   turbu_characters.setScriptEngine(GScriptEngine);
    self.scriptBuild;
    self.parseMeta;
 
@@ -504,13 +494,22 @@ begin
    lassert(savefile.readChar = 'm');
 
    lassert(savefile.readChar = 'B');
-   setLength(FBattleStyle, savefile.readByte);
-   for I := 0 to high(FBattleStyle) do
+   FBattleStyle.Capacity := savefile.readByte;
+   for I := 0 to FBattleStyle.Capacity - 1 do
    begin
       dummy := savefile.readString; //order of operations issue
-      FBattleStyle[i] := TBattleEngineData(requireEngine(et_battle, dummy, TVersion.Create(savefile.readInt)));
+      FBattleStyle.Add(requireEngine(et_battle, dummy, TVersion.Create(savefile.readInt)) as TBattleEngineData);
    end;
    lassert(savefile.readChar = 'b');
+
+   lassert(savefile.readChar = 'M');
+   FMapEngines.Capacity := savefile.readByte;
+   for I := 0 to FMapEngines.Capacity - 1 do
+   begin
+      dummy := savefile.readString; //order of operations issue
+      FMapEngines.Add(requireEngine(et_map, dummy, TVersion.Create(savefile.readInt)) as TMapEngineData);
+   end;
+   lassert(savefile.readChar = 'm');
 
    lassert(savefile.readChar = 'L');
    FLayout := TGameLayout.Load(savefile);
@@ -755,13 +754,22 @@ begin
    savefile.writeChar('m');
 
    savefile.writeChar('B');
-   savefile.WriteByte(length(FBattleStyle));
-   for I := 0 to high(FBattleStyle) do
+   savefile.WriteByte(FBattleStyle.Count);
+   for I := 0 to FBattleStyle.High do
    begin
       savefile.writeString(FBattleStyle[i].name);
       savefile.writeInt(FBattleStyle[i].version.value);
    end;
    savefile.writeChar('b');
+
+   savefile.writeChar('M');
+   savefile.WriteByte(FMapEngines.Count);
+   for I := 0 to FMapEngines.High do
+   begin
+      savefile.writeString(FMapEngines[i].name);
+      savefile.writeInt(FMapEngines[i].version.value);
+   end;
+   savefile.writeChar('m');
 
    savefile.writeChar('L');
    FLayout.save(savefile);
@@ -811,9 +819,7 @@ begin
       for item in FUnits.Keys do
          list.Add(item);
       try
-         {$IFDEF EDITOR}
-         GDScriptEngine.script := ansiString(format(SCRIPT, [list.CommaText]));
-         {$ENDIF}
+         GScriptEngine.dbScript := ansiString(format(SCRIPT, [list.CommaText]));
       except
          on E: Exception do
          begin
@@ -852,12 +858,9 @@ begin
 //      FSkillFuncs[i].Free;
    end;
    FSkillFuncs.Free;
-   if assigned(FSkillAlgs) then //gotta do it this way in case an exception was
-   begin                        //raised in the constructor
-      for i := 0 to FSkillAlgs.Count - 1 do
-         FSkillAlgs.Objects[i].Free;
-      FSkillAlgs.Destroy;
-   end;
+   if assigned(FSkillAlgs) then
+      FSkillAlgs.OwnsObjects := true;
+   FSkillAlgs.Free;
    for i := 0 to ord(high(TItemType)) do
       FItems[TItemType(i)].free;
    for i := 0 to high(FAnims) do
@@ -870,6 +873,8 @@ begin
    FStatSet.Free;
    FTileGroup.Free;
    FTileset.Free;
+   FBattleStyle.Free;
+   FMapEngines.Free;
    inherited Destroy;
 end;
 
@@ -1082,9 +1087,7 @@ end;
 procedure TRpgDatabase.setUnits(const Value: TUnitDictionary);
 begin
    FUnits := Value;
-   {$IFDEF EDITOR}
-   GDScriptEngine.units := Value;
-   {$ENDIF}
+   GScriptEngine.units := Value;
 end;
 
 function TRpgDatabase.skillFuncIndex(name: string): integer;
@@ -1219,14 +1222,11 @@ begin
 end;
 
 procedure TRpgDatabase.parseMeta;
-{$IFDEF EDITOR}
 var
    dummy: string;
    newDecl: TRpgDecl;
-{$ENDIF}
 begin
-   {$IFDEF EDITOR}
-   for newdecl in GDScriptEngine.decl do
+   for newdecl in GScriptEngine.decl do
    begin
       dummy := FAlgLookup.Values[newDecl.name];
       case signatureMatch(newDecl) of
@@ -1234,7 +1234,6 @@ begin
          ssSkillCheck: addSkillFunc(TSkillGainRecord.Create(newDecl.name, dummy, sf_bool, false));
       end;
    end;
-   {$ENDIF}
 end;
 
 procedure TRpgDatabase.prepareBlanks;
@@ -1276,6 +1275,7 @@ end;
 finalization
 begin
    GDatabase.Free;
+   GScriptEngine := nil;
 end;
 
 end.

@@ -23,15 +23,11 @@ package default_format;
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$RUNONLY}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
-  rtl,
-  dbrtl,
-  dsnap,
-  vcldb,
-  vcl,
-  EngineBasis;
+  EngineBasis,
+  dsnap;
 
 contains
   SimpleShareMem_DefaultFormat in 'SimpleShareMem_DefaultFormat.pas',
@@ -51,7 +47,6 @@ contains
   turbu_unit_dictionary in 'turbu_unit_dictionary.pas',
   turbu_defs in 'turbu_defs.pas',
   turbu_containers in 'turbu_containers.pas',
-  turbu_engines in 'turbu_engines.pas',
   turbu_decl_utils in 'turbu_decl_utils.pas',
   turbu_vartypes in 'turbu_vartypes.pas',
   turbu_constants in 'turbu_constants.pas',
@@ -62,6 +57,8 @@ contains
   turbu_functional in '..\turbu_functional.pas',
   image_callback_hack in '..\image_callback_hack.pas',
   timing in '..\mapview\libs\timing.pas',
+  turbu_engines in 'turbu_engines.pas',
+  turbu_script_interface in 'turbu_script_interface.pas',
   commons in '..\commons.pas';
 
 end.
