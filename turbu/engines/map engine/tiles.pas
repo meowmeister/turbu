@@ -312,12 +312,12 @@ begin
    if T2kSpriteEngine(FEngine).overlapping = [] then
       result := inherited InVisibleRect
    else begin
-      corrected := NormalizePoint(FGridLoc, T2kSpriteEngine(FEngine).mapRect);
+      corrected := NormalizePoint(FGridLoc, T2kSpriteEngine(FEngine).mapRect) * TILE_SIZE;
 
       result := (corrected.X > FEngine.WorldX - Width ) and
       (corrected.Y > FEngine.WorldY - Height)    and
-      (corrected.X < FEngine.WorldX + FEngine.VisibleWidth)  and
-      (corrected.Y < FEngine.WorldY + FEngine.VisibleHeight);
+      (corrected.X < FEngine.WorldX + FEngine.VisibleWidth + Width)  and
+      (corrected.Y < FEngine.WorldY + FEngine.VisibleHeight + Height);
    end;
 end;
 

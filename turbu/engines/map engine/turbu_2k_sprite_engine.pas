@@ -56,6 +56,8 @@ begin
    for i := low(FMap.tileMap) to high(FMap.tileMap) do
       FTiles.add(TTileMatrix.Create(size));
    self.SetViewport(viewport);
+   self.VisibleWidth := canvas.Width;
+   self.VisibleHeight := canvas.Height;
    if map.bgName <> '' then
       FBgImage := TSdlImage.Create(map.bgName, map.bgName, images);
    FMapRect := rect(0, 0, size.x, size.y);
@@ -119,8 +121,8 @@ var
    tileRef: TTileRef;
 begin
    size := FMap.size;
-   for y := viewport.top to viewport.bottom - 1 do
-      for x := viewport.left to viewport.Right - 1 do
+   for y := viewport.top - 1 to viewport.top + viewport.bottom + 1 do
+      for x := viewport.left - 1 to viewport.left + viewport.Right + 1 do
       begin
          EquivalizeCoords(x, y, equivX, equivY);
          if assigned(FTiles[index][equivX, equivY]) then
@@ -143,7 +145,6 @@ begin
    FViewport := viewport;
    self.WorldX := viewport.Left * TILE_SIZE.X;
    self.WorldY := viewport.Top * TILE_SIZE.Y;
-   self.ClearSpriteList;
    for i := low(FMap.tileMap) to high(FMap.tileMap) do
       loadTileMatrix(FMap.tileMap[i], i, viewport);
    FOverlapping := [];

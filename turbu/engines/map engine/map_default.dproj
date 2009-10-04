@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_WriteableConstants>true</DCC_WriteableConstants>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DCC_UnitSearchPath>..\..\bin;..\..\dcus;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
@@ -41,6 +42,7 @@
 			<DCC_K>false</DCC_K>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_Optimize>true</DCC_Optimize>
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
