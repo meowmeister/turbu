@@ -33,11 +33,15 @@ type
    private //design section
       FTilesetListD: TList<TTileGroupPair>;
       FTileSize: TSgPoint;
+      FScrollPosition: TSgPoint;
       procedure initializeDesigner(window: TSdlWindowId; database: IRpgDatabase);
       function GetTilesetImageSize(const index: byte): TSgPoint;
       function GetTilesetImage(const index: byte): PSdlSurface;
-      function DesignLoadMap(map: IRpgMap; startPosition: TSgPoint): boolean;
+      function DesignLoadMap(map: IRpgMap): boolean;
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
+      function mapSize: TSgPoint;
+      function mapPosition: TSgPoint;
+      procedure scrollMap(const newPosition: TSgPoint);
 
       procedure IDesignMapEngine.initialize = initializeDesigner;
       function IDesignMapEngine.loadMap = DesignLoadMap;
@@ -59,7 +63,7 @@ type
    public
       constructor Create; override;
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase); override;
-      function loadMap(map: IRpgMap; startPosition: TSgPoint): boolean; override;
+      function loadMap(map: IRpgMap): boolean; override;
    end;
 
 implementation
@@ -120,14 +124,14 @@ begin
       if center.x < 0 then
          center.x := 0
       else if center.x + screensize.x >= map.size.X then
-         center.x := pred(map.size.x - screensize.x);
+         center.x := pred(map.size.x - (screensize.x div 2));
    end;
    if not (wrVertical in map.wraparound) then
    begin
       if center.Y < 0 then
          center.Y := 0
       else if center.Y + screensize.Y >= map.size.Y then
-         center.Y := pred(map.size.Y - screensize.Y);
+         center.Y := pred(map.size.Y - (screensize.Y div 2));
    end;
    result.TopLeft := center;
    result.BottomRight := screensize;
@@ -176,12 +180,12 @@ begin
    FInitialized := true;
 end;
 
-function T2kMapEngine.loadMap(map: IRpgMap; startPosition: TSgPoint): boolean;
+function T2kMapEngine.loadMap(map: IRpgMap): boolean;
 var
    viewport: TRect;
 begin
    prepareMap(map);
-   viewport := createViewport(FWaitingMap, startPosition);
+   viewport := createViewport(FWaitingMap, FScrollPosition);
    if not assigned(FMaps[FWaitingMap.id]) then
    begin
       loadTileset(FDatabase.tileset[FWaitingMap.tileset]);
@@ -199,6 +203,20 @@ begin
    FWaitingMap := TRpgMap(map);
    if not assigned(FWaitingMap) then
       raise ERpgPlugin.Create('Incompatible map object');
+   FScrollPosition := FDatabase.mapTree[FWaitingMap.ID].scrollPosition;
+end;
+
+procedure T2kMapEngine.scrollMap(const newPosition: TSgPoint);
+var
+   reducedPosition: TSgPoint;
+begin
+   reducedPosition := newPosition / TILE_SIZE;
+   FCurrentMap.viewport := rect(reducedPosition, FCurrentMap.viewport.BottomRight);
+   FCurrentMap.WorldX := newPosition.x;
+   FCurrentMap.WorldY := newPosition.y;
+   FCanvas.SetRenderer;
+   FCurrentMap.Draw;
+   FCanvas.Flip;
 end;
 
 function T2kMapEngine.doneLoadingMap: boolean;
@@ -326,18 +344,28 @@ begin
       end);
 end;
 
+function T2kMapEngine.mapPosition: TSgPoint;
+begin
+   result := sgPoint(trunc(FCurrentMap.WorldX), trunc(FCurrentMap.WorldY)) * TILE_SIZE;
+end;
+
+function T2kMapEngine.mapSize: TSgPoint;
+begin
+   result := TSgPoint(FCurrentMap.mapRect.BottomRight) * TILE_SIZE;
+end;
+
 procedure T2kMapEngine.initializeDesigner(window: TSdlWindowId; database: IRpgDatabase);
 begin
    self.initialize(window, database);
    //do more
 end;
 
-function T2kMapEngine.DesignLoadMap(map: IRpgMap; startPosition: TSgPoint): boolean;
+function T2kMapEngine.DesignLoadMap(map: IRpgMap): boolean;
 var
    viewport: TRect;
 begin
    prepareMap(map);
-   viewport := createViewport(FWaitingMap, startPosition);
+   viewport := createViewport(FWaitingMap, FScrollPosition);
    if not assigned(FMaps[FWaitingMap.id]) then
    begin
       FTilesetListD.Free;

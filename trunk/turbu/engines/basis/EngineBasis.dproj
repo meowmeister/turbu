@@ -82,6 +82,7 @@
 			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL\Pas\sdlstreams.pas"/>
 			<DCCReference Include="..\..\turbu format\plugins\turbu_plugin_interface.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_sdl_image.pas"/>
+			<DCCReference Include="..\..\turbu format\turbu_engines.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

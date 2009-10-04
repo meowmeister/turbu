@@ -88,7 +88,6 @@
 			<DCCReference Include="turbu_maps.pas"/>
 			<DCCReference Include="database\turbu_tilesets.pas"/>
 			<DCCReference Include="..\turbu_functional.pas"/>
-			<DCCReference Include="..\image_callback_hack.pas"/>
 			<DCCReference Include="..\mapview\libs\timing.pas"/>
 			<DCCReference Include="turbu_script_interface.pas"/>
 			<DCCReference Include="..\commons.pas"/>

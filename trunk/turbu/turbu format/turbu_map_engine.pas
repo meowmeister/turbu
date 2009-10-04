@@ -33,7 +33,7 @@ type
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase);
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
-      function loadMap(map: IRpgMap; startPosition: TSgPoint): boolean;
+      function loadMap(map: IRpgMap): boolean;
       function getData: TMapEngineData;
       property data: TMapEngineData read getData;
    end;
@@ -42,6 +42,9 @@ type
    ['{B68B1D70-D95E-4CEB-B009-2197D7EC7666}']
       function GetTilesetImage(const index: byte): PSdlSurface;
       property tilesetImage[const index: byte]: PSdlSurface read GetTilesetImage;
+      function mapSize: TSgPoint;
+      function mapPosition: TSgPoint;
+      procedure scrollMap(const newPosition: TSgPoint);
    end;
 
    TMapEngine = class abstract (TRpgPlugBase, IMapEngine)
@@ -60,7 +63,7 @@ type
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase); virtual;
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
-      function loadMap(map: IRpgMap; startPosition: TSgPoint): boolean; virtual; abstract;
+      function loadMap(map: IRpgMap): boolean; virtual; abstract;
 
       property data: TMapEngineData read GetData write FData;
    end;

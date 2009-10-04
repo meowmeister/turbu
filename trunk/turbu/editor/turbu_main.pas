@@ -40,14 +40,18 @@ type
       mnuDatabase: TMenuItem;
       dlgOpen: TOpenDialog;
       pluginManager: TJvPluginManager;
-      sbxMain: TScrollBox;
-      imgLogo: TSdlFrame;
-    pnlSidebar: TPanel;
+      pnlSidebar: TPanel;
       sbxPallette: TScrollBox;
       splSidebar: TSplitter;
       imgPalette: TSdlFrame;
-    trvMapTree: TTreeView;
+      trvMapTree: TTreeView;
       sbPalette: TScrollBar;
+      imgLogo: TSdlFrame;
+      pnlHorizScroll: TPanel;
+      sbHoriz: TScrollBar;
+      pnlCorner: TPanel;
+      pnlVertScroll: TPanel;
+      sbVert: TScrollBar;
       procedure mnu2KClick(Sender: TObject);
       procedure mnuSkillEditClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -57,9 +61,11 @@ type
       procedure FormCreate(Sender: TObject);
       procedure imgLogoAvailable(Sender: TObject);
       procedure FormDestroy(Sender: TObject);
-    procedure sbPaletteScroll(Sender: TObject; ScrollCode: TScrollCode;
-      var ScrollPos: Integer);
-    procedure splSidebarMoved(Sender: TObject);
+      procedure sbPaletteScroll(Sender: TObject; ScrollCode: TScrollCode;
+        var ScrollPos: Integer);
+      procedure splSidebarMoved(Sender: TObject);
+      procedure OnScrollMap(Sender: TObject; ScrollCode: TScrollCode;
+        var ScrollPos: Integer);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentMap: IRpgMap;
@@ -72,6 +78,8 @@ type
       procedure assignPaletteImage(surface: PSdlSurface);
       procedure displayPalette(height: integer);
       procedure resizePalette;
+
+      procedure configureScrollBars(const size, position: TPoint);
    public
       { Public declarations }
    end;
@@ -87,11 +95,14 @@ uses
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_classes,
    turbu_versioning, turbu_maps, turbu_tilesets,
    dm_database, discInterface, formats, strtok,
-   sdl_image, sdlstreams;
+   sdl_image, sdlstreams, sg_defs;
 
 {$R *.dfm}
 
-procedure TfrmTurbuMain.DisplayPalette(height: integer);
+const
+   TILE_SIZE: integer = 16;
+
+procedure TfrmTurbuMain.displayPalette(height: integer);
 var
    texture: TSdlTexture;
    displayRect: TRect;
@@ -105,8 +116,6 @@ begin
 end;
 
 procedure TfrmTurbuMain.resizePalette;
-const
-   TILE_SIZE = 16;
 var
    texture: TSdlTexture;
 begin
@@ -114,7 +123,7 @@ begin
    sbPalette.Max := texture.size.y;
    sbPalette.PageSize := imgPalette.height div 2;
    sbPalette.LargeChange := sbPalette.PageSize - TILE_SIZE;
-   DisplayPalette(sbPalette.Position);
+   displayPalette(sbPalette.Position);
 end;
 
 procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);
@@ -132,13 +141,24 @@ begin
    GArchives.clearFrom(1);
 end;
 
+procedure TfrmTurbuMain.configureScrollBars(const size, position: TPoint);
+begin
+   sbHoriz.Max := size.x;
+   sbHoriz.PageSize := imgLogo.width;
+   sbHoriz.LargeChange := sbHoriz.PageSize - TILE_SIZE;
+   sbHoriz.Position := position.X;
+   sbVert.Max := size.y;
+   sbVert.PageSize := imgLogo.height;
+   sbVert.LargeChange := sbVert.PageSize - TILE_SIZE;
+   sbVert.Position := position.Y;
+end;
+
 procedure TfrmTurbuMain.FormCreate(Sender: TObject);
 begin
    if getProjectFolder = '' then
       createProjectFolder;
    FPaletteTexture := -1;
 end;
-
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
 begin
@@ -182,6 +202,7 @@ begin
          loadEngine(engines[j]);
       engines.free;
    end;
+   focusControl(trvMapTree);
 end;
 
 procedure TfrmTurbuMain.imgLogoAvailable(Sender: TObject);
@@ -252,7 +273,8 @@ begin
    finally
       mapStream.Free;
    end;
-   FMapEngine.loadMap(FCurrentMap, point(0,0));
+   FMapEngine.loadMap(FCurrentMap);
+   self.configureScrollBars(FMapEngine.mapSize, FMapEngine.mapPosition);
 
    tileset := GDatabase.tileset[FCurrentMap.tileset];
    //I don't know why this is necessary, but without the next two lines,
@@ -306,6 +328,12 @@ end;
 procedure TfrmTurbuMain.mnuSkillEditClick(Sender: TObject);
 begin
    frmSkillLearning.Show;
+end;
+
+procedure TfrmTurbuMain.OnScrollMap(Sender: TObject; ScrollCode: TScrollCode;
+  var ScrollPos: Integer);
+begin
+   fMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
 end;
 
 procedure TfrmTurbuMain.openProject(location: string);

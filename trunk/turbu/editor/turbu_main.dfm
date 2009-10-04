@@ -39,12 +39,60 @@ object frmTurbuMain: TfrmTurbuMain
     object imgLogo: TSdlFrame
       Left = 0
       Top = 0
-      Width = 708
-      Height = 636
+      Width = 691
+      Height = 619
       Framerate = 0
       Active = False
       OnAvailable = imgLogoAvailable
       Align = alClient
+    end
+    object pnlHorizScroll: TPanel
+      Left = 0
+      Top = 619
+      Width = 708
+      Height = 17
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 1
+      object sbHoriz: TScrollBar
+        Left = 0
+        Top = 0
+        Width = 691
+        Height = 17
+        Align = alClient
+        PageSize = 100
+        TabOrder = 0
+        OnScroll = OnScrollMap
+      end
+      object pnlCorner: TPanel
+        Left = 691
+        Top = 0
+        Width = 17
+        Height = 17
+        Align = alRight
+        Caption = 'pnlCorner'
+        TabOrder = 1
+      end
+    end
+    object pnlVertScroll: TPanel
+      Left = 691
+      Top = 0
+      Width = 17
+      Height = 619
+      Align = alRight
+      BevelOuter = bvNone
+      TabOrder = 2
+      object sbVert: TScrollBar
+        Left = 0
+        Top = 0
+        Width = 17
+        Height = 619
+        Align = alClient
+        Kind = sbVertical
+        PageSize = 100
+        TabOrder = 0
+        OnScroll = OnScrollMap
+      end
     end
   end
   object pnlSidebar: TPanel

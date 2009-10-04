@@ -24,12 +24,6 @@
 			<Projects Include="test harness\testing.dproj">
 				<Dependencies/>
 			</Projects>
-			<Projects Include="..\patcher\patcher.dproj">
-				<Dependencies/>
-			</Projects>
-			<Projects Include="..\..\test\sdlFrame_test.dproj">
-				<Dependencies/>
-			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -103,32 +97,14 @@
 		<Target Name="testing:Make">
 			<MSBuild Targets="Make" Projects="test harness\testing.dproj"/>
 		</Target>
-		<Target Name="patcher">
-			<MSBuild Projects="..\patcher\patcher.dproj"/>
-		</Target>
-		<Target Name="patcher:Clean">
-			<MSBuild Targets="Clean" Projects="..\patcher\patcher.dproj"/>
-		</Target>
-		<Target Name="patcher:Make">
-			<MSBuild Targets="Make" Projects="..\patcher\patcher.dproj"/>
-		</Target>
-		<Target Name="sdlFrame_test">
-			<MSBuild Projects="..\..\test\sdlFrame_test.dproj"/>
-		</Target>
-		<Target Name="sdlFrame_test:Clean">
-			<MSBuild Targets="Clean" Projects="..\..\test\sdlFrame_test.dproj"/>
-		</Target>
-		<Target Name="sdlFrame_test:Make">
-			<MSBuild Targets="Make" Projects="..\..\test\sdlFrame_test.dproj"/>
-		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="EngineBasis;default_format;battle_default;map_default;mapshow;Turbu;testing;patcher;sdlFrame_test"/>
+			<CallTarget Targets="EngineBasis;default_format;battle_default;map_default;mapshow;Turbu;testing"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="EngineBasis:Clean;default_format:Clean;battle_default:Clean;map_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean;patcher:Clean;sdlFrame_test:Clean"/>
+			<CallTarget Targets="EngineBasis:Clean;default_format:Clean;battle_default:Clean;map_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="EngineBasis:Make;default_format:Make;battle_default:Make;map_default:Make;mapshow:Make;Turbu:Make;testing:Make;patcher:Make;sdlFrame_test:Make"/>
+			<CallTarget Targets="EngineBasis:Make;default_format:Make;battle_default:Make;map_default:Make;mapshow:Make;Turbu:Make;testing:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>
