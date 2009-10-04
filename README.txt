@@ -12,7 +12,7 @@ It takes a few steps to configure the TURBU package:
 
 1. Main project code
 ----------------------
-Check out the /trunk/turbu folder to someplace inside your RAD Studio projects folder.  (NOTE: TURBU will only compile if you have Delphi 2009.  It uses the new Generics features extensively, which are not found in any earlier versions of Delphi.)
+Check out the /trunk/turbu folder to someplace inside your RAD Studio projects folder.  (NOTE: TURBU will only compile if you have Delphi 2010.  It uses the new RTTI features extensively, and the interface-to-object-cast trick, which are not found in any earlier versions of Delphi.)
 
 
 2. DLLs
@@ -21,7 +21,7 @@ Check out the /trunk/dlls folder.  All the DLLs in this folder need to go in you
 
 3. Dependencies
 ----------------------
-The TURBU project uses RemObjects PascalScript, the JEDI-SDL header library, and a handful of other libraries and components.  If you already have the latest version of PascalScript installed, you don't need to download it from here.  Everything else (including JEDI-SDL, for the moment, as the "official" version is not Delphi 2009-ready yet) needs to be downloaded from the repository.
+The TURBU project uses RemObjects PascalScript, the JEDI-SDL header library, and a handful of other libraries and components.  If you already have the latest version of PascalScript installed, you don't need to download it from here.  Everything else (including JEDI-SDL, for the moment, as the "official" version is not Delphi 2010-ready yet) needs to be downloaded from the repository.
 
 Check out everything in the Classes and Components folders.  (Except PascalScript if you already have it.)  The PascalScript_Core_D12 and Turbu_components packages should be installed into your IDE, and the following folders added to Delphi's search path:
 
@@ -41,13 +41,7 @@ Check out everything in the Classes and Components folders.  (Except PascalScrip
 ----------------------
 The TURBU project requires the JEDI VCL.  It's a fairly large download and gets updated often enough that I'm not even going to bother trying to mirror it here.  You can download it at http://sourceforge.net/project/showfiles.php?group_id=45786 and install it.
 
-5. Patches
-----------------------
-Almost done!  Unfortunately, there are a few bugs in the Delphi VCL that keep TURBU from working properly.  They've been reported to CodeGear, and hopefully will be fixed soon.  Until then, we have to make do with our own fixes.  It would violate the license agreement to distribute the patched files, but it's all right to distribute diffs so you can patch them yourself.
-
-Check out the files in the diffs folder. Create a new folder called vclpatch in your RAD Studio projects folder.  (It should be placed alongside the TURBU folder, but not inside it.) Copy the files db.pas and generics.collections.pas to the vclpatch folder from the original RAD Studio VCL source folders, then apply the diff patches to them.  Your SVN client should be able to do that for you.  This is inconvenient, but only a temporary measure until CodeGear fixes the bugs the patches take care of.
-
-6. Build
+5. Build
 ----------------------
 All ready!  You can open the Turbu.groupproj file found in the /trunk/turbu folder.  It contains 5 projects.  The two BPLs are plugins that the editor needs to run.  Turbu.exe is the main editor.  Building it will automatically build the plugins first.  Testing.exe is a test harness for easier debugging of the editor. Mapshow.exe is the remains of the old Map Viewer.  It currently does not compile, and wouldn't run properly if it did.
 
