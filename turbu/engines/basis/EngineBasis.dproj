@@ -83,6 +83,7 @@
 			<DCCReference Include="..\..\turbu format\plugins\turbu_plugin_interface.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_sdl_image.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_engines.pas"/>
+			<DCCReference Include="..\..\..\classes\sdl custom\sg_utils.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TURBU"
-#define MyAppVerName "TURBU Editor 0.6.3"
+#define MyAppVerName "TURBU Editor 0.7.1"
 #define MyAppPublisher "Dragon Slayers, Inc."
 #define MyAppURL "http://www.turbu-rpg.com/"
 #define MyAppExeName "Turbu.exe"
@@ -18,7 +18,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\setup
-OutputBaseFilename=TURBU_Editor_0.6.3
+OutputBaseFilename=TURBU_Editor_0.7.1
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -33,6 +33,8 @@ Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:Ad
 Source: ..\bin\Turbu.exe; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\battle_default.tep; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\EngineBasis.bpl; DestDir: {app}; Flags: ignoreversion
+Source: ..\bin\map_default.tep; DestDir: {app}; Flags: ignoreversion
+Source: ..\bin\default_format.bpl; DestDir: {app}; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 Source: ..\..\dlls\libogg-0.dll; DestDir: {sys}
 Source: ..\..\dlls\libpng12-0.dll; DestDir: {sys}
@@ -50,16 +52,16 @@ Source: ..\bin\design\scripts\general\skill_algorithms.trs; DestDir: {app}\desig
 Source: ..\bin\design\scripts\menu\menuscripts.trs; DestDir: {app}\design\scripts\menu
 Source: ..\bin\design\metadata; DestDir: {app}\design\
 Source: ..\bin\design\plugins; DestDir: {app}\design\
-Source: ..\..\..\..\6.0\Bpl\JvPluginD12R.bpl; DestDir: {sys}
-Source: ..\..\..\..\6.0\Bpl\JvCoreD12R.bpl; DestDir: {sys}
-Source: ..\..\..\..\6.0\Bpl\JclVcl120.bpl; DestDir: {sys}
-Source: ..\..\..\..\6.0\Bpl\Jcl120.bpl; DestDir: {sys}
-Source: c:\Windows\SysWOW64\rtl120.bpl; DestDir: {sys}
-Source: c:\Windows\SysWOW64\vclimg120.bpl; DestDir: {sys}
-Source: c:\Windows\SysWOW64\vclx120.bpl; DestDir: {sys}
-Source: c:\Windows\SysWOW64\dbrtl120.bpl; DestDir: {sys}
+Source: C:\Users\Public\Documents\RAD Studio\7.0\Bpl\JvPluginD14R.bpl; DestDir: {sys}
+Source: C:\Users\Public\Documents\RAD Studio\7.0\Bpl\JvCoreD14R.bpl; DestDir: {sys}
+Source: C:\Users\Public\Documents\RAD Studio\7.0\Bpl\JclVcl140.bpl; DestDir: {sys}
+Source: C:\Users\Public\Documents\RAD Studio\7.0\Bpl\Jcl140.bpl; DestDir: {sys}
+Source: c:\Windows\SysWOW64\rtl140.bpl; DestDir: {sys}
+Source: c:\Windows\SysWOW64\vclimg140.bpl; DestDir: {sys}
+Source: c:\Windows\SysWOW64\vclx140.bpl; DestDir: {sys}
+Source: c:\Windows\SysWOW64\dbrtl140.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\midas.dll; DestDir: {sys}
-Source: c:\Windows\SysWOW64\vcl120.bpl; DestDir: {sys}
+Source: c:\Windows\SysWOW64\vcl140.bpl; DestDir: {sys}
 
 [Icons]
 Name: {group}\{#MyAppName}; Filename: {app}\{#MyAppExeName}

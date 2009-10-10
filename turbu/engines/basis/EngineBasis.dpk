@@ -50,6 +50,7 @@ contains
   sdlstreams in '..\..\..\classes\jedi-sdl\SDL\Pas\sdlstreams.pas',
   turbu_plugin_interface in '..\..\turbu format\plugins\turbu_plugin_interface.pas',
   turbu_sdl_image in '..\..\turbu format\turbu_sdl_image.pas',
-  turbu_engines in '..\..\turbu format\turbu_engines.pas';
+  turbu_engines in '..\..\turbu format\turbu_engines.pas',
+  sg_utils in '..\..\..\classes\sdl custom\sg_utils.pas';
 
 end.

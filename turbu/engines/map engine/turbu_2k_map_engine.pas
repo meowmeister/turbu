@@ -34,6 +34,8 @@ type
       FTilesetListD: TList<TTileGroupPair>;
       FTileSize: TSgPoint;
       FScrollPosition: TSgPoint;
+      FPaletteList: TList<integer>;
+      FCurrentLayer: byte;
       procedure initializeDesigner(window: TSdlWindowId; database: IRpgDatabase);
       function GetTilesetImageSize(const index: byte): TSgPoint;
       function GetTilesetImage(const index: byte): PSdlSurface;
@@ -42,6 +44,9 @@ type
       function mapSize: TSgPoint;
       function mapPosition: TSgPoint;
       procedure scrollMap(const newPosition: TSgPoint);
+      procedure setPaletteList(value: TList<integer>);
+      procedure draw(const position: TSgPoint; new: boolean);
+      procedure doneDrawing;
 
       procedure IDesignMapEngine.initialize = initializeDesigner;
       function IDesignMapEngine.loadMap = DesignLoadMap;
@@ -71,7 +76,7 @@ uses
    sysUtils, classes, math,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
    turbu_constants, turbu_map_metadata, turbu_functional,
-   SDL, sdlstreams, sdl_sprite;
+   SDL, sdlstreams, sdl_sprite, sg_utils;
 
 { Callbacks }
 
@@ -98,6 +103,7 @@ procedure T2kMapEngine.cleanup;
 var i: integer;
 begin
    assert(FInitialized);
+   FPaletteList.Free;
    FCanvas.Free;
    FImages.Free;
    FSignal.Free;
@@ -206,19 +212,6 @@ begin
    FScrollPosition := FDatabase.mapTree[FWaitingMap.ID].scrollPosition;
 end;
 
-procedure T2kMapEngine.scrollMap(const newPosition: TSgPoint);
-var
-   reducedPosition: TSgPoint;
-begin
-   reducedPosition := newPosition / TILE_SIZE;
-   FCurrentMap.viewport := rect(reducedPosition, FCurrentMap.viewport.BottomRight);
-   FCurrentMap.WorldX := newPosition.x;
-   FCurrentMap.WorldY := newPosition.y;
-   FCanvas.SetRenderer;
-   FCurrentMap.Draw;
-   FCanvas.Flip;
-end;
-
 function T2kMapEngine.doneLoadingMap: boolean;
 begin
    FCurrentMap := FMaps[FWaitingMap.id];
@@ -288,10 +281,10 @@ var
 begin
    assert(assigned(FTilesetListD));
    surfaceSize := GetTilesetImageSize(index);
+   FCurrentLayer := index;
 
    result := TSdlSurface.Create(surfaceSize.x, surfaceSize.y, 8);
    result.Fill(nil, 0);
-//   result.ColorKey := FTilesetListD[0].Value.ColorKey;
    result.CopyPaletteFrom(FTilesetListD.Last.Value);
    dstRect := rect(point(0, 0), FTileSize);
    for pair in FTilesetListD do
@@ -315,7 +308,6 @@ begin
       inc(dstRect.Left, srcRect.Right);
       inc(dstRect.Top, srcRect.bottom - FTileSize.y);
    end;
-//   result := FTilesetListD[0].Value;
 end;
 
 function T2kMapEngine.loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
@@ -375,6 +367,57 @@ begin
                                FImages);
    end;
    result := doneLoadingMap;
+end;
+
+procedure T2kMapEngine.scrollMap(const newPosition: TSgPoint);
+var
+   reducedPosition: TSgPoint;
+begin
+   reducedPosition := newPosition / TILE_SIZE;
+   FCurrentMap.viewport := rect(reducedPosition, FCurrentMap.viewport.BottomRight);
+   FCurrentMap.WorldX := newPosition.x;
+   FCurrentMap.WorldY := newPosition.y;
+   FCanvas.SetRenderer;
+   FCurrentMap.Draw;
+   FCanvas.Flip;
+end;
+
+procedure T2kMapEngine.setPaletteList(value: TList<integer>);
+begin
+   assert((value[0] = 1) or (value.Count mod value[0] = 1));
+   FPaletteList.Free;
+   FPaletteList := value;
+end;
+
+procedure T2kMapEngine.draw(const position: TSgPoint; new: boolean);
+var
+   tile: TTileRef;
+   drawRect: TRect;
+   i, j, counter: integer;
+begin
+   drawRect.TopLeft := position;
+   drawRect.Right := drawRect.Left + FPaletteList[0] - 1;
+   drawRect.Bottom := drawRect.Top + ((FPaletteList.Count - 1) div FPaletteList[0]) - 1;
+   counter := 1;
+   for j := drawRect.Top to drawRect.Bottom do
+      for I := drawRect.Left to drawRect.Right do
+      begin
+         tile := FCurrentMap.tileset.Tile(FPaletteList[counter]);
+         FCurrentMap.assignTile(i, j, FCurrentLayer, tile);
+         inc(counter);
+      end;
+   drawRect := sg_utils.expandRect(drawRect, 1);
+   for j := drawRect.Top to drawRect.Bottom do
+      for I := drawRect.Left to drawRect.Right do
+         FCurrentMap.updateBorders(i, j, FCurrentLayer);
+   FCanvas.SetRenderer;
+   FCurrentMap.Draw;
+   FCanvas.Flip;
+end;
+
+procedure T2kMapEngine.doneDrawing;
+begin
+   FCurrentMap.Dead;
 end;
 
 end.

@@ -13,15 +13,18 @@
 				<Dependencies>engines\basis\EngineBasis.dproj</Dependencies>
 			</Projects>
 			<Projects Include="engines\map engine\map_default.dproj">
-				<Dependencies>engines\basis\EngineBasis.dproj</Dependencies>
+				<Dependencies>engines\basis\EngineBasis.dproj;turbu format\default_format.dproj</Dependencies>
 			</Projects>
 			<Projects Include="mapview\mapshow.dproj">
 				<Dependencies/>
 			</Projects>
 			<Projects Include="editor\Turbu.dproj">
-				<Dependencies>engines\basis\EngineBasis.dproj;turbu format\default_format.dproj</Dependencies>
+				<Dependencies>engines\basis\EngineBasis.dproj;turbu format\default_format.dproj;engines\map engine\map_default.dproj</Dependencies>
 			</Projects>
 			<Projects Include="test harness\testing.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="..\components\TURBU\sdlframe.dproj">
 				<Dependencies/>
 			</Projects>
 		</ItemGroup>
@@ -61,13 +64,13 @@
 		<Target DependsOnTargets="EngineBasis:Make" Name="battle_default:Make">
 			<MSBuild Targets="Make" Projects="engines\battle basis\battle_default.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis" Name="map_default">
+		<Target DependsOnTargets="EngineBasis;default_format" Name="map_default">
 			<MSBuild Projects="engines\map engine\map_default.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis:Clean" Name="map_default:Clean">
+		<Target DependsOnTargets="EngineBasis:Clean;default_format:Clean" Name="map_default:Clean">
 			<MSBuild Targets="Clean" Projects="engines\map engine\map_default.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis:Make" Name="map_default:Make">
+		<Target DependsOnTargets="EngineBasis:Make;default_format:Make" Name="map_default:Make">
 			<MSBuild Targets="Make" Projects="engines\map engine\map_default.dproj"/>
 		</Target>
 		<Target Name="mapshow">
@@ -79,13 +82,13 @@
 		<Target Name="mapshow:Make">
 			<MSBuild Targets="Make" Projects="mapview\mapshow.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis;default_format" Name="Turbu">
+		<Target DependsOnTargets="EngineBasis;default_format;map_default" Name="Turbu">
 			<MSBuild Projects="editor\Turbu.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis:Clean;default_format:Clean" Name="Turbu:Clean">
+		<Target DependsOnTargets="EngineBasis:Clean;default_format:Clean;map_default:Clean" Name="Turbu:Clean">
 			<MSBuild Targets="Clean" Projects="editor\Turbu.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis:Make;default_format:Make" Name="Turbu:Make">
+		<Target DependsOnTargets="EngineBasis:Make;default_format:Make;map_default:Make" Name="Turbu:Make">
 			<MSBuild Targets="Make" Projects="editor\Turbu.dproj"/>
 		</Target>
 		<Target Name="testing">
@@ -97,14 +100,23 @@
 		<Target Name="testing:Make">
 			<MSBuild Targets="Make" Projects="test harness\testing.dproj"/>
 		</Target>
+		<Target Name="sdlframe">
+			<MSBuild Projects="..\components\TURBU\sdlframe.dproj"/>
+		</Target>
+		<Target Name="sdlframe:Clean">
+			<MSBuild Targets="Clean" Projects="..\components\TURBU\sdlframe.dproj"/>
+		</Target>
+		<Target Name="sdlframe:Make">
+			<MSBuild Targets="Make" Projects="..\components\TURBU\sdlframe.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="EngineBasis;default_format;battle_default;map_default;mapshow;Turbu;testing"/>
+			<CallTarget Targets="EngineBasis;default_format;battle_default;map_default;mapshow;Turbu;testing;sdlframe"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="EngineBasis:Clean;default_format:Clean;battle_default:Clean;map_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean"/>
+			<CallTarget Targets="EngineBasis:Clean;default_format:Clean;battle_default:Clean;map_default:Clean;mapshow:Clean;Turbu:Clean;testing:Clean;sdlframe:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="EngineBasis:Make;default_format:Make;battle_default:Make;map_default:Make;mapshow:Make;Turbu:Make;testing:Make"/>
+			<CallTarget Targets="EngineBasis:Make;default_format:Make;battle_default:Make;map_default:Make;mapshow:Make;Turbu:Make;testing:Make;sdlframe:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>

@@ -45,6 +45,9 @@ type
       function mapSize: TSgPoint;
       function mapPosition: TSgPoint;
       procedure scrollMap(const newPosition: TSgPoint);
+      procedure setPaletteList(value: TList<integer>);
+      procedure draw(const position: TSgPoint; new: boolean);
+      procedure doneDrawing;
    end;
 
    TMapEngine = class abstract (TRpgPlugBase, IMapEngine)

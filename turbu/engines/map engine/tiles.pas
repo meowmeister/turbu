@@ -52,8 +52,8 @@ type
       destructor Destroy; override;
       procedure Draw; override;
       procedure Assign(const value: TTile); reintroduce;
-      function place(const xCoord,yCoord: word; const layer: byte;
-                    const tileData: TTileRef; chip_data: TTileSet): TTileAttributes; virtual;
+      function place(const xCoord,yCoord, layer: word; const tileData: TTileRef;
+                     chip_data: TTileSet): TTileAttributes; virtual;
       function open(exceptFor: TObject): boolean; virtual;
       procedure flash(r, g, b, a: byte; time: cardinal);
       function canEnter: boolean; virtual;
@@ -78,8 +78,6 @@ type
    public
       constructor Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false); override;
       destructor Destroy; override;
-      procedure placeUpper(const xCoord, yCoord: word; const layer: byte;
-                    const tileData: TTileRef; chip_data: TTileSet);
       function open(exceptFor: TObject): boolean; override;
       function canEnter: boolean; override;
 //      procedure bump(character: TObject);
@@ -97,8 +95,8 @@ type
       FDisplacement: byte;
    public
       procedure Draw; override;
-      function place(const xCoord, yCoord: word; const layer: byte;
-                    const tileData: TTileRef; chip_data: TTileSet): TTileAttributes; override;
+      function place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
+                    chip_data: TTileSet): TTileAttributes; override;
       class procedure heartbeat;
    end;
 
@@ -112,8 +110,6 @@ type
    TBorderTile = class(TLowerTile)
    private
       minitiles: array[1..4] of TMiniTile;
-      function FindNeighbors: TNeighborSet; //determines which of
-                                            //the 46 patterns it fits
       procedure setEngine(newEngine: TSpriteEngine); override;
    protected
       procedure doPlace; virtual;
@@ -121,20 +117,21 @@ type
       constructor Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false); override;
       destructor Destroy; override;
       procedure Draw; override;
-      function place(const xCoord, yCoord: word; const layer: byte;
-                    const tileData: TTileRef; chip_data: TTileSet): TTileAttributes; override;
-      property neighbors: TNeighborSet read FindNeighbors write FNeighbors;
+      function place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
+                    chip_data: TTileSet): TTileAttributes; override;
+      function sharesBorder(neighbor: TTile): boolean; virtual;
+
+      property neighbors: TNeighborSet read FNeighbors;
    end;
 
    TWaterTile = class abstract(TBorderTile)
    private
       FLinkedFilename: string;
-{      function FindNeighbors: ANeighbors; //determines which of
-                                          //the 46 patterns it fits}
    public
-      function place(const xCoord, yCoord: word; const layer: byte;
-                    const tileData: TTileRef; chip_data: TTileSet): TTileAttributes; override;
+      function place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
+                    chip_data: TTileSet): TTileAttributes; override;
       procedure Draw; override;
+      function sharesBorder(neighbor: TTile): boolean; override;
    end;
 
    TShoreTile = class(TWaterTile)
@@ -365,8 +362,8 @@ begin
    result := Self.canEnter;
 end;
 
-function TTile.place(const xCoord, yCoord: word; const layer: byte;
-                    const tileData: TTileRef; chip_data: TTileSet): TTileAttributes;
+function TTile.place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
+                    chip_data: TTileSet): TTileAttributes;
 var
    tileGroup: TTileGroupRecord;
 begin
@@ -381,7 +378,7 @@ begin
    tileGroup := chip_data.Records[tiledata.group];
    imageName := tileGroup.group.filename;
    result := tileGroup.attributes[tileData.tile];
-   z := decodeZOrder(result);
+   z := decodeZOrder(result) + layer;
 end;
 
 procedure TTile.restoreColor(which: TRpgColor);
@@ -435,15 +432,8 @@ begin
    inherited destroy;
 end;
 
-function TBorderTile.FindNeighbors(): TNeighborSet;
-begin
-   //fix this
-   //owner's internal name is FEngine
-   result := FNeighbors;
-end;
-
-function TBorderTile.place(const xCoord, yCoord: word; const layer: byte;
-                    const tileData: TTileRef; chip_data: TTileSet): TTileAttributes;
+function TBorderTile.place(const xCoord, yCoord, layer: word; const tileData:
+                    TTileRef; chip_data: TTileSet): TTileAttributes;
 var
    tileRef: TTileRef;
 begin
@@ -461,6 +451,12 @@ begin
    inherited setEngine(newEngine);
    for I := 1 to 4 do
       minitiles[i].engine := newEngine;
+end;
+
+function TBorderTile.sharesBorder(neighbor: TTile): boolean;
+begin
+   result := (neighbor.ClassType = self.ClassType) and //to keep unnecessary string comparisons down
+             (neighbor.ImageName = self.ImageName);
 end;
 
 procedure TBorderTile.doPlace;
@@ -531,7 +527,7 @@ begin
       end else
    //full-corner cases
    //34:
-      if neighbors * [n, nw] = [n, nw] then
+      if neighbors * [n, w] = [n, w] then
       begin
          dec(minis[1], 14);
          dec(minis[2], 14);
@@ -540,7 +536,7 @@ begin
             dec(minis[4], 22);
       end else
    //36:
-      if neighbors * [n, ne] = [n, ne] then
+      if neighbors * [n, e] = [n, e] then
       begin
          dec(minis[1], 10);
          dec(minis[2], 10);
@@ -549,7 +545,7 @@ begin
             dec(minis[3], 22);
       end else
    //38:
-      if neighbors * [e, se] = [e, se] then
+      if neighbors * [e, s] = [e, s] then
       begin
          inc(minis[2], 14);
          inc(minis[3], 14);
@@ -558,7 +554,7 @@ begin
             dec(minis[1], 22);
       end else
    //40:
-      if neighbors * [s, sw] = [s, sw] then
+      if neighbors * [s, w] = [s, w] then
       begin
          inc(minis[1], 10);
          inc(minis[3], 10);
@@ -624,18 +620,17 @@ begin
    inherited;
 end;
 
-function TWaterTile.place(const xCoord, yCoord: word; const layer: byte;
-  const tileData: TTileRef; chip_data: TTileSet): TTileAttributes;
+function TWaterTile.place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
+                          chip_data: TTileSet): TTileAttributes;
 begin
    FLinkedFilename := chip_data.Records[tileData.group].group.linkedFilename;
    result := inherited place(xCoord, yCoord, layer, tileData, chip_data);
 end;
 
-{function TWaterTile.FindNeighbors: ANeighbors;
+function TWaterTile.sharesBorder(neighbor: TTile): boolean;
 begin
-   //do later
-   //other types of water tiles count as homogenous
-end;}
+   result := neighbor is TWaterTile;
+end;
 
 { TShoreTile }
 
@@ -723,7 +718,7 @@ begin
       end else
    //full-corner cases
    //34:
-      if neighbors * [n, nw] = [n, nw] then
+      if neighbors * [n, w] = [n, w] then
       begin
          inc(minis[1], 24);
          inc(minis[2], 12);
@@ -736,7 +731,7 @@ begin
          end;
       end else
    //36:
-      if neighbors * [n, ne] = [n, ne] then
+      if neighbors * [n, e] = [n, e] then
       begin
          inc(minis[1], 24);
          inc(minis[4], 12);
@@ -750,7 +745,7 @@ begin
          end;
       end else
    //38:
-      if neighbors * [s, se] = [s, se] then
+      if neighbors * [s, e] = [s, e] then
       begin
          inc(minis[2], 12);
          inc(minis[3], 24);
@@ -764,7 +759,7 @@ begin
          end;
       end else
    //40:
-      if neighbors * [s, sw] = [s, sw] then
+      if neighbors * [s, w] = [s, w] then
       begin
          inc(minis[1], 12);
          inc(minis[4], 24);
@@ -913,7 +908,7 @@ begin
       end else
    //full-corner cases
    //34:
-      if neighbors * [n, nw] = [n, nw] then
+      if neighbors * [n, w] = [n, w] then
       begin
          inc(minis[2], 24);
          inc(minis[3], 12);
@@ -926,7 +921,7 @@ begin
          end;
       end else
    //36:
-      if neighbors * [n, ne] = [n, ne] then
+      if neighbors * [n, e] = [n, e] then
       begin
          inc(minis[1], 24);
          changed[1] := true;
@@ -940,7 +935,7 @@ begin
          end;
       end else
    //38:
-      if neighbors * [s, se] = [s, se] then
+      if neighbors * [s, e] = [s, e] then
       begin
          inc(minis[2], 12);
          inc(minis[3], 24);
@@ -953,7 +948,7 @@ begin
          end;
       end else
    //40:
-      if neighbors * [s, sw] = [s, sw] then
+      if neighbors * [s, w] = [s, w] then
       begin
          inc(minis[1], 12);
          changed[1] := true;
@@ -1071,14 +1066,10 @@ begin
    end;
 end;
 
-function TAnimTile.place(const xCoord, yCoord: word; const layer: byte;
-                    const tileData: TTileRef; chip_data: TTileSet): TTileAttributes;
-var
-   tileRef: TTileRef;
+function TAnimTile.place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
+                         chip_data: TTileSet): TTileAttributes;
 begin
-   tileRef.group := tileData.group;
-   tileRef.tile := 0;
-   result := inherited place(xCoord, yCoord, layer, tileRef, chip_data);
+   result := inherited place(xCoord, yCoord, layer, tileData, chip_data);
    FTileID := ImageIndex;
 end;
 
@@ -1198,14 +1189,6 @@ begin
    if assigned(FUpperTile) then
       result := result and FUpperTile.open(exceptFor);
    //end if
-end;
-
-procedure TLowerTile.placeUpper(const xCoord, yCoord: word; const layer: byte;
-                    const tileData: TTileRef; chip_data: TTileSet);
-begin
-   assert (tileData.group > 18);
-   upperTile := TUpperTile.Create(Engine, imageName, true);
-   upperTile.place(xCoord, yCoord, layer, tileData, chip_data);
 end;
 
 { TBackgroundSprite }
