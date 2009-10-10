@@ -18,7 +18,7 @@ type
 
 implementation
 uses
-   types, sysUtils;
+   types, sysUtils, turbu_tilesets;
 
 type
    ETileError = class(Exception);

@@ -3,17 +3,10 @@ unit turbu_maps;
 interface
 uses
    types, classes, generics.collections, DB,
-   turbu_defs, turbu_classes, turbu_map_interface,
+   turbu_defs, turbu_classes, turbu_map_interface, turbu_tilesets,
    SG_defs;
 
 type
-   TTileRef = packed record
-      case boolean of
-      false: (value: word);
-      true: (group: byte;
-             tile: byte);
-   end;
-
    TTileList = packed array of TTileRef;
    TTileMap = array of TTileList;
 
@@ -83,6 +76,9 @@ type
       procedure upload(db: TDataSet); override;
       procedure download(db: TDataset); override;
       destructor Destroy; override;
+
+      procedure assignTile(const x, y, layer: integer; const tile: TTileRef);
+      function getTile(const x, y, layer: integer): TTileRef;
 
       property tileset: string read FTileset write FTileset;
       property size: TSgPoint read FSize write SetSize;
@@ -179,6 +175,16 @@ begin
       savefile.writeChar(UpCase(TMapRegion.keyChar));
    end;
    savefile.writeChar(self.keyChar);
+end;
+
+procedure TRpgMap.assignTile(const x, y, layer: integer; const tile: TTileRef);
+begin
+   FTileMap[layer][(y * FSize.x) + x] := tile;
+end;
+
+function TRpgMap.getTile(const x, y, layer: integer): TTileRef;
+begin
+   result := FTileMap[layer][(y * FSize.x) + x];
 end;
 
 destructor TRpgMap.Destroy;

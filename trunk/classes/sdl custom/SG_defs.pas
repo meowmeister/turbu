@@ -12,6 +12,7 @@ type
       class operator Multiply(a: TSgPoint; b: integer): TSgPoint; inline; static;
       class operator Multiply(a, b: TSgPoint): TSgPoint; inline; static;
       class operator Divide(a: TSgPoint; b: integer): TSgPoint; inline; static;
+      class operator Divide(a: TSgPoint; b: TSgPoint): TSgPoint; inline; static;
       class operator Modulus(a, b: TSgPoint): TSgPoint; inline; static;
       class operator Add(a, b: TSgPoint): TSgPoint; inline; static;
       class operator Subtract(a, b: TSgPoint): TSgPoint; inline; static;
@@ -93,6 +94,12 @@ class operator TSgPoint.Divide(a: TSgPoint; b: integer): TSgPoint;
 begin
    result.x := a.x div b;
    result.y := a.y div b;
+end;
+
+class operator TSgPoint.Divide(a: TSgPoint; b: TSgPoint): TSgPoint;
+begin
+   result.x := a.x div b.x;
+   result.y := a.y div b.y;
 end;
 
 class operator TSgPoint.Modulus(a, b: TSgPoint): TSgPoint;

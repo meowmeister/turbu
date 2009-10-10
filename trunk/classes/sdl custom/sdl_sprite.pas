@@ -437,12 +437,13 @@ procedure TSprite.SetZ(const Value: Cardinal);
 begin
    if (FZ <> Value) or (not FZset) then
    begin
-      FZ := Value;
       if assigned(FParent) then
       begin
          FParent.UnDraw(Self);
+         FZ := Value;
          FParent.AddDrawList(Self);
-      end;
+      end
+      else FZ := Value;
       FZset := true;
    end;
 end;
@@ -744,7 +745,7 @@ end;
 constructor TSpriteEngine.Create(const AParent: TSpriteEngine; const ACanvas: TSdlCanvas);
 begin
    inherited Create(AParent);
-   FDeadList := TSpriteList.Create;
+   FDeadList := TSpriteList.Create(false);
    FVisibleWidth := 800;
    FVisibleHeight := 600;
    FCanvas := ACanvas;
@@ -758,14 +759,24 @@ end;
 
 procedure TSpriteEngine.Dead;
 begin
-   while FDeadList.Count > 0 do
-      TSprite(FDeadList[FDeadList.Count - 1]).Free;
+   FDeadList.OwnsObjects := true;
+   try
+      FDeadList.Clear;
+   finally
+      FDeadList.OwnsObjects := false;
+   end;
 end;
 
 procedure TSpriteEngine.Draw;
+var
+   list: TSpriteList;
+   i: integer;
 begin
    FDrawCount := 0;
-   inherited Draw;
+   for list in FSpriteList.FSprites do
+      if assigned(list) then
+         for I := 0 to List.Count - 1 do
+            list[i].Draw;
 end;
 
 { TSpriteComparer }

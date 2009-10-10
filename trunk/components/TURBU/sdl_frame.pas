@@ -14,7 +14,7 @@ unit sdl_frame;
 interface
 
 uses
-   Classes, Controls, ExtCtrls, Messages, SysUtils,
+   Classes, Types, Controls, ExtCtrls, Messages, SysUtils,
    SDL_13 {$IF CompilerVersion >= 20}, Generics.Collections{$IFEND};
 
 type
@@ -61,6 +61,8 @@ type
 
       procedure Clear;
       procedure FillColor(color: SDL_Color; alpha: byte);
+      procedure DrawRect(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
+      procedure DrawBox(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
       procedure assignImage(image: PSdlSurface); deprecated;
       function AddTexture(surface: PSdlSurface; out texture: TSdlTexture): integer;
       procedure DrawTexture(texture: TSdlTexture; src: PSdlRect = nil; dst: PSdlRect = nil);
@@ -79,6 +81,11 @@ type
    published
       property Align;
       property Anchors;
+      property OnClick;
+      property OnDblClick;
+      property OnMouseDown;
+      property OnMouseMove;
+      property OnMouseUp;
    end;
 
 procedure Register;
@@ -104,6 +111,10 @@ begin
    FTextureList := TTextureList.Create;
    FTimer.OnTimer := Self.InternalOnTimer;
    FRendererType := rtOpenGL;
+   self.ControlStyle := [csCaptureMouse,csClickEvents,csOpaque,csDoubleClicks];
+   {$IF CompilerVersion >= 21}
+   self.ControlStyle := self.ControlStyle + [csGestures];
+   {$IFEND}
 end;
 
 destructor TSdlFrame.Destroy;
@@ -131,6 +142,29 @@ begin
    FFlags := [];
    self.Framerate := 0;
    inherited;
+end;
+
+procedure TSdlFrame.DrawBox(const region: TRect; const color: SDL_Color;
+  const alpha: byte = $FF);
+begin
+   if CreateRenderer then
+   begin
+      assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
+      assert(SDL_RenderFill(@region) = 0);
+   end;
+end;
+
+procedure TSdlFrame.DrawRect(const region: TRect; const color: SDL_Color;
+  const alpha: byte = $FF);
+begin
+   if CreateRenderer then
+   begin
+      assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
+      assert(SDL_RenderLine(region.Left, region.Top, region.Right, region.Top) = 0);
+      assert(SDL_RenderLine(region.right, region.Top, region.Right, region.bottom) = 0);
+      assert(SDL_RenderLine(region.right, region.bottom, region.left, region.bottom) = 0);
+      assert(SDL_RenderLine(region.Left, region.bottom, region.left, region.Top) = 0);
+   end;
 end;
 
 procedure TSdlFrame.DrawTexture(texture: TSdlTexture; src, dst: PSdlRect);
@@ -177,7 +211,7 @@ end;
 
 function TSdlFrame.CreateRenderer: boolean;
 const
-   SDL_BLACK: sdl_13.TSDL_Color = (r: 0; g: 0; b:0; unused: 0);
+   SDL_BLACK: sdl_13.TSDL_Color = ();
    pf: tagPIXELFORMATDESCRIPTOR = (nSize: sizeof(pf); nVersion: 1;
        dwFlags: PFD_DRAW_TO_WINDOW or PFD_SUPPORT_OPENGL or PFD_DOUBLEBUFFER;
        iPixelType: PFD_TYPE_RGBA; cColorBits: 24; cAlphaBits: 8;

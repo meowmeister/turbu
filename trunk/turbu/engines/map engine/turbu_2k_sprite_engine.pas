@@ -29,9 +29,13 @@ type
                          canvas: TSdlCanvas; tileset: TTileset; images: TSdlImages);
       destructor Destroy; override;
 
+      procedure assignTile(const x, y, layer: integer; const tile: TTileRef);
+      procedure updateBorders(const x, y, layer: integer);
+
       property overlapping: TFacingSet read FOverlapping;
       property viewport: TRect read FViewport write SetViewport;
       property mapRect: TRect read FMapRect;
+      property tileset: TTileSet read FTileset;
    end;
 
 implementation
@@ -40,6 +44,58 @@ uses
    SG_defs;
 
 { T2kSpriteEngine }
+
+procedure T2kSpriteEngine.assignTile(const x, y, layer: integer;
+  const tile: TTileRef);
+var
+   newTile: TTile;
+begin
+   FMap.AssignTile(x, y, layer, tile);
+   FTiles[layer][x, y].Dead;
+   newTile := CreateNewTile(tile);
+   FTiles[layer][x, y] := newTile;
+   newTile.place(x, y, layer, tile, FTileset);
+end;
+
+procedure T2kSpriteEngine.updateBorders(const x, y, layer: integer);
+var
+   tile: TBorderTile;
+   neighbors: TNeighborSet;
+   tileRef: TTileRef;
+   newTile: TTile;
+
+   procedure TestInclude(x, y: integer; neighbor: TDirs8);
+   begin
+      if not tile.sharesBorder(FTiles[layer][x, y]) then
+         include(neighbors, neighbor);
+   end;
+
+begin
+   if not (FTiles[layer][x, y] is TBorderTile) then
+      Exit;
+
+   neighbors := [];
+   tile := TBorderTile(FTiles[layer][x, y]);
+   testInclude(x, y - 1, n);
+   testInclude(x + 1, y - 1, ne);
+   testInclude(x + 1, y, e);
+   testInclude(x + 1, y + 1, se);
+   testInclude(x, y + 1, s);
+   testInclude(x - 1, y + 1, sw);
+   testInclude(x - 1, y, w);
+   testInclude(x - 1, y - 1, nw);
+
+   tileRef := FMap.GetTile(x, y, layer);
+   if byte(neighbors) <> tileRef.tile then
+   begin
+      tileRef.tile := byte(neighbors);
+      FMap.assignTile(x, y, layer, tileRef);
+      FTiles[layer][x, y].Dead;
+      newTile := self.CreateNewTile(tileRef);
+      FTiles[layer][x, y] := newTile;
+      newTile.place(X, Y, layer, tileRef, FTileset);
+   end;
+end;
 
 constructor T2kSpriteEngine.Create(map: TRpgMap; const viewport: TRect;
             canvas: TSdlCanvas; tileset: TTileset; images: TSdlImages);

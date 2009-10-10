@@ -20,10 +20,11 @@ unit turbu_main;
 interface
 
 uses
-   SysUtils, Classes, Controls, Forms, Menus, Graphics, ExtCtrls, StdCtrls,
-   design_script_engine, Dialogs, JvComponentBase, JvPluginManager,
-   turbu_plugin_interface, turbu_engines, turbu_map_engine, turbu_map_interface,
-   sdl_frame, ComCtrls, sdl, sdl_13;
+   Controls, Classes, Forms, Menus, Graphics, ExtCtrls, StdCtrls, ComCtrls,
+   Dialogs, JvComponentBase, JvPluginManager,
+   design_script_engine, turbu_plugin_interface, turbu_engines, turbu_map_engine,
+   turbu_map_interface,
+   sdl_frame, sdl, sdl_13;
 
 type
    TfrmTurbuMain = class(TForm)
@@ -66,18 +67,35 @@ type
       procedure splSidebarMoved(Sender: TObject);
       procedure OnScrollMap(Sender: TObject; ScrollCode: TScrollCode;
         var ScrollPos: Integer);
+      procedure imgPaletteMouseDown(Sender: TObject; Button: TMouseButton;
+        Shift: TShiftState; X, Y: Integer);
+      procedure imgPaletteMouseMove(Sender: TObject; Shift: TShiftState; X,
+        Y: Integer);
+      procedure imgLogoMouseDown(Sender: TObject; Button: TMouseButton;
+        Shift: TShiftState; X, Y: Integer);
+      procedure imgLogoMouseUp(Sender: TObject; Button: TMouseButton;
+        Shift: TShiftState; X, Y: Integer);
+      procedure imgLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
+        Y: Integer);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentMap: IRpgMap;
       FPaletteTexture: integer;
+      FPaletteSelection: TRect;
+      FPaletteSelectionTiles: TRect;
+      FLastPalettePos: integer;
+      FCurrPalettePos: integer;
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
       procedure openProject(location: string);
       procedure closeProject;
 
       procedure assignPaletteImage(surface: PSdlSurface);
-      procedure displayPalette(height: integer);
+      procedure displayPalette(height: integer); overload;
+      procedure displayPalette; overload; inline;
       procedure resizePalette;
+      function calculatePaletteRect: TRect;
+      procedure bindPaletteCursor;
 
       procedure configureScrollBars(const size, position: TPoint);
    public
@@ -90,12 +108,12 @@ var
 implementation
 
 uses
-   types, DBClient, windows, generics.Collections, math,
+   SysUtils, Types, Math, Generics.Collections,
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
-   turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_classes,
-   turbu_versioning, turbu_maps, turbu_tilesets,
-   dm_database, discInterface, formats, strtok,
-   sdl_image, sdlstreams, sg_defs;
+   turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
+   turbu_classes, turbu_versioning, turbu_tilesets,
+   dm_database, discInterface, formats,
+   sdl_image, sdlstreams, sg_defs, sg_utils;
 
 {$R *.dfm}
 
@@ -103,16 +121,36 @@ const
    TILE_SIZE: integer = 16;
 
 procedure TfrmTurbuMain.displayPalette(height: integer);
+
+   procedure DrawPaletteCursor(const aRect: TRect);
+   const
+      SDL_BLACK: sdl_13.TSDL_Color = ();
+      SDL_WHITE: sdl_13.TSDL_Color = (r: $FF; g: $FF; b:$FF);
+   begin
+      imgPalette.DrawRect(aRect, SDL_BLACK);
+      imgPalette.DrawRect(constrictRect(aRect, 1), SDL_WHITE);
+      imgPalette.DrawRect(constrictRect(aRect, 2), SDL_WHITE, $B0);
+      imgPalette.DrawRect(constrictRect(aRect, 3), SDL_BLACK, $10);
+   end;
+
 var
    texture: TSdlTexture;
    displayRect: TRect;
 begin
-   assert(FPaletteTexture > -1);
+   if FPaletteTexture = -1 then
+      Exit;
+
    texture := imgPalette.textures[FPaletteTexture];
    height := min(height, texture.size.Y - sbPalette.pageSize);
    displayRect := rect(0, height, imgPalette.width div 2, imgPalette.height div 2);
    imgPalette.drawTexture(texture, @displayRect, nil);
+   drawPaletteCursor(calculatePaletteRect);
    imgPalette.Flip;
+end;
+
+procedure TfrmTurbuMain.displayPalette;
+begin
+   displayPalette(sbPalette.Position);
 end;
 
 procedure TfrmTurbuMain.resizePalette;
@@ -123,7 +161,7 @@ begin
    sbPalette.Max := texture.size.y;
    sbPalette.PageSize := imgPalette.height div 2;
    sbPalette.LargeChange := sbPalette.PageSize - TILE_SIZE;
-   displayPalette(sbPalette.Position);
+   displayPalette;
 end;
 
 procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);
@@ -131,6 +169,7 @@ var
    dummy: TSdlTexture;
 begin
    FPaletteTexture := imgPalette.AddTexture(surface, dummy);
+   bindPaletteCursor;
    resizePalette;
 end;
 
@@ -230,6 +269,48 @@ begin
    imgLogo.DrawTexture(texture);
 end;
 
+procedure TfrmTurbuMain.imgLogoMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+   FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, 1),
+                   true);
+end;
+
+procedure TfrmTurbuMain.imgLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+   if ssLeft in shift then
+      FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, 1),
+                      false);
+end;
+
+procedure TfrmTurbuMain.imgLogoMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+   FMapEngine.doneDrawing;
+end;
+
+procedure TfrmTurbuMain.imgPaletteMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+   if button = mbLeft then
+   begin
+      FPaletteSelection.TopLeft := point(x, y);
+      imgPaletteMouseMove(sender, shift, x, y);
+   end;
+end;
+
+procedure TfrmTurbuMain.imgPaletteMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+begin
+   if ssLeft in shift then
+   begin
+      FPaletteSelection.BottomRight := point(x, y);
+      bindPaletteCursor;
+      displayPalette;
+   end;
+end;
+
 procedure TfrmTurbuMain.loadEngine(data: TEngineData);
 var
    iClass: TRpgPlugBase;
@@ -297,12 +378,7 @@ begin
 end;
 
 procedure TfrmTurbuMain.mnuDatabaseClick(Sender: TObject);
-var
-   dataset: TClientDataSet;
 begin
-   for dataset in dmDatabase.datasets do
-      if dataset.Active = false then
-         dataset.CreateDataSet;
    frmDatabase.ShowModal;
 end;
 
@@ -374,8 +450,48 @@ end;
 procedure TfrmTurbuMain.sbPaletteScroll(Sender: TObject;
   ScrollCode: TScrollCode; var ScrollPos: Integer);
 begin
-   if FPaletteTexture <> -1 then
-      displayPalette(ScrollPos);
+   if (FLastPalettePos = ScrollPos) or (FPaletteTexture = -1) then
+      Exit;
+   FCurrPalettePos := ScrollPos;
+   displayPalette(ScrollPos);
+   FLastPalettePos := ScrollPos;
+end;
+
+procedure TfrmTurbuMain.bindPaletteCursor;
+var
+   tempRect: TRect;
+   delta: integer;
+   height, width: integer;
+   i, j: integer;
+   list: TList<integer>;
+begin
+   FPaletteSelectionTiles.TopLeft := pointToGridLoc(
+     sgPoint(min(FPaletteSelection.left, FPaletteSelection.right),
+             min(FPaletteSelection.top, FPaletteSelection.bottom)),
+     sgPoint(16, 16), 0, FCurrPalettePos, 2);
+   FPaletteSelectionTiles.BottomRight := pointToGridLoc(
+     sgPoint(max(FPaletteSelection.left, FPaletteSelection.right),
+             max(FPaletteSelection.top, FPaletteSelection.bottom)),
+     sgPoint(16, 16), 0, FCurrPalettePos, 2);
+
+   width := (FPaletteSelectionTiles.right - FPaletteSelectionTiles.left) + 1;
+   height := (FPaletteSelectionTiles.bottom - FPaletteSelectionTiles.top) + 1;
+   list := TList<integer>.Create;
+   list.capacity := (height * width) + 1;
+   list.add(width);
+   for j := 0 to height - 1 do
+      for i := 0 to width - 1 do
+         list.add((6 * (FPaletteSelectionTiles.top + j)) + FPaletteSelectionTiles.Left + i);
+   FMapEngine.setPaletteList(list);
+end;
+
+function TfrmTurbuMain.calculatePaletteRect: TRect;
+begin
+   result := multiplyRect(FPaletteSelectionTiles, 32);
+   dec(result.top, FCurrPalettePos * 2);
+   dec(result.bottom, FCurrPalettePos * 2);
+   inc(result.right, 31);
+   inc(result.bottom, 31);
 end;
 
 procedure TfrmTurbuMain.splSidebarMoved(Sender: TObject);

@@ -30,6 +30,13 @@ type
    TTileAttributes = set of TTileAttribute;
    TAttributeList = TList<TTileAttributes>;
 
+   TTileRef = packed record
+      case boolean of
+      false: (value: word);
+      true: (group: byte;
+             tile: byte);
+   end;
+
    TTileGroup = class(TRpgDatafile)
    private
       FFilename: string;
@@ -81,6 +88,8 @@ type
    private
       FRecords: TTileGroupList;
       FHiSpeed: boolean;
+      FGroupMap: TList<byte>;
+      function TileCount(value: TTileGroupRecord): byte;
    protected
       class function keyChar: ansiChar; override;
    public
@@ -89,6 +98,8 @@ type
       procedure save(savefile: TStream); override;
       procedure upload(db: TDataSet); override;
       procedure download(db: TDataset); override;
+
+      function tile(index: integer): TTileRef;
 
       property Records: TTileGroupList read FRecords write FRecords;
       property HiSpeed: boolean read FHiSpeed write FHiSpeed;
@@ -227,14 +238,19 @@ end;
 
 constructor TTileSet.Load(savefile: TStream);
 var
-   i: integer;
+   i, j: integer;
 begin
    inherited Load(savefile);
+   FGroupMap := TList<byte>.Create;
    {records.load(savefile); //Do this once QC 67762 gets fixed}
    lassert(savefile.readChar = TTileGroupRecord.keyChar);
    FRecords := TTileGroupList.Create;
    for I := 1 to savefile.readInt do
+   begin
       FRecords.Add(TTileGroupRecord.Load(savefile));
+      for j := 1 to tileCount(FRecords.Last) do
+         FGroupMap.Add(i - 1);
+   end;
    lassert(savefile.readChar = UpCase(TTileGroupRecord.keyChar));
 
    FHiSpeed := savefile.readBool;
@@ -243,6 +259,7 @@ end;
 destructor TTileSet.Destroy;
 begin
    FRecords.Free;
+   FGroupMap.Free;
    inherited Destroy;
 end;
 
@@ -259,6 +276,28 @@ begin
    savefile.writeChar(UpCase(TTileGroupRecord.keyChar));
 
    savefile.writeBool(FHiSpeed);
+end;
+
+function TTileSet.tile(index: integer): TTileRef;
+begin
+   Result.group := FGroupMap[index];
+   result.tile := 0;
+   dec(index);
+   while (index >= 0) and (FGroupMap[index] = result.group) do
+   begin
+      inc(result.tile);
+      dec(index);
+   end;
+end;
+
+function TTileSet.TileCount(value: TTileGroupRecord): byte;
+begin
+   if tsBordered in value.FGroup.FTileType then
+      result := 1
+   else if tsAnimated in value.FGroup.FTileType then
+      result := 3
+   else result := 48;
+   {TODO: Remove these hard-coded values}
 end;
 
 procedure TTileSet.download(db: TDataset);

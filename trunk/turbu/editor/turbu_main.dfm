@@ -45,6 +45,9 @@ object frmTurbuMain: TfrmTurbuMain
       Active = False
       OnAvailable = imgLogoAvailable
       Align = alClient
+      OnMouseDown = imgLogoMouseDown
+      OnMouseMove = imgLogoMouseMove
+      OnMouseUp = imgLogoMouseUp
     end
     object pnlHorizScroll: TPanel
       Left = 0
@@ -140,6 +143,8 @@ object frmTurbuMain: TfrmTurbuMain
         Framerate = 0
         Active = False
         Align = alClient
+        OnMouseDown = imgPaletteMouseDown
+        OnMouseMove = imgPaletteMouseMove
       end
       object sbPalette: TScrollBar
         Left = 192

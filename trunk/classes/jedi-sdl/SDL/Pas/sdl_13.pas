@@ -329,6 +329,8 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     FId: TSdlTextureID;
     function GetSize: TPoint;
     function GetColor(index: byte): TSDL_Color;
+    function GetAlpha: byte;
+    procedure SetAlpha(const Value: byte);
   public
     constructor Create(format: Uint32; access: TSdlTextureAccess; w, h: integer); overload;
     constructor Create(format: Uint32; surface: PSdlSurface); overload;
@@ -337,6 +339,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     property ID: TSdlTextureID read FId;
     property size: TPoint read GetSize;
     property color[index: byte]: TSDL_Color read GetColor;
+    property alpha: byte read GetAlpha write SetAlpha;
   end;
 
   // SDL_error.h types
@@ -473,6 +476,9 @@ function SDL_GetRenderDrawColor(var r, g, b, a: byte): integer; cdecl; external 
 function SDL_RenderFill(const rect: PSdlRect): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderFill}
 
+function SDL_RenderLine(x1, y1, x2, y2: integer): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderLine}
+
 { Copy a portion of the texture to the current rendering target.
   textureID: The source texture.
   srcrect: A pointer to the source rectangle, or nil for the entire texture.
@@ -589,7 +595,7 @@ function SDL_SetTexturePalette(textureID: TSdlTextureID; const colors: PSdlColor
 {$EXTERNALSYM SDL_SetTexturePalette}
 
 (**
- * \fn int SDL_GetTexturePalette(SDL_TextureID textureID, SDL_Color * colors, int firstcolor, int ncolors)
+ * SDL_GetTexturePalette
  *
  * Retrieves the color palette from an indexed texture
  *
@@ -603,6 +609,31 @@ function SDL_GetTexturePalette(textureID: TSdlTextureID; const colors: PSdlColor
                                firstcolor, ncolors: integer): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetTexturePalette}
 
+(**
+ * SDL_SetTextureAlphaMod
+ *
+ * Sets an additional alpha value used in render copy operations
+ *
+ * texture: The texture to update
+ * alpha: The source alpha value multiplied into copy operations.
+ * returns 0 on success, or -1 if the texture is not valid or alpha modulation is not supported
+ *)
+function SDL_SetTextureAlphaMod(textureID: TSdlTextureID; alpha: byte): integer; cdecl;
+external SDLLibName;
+{$EXTERNALSYM SDL_SetTextureAlphaMod}
+
+(**
+ * SDL_GetTextureAlphaMod
+ *
+ * Gets the additional alpha value used in render copy operations
+ *
+ * texture: The texture to query
+ * alpha: A pointer filled in with the source alpha value
+ * returns 0 on success, or -1 if the texture is not valid
+ *)
+function SDL_GetTextureAlphaMod(textureID: TSdlTextureID; var alpha: byte): integer; cdecl;
+external SDLLibName;
+{$EXTERNALSYM SDL_GetTextureAlphaMod}
 {------------------------------------------------------------------------------}
 { error-handling }
 {------------------------------------------------------------------------------}
@@ -750,6 +781,18 @@ function TSdlTexture.GetSize: TPoint;
 begin
   if SDL_QueryTexture(FId, nil, nil, @result.X, @result.Y) <> 0 then
     raise EBadHandle.Create('SDL_QueryTexture failed due to invalid texture.');
+end;
+
+function TSdlTexture.GetAlpha: byte;
+begin
+   if SDL_GetTextureAlphaMod(FId, result) <> 0 then
+      raise EBadHandle.Create('Alpha not supported for this texture.');
+end;
+
+procedure TSdlTexture.SetAlpha(const Value: byte);
+begin
+   if SDL_SetTextureAlphaMod(FId, Value) <> 0 then
+      raise EBadHandle.Create('Alpha not supported for this texture.');
 end;
 
 procedure SDL_OutOfMemory;
