@@ -213,8 +213,8 @@
 						<VersionInfo Name="AutoIncBuild">True</VersionInfo>
 						<VersionInfo Name="MajorVer">0</VersionInfo>
 						<VersionInfo Name="MinorVer">7</VersionInfo>
-						<VersionInfo Name="Release">1</VersionInfo>
-						<VersionInfo Name="Build">1110</VersionInfo>
+						<VersionInfo Name="Release">3</VersionInfo>
+						<VersionInfo Name="Build">1125</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -226,14 +226,14 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc,</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">TURBU Editor</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">0.7.1.1110</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.7.3.1125</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">TURBU Editor</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">Turbu.exe</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">TURBU editor</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">0.7.1</VersionInfoKeys>
-						<VersionInfoKeys Name="Comments">Please report the contents of any error boxes, along with whatever file you were evaluating when it came up, to Mason.</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">0.7.3</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Source>
 						<Source Name="MainSource">Turbu.dpr</Source>

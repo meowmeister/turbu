@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TURBU"
-#define MyAppVerName "TURBU Editor 0.7.2"
+#define MyAppVerName "TURBU Editor 0.7.3"
 #define MyAppPublisher "Dragon Slayers, Inc."
 #define MyAppURL "http://www.turbu-rpg.com/"
 #define MyAppExeName "Turbu.exe"
@@ -18,7 +18,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\setup
-OutputBaseFilename=TURBU_Editor_0.7.2
+OutputBaseFilename=TURBU_Editor_0.7.3
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -41,7 +41,6 @@ Source: ..\..\dlls\libpng12-0.dll; DestDir: {sys}
 Source: ..\..\dlls\libvorbis-0.dll; DestDir: {sys}
 Source: ..\..\dlls\libvorbisfile-3.dll; DestDir: {sys}
 Source: ..\..\dlls\SDL.dll; DestDir: {app}
-Source: ..\..\dlls\sdl_gfx.dll; DestDir: {sys}
 Source: ..\..\dlls\sdl_image.dll; DestDir: {app}
 Source: ..\..\dlls\SDL_mixer.dll; DestDir: {sys}
 Source: ..\..\dlls\smpeg.dll; DestDir: {sys}
