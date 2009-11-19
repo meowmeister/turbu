@@ -11,7 +11,7 @@ type
    TTileMap = array of TTileList;
 
    TMapScrollType = (stNone, stScroll, stAutoscroll);
-   TScriptFormat = (sfEvents, sfScripts, sfCompiled);
+   TScriptFormat = (sfEvents, sfScripts, sfCompiled, sfLegacy);
    TWraparound = set of (wrHorizontal, wrVertical);
 
    TDirs8 = (n, ne, e, se, s, sw, w, nw);
@@ -45,7 +45,7 @@ type
 
    TRpgMap = class(TRpgDatafile, IRpgMap)
    private
-      FTileset: string;
+      FTileset: integer;
       FSize: TSgPoint;
       FDepth: byte;
       FWraparound: TWraparound;
@@ -56,7 +56,7 @@ type
       FHScroll: TMapScrollType;
       FScrollSpeed: TSgPoint;
       FScriptFormat: TScriptFormat;
-      FScriptBlock: ansiString;
+      FScriptFile: string;
       FRegions: TRegionList;
       FEncounterScript: string;
       procedure SetSize(const Value: TSgPoint);
@@ -64,8 +64,8 @@ type
       procedure SetScriptFormat(const Value: TScriptFormat);
       function GetBattleCount: integer;
       procedure SetBattleCount(const Value: integer);
-      function GetTileset: string;
-      procedure SetTileset(const Value: string);
+      function GetTileset: integer;
+      procedure SetTileset(const Value: integer);
    protected
       FEncounters: T4IntArray;
       FBattles: TPWordArray;
@@ -80,7 +80,7 @@ type
       procedure assignTile(const x, y, layer: integer; const tile: TTileRef);
       function getTile(const x, y, layer: integer): TTileRef;
 
-      property tileset: string read FTileset write FTileset;
+      property tileset: integer read FTileset write FTileset;
       property size: TSgPoint read FSize write SetSize;
       property depth: byte read FDepth write SetDepth;
       property wraparound: TWraparound read FWraparound write FWraparound;
@@ -91,7 +91,7 @@ type
       property vScroll: TMapScrollType read FVScroll write FVScroll;
       property scrollSpeed: TSgPoint read FScrollSpeed write FScrollSpeed;
       property scriptFormat: TScriptFormat read FScriptFormat write SetScriptFormat;
-      property scriptBlock: ansiString read FScriptBlock write FScriptBlock;
+      property scriptFile: string read FScriptFile write FScriptFile;
       property battles: TPWordArray read FBattles write FBattles;
       property battleCount: integer read GetBattleCount write SetBattleCount;
       property encounterScript: string read FEncounterScript write FEncounterScript;
@@ -112,7 +112,7 @@ var
    size: TSgPoint;
 begin
    inherited Load(savefile);
-   FTileset := savefile.readString;
+   FTileset := savefile.readInt;
    savefile.ReadBuffer(size, sizeof(TSgPoint));
    self.SetSize(size);
    self.depth := savefile.readByte;
@@ -124,7 +124,7 @@ begin
    savefile.ReadBuffer(FVScroll, sizeof(TMapScrollType));
    savefile.ReadBuffer(FScrollSpeed, sizeof(TSgPoint));
    savefile.ReadBuffer(FScriptFormat, sizeof(TScriptFormat));
-   scriptBlock := savefile.ReadAString;
+   scriptFile := savefile.readString;
    battleCount := savefile.ReadInt;
    if battleCount > 0 then
       savefile.ReadBuffer(FBattles[0], length(FBattles) * sizeof(word));
@@ -149,7 +149,7 @@ var
    tileList: TTileList;
 begin
    inherited Save(savefile);
-   savefile.writeString(FTileset);
+   savefile.writeInt(FTileset);
    savefile.WriteBuffer(FSize, sizeof(TSgPoint));
    savefile.writeByte(FDepth);
    savefile.writeBuffer(FWraparound, sizeof(FWraparound));
@@ -160,7 +160,7 @@ begin
    savefile.WriteBuffer(FVScroll, sizeof(TMapScrollType));
    savefile.WriteBuffer(FScrollSpeed, sizeof(TSgPoint));
    savefile.WriteBuffer(FScriptFormat, sizeof(TScriptFormat));
-   savefile.WriteAString(scriptBlock);
+   savefile.WriteString(scriptFile);
    savefile.WriteInt(battleCount);
    if battleCount > 0 then
       savefile.WriteBuffer(FBattles[0], length(FBattles) * sizeof(word));
@@ -210,7 +210,7 @@ begin
    result := Length(FBattles);
 end;
 
-function TRpgMap.GetTileset: string;
+function TRpgMap.GetTileset: integer;
 begin
   Result := FTileset;
 end;
@@ -247,7 +247,7 @@ begin
       setLength(FTileMap[i], value.x * value.y);
 end;
 
-procedure TRpgMap.SetTileset(const Value: string);
+procedure TRpgMap.SetTileset(const Value: integer);
 begin
   FTileset := Value;
 end;

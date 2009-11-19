@@ -33,21 +33,27 @@ type
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase);
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
-      function loadMap(map: IRpgMap): boolean;
+      function loadMap(var map: IRpgMap): boolean;
       function getData: TMapEngineData;
       property data: TMapEngineData read getData;
    end;
 
    IDesignMapEngine = interface(IMapEngine)
-   ['{B68B1D70-D95E-4CEB-B009-2197D7EC7666}']
+   ['{B68B1D70-D95E-4CEB-B009-2197D7EC7642}']
       function GetTilesetImage(const index: byte): PSdlSurface;
       property tilesetImage[const index: byte]: PSdlSurface read GetTilesetImage;
+      procedure SetCurrentLayer(const value: byte);
       function mapSize: TSgPoint;
       function mapPosition: TSgPoint;
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TList<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
+      function getAutosaveMaps: boolean;
+      procedure setAutosaveMaps(const value: boolean);
+      property autosaveMaps: boolean read getAutosaveMaps write setAutosaveMaps;
+      procedure saveCurrent;
+      procedure saveAll;
    end;
 
    TMapEngine = class abstract (TRpgPlugBase, IMapEngine)
@@ -66,7 +72,7 @@ type
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase); virtual;
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
-      function loadMap(map: IRpgMap): boolean; virtual; abstract;
+      function loadMap(var map: IRpgMap): boolean; virtual; abstract;
 
       property data: TMapEngineData read GetData write FData;
    end;
@@ -79,7 +85,9 @@ type
       procedure SetValue(X, Y: integer; const Value: T); inline;
    public
       constructor Create(size: TSgPoint);
-      property Value[X, Y: integer]: T read GetValue write SetValue; default;
+      property value[X, Y: integer]: T read GetValue write SetValue; default;
+      property width: integer read FWidth;
+      property height:integer read FHeight;
    end;
 
 implementation
@@ -149,14 +157,14 @@ end;
 {$Q-}{$R-}
 function TMatrix<T>.GetValue(X, Y: integer): T;
 begin
-   if (x < 0) or (y < 0) or (x > FWidth) or (Y > FHeight) then
+   if (x < 0) or (y < 0) or (x >= FWidth) or (Y >= FHeight) then
       raise ERangeError.Create('Matrix bounds out of range');
    result := FMatrix[X, Y];
 end;
 
 procedure TMatrix<T>.SetValue(X, Y: integer; const Value: T);
 begin
-   if (x < 0) or (y < 0) or (x > FWidth) or (Y > FHeight) then
+   if (x < 0) or (y < 0) or (x >= FWidth) or (Y >= FHeight) then
       raise ERangeError.Create('Matrix bounds out of range');
    FMatrix[X, Y] := Value;
 end;

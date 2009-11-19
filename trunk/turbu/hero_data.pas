@@ -283,7 +283,9 @@ end;
 
 function THeroRecord.getConditionModifier(x: word): byte;
 begin
-   result := FConditionModifiers[x];
+   if x <= high(FConditionModifiers) then
+      result := FConditionModifiers[x]
+   else result := 2;
 end;
 
 function THeroRecord.getCurveSec: pointer;

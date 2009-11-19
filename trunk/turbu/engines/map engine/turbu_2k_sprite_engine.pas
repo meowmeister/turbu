@@ -20,6 +20,7 @@ type
       FOverlapping: TFacingSet;
       FViewport: TRect;
       FMapRect: TRect;
+      FCurrentLayer: integer;
 
       procedure SetViewport(const viewport: TRect);
       procedure loadTileMatrix(value: TTileList; index: integer; const viewport: TRect);
@@ -30,17 +31,19 @@ type
       destructor Destroy; override;
 
       procedure assignTile(const x, y, layer: integer; const tile: TTileRef);
-      procedure updateBorders(const x, y, layer: integer);
+      procedure updateBorders(x, y, layer: integer);
 
       property overlapping: TFacingSet read FOverlapping;
       property viewport: TRect read FViewport write SetViewport;
       property mapRect: TRect read FMapRect;
       property tileset: TTileSet read FTileset;
+      property currentLayer: integer read FCurrentLayer write FCurrentLayer;
+      property mapObj: TRpgMap read FMap;
    end;
 
 implementation
 uses
-   turbu_constants,
+   commons, turbu_constants,
    SG_defs;
 
 { T2kSpriteEngine }
@@ -51,26 +54,46 @@ var
    newTile: TTile;
 begin
    FMap.AssignTile(x, y, layer, tile);
-   FTiles[layer][x, y].Dead;
+   if assigned(FTiles[layer][x, y]) then
+      FTiles[layer][x, y].Dead;
    newTile := CreateNewTile(tile);
    FTiles[layer][x, y] := newTile;
    newTile.place(x, y, layer, tile, FTileset);
 end;
 
-procedure T2kSpriteEngine.updateBorders(const x, y, layer: integer);
+procedure T2kSpriteEngine.updateBorders(x, y, layer: integer);
 var
    tile: TBorderTile;
    neighbors: TNeighborSet;
    tileRef: TTileRef;
    newTile: TTile;
 
+   function normalizePoint(var x, y: integer): boolean;
+   var
+      newX, newY: integer;
+   begin
+      result := true;
+      newX := safeMod(x, fTiles[layer].width);
+      newY := safeMod(y, fTiles[layer].height);
+      result := result and ((newX = x) or (wrHorizontal in FMap.wraparound));
+      result := result and ((newY = y) or (wrVertical in FMap.wraparound));
+      x := newX;
+      y := newY;
+   end;
+
    procedure TestInclude(x, y: integer; neighbor: TDirs8);
    begin
-      if not tile.sharesBorder(FTiles[layer][x, y]) then
-         include(neighbors, neighbor);
+      if normalizePoint(x, y) then
+      begin
+         if assigned(FTiles[layer][x, y]) and (not tile.sharesBorder(FTiles[layer][x, y])) then
+            include(neighbors, neighbor)
+      end
+      else include(neighbors, neighbor);
    end;
 
 begin
+   if not normalizePoint(x, y) then
+      Exit;
    if not (FTiles[layer][x, y] is TBorderTile) then
       Exit;
 

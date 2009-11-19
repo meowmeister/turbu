@@ -65,7 +65,6 @@
 			<DCCReference Include="database\turbu_characters.pas"/>
 			<DCCReference Include="database\turbu_classes.pas"/>
 			<DCCReference Include="database\turbu_animations.pas"/>
-			<DCCReference Include="database\turbu_db_var_arrays.pas"/>
 			<DCCReference Include="database\turbu_items.pas"/>
 			<DCCReference Include="database\turbu_resists.pas"/>
 			<DCCReference Include="database\turbu_skills.pas"/>

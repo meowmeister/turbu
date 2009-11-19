@@ -3,7 +3,7 @@
 			<ProjectGuid>{920169D8-3955-472E-B306-74E825F6E932}</ProjectGuid>
 			<ProjectVersion>12.0</ProjectVersion>
 			<MainSource>testing.dpr</MainSource>
-			<Config Condition="'$(Config)'==''">Memleak Report</Config>
+			<Config Condition="'$(Config)'==''">Profiler</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -97,7 +97,6 @@
 			<DCCReference Include="..\turbu format\database\turbu_sounds.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_resists.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_animations.pas"/>
-			<DCCReference Include="..\turbu format\database\turbu_db_var_arrays.pas"/>
 			<DCCReference Include="..\turbu format\turbu_engines.pas"/>
 			<DCCReference Include="..\turbu format\turbu_sdl_image.pas"/>
 			<DCCReference Include="..\turbu format\turbu_sprites.pas"/>
@@ -187,7 +186,10 @@
 			<DCCReference Include="..\engines\map engine\tiles.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_2k_map_engine.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_2k_sprite_engine.pas"/>
-			<DCCReference Include="..\engines\battle basis\turbu_plugin_interface.pas"/>
+			<DCCReference Include="..\editor\map_tree_controller.pas"/>
+			<DCCReference Include="test_map_tree.pas">
+				<Form>frmMapTree</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

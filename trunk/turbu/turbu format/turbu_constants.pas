@@ -43,7 +43,8 @@ const
    DATABASE_ARCHIVE  = 1;
    MAP_ARCHIVE       = 2;
    IMAGE_ARCHIVE     = 3;
-   MUSIC_ARCHIVE     = 4;
+   SCRIPT_ARCHIVE    = 4;
+   MUSIC_ARCHIVE     = 5;
 
    //variable types
    vt_none: integer  = -1;
@@ -79,6 +80,7 @@ resourcestring
    PROJECT_DB = 'database';
    MAP_DB = 'maps';
    IMAGE_DB = 'images';
+   SCRIPT_DB = 'scripts';
 
 implementation
 

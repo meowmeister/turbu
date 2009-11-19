@@ -25,17 +25,20 @@ uses
 type
    TfrmTestConsole = class(TForm)
       MainMenu1: TMainMenu;
-      Database1: TMenuItem;
+      mnuDatabase: TMenuItem;
       mnuTestDatasets: TMenuItem;
       mnuTestLoading: TMenuItem;
       mnuTestDatabasewindow1: TMenuItem;
-      File1: TMenuItem;
+      mnuFile: TMenuItem;
       mnuTestConversion1: TMenuItem;
       mnuSetDefaultProject: TMenuItem;
-      Graphics1: TMenuItem;
+      mnuGraphics: TMenuItem;
       mnuCreateSdlWindow: TMenuItem;
       mnuTestSDL: TMenuItem;
       mnuTestMapLoading: TMenuItem;
+      mnuTree: TMenuItem;
+      mnuTestMapTree: TMenuItem;
+      estLDBLoading1: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -47,10 +50,12 @@ type
       procedure FormDestroy(Sender: TObject);
       procedure mnuTestSDLClick(Sender: TObject);
       procedure mnuTestMapLoadingClick(Sender: TObject);
+      procedure mnuTestMapTreeClick(Sender: TObject);
+      procedure estLDBLoading1Click(Sender: TObject);
    private
       { Private declarations }
       folder, outFolder: string;
-
+      procedure setupConversionPaths;
    public
       { Public declarations }
    end;
@@ -63,15 +68,15 @@ implementation
 uses
    Contnrs, DBClient, Generics.Collections, Registry, windows,
    dm_database, turbu_database, database, test_project,
-   archiveInterface, discInterface,
+   archiveInterface, discInterface, test_map_tree,
    turbu_constants, conversion_report, conversion_report_form,
    rm2_turbu_converter_thread, design_script_engine,
    commons, fileIO, formats, LDB, LMT, LMU,
-   turbu_characters, locate_files,
+   turbu_characters, locate_files, map_tree_controller,
    rm2_turbu_characters, rm2_turbu_database, turbu_unit_dictionary,
    turbu_engines, turbu_plugin_interface, turbu_battle_engine,
    turbu_2k3_battle_engine, turbu_2k_battle_engine, turbu_sprites,
-   turbu_map_engine, turbu_2k_map_engine, turbu_maps,
+   turbu_map_engine, turbu_2k_map_engine, turbu_maps, turbu_classes,
    turbu_tbi_lib, turbu_sdl_image, turbu_map_interface,
    sdl_canvas, sdl_13,
    strtok;
@@ -103,41 +108,42 @@ end;
 procedure TfrmTestConsole.mnuSetDefaultProjectClick(Sender: TObject);
 begin
    frmTestProjLocation.getLocation(folder);
-   mnuTestConversion1.Enabled := folder <> '';
+   setupConversionPaths;
 end;
 
 procedure TfrmTestConsole.mnuTestConversion1Click(Sender: TObject);
+
+   procedure openArchive(folderName: string; index: integer);
+   var
+      filename: string;
+   begin
+      filename := IncludeTrailingPathDelimiter(outFolder) + folderName;
+      assert(GArchives.Add(newFolder(filename)) = index);
+   end;
+
 var
    filename: string;
    conversionReport: IConversionReport;
 begin
-   try
-      filename := IncludeTrailingPathDelimiter(outFolder);
-      assert(DirectoryExists(filename));
-      GArchives.clearFrom(1);
-      filename := IncludeTrailingPathDelimiter(outFolder) + PROJECT_DB;
-      assert(GArchives.Add(newFolder(filename)) = DATABASE_ARCHIVE);
-      filename := IncludeTrailingPathDelimiter(outFolder) + MAP_DB;
-      assert(GArchives.Add(newFolder(filename)) = MAP_ARCHIVE);
-      filename := IncludeTrailingPathDelimiter(outFolder) + IMAGE_DB;
-      assert(GArchives.Add(newFolder(filename)) = IMAGE_ARCHIVE);
+   GArchives.clearFrom(1);
+   openArchive(PROJECT_DB, DATABASE_ARCHIVE);
+   openArchive(MAP_DB, MAP_ARCHIVE);
+   openArchive(IMAGE_DB, IMAGE_ARCHIVE);
+   openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
 
-      filename := IncludeTrailingPathDelimiter(folder);
+   filename := IncludeTrailingPathDelimiter(folder);
 
-      GCurrentFolder := folder;
-      GProjectFolder := outFolder;
-      rtpLocation := GetRegistryValue('\Software\ASCII\RPG2000', 'RuntimePackagePath');
+   GCurrentFolder := folder;
+   GProjectFolder := outFolder;
+   rtpLocation := GetRegistryValue('\Software\ASCII\RPG2000', 'RuntimePackagePath');
 
-      turbu_characters.SetScriptEngine(GDScriptEngine);
-      frmConversionReport := TfrmConversionReport.Create(Application);
-      ConversionReport := frmConversionReport;
-      frmConversionReport.thread := TConverterThread.Create(conversionReport, folder, outFolder, pf_2k);
-      case frmConversionReport.ShowModal of
-         mrOk:;
-         else ;
-      end;
-   finally
-
+   turbu_characters.SetScriptEngine(GDScriptEngine);
+   frmConversionReport := TfrmConversionReport.Create(Application);
+   ConversionReport := frmConversionReport;
+   frmConversionReport.thread := TConverterThread.Create(conversionReport, folder, outFolder, pf_2k);
+   case frmConversionReport.ShowModal of
+      mrOk:;
+      else ;
    end;
 end;
 
@@ -151,7 +157,6 @@ begin
       mnuTestLoadingClick(Sender);
 
    engine := T2kMapEngine.Create;
-//   freeList.add(engine.data);
    engine.initialize(0, gdatabase);
    mapStream := GArchives[MAP_ARCHIVE].getFile(GDatabase.mapTree[1].internalFilename.name);
    try
@@ -159,10 +164,84 @@ begin
    finally
       mapStream.Free;
    end;
-   engine.loadMap(map, point(0,0));
+   engine.loadMap(map);
 
    if sender = mnuTestMapLoading then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
+procedure TfrmTestConsole.estLDBLoading1Click(Sender: TObject);
+var
+   fromFolder: IArchive;
+   FLdb: TLcfDatabase;
+   datafile, optimStream: TStream;
+   legacy: TLegacySections;
+   key: byte;
+const
+	SECTIONS_I_KNOW_HOW_TO_READ = [$0b..$0d, $11..$14, $17..$18, $1e];
+begin
+   optimStream := nil;
+   fromFolder := discInterface.openFolder(folder);
+   try
+      datafile := fromFolder.getFile('RPG_RT.ldb');
+      try
+         optimStream := TMemoryStream.Create;
+            optimStream.CopyFrom(dataFile, datafile.Size);
+         optimStream.rewind;
+         if getString(optimStream) <> 'LcfDataBase' then
+            raise EParseMessage.create('RPG_RT.LDB is corrupt!');
+
+         GProjectFormat := scanRmFormat(optimStream);
+         FLdb := TLcfDataBase.Create(optimStream);
+         //end of format and database check
+         legacy := TLegacySections.Create;
+         optimStream.rewind;
+         getString(optimStream);
+         while not optimStream.eof do
+         begin
+            key := peekAhead(optimStream);
+            if not key in SECTIONS_I_KNOW_HOW_TO_READ then
+               legacy.Add(key, getStrSec(key, optimStream, nil))
+            else skipSec(key, optimStream);
+         end;
+      finally
+         datafile.Free;
+         optimStream.Free;
+      end;
+   finally
+      FLdb.Free;
+      legacy.Free;
+   end;
+   application.MessageBox('Test completed successfully!', 'Done loading LDB');
+end;
+
+procedure TfrmTestConsole.mnuTestMapTreeClick(Sender: TObject);
+var
+   form: TfrmMapTree;
+begin
+   if not assigned(GDatabase) then
+      mnuTestLoadingClick(Sender);
+   form := TfrmMapTree.Create(nil);
+   try
+      map_tree_controller.buildMapTree(GDatabase.mapTree, form.trvMapTree);
+      form.ShowModal;
+   finally
+      form.Free;
+   end;
+end;
+
+procedure TfrmTestConsole.setupConversionPaths;
+var
+   dummy: string;
+begin
+  //   setupConversionPaths;
+  folder := IncludeTrailingPathDelimiter(GetRegistryValue('\Software\TURBU', 'TURBU Test Project'));
+  if folder <> '\' then
+  begin
+    dummy := ExcludeTrailingPathDelimiter(folder);
+    dummy := strtok.getLastToken(dummy, PathDelim);
+    outFolder := getProjectFolder + dummy;
+  end;
 end;
 
 procedure TfrmTestConsole.FormCreate(Sender: TObject);
@@ -188,7 +267,6 @@ type
    begin
       engine := aClass.Create;
       addEngine(et_battle, engine.data, engine);
-//      freeList.Add(engine.data);
    end;
 
    procedure AddMapEngine(aClass: TMapEngineClass);
@@ -197,12 +275,9 @@ type
    begin
       engine := aClass.Create;
       addEngine(et_map, engine.data, engine);
-//      freeList.Add(engine.data);
    end;
    {$WARN CONSTRUCTING_ABSTRACT ON}
 
-var
-   dummy: string;
 begin
    JITEnable := 0;
    GProjectFolder := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
@@ -210,13 +285,7 @@ begin
    addBattleEngine(T2kBattleEngine);
    addBattleEngine(T2k3BattleEngine);
    addMapEngine(T2kMapEngine);
-   folder := IncludeTrailingPathDelimiter(GetRegistryValue('\Software\TURBU', 'TURBU Test Project'));
-   if folder <> '\' then
-   begin
-      dummy := ExcludeTrailingPathDelimiter(folder);
-      dummy := strtok.getLastToken(dummy, PathDelim);
-      outFolder := getProjectFolder + dummy;
-   end;
+   setupConversionPaths;
    mnuTestConversion1.Enabled := folder <> '\';
 end;
 
@@ -240,18 +309,25 @@ end;
 procedure TfrmTestConsole.mnuTestLoadingClick(Sender: TObject);
 var
    location: string;
-   filename: string;
+
+   procedure openArchive(folderName: string; index: integer);
+   var
+      filename: string;
+   begin
+      filename := location + folderName;
+      assert(GArchives.Add(openFolder(filename)) = index);
+   end;
+
+var
    loadStream: TStream;
 begin
    try
       location := IncludeTrailingPathDelimiter(GetRegistryValue('\Software\TURBU', 'TURBU Test Project Output'));
       GArchives.clearFrom(1);
-      filename := location + PROJECT_DB;
-      assert(GArchives.Add(openFolder(filename)) = DATABASE_ARCHIVE);
-      filename := location + MAP_DB;
-      assert(GArchives.Add(openFolder(filename)) = MAP_ARCHIVE);
-      filename := location + IMAGE_DB;
-      assert(GArchives.Add(openFolder(filename)) = IMAGE_ARCHIVE);
+      openArchive(PROJECT_DB, DATABASE_ARCHIVE);
+      openArchive(MAP_DB, MAP_ARCHIVE);
+      openArchive(IMAGE_DB, IMAGE_ARCHIVE);
+      openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
       loadStream := TFileStream.Create(IncludeTrailingPathDelimiter(location) + DBNAME, fmOpenRead);
 
       turbu_characters.SetScriptEngine(GDScriptEngine);

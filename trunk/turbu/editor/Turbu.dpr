@@ -61,7 +61,8 @@ uses
   rm2_turbu_converter_thread in '..\turbu format\converters\rm2_turbu_converter_thread.pas',
   turbu_functional in '..\turbu_functional.pas',
   rm2_turbu_tilesets in '..\turbu format\converters\rm2_turbu_tilesets.pas',
-  addition_sprite in '..\mapview\libs\map engine\addition_sprite.pas';
+  addition_sprite in '..\mapview\libs\map engine\addition_sprite.pas',
+  map_tree_controller in 'map_tree_controller.pas';
 
 {$R *.res}
 

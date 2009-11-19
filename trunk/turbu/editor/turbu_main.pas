@@ -21,10 +21,11 @@ interface
 
 uses
    Controls, Classes, Forms, Menus, Graphics, ExtCtrls, StdCtrls, ComCtrls,
-   Dialogs, JvComponentBase, JvPluginManager,
+   Generics.Collections, Dialogs, ImgList, ToolWin,
+   JvComponentBase, JvPluginManager,
    design_script_engine, turbu_plugin_interface, turbu_engines, turbu_map_engine,
-   turbu_map_interface,
-   sdl_frame, sdl, sdl_13;
+   turbu_map_interface, turbu_map_metadata,
+   sdl_frame, sdl, sdl_13, sg_defs;
 
 type
    TfrmTurbuMain = class(TForm)
@@ -37,7 +38,6 @@ type
       mnuExit: TMenuItem;
       mnu2K: TMenuItem;
       mnuEdit1: TMenuItem;
-      mnuSkillEdit: TMenuItem;
       mnuDatabase: TMenuItem;
       dlgOpen: TOpenDialog;
       pluginManager: TJvPluginManager;
@@ -53,8 +53,16 @@ type
       pnlCorner: TPanel;
       pnlVertScroll: TPanel;
       sbVert: TScrollBar;
+      ilToolbarIcons: TImageList;
+      mnuOptions: TMenuItem;
+      mnuAutosaveMaps: TMenuItem;
+      ToolBar2: TToolBar;
+      btnLayer1: TToolButton;
+      btnLayer2: TToolButton;
+      ToolButton1: TToolButton;
+      btnSave: TToolButton;
+      btnSaveAll: TToolButton;
       procedure mnu2KClick(Sender: TObject);
-      procedure mnuSkillEditClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
       procedure mnuExitClick(Sender: TObject);
@@ -77,6 +85,12 @@ type
         Shift: TShiftState; X, Y: Integer);
       procedure imgLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
         Y: Integer);
+      procedure btnLayer1Click(Sender: TObject);
+      procedure btnLayer2Click(Sender: TObject);
+      procedure trvMapTreeChange(Sender: TObject; Node: TTreeNode);
+      procedure mnuAutosaveMapsClick(Sender: TObject);
+      procedure btnSaveClick(Sender: TObject);
+      procedure btnSaveAllClick(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentMap: IRpgMap;
@@ -85,10 +99,14 @@ type
       FPaletteSelectionTiles: TRect;
       FLastPalettePos: integer;
       FCurrPalettePos: integer;
+      FPaletteImages: TDictionary<integer, integer>;
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
       procedure openProject(location: string);
       procedure closeProject;
+
+      procedure loadMap(const value: word); overload;
+      procedure loadMap(const value: TMapMetadata); overload;
 
       procedure assignPaletteImage(surface: PSdlSurface);
       procedure displayPalette(height: integer); overload;
@@ -97,7 +115,10 @@ type
       function calculatePaletteRect: TRect;
       procedure bindPaletteCursor;
 
-      procedure configureScrollBars(const size, position: TPoint);
+      procedure setLayer(const value: integer);
+
+      procedure configureScrollBars(const size, position: TSgPoint);
+      procedure RequireMapEngine;
    public
       { Public declarations }
    end;
@@ -108,12 +129,12 @@ var
 implementation
 
 uses
-   SysUtils, Types, Math, Generics.Collections,
+   SysUtils, Types, Math,
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
    turbu_classes, turbu_versioning, turbu_tilesets,
-   dm_database, discInterface, formats,
-   sdl_image, sdlstreams, sg_defs, sg_utils;
+   dm_database, discInterface, formats, map_tree_controller,
+   sdl_image, sdlstreams, sg_utils;
 
 {$R *.dfm}
 
@@ -169,6 +190,7 @@ var
    dummy: TSdlTexture;
 begin
    FPaletteTexture := imgPalette.AddTexture(surface, dummy);
+   surface.Free;
    bindPaletteCursor;
    resizePalette;
 end;
@@ -180,16 +202,20 @@ begin
    GArchives.clearFrom(1);
 end;
 
-procedure TfrmTurbuMain.configureScrollBars(const size, position: TPoint);
+procedure TfrmTurbuMain.configureScrollBars(const size, position: TSgPoint);
+
+   procedure configureScrollBar(scrollbar: TScrollBar; size, pageSize, position: integer);
+   begin
+      scrollBar.PageSize := 1;
+      scrollBar.Max := size;
+      scrollBar.PageSize := pageSize;
+      scrollBar.LargeChange := scrollBar.PageSize - TILE_SIZE;
+      scrollBar.Position := min(position, scrollBar.Max - scrollBar.PageSize);
+   end;
+
 begin
-   sbHoriz.Max := size.x;
-   sbHoriz.PageSize := imgLogo.width;
-   sbHoriz.LargeChange := sbHoriz.PageSize - TILE_SIZE;
-   sbHoriz.Position := position.X;
-   sbVert.Max := size.y;
-   sbVert.PageSize := imgLogo.height;
-   sbVert.LargeChange := sbVert.PageSize - TILE_SIZE;
-   sbVert.Position := position.Y;
+   configureScrollBar(sbHoriz, size.x, min(imgLogo.width, size.x), position.x);
+   configureScrollBar(sbVert, size.y, min(imgLogo.height, size.y), position.y);
 end;
 
 procedure TfrmTurbuMain.FormCreate(Sender: TObject);
@@ -197,6 +223,7 @@ begin
    if getProjectFolder = '' then
       createProjectFolder;
    FPaletteTexture := -1;
+   FPaletteImages := TDictionary<integer, integer>.Create;
 end;
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
@@ -205,6 +232,7 @@ begin
    FCurrentMap := nil;
    FMapEngine := nil;
    GScriptEngine := nil;
+   FPaletteImages.Free;
 end;
 
 procedure TfrmTurbuMain.FormShow(Sender: TObject);
@@ -272,14 +300,16 @@ end;
 procedure TfrmTurbuMain.imgLogoMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-   FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, 1),
-                   true);
+   RequireMapEngine;
+   FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position,
+                                  sbVert.Position, 1), true);
 end;
 
 procedure TfrmTurbuMain.imgLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
-   if ssLeft in shift then
+   RequireMapEngine;
+   if (ssLeft in shift) then
       FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, 1),
                       false);
 end;
@@ -287,13 +317,14 @@ end;
 procedure TfrmTurbuMain.imgLogoMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
+   RequireMapEngine;
    FMapEngine.doneDrawing;
 end;
 
 procedure TfrmTurbuMain.imgPaletteMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-   if button = mbLeft then
+   if (button = mbLeft) then
    begin
       FPaletteSelection.TopLeft := point(x, y);
       imgPaletteMouseMove(sender, shift, x, y);
@@ -335,20 +366,19 @@ begin
    end;
 end;
 
-procedure TfrmTurbuMain.loadProject;
+procedure TfrmTurbuMain.loadMap(const value: TMapMetadata);
 var
    mapStream: TStream;
    tileset: TTileset;
+   metadata: TMapMetadata;
 const
    SDL_BLACK: SDL_Color = ();
 begin
-   if GDatabase = nil then
-      GDatabase := TRpgDatabase.Create;
-   frmDatabase.init(GDatabase);
-   FMapEngine := retrieveEngine(et_map, GDatabase.mapTree[GDatabase.mapTree.CurrentMap].mapEngine,
+   FMapEngine := retrieveEngine(et_map, value.mapEngine,
                  TVersion.Create(0, 0, 0)) as IDesignMapEngine;
    FMapEngine.initialize(imgLogo.sdlWindow, GDatabase);
-   mapStream := GArchives[MAP_ARCHIVE].getFile(GDatabase.mapTree[GDatabase.mapTree.CurrentMap].internalFilename.name);
+   FMapEngine.autosaveMaps := mnuAutosaveMaps.checked;
+   mapStream := GArchives[MAP_ARCHIVE].getFile(value.internalFilename.name);
    try
       FCurrentMap := TRpgMap.Load(mapStream);
    finally
@@ -356,14 +386,32 @@ begin
    end;
    FMapEngine.loadMap(FCurrentMap);
    self.configureScrollBars(FMapEngine.mapSize, FMapEngine.mapPosition);
+   fMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
 
    tileset := GDatabase.tileset[FCurrentMap.tileset];
-   //I don't know why this is necessary, but without the next two lines,
-   //nothing will ever actually show in imgPalette;
-   imgPalette.fillColor(SDL_BLACK, 255);
-   imgPalette.Flip;
 
-   assignPaletteImage(FMapEngine.tilesetImage[0]);
+   // I don't know why this is necessary, but without the next two lines,
+   // nothing will ever actually show in imgPalette;
+   // ...
+   // 10-31-09: For some reason this is no longer causing trouble
+{   imgPalette.fillColor(SDL_BLACK, 255);
+   imgPalette.Flip;}
+
+   if FPaletteTexture = -1 then
+      setLayer(0);
+end;
+
+procedure TfrmTurbuMain.loadMap(const value: word);
+begin
+   loadMap(GDatabase.mapTree.item[value]);
+end;
+
+procedure TfrmTurbuMain.loadProject;
+begin
+   if GDatabase = nil then
+      GDatabase := TRpgDatabase.Create;
+   frmDatabase.init(GDatabase);
+   buildMapTree(GDatabase.mapTree, trvMapTree);
 end;
 
 procedure TfrmTurbuMain.mnu2KClick(Sender: TObject);
@@ -375,6 +423,16 @@ begin
       self.loadProject;
       mnuDatabase.Enabled := true;
    end;
+end;
+
+procedure TfrmTurbuMain.mnuAutosaveMapsClick(Sender: TObject);
+var
+   menu: TMenuItem absolute Sender;
+begin
+   assert(menu = mnuAutosaveMaps);
+   menu.checked := not menu.checked;
+   RequireMapEngine;
+   FMapEngine.autosaveMaps := menu.checked;
 end;
 
 procedure TfrmTurbuMain.mnuDatabaseClick(Sender: TObject);
@@ -401,28 +459,37 @@ begin
    end;
 end;
 
-procedure TfrmTurbuMain.mnuSkillEditClick(Sender: TObject);
-begin
-   frmSkillLearning.Show;
-end;
-
 procedure TfrmTurbuMain.OnScrollMap(Sender: TObject; ScrollCode: TScrollCode;
   var ScrollPos: Integer);
+var
+   scrollbar: TScrollBar absolute sender;
 begin
+   RequireMapEngine;
+   assert(scrollbar is TScrollBar);
+   scrollPos := min(scrollPos, scrollbar.Max - scrollbar.PageSize);
    fMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
+   trvMapTree.Selections[0].selected := true;
 end;
 
 procedure TfrmTurbuMain.openProject(location: string);
+
+   procedure openArchive(folderName: string; index: integer);
+   var
+      filename: string;
+   begin
+      filename := location + folderName;
+      assert(GArchives.Add(openFolder(filename)) = index);
+   end;
+
 var
-   filename: string;
    loadStream: TStream;
 begin
-   filename := location + DIRMARK + PROJECT_DB;
-   assert(GArchives.Add(openFolder(filename)) = DATABASE_ARCHIVE);
-   filename := location + DIRMARK + MAP_DB;
-   assert(GArchives.Add(openFolder(filename)) = MAP_ARCHIVE);
-   filename := location + DIRMARK + IMAGE_DB;
-   assert(GArchives.Add(openFolder(filename)) = IMAGE_ARCHIVE);
+   location := IncludeTrailingPathDelimiter(location);
+   openArchive(PROJECT_DB, DATABASE_ARCHIVE);
+   openArchive(MAP_DB, MAP_ARCHIVE);
+   openArchive(IMAGE_DB, IMAGE_ARCHIVE);
+   openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
+
    loadStream := TFileStream.Create(IncludeTrailingPathDelimiter(location) + DBNAME, fmOpenRead);
    frmDatabase.reset;
 
@@ -447,6 +514,12 @@ begin
    loadProject;
 end;
 
+procedure TfrmTurbuMain.RequireMapEngine;
+begin
+   if not assigned(FMapEngine) then
+      Abort;
+end;
+
 procedure TfrmTurbuMain.sbPaletteScroll(Sender: TObject;
   ScrollCode: TScrollCode; var ScrollPos: Integer);
 begin
@@ -457,6 +530,22 @@ begin
    FLastPalettePos := ScrollPos;
 end;
 
+procedure TfrmTurbuMain.setLayer(const value: integer);
+begin
+   RequireMapEngine;
+   if not FPaletteImages.ContainsKey(value) then
+   begin
+      assignPaletteImage(FMapEngine.tilesetImage[value]);
+      FPaletteImages.add(value, FPaletteTexture);
+   end
+   else begin
+      FPaletteTexture := FPaletteImages[value];
+      bindPaletteCursor;
+      resizePalette;
+   end;
+   FMapEngine.SetCurrentLayer(value);
+end;
+
 procedure TfrmTurbuMain.bindPaletteCursor;
 var
    tempRect: TRect;
@@ -465,6 +554,7 @@ var
    i, j: integer;
    list: TList<integer>;
 begin
+   RequireMapEngine;
    FPaletteSelectionTiles.TopLeft := pointToGridLoc(
      sgPoint(min(FPaletteSelection.left, FPaletteSelection.right),
              min(FPaletteSelection.top, FPaletteSelection.bottom)),
@@ -499,7 +589,39 @@ begin
    resizePalette;
 end;
 
+procedure TfrmTurbuMain.btnLayer1Click(Sender: TObject);
+begin
+   setLayer(0);
+end;
+
+procedure TfrmTurbuMain.btnLayer2Click(Sender: TObject);
+begin
+   setLayer(1);
+end;
+
+procedure TfrmTurbuMain.btnSaveAllClick(Sender: TObject);
+begin
+   RequireMapEngine;
+   FMapEngine.SaveAll;
+end;
+
+procedure TfrmTurbuMain.btnSaveClick(Sender: TObject);
+begin
+   RequireMapEngine;
+   FMapEngine.SaveCurrent;
+end;
+
+procedure TfrmTurbuMain.trvMapTreeChange(Sender: TObject; Node: TTreeNode);
+begin
+   loadMap(TObject(node.Data) as TMapMetadata);
+end;
+
 initialization
 finalization
    frmTurbuMain := nil;
+
+//The major difference between a thing that might go wrong and a thing that
+//cannot possibly go wrong is that when a thing that cannot possibly go wrong
+//goes wrong it usually turns out to be impossible to get at or repair.
+
 end.

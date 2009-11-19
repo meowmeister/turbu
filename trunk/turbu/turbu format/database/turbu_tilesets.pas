@@ -20,7 +20,7 @@ unit turbu_tilesets;
 interface
 uses
    classes, Generics.Collections, DB,
-   turbu_classes,
+   turbu_classes, turbu_containers,
    sg_defs, sdl_sprite;
 
 type
@@ -82,26 +82,27 @@ type
       property terrain: TList<integer> read FTerrain write FTerrain;
    end;
 
-   TTileGroupList = {TRpgDataList}TObjectList<TTileGroupRecord>; //QC 67762
+   TTileGroupList = {TRpgDataList}TRpgObjectList<TTileGroupRecord>; //QC 67762
 
    TTileSet = class(TRpgDatafile)
    private
       FRecords: TTileGroupList;
       FHiSpeed: boolean;
-      FGroupMap: TList<byte>;
+      FGroupMap: array [0..7] of TList<byte>;
       function TileCount(value: TTileGroupRecord): byte;
    protected
       class function keyChar: ansiChar; override;
    public
+      constructor Create;
       constructor Load(savefile: TStream);
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
       procedure upload(db: TDataSet); override;
       procedure download(db: TDataset); override;
 
-      function tile(index: integer): TTileRef;
+      function tile(index: integer; layer: byte): TTileRef;
 
-      property Records: TTileGroupList read FRecords write FRecords;
+      property Records: TTileGroupList read FRecords;
       property HiSpeed: boolean read FHiSpeed write FHiSpeed;
    end;
 
@@ -239,27 +240,42 @@ end;
 constructor TTileSet.Load(savefile: TStream);
 var
    i, j: integer;
+   layer: byte;
 begin
    inherited Load(savefile);
-   FGroupMap := TList<byte>.Create;
+   for i := 0 to 7 do
+      FGroupMap[i] := TList<byte>.Create;
    {records.load(savefile); //Do this once QC 67762 gets fixed}
    lassert(savefile.readChar = TTileGroupRecord.keyChar);
+
    FRecords := TTileGroupList.Create;
    for I := 1 to savefile.readInt do
    begin
       FRecords.Add(TTileGroupRecord.Load(savefile));
       for j := 1 to tileCount(FRecords.Last) do
-         FGroupMap.Add(i - 1);
+      begin
+         for layer in FRecords.Last.FLayers do
+            FGroupMap[layer].Add(i - 1);
+      end;
    end;
    lassert(savefile.readChar = UpCase(TTileGroupRecord.keyChar));
 
    FHiSpeed := savefile.readBool;
 end;
 
+constructor TTileSet.Create;
+begin
+   inherited Create;
+   FRecords := TTileGroupList.Create;
+end;
+
 destructor TTileSet.Destroy;
+var
+   i: integer;
 begin
    FRecords.Free;
-   FGroupMap.Free;
+   for I := low(FGroupMap) to high(FGroupMap) do
+      FGroupMap[i].Free;
    inherited Destroy;
 end;
 
@@ -278,12 +294,12 @@ begin
    savefile.writeBool(FHiSpeed);
 end;
 
-function TTileSet.tile(index: integer): TTileRef;
+function TTileSet.tile(index: integer; layer: byte): TTileRef;
 begin
-   Result.group := FGroupMap[index];
+   Result.group := FGroupMap[layer][index];
    result.tile := 0;
    dec(index);
-   while (index >= 0) and (FGroupMap[index] = result.group) do
+   while (index >= 0) and (FGroupMap[layer][index] = result.group) do
    begin
       inc(result.tile);
       dec(index);

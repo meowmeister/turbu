@@ -16,7 +16,7 @@ unit BER;
 * This file was created by Mason Wheeler.  He can be reached for support at
 * www.turbu-rpg.com.
 *****************************************************************************}
-{$D+}
+
 interface
 uses
    classes;
@@ -28,13 +28,13 @@ type
    TBerConverter = record
    private
       value: tX80;
-      len: byte;
+      len: shortint;
    public
       class function Create(theFile: TStream): intX80; overload; static;
 
       procedure read (theFile: TStream);
       function getData: integer;
-      property size: byte read len;
+      property size: shortint read len;
    end;
 
 implementation
@@ -50,8 +50,6 @@ end;
 
 {$Q-} {$R-}
 function TBerConverter.getData: integer;
-const
-   ERROR_MSG = 'BER processing error';
 var
    exponent: byte;
 begin

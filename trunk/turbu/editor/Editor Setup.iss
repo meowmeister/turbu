@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TURBU"
-#define MyAppVerName "TURBU Editor 0.7.1"
+#define MyAppVerName "TURBU Editor 0.7.2"
 #define MyAppPublisher "Dragon Slayers, Inc."
 #define MyAppURL "http://www.turbu-rpg.com/"
 #define MyAppExeName "Turbu.exe"
@@ -18,7 +18,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\setup
-OutputBaseFilename=TURBU_Editor_0.7.1
+OutputBaseFilename=TURBU_Editor_0.7.2
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes

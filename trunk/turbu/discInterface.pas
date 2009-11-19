@@ -189,11 +189,20 @@ begin
 end;
 
 function TDiscArchive.getFile(key: string): TStream;
+var
+   filestream: TFileStream;
 begin
    try
       if pos(FRoot, key) <> 1 then
-         result := TFileStream.Create(FRoot + key, fmOpenRead)
-      else result := TFileStream.Create(key, fmOpenRead);
+         fileStream := TFileStream.Create(FRoot + key, fmOpenRead)
+      else fileStream := TFileStream.Create(key, fmOpenRead);
+      try
+         result := TMemoryStream.Create;
+         result.CopyFrom(fileStream, fileStream.Size);
+         result.seek(0, soFromBeginning);
+      finally
+         fileStream.Free;
+      end;
    except
       on E: Exception do
          raise EArchiveError.Create(E.Message);
@@ -225,6 +234,7 @@ var
    rogueChars: TSysCharset;
    checkname, basename, ext: string;
    duplicates: integer;
+   baseFolder: string;
 begin
    checkname := value;
    rogueChars := FindInvalidCharacters(checkname);
@@ -237,7 +247,8 @@ begin
                                 + checkname + format(' (%d)', [expectedNumber]) + ext)) then
    begin
       duplicates := 1;
-      while fileExists(IncludeTrailingPathDelimiter(FRoot) + checkname + ext) do
+      baseFolder := IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(FRoot) + ExcludeTrailingPathDelimiter(getCurrentFolder));
+      while fileExists(baseFolder + checkname + ext) do
       begin
          inc(duplicates);
          checkname := basename + format(' (%d)', [duplicates]);

@@ -22,25 +22,25 @@ uses
    classes, Generics.Collections,
 //   events,
    dm_database, turbu_database_interface,
-   turbu_characters, turbu_items, turbu_db_var_arrays, turbu_skills, turbu_classes,
-   turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations, turbu_resists,
+   turbu_characters, turbu_items, turbu_skills, turbu_classes, turbu_resists,
+   turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations,
    turbu_unit_dictionary, turbu_containers, turbu_script_interface, turbu_game_data,
    turbu_map_metadata, turbu_tilesets;
 
 type
-   TCharClassArray = array of TClassTemplate;
-   THeroTemplateArray = array of THeroTemplate;
-   TBattleEngineList = TRpgList<TBattleEngineData>;
-   TMapEngineList = TRpgList<TMapEngineData>;
+   TCharClassList = TRpgObjectList<TClassTemplate>;
+   THeroTemplateList = TRpgObjectList<THeroTemplate>;
+   TBattleEngineList = TRpgObjectList<TBattleEngineData>;
+   TMapEngineList = TRpgObjectList<TMapEngineData>;
    TMoveMatrixArray = array of TMoveMatrix;
    TItemList = TRpgObjectList<TItemTemplate>;
    TSkillGainList = TRpgObjectList<TSkillGainRecord>;
    TItemMatrix = array[TItemType] of TItemList;
-   TSkillArray = array of TSkillTemplate;
-   TAnimArray = array of TAnimTemplate;
+   TSkillList = TRpgObjectList<TSkillTemplate>;
+   TAnimList = TRpgObjectList<TAnimTemplate>;
    TAttribList = TRpgObjectList<TAttributeTemplate>;
    TConditionList = TRpgObjectList<TConditionTemplate>;
-   TTilesetDictionary = TObjectDictionary<string, TTileset>;
+   TTilesetList = TRpgObjectList<TTileset>;
    TTileDictionary = TObjectDictionary<string, TTileGroup>;
 
    TRpgDataTypes = (rd_class, rd_hero, rd_command, rd_item, rd_skill, rd_anim,
@@ -53,22 +53,32 @@ type
       function indexOf (name: string): integer;
    end;
 
+   TLegacySections = class(TDictionary<word, rawbytestring>);
+
    TRpgDatabase = class(TRpgDatafile, IRpgDatabase)
    private
-      FClass: TCharClassArray;
-      FHero: THeroTemplateArray;
+      FClass: TCharClassList;
+      FHero: THeroTemplateList;
       FSkillFuncs: TSkillGainList;
       FCommand: TBattleCommandList;
       FItems: TItemMatrix;
-      FSkills: TSkillArray;
-      FAnims: TAnimArray;
+      FSkills: TSkillList;
+      FAnims: TAnimList;
       FAttributes: TAttribList;
       FConditions: TConditionList;
 
+      //I need monsters and monster parties
+      //and battle anims and terrains
+      //and vocabulary and system data
+      //and a battle layout section
+      //and whatever $20 is in 2003
+
 //      FGlobalEvents: TEventBlock;
       FLayout: TGameLayout;
-      FSwitches: TSwitchSection;
-      FVariables: TVarSection;
+      FSwitches: TStringList;
+      FVariables: TStringList;
+      FFloats: TStringList;
+      FStrings: TStringList;
 
       FUnits: TUnitDictionary;
       FAlgLookup: TStringList;
@@ -85,7 +95,7 @@ type
       FExpRecordList: TExpRecordList;
       FStatSet: TStatSet;
       FTileGroup: TTileDictionary;
-      FTileset: TTilesetDictionary;
+      FTileset: TTilesetList;
 
       function getClassCount: integer;
       procedure setClassCount(const Value: integer);
@@ -104,6 +114,7 @@ type
       procedure saveTileGroups(savefile: TStream);
       procedure saveTilesets(savefile: TStream);
    protected
+      FLegacyCruft: TLegacySections;
       class function keyChar: ansiChar; override;
    public
       constructor Create;
@@ -137,29 +148,29 @@ type
       procedure addAnim(value: TAnimTemplate); overload;
 
       procedure addAttribute;
-
       procedure addCondition;
+      procedure addTileset;
 
       function scriptBuild: boolean;
 
       property skillFunc: TSkillGainList read FSkillFuncs;
       property charClasses: integer read getClassCount write setClassCount;
-      property charClass: TCharClassArray read FClass write FClass;
+      property charClass: TCharClassList read FClass write FClass;
       property heroes: integer read getHeroCount write setHeroCount;
-      property hero: THeroTemplateArray read FHero write FHero;
-      property skill: TSkillArray read FSkills write FSkills;
+      property hero: THeroTemplateList read FHero write FHero;
+      property skill: TSkillList read FSkills write FSkills;
       property item: TItemMatrix read FItems write FItems;
       property items: integer read sumItems;
-      property anim: TAnimArray read FAnims write FAnims;
+      property anim: TAnimList read FAnims write FAnims;
       property attributes: TAttribList read FAttributes write FAttributes;
       property conditions: TConditionList read FConditions write FConditions;
       property command: TBattleCommandList read FCommand write FCommand;
       property commands: integer read getCommandCount write setCommandCount;
-      property tileset: TTilesetDictionary read FTileset write FTileset;
+      property tileset: TTilesetList read FTileset write FTileset;
 //      property globalEventBlock: TEventBlock read FGlobalEvents;
       property layout: TGameLayout read FLayout write FLayout;
-      property variable: TVarSection read FVariables write FVariables;
-      property switch: TSwitchSection read FSwitches write FSwitches;
+      property variable: TStringList read FVariables write FVariables;
+      property switch: TStringList read FSwitches write FSwitches;
       property battleStyle: TBattleEngineList read FBattleStyle;
       property mapEngines: TMapEngineList read FMapEngines;
       property moveMatrix: TMoveMatrixArray read FMoveMatrix write FMoveMatrix;
@@ -188,7 +199,7 @@ uses
    turbu_decl_utils, turbu_functional;
 
 const
-   DBVERSION = 25;
+   DBVERSION = 27;
 
 { TRpgDatabase }
 
@@ -207,9 +218,13 @@ begin
    FAttributes := TAttribList.Create;
    FConditions := TConditionList.Create;
    FSkillFuncs := TSkillGainList.Create;
-   FBattleStyle := TBattleEngineList.Create;
-   FMapEngines := TMapEngineList.Create;
+   FBattleStyle := TBattleEngineList.Create(false);
+   FMapEngines := TMapEngineList.Create(false);
    FLayout := TGameLayout.Create;
+   FSwitches := TStringList.Create;
+   FVariables := TStringList.Create;
+   FFloats := TStringList.Create;
+   FStrings := TStringList.Create;
    self.prepareBlanks;
 end;
 
@@ -217,11 +232,15 @@ constructor TRpgDatabase.Load(savefile: TStream);
 type
    TItemClass = class of TItemTemplate;
    TSkillClass = class of TSkillTemplate;
+const
+   items: array[TItemType] of TItemClass =
+   (TJunkTemplate, TWeaponTemplate, TArmorTemplate, TMedicineTemplate,
+   TStatItemTemplate, TSkillBookTemplate, TSkillItemTemplate,
+   TVariableItemTemplate, TScriptItemTemplate);
 var
    substream: TStream;
    i, j, k: integer;
    item: TItemType;
-   items: array[TItemType] of TItemClass;
    skills: TSkillClass;
    dummy: string;
    filename, uFilename: string;
@@ -246,28 +265,33 @@ var
 
 begin
    skills := nil;
-   items[it_junk] := TJunkTemplate;
-   items[it_weapon] := TWeaponTemplate;
-   items[it_armor] := TArmorTemplate;
-   items[it_medicine] := TMedicineTemplate;
-   items[it_upgrade] := TStatItemTemplate;
-   items[it_book] := TSkillBookTemplate;
-   items[it_skill] := TSkillItemTemplate;
-   items[it_variable] := TVariableItemTemplate;
-   items[it_script] := TScriptItemTemplate;
    for item := low(TItemType) to high(TItemType) do
-      FItems[item] := TRpgObjectList<TItemTemplate>.Create;
+      FItems[item] := TItemList.Create;
    FAttributes := TAttribList.Create;
    FConditions := TConditionList.Create;
    FSkillFuncs := TSkillGainList.Create;
-   FBattleStyle := TBattleEngineList.Create;
-   FMapEngines := TMapEngineList.Create;
+   FBattleStyle := TBattleEngineList.Create(false);
+   FMapEngines := TMapEngineList.Create(false);
    self.prepareBlanks;
    GDatabase := self;
 
    inherited load(savefile);
    lassert(FName = 'TURBU RPG Database');
    lassert(FID = DBVERSION);
+
+   substream := GArchives[DATABASE_ARCHIVE].getFile('legacy.tdf');
+   try
+      while not substream.eof do
+      begin
+         i := subStream.readWord;
+         FLegacyCruft.Add(i, subStream.readAString);
+      end;
+      lassert(savefile.readChar = 'L');
+      lassert(FLegacyCruft.Count = savefile.readInt);
+      lassert(savefile.readChar = 'l');
+   finally
+      substream.free;
+   end;
 
    substream := GArchives[DATABASE_ARCHIVE].getFile('mapTree.tdf');
    try
@@ -292,6 +316,10 @@ begin
       loadStringList(subStream, FSpriteList);
       loadStringList(subStream, FPortraitList);
       loadStringList(subStream, FAnimList);
+      loadStringList(substream, FSwitches);
+      loadStringList(substream, FVariables);
+      loadStringList(substream, FFloats);
+      loadStringList(substream, FStrings);
       lassert(subStream.readChar = 'l');
    finally
       substream.free;
@@ -332,30 +360,32 @@ begin
    turbu_skills.setDatabase(self);
    turbu_tilesets.setDatabase(self);
 
-   setLength(FClass, savefile.readInt + 1);
-   if high(FClass) > 0 then
+   j := savefile.readInt;
+   if j > 0 then
    begin
+      FClass.Capacity := j + 1;
       substream := GArchives[DATABASE_ARCHIVE].getFile('classes.tdf');
       try
          lassert(subStream.readChar = 'C');
-         lassert(subStream.readInt = high(FClass));
-         for I := 1 to high(FClass) do
-            FClass[i] := TClassTemplate.Load(subStream);
+         lassert(subStream.readInt = j);
+         for I := 1 to j do
+            FClass.Add(TClassTemplate.Load(subStream));
          lassert(subStream.readChar = 'c');
       finally
          substream.Free;
       end;
    end;
 
-   setLength(FHero, savefile.readInt + 1);
-   if high(FHero) > 0 then
+   j := savefile.readInt;
+   if j > 0 then
    begin
+      FHero.Capacity := j + 1;
       substream := GArchives[DATABASE_ARCHIVE].getFile('heroes.tdf');
       try
          lassert(subStream.readChar = 'H');
-         lassert(subStream.readInt = high(FHero));
-         for I := 1 to high(FHero) do
-            FHero[i] := THeroTemplate.Load(subStream);
+         lassert(subStream.readInt = j);
+         for I := 1 to j do
+            FHero.Add (THeroTemplate.Load(subStream));
          lassert(subStream.readChar = 'h');
       finally
          substream.Free;
@@ -394,14 +424,15 @@ begin
       end;
    end;
 
-   setLength(FSkills, savefile.readInt + 1);
-   if high(FSkills) > 0 then
+   j := savefile.readInt;
+   if j > 0 then
    begin
+      FSkills.Capacity := j + 1;
       substream := GArchives[DATABASE_ARCHIVE].getFile('skills.tdf');
       try
          lassert(subStream.readChar = 'S');
-         lassert(subStream.readInt = high(FSkills));
-         for I := 1 to high(FSkills) do
+         lassert(subStream.readInt = j);
+         for I := 1 to j do
          begin
             case subStream.readChar of
                'N': skills := TNormalSkillTemplate;
@@ -409,7 +440,7 @@ begin
                'T': skills := TTeleportSkillTemplate;
                else lassert(false);
             end;
-            FSkills[i] := skills.Load(subStream);
+            FSkills.add(skills.Load(subStream));
          end;
          lassert(subStream.readChar = 's');
       finally
@@ -417,15 +448,16 @@ begin
       end;
    end;
 
-   setLength(FAnims, savefile.readInt + 1);
-   if high(FAnims) > 0 then
+   j := savefile.readInt;
+   if j > 0 then
    begin
+      FAnims.Capacity := j + 1;
       substream := GArchives[DATABASE_ARCHIVE].getFile('animations.tdf');
       try
          lassert(subStream.readChar = 'A');
-         lassert(subStream.readInt = high(FAnims));
-         for I := 1 to high(FAnims) do
-            FAnims[i] := TAnimTemplate.Load(subStream);
+         lassert(subStream.readInt = j);
+         for I := 1 to j do
+            FAnims.Add(TAnimTemplate.Load(subStream));
          lassert(subStream.readChar = 'a');
       finally
          substream.Free;
@@ -473,10 +505,8 @@ begin
 
    lassert(savefile.readChar = 'T');
    for i := 1 to savefile.readInt do
-   begin
-      dummy := savefile.readString;
-      FTileSet.Add(dummy, TTileSet.Load(savefile));
-   end;
+      FTileSet.Add(TTileSet.Load(savefile));
+
 //   savefile.readDict<TTileset>(FTileset);
    lassert(savefile.readChar = 't');
 
@@ -540,8 +570,25 @@ var
       end;
    end;
 
+var
+   enumerator: TPair<word, rawbytestring>;
 begin
    inherited save(savefile);
+
+   substream := TMemoryStream.Create;
+   try
+      for enumerator in FLegacyCruft do
+      begin
+         subStream.writeWord(enumerator.key);
+         subStream.writeAString(enumerator.value);
+      end;
+      savefile.writeChar('L');
+      savefile.writeInt(FLegacyCruft.Count);
+      savefile.writeChar('l');
+      GArchives[DATABASE_ARCHIVE].writeFile('legacy.tdf', substream);
+   finally
+      substream.free;
+   end;
 
    substream := TMemoryStream.Create;
    try
@@ -571,6 +618,10 @@ begin
       saveStringList(substream, FSpriteList);
       saveStringList(substream, FPortraitList);
       saveStringList(substream, FAnimList);
+      saveStringList(substream, FSwitches);
+      saveStringList(substream, FVariables);
+      saveStringList(substream, FFloats);
+      saveStringList(substream, FStrings);
       substream.writeChar('l');
       GArchives[DATABASE_ARCHIVE].writeFile('lists.tdf', substream);
    finally
@@ -597,14 +648,14 @@ begin
       end;
    end;
 
-   savefile.writeInt(high(FClass));
-   if high(FClass) > 0 then
+   savefile.writeInt(FClass.High);
+   if FClass.High > 0 then
    begin
       subStream := TMemoryStream.Create;
       try
          subStream.writeChar('C');
-         subStream.writeInt(high(FClass));
-         for I := 1 to high(FClass) do
+         subStream.writeInt(FClass.High);
+         for I := 1 to FClass.High do
             FClass[i].save(substream);
          subStream.writeChar('c');
          GArchives[DATABASE_ARCHIVE].writeFile('classes.tdf', substream);
@@ -613,14 +664,14 @@ begin
       end;
    end;
 
-   savefile.writeInt(high(FHero));
-   if high(FHero) > 0 then
+   savefile.writeInt(FHero.High);
+   if FHero.High > 0 then
    begin
       subStream := TMemoryStream.Create;
       try
          subStream.writeChar('H');
-         subStream.writeInt(high(FHero));
-         for I := 1 to high(FHero) do
+         subStream.writeInt(FHero.High);
+         for I := 1 to FHero.High do
             FHero[i].save(substream);
          subStream.writeChar('h');
          GArchives[DATABASE_ARCHIVE].writeFile('heroes.tdf', substream);
@@ -665,14 +716,14 @@ begin
       end;
    end;
 
-   savefile.writeInt(high(FSkills));
-   if high(FSkills) > 0 then
+   savefile.writeInt(FSkills.High);
+   if FSkills.High > 0 then
    begin
       subStream := TMemoryStream.Create;
       try
          subStream.writeChar('S');
-         subStream.writeInt(high(FSkills));
-         for I := 1 to high(FSkills) do
+         subStream.writeInt(FSkills.High);
+         for I := 1 to FSkills.High do
             FSkills[i].save(substream);
          subStream.writeChar('s');
          GArchives[DATABASE_ARCHIVE].writeFile('skills.tdf', substream);
@@ -681,14 +732,14 @@ begin
       end;
    end;
 
-   savefile.writeInt(high(FAnims));
-   if high(FAnims) > 0 then
+   savefile.writeInt(FAnims.High);
+   if FAnims.High > 0 then
    begin
       subStream := TMemoryStream.Create;
       try
          subStream.writeChar('A');
-         subStream.writeInt(high(FAnims));
-         for I := 1 to high(FAnims) do
+         subStream.writeInt(FAnims.High);
+         for I := 1 to FAnims.High do
             FAnims[i].save(substream);
          subStream.writeChar('a');
          GArchives[DATABASE_ARCHIVE].writeFile('animations.tdf', substream);
@@ -792,14 +843,12 @@ end;
 
 procedure TRpgDatabase.saveTilesets(savefile: TStream);
 var
-   enumerator: TPair<string, TTileSet>;
+   enumerator: TTileSet;
 begin
-   savefile.writeInt(FTileSet.Count);
+   savefile.writeInt(FTileSet.High);
    for enumerator in FTileSet do
-   begin
-      savefile.writeString(enumerator.Key);
-      enumerator.Value.save(savefile);
-   end;
+      if enumerator.id > 0 then
+         enumerator.save(savefile);
 end;
 
 function TRpgDatabase.scriptBuild: boolean;
@@ -837,19 +886,21 @@ destructor TRpgDatabase.Destroy;
 var
    i, j: integer;
 begin
+   FLegacyCruft.Free;
+   FSwitches.Free;
+   FVariables.Free;
+   FFloats.Free;
+   FStrings.Free;
    FExpRecordList.Free;
    FUnits.Free;
    FStatAlgs.Free;
    FSpriteList.Free;
    FPortraitList.Free;
    FAnimList.Free;
-   for i := 0 to high(FClass) do
-      FClass[i].Free;
-   for i := 0 to high(FHero) do
-      FHero[i].Free;
+   FClass.Free;
+   FHero.Free;
    FCommand.Free;
-   for i := 0 to high(FSkills) do
-      FSkills[i].Free;
+   FSkills.Free;
    for i := FSkillFuncs.high downto 0 do
    begin
       j := FSkillAlgs.IndexOfObject(FSkillFuncs[i]);
@@ -863,8 +914,7 @@ begin
    FSkillAlgs.Free;
    for i := 0 to ord(high(TItemType)) do
       FItems[TItemType(i)].free;
-   for i := 0 to high(FAnims) do
-      FAnims[i].Free;
+   FAnims.Free;
    FConditions.Free;
    FAttributes.Free;
    FAlgLookup.Free;
@@ -893,22 +943,22 @@ end;
 procedure TRpgDatabase.copyTypeToDB(db: TdmDatabase; value: TRpgDataTypes);
 var
    i: integer;
-   iterator: TRpgDatafile;
+   enumerator: TRpgDatafile;
    dummy: TDataSet;
 begin
    case value of
       rd_class:
       begin
-         for I := 1 to high(FClass) do
-            FClass[i].upload(db.charClasses);
+         for enumerator in FClass do
+            enumerator.upload(db.charClasses);
          db.charClasses.postSafe;
       end;
       rd_hero: ;
       rd_command:
       begin
-         for iterator in FCommand do
-            if iterator.id > 0 then
-               iterator.upload(db.commands);
+         for enumerator in FCommand do
+            if enumerator.id > 0 then
+               enumerator.upload(db.commands);
          db.commands.postSafe;
       end;
       rd_item:
@@ -917,10 +967,10 @@ begin
          begin
             dummy := db.FindComponent('items') as TDataset;
 //            dummy := db.FindComponent(stringReplace(GetEnumName(TypeInfo(TItemType), i), 'it_', 'items_', [])) as TDataset;
-            for iterator in FItems[TItemType(i)] do
-               if iterator.id > 0 then
+            for enumerator in FItems[TItemType(i)] do
+               if enumerator.id > 0 then
                begin
-                  iterator.upload(dummy);
+                  enumerator.upload(dummy);
                   dummy.FieldByName('itemType').AsInteger := i;
                end;
             dummy.postSafe;
@@ -928,14 +978,14 @@ begin
       end;
       rd_skill:
       begin
-         for I := 1 to high(FSkills) do
-            FSkills[i].upload(db.skills);
+         for enumerator in FSkills do
+            enumerator.upload(db.skills);
          db.skills.postSafe;
       end;
       rd_anim:
       begin
-         for I := 1 to high(FAnims) do
-            FAnims[i].upload(db.animations);
+         for enumerator in FAnims do
+            enumerator.upload(db.animations);
          db.animations.postSafe;
       end;
       rd_attrib:
@@ -1010,26 +1060,21 @@ end;
 
 function TRpgDatabase.getClassCount: integer;
 begin
-   result := high(FClass);
+   result := FClass.High;
 end;
 
 procedure TRpgDatabase.setClassCount(const value: integer);
 var
    i: word;
 begin
-   i := self.charClasses + 1;
+   i := FClass.Count;
    if value > i then
    begin
-      setLength(FClass, value + 1);
-      for I := i + 1 to value do
-         FClass[i] := TClassTemplate.Create;
+      for I := i to value do
+         FClass.Add(TClassTemplate.Create);
    end
    else if value < i then
-   begin
-      for I := i downto value + 1 do
-         FClass[i].Free;
-      setLength(FClass, value + 1);
-   end;
+      FClass.DeleteRange(value + 1, i);
 end;
 
 procedure TRpgDatabase.setCommandCount(const Value: integer);
@@ -1051,7 +1096,7 @@ end;
 
 function TRpgDatabase.getHeroCount: integer;
 begin
-   result := high(FHero);
+   result := FHero.High;
 end;
 
 function TRpgDatabase.getProjectName: string;
@@ -1069,19 +1114,14 @@ procedure TRpgDatabase.setHeroCount(const Value: integer);
 var
    i: word;
 begin
-   i := self.heroes + 1;
+   i := FHero.Count;
    if value > i then
    begin
-      setLength(FHero, value + 1);
       for I := i + 1 to value do
-         FHero[i] := THeroTemplate.Create;
+         AddHero;
    end
    else if value < i then
-   begin
-      for I := i downto value + 1 do
-         FHero[i].Free;
-      setLength(FHero, value + 1);
-   end;
+      FHero.DeleteRange(value + 1, i);
 end;
 
 procedure TRpgDatabase.setUnits(const Value: TUnitDictionary);
@@ -1111,14 +1151,12 @@ end;
 
 procedure TRpgDatabase.addAnim;
 begin
-   setLength(FAnims, length(FAnims) + 1);
-   FAnims[high(FAnims)] := TAnimTemplate.Create;
+   FAnims.add(TAnimTemplate.Create);
 end;
 
 procedure TRpgDatabase.addAnim(value: TAnimTemplate);
 begin
-   setLength(FAnims, length(FAnims) + 1);
-   FAnims[high(FAnims)] := value;
+   FAnims.Add(value);
 end;
 
 procedure TRpgDatabase.addAttribute;
@@ -1128,14 +1166,12 @@ end;
 
 procedure TRpgDatabase.addClass;
 begin
-   setLength(FClass, length(FClass) + 1);
-   FClass[high(FClass)] := TClassTemplate.Create;
+   FClass.Add(TClassTemplate.Create);
 end;
 
 procedure TRpgDatabase.addClass(value: TClassTemplate);
 begin
-   setLength(FClass, length(FClass) + 1);
-   FClass[high(FClass)] := value;
+   FClass.Add(value);
 end;
 
 procedure TRpgDatabase.addCondition;
@@ -1145,14 +1181,12 @@ end;
 
 procedure TRpgDatabase.addHero;
 begin
-   setLength(FHero, length(FHero) + 1);
-   FHero[high(FHero)] := THeroTemplate.Create;
+   FHero.Add(THeroTemplate.Create);
 end;
 
 procedure TRpgDatabase.addHero(value: THeroTemplate);
 begin
-   setLength(FHero, length(FHero) + 1);
-   FHero[high(FHero)] := value;
+   FHero.Add(value);
 end;
 
 {$WARN USE_BEFORE_DEF OFF}
@@ -1183,14 +1217,12 @@ end;
 
 procedure TRpgDatabase.addSkill;
 begin
-   setLength(FSkills, length(FSkills) + 1);
-   FSkills[high(FSkills)] := TSkillTemplate.Create;
+   FSkills.Add(TSkillTemplate.Create);
 end;
 
 procedure TRpgDatabase.addSkill(value: TSkillTemplate);
 begin
-   setLength(FSkills, length(FSkills) + 1);
-   FSkills[high(FSkills)] := value;
+   FSkills.Add(value);
 end;
 
 function TRpgDatabase.addSkillFunc(data: TSkillGainRecord): integer;
@@ -1203,6 +1235,11 @@ begin
       FSkillAlgs.AddObject(data.name, data);
    end
    else data.free;
+end;
+
+procedure TRpgDatabase.addTileset;
+begin
+   FTileset.Add(TTileset.Create);
 end;
 
 procedure TRpgDatabase.AfterConstruction;
@@ -1240,11 +1277,15 @@ procedure TRpgDatabase.prepareBlanks;
 var
    item: TItemType;
 begin
+   FClass := TCharClassList.Create;
    addClass;
+   FHero := THeroTemplateList.Create;
    addHero;
    for item := low(TItemType) to high(TItemType) do
       self.addItem(item);
+   FSkills := TSkillList.Create;
    addSkill;
+   FAnims := TAnimList.Create;
    addAnim;
    addAttribute;
    addCondition;
@@ -1252,19 +1293,21 @@ begin
    FCommand := TBattleCommandList.Create;
    FAlgLookup := TStringList.Create;
    FTileGroup := TTileDictionary.Create([doOwnsValues]);
-   FTileset := TTilesetDictionary.Create([doOwnsValues]);
+   FTileset := TTilesetList.Create;
+   addTileset;
+   FLegacyCruft := TLegacySections.Create;
 end;
 
 { TBattleCommandList }
 
 function TBattleCommandList.indexOf(name: string): integer;
 var
-   iterator: TBattleCommand;
+   enumerator: TBattleCommand;
 begin
    result := -1;
-   for iterator in self do
-      if iterator.name = name then
-         Exit(iterator.id);
+   for enumerator in self do
+      if enumerator.name = name then
+         Exit(enumerator.id);
 end;
 
 initialization
@@ -1279,3 +1322,4 @@ begin
 end;
 
 end.
+

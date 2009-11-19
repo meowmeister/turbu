@@ -18,7 +18,7 @@ unit LMT;
 *****************************************************************************}
 
 interface
-uses windows, classes, //system libraries
+uses windows, classes, generics.Collections, //system libraries
      fileIO, charset_data, rm_sound; //modules
 
 type
@@ -27,6 +27,7 @@ type
    *********************************************************************}
    TMapTreeData = class (TObject)
    private
+      FID: word;
       FBgmData: TRmMusic;
       FCanSave: radioSet;
       FName: ansiString;
@@ -50,7 +51,7 @@ type
       procedure SetBattle(index: integer; const Value: word);
       function GetArea(x: byte): integer;
       procedure SetArea(x: byte; const Value: integer);
-    function GetBoundsRect: TRect;
+      function GetBoundsRect: TRect;
    public
       constructor Create(theLMT: TStream; id: word);
       destructor Destroy; override;
@@ -92,7 +93,7 @@ type
       FVhStartX, FVhStartY: array[TVehicleSet] of word;
       FCurrentMap: word;
       inserted: boolean;
-      translationTable: array of word;
+      translationTable: TDictionary<word, word>;
       function getVehicleStartX(x: TVehicleSet): word;
       function getVehicleStartY(x: TVehicleSet): word;
       function getVehicleStartMap(x: TVehicleSet): smallint;
@@ -120,7 +121,7 @@ type
 
 implementation
 
-uses strUtils, sysUtils, //windows libs
+uses math, sysUtils, //system libs
      commons, BER; //turbu libs
 
 {Forwards}
@@ -141,6 +142,7 @@ var
 begin
 try
    inherited Create;
+   FID := id;
    name := getStrSec (1, theLMT, fillInBlankStr);
    parent := getNumSec(2, theLMT, fillInLmtInt);
    generation := getNumSec(3, theLMT, fillInLmtInt);
@@ -254,30 +256,38 @@ end;
 
 constructor TFullTree.Create(theLMT: TStream);
 var
-//   dummy: byte;
    dummy16: word;
    i: word;
    converter: intX80;
    v: TVehicleSet;
+   last, maxVal: word;
 begin
 try
    inherited Create;
    inserted := false;
+   last := 0;
+   translationTable := TDictionary<word, word>.Create;
    converter := TBerConverter.Create (theLMT);
    projectLen := converter.getData;
    SetLength(mapSet, projectLen);
-   setLength(translationtable, projectLen);
-   projectLen := projectLen - 1;
+   dec(projectLen);
+   maxVal := projectLen;
    for i := 0 to projectLen do
    begin
       converter.read(theLMT);
       dummy16 := converter.getData;
-      if ((i = 0) and (dummy16 = 0)) or (dummy16 >= translationtable[i - 1]) then
+      if ((i = 0) and (dummy16 = 0)) or (dummy16 >= last) then
       begin
-         mapSet[i] := TMapTreeData.Create(theLMT, i);
-         translationtable[i] := dummy16;
+         if dummy16 > maxVal then
+         begin
+            setLength(mapSet, dummy16 + 1);
+            maxVal := dummy16;
+         end;
+         mapSet[dummy16] := TMapTreeData.Create(theLMT, i);
+         translationtable.Add(dummy16, i);
+         last := dummy16;
       end
-      else raise EParseMessage.create('LMT section ' + intToStr(i) + ' not found!')
+      else raise EParseMessage.CreateFmt('LMT section %d not found!', [i]);
    end;
    converter.read(theLMT);
    dummy16 := converter.getData;
@@ -305,6 +315,7 @@ try
       FVhStartY[v] := getNumSec(i, theLMT, fillInLmtEndInt);
    end;
    assert(peekAhead(theLMT, 0));
+   projectLen := max(projectLen, maxVal + 1);
 except
    on E: EParseMessage do
    begin
@@ -312,6 +323,16 @@ except
       raise EMessageAbort.Create
    end
 end; //end of TRY block
+end;
+
+destructor TFullTree.Destroy;
+var
+   map: TMapTreeData;
+begin
+   translationtable.Free;
+   for map in mapSet do
+      map.Free;
+   inherited Destroy;
 end;
 
 function TFullTree.getBgm(const whichMap: word): ansiString;
@@ -327,18 +348,13 @@ begin
 end;
 
 function TFullTree.getMapData(id: word): TMapTreeData;
-var
-   i: word;
 begin
-   i := 0;
-   while translationTable[i] <> id do
-      inc(i);
-   result := mapSet[i]
+   result := mapSet[id]
 end;
 
 function TFullTree.getMax: word;
 begin
-   result := projectLen;
+   result := high(mapSet);
    while (mapSet[result].isArea = true) and (mapSet[result].name <> '') do
       dec(result);
 end;
@@ -361,29 +377,20 @@ end;
 procedure TFullTree.searchBack(var id: word);
 begin
    repeat
-      id := id - 1
+      dec(id)
    until mapSet[id].isArea = false
 end;
 
 procedure TFullTree.searchForward(var id: word);
 begin
    repeat
-      id := id + 1
+      inc(id)
    until mapSet[id].isArea = false
 end;
 
 function TFullTree.lookup(x: word): word;
 begin
    result := translationtable[x];
-end;
-
-destructor TFullTree.Destroy;
-var
-   map: TMapTreeData;
-begin
-   for map in mapSet do
-      map.Free;
-   inherited Destroy;
 end;
 
 procedure fillInLmtInt(const expected: byte; out theResult: integer);

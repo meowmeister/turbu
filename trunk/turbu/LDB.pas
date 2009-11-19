@@ -399,7 +399,6 @@ begin
 
       theLDB.Seek(savedPos, soFromBeginning);
    end;
-   
 
 //skills section
    Read(dummy, 1);
@@ -427,7 +426,7 @@ begin
    for i := 1 to FItems do
       FItem[i] := TItem.Create(theLDB, i, self);
 
-   skipSec($0e, theLDB);
+   skipSec($0e, theLDB); //monsters section
 
 //mparty section
    if not peekAhead(theLDB, $0f) then
@@ -597,6 +596,7 @@ begin
    dummy := converter.getData;
    FVariables := TVarSection.create(theLDB, dummy);
 
+{$IFNDEF NOPARSE_EVENTS}
 //common event section
    dummy := 0;
    Read(dummy, 1);
@@ -604,9 +604,14 @@ begin
       raise EParseMessage.create('Variable section of RPG_RT.LDB not found!');
    converter.read(theLDB); // bypass the length statement
    FGlobalEvents := TEventBlock.create(theLDB);
+{$ELSE}
+   skipSec($19, theLDB);
+{$ENDIF}
 
    if GProjectFormat = pf_2k3 then
    begin
+      //sections $1A-$1C (and 1F, below) are apparently always empty.
+      //Why are they in there?
       read(dummy, 2);
       assert(dummy = $001A);
       read(dummy, 2);
@@ -631,7 +636,7 @@ begin
       OutputDebugString(PChar('Section x' + intTohex(dummy, 2) + ' begins at offset x' + intTohex(theLDB.Position, 2)));
       theLDB.Seek(-1, soFromCurrent);
 
-      skipSec($20, theLDB);
+      skipSec($20, theLDB); //what does this do? system page 2?
    end;
    assert(theLDB.position = theLDB.Size);
 end; // end of WITH block

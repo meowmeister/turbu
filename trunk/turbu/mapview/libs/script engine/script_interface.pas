@@ -17,8 +17,6 @@ unit script_interface;
 * www.turbu-rpg.com.
 *****************************************************************************}
 
-{$I ..\..\..\..\unfinished.inc}
-
 interface
 uses
    types, contnrs, //windows libs
@@ -27,6 +25,7 @@ uses
    {AsphyreSprite,} SDL_sprite, SG_Defs,//Asphyre libs
    sdl_mixer, sdlaudiomixer; //SDL libs
 
+{$I ..\..\..\..\unfinished.inc}
 const
    MAXGOLD = 999999;
    MAXPARTYSIZE = 4;

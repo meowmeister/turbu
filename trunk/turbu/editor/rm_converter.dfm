@@ -25,6 +25,10 @@ object frmRmConverter: TfrmRmConverter
     TabOrder = 0
     object tshBasic: TTabSheet
       Caption = 'Basic'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblLocation: TLabel
         Left = 185
         Top = 27
@@ -78,6 +82,10 @@ object frmRmConverter: TfrmRmConverter
     object tshEvents: TTabSheet
       Caption = 'Events'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object grpEventFormat: TRadioGroup
         Left = 3
         Top = 3
@@ -94,6 +102,10 @@ object frmRmConverter: TfrmRmConverter
     object tshCull: TTabSheet
       Caption = 'Culling'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblCullSelect: TLabel
         Left = 16
         Top = 100
