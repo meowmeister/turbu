@@ -28,7 +28,8 @@ type
    private
       procedure buildNameLists(base: TLcfDatabase; ConversionReport: IConversionReport);
    public
-      constructor convert(base: TLcfDatabase; tree: TFullTree; dic: TUnitDictionary; ConversionReport: IConversionReport);
+      constructor convert(base: TLcfDatabase; tree: TFullTree; dic: TUnitDictionary;
+                          legacy: TLegacySections; ConversionReport: IConversionReport);
       function lookupMapSprite(name: ansiString; index: byte): integer;
       function lookupPortrait(name: ansiString; index: byte): integer;
    end;
@@ -176,12 +177,11 @@ begin
 end;
 
 constructor T2k2Database.convert(base: TLcfDatabase; tree: TFullTree;
-   dic: TUnitDictionary; ConversionReport: IConversionReport);
+   dic: TUnitDictionary; legacy: TLegacySections; ConversionReport: IConversionReport);
 var
    i, j: integer;
    counter, classes: integer;
    classTable, heroClassTable: TConversionTable;
-   converter: TMemoryStream;
    reader: TStream;
    battleEngine: TBattleEngineData;
    defMoveMatrix: TMoveMatrix;
@@ -199,9 +199,10 @@ begin
    end;
    self.units.free;
    self.units := dic;
+   FLegacyCruft.Free;
+   FLegacyCruft := legacy;
    self.scriptBuild;
    self.parseMeta;
-   // self.algorithms := algorithms;
    assert(SDL_WasInit(SDL_INIT_VIDEO) = SDL_INIT_VIDEO);
 
    // make sure required battle engine is available from plugins
@@ -227,14 +228,13 @@ begin
    end;
    moveArray := @self.moveMatrix;
    setLength(moveArray^, length(moveArray^) + 1);
-   self.moveMatrix[ high(self.moveMatrix)] := defMoveMatrix;
+   self.moveMatrix[high(self.moveMatrix)] := defMoveMatrix;
 
    // create conversion tables
    classTable := TConversionTable.Create;
    heroClassTable := TConversionTable.Create;
    nameTable.free;
    nameTable := TNameTable.Create;
-   converter := nil;
    self.statSet := TStatSet.Create;
 
    try
@@ -272,7 +272,6 @@ begin
          begin
             if not isEmpty(base.charClass[i]) then
             begin
-               charClass[i].Free;
                charClass[i] := TClassTemplate.convert(base.charClass[i], self.statSet);
                classTable.add(i, i - counter);
             end
@@ -338,9 +337,11 @@ begin
       for i := 1 to base.conditions do
          self.conditions.add(TConditionTemplate.convert(base.condition[i], i));
 
+      ConversionReport.newStep('Converting Tilesets');
       //TILESETS
       for I := 1 to base.getMaxChipsets do
-         self.tileset.Add(string(base.getChipset(i).name), TTileset.Convert(base.getChipset(i), i));
+         if not base.getChipset(i).empty then
+            self.tileset.Add(TTileset.Convert(base.getChipset(i), i));
 
       ConversionReport.newStep('Preparing layout');
       self.layout.width := LOGICAL_SIZE.X;
@@ -350,10 +351,17 @@ begin
 
       ConversionReport.newStep('Converting map tree');
       self.mapTree := TMapTree.convert(tree, true);
+
+      for I := 1 to base.variables.len do
+         self.variable.Add(string(base.variables.name[i]));
+      assert(self.variable.Count = base.variables.len);
+
+      for I := 1 to base.switches.len do
+         self.switch.Add(string(base.switches.name[i]));
+      assert(self.switch.Count = base.switches.len);
    finally
       classTable.free;
       heroClassTable.free;
-      assert(converter = nil);
    end;
 end;
 

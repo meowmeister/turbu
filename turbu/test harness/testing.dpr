@@ -28,7 +28,6 @@ uses
   turbu_sounds in '..\turbu format\database\turbu_sounds.pas',
   turbu_resists in '..\turbu format\database\turbu_resists.pas',
   turbu_animations in '..\turbu format\database\turbu_animations.pas',
-  turbu_db_var_arrays in '..\turbu format\database\turbu_db_var_arrays.pas',
   turbu_engines in '..\turbu format\turbu_engines.pas',
   turbu_sdl_image in '..\turbu format\turbu_sdl_image.pas',
   turbu_sprites in '..\turbu format\turbu_sprites.pas',
@@ -89,7 +88,8 @@ uses
   tiles in '..\engines\map engine\tiles.pas',
   turbu_2k_map_engine in '..\engines\map engine\turbu_2k_map_engine.pas',
   turbu_2k_sprite_engine in '..\engines\map engine\turbu_2k_sprite_engine.pas',
-  turbu_plugin_interface in '..\engines\battle basis\turbu_plugin_interface.pas';
+  map_tree_controller in '..\editor\map_tree_controller.pas',
+  test_map_tree in 'test_map_tree.pas' {frmMapTree};
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

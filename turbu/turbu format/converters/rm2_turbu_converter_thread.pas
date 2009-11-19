@@ -47,11 +47,11 @@ uses
    Generics.Collections, SysUtils,
    fileIO, archiveInterface, discInterface, logs,
    turbu_constants, turbu_database, turbu_unit_dictionary, turbu_engines,
-   turbu_functional, turbu_maps, turbu_map_metadata,
+   turbu_functional, turbu_maps, turbu_map_metadata, turbu_classes,
    rm2_turbu_database, rm2_turbu_maps, rm2_turbu_map_metadata;
 
 const
-   CONVERSION_TASKS = 6;
+   CONVERSION_TASKS = 7;
 
 resourcestring
    UNEX_FORMAT_MESSAGE1 = 'The project in this folder appears to be a RPG Maker';
@@ -84,6 +84,8 @@ begin
 end;
 
 procedure TConverterThread.Execute;
+const
+	SECTIONS_I_KNOW_HOW_TO_READ = [$0b..$0d, $11..$14, $17..$18, $1e];
 var
    datafile: TStream;
    stream: TStream;
@@ -92,7 +94,10 @@ var
    filename, uFilename: string;
    dic: TUnitDictionary;
    fromFolder, toFolder: IArchive;
+   legacy: TLegacySections;
+   key: byte;
 begin
+   legacy := nil; //to silence a compiler warning
    try
       inherited Execute;
       outFile := nil;
@@ -114,6 +119,16 @@ begin
             FReport.setCurrentTask('Loading database');
             FLdb := TLcfDataBase.Create(datafile);
             //end of format and database check
+            legacy := TLegacySections.Create;
+            datafile.rewind;
+            getString(datafile);
+            while not datafile.eof do
+            begin
+               key := peekAhead(datafile);
+               if not key in SECTIONS_I_KNOW_HOW_TO_READ then
+                     legacy.Add(key, getStrSec(key, datafile, nil))
+               else skipSec(key, datafile);
+            end;
          finally
             datafile.Free;
          end;
@@ -146,8 +161,8 @@ begin
          end;
 
          try
-            FReport.setCurrentTask('Converting Database', 11);
-            GDatabase := TRpgDatabase.convert(FLdb, FLmt, dic, FReport);
+            FReport.setCurrentTask('Converting Database', 12);
+            GDatabase := TRpgDatabase.convert(FLdb, FLmt, dic, legacy, FReport);
          except
             on E: EMissingPlugin do
             begin
@@ -172,6 +187,8 @@ begin
             end);
 {         SysUtils.DateTimeToString(timestring, 'h:n:s:z', Now);
          OutputDebugString(PChar(format('Map conversion ended at %s', [timeString])));}
+
+         GDatabase.mapTree.fixTree(FLmt, FReport);
 
          savefile := TMemoryStream.Create;
          try
@@ -232,7 +249,7 @@ procedure ConvertMap(const filename: string; database: TLcfDataBase; mapTree: TF
       dummy: string;
    begin
       dummy := StringReplace(filename, 'map', '', [rfIgnoreCase]);
-      result := StrToInt(stringReplace(dummy, '.lmu', '', [rfIgnoreCase]));
+      result := StrToIntDef(stringReplace(dummy, '.lmu', '', [rfIgnoreCase]), -1);
    end;
 
 var
@@ -250,6 +267,9 @@ begin
       if getString(mapFile) <> 'LcfMapUnit' then
          raise EParseMessage.createFmt('%s is corrupt!', [filename]);
       id := GetIdFromFilename;
+	  //in case we have, for whatever reason, a map that's not in the map tree
+      if (id = -1) or (id > mapTree.GetMax) then
+         Exit;
       map := TMapUnit.Create(mapFile, database, mapTree, id);
       cMap := TRpgMap.Convert(map, mapTree.getMapData(id), database, id);
       outFile := TMemoryStream.Create;
@@ -259,7 +279,7 @@ begin
       output.currentFolder := 'maps';
       dummy := 1;
       id := metadata.lookup[id];
-      metadata[id].internalFilename := output.MakeValidFilename(cmap.name + '.tmf', dummy);
+      metadata[id].internalFilename := output.MakeValidFilename(format('%s.tmf', [cmap.name]), dummy);
       output.writeFile(format('maps\%s', [metadata[id].internalFilename.name]), outFile);
    finally
       mapFile.Free;

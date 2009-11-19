@@ -216,7 +216,7 @@ begin
    chkHasSwitch.Checked := FEventPage.conditionBlock.conditions[switch1];
    dummy := FEventPage.conditionBlock.switch1set;
    if chkHasSwitch.Checked then
-      txtCondSwitch.Text := intToStr(dummy) + ': ' + FDatabase.switch.name[dummy]
+      txtCondSwitch.Text := intToStr(dummy) + ': ' + FDatabase.switch[dummy]
    else
       txtCondSwitch.Text := '';
    //end if

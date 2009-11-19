@@ -50,7 +50,6 @@ object frameParams: TframeParams
       Top = 41
       Width = 99
       Height = 21
-      ItemHeight = 13
       TabOrder = 1
       OnChange = headerChange
     end

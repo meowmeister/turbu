@@ -35,7 +35,6 @@ contains
   turbu_characters in 'database\turbu_characters.pas',
   turbu_classes in 'database\turbu_classes.pas',
   turbu_animations in 'database\turbu_animations.pas',
-  turbu_db_var_arrays in 'database\turbu_db_var_arrays.pas',
   turbu_items in 'database\turbu_items.pas',
   turbu_resists in 'database\turbu_resists.pas',
   turbu_skills in 'database\turbu_skills.pas',
@@ -60,3 +59,4 @@ contains
   commons in '..\commons.pas';
 
 end.
+

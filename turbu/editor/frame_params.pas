@@ -20,9 +20,9 @@ unit frame_params;
 interface
 
 uses
-   Forms, Controls, StdCtrls, Classes, JvExStdCtrls, JvEdit, JvValidateEdit,
-   Mask, JvExMask, JvSpin,
-   turbu_classes, turbu_defs, turbu_containers;
+   Forms, Controls, StdCtrls, Classes, Generics.Collections, JvExStdCtrls,
+   JvEdit, JvValidateEdit, Mask, JvExMask, JvSpin,
+   turbu_classes, turbu_defs;
 
 type
    TParamRecord = record
@@ -50,7 +50,7 @@ type
       procedure spnCountChange(Sender: TObject);
       procedure headerChange(Sender: TObject);
    private
-      FParamSet: TRpgList<TParamRecord>;
+      FParamSet: TList<TParamRecord>;
       FStringSet: TStringSetProc;
 
       procedure setSize(Value: byte);
@@ -84,7 +84,7 @@ begin
    boxRecord.typename := cbxTypes;
    boxRecord.L1 := Label1;
    boxRecord.L2 := Label2;
-   FParamSet := TRpgList<TParamRecord>.Create;
+   FParamSet := TList<TParamRecord>.Create;
    FParamSet.Add(boxRecord);
 end;
 

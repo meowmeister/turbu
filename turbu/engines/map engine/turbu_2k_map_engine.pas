@@ -34,12 +34,14 @@ type
       FTilesetListD: TList<TTileGroupPair>;
       FTileSize: TSgPoint;
       FScrollPosition: TSgPoint;
+      FDrawFrom: TSgPoint;
       FPaletteList: TList<integer>;
       FCurrentLayer: byte;
+      FAutosaveMaps: boolean;
       procedure initializeDesigner(window: TSdlWindowId; database: IRpgDatabase);
       function GetTilesetImageSize(const index: byte): TSgPoint;
       function GetTilesetImage(const index: byte): PSdlSurface;
-      function DesignLoadMap(map: IRpgMap): boolean;
+      function DesignLoadMap(var map: IRpgMap): boolean;
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
       function mapSize: TSgPoint;
       function mapPosition: TSgPoint;
@@ -47,6 +49,13 @@ type
       procedure setPaletteList(value: TList<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
+      procedure SetCurrentLayer(const value: byte);
+      function getAutosaveMaps: boolean;
+      procedure setAutosaveMaps(const value: boolean);
+      procedure saveMap(value: TRpgMap);
+      procedure saveAndClearMapCache;
+      procedure saveCurrent;
+      procedure saveAll;
 
       procedure IDesignMapEngine.initialize = initializeDesigner;
       function IDesignMapEngine.loadMap = DesignLoadMap;
@@ -59,6 +68,10 @@ type
       FImages: TSdlImages;
       FMaps: array of T2kSpriteEngine;
       FSignal: TSimpleEvent;
+
+      function retrieveImage(const filename: string): TRpgSdlImage;
+
+      procedure repaint;
       procedure loadTileset(const value: TTileSet);
       function CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
       function doneLoadingMap: boolean;
@@ -68,14 +81,14 @@ type
    public
       constructor Create; override;
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase); override;
-      function loadMap(map: IRpgMap): boolean; override;
+      function loadMap(var map: IRpgMap): boolean; override;
    end;
 
 implementation
 uses
    sysUtils, classes, math,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
-   turbu_constants, turbu_map_metadata, turbu_functional,
+   turbu_constants, turbu_map_metadata, turbu_functional, turbu_classes,
    SDL, sdlstreams, sdl_sprite, sg_utils;
 
 { Callbacks }
@@ -124,7 +137,7 @@ var
    screensize: TSgPoint;
 begin
    screensize := FCanvas.size / TILE_SIZE;
-   center := center - (screensize / 2);
+   center := (center / TILE_SIZE) - (screensize / 2);
    if not (wrHorizontal in map.wraparound) then
    begin
       if center.x < 0 then
@@ -179,14 +192,14 @@ begin
    FImages := TSdlImages.Create();
    FImages.ArchiveCallback := aCallback;
    FImages.ArchiveLoader := aLoader;
-   setLength(FMaps, FDatabase.mapTree.Count);
+   setLength(FMaps, FDatabase.mapTree.lookupCount);
    FSignal := TSimpleEvent.Create;
    FSignal.SetEvent;
 
    FInitialized := true;
 end;
 
-function T2kMapEngine.loadMap(map: IRpgMap): boolean;
+function T2kMapEngine.loadMap(var map: IRpgMap): boolean;
 var
    viewport: TRect;
 begin
@@ -209,7 +222,27 @@ begin
    FWaitingMap := TRpgMap(map);
    if not assigned(FWaitingMap) then
       raise ERpgPlugin.Create('Incompatible map object');
-   FScrollPosition := FDatabase.mapTree[FWaitingMap.ID].scrollPosition;
+   FScrollPosition := FDatabase.mapTree.item[FWaitingMap.ID].scrollPosition;
+end;
+
+procedure T2kMapEngine.repaint;
+begin
+   FCanvas.SetRenderer;
+   SDL_SetRenderDrawColor(0, 0, 0, 255);
+   FCanvas.Clear;
+   FCurrentMap.Draw;
+   FCanvas.Flip;
+end;
+
+function T2kMapEngine.retrieveImage(const filename: string): TRpgSdlImage;
+var
+   fullName: string;
+begin
+   fullName := 'tileset\' + filename + '.png';
+   if not FImages.contains(filename) then
+      result := nil
+   else
+      result := FImages.Image[filename] as TRpgSdlImage;
 end;
 
 function T2kMapEngine.doneLoadingMap: boolean;
@@ -217,17 +250,12 @@ begin
    FCurrentMap := FMaps[FWaitingMap.id];
    result := FSignal.WaitFor(INFINITE) = wrSignaled;
    if result then
-   begin
-      FSignal.ResetEvent;
-      FCanvas.SetRenderer;
-      FCurrentMap.Draw;
-      FCanvas.Flip;
-   end;
+      self.repaint;
 end;
 
 procedure T2kMapEngine.loadTileset(const value: TTileSet);
 begin
-   TFunctional.map<TTileGroupRecord>(value.Records,
+   value.Records.map(
       procedure(const input: TTileGroupRecord)
       var filename: string;
       begin
@@ -338,7 +366,7 @@ end;
 
 function T2kMapEngine.mapPosition: TSgPoint;
 begin
-   result := sgPoint(trunc(FCurrentMap.WorldX), trunc(FCurrentMap.WorldY)) * TILE_SIZE;
+   result := sgPoint(trunc(FCurrentMap.WorldX), trunc(FCurrentMap.WorldY));
 end;
 
 function T2kMapEngine.mapSize: TSgPoint;
@@ -352,10 +380,22 @@ begin
    //do more
 end;
 
-function T2kMapEngine.DesignLoadMap(map: IRpgMap): boolean;
+function T2kMapEngine.DesignLoadMap(var map: IRpgMap): boolean;
 var
    viewport: TRect;
+   temp: TObject;
 begin
+   if assigned(FCurrentMap) then
+   begin
+      if not FCurrentMap.mapObj.modified then
+         freeAndNil(FMaps[FCurrentMap.mapObj.id])
+      else if FAutosaveMaps then
+      begin
+         saveMap(FCurrentMap.mapObj);
+         freeAndNil(FMaps[FCurrentMap.mapObj.id])
+      end;
+   end;
+
    prepareMap(map);
    viewport := createViewport(FWaitingMap, FScrollPosition);
    if not assigned(FMaps[FWaitingMap.id]) then
@@ -363,10 +403,64 @@ begin
       FTilesetListD.Free;
       FTilesetListD := loadTilesetD(FDatabase.tileset[FWaitingMap.tileset]);
       FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
-                               FCanvas, FDatabase.tileset[FWaitingMap.tileset],
-                               FImages);
+                                FCanvas, FDatabase.tileset[FWaitingMap.tileset],
+                                FImages);
+   end
+   else begin
+      FWaitingMap := FMaps[FWaitingMap.id].mapObj;
+      //isn't disposing of interfaced objects without ref-counting fun?
+      temp := TObject(map);
+      map := FWaitingMap;
+      temp.Free;
    end;
    result := doneLoadingMap;
+end;
+
+procedure T2kMapEngine.saveAll;
+begin
+   saveAndClearMapCache;
+   saveCurrent;
+end;
+
+procedure T2kMapEngine.saveAndClearMapCache;
+var
+   i: integer;
+   map: T2kSpriteEngine;
+begin
+   for i := low(FMaps) to high(FMaps) do
+   begin
+      map := FMaps[i];
+      if assigned(map) and (map <> FCurrentMap) then
+      begin
+         saveMap(map.mapObj);
+         FreeAndNil(FMaps[i]);
+      end;
+   end;
+end;
+
+procedure T2kMapEngine.saveCurrent;
+begin
+   saveMap(FCurrentMap.mapObj);
+end;
+
+procedure T2kMapEngine.saveMap(value: TRpgMap);
+var
+   metadata: TMapMetadata;
+   saveStream: TMemoryStream;
+begin
+   if not value.modified then
+      Exit;
+
+   saveStream := TMemoryStream.Create;
+   try
+      value.save(saveStream);
+      metadata := GDatabase.mapTree.item[value.id];
+      assert(metadata.name = value.Name);
+      GArchives[MAP_ARCHIVE].writeFile(metadata.internalFilename.name, saveStream);
+      value.modified := false;
+   finally
+      saveStream.Free;
+   end;
 end;
 
 procedure T2kMapEngine.scrollMap(const newPosition: TSgPoint);
@@ -377,9 +471,34 @@ begin
    FCurrentMap.viewport := rect(reducedPosition, FCurrentMap.viewport.BottomRight);
    FCurrentMap.WorldX := newPosition.x;
    FCurrentMap.WorldY := newPosition.y;
-   FCanvas.SetRenderer;
-   FCurrentMap.Draw;
-   FCanvas.Flip;
+   self.repaint;
+end;
+
+procedure T2kMapEngine.setAutosaveMaps(const value: boolean);
+begin
+   FAutosaveMaps := value;
+   if value then
+      self.saveAndClearMapCache;
+end;
+
+procedure T2kMapEngine.SetCurrentLayer(const value: byte);
+var
+   enumerator: TTileGroupRecord;
+   image: TRpgSdlImage;
+   texture: TSdlTexture;
+begin
+   FCurrentLayer := value;
+   for enumerator in FCurrentMap.tileset.Records do
+   begin
+      image := retrieveImage(enumerator.group.filename);
+      if not assigned(image) then
+         Continue;
+      texture := image.Texture;
+      if value in enumerator.layers then
+         texture.alpha := $FF
+      else texture.alpha := $A0;
+   end;
+   self.repaint;
 end;
 
 procedure T2kMapEngine.setPaletteList(value: TList<integer>);
@@ -394,30 +513,49 @@ var
    tile: TTileRef;
    drawRect: TRect;
    i, j, counter: integer;
+   offset: TSgPoint;
 begin
    drawRect.TopLeft := position;
    drawRect.Right := drawRect.Left + FPaletteList[0] - 1;
    drawRect.Bottom := drawRect.Top + ((FPaletteList.Count - 1) div FPaletteList[0]) - 1;
-   counter := 1;
+
+   //calculate where to start drawing
+   if new then
+   begin
+      offset := sgPoint(0, 0);
+      FDrawFrom := position;
+   end
+   else
+      offset := position - FDrawFrom;
+   counter := (offset.y * FPaletteList[0]) + offset.x;
+   counter := safeMod(counter, FPaletteList.Count - 1) + 1;
+
    for j := drawRect.Top to drawRect.Bottom do
       for I := drawRect.Left to drawRect.Right do
       begin
-         tile := FCurrentMap.tileset.Tile(FPaletteList[counter]);
+         tile := FCurrentMap.tileset.Tile(FPaletteList[counter], FCurrentLayer);
          FCurrentMap.assignTile(i, j, FCurrentLayer, tile);
          inc(counter);
+         if counter = FPaletteList.Count then
+            counter := 1;
       end;
    drawRect := sg_utils.expandRect(drawRect, 1);
    for j := drawRect.Top to drawRect.Bottom do
       for I := drawRect.Left to drawRect.Right do
          FCurrentMap.updateBorders(i, j, FCurrentLayer);
-   FCanvas.SetRenderer;
-   FCurrentMap.Draw;
-   FCanvas.Flip;
+   FCurrentMap.Dead;
+   self.repaint;
+end;
+
+function T2kMapEngine.getAutosaveMaps: boolean;
+begin
+   result := FAutosaveMaps;
 end;
 
 procedure T2kMapEngine.doneDrawing;
 begin
    FCurrentMap.Dead;
+   FCurrentMap.mapObj.modified := true;
 end;
 
 end.

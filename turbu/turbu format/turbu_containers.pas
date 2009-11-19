@@ -2,47 +2,22 @@ unit turbu_containers;
 
 interface
 uses
-   generics.collections;
+   SysUtils, generics.collections,
+   turbu_functional;
 
 type
-   TRpgList<T> = class (TList<T>)
-   private
-      function getHigh: integer;
-      function getLength: integer;
-   public
-      function Last: T;
-      property High: integer read getHigh;
-      property Length: integer read getLength;
-   end;
-
    TRpgObjectList<T: class> = class(TObjectList<T>)
    private
       function getHigh: integer;
-      function getLength: integer;
    public
-      function Last: T;
+      procedure map(work: TMapper<T>);
+      function mapF(work: TMapperFunc<T, T>): TRpgObjectList<T>; overload;
+      function mapF<U: class>(work: TMapperFunc<T, U>): TRpgObjectList<U>; overload;
+      function where(filter: TPredicate<T>): TRpgObjectList<T>;
       property High: integer read getHigh;
-      property Length: integer read getLength;
    end;
 
 implementation
-
-{ TRpgList<T> }
-
-function TRpgList<T>.GetHigh: integer;
-begin
-   result := self.Count - 1;
-end;
-
-function TRpgList<T>.getLength: integer;
-begin
-   result := self.High + 1;
-end;
-
-function TRpgList<T>.Last: T;
-begin
-   result := Self[High];
-end;
 
 { TRpgObjectList<T> }
 
@@ -51,14 +26,41 @@ begin
    result := Count - 1;
 end;
 
-function TRpgObjectList<T>.getLength: integer;
+procedure TRpgObjectList<T>.map(work: TMapper<T>);
 begin
-   result := self.High + 1;
+   TFunctional.map<T>(self, work);
 end;
 
-function TRpgObjectList<T>.Last: T;
+function TRpgObjectList<T>.mapF(work: TMapperFunc<T, T>): TRpgObjectList<T>;
 begin
-   result := Self[High];
+   result := self.mapF<T>(work);
+end;
+
+function TRpgObjectList<T>.mapF<U>(work: TMapperFunc<T, U>): TRpgObjectList<U>;
+var
+   output: TRpgObjectList<U>;
+begin
+   output := TRpgObjectList<U>.Create(false);
+   TFunctional.map<T>(self,
+      procedure(const input: T)
+      begin
+         output.Add(work(input));
+      end);
+   result := output;
+end;
+
+function TRpgObjectList<T>.where(filter: TPredicate<T>): TRpgObjectList<T>;
+var
+   output: TRpgObjectList<T>;
+begin
+   output := TRpgObjectList<T>.Create(false);
+   TFunctional.map<T>(self,
+      procedure(const input: T)
+      begin
+         if filter(input) then
+            output.Add(input);
+      end);
+   result := output;
 end;
 
 end.

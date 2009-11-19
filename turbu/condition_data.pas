@@ -110,7 +110,6 @@ type
 
 implementation
 uses sysUtils, windows,
-logs,
      commons, formats, fileIO, BER;
 
 procedure fillInCondInt(const expected: byte; out theResult: integer); forward;
@@ -137,10 +136,7 @@ begin
    FHealPercent := getNumSec($16, input, fillInZeroInt);
    FHealShock := getNumSec($17, input, fillInZeroInt);
    if GProjectFormat = pf_2k3 then
-   begin
-logs.logText('Unknown format data for TCondition #' + intToStr(id));
       FStatEffect := TStatEffect(getNumSec($1E, input, fillInZeroInt));
-   end;
    FAttackStat := getChboxSec($1F, input, fillInZeroInt);
    FDefenseStat := getChboxSec($20, input, fillInZeroInt);
    FMindStat := getChboxSec($21, input, fillInZeroInt);

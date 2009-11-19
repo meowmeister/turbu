@@ -37,7 +37,6 @@ type
       constructor Create(var theLDB: TStream; const id: word);
       function getName: ansiString;
       function empty: boolean;
-      class procedure skip(theLDB: TStream; id: word);
    end;
 
 implementation
@@ -148,49 +147,14 @@ begin
    result := incomplete;
    if name <> '' then result := false;
    if filename <> '' then result := false;
-   for i := 1 to 162 do
+   for i := 0 to 161 do
    begin
+      if result = false then break;
       if terrain[i] <> 0 then result := false;
       if blockData[i] <> $0F then result := false;
-      if (i <= 144) and (i > 1) and (uBlockData[i] <> $0F) then result := false;
+      if (i < 144) and (i > 0) and (uBlockData[i] <> $0F) then result := false;
    end;
    if animation or hispeed = true then result := false;
-end;
-
-class procedure TChipSet.skip(theLDB: TStream; id: word);
-var
-   dummy, i: byte;
-begin
-try
-with theLDB do
-begin
-   Read(dummy, 1);
-   if dummy <> id then
-      raise EParseMessage.create('ChipSet section ' + intToStr(id) + ' of RPG_RT.LDB not found!');
-   if peekAhead(theLDB, 0) = false then //blank chipset records just contain an x00 and nothing else
-   begin
-      skipSec(1, theLDB);
-      if peekAhead(theLDB, 0) then
-         exit;
-      skipSec(2, theLDB);
-      if peekAhead(theLDB, 0) then
-         exit;
-      for i := 3 to 5 do
-         skipSec(i, theLDB);
-      skipSec($0b, theLDB);
-      skipSec($0c, theLDB);
-      Read(dummy, 1);
-      if dummy <> 0 then
-         raise EParseMessage.create('Chipset section ' + intToStr(id) + ' final 0 not found');
-   end;
-end; // end of WITH block
-except
-   on E: EParseMessage do
-   begin
-      msgBox(E.message, 'TChipSet.Skip says:', MB_OK);
-      raise EMessageAbort.Create
-   end
-end // end of TRY block
 end;
 
 { Classless }

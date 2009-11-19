@@ -114,7 +114,7 @@ begin
    inherited create;
    converter := TBerConverter.Create(input);
    if converter.getData <> id then
-      raise EParseMessage.create('Battle Animation FX record ' + intToStr(id) + ' of RPG_RT.LDB not found!');
+      raise EParseMessage.createFmt('Battle Animation FX record %d of RPG_RT.LDB not found!', [id]);
    FFrame := getNumSec(1, input, fillInAnimFxInt);
    FSound := TRmSound.Create(2, input);
    FFlashWhere := TFlashTarget(getNumSec(3, input, fillInZeroInt));
@@ -124,7 +124,7 @@ begin
    FPower := getNumSec(7, input, fillInAnimFxInt);
    skipSec(8, input); //no idea what this does.  It showed up in Love and War's database
    if not peekAhead(input, 0) then
-      raise EParseMessage.create('Exceptional case found at LDB anim fx x' + intToHex(id, 2) + '!');
+      raise EParseMessage.createFmt('Exceptional case found at LDB anim fx x%s!', [intToHex(id, 2)]);
    //end if
 end;
 
@@ -143,7 +143,7 @@ begin
    inherited create;
    converter := TBerConverter.Create(input);
    if converter.getData <> id then
-      raise EParseMessage.create('Battle Animation FX record ' + intToStr(id) + ' of RPG_RT.LDB not found!');
+      raise EParseMessage.createFmt('Battle Animation FX record %d of RPG_RT.LDB not found!', [id]);
    FUnknown := getNumSec(1, input, fillInZeroInt);
    assert(FUnknown = 0);
    FIndex := getNumSec(2, input, fillInZeroInt);
@@ -156,7 +156,7 @@ begin
    FSaturation := getNumSec(9, input, fillInCellInt);
    FColor.rgba[4] := getNumSec($A, input, fillInCellInt);
    if not peekAhead(input, 0) then
-      raise EParseMessage.create('Exceptional case found at LDB anim cell x' + intToHex(id, 2) + '!');
+      raise EParseMessage.createFmt('Exceptional case found at LDB anim cell x%s!', [intToHex(id, 2)]);
    //end if
 end;
 
@@ -180,12 +180,12 @@ begin
    inherited create;
    converter := TBerConverter.Create(input);
    if converter.getData <> id then
-      raise EParseMessage.create('Battle Animation record ' + intToStr(id) + ' of RPG_RT.LDB not found!');
+      raise EParseMessage.createFmt('Battle Animation record %d of RPG_RT.LDB not found!', [id]);
    FName := getStrSec(1, input, fillInBlankStr);
    FFilename := getStrSec(2, input, fillInBlankStr);
    if GProjectFormat = pf_2k3 then
    begin
-      for i := 3 to 5 do         
+      for i := 3 to 5 do
          skipSec(i, input);
    end;
 
@@ -221,13 +221,13 @@ begin
       for j := 1 to high(FFrameSec[i]) do
          FFrameSec[i, j] := TAnimCell.create(input, j);
       if not peekAhead(input, 0) then
-         raise EParseMessage.create('Exceptional case found at LDB anim cell x' + intToHex(id, 2) + '!');
+         raise EParseMessage.createFmt('Exceptional case found at LDB anim cell x%s!', [intToHex(id, 2)]);
       //end if
    end;
 
    //   FFrameSec := getStrSec($C, input, fillInAnimStr);
    if not peekAhead(input, 0) then
-      raise EParseMessage.create('Exceptional case found at LDB anim x' + intToHex(id, 2) + '!');
+      raise EParseMessage.createFmt('Exceptional case found at LDB anim x%s!', [intToHex(id, 2)]);
    //end if
 end;
 
@@ -259,9 +259,6 @@ end;
 
 procedure fillInAnimInt(const expected: byte; out theResult: integer);
 begin
-{   case expected of
-      9: result :=
-   end;}
    msgBox ('No case implemented for x' + IntToHex(expected, 2) + '!', 'fillInAnimStr says:', MB_OK);
    raise EMessageAbort.Create
 end;

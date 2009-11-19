@@ -359,7 +359,6 @@ end;
 procedure TframeClass.lstScriptsDblClick(Sender: TObject);
 var
    item: TListItem;
-   i: integer;
 begin
    item := lstScripts.Selected;
    if not assigned(item) then
@@ -419,7 +418,6 @@ var
    image: TRpgSdlImage;
    fileStream: TStream;
    spriteRect, destRect: TRect;
-   oldIndex: integer;
 begin
    assert(assigned(GDatabase.spriteList));
    if not assigned(FImageList) then
@@ -429,7 +427,6 @@ begin
    end;
 
    dummy := id;
-   oldIndex := FCurrentTexture;
    FSpriteData := extractSpriteData(GDatabase.spriteList[dummy]);
    filename := FSpriteData.name + '.tbi';
    if FImageList.IndexOf(filename) = -1 then

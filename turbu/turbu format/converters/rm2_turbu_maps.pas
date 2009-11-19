@@ -9,6 +9,7 @@ type
    T2k2RpgMap = class helper for TRpgMap
    public
       constructor Convert(base: TMapUnit; metadata: TMapTreeData; db: TLcfDataBase; id: smallint);
+      procedure saveScript(const script: ansiString);
    end;
 
    T2k2MapRegion = class helper for TMapRegion
@@ -18,7 +19,8 @@ type
 
 implementation
 uses
-   types, sysUtils, turbu_tilesets;
+   types, sysUtils, classes,
+   turbu_tilesets, archiveInterface, turbu_constants, turbu_classes;
 
 type
    ETileError = class(Exception);
@@ -37,6 +39,8 @@ function decode(const readID: integer): TDecodeResult; forward;
 function convertDecodeResult(value: TDecodeResult): TTileRef; forward;
 
 { T2k2RpgMap }
+const
+   RANDOM_ENCOUNTER_SCRIPT = 'randomEncounterSteps';
 
 constructor T2k2RpgMap.Convert(base: TMapUnit; metadata: TMapTreeData; db: TLcfDataBase; id: smallint);
 var
@@ -45,7 +49,7 @@ begin
    self.Create;
    self.name := string(metadata.name);
    self.id := id;
-   self.tileset := string(db.getChipset(base.terrain).name);
+   self.tileset := base.terrain;
    self.size := point(base.width, base.height);
    self.depth := 2;
    self.wraparound := TWraparound(base.unk0b);
@@ -68,9 +72,27 @@ begin
    self.battleCount := metadata.battles;
    for I := 0 to battleCount - 1 do
       self.battles[i] := (metadata.battle[i]);
-   self.encounterScript := 'randomEncounterSteps';
+   self.encounterScript := RANDOM_ENCOUNTER_SCRIPT;
    TRpgMapHelper(self).FEncounters[1] := metadata.encounterRate;
    self.regions := TRegionList.Create;
+   self.saveScript(base.eventData);
+end;
+
+procedure T2k2RpgMap.saveScript(const script: ansiString);
+var
+   stream: TMemoryStream;
+   filename: TFilenameData;
+begin
+   self.scriptFormat := sfLegacy;
+   stream := TMemoryStream.Create;
+   try
+      stream.WriteAString(script);
+      filename := GArchives[SCRIPT_ARCHIVE].MakeValidFilename(format('%s.trs', [self.name]));
+      GArchives[SCRIPT_ARCHIVE].writeFile(filename.name, stream);
+      self.scriptFile := filename.name;
+   finally
+      stream.Free;
+   end;
 end;
 
 { T2k2MapRegion }
@@ -86,7 +108,7 @@ begin
    self.battleCount := base.battles;
    for I := 0 to battleCount - 1 do
       self.battles[i] := (base.battle[i]);
-   self.encounterScript := 'randomEncounterSteps';
+   self.encounterScript := RANDOM_ENCOUNTER_SCRIPT;
    TMapRegionHelper(self).FEncounters[1] := base.encounterRate;
 end;
 

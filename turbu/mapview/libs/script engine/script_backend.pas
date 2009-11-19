@@ -17,13 +17,12 @@ unit script_backend;
 * www.turbu-rpg.com.
 *****************************************************************************}
 
-{$I ..\..\..\..\unfinished.inc}
-
 interface
 uses sysUtils,
      {addition_sprite, charset_data, item_data,} turbu_characters, rpg_list,
      {LMT,} turbu_database;
 
+{$I ..\..\..\..\unfinished.inc}
 type
    TStatComponents = (stat_base, stat_bonus, stat_eq_mod);
 

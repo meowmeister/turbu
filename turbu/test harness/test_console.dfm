@@ -20,7 +20,7 @@ object frmTestConsole: TfrmTestConsole
   object MainMenu1: TMainMenu
     Left = 144
     Top = 72
-    object File1: TMenuItem
+    object mnuFile: TMenuItem
       Caption = '&File'
       object mnuTestConversion1: TMenuItem
         Caption = 'Test &Conversion'
@@ -30,8 +30,12 @@ object frmTestConsole: TfrmTestConsole
         Caption = '&Set Default Project'
         OnClick = mnuSetDefaultProjectClick
       end
+      object estLDBLoading1: TMenuItem
+        Caption = 'Test L&DB Loading'
+        OnClick = estLDBLoading1Click
+      end
     end
-    object Graphics1: TMenuItem
+    object mnuGraphics: TMenuItem
       Caption = '&Graphics'
       object mnuCreateSdlWindow: TMenuItem
         Caption = '&Create SDL window'
@@ -46,7 +50,7 @@ object frmTestConsole: TfrmTestConsole
         OnClick = mnuTestMapLoadingClick
       end
     end
-    object Database1: TMenuItem
+    object mnuDatabase: TMenuItem
       Caption = '&Database'
       object mnuTestDatasets: TMenuItem
         Caption = 'Test &Datasets'
@@ -59,6 +63,13 @@ object frmTestConsole: TfrmTestConsole
       object mnuTestDatabasewindow1: TMenuItem
         Caption = 'Test D&atabase window'
         OnClick = mnuTestDatabasewindow1Click
+      end
+    end
+    object mnuTree: TMenuItem
+      Caption = '&Tree'
+      object mnuTestMapTree: TMenuItem
+        Caption = '&Test Map Tree'
+        OnClick = mnuTestMapTreeClick
       end
     end
   end

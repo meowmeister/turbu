@@ -32,8 +32,6 @@ const
    LFCR = #13#10;
    ORIGIN: TPoint = (X: 0; Y: 0);
    MULTIPLIER_31 = 8.2258064516129032258064516129032;
-   DIRMARK = '\';
-
 
 //   HKEY_LOCAL_MACHINE = $80000002;
 
@@ -98,6 +96,9 @@ type
    function pointInRect(const thePoint: types.TPoint; theRect: TRect): boolean;
    procedure clamp(var value: single; low, high: single); inline;
 
+   //modulus function that doesn't "mirror" for negative numbers
+   function safeMod(big, small: integer): integer; inline;
+
    function GCurrentThread: TRpgThread;
    procedure setCurrentThread(value: TRpgThread);
    procedure runThreadsafe(closure: TThreadProcedure);
@@ -130,6 +131,11 @@ begin
    if assigned(LCurrentThread) then
       TThread.Synchronize(LCurrentThread, closure)
    else closure();
+end;
+
+function safeMod(big, small: integer): integer;
+begin
+   result := ((big mod small) + small) mod small;
 end;
 
 {Constructor that does nothing, but is required due to the nature of Delphi's

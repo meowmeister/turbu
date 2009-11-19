@@ -27,12 +27,15 @@ type
       lblCurrentStatus: TLabel;
       btnDone: TButton;
       procedure FormShow(Sender: TObject);
+      procedure FormCreate(Sender: TObject);
+      procedure FormDestroy(Sender: TObject);
    private
       { Private declarations }
       FRunning: boolean;
       FCurrentTaskRunning: boolean;
       FThread: TThread;
       FFatal: boolean;
+      FOutput: TStringList;
 
       procedure setTasks(const value: integer);
       procedure setCurrentTask(const name: string; const steps: integer); overload;
@@ -77,6 +80,16 @@ begin
    ReleaseExceptionObject;
 end;
 
+procedure TfrmConversionReport.FormCreate(Sender: TObject);
+begin
+   FOutput := TStringList.Create;
+end;
+
+procedure TfrmConversionReport.FormDestroy(Sender: TObject);
+begin
+   FOutput.Free;
+end;
+
 procedure TfrmConversionReport.FormShow(Sender: TObject);
 begin
    if FFatal then
@@ -111,7 +124,8 @@ end;
 
 procedure TfrmConversionReport.makeNotice(text: string; group: integer);
 begin
-   assert(false);
+   FOutput.AddObject(format('Note: %s', [text]), TObject(group));
+   lblWarningCount.Caption := intToStr(StrToInt(lblWarningCount.Caption) + 1);
 end;
 
 procedure TfrmConversionReport.makeReport;

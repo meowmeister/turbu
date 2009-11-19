@@ -498,7 +498,7 @@ begin
    db.FieldByName('expFunc').AsString := FExpCalc;
    for i := 1 to 4 do
       db.FieldByName(format('expVars[%d]', [i])).asInteger := FExpVars[i];
-   if FSkillSet.length > 0 then
+   if FSkillSet.Count > 0 then
    begin
       tempDB := db.Owner.FindComponent(db.Name + FSkillSet[0].datasetName) as TDataSet;
       for I := 1 to FSkillset.high do

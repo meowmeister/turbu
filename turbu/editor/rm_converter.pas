@@ -80,14 +80,23 @@ uses
 {$R *.dfm}
 
 resourcestring
-   PROJECT_EXISTS = 'The destination folder already exists.  Continuing conversion will overwrite the target folder and delete everything in it. Continue?';
+   PROJECT_EXISTS = 'The destination folder already exists.  Continuing ' +
+    'conversion will overwrite the target folder and delete everything in it. Continue?';
 
 { TfrmRmConverter }
 
 procedure TfrmRmConverter.btnConvertClick(Sender: TObject);
+
+   procedure openArchive(folderName: string; index: integer);
+   var
+      filename: string;
+   begin
+      filename := IncludeTrailingPathDelimiter(dirOutput.text) + folderName;
+      assert(GArchives.Add(newFolder(filename)) = index);
+   end;
+
 var
    filename: string;
-   conversionReport: IConversionReport;
 begin
    if not validateDirectories then
    begin
@@ -104,12 +113,10 @@ begin
       end else if not CreateDir(filename) then
          RaiseLastOSError;
       GArchives.clearFrom(1);
-      filename := IncludeTrailingPathDelimiter(dirOutput.text) + PROJECT_DB;
-      assert(GArchives.Add(newFolder(filename)) = DATABASE_ARCHIVE);
-      filename := IncludeTrailingPathDelimiter(dirOutput.text) + MAP_DB;
-      assert(GArchives.Add(newFolder(filename)) = MAP_ARCHIVE);
-      filename := IncludeTrailingPathDelimiter(dirOutput.text) + IMAGE_DB;
-      assert(GArchives.Add(newFolder(filename)) = IMAGE_ARCHIVE);
+      openArchive(PROJECT_DB, DATABASE_ARCHIVE);
+      openArchive(MAP_DB, MAP_ARCHIVE);
+      openArchive(IMAGE_DB, IMAGE_ARCHIVE);
+      openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
 
       GCurrentFolder := dirProjectLocation.Text;
       GProjectFolder := dirOutput.Text;
@@ -118,12 +125,15 @@ begin
          deleteFile(PChar(logName));}
 
       turbu_characters.SetScriptEngine(GDScriptEngine);
-      frmConversionReport := TfrmConversionReport.Create(Application);
-      ConversionReport := frmConversionReport;
-      frmConversionReport.thread := TConverterThread.Create(conversionReport, dirProjectLocation.Text, dirOutput.Text, FFormat);
-      case frmConversionReport.ShowModal of
-         mrOk:;
-         else ;
+      frmConversionReport := TfrmConversionReport.Create(nil);
+      try
+         frmConversionReport.thread := TConverterThread.Create(frmConversionReport, dirProjectLocation.Text, dirOutput.Text, FFormat);
+         case frmConversionReport.ShowModal of
+            mrOk:;
+            else ;
+         end;
+      finally
+         frmConversionReport.Free;
       end;
    finally
       tmrValidate.Enabled := self.ModalResult = mrNone;

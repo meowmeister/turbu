@@ -211,7 +211,6 @@ end;
 
 function TSdlFrame.CreateRenderer: boolean;
 const
-   SDL_BLACK: sdl_13.TSDL_Color = ();
    pf: tagPIXELFORMATDESCRIPTOR = (nSize: sizeof(pf); nVersion: 1;
        dwFlags: PFD_DRAW_TO_WINDOW or PFD_SUPPORT_OPENGL or PFD_DOUBLEBUFFER;
        iPixelType: PFD_TYPE_RGBA; cColorBits: 24; cAlphaBits: 8;
@@ -237,7 +236,7 @@ begin
    if (SDL_CreateRenderer(FWindowID, SDL_RendererIndex(RENDERERS[FRendererType]), [sdlrPresentFlip3, sdlrAccelerated]) = 0) then
    begin
       SDL_ShowWindow(FWindowID);
-      assert(SDL_SetRenderDrawColor(0, 0, 0, 0) = 0);
+      assert(SDL_SetRenderDrawColor(0, 0, 0, 255) = 0);
       FFlags := SDL_GetWindowFlags(FWindowID);
       FBuffer := TSdlTexture.Create(0, sdltaStreaming, self.Width, self.Height);
       FRenderer := true;

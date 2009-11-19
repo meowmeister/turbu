@@ -42,7 +42,6 @@ begin
    inherited Create;
    self.id := id;
    self.name := string(base.name);
-   self.Records := TTileGroupList.Create;
    self.HiSpeed := base.hispeed;
    //convert images here
    convertTileGroups(string(base.filename), base);
@@ -117,7 +116,7 @@ begin
       include(result, taCountertop);
 end;
 
-procedure convertGroup(filename: string);
+function convertGroup(filename: string): boolean;
 var
    surface: PSdlSurface;
    subsurface: PSdlSurface;
@@ -132,7 +131,7 @@ begin
    outFile := nil;
    locate_files.findGraphic(filename, 'ChipSet');
    if (filename = '') or (ExtractFileExt(filename) = '.xyx') then
-      Exit;
+      Exit(false);
    pointer(surface) := sdl_image.IMG_Load(PAnsiChar(ansiString(filename)));
    assert(assigned(surface));
    assert(surface.Width = 480);
@@ -177,6 +176,7 @@ begin
          subSurface.Free;
       end;
    end;
+   result := true;
 end;
 
 const
@@ -189,7 +189,8 @@ var
    i, j: integer;
 begin
    if not GDatabase.tileGroup.ContainsKey(format(KEYNAME, [filename, TILESET_NAME[0]])) then
-      convertGroup(filename);
+      if not convertGroup(filename) then
+         Exit;
    for i := low(TILESET_MAP) to high(TILESET_MAP) do
    begin
       newRecord := TTileGroupRecord.Create;

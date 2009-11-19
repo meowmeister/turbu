@@ -151,9 +151,10 @@ type
       procedure writeDict<T: TRpgDatafile>(data: TDictionary<string, T>);
       function readInt: integer;
       function eof: boolean;
+      procedure rewind;
    end;
 
-   TRpgDataList<T: TRpgDatafile, constructor> = class(TRpgObjectList<TRpgDatafile>)
+   TRpgDataList<T: TRpgDatafile, constructor> = class(TRpgObjectList<T>)
    private
       type TEnumerator = record
       private
@@ -173,7 +174,7 @@ type
       function GetEnumerator: TEnumerator;
    end;
 
-   TNameTypeList = TRpgList<TNameType>;
+   TNameTypeList = TList<TNameType>;
 
    TRpgDecl = class(TEnumerable<TNameType> {TObject})
    private
@@ -400,7 +401,6 @@ begin
    except
       on EIntOverflow do
          result := '';
-      else raise;
    end;
 end;
 
@@ -471,7 +471,11 @@ function TStreamEx.readWord: word;
 begin
    self.readBuffer(result, 2);
 end;
-{$Q+}{$R+}
+
+procedure TStreamEx.rewind;
+begin
+   self.Seek(0, soFromBeginning);
+end;
 
 procedure TStreamEx.writeAString(data: AnsiString);
 var
@@ -540,6 +544,7 @@ procedure TStreamEx.writeWord(data: word);
 begin
    self.WriteBuffer(data, 2);
 end;
+{$Q+}{$R+}
 
 { Classless }
 
@@ -652,7 +657,7 @@ var
 begin
    result := (FParams.Count = other.params.Count) and (Self.retval = other.retval);
    if result then
-      for i := 0 to FParams.high do
+      for i := 0 to FParams.Count - 1 do
          result := result and (FParams[i].typeVar = other.params[i].typeVar) and (FParams[i].flags = other.params[i].flags)
 end;
 
