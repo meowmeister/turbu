@@ -391,6 +391,7 @@ begin
    lassert((FId = 0) and (FName = ''));
    savefile.ReadBuffer(FStyle, sizeof(FStyle));
    FPointer := GDatabase.skillFunc[savefile.readInt];
+   assert(assigned(FPointer) and assigned(FPointer.displayMethod));
    FSkill := savefile.readInt;
    savefile.ReadBuffer(FNums[1], 16);
    lassert(savefile.readChar = 'G');
@@ -457,10 +458,8 @@ end;
 procedure TSkillGainRecord.setName(const Value: string);
 begin
    inherited setName(Value);
-   {$IFDEF EDITOR}
-   FMethod := TRpgMethod(GDScriptEngine.exec.GetProcAsMethodN(ansiString(Value)));
-   FDisplayMethod := TSkillGainDisplayFunc(GDScriptEngine.exec.GetProcAsMethodN(ansiString(Value) + '_display'))
-   {$ENDIF}
+   FMethod := TRpgMethod(GScriptEngine.exec.GetProcAsMethodN(ansiString(Value)));
+   FDisplayMethod := TSkillGainDisplayFunc(GScriptEngine.exec.GetProcAsMethodN(ansiString(Value) + '_display'))
 end;
 
 procedure TSkillGainRecord.upload(db: TDataSet);

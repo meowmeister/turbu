@@ -950,7 +950,8 @@ begin
       rd_class:
       begin
          for enumerator in FClass do
-            enumerator.upload(db.charClasses);
+            if enumerator.id > 0 then
+               enumerator.upload(db.charClasses);
          db.charClasses.postSafe;
       end;
       rd_hero: ;
@@ -979,13 +980,15 @@ begin
       rd_skill:
       begin
          for enumerator in FSkills do
-            enumerator.upload(db.skills);
+            if enumerator.id > 0 then
+               enumerator.upload(db.skills);
          db.skills.postSafe;
       end;
       rd_anim:
       begin
          for enumerator in FAnims do
-            enumerator.upload(db.animations);
+            if enumerator.id > 0 then
+               enumerator.upload(db.animations);
          db.animations.postSafe;
       end;
       rd_attrib:
@@ -1227,6 +1230,7 @@ end;
 
 function TRpgDatabase.addSkillFunc(data: TSkillGainRecord): integer;
 begin
+   assert(assigned(data.displayMethod));
    result := FSkillFuncs.indexOf(data);
    if result = -1 then
    begin

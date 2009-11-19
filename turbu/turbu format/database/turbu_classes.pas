@@ -229,7 +229,7 @@ implementation
 uses
    Generics.Defaults, TypInfo, math,
    commons, turbu_decl_utils, turbu_functional,
-   uPSRuntime;
+   ps_pointer;
 
 type
    TSetSaver = record
@@ -677,13 +677,13 @@ end;
 
 function TFieldExt.getPSMethod: TMethod;
 begin
-   result.Code := @uPSRuntime.MyAllMethodsHandler;
+   result.Code := ps_pointer.mamhLoc;
    result.Data := pointer(Self.AsInteger);
 end;
 
 procedure TFieldExt.setPSMethod(const Value: TMethod);
 begin
-   assert(value.Code = @uPSRuntime.MyAllMethodsHandler);
+   assert(value.Code = ps_pointer.mamhLoc);
    self.asInteger := integer(Value.Data);
 end;
 
