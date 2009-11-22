@@ -62,6 +62,8 @@ type
       ToolButton1: TToolButton;
       btnSave: TToolButton;
       btnSaveAll: TToolButton;
+    mnuTreePopup: TPopupMenu;
+    mnuAddNewMap: TMenuItem;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -91,6 +93,7 @@ type
       procedure mnuAutosaveMapsClick(Sender: TObject);
       procedure btnSaveClick(Sender: TObject);
       procedure btnSaveAllClick(Sender: TObject);
+    procedure mnuAddNewMapClick(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentMap: IRpgMap;
@@ -183,6 +186,11 @@ begin
    sbPalette.PageSize := imgPalette.height div 2;
    sbPalette.LargeChange := sbPalette.PageSize - TILE_SIZE;
    displayPalette;
+end;
+
+procedure TfrmTurbuMain.mnuAddNewMapClick(Sender: TObject);
+begin
+   //
 end;
 
 procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);

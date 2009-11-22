@@ -27,7 +27,8 @@ package map_default;
 
 requires
   JvPluginD14R,
-  default_format;
+  default_format,
+  urdgrp;
 
 contains
   SimpleShareMem_MapDefault in 'SimpleShareMem_MapDefault.pas',
@@ -35,7 +36,8 @@ contains
   turbu_2k_map_engine in 'turbu_2k_map_engine.pas',
   turbu_2k_sprite_engine in 'turbu_2k_sprite_engine.pas',
   tiles in 'tiles.pas',
-  charset_data in '..\..\charset_data.pas';
+  charset_data in '..\..\charset_data.pas',
+  eval in 'eval.pas';
 
 end.
 

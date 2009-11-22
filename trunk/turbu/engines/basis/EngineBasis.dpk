@@ -51,6 +51,7 @@ contains
   turbu_plugin_interface in '..\..\turbu format\plugins\turbu_plugin_interface.pas',
   turbu_sdl_image in '..\..\turbu format\turbu_sdl_image.pas',
   turbu_engines in '..\..\turbu format\turbu_engines.pas',
-  sg_utils in '..\..\..\classes\sdl custom\sg_utils.pas';
+  sg_utils in '..\..\..\classes\sdl custom\sg_utils.pas',
+  ps_pointer in 'ps_pointer.pas';
 
 end.

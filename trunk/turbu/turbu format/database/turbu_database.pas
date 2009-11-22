@@ -967,7 +967,6 @@ begin
          for i := ord(low(TItemType)) to ord(high(TItemType)) do
          begin
             dummy := db.FindComponent('items') as TDataset;
-//            dummy := db.FindComponent(stringReplace(GetEnumName(TypeInfo(TItemType), i), 'it_', 'items_', [])) as TDataset;
             for enumerator in FItems[TItemType(i)] do
                if enumerator.id > 0 then
                begin

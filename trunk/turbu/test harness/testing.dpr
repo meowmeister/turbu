@@ -89,7 +89,8 @@ uses
   turbu_2k_map_engine in '..\engines\map engine\turbu_2k_map_engine.pas',
   turbu_2k_sprite_engine in '..\engines\map engine\turbu_2k_sprite_engine.pas',
   map_tree_controller in '..\editor\map_tree_controller.pas',
-  test_map_tree in 'test_map_tree.pas' {frmMapTree};
+  test_map_tree in 'test_map_tree.pas' {frmMapTree},
+  ps_pointer in '..\engines\basis\ps_pointer.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

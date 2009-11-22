@@ -190,6 +190,7 @@
 			<DCCReference Include="test_map_tree.pas">
 				<Form>frmMapTree</Form>
 			</DCCReference>
+			<DCCReference Include="..\engines\basis\ps_pointer.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

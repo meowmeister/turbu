@@ -2,7 +2,7 @@ object frmTurbuMain: TfrmTurbuMain
   Left = 183
   Top = 38
   Caption = 'TURBU - The Ultimate Rpg BUilder'
-  ClientHeight = 640
+  ClientHeight = 660
   ClientWidth = 925
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,7 +22,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 213
     Top = 25
     Width = 712
-    Height = 615
+    Height = 635
     HorzScrollBar.Tracking = True
     VertScrollBar.ButtonSize = 15
     VertScrollBar.Margin = 10
@@ -40,7 +40,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 0
       Width = 691
-      Height = 594
+      Height = 614
       Framerate = 0
       Active = False
       OnAvailable = imgLogoAvailable
@@ -51,7 +51,7 @@ object frmTurbuMain: TfrmTurbuMain
     end
     object pnlHorizScroll: TPanel
       Left = 0
-      Top = 594
+      Top = 614
       Width = 708
       Height = 17
       Align = alBottom
@@ -81,7 +81,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 691
       Top = 0
       Width = 17
-      Height = 594
+      Height = 614
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 2
@@ -89,7 +89,7 @@ object frmTurbuMain: TfrmTurbuMain
         Left = 0
         Top = 0
         Width = 17
-        Height = 594
+        Height = 614
         Align = alClient
         Kind = sbVertical
         PageSize = 100
@@ -102,7 +102,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 0
     Top = 25
     Width = 213
-    Height = 615
+    Height = 635
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
@@ -162,7 +162,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 387
       Width = 213
-      Height = 228
+      Height = 248
       Align = alClient
       Indent = 19
       TabOrder = 1
@@ -550,5 +550,13 @@ object frmTurbuMain: TfrmTurbuMain
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000}
+  end
+  object mnuTreePopup: TPopupMenu
+    Left = 96
+    Top = 592
+    object mnuAddNewMap: TMenuItem
+      Caption = 'Add &New Map'
+      OnClick = mnuAddNewMapClick
+    end
   end
 end
