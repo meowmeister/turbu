@@ -238,7 +238,6 @@ type
          false: (aArray: packed array[1..32] of byte);
    end;
 
-
 threadvar
    currentloader: TStream;
 

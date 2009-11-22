@@ -58,9 +58,12 @@ Source: C:\Users\Public\Documents\RAD Studio\7.0\Bpl\Jcl140.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\rtl140.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\vclimg140.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\vclx140.bpl; DestDir: {sys}
+Source: c:\Windows\SysWOW64\vcldb140.bpl; DestDir: {sys}
+Source: c:\Windows\SysWOW64\dsnap140.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\dbrtl140.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\midas.dll; DestDir: {sys}
 Source: c:\Windows\SysWOW64\vcl140.bpl; DestDir: {sys}
+Source: C:\Users\Public\Documents\RAD Studio\7.0\Bpl\urdgrp.bpl; DestDir: {sys}
 
 [Icons]
 Name: {group}\{#MyAppName}; Filename: {app}\{#MyAppExeName}
