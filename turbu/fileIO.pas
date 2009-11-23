@@ -206,7 +206,13 @@ begin
       if wasExpected then
       begin
          read(recordLen, 1);
-         read(result, recordlen);
+         if recordLen = 1 then
+            read(result, recordlen)
+         else begin
+            converter := TBerConverter.Create(theFile);
+            result := converter.getData;
+            assert(byte(converter.size) = recordlen);
+         end;
       end
       else if (result > expected) or (result = 0) then
       begin
@@ -217,12 +223,6 @@ begin
       begin
          foundWrongSection(callername, expected, result);
          Exit;
-      end;
-      if (((result > 128) or (result < 0)) and wasExpected) then
-      begin
-         Seek(-recordLen, soFromCurrent);
-         converter := TBerConverter.Create(theFile);
-         result := converter.getData;
       end;
    end;
 end;
