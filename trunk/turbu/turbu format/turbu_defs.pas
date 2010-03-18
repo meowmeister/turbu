@@ -19,7 +19,7 @@ unit turbu_defs;
 
 interface
 uses
-   Types, TypInfo, Generics.Collections;
+   Types, TypInfo;
 
 type
    TCharEvent = procedure(character, party: TObject) of object;
@@ -28,11 +28,11 @@ type
    TCondOnTurnEvent = procedure(character, condition: TObject; var1, var2, var3, var4: integer) of object;
    TExpCalcEvent = function(level, var1, var2, var3, var4: integer): integer of object;
 
-   TRpgMethod = procedure of object;
    TStringSetProc = procedure (header: string) of object;
 
    TIntArray = array of integer;
    T4IntArray = array[1..4] of integer;
+   T4StrArray = array[1..4] of string;
    TPByteArray = packed array of byte;
    TPWordArray = packed array of word;
    TByteSet = set of byte;
@@ -58,7 +58,7 @@ type
 
    TVarOps = (vo_add, vo_sub, vo_mult, vo_div, vo_equals);
    TVarSets = (vs_switch, vs_integer, vs_float, vs_string);
-   TUsableWhere = (us_field, us_battle, us_both);
+   TUsableWhere = (us_none, us_field, us_battle, us_both);
    TColorSet = (cs_red, cs_green, cs_blue, cs_sat);
 
    TScriptStyle = (sc_exp, sc_skill);

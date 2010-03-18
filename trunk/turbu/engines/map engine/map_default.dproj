@@ -3,7 +3,7 @@
 			<ProjectGuid>{08AD91A2-FD3D-4226-9510-C1FBE1CC36ED}</ProjectGuid>
 			<MainSource>map_default.dpk</MainSource>
 			<ProjectVersion>12.0</ProjectVersion>
-			<Config Condition="'$(Config)'==''">Release</Config>
+			<Config Condition="'$(Config)'==''">Debug</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -49,6 +49,11 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+			<DCC_SymbolReferenceInfo>2</DCC_SymbolReferenceInfo>
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -57,16 +62,14 @@
 			<DelphiCompile Include="map_default.dpk">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="JvPluginD14R.dcp"/>
+			<DCCReference Include="JvPluginSystem.dcp"/>
 			<DCCReference Include="default_format.dcp"/>
-			<DCCReference Include="urdgrp.dcp"/>
 			<DCCReference Include="SimpleShareMem_MapDefault.pas"/>
 			<DCCReference Include="map_default_plugin.pas"/>
 			<DCCReference Include="turbu_2k_map_engine.pas"/>
 			<DCCReference Include="turbu_2k_sprite_engine.pas"/>
 			<DCCReference Include="tiles.pas"/>
 			<DCCReference Include="..\..\charset_data.pas"/>
-			<DCCReference Include="eval.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -2,12 +2,12 @@ object frmTestConsole: TfrmTestConsole
   Left = 0
   Top = 0
   Caption = 'Test Console'
-  ClientHeight = 206
-  ClientWidth = 339
+  ClientHeight = 269
+  ClientWidth = 443
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu1
@@ -15,8 +15,8 @@ object frmTestConsole: TfrmTestConsole
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object MainMenu1: TMainMenu
     Left = 144
     Top = 72
@@ -48,6 +48,21 @@ object frmTestConsole: TfrmTestConsole
       object mnuTestMapLoading: TMenuItem
         Caption = 'Test &Map Loading'
         OnClick = mnuTestMapLoadingClick
+      end
+      object mnuEditMapProperties: TMenuItem
+        Caption = '&Edit Map Properties'
+        OnClick = mnuEditMapPropertiesClick
+      end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object mnuTestMapResizing: TMenuItem
+        Caption = 'Test Map &Resizing Code'
+        OnClick = mnuTestMapResizingClick
+      end
+      object mnuDebugMapResizing: TMenuItem
+        Caption = '&Debug Map Resizing Code'
+        OnClick = mnuDebugMapResizingClick
       end
     end
     object mnuDatabase: TMenuItem

@@ -22,6 +22,7 @@ interface
 procedure findMusic(var filename: string);
 procedure findSfx(var filename: string);
 procedure findGraphic(var filename: string; const folder: string);
+function findGraphicF(filename: string; const folder: string): string;
 
 var
    rtpLocation: string;
@@ -80,6 +81,12 @@ begin
       Exit;
 
    filename := '';
+end;
+
+function findGraphicF(filename: string; const folder: string): string;
+begin
+   findGraphic(filename, folder);
+   result := filename;
 end;
 
 end.

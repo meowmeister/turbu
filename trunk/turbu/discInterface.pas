@@ -62,6 +62,7 @@ type
       function MakeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;
       procedure setCurrentFolder(const value: string);
       function getCurrentFolder: string;
+      procedure deleteFile(name: string);
    public
       constructor Create(root: string);
       destructor Destroy; override;
@@ -207,6 +208,14 @@ begin
       on E: Exception do
          raise EArchiveError.Create(E.Message);
    end;
+end;
+
+procedure TDiscArchive.deleteFile(name: string);
+begin
+   if pos(FRoot, name) <> 1 then
+      name := FRoot + name;
+   if not sysUtils.DeleteFile(name) then
+      raise EArchiveError.CreateFmt('Could not delete file %s: file not found.', [name]);
 end;
 
 function TDiscArchive.MakeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;

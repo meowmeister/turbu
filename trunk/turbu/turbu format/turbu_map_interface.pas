@@ -18,12 +18,49 @@ unit turbu_map_interface;
 *****************************************************************************}
 
 interface
+uses
+   types;
+
 type
    IRpgMap = interface(IInterface)
    ['{8B9CDCC2-AFB6-408C-88C3-2E50D145C901}']
       function GetTileset: integer;
       procedure SetTileset(const Value: integer);
       property tileset: integer read GetTileset write SetTileset;
+   end;
+
+   IMapMetadata = interface(IInterface)
+   ['{2028AFBA-6E31-4B5D-92A0-8375DA9AEC53}']
+      function GetID: integer;
+      function GetName: string;
+      function GetParent: integer;
+      function GetTreeOpen: boolean;
+      function GetMapEngine: string;
+
+      property ID: integer read GetID;
+      property name: string read GetName;
+      property parent: integer read GetParent;
+      property treeOpen: boolean read GetTreeOpen;
+      property mapEngine: string read GetMapEngine;
+   end;
+
+   IMapTree = interface;
+
+   IMapMetadataEnumerator = interface
+   ['{4FD5CC25-13B8-4127-A67E-668909C3B977}']
+      function GetCurrent: IMapMetadata;
+      function MoveNext: boolean;
+      property Current: IMapMetadata read GetCurrent;
+   end;
+
+   IMapTree = interface(IInterface)
+   ['{ABB814B1-412E-4520-A6B0-A53C04200DFD}']
+      function GetEnumerator: IMapMetadataEnumerator;
+      function CurrentMap: integer;
+      function Get(x: integer): IMapMetadata;
+      function Count: integer;
+
+      property Items[x: integer]: IMapMetadata read Get; default;
    end;
 
 implementation

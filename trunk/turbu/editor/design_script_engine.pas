@@ -30,7 +30,7 @@ uses
    turbu_script_interface;
 
 type
-   TTurbuScriptEngine = class(TObject, IScriptEngine)
+   TTurbuScriptEngine = class(TObject, IScriptEngine, IDesignScriptEngine)
    private
       function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
       function _AddRef: Integer; stdcall;
@@ -41,6 +41,7 @@ type
       FDeclarations: TDeclList;
       FNameInProgress: ansiString;
       FPosInProgress: integer;
+      FDisplayName: ansiString;
       FScript: ansiString;
       FUnits: TUnitDictionary;
 
@@ -103,7 +104,7 @@ begin
    inherited Create;
    GScriptEngine := self;
 
-   FIndices := TScriptList.Create;
+   FIndices := turbu_script_basis.TScriptList.Create;
    FDeclarations := TDeclList.Create;
 
    FCompiler := TPSPascalCompiler.Create;
@@ -140,7 +141,7 @@ var
 begin
    for I := 0 to FIndices.Count - 1 do
    begin
-      dummy := TRpgDecl.Create(FIndices[i].name);
+      dummy := TRpgDecl.Create(FIndices[i].name, FIndices[i].designName);
       proc := FCompiler.GetProc(FCompiler.FindProc(ansiString(dummy.name)));
       if proc is TPSInternalProcedure then
          decl := TPSInternalProcedure(proc).Decl
@@ -168,6 +169,7 @@ end;
 procedure TTurbuScriptEngine.startFunction(name: tbtString; pos, column, row: integer);
 begin
    FNameInProgress := name;
+   FDisplayName := name;
    FPosInProgress := pos;
 end;
 
@@ -176,7 +178,7 @@ begin
    assert(name = FNameInProgress);
    {$WARN CONSTRUCTING_ABSTRACT OFF} //this is created at runtime and never
                                      //saved, so it doesn't need a keychar
-   FIndices.Add(TScriptRange.Create(string(FNameInProgress), point(FPosInProgress, pos)));
+   FIndices.Add(TScriptRange.Create(string(FNameInProgress), string(FDisplayName), point(FPosInProgress, pos)));
    {$WARN CONSTRUCTING_ABSTRACT ON}
 end;
 
@@ -338,6 +340,13 @@ begin
    result := system.Random(dummy) + min(one, two);
 end;
 
+function DesignNameFunc(Sender: TPSPascalCompiler; aProc: TPSProcedure; Attr: TPSAttribute): Boolean;
+begin
+   assert((attr.Count = 1) and (attr.values[0].FType.OriginalName = 'AnsiString'));
+   GDScriptEngine.FDisplayName := ansiString(attr.values[0].tString);
+   result := true;
+end;
+
 function scriptOnUses(Sender: TPSPascalCompiler; const Name: tbtString): Boolean;
 
    function AddPointerVariable(const VarName, VarType: ansiString): Boolean;
@@ -354,7 +363,9 @@ function scriptOnUses(Sender: TPSPascalCompiler; const Name: tbtString): Boolean
       end;
    end;
 
-var dummy: TPSType;
+var
+   dummy: TPSType;
+   att: upsCompiler.TPSAttributeType;
 begin
    result := true;
    if Name = 'SYSTEM' then begin
@@ -369,6 +380,11 @@ begin
       dummy.ExportName := true;
       assert(AddPointerVariable('variable', 'varArray'));
       assert(AddPointerVariable('switch', 'switchArray'));
+
+      att := sender.AddAttributeType;
+      att.orgName := 'DesignName';
+      att.AddField.FieldType := sender.FindType('string');
+      att.OnApplyAttributeToProc := @DesignNameFunc;
    end
    else result := GDScriptEngine.tryUseFile(sender, name);
 end;

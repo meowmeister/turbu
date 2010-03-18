@@ -47,6 +47,7 @@
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 			<Version>7.0</Version>
@@ -85,6 +86,7 @@
 			<DCCReference Include="..\..\turbu format\turbu_engines.pas"/>
 			<DCCReference Include="..\..\..\classes\sdl custom\sg_utils.pas"/>
 			<DCCReference Include="ps_pointer.pas"/>
+			<DCCReference Include="..\..\archiveInterface.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

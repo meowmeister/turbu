@@ -74,7 +74,6 @@
 				<DesignClass>TDataModule</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
-			<DCCReference Include="..\archiveInterface.pas"/>
 			<DCCReference Include="turbu_sprites.pas"/>
 			<DCCReference Include="turbu_unit_dictionary.pas"/>
 			<DCCReference Include="turbu_defs.pas"/>
@@ -90,6 +89,8 @@
 			<DCCReference Include="..\mapview\libs\timing.pas"/>
 			<DCCReference Include="turbu_script_interface.pas"/>
 			<DCCReference Include="..\commons.pas"/>
+			<DCCReference Include="..\turbu_serialization.pas"/>
+			<DCCReference Include="..\rttiHelper.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

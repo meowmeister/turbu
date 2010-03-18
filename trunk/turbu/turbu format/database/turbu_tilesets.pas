@@ -20,7 +20,7 @@ unit turbu_tilesets;
 interface
 uses
    classes, Generics.Collections, DB,
-   turbu_classes, turbu_containers,
+   turbu_classes, turbu_containers, turbu_serialization,
    sg_defs, sdl_sprite;
 
 type
@@ -49,7 +49,6 @@ type
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
       procedure download(db: TDataset); override;
 
       property filename: string read FFilename write FFilename;
@@ -72,7 +71,6 @@ type
       constructor Load(savefile: TStream);
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
       procedure download(db: TDataset); override;
 
       property group: TTileGroup read FGroup write FGroup;
@@ -82,12 +80,14 @@ type
       property terrain: TList<integer> read FTerrain write FTerrain;
    end;
 
-   TTileGroupList = {TRpgDataList}TRpgObjectList<TTileGroupRecord>; //QC 67762
+   TTileGroupList = class({TRpgDataList}TRpgObjectList<TTileGroupRecord>); //QC 67762
 
    TTileSet = class(TRpgDatafile)
    private
+      [TNoUpload]
       FRecords: TTileGroupList;
       FHiSpeed: boolean;
+      [TNoUpload]
       FGroupMap: array [0..7] of TList<byte>;
       function TileCount(value: TTileGroupRecord): byte;
    protected
@@ -97,7 +97,6 @@ type
       constructor Load(savefile: TStream);
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
       procedure download(db: TDataset); override;
 
       function tile(index: integer; layer: byte): TTileRef;
@@ -140,11 +139,6 @@ begin
    savefile.writeBool(FOcean);
    savefile.WriteBuffer(FTileType, SizeOf(FTileType));
    savefile.WriteBuffer(FDimensions, sizeof(FDimensions));
-end;
-
-procedure TTileGroup.upload(db: TDataSet);
-begin
-assert(false);
 end;
 
 procedure TTileGroup.download(db: TDataset);
@@ -218,11 +212,6 @@ begin
    FAttributes.Free;
    FTerrain.Free;
    inherited Destroy;
-end;
-
-procedure TTileGroupRecord.upload(db: TDataSet);
-begin
-assert(false);
 end;
 
 procedure TTileGroupRecord.download(db: TDataset);
@@ -317,11 +306,6 @@ begin
 end;
 
 procedure TTileSet.download(db: TDataset);
-begin
-assert(false);
-end;
-
-procedure TTileSet.upload(db: TDataSet);
 begin
 assert(false);
 end;

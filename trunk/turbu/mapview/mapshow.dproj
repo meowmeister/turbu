@@ -126,6 +126,7 @@
 			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_menus.pas"/>
 			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_party_target_menu.pas"/>
 			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_rm2x_inventory_menu.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_2k_sprite_engine.pas"/>
 			<None Include="libs\menus\rm2x\menuscripts.txt"/>
 			<None Include="mapshow.todo"/>
 			<None Include="scripts\battle_algorithms"/>

@@ -24,8 +24,8 @@ unit turbu_decl_utils;
 
 interface
 uses
-   types, TypInfo,
-   turbu_classes, turbu_heroes;
+   types, TypInfo, DB,
+   turbu_classes, turbu_heroes, turbu_defs;
 
 type
    TScriptSignature = (ssNone = -1, ssScriptEvent, ssDamageCalcEvent,
@@ -41,13 +41,32 @@ type
    TSkillNumFunc = function(character: TRpgHero; int1, int2, int3, int4: integer): integer of object;
    TSkillDualNumFunc = function(character: TRpgHero; int1, int2, int3, int4: integer): TPoint of object;
 
+   TScriptRecord = class(TObject)
+   private
+      FName: string;
+      FDesignName: string;
+      FStrings: T4StrArray;
+      FMethod: TMethod;
+      FSignature: TScriptSignature;
+      function getMethod: TMethod;
+      procedure setName(const Value: string);
+   public
+      constructor Create(decl: TRpgDecl; script: TMethod);
+      procedure upload(db: TDataSet);
+      procedure update(db: TDataSet);
+
+      property name: string read FName write setName;
+      property designName: string read FDesignName write FDesignName;
+      property baseMethod: TMethod read getMethod;
+   end;
+
    function signatureMatch(func: TRpgDecl): TScriptSignature; overload;
    function GetSignature(Event: PTypeInfo): TRpgDecl;
 
 implementation
 uses
    Generics.Collections,
-   turbu_vartypes, turbu_defs, turbu_containers;
+   turbu_vartypes, turbu_containers;
 
 type
 
@@ -94,7 +113,7 @@ var
 begin
    assert(Event.Kind = tkMethod);
    eventData := GetTypeData(event);
-   result := TRpgDecl.Create(string(event.Name));
+   result := TRpgDecl.Create(string(event.Name), '');
    ParamListRecord := @EventData.ParamList;
    for i := 0 to EventData.ParamCount - 1 do
    begin
@@ -142,6 +161,45 @@ begin
       result := GetMethodSignature(key);
       self.Add(key, result);
    end;
+end;
+
+{ TScriptRecord }
+
+constructor TScriptRecord.Create(decl: TRpgDecl; script: TMethod);
+var
+   i: integer;
+begin
+   FName := decl.name;
+   FDesignName := decl.designName;
+   FMethod := script;
+   if decl.fourInts then
+      for I := 1 to 4 do
+         FStrings[i] := decl.params[i].name;
+   FSignature := signatureMatch(decl);
+end;
+
+function TScriptRecord.getMethod: TMethod;
+begin
+   result := FMethod;
+end;
+
+procedure TScriptRecord.setName(const Value: string);
+begin
+  FName := Value;
+end;
+
+procedure TScriptRecord.update(db: TDataSet);
+begin
+   db.FieldByName('name').AsString := name;
+   db.FieldByName('designName').AsString := designName;
+   db.FieldByName('address').AsInteger := integer(Self);
+   db.FieldByName('baseMethod').asPSMethod := TMethod(FMethod);
+end;
+
+procedure TScriptRecord.upload(db: TDataSet);
+begin
+   db.Append;
+   self.update(db);
 end;
 
 initialization

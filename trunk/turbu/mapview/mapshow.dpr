@@ -65,7 +65,8 @@ uses
   uPSI_menu_components in 'libs\menus\rm2x\upsi\uPSI_menu_components.pas',
   uPSI_menus in 'libs\menus\rm2x\upsi\uPSI_menus.pas',
   uPSI_party_target_menu in 'libs\menus\rm2x\upsi\uPSI_party_target_menu.pas',
-  uPSI_rm2x_inventory_menu in 'libs\menus\rm2x\upsi\uPSI_rm2x_inventory_menu.pas';
+  uPSI_rm2x_inventory_menu in 'libs\menus\rm2x\upsi\uPSI_rm2x_inventory_menu.pas',
+  turbu_2k_sprite_engine in '..\engines\map engine\turbu_2k_sprite_engine.pas';
 
 {$R *.res}
 

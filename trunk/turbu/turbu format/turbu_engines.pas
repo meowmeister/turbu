@@ -61,10 +61,10 @@ begin
    if assigned(FEngineList[slot]) then
       for enumerator in FEngineList[slot].Keys do
          if enumerator.name = name then
-		 begin
+         begin
             result := enumerator;
-			break;
-		 end;
+            break;
+         end;
    if assigned(result) then
    begin
       if result.version < version then

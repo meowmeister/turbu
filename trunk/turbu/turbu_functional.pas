@@ -22,6 +22,7 @@ type
       class function countWhere<T>(list: TEnumerable<T>; countFunc: TPredicate<T>): integer; static;
       class function count<T>(list: TEnumerable<T>): integer; static;
       class function where<T>(list: TEnumerable<T>; filter: TPredicate<T>): TList<T>;
+      class function firstWhere<T>(list: TEnumerable<T>; filter: TPredicate<T>): T;
    end;
 
 implementation
@@ -42,6 +43,16 @@ begin
    for enumerator in list do
       if filter(enumerator) then
          result.Add(enumerator);
+end;
+
+class function TFunctional.firstWhere<T>(list: TEnumerable<T>;
+  filter: TPredicate<T>): T;
+var
+   enumerator: T;
+begin
+   for enumerator in list do
+      if filter(enumerator) then
+         exit(enumerator);
 end;
 
 class function TFunctional.zip<T, U>(list1: TEnumerable<T>; list2: TEnumerable<U>): TList<TPair<T, U>>;
@@ -77,8 +88,8 @@ var
    count: integer;
 begin
    count := 0;
-   mapF<T, integer>(list,
-      function(const input: T): integer
+   map<T>(list,
+      procedure (const input: T)
       begin
          if countFunc(input) then
             inc(count);

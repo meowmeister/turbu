@@ -30,6 +30,7 @@ type
    TRpgPlugBase = class(TInterfacedObject)
    public
       constructor Create; virtual;
+      function IsDesign: boolean; virtual;
    end;
 
    TPlugClass = class of TRpgPlugBase;
@@ -85,6 +86,11 @@ end;
 constructor TRpgPlugBase.Create;
 begin
    inherited Create;
+end;
+
+function TRpgPlugBase.IsDesign: boolean;
+begin
+   result := false;
 end;
 
 { TRpgMetadata }

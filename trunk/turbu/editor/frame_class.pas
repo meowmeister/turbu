@@ -23,7 +23,6 @@ uses
    SysUtils, Classes, Controls, Forms, ComCtrls, StdCtrls, ExtCtrls, Graphics,
    DBGrids, DB, Mask, DBCtrls, Grids,
    commons, frame_commands, turbu_sprites, turbu_characters, turbu_defs,
-   conversion_table, dm_database,
    SDL_ImageManager,
    JvListBox, JvExStdCtrls, JvExMask, JvSpin, JvDBSpinEdit, turbu_listGrid,
   DBClient, sdl_frame;
@@ -120,9 +119,11 @@ type
       FMatrixPosition: TRpgPoint;
       FCurrentTexture: integer;
       FSpriteToLoad: integer;
+      FOldWeaponScroll: TDatasetNotifyEvent;
 
       procedure loadPortrait(id: integer);
       procedure loadMapSprite(id: integer; frame: byte);
+      procedure weaponsAfterScroll(DataSet: TDataSet);
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
@@ -135,9 +136,9 @@ type
 
 implementation
 uses
-   zlib, math, contnrs, generics.Collections, Generics.Defaults,
+   zlib, math,
    turbu_database, archiveInterface, turbu_constants, turbu_items,
-   turbu_tbi_lib, turbu_sdl_image, turbu_decl_utils, turbu_classes,
+   turbu_tbi_lib, turbu_sdl_image, turbu_classes, dm_database,
    generic_algorithm_editor, design_script_engine, skill_settings,
    attributes_editor,
    SDL, SDL_13;
@@ -179,7 +180,7 @@ begin
    cbxEquip1.Enabled := true;
    lblEquip1.Enabled := true;
    cbxEquip2.Enabled := radWeaponStyle.ItemIndex <> ord(ws_single);
-   lblEquip2.Enabled := radWeaponStyle.ItemIndex <> ord(ws_single);;
+   lblEquip2.Enabled := radWeaponStyle.ItemIndex <> ord(ws_single);
 end;
 
 constructor TframeClass.Create(AOwner: TComponent);
@@ -194,12 +195,15 @@ begin
    tshConditions.Tag := integer(dsCondition);
    dsEventName.CreateDataset;
    dsEventName.AppendRecord([0]);
+   FOldWeaponScroll := dmDatabase.weapons.AfterScroll;
+   dmDatabase.weapons.AfterScroll := self.weaponsAfterScroll;
 end;
 
 destructor TframeClass.Destroy;
 var
    i: integer;
 begin
+   dmDatabase.weapons.AfterScroll := FOldWeaponScroll;
    FImageList.Free;
    if assigned(FNameList) then
    begin
@@ -257,6 +261,7 @@ var
    events: TStringList;
    i: integer;
    item: TListItem;
+   eventName: string;
 begin
    if data = 0 then
       Exit;
@@ -275,8 +280,9 @@ begin
          begin
             //prepare the initial list
             item := lstScripts.Items.Add;
-            item.Caption := events[i];
-            item.Data := FTemplate.signature[events[i]];
+            eventName := events[i];
+            item.Caption := eventName;
+            item.Data := FTemplate.signature[eventName];
          end
          else item := lstScripts.Items[i];
 
@@ -377,29 +383,12 @@ begin
 end;
 
 procedure TframeClass.onShow;
-var
-   dset: TDataset;
-   dummy: string;
 begin
    tmrAnim.Enabled := true;
    imgMapSprite.Active := true;
    if not FLoaded then
    begin
       frameHeroCommands.dataSet := dsCharClass.DataSet;
-
-      {2 ugly hacks to make everything set up and display properly}
-      dset := dsCharClass.DataSet;
-      //1
-      dset.Last;
-      dset.First;
-
-      //2
-      dset.Edit;
-      dummy := dset.FieldByName('expFunc').AsString;
-      dset.FieldByName('expFunc').AsString := '';
-      dset.FieldByName('expFunc').AsString := dummy;
-      dset.Post;
-
       loadClass(1);
       FLoaded := true;
    end;
@@ -517,6 +506,13 @@ begin
       if tmrAnim.Tag = 0 then
          FMatrixPosition.x := (FMatrixPosition.x + 1) mod length(matrix);
    end;
+end;
+
+procedure TframeClass.weaponsAfterScroll(DataSet: TDataSet);
+begin
+  if assigned(FOldWeaponScroll) then
+     FOldWeaponScroll(DataSet);
+  checkFor2Handed(DataSet);
 end;
 
 procedure TframeClass.btnEditAttributesClick(Sender: TObject);

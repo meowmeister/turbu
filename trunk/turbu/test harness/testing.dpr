@@ -1,6 +1,7 @@
 program testing;
 
 uses
+  FastMM4,
   Forms,
   types,
   SDL,
@@ -90,7 +91,12 @@ uses
   turbu_2k_sprite_engine in '..\engines\map engine\turbu_2k_sprite_engine.pas',
   map_tree_controller in '..\editor\map_tree_controller.pas',
   test_map_tree in 'test_map_tree.pas' {frmMapTree},
-  ps_pointer in '..\engines\basis\ps_pointer.pas';
+  ps_pointer in '..\engines\basis\ps_pointer.pas',
+  turbu_2k_map_engine_D in '..\engines\map engine\design\turbu_2k_map_engine_D.pas',
+  eval in '..\engines\map engine\design\eval.pas' {frmMapProperties},
+  rttiHelper in '..\rttiHelper.pas',
+  turbu_serialization in '..\turbu_serialization.pas',
+  test_map_size in 'test_map_size.pas' {frmTestMapSize};
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -110,5 +116,6 @@ begin
   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
   Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
   Application.CreateForm(TfrmConversionReport, frmConversionReport);
+  Application.CreateForm(TfrmTestMapSize, frmTestMapSize);
   Application.Run;
 end.

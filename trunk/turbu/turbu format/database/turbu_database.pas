@@ -25,7 +25,7 @@ uses
    turbu_characters, turbu_items, turbu_skills, turbu_classes, turbu_resists,
    turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations,
    turbu_unit_dictionary, turbu_containers, turbu_script_interface, turbu_game_data,
-   turbu_map_metadata, turbu_tilesets;
+   turbu_map_metadata, turbu_tilesets, turbu_decl_utils;
 
 type
    TCharClassList = TRpgObjectList<TClassTemplate>;
@@ -34,7 +34,6 @@ type
    TMapEngineList = TRpgObjectList<TMapEngineData>;
    TMoveMatrixArray = array of TMoveMatrix;
    TItemList = TRpgObjectList<TItemTemplate>;
-   TSkillGainList = TRpgObjectList<TSkillGainRecord>;
    TItemMatrix = array[TItemType] of TItemList;
    TSkillList = TRpgObjectList<TSkillTemplate>;
    TAnimList = TRpgObjectList<TAnimTemplate>;
@@ -42,10 +41,11 @@ type
    TConditionList = TRpgObjectList<TConditionTemplate>;
    TTilesetList = TRpgObjectList<TTileset>;
    TTileDictionary = TObjectDictionary<string, TTileGroup>;
+   TScriptList = TRpgObjectList<TScriptRecord>;
 
    TRpgDataTypes = (rd_class, rd_hero, rd_command, rd_item, rd_skill, rd_anim,
-                    rd_attrib, rd_condition, rd_switch, rd_int, rd_float,
-                    rd_string, rd_script);
+                    rd_attrib, rd_condition, rd_tileset, rd_switch, rd_int,
+                    rd_float, rd_string, rd_script, rd_metadata);
    TRpgDataTypeSet = set of TRpgDataTypes;
 
    TBattleCommandList = class(TRpgObjectList<TBattleCommand>)
@@ -59,7 +59,6 @@ type
    private
       FClass: TCharClassList;
       FHero: THeroTemplateList;
-      FSkillFuncs: TSkillGainList;
       FCommand: TBattleCommandList;
       FItems: TItemMatrix;
       FSkills: TSkillList;
@@ -79,9 +78,9 @@ type
       FVariables: TStringList;
       FFloats: TStringList;
       FStrings: TStringList;
+      FScripts: TScriptList;
 
       FUnits: TUnitDictionary;
-      FAlgLookup: TStringList;
       FSkillAlgs: TStringList;
       FStatAlgs: TStringList;
       FSpriteList: TStringList;
@@ -92,7 +91,6 @@ type
       FMoveMatrix: TMoveMatrixArray;
       FBattleStyle: TBattleEngineList;
       FMapEngines: TMapEngineList;
-      FExpRecordList: TExpRecordList;
       FStatSet: TStatSet;
       FTileGroup: TTileDictionary;
       FTileset: TTilesetList;
@@ -127,9 +125,6 @@ type
 
       procedure AfterConstruction; override;
 
-      function addSkillFunc(data: TSkillGainRecord): integer;
-      function skillFuncIndex(name: string): integer; inline;
-
       procedure addClass; overload;
       procedure addClass(value: TClassTemplate); overload;
 
@@ -152,8 +147,8 @@ type
       procedure addTileset;
 
       function scriptBuild: boolean;
+      function scriptByName(name: string): TScriptRecord;
 
-      property skillFunc: TSkillGainList read FSkillFuncs;
       property charClasses: integer read getClassCount write setClassCount;
       property charClass: TCharClassList read FClass write FClass;
       property heroes: integer read getHeroCount write setHeroCount;
@@ -177,13 +172,12 @@ type
       property mapTree: TMapTree read FMapTree write FMapTree;
       property statSet: TStatSet read FStatSet write FStatSet;
       property tileGroup: TTileDictionary read FTileGroup write FTileGroup;
+      property scripts: TScriptList read FScripts write FScripts;
 
       property spriteList: TStringList read FSpriteList write FSpriteList;
       property portraitList: TStringList read FPortraitList write FPortraitList;
       property animList: TStringList read FAnimList write FAnimlist;
-      property expRecs: TExpRecordList read FExpRecordList;
       property units: TUnitDictionary read FUnits write setUnits;
-      property algorithmLookup: TStringList read FAlgLookup write FAlgLookup;
       property projectName: string read getProjectName;
    end;
 
@@ -194,12 +188,13 @@ var
 implementation
 uses
    sysUtils, zlib, math, DB, TypInfo,
-   {$IFDEF EDITOR}design_script_engine,{$ENDIF} archiveInterface, commons,
+   archiveInterface, commons,
    turbu_constants, turbu_engines, turbu_versioning, turbu_plugin_interface,
-   turbu_decl_utils, turbu_functional;
+   turbu_functional;
 
 const
-   DBVERSION = 27;
+   MIN_DBVERSION = 30;
+   DBVERSION = 30;
 
 { TRpgDatabase }
 
@@ -210,14 +205,13 @@ begin
    inherited Create;
    FName := 'TURBU RPG Database';
    FID := DBVERSION;
-   FUnits := TUnitDictionary.Create([doOwnsValues], 20);
+   FUnits := TUnitDictionary.Create(20);
    FStatAlgs := TStringList.Create;
    FSkillAlgs := TStringList.Create;
    for I := low(TItemType) to high(TItemType) do
       FItems[i] := TItemList.Create;
    FAttributes := TAttribList.Create;
    FConditions := TConditionList.Create;
-   FSkillFuncs := TSkillGainList.Create;
    FBattleStyle := TBattleEngineList.Create(false);
    FMapEngines := TMapEngineList.Create(false);
    FLayout := TGameLayout.Create;
@@ -269,7 +263,6 @@ begin
       FItems[item] := TItemList.Create;
    FAttributes := TAttribList.Create;
    FConditions := TConditionList.Create;
-   FSkillFuncs := TSkillGainList.Create;
    FBattleStyle := TBattleEngineList.Create(false);
    FMapEngines := TMapEngineList.Create(false);
    self.prepareBlanks;
@@ -330,20 +323,14 @@ begin
    lassert(savefile.readInt = FPortraitList.Count);
    lassert(savefile.readInt = FAnimList.Count);
 
-   substream := GArchives[DATABASE_ARCHIVE].getFile('metadata');
-   try
-      FAlgLookup.LoadFromStream(substream);
-   finally
-      substream.Free;
-   end;
-
    k := savefile.readInt;
-   FUnits := TUnitDictionary.Create([doOwnsValues], k * 2);
+   FUnits := TUnitDictionary.Create(k * 2);
    for filename in GArchives[DATABASE_ARCHIVE].allFiles('scripts') do
    begin
       substream := GArchives[DATABASE_ARCHIVE].getFile(filename);
       try
          uFilename := upperCase(ExtractFileName(filename));
+         uFilename := stringReplace(uFilename, '.TRS', '', []);
          FUnits.Add(uFileName, TStringList.Create);
          FUnits[uFileName].LoadFromStream(substream);
       finally
@@ -628,21 +615,13 @@ begin
       substream.free;
    end;
 
-   substream := TMemoryStream.Create;
-   try
-      FAlgLookup.SaveToStream(substream);
-      GArchives[DATABASE_ARCHIVE].writeFile('metadata', substream);
-   finally
-      substream.Free;
-   end;
-
    savefile.writeInt(FUnits.Count);
    for filename in FUnits.Keys do
    begin
       subStream := TMemoryStream.Create;
       try
          FUnits[filename].SaveToStream(substream);
-         GArchives[DATABASE_ARCHIVE].writeFile('scripts\' + filename, substream);
+         GArchives[DATABASE_ARCHIVE].writeFile(format('scripts\%s.trs', [FUnits.original(filename)]), substream);
       finally
          substream.Free;
       end;
@@ -882,16 +861,25 @@ begin
    end;
 end;
 
+function TRpgDatabase.scriptByName(name: string): TScriptRecord;
+begin
+   result := self.FScripts.firstWhere(
+      function(Arg1: TScriptRecord): boolean
+      begin
+         result := arg1.name = name;
+      end);
+end;
+
 destructor TRpgDatabase.Destroy;
 var
-   i, j: integer;
+   i: integer;
 begin
+   FScripts.Free;
    FLegacyCruft.Free;
    FSwitches.Free;
    FVariables.Free;
    FFloats.Free;
    FStrings.Free;
-   FExpRecordList.Free;
    FUnits.Free;
    FStatAlgs.Free;
    FSpriteList.Free;
@@ -901,14 +889,6 @@ begin
    FHero.Free;
    FCommand.Free;
    FSkills.Free;
-   for i := FSkillFuncs.high downto 0 do
-   begin
-      j := FSkillAlgs.IndexOfObject(FSkillFuncs[i]);
-      if j <> -1  then
-         FSkillAlgs.Delete(j); //this should stop the strange memory leak issues
-//      FSkillFuncs[i].Free;
-   end;
-   FSkillFuncs.Free;
    if assigned(FSkillAlgs) then
       FSkillAlgs.OwnsObjects := true;
    FSkillAlgs.Free;
@@ -917,7 +897,6 @@ begin
    FAnims.Free;
    FConditions.Free;
    FAttributes.Free;
-   FAlgLookup.Free;
    FLayout.Free;
    FMapTree.Free;
    FStatSet.Free;
@@ -933,11 +912,14 @@ var
    i: TRpgDataTypes;
 begin
    db.beginUpload;
-   if typeSet = [] then
-      typeSet := [low(TRpgDataTypes)..high(TRpgDataTypes)];
-   for i in typeSet do
-      copyTypeToDB(db, i);
-   db.endUpload;
+   try
+      if typeSet = [] then
+         typeSet := [low(TRpgDataTypes)..high(TRpgDataTypes)];
+      for i in typeSet do
+         copyTypeToDB(db, i);
+   finally
+      db.endUpload;
+   end;
 end;
 
 procedure TRpgDatabase.copyTypeToDB(db: TdmDatabase; value: TRpgDataTypes);
@@ -1002,19 +984,25 @@ begin
             FConditions[i].upload(db.conditions);
          db.conditions.postSafe;
       end;
+      rd_tileset:
+      begin
+         for i := 1 to FTileset.High do
+            FTileset[i].upload(db.tilesets);
+         db.tilesets.postSafe;
+      end;
       rd_switch: ;
       rd_int: ;
       rd_float: ;
       rd_string: ;
       rd_script:
       begin
-         {$IFDEF EDITOR}
-         GDScriptEngine.upload(db);
-         {$ENDIF}
-         for i := 0 to FSkillFuncs.High do
-            FSkillFuncs[i].upload(db.SkillGainRecords);
-         for i := 0 to FExpRecordList.High do
-            FExpRecordList[i].upload(db.expCalcRecords);
+         (GScriptEngine as IDesignScriptEngine).upload(db);
+      end;
+      rd_metadata:
+      begin
+         for enumerator in FMapTree do
+            enumerator.upload(db.metadata);
+         db.metadata.postSafe;
       end;
       else assert(false);
    end;
@@ -1132,11 +1120,6 @@ begin
    GScriptEngine.units := Value;
 end;
 
-function TRpgDatabase.skillFuncIndex(name: string): integer;
-begin
-   result := FSkillAlgs.IndexOf(name)
-end;
-
 function TRpgDatabase.sumItems: integer;
 var
    i: TItemType;
@@ -1227,19 +1210,6 @@ begin
    FSkills.Add(value);
 end;
 
-function TRpgDatabase.addSkillFunc(data: TSkillGainRecord): integer;
-begin
-   assert(assigned(data.displayMethod));
-   result := FSkillFuncs.indexOf(data);
-   if result = -1 then
-   begin
-      result := FSkillFuncs.Count;
-      FSkillFuncs.Add(data);
-      FSkillAlgs.AddObject(data.name, data);
-   end
-   else data.free;
-end;
-
 procedure TRpgDatabase.addTileset;
 begin
    FTileset.Add(TTileset.Create);
@@ -1263,17 +1233,10 @@ end;
 
 procedure TRpgDatabase.parseMeta;
 var
-   dummy: string;
    newDecl: TRpgDecl;
 begin
    for newdecl in GScriptEngine.decl do
-   begin
-      dummy := FAlgLookup.Values[newDecl.name];
-      case signatureMatch(newDecl) of
-         ssExpCalc: expRecs.Add(TExpCalcRecord.Create(newDecl.name, dummy));
-         ssSkillCheck: addSkillFunc(TSkillGainRecord.Create(newDecl.name, dummy, sf_bool, false));
-      end;
-   end;
+      FScripts.add(TScriptRecord.create(newdecl, GScriptEngine.exec.GetProcAsMethodN(ansiString(newdecl.name))))
 end;
 
 procedure TRpgDatabase.prepareBlanks;
@@ -1292,13 +1255,12 @@ begin
    addAnim;
    addAttribute;
    addCondition;
-   FExpRecordList := TExpRecordList.Create;
    FCommand := TBattleCommandList.Create;
-   FAlgLookup := TStringList.Create;
    FTileGroup := TTileDictionary.Create([doOwnsValues]);
    FTileset := TTilesetList.Create;
    addTileset;
    FLegacyCruft := TLegacySections.Create;
+   FScripts := TScriptList.Create;
 end;
 
 { TBattleCommandList }
@@ -1325,4 +1287,3 @@ begin
 end;
 
 end.
-

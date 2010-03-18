@@ -20,9 +20,9 @@ unit generic_algorithm_editor;
 interface
 
 uses
-   types, Forms, Controls, Dialogs, StdCtrls, ExtCtrls, Mask, Classes,
+   types, Forms, Controls, Dialogs, StdCtrls, ExtCtrls, Mask, Classes, DB,
    JvExControls, JvEditorCommon, JvEditor, JvHLEditor,
-   commons, turbu_defs, turbu_classes, dm_database, DB;
+   commons, turbu_defs, turbu_classes, dm_database, turbu_decl_utils;
 
 type
    TNameChangeResult = (nr_new, nr_renamed, nr_cancel);
@@ -110,7 +110,8 @@ begin
       algs.Text := oldAlgs;
    end;
 
-   if worked then
+//TODO: make a script editor that doesn't suck
+{   if worked then
    begin
       if nr_new in verifyResult then
       begin
@@ -124,7 +125,7 @@ begin
          FScript.designName := newName;
       end;
       self.ModalResult := mrOk;
-   end;
+   end;}
 end;
 
 procedure TfrmAlgorithmEditor.Button1Click(Sender: TObject);
@@ -150,7 +151,8 @@ function TfrmAlgorithmEditor.newFunc(script: TDataSet; decl: TRpgDecl): boolean;
 begin
    FReturnType := lookupType(decl.retval);
    dsFunction := script;
-   FScript := TScriptRecord.create;
+//   FScript := TScriptRecord.create(decl, nil);
+   asm int 3 end;
    frmFuncHeader.setup(decl);
    result := runEditor;
 end;

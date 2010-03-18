@@ -62,8 +62,10 @@ type
       ToolButton1: TToolButton;
       btnSave: TToolButton;
       btnSaveAll: TToolButton;
-    mnuTreePopup: TPopupMenu;
-    mnuAddNewMap: TMenuItem;
+      mnuTreePopup: TPopupMenu;
+      mnuAddNewMap: TMenuItem;
+      mnuEditMapProperties: TMenuItem;
+      mnuDeleteMap: TMenuItem;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -93,7 +95,11 @@ type
       procedure mnuAutosaveMapsClick(Sender: TObject);
       procedure btnSaveClick(Sender: TObject);
       procedure btnSaveAllClick(Sender: TObject);
-    procedure mnuAddNewMapClick(Sender: TObject);
+      procedure mnuAddNewMapClick(Sender: TObject);
+      procedure mnuEditMapPropertiesClick(Sender: TObject);
+      procedure trvMapTreeContextPopup(Sender: TObject; MousePos: TPoint;
+        var Handled: Boolean);
+      procedure mnuDeleteMapClick(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentMap: IRpgMap;
@@ -109,7 +115,7 @@ type
       procedure closeProject;
 
       procedure loadMap(const value: word); overload;
-      procedure loadMap(const value: TMapMetadata); overload;
+      procedure loadMap(const value: IMapMetadata); overload;
 
       procedure assignPaletteImage(surface: PSdlSurface);
       procedure displayPalette(height: integer); overload;
@@ -135,8 +141,8 @@ uses
    SysUtils, Types, Math,
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
-   turbu_classes, turbu_versioning, turbu_tilesets,
-   dm_database, discInterface, formats, map_tree_controller,
+   turbu_classes, turbu_versioning, turbu_tilesets, turbu_defs,
+   dm_database, discInterface, formats, map_tree_controller, delete_map,
    sdl_image, sdlstreams, sg_utils;
 
 {$R *.dfm}
@@ -188,9 +194,33 @@ begin
    displayPalette;
 end;
 
-procedure TfrmTurbuMain.mnuAddNewMapClick(Sender: TObject);
+procedure TfrmTurbuMain.mnuEditMapPropertiesClick(Sender: TObject);
 begin
-   //
+   RequireMapEngine;
+   fMapEngine.EditMapProperties(trvMapTree.currentMapID);
+   configureScrollBars(fMapEngine.mapSize, FMapEngine.mapPosition);
+end;
+
+procedure TfrmTurbuMain.mnuAddNewMapClick(Sender: TObject);
+var
+   newMap: IMapMetadata;
+begin
+   RequireMapEngine;
+   newMap := FMapEngine.AddNewMap(trvMapTree.currentMapID);
+   if assigned(newMap) then
+      trvMapTree.addChildMap(newMap);
+end;
+
+procedure TfrmTurbuMain.mnuDeleteMapClick(Sender: TObject);
+var
+   deleteResult: TDeleteMapMode;
+begin
+   deleteResult := delete_map.deleteMapConfirm(trvMapTree.Selected.HasChildren);
+   if deleteResult <> dmNone then
+   begin
+      FMapEngine.DeleteMap(trvMapTree.currentMapID, deleteResult);
+      trvMapTree.buildMapTree(GDatabase.mapTree);
+   end;
 end;
 
 procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);
@@ -254,20 +284,20 @@ var
 begin
    GProjectFolder := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
    assert(GArchives.Add(openFolder(GProjectFolder + DESIGN_DB)) = BASE_ARCHIVE);
+   inFile := nil;
    plugins := TStringList.Create;
    try
       inFile := GArchives[BASE_ARCHIVE].getFile('plugins');
-      try
-         plugins.LoadFromStream(inFile);
-      finally
-         inFile.free;
-      end;
+      plugins.LoadFromStream(inFile);
       for plugStr in plugins do
-      begin
+      try
          pluginManager.LoadPlugin(plugStr, plgPackage);
+      except
+         on E: EPackageError do ; //TODO: Add code here to handle package loading errors
       end;
    finally
       plugins.free;
+      inFile.free;
    end;
    for I := 0 to pluginManager.PluginCount - 1 do
    begin
@@ -374,11 +404,10 @@ begin
    end;
 end;
 
-procedure TfrmTurbuMain.loadMap(const value: TMapMetadata);
+procedure TfrmTurbuMain.loadMap(const value: IMapMetadata);
 var
    mapStream: TStream;
    tileset: TTileset;
-   metadata: TMapMetadata;
 const
    SDL_BLACK: SDL_Color = ();
 begin
@@ -386,13 +415,7 @@ begin
                  TVersion.Create(0, 0, 0)) as IDesignMapEngine;
    FMapEngine.initialize(imgLogo.sdlWindow, GDatabase);
    FMapEngine.autosaveMaps := mnuAutosaveMaps.checked;
-   mapStream := GArchives[MAP_ARCHIVE].getFile(value.internalFilename.name);
-   try
-      FCurrentMap := TRpgMap.Load(mapStream);
-   finally
-      mapStream.Free;
-   end;
-   FMapEngine.loadMap(FCurrentMap);
+   FCurrentMap := FMapEngine.loadMap(value);
    self.configureScrollBars(FMapEngine.mapSize, FMapEngine.mapPosition);
    fMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
 
@@ -419,7 +442,7 @@ begin
    if GDatabase = nil then
       GDatabase := TRpgDatabase.Create;
    frmDatabase.init(GDatabase);
-   buildMapTree(GDatabase.mapTree, trvMapTree);
+   trvMapTree.buildMapTree(GDatabase.mapTree);
 end;
 
 procedure TfrmTurbuMain.mnu2KClick(Sender: TObject);
@@ -621,7 +644,17 @@ end;
 
 procedure TfrmTurbuMain.trvMapTreeChange(Sender: TObject; Node: TTreeNode);
 begin
-   loadMap(TObject(node.Data) as TMapMetadata);
+   loadMap(IInterface(node.Data) as IMapMetadata);
+end;
+
+procedure TfrmTurbuMain.trvMapTreeContextPopup(Sender: TObject;
+  MousePos: TPoint; var Handled: Boolean);
+var
+   topNode: boolean;
+begin
+   topNode := trvMapTree.selected = trvMapTree.items[0];
+   mnuDeleteMap.Enabled := not topNode;
+   mnuEditMapProperties.Enabled := not topNode;
 end;
 
 initialization

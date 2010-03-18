@@ -34,7 +34,7 @@ object frmSkillLearning: TfrmSkillLearning
         Height = 21
         ButtonKind = bkClassic
         TabOrder = 0
-        DataField = 'num[0]'
+        DataField = 'nums[1]'
         DataSource = dsForeign
       end
     end
@@ -52,7 +52,7 @@ object frmSkillLearning: TfrmSkillLearning
         Height = 21
         ButtonKind = bkClassic
         TabOrder = 0
-        DataField = 'num[1]'
+        DataField = 'nums[2]'
         DataSource = dsForeign
       end
     end
@@ -122,7 +122,7 @@ object frmSkillLearning: TfrmSkillLearning
         Height = 21
         ButtonKind = bkClassic
         TabOrder = 0
-        DataField = 'num[2]'
+        DataField = 'nums[3]'
         DataSource = dsForeign
       end
     end
@@ -140,7 +140,7 @@ object frmSkillLearning: TfrmSkillLearning
         Height = 21
         ButtonKind = bkClassic
         TabOrder = 0
-        DataField = 'num[3]'
+        DataField = 'nums[4]'
         DataSource = dsForeign
       end
     end

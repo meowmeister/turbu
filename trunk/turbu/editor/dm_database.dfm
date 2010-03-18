@@ -62,14 +62,32 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'statblock'
-        ChildDefs = <
-          item
-            Name = 'statblock[0]'
-            DataType = ftLargeint
-          end>
-        DataType = ftArray
-        Size = 6
+        Name = 'commands'
+        DataType = ftByte
+      end
+      item
+        Name = 'statblock[1]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'statblock[2]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'statblock[3]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'statblock[4]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'statblock[5]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'statblock[6]'
+        DataType = ftInteger
       end
       item
         Name = 'Sp'
@@ -129,15 +147,6 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'animName'
-        DataType = ftString
-        Size = 32
-      end
-      item
-        Name = 'equip[0]'
-        DataType = ftInteger
-      end
-      item
         Name = 'equip[1]'
         DataType = ftInteger
       end
@@ -152,6 +161,10 @@ object dmDatabase: TdmDatabase
       item
         Name = 'equip[4]'
         DataType = ftInteger
+      end
+      item
+        Name = 'equip[5]'
+        DataType = ftInteger
       end>
     IndexDefs = <>
     Params = <>
@@ -159,7 +172,7 @@ object dmDatabase: TdmDatabase
     Left = 8
     Top = 8
     Data = {
-      9B0200009619E0BD0200000018000000230000000000030000009B0202696404
+      E60200009619E0BD010000001800000027000000000003000000E60202696404
       00010000000000046E616D650100490000000100055749445448020002001400
       086D6F6469666965640200030000000000096D61705370726974650400010000
       0000000C626174746C65537072697465040001000000000008706F7274726169
@@ -167,19 +180,22 @@ object dmDatabase: TdmDatabase
       6D616E645B325D04000100000000000A636F6D6D616E645B335D040001000000
       00000A636F6D6D616E645B345D04000100000000000A636F6D6D616E645B355D
       04000100000000000A636F6D6D616E645B365D04000100000000000A636F6D6D
-      616E645B375D04000100000000000973746174626C6F636B06000D0300000000
-      0C73746174626C6F636B5B305D08000100000000000253700800010000000000
-      0641747461636B080001000000000007446566656E7365080001000000000004
-      4D696E6408000100000000000553706565640800010000000000076578704675
-      6E6301004900000001000557494454480200020020000A657870566172735B31
-      5D04000100000000000A657870566172735B325D04000100000000000A657870
-      566172735B335D04000100000000000A657870566172735B345D040001000000
-      0000096475616C5769656C640400010000000000087374617469634571020003
-      0000000000097374726F6E6744656602000300000000000B756E61726D656441
-      6E696D040001000000000008616E696D4E616D65010049000000010005574944
-      54480200020020000865717569705B305D04000100000000000865717569705B
-      315D04000100000000000865717569705B325D04000100000000000865717569
-      705B335D04000100000000000865717569705B345D04000100000000000000}
+      616E645B375D040001000000000008636F6D6D616E647301000200000000000C
+      73746174626C6F636B5B315D04000100000000000C73746174626C6F636B5B32
+      5D04000100000000000C73746174626C6F636B5B335D04000100000000000C73
+      746174626C6F636B5B345D04000100000000000C73746174626C6F636B5B355D
+      04000100000000000C73746174626C6F636B5B365D0400010000000000025370
+      08000100000000000641747461636B080001000000000007446566656E736508
+      00010000000000044D696E640800010000000000055370656564080001000000
+      00000765787046756E6301004900000001000557494454480200020020000A65
+      7870566172735B315D04000100000000000A657870566172735B325D04000100
+      000000000A657870566172735B335D04000100000000000A657870566172735B
+      345D0400010000000000096475616C5769656C64040001000000000008737461
+      74696345710200030000000000097374726F6E6744656602000300000000000B
+      756E61726D6564416E696D04000100000000000865717569705B315D04000100
+      000000000865717569705B325D04000100000000000865717569705B335D0400
+      0100000000000865717569705B345D04000100000000000865717569705B355D
+      04000100000000000000}
     object charClassesid: TIntegerField
       FieldName = 'id'
     end
@@ -216,29 +232,29 @@ object dmDatabase: TdmDatabase
     object charClassescommand6: TIntegerField
       FieldName = 'command[6]'
     end
-    object charClassescommand0: TIntegerField
+    object charClassescommand7: TIntegerField
       FieldName = 'command[7]'
     end
-    object charClassesstatblock: TArrayField
-      FieldName = 'statblock'
-      object charClassesstatblock0: TLargeintField
-        FieldName = 'statblock[0]'
-      end
-      object charClassesstatblock1: TLargeintField
-        FieldName = 'statblock[1]'
-      end
-      object charClassesstatblock2: TLargeintField
-        FieldName = 'statblock[2]'
-      end
-      object charClassesstatblock3: TLargeintField
-        FieldName = 'statblock[3]'
-      end
-      object charClassesstatblock4: TLargeintField
-        FieldName = 'statblock[4]'
-      end
-      object charClassesstatblock5: TLargeintField
-        FieldName = 'statblock[5]'
-      end
+    object charClassescommands: TByteField
+      FieldName = 'commands'
+    end
+    object charClassesstatblock1: TIntegerField
+      FieldName = 'statblock[1]'
+    end
+    object charClassesstatblock2: TIntegerField
+      FieldName = 'statblock[2]'
+    end
+    object charClassesstatblock3: TIntegerField
+      FieldName = 'statblock[3]'
+    end
+    object charClassesstatblock4: TIntegerField
+      FieldName = 'statblock[4]'
+    end
+    object charClassesstatblock5: TIntegerField
+      FieldName = 'statblock[5]'
+    end
+    object charClassesstatblock6: TIntegerField
+      FieldName = 'statblock[6]'
     end
     object charClassesSp: TLargeintField
       FieldName = 'Sp'
@@ -283,9 +299,6 @@ object dmDatabase: TdmDatabase
     object charClassesunarmedAnim: TIntegerField
       FieldName = 'unarmedAnim'
     end
-    object charClassesequip0: TIntegerField
-      FieldName = 'equip[0]'
-    end
     object charClassesequip1: TIntegerField
       FieldName = 'equip[1]'
     end
@@ -297,6 +310,9 @@ object dmDatabase: TdmDatabase
     end
     object charClassesequip4: TIntegerField
       FieldName = 'equip[4]'
+    end
+    object charClassesequip5: TIntegerField
+      FieldName = 'equip[5]'
     end
     object charClassesanimName: TStringField
       FieldKind = fkLookup
@@ -314,7 +330,7 @@ object dmDatabase: TdmDatabase
       LookupDataSet = weapons
       LookupKeyFields = 'id'
       LookupResultField = 'name'
-      KeyFields = 'equip[0]'
+      KeyFields = 'equip[1]'
       Size = 32
       Lookup = True
     end
@@ -324,7 +340,7 @@ object dmDatabase: TdmDatabase
       LookupDataSet = weapons
       LookupKeyFields = 'id'
       LookupResultField = 'name'
-      KeyFields = 'equip[1]'
+      KeyFields = 'equip[2]'
       Size = 32
       Lookup = True
     end
@@ -334,7 +350,7 @@ object dmDatabase: TdmDatabase
       LookupDataSet = offhands
       LookupKeyFields = 'id'
       LookupResultField = 'name'
-      KeyFields = 'equip[1]'
+      KeyFields = 'equip[2]'
       Size = 32
       Lookup = True
     end
@@ -344,7 +360,7 @@ object dmDatabase: TdmDatabase
       LookupDataSet = shields
       LookupKeyFields = 'id'
       LookupResultField = 'name'
-      KeyFields = 'equip[1]'
+      KeyFields = 'equip[2]'
       Size = 32
       Lookup = True
     end
@@ -354,7 +370,7 @@ object dmDatabase: TdmDatabase
       LookupDataSet = armors
       LookupKeyFields = 'id'
       LookupResultField = 'name'
-      KeyFields = 'equip[2]'
+      KeyFields = 'equip[3]'
       Size = 32
       Lookup = True
     end
@@ -364,7 +380,7 @@ object dmDatabase: TdmDatabase
       LookupDataSet = helmets
       LookupKeyFields = 'id'
       LookupResultField = 'name'
-      KeyFields = 'equip[3]'
+      KeyFields = 'equip[4]'
       Size = 32
       Lookup = True
     end
@@ -374,14 +390,14 @@ object dmDatabase: TdmDatabase
       LookupDataSet = accessories
       LookupKeyFields = 'id'
       LookupResultField = 'name'
-      KeyFields = 'equip[4]'
+      KeyFields = 'equip[5]'
       Size = 32
       Lookup = True
     end
     object charClassesExpFuncDesignName: TStringField
       FieldKind = fkLookup
       FieldName = 'expFuncDesignName'
-      LookupDataSet = expCalcRecords
+      LookupDataSet = scriptRange
       LookupKeyFields = 'name'
       LookupResultField = 'designName'
       KeyFields = 'expFunc'
@@ -402,34 +418,40 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'method'
-        ChildDefs = <
-          item
-            Name = 'methodName'
-            DataType = ftString
-            Size = 32
-          end
-          item
-            Name = 'arrayArgs'
-            DataType = ftBoolean
-          end
-          item
-            Name = 'methodStyle'
-            DataType = ftInteger
-          end
-          item
-            Name = 'address'
-            DataType = ftInteger
-          end
-          item
-            Name = 'displayAddress'
-            DataType = ftInteger
-          end>
-        DataType = ftADT
-        Size = 5
+        Name = 'nums[1]'
+        DataType = ftInteger
       end
       item
-        Name = 'skill'
+        Name = 'nums[2]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'nums[3]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'nums[4]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'method.methodName'
+        DataType = ftString
+        Size = 32
+      end
+      item
+        Name = 'method.arrayArgs'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'method.methodStyle'
+        DataType = ftInteger
+      end
+      item
+        Name = 'method.address'
+        DataType = ftInteger
+      end
+      item
+        Name = 'method.displayAddress'
         DataType = ftInteger
       end
       item
@@ -437,25 +459,7 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'num'
-        ChildDefs = <
-          item
-            Name = 'num[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 4
-      end
-      item
-        Name = 'num[1]'
-        DataType = ftInteger
-      end
-      item
-        Name = 'num[2]'
-        DataType = ftInteger
-      end
-      item
-        Name = 'num[3]'
+        Name = 'skill'
         DataType = ftInteger
       end>
     IndexDefs = <
@@ -472,16 +476,16 @@ object dmDatabase: TdmDatabase
     Left = 8
     Top = 56
     Data = {
-      2F0100009619E0BD02000000180000000F0000000000030000002F01086D6F64
-      69666965640200030000000000057374796C650400010000000000066D657468
-      6F6405000C01000000000A6D6574686F644E616D650100490000000100055749
-      4454480200020020000961727261794172677302000300000000000B6D657468
-      6F645374796C650400010000000000076164647265737304000100000000000E
-      646973706C617941646472657373040001000000000005736B696C6C04000100
-      00000000066D61737465720400010000000000036E756D04000D030000000006
-      6E756D5B305D0400010000000000066E756D5B315D0400010000000000066E75
-      6D5B325D0400010000000000066E756D5B335D040001000000000001000D4445
-      4641554C545F4F524445520200820000000000}
+      3B0100009619E0BD01000000180000000D0000000000030000003B01086D6F64
+      69666965640200030000000000057374796C650400010000000000076E756D73
+      5B315D0400010000000000076E756D735B325D0400010000000000076E756D73
+      5B335D0400010000000000076E756D735B345D0400010000000000116D657468
+      6F642E6D6574686F644E616D6501004900000001000557494454480200020020
+      00106D6574686F642E6172726179417267730200030000000000126D6574686F
+      642E6D6574686F645374796C6504000100000000000E6D6574686F642E616464
+      726573730400010000000000156D6574686F642E646973706C61794164647265
+      73730400010000000000066D6173746572040001000000000005736B696C6C04
+      0001000000000001000D44454641554C545F4F524445520200820000000000}
     object charClasses_skillsetid: TStringField
       FieldKind = fkCalculated
       FieldName = 'id'
@@ -504,20 +508,17 @@ object dmDatabase: TdmDatabase
     object charClasses_skillsetstyle: TIntegerField
       FieldName = 'style'
     end
-    object charClasses_skillsetnum: TArrayField
-      FieldName = 'num'
-      object charClasses_skillsetnum0: TIntegerField
-        FieldName = 'num[0]'
-      end
-      object charClasses_skillsetnum1: TIntegerField
-        FieldName = 'num[1]'
-      end
-      object charClasses_skillsetnum2: TIntegerField
-        FieldName = 'num[2]'
-      end
-      object charClasses_skillsetnum3: TIntegerField
-        FieldName = 'num[3]'
-      end
+    object charClasses_skillsetnums1: TIntegerField
+      FieldName = 'nums[1]'
+    end
+    object charClasses_skillsetnums2: TIntegerField
+      FieldName = 'nums[2]'
+    end
+    object charClasses_skillsetnums3: TIntegerField
+      FieldName = 'nums[3]'
+    end
+    object charClasses_skillsetnums4: TIntegerField
+      FieldName = 'nums[4]'
     end
     object charClasses_skillsetmethodName: TStringField
       FieldName = 'method.methodName'
@@ -544,15 +545,15 @@ object dmDatabase: TdmDatabase
     object charClasses_skillsetAlgName: TStringField
       FieldKind = fkLookup
       FieldName = 'algName'
-      LookupDataSet = skillGainRecords
-      LookupKeyFields = 'baseMethod'
+      LookupDataSet = scriptRange
+      LookupKeyFields = 'name'
       LookupResultField = 'designName'
-      KeyFields = 'method.address'
+      KeyFields = 'method.methodName'
       Size = 50
       Lookup = True
     end
   end
-  object charClasses_Resist: TClientDataSet
+  object charClasses_Resists: TClientDataSet
     Active = True
     Aggregates = <>
     FieldDefs = <
@@ -587,16 +588,16 @@ object dmDatabase: TdmDatabase
       530000009619E0BD0100000018000000030000000000030000005300066D6173
       7465720400010000000000017804000100000000000179040001000000000001
       000D44454641554C545F4F524445520200820000000000}
-    object charClasses_Resistmaster: TIntegerField
+    object charClasses_Resistsmaster: TIntegerField
       FieldName = 'master'
     end
-    object charClasses_Resistx: TIntegerField
+    object charClasses_Resistsx: TIntegerField
       FieldName = 'x'
     end
-    object charClasses_Resisty: TIntegerField
+    object charClasses_Resistsy: TIntegerField
       FieldName = 'y'
     end
-    object charClasses_Resistname: TStringField
+    object charClasses_Resistsname: TStringField
       FieldKind = fkLookup
       FieldName = 'name'
       LookupDataSet = attributes
@@ -607,7 +608,7 @@ object dmDatabase: TdmDatabase
       Lookup = True
     end
   end
-  object charClasses_Condition: TClientDataSet
+  object charClasses_Conditions: TClientDataSet
     Active = True
     Aggregates = <>
     FieldDefs = <
@@ -651,7 +652,7 @@ object dmDatabase: TdmDatabase
     object IntegerField3: TIntegerField
       FieldName = 'y'
     end
-    object charClasses_Conditionname: TStringField
+    object charClasses_Conditionsname: TStringField
       FieldKind = fkLookup
       FieldName = 'name'
       LookupDataSet = conditions
@@ -686,17 +687,23 @@ object dmDatabase: TdmDatabase
       item
         Name = 'yTarget'
         DataType = ftInteger
+      end
+      item
+        Name = 'filename'
+        DataType = ftString
+        Size = 255
       end>
     IndexDefs = <>
     Params = <>
     StoreDefs = True
     Left = 384
-    Top = 8
+    Top = 16
     Data = {
-      6F0000009619E0BD0100000018000000050000000000030000006F0002696404
+      8C0000009619E0BD0100000018000000060000000000030000008C0002696404
       00010000000000046E616D650100490000000100055749445448020002002000
       086D6F64696669656402000300000000000768697473416C6C02000300000000
-      00077954617267657404000100000000000000}
+      00077954617267657404000100000000000866696C656E616D65020049000000
+      010005574944544802000200FF000000}
     object animationsid: TIntegerField
       FieldName = 'id'
     end
@@ -712,6 +719,10 @@ object dmDatabase: TdmDatabase
     end
     object animationsyTarget: TIntegerField
       FieldName = 'yTarget'
+    end
+    object animationsfilename: TStringField
+      FieldName = 'filename'
+      Size = 255
     end
   end
   object items_script: TClientDataSet
@@ -741,16 +752,6 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'tag'
-        ChildDefs = <
-          item
-            Name = 'tag[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 4
-      end
-      item
         Name = 'tag[1]'
         DataType = ftInteger
       end
@@ -760,6 +761,10 @@ object dmDatabase: TdmDatabase
       end
       item
         Name = 'tag[3]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'tag[4]'
         DataType = ftInteger
       end
       item
@@ -779,16 +784,6 @@ object dmDatabase: TdmDatabase
         Name = 'usableByClass'
         DataType = ftBytes
         Size = 32
-      end
-      item
-        Name = 'stat'
-        ChildDefs = <
-          item
-            Name = 'stat[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 6
       end
       item
         Name = 'stat[1]'
@@ -811,6 +806,10 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
+        Name = 'stat[6]'
+        DataType = ftInteger
+      end
+      item
         Name = 'event'
         DataType = ftString
         Size = 32
@@ -826,20 +825,20 @@ object dmDatabase: TdmDatabase
     Left = 184
     Top = 496
     Data = {
-      B60100009619E0BD020000001800000017000000000003000000B60102696404
+      9D0100009619E0BD0100000018000000150000000000030000009D0102696404
       00010000000000046E616D650100490000000100055749445448020002002000
       086D6F6469666965640200030000000000046465736301004900000001000557
-      4944544802000200320004636F737404000100000000000374616704000D0300
-      000000067461675B305D0400010000000000067461675B315D04000100000000
-      00067461675B325D0400010000000000067461675B335D040001000000000008
-      757365734C65667404000100000000000B757361626C65576865726504000100
-      000000000C757361626C6542794865726F20000B00000000000D757361626C65
-      4279436C61737320000B0000000000047374617406000D030000000007737461
-      745B305D040001000000000007737461745B315D040001000000000007737461
-      745B325D040001000000000007737461745B335D040001000000000007737461
-      745B345D040001000000000007737461745B355D040001000000000005657665
-      6E7401004900000001000557494454480200020020000673637269707404004B
-      0000000100075355425459504502004900050054657874000000}
+      4944544802000200320004636F73740400010000000000067461675B315D0400
+      010000000000067461675B325D0400010000000000067461675B335D04000100
+      00000000067461675B345D040001000000000008757365734C65667404000100
+      000000000B757361626C65576865726504000100000000000C757361626C6542
+      794865726F20000B00000000000D757361626C654279436C61737320000B0000
+      00000007737461745B315D040001000000000007737461745B325D0400010000
+      00000007737461745B335D040001000000000007737461745B345D0400010000
+      00000007737461745B355D040001000000000007737461745B365D0400010000
+      000000056576656E740100490000000100055749445448020002002000067363
+      7269707404004B00000001000753554254595045020049000500546578740000
+      00}
     object items_scriptid: TIntegerField
       FieldName = 'id'
     end
@@ -857,20 +856,17 @@ object dmDatabase: TdmDatabase
     object items_scriptcost: TIntegerField
       FieldName = 'cost'
     end
-    object items_scripttag: TArrayField
-      FieldName = 'tag'
-      object items_scripttag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object items_scripttag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object items_scripttag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object items_scripttag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object items_scripttag1: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object items_scripttag2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object items_scripttag3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object items_scripttag4: TIntegerField
+      FieldName = 'tag[4]'
     end
     object items_scriptusesLeft: TIntegerField
       FieldName = 'usesLeft'
@@ -886,27 +882,6 @@ object dmDatabase: TdmDatabase
       FieldName = 'usableByClass'
       Size = 32
     end
-    object items_scriptstat: TArrayField
-      FieldName = 'stat'
-      object items_scriptstat0: TIntegerField
-        FieldName = 'stat[0]'
-      end
-      object items_scriptstat1: TIntegerField
-        FieldName = 'stat[1]'
-      end
-      object items_scriptstat2: TIntegerField
-        FieldName = 'stat[2]'
-      end
-      object items_scriptstat3: TIntegerField
-        FieldName = 'stat[3]'
-      end
-      object items_scriptstat4: TIntegerField
-        FieldName = 'stat[4]'
-      end
-      object items_scriptstat5: TIntegerField
-        FieldName = 'stat[5]'
-      end
-    end
     object items_scriptevent: TStringField
       FieldName = 'event'
       Size = 32
@@ -914,6 +889,24 @@ object dmDatabase: TdmDatabase
     object items_scriptscript: TMemoField
       FieldName = 'script'
       BlobType = ftMemo
+    end
+    object items_scriptIntegerField: TIntegerField
+      FieldName = 'stat[1]'
+    end
+    object items_scriptIntegerField2: TIntegerField
+      FieldName = 'stat[2]'
+    end
+    object items_scriptIntegerField3: TIntegerField
+      FieldName = 'stat[3]'
+    end
+    object items_scriptIntegerField4: TIntegerField
+      FieldName = 'stat[4]'
+    end
+    object items_scriptIntegerField5: TIntegerField
+      FieldName = 'stat[5]'
+    end
+    object items_scriptIntegerField6: TIntegerField
+      FieldName = 'stat[6]'
     end
   end
   object items_armor: TClientDataSet
@@ -1103,20 +1096,17 @@ object dmDatabase: TdmDatabase
     object items_armorcost: TIntegerField
       FieldName = 'cost'
     end
-    object items_armortag: TArrayField
-      FieldName = 'tag'
-      object items_armortag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object items_armortag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object items_armortag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object items_armortag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object items_armortag1: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object items_armortag2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object items_armortag3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object items_armortag4: TIntegerField
+      FieldName = 'tag[4]'
     end
     object items_armorusesLeft: TIntegerField
       FieldName = 'usesLeft'
@@ -1132,26 +1122,23 @@ object dmDatabase: TdmDatabase
       FieldName = 'usableByClass'
       Size = 32
     end
-    object items_armorstat: TArrayField
-      FieldName = 'stat'
-      object items_armorstat0: TIntegerField
-        FieldName = 'stat[0]'
-      end
-      object items_armorstat1: TIntegerField
-        FieldName = 'stat[1]'
-      end
-      object items_armorstat2: TIntegerField
-        FieldName = 'stat[2]'
-      end
-      object items_armorstat3: TIntegerField
-        FieldName = 'stat[3]'
-      end
-      object items_armorstat4: TIntegerField
-        FieldName = 'stat[4]'
-      end
-      object items_armorstat5: TIntegerField
-        FieldName = 'stat[5]'
-      end
+    object items_armorstat1: TIntegerField
+      FieldName = 'stat[1]'
+    end
+    object items_armorstat2: TIntegerField
+      FieldName = 'stat[2]'
+    end
+    object items_armorstat3: TIntegerField
+      FieldName = 'stat[3]'
+    end
+    object items_armorstat4: TIntegerField
+      FieldName = 'stat[4]'
+    end
+    object items_armorstat5: TIntegerField
+      FieldName = 'stat[5]'
+    end
+    object items_armorstat6: TIntegerField
+      FieldName = 'stat[6]'
     end
     object items_armorevasion: TBooleanField
       FieldName = 'evasion'
@@ -1184,42 +1171,7 @@ object dmDatabase: TdmDatabase
       FieldName = 'slot'
     end
   end
-  object equipment_conditions: TClientDataSet
-    Active = True
-    Aggregates = <>
-    FieldDefs = <
-      item
-        Name = 'master'
-        DataType = ftInteger
-      end
-      item
-        Name = 'id'
-        DataType = ftInteger
-      end
-      item
-        Name = 'value'
-        DataType = ftBoolean
-      end>
-    IndexDefs = <>
-    Params = <>
-    StoreDefs = True
-    Left = 288
-    Top = 480
-    Data = {
-      420000009619E0BD0100000018000000030000000000030000004200066D6173
-      746572040001000000000002696404000100000000000576616C756502000300
-      000000000000}
-    object IntegerField10: TIntegerField
-      FieldName = 'master'
-    end
-    object equipment_conditionsid: TIntegerField
-      FieldName = 'id'
-    end
-    object equipment_conditionsvalue: TBooleanField
-      FieldName = 'value'
-    end
-  end
-  object equipment_attributes: TClientDataSet
+  object items_attributes: TClientDataSet
     Active = True
     Aggregates = <>
     FieldDefs = <
@@ -1465,20 +1417,17 @@ object dmDatabase: TdmDatabase
     object items_weaponcost: TIntegerField
       FieldName = 'cost'
     end
-    object items_weapontag: TArrayField
-      FieldName = 'tag'
-      object items_weapontag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object items_weapontag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object items_weapontag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object items_weapontag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object items_weapontag1: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object items_weapontag2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object items_weapontag3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object items_weapontag4: TIntegerField
+      FieldName = 'tag[4]'
     end
     object items_weaponusesLeft: TIntegerField
       FieldName = 'usesLeft'
@@ -1494,26 +1443,23 @@ object dmDatabase: TdmDatabase
       FieldName = 'usableByClass'
       Size = 32
     end
-    object items_weaponstat: TArrayField
-      FieldName = 'stat'
-      object items_weaponstat0: TIntegerField
-        FieldName = 'stat[0]'
-      end
-      object items_weaponstat1: TIntegerField
-        FieldName = 'stat[1]'
-      end
-      object items_weaponstat2: TIntegerField
-        FieldName = 'stat[2]'
-      end
-      object items_weaponstat3: TIntegerField
-        FieldName = 'stat[3]'
-      end
-      object items_weaponstat4: TIntegerField
-        FieldName = 'stat[4]'
-      end
-      object items_weaponstat5: TIntegerField
-        FieldName = 'stat[5]'
-      end
+    object items_weaponstat1: TIntegerField
+      FieldName = 'stat[1]'
+    end
+    object items_weaponstat2: TIntegerField
+      FieldName = 'stat[2]'
+    end
+    object items_weaponstat3: TIntegerField
+      FieldName = 'stat[3]'
+    end
+    object items_weaponstat4: TIntegerField
+      FieldName = 'stat[4]'
+    end
+    object items_weaponstat5: TIntegerField
+      FieldName = 'stat[5]'
+    end
+    object items_weaponstat6: TIntegerField
+      FieldName = 'stat[6]'
     end
     object items_weaponevasion: TBooleanField
       FieldName = 'evasion'
@@ -1588,16 +1534,6 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'tag'
-        ChildDefs = <
-          item
-            Name = 'tag[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 4
-      end
-      item
         Name = 'tag[1]'
         DataType = ftInteger
       end
@@ -1610,22 +1546,12 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
+        Name = 'tag[4]'
+        DataType = ftInteger
+      end
+      item
         Name = 'usesLeft'
         DataType = ftInteger
-      end
-      item
-        Name = 'usableWhere'
-        DataType = ftInteger
-      end
-      item
-        Name = 'stat'
-        ChildDefs = <
-          item
-            Name = 'stat[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 6
       end
       item
         Name = 'stat[1]'
@@ -1645,6 +1571,10 @@ object dmDatabase: TdmDatabase
       end
       item
         Name = 'stat[5]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[6]'
         DataType = ftInteger
       end
       item
@@ -1676,6 +1606,10 @@ object dmDatabase: TdmDatabase
         Name = 'usableByHero'
         DataType = ftBytes
         Size = 32
+      end
+      item
+        Name = 'usableWhere'
+        DataType = ftInteger
       end>
     IndexDefs = <>
     Params = <>
@@ -1684,21 +1618,20 @@ object dmDatabase: TdmDatabase
     Left = 184
     Top = 224
     Data = {
-      D20100009619E0BD02000000180000001A000000000003000000D20102696404
+      B90100009619E0BD010000001800000018000000000003000000B90102696404
       00010000000000046E616D650100490000000100055749445448020002002000
       086D6F6469666965640200030000000000046465736301004900000001000557
-      4944544802000200320004636F737404000100000000000374616704000D0300
-      000000067461675B305D0400010000000000067461675B315D04000100000000
-      00067461675B325D0400010000000000067461675B335D040001000000000008
-      757365734C65667404000100000000000B757361626C65576865726504000100
-      00000000047374617406000D030000000007737461745B305D04000100000000
-      0007737461745B315D040001000000000007737461745B325D04000100000000
-      0007737461745B335D040001000000000007737461745B345D04000100000000
-      0007737461745B355D04000100000000000C617265614D65646963696E650200
-      03000000000009687050657263656E740400010000000000096D705065726365
-      6E74040001000000000008646561644F6E6C79020003000000000005736B696C
-      6C04000100000000000D757361626C654279436C61737320000B00000000000C
-      757361626C6542794865726F20000B00000000000000}
+      4944544802000200320004636F73740400010000000000067461675B315D0400
+      010000000000067461675B325D0400010000000000067461675B335D04000100
+      00000000067461675B345D040001000000000008757365734C65667404000100
+      0000000007737461745B315D040001000000000007737461745B325D04000100
+      0000000007737461745B335D040001000000000007737461745B345D04000100
+      0000000007737461745B355D040001000000000007737461745B365D04000100
+      000000000C617265614D65646963696E65020003000000000009687050657263
+      656E740400010000000000096D7050657263656E740400010000000000086465
+      61644F6E6C79020003000000000005736B696C6C04000100000000000D757361
+      626C654279436C61737320000B00000000000C757361626C6542794865726F20
+      000B00000000000B757361626C65576865726504000100000000000000}
     object items_medicineid: TIntegerField
       FieldName = 'id'
     end
@@ -1716,20 +1649,17 @@ object dmDatabase: TdmDatabase
     object items_medicinecost: TIntegerField
       FieldName = 'cost'
     end
-    object items_medicinetag: TArrayField
-      FieldName = 'tag'
-      object items_medicinetag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object items_medicinetag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object items_medicinetag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object items_medicinetag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object items_medicineIntegerField: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object items_medicineIntegerField2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object items_medicineIntegerField3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object items_medicineIntegerField4: TIntegerField
+      FieldName = 'tag[4]'
     end
     object items_medicineusesLeft: TIntegerField
       FieldName = 'usesLeft'
@@ -1745,26 +1675,23 @@ object dmDatabase: TdmDatabase
       FieldName = 'usableByClass'
       Size = 32
     end
-    object items_medicinestat: TArrayField
-      FieldName = 'stat'
-      object items_medicinestat0: TIntegerField
-        FieldName = 'stat[0]'
-      end
-      object items_medicinestat1: TIntegerField
-        FieldName = 'stat[1]'
-      end
-      object items_medicinestat2: TIntegerField
-        FieldName = 'stat[2]'
-      end
-      object items_medicinestat3: TIntegerField
-        FieldName = 'stat[3]'
-      end
-      object items_medicinestat4: TIntegerField
-        FieldName = 'stat[4]'
-      end
-      object items_medicinestat5: TIntegerField
-        FieldName = 'stat[5]'
-      end
+    object items_medicinestat1: TIntegerField
+      FieldName = 'stat[1]'
+    end
+    object items_medicinestat2: TIntegerField
+      FieldName = 'stat[2]'
+    end
+    object items_medicinestat3: TIntegerField
+      FieldName = 'stat[3]'
+    end
+    object items_medicinestat4: TIntegerField
+      FieldName = 'stat[4]'
+    end
+    object items_medicinestat5: TIntegerField
+      FieldName = 'stat[5]'
+    end
+    object items_medicinestat0: TIntegerField
+      FieldName = 'stat[6]'
     end
     object items_medicineareaMedicine: TBooleanField
       FieldName = 'areaMedicine'
@@ -1806,16 +1733,6 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'tag'
-        ChildDefs = <
-          item
-            Name = 'tag[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 4
-      end
-      item
         Name = 'tag[1]'
         DataType = ftInteger
       end
@@ -1828,22 +1745,16 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
+        Name = 'tag[4]'
+        DataType = ftInteger
+      end
+      item
         Name = 'usesLeft'
         DataType = ftInteger
       end
       item
         Name = 'usableWhere'
         DataType = ftInteger
-      end
-      item
-        Name = 'stat'
-        ChildDefs = <
-          item
-            Name = 'stat[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 6
       end
       item
         Name = 'stat[1]'
@@ -1863,6 +1774,10 @@ object dmDatabase: TdmDatabase
       end
       item
         Name = 'stat[5]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[6]'
         DataType = ftInteger
       end
       item
@@ -1886,19 +1801,18 @@ object dmDatabase: TdmDatabase
     Left = 184
     Top = 280
     Data = {
-      880100009619E0BD020000001800000016000000000003000000880102696404
+      6F0100009619E0BD0100000018000000140000000000030000006F0102696404
       00010000000000046E616D650100490000000100055749445448020002002000
       086D6F6469666965640200030000000000046465736301004900000001000557
-      4944544802000200320004636F737404000100000000000374616704000D0300
-      000000067461675B305D0400010000000000067461675B315D04000100000000
-      00067461675B325D0400010000000000067461675B335D040001000000000008
-      757365734C65667404000100000000000B757361626C65576865726504000100
-      00000000047374617406000D030000000007737461745B305D04000100000000
-      0007737461745B315D040001000000000007737461745B325D04000100000000
-      0007737461745B335D040001000000000007737461745B345D04000100000000
-      0007737461745B355D040001000000000005736B696C6C04000100000000000D
-      757361626C654279436C61737320000B00000000000C757361626C6542794865
-      726F20000B00000000000000}
+      4944544802000200320004636F73740400010000000000067461675B315D0400
+      010000000000067461675B325D0400010000000000067461675B335D04000100
+      00000000067461675B345D040001000000000008757365734C65667404000100
+      000000000B757361626C655768657265040001000000000007737461745B315D
+      040001000000000007737461745B325D040001000000000007737461745B335D
+      040001000000000007737461745B345D040001000000000007737461745B355D
+      040001000000000007737461745B365D040001000000000005736B696C6C0400
+      0100000000000D757361626C654279436C61737320000B00000000000C757361
+      626C6542794865726F20000B00000000000000}
     object items_bookid: TIntegerField
       FieldName = 'id'
     end
@@ -1916,20 +1830,17 @@ object dmDatabase: TdmDatabase
     object items_bookcost: TIntegerField
       FieldName = 'cost'
     end
-    object items_booktag: TArrayField
-      FieldName = 'tag'
-      object items_booktag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object items_booktag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object items_booktag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object items_booktag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object items_bookIntegerField: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object items_bookIntegerField2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object items_bookIntegerField3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object items_bookIntegerField4: TIntegerField
+      FieldName = 'tag[4]'
     end
     object items_bookusesLeft: TIntegerField
       FieldName = 'usesLeft'
@@ -1945,26 +1856,23 @@ object dmDatabase: TdmDatabase
       FieldName = 'usableByClass'
       Size = 32
     end
-    object items_bookstat: TArrayField
-      FieldName = 'stat'
-      object items_bookstat0: TIntegerField
-        FieldName = 'stat[0]'
-      end
-      object items_bookstat1: TIntegerField
-        FieldName = 'stat[1]'
-      end
-      object items_bookstat2: TIntegerField
-        FieldName = 'stat[2]'
-      end
-      object items_bookstat3: TIntegerField
-        FieldName = 'stat[3]'
-      end
-      object items_bookstat4: TIntegerField
-        FieldName = 'stat[4]'
-      end
-      object items_bookstat5: TIntegerField
-        FieldName = 'stat[5]'
-      end
+    object items_bookstat1: TIntegerField
+      FieldName = 'stat[1]'
+    end
+    object items_bookstat2: TIntegerField
+      FieldName = 'stat[2]'
+    end
+    object items_bookstat3: TIntegerField
+      FieldName = 'stat[3]'
+    end
+    object items_bookstat4: TIntegerField
+      FieldName = 'stat[4]'
+    end
+    object items_bookstat5: TIntegerField
+      FieldName = 'stat[5]'
+    end
+    object items_bookstat6: TIntegerField
+      FieldName = 'stat[6]'
     end
     object items_bookskill: TIntegerField
       FieldName = 'skill'
@@ -1997,16 +1905,6 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'tag'
-        ChildDefs = <
-          item
-            Name = 'tag[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 4
-      end
-      item
         Name = 'tag[1]'
         DataType = ftInteger
       end
@@ -2019,22 +1917,16 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
+        Name = 'tag[4]'
+        DataType = ftInteger
+      end
+      item
         Name = 'usesLeft'
         DataType = ftInteger
       end
       item
         Name = 'usableWhere'
         DataType = ftInteger
-      end
-      item
-        Name = 'stat'
-        ChildDefs = <
-          item
-            Name = 'stat[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 6
       end
       item
         Name = 'stat[1]'
@@ -2054,6 +1946,10 @@ object dmDatabase: TdmDatabase
       end
       item
         Name = 'stat[5]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[6]'
         DataType = ftInteger
       end
       item
@@ -2081,20 +1977,19 @@ object dmDatabase: TdmDatabase
     Left = 184
     Top = 336
     Data = {
-      A30100009619E0BD020000001800000017000000000003000000A30102696404
+      8A0100009619E0BD0100000018000000150000000000030000008A0102696404
       00010000000000046E616D650100490000000100055749445448020002002000
       086D6F6469666965640200030000000000046465736301004900000001000557
-      4944544802000200320004636F737404000100000000000374616704000D0300
-      000000067461675B305D0400010000000000067461675B315D04000100000000
-      00067461675B325D0400010000000000067461675B335D040001000000000008
-      757365734C65667404000100000000000B757361626C65576865726504000100
-      00000000047374617406000D030000000007737461745B305D04000100000000
-      0007737461745B315D040001000000000007737461745B325D04000100000000
-      0007737461745B335D040001000000000007737461745B345D04000100000000
-      0007737461745B355D040001000000000005736B696C6C040001000000000012
-      637573746F6D536B696C6C4D65737361676502000300000000000C757361626C
-      6542794865726F20000B00000000000D757361626C654279436C61737320000B
-      00000000000000}
+      4944544802000200320004636F73740400010000000000067461675B315D0400
+      010000000000067461675B325D0400010000000000067461675B335D04000100
+      00000000067461675B345D040001000000000008757365734C65667404000100
+      000000000B757361626C655768657265040001000000000007737461745B315D
+      040001000000000007737461745B325D040001000000000007737461745B335D
+      040001000000000007737461745B345D040001000000000007737461745B355D
+      040001000000000007737461745B365D040001000000000005736B696C6C0400
+      01000000000012637573746F6D536B696C6C4D65737361676502000300000000
+      000C757361626C6542794865726F20000B00000000000D757361626C65427943
+      6C61737320000B00000000000000}
     object items_skillid: TIntegerField
       FieldName = 'id'
     end
@@ -2112,20 +2007,17 @@ object dmDatabase: TdmDatabase
     object items_skillcost: TIntegerField
       FieldName = 'cost'
     end
-    object items_skilltag: TArrayField
-      FieldName = 'tag'
-      object items_skilltag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object items_skilltag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object items_skilltag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object items_skilltag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object items_skillIntegerField: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object items_skillIntegerField2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object items_skillIntegerField3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object items_skillIntegerField4: TIntegerField
+      FieldName = 'tag[4]'
     end
     object items_skillusesLeft: TIntegerField
       FieldName = 'usesLeft'
@@ -2141,26 +2033,23 @@ object dmDatabase: TdmDatabase
       FieldName = 'usableByClass'
       Size = 32
     end
-    object items_skillstat: TArrayField
-      FieldName = 'stat'
-      object items_skillstat0: TIntegerField
-        FieldName = 'stat[0]'
-      end
-      object items_skillstat1: TIntegerField
-        FieldName = 'stat[1]'
-      end
-      object items_skillstat2: TIntegerField
-        FieldName = 'stat[2]'
-      end
-      object items_skillstat3: TIntegerField
-        FieldName = 'stat[3]'
-      end
-      object items_skillstat4: TIntegerField
-        FieldName = 'stat[4]'
-      end
-      object items_skillstat5: TIntegerField
-        FieldName = 'stat[5]'
-      end
+    object items_skillstat1: TIntegerField
+      FieldName = 'stat[1]'
+    end
+    object items_skillstat2: TIntegerField
+      FieldName = 'stat[2]'
+    end
+    object items_skillstat3: TIntegerField
+      FieldName = 'stat[3]'
+    end
+    object items_skillstat4: TIntegerField
+      FieldName = 'stat[4]'
+    end
+    object items_skillstat5: TIntegerField
+      FieldName = 'stat[5]'
+    end
+    object items_skillstat6: TIntegerField
+      FieldName = 'stat[6]'
     end
     object items_skillskill: TIntegerField
       FieldName = 'skill'
@@ -2196,16 +2085,6 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'tag'
-        ChildDefs = <
-          item
-            Name = 'tag[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 4
-      end
-      item
         Name = 'tag[1]'
         DataType = ftInteger
       end
@@ -2218,22 +2097,16 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
+        Name = 'tag[4]'
+        DataType = ftInteger
+      end
+      item
         Name = 'usesLeft'
         DataType = ftInteger
       end
       item
         Name = 'usableWhere'
         DataType = ftInteger
-      end
-      item
-        Name = 'stat'
-        ChildDefs = <
-          item
-            Name = 'stat[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 6
       end
       item
         Name = 'stat[1]'
@@ -2256,6 +2129,10 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
+        Name = 'stat[6]'
+        DataType = ftInteger
+      end
+      item
         Name = 'usableByClass'
         DataType = ftBytes
         Size = 32
@@ -2272,18 +2149,18 @@ object dmDatabase: TdmDatabase
     Left = 184
     Top = 388
     Data = {
-      7A0100009619E0BD0200000018000000150000000000030000007A0102696404
+      610100009619E0BD010000001800000013000000000003000000610102696404
       00010000000000046E616D650100490000000100055749445448020002002000
       086D6F6469666965640200030000000000046465736301004900000001000557
-      4944544802000200320004636F737404000100000000000374616704000D0300
-      000000067461675B305D0400010000000000067461675B315D04000100000000
-      00067461675B325D0400010000000000067461675B335D040001000000000008
-      757365734C65667404000100000000000B757361626C65576865726504000100
-      00000000047374617406000D030000000007737461745B305D04000100000000
-      0007737461745B315D040001000000000007737461745B325D04000100000000
-      0007737461745B335D040001000000000007737461745B345D04000100000000
-      0007737461745B355D04000100000000000D757361626C654279436C61737320
-      000B00000000000C757361626C6542794865726F20000B00000000000000}
+      4944544802000200320004636F73740400010000000000067461675B315D0400
+      010000000000067461675B325D0400010000000000067461675B335D04000100
+      00000000067461675B345D040001000000000008757365734C65667404000100
+      000000000B757361626C655768657265040001000000000007737461745B315D
+      040001000000000007737461745B325D040001000000000007737461745B335D
+      040001000000000007737461745B345D040001000000000007737461745B355D
+      040001000000000007737461745B365D04000100000000000D757361626C6542
+      79436C61737320000B00000000000C757361626C6542794865726F20000B0000
+      0000000000}
     object items_upgradeid: TIntegerField
       FieldName = 'id'
     end
@@ -2301,20 +2178,17 @@ object dmDatabase: TdmDatabase
     object items_upgradecost: TIntegerField
       FieldName = 'cost'
     end
-    object items_upgradetag: TArrayField
-      FieldName = 'tag'
-      object items_upgradetag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object items_upgradetag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object items_upgradetag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object items_upgradetag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object items_upgradeIntegerField: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object items_upgradeIntegerField2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object items_upgradeIntegerField3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object items_upgradeIntegerField4: TIntegerField
+      FieldName = 'tag[4]'
     end
     object items_upgradeusesLeft: TIntegerField
       FieldName = 'usesLeft'
@@ -2330,26 +2204,23 @@ object dmDatabase: TdmDatabase
       FieldName = 'usableByClass'
       Size = 32
     end
-    object items_upgradestat: TArrayField
-      FieldName = 'stat'
-      object items_upgradestat0: TIntegerField
-        FieldName = 'stat[0]'
-      end
-      object items_upgradestat1: TIntegerField
-        FieldName = 'stat[1]'
-      end
-      object items_upgradestat2: TIntegerField
-        FieldName = 'stat[2]'
-      end
-      object items_upgradestat3: TIntegerField
-        FieldName = 'stat[3]'
-      end
-      object items_upgradestat4: TIntegerField
-        FieldName = 'stat[4]'
-      end
-      object items_upgradestat5: TIntegerField
-        FieldName = 'stat[5]'
-      end
+    object items_upgradestat1: TIntegerField
+      FieldName = 'stat[1]'
+    end
+    object items_upgradestat2: TIntegerField
+      FieldName = 'stat[2]'
+    end
+    object items_upgradestat3: TIntegerField
+      FieldName = 'stat[3]'
+    end
+    object items_upgradestat4: TIntegerField
+      FieldName = 'stat[4]'
+    end
+    object items_upgradestat5: TIntegerField
+      FieldName = 'stat[5]'
+    end
+    object items_upgradestat6: TIntegerField
+      FieldName = 'stat[6]'
     end
   end
   object items_variable: TClientDataSet
@@ -2379,16 +2250,6 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'tag'
-        ChildDefs = <
-          item
-            Name = 'tag[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 4
-      end
-      item
         Name = 'tag[1]'
         DataType = ftInteger
       end
@@ -2401,22 +2262,16 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
+        Name = 'tag[4]'
+        DataType = ftInteger
+      end
+      item
         Name = 'usesLeft'
         DataType = ftInteger
       end
       item
         Name = 'usableWhere'
         DataType = ftInteger
-      end
-      item
-        Name = 'stat'
-        ChildDefs = <
-          item
-            Name = 'stat[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 6
       end
       item
         Name = 'stat[1]'
@@ -2439,6 +2294,10 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
+        Name = 'stat[6]'
+        DataType = ftInteger
+      end
+      item
         Name = 'which'
         DataType = ftInteger
       end
@@ -2447,7 +2306,7 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'stype'
+        Name = 'style'
         DataType = ftInteger
       end
       item
@@ -2471,20 +2330,20 @@ object dmDatabase: TdmDatabase
     Left = 184
     Top = 440
     Data = {
-      BA0100009619E0BD020000001800000019000000000003000000BA0102696404
+      A10100009619E0BD010000001800000017000000000003000000A10102696404
       00010000000000046E616D650100490000000100055749445448020002002000
       086D6F6469666965640200030000000000046465736301004900000001000557
-      4944544802000200320004636F737404000100000000000374616704000D0300
-      000000067461675B305D0400010000000000067461675B315D04000100000000
-      00067461675B325D0400010000000000067461675B335D040001000000000008
-      757365734C65667404000100000000000B757361626C65576865726504000100
-      00000000047374617406000D030000000007737461745B305D04000100000000
-      0007737461745B315D040001000000000007737461745B325D04000100000000
-      0007737461745B335D040001000000000007737461745B345D04000100000000
-      0007737461745B355D0400010000000000057768696368040001000000000009
-      6D61676E69747564650400010000000000057374797065040001000000000009
-      6F7065726174696F6E04000100000000000D757361626C654279436C61737320
-      000B00000000000C757361626C6542794865726F20000B00000000000000}
+      4944544802000200320004636F73740400010000000000067461675B315D0400
+      010000000000067461675B325D0400010000000000067461675B335D04000100
+      00000000067461675B345D040001000000000008757365734C65667404000100
+      000000000B757361626C655768657265040001000000000007737461745B315D
+      040001000000000007737461745B325D040001000000000007737461745B335D
+      040001000000000007737461745B345D040001000000000007737461745B355D
+      040001000000000007737461745B365D04000100000000000577686963680400
+      010000000000096D61676E69747564650400010000000000057374796C650400
+      010000000000096F7065726174696F6E04000100000000000D757361626C6542
+      79436C61737320000B00000000000C757361626C6542794865726F20000B0000
+      0000000000}
     object items_variableid: TIntegerField
       FieldName = 'id'
     end
@@ -2502,20 +2361,17 @@ object dmDatabase: TdmDatabase
     object items_variablecost: TIntegerField
       FieldName = 'cost'
     end
-    object items_variabletag: TArrayField
-      FieldName = 'tag'
-      object items_variabletag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object items_variabletag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object items_variabletag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object items_variabletag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object items_variableIntegerField: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object items_variableIntegerField2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object items_variableIntegerField3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object items_scripttag0: TIntegerField
+      FieldName = 'tag[4]'
     end
     object items_variableusesLeft: TIntegerField
       FieldName = 'usesLeft'
@@ -2531,38 +2387,35 @@ object dmDatabase: TdmDatabase
       FieldName = 'usableByClass'
       Size = 32
     end
-    object items_variablestat: TArrayField
-      FieldName = 'stat'
-      object items_variablestat0: TIntegerField
-        FieldName = 'stat[0]'
-      end
-      object items_variablestat1: TIntegerField
-        FieldName = 'stat[1]'
-      end
-      object items_variablestat2: TIntegerField
-        FieldName = 'stat[2]'
-      end
-      object items_variablestat3: TIntegerField
-        FieldName = 'stat[3]'
-      end
-      object items_variablestat4: TIntegerField
-        FieldName = 'stat[4]'
-      end
-      object items_variablestat5: TIntegerField
-        FieldName = 'stat[5]'
-      end
-    end
     object items_variablewhich: TIntegerField
       FieldName = 'which'
     end
     object items_variablemagnitude: TIntegerField
       FieldName = 'magnitude'
     end
-    object items_variablestype: TIntegerField
-      FieldName = 'stype'
+    object items_variablestyle: TIntegerField
+      FieldName = 'style'
     end
     object items_variableoperation: TIntegerField
       FieldName = 'operation'
+    end
+    object items_variableIntegerField4: TIntegerField
+      FieldName = 'stat[1]'
+    end
+    object items_variableIntegerField5: TIntegerField
+      FieldName = 'stat[2]'
+    end
+    object items_variableIntegerField6: TIntegerField
+      FieldName = 'stat[3]'
+    end
+    object items_variableIntegerField7: TIntegerField
+      FieldName = 'stat[4]'
+    end
+    object items_variableIntegerField8: TIntegerField
+      FieldName = 'stat[5]'
+    end
+    object items_variableIntegerField9: TIntegerField
+      FieldName = 'stat[6]'
     end
   end
   object shields: TClientDataSet
@@ -3417,20 +3270,17 @@ object dmDatabase: TdmDatabase
     object items_junkcost: TIntegerField
       FieldName = 'cost'
     end
-    object items_junktag: TArrayField
-      FieldName = 'tag'
-      object items_junktag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object items_junktag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object items_junktag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object items_junktag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object items_junktag1: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object items_junktag2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object items_junktag3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object items_junktag4: TIntegerField
+      FieldName = 'tag[4]'
     end
   end
   object weapons: TClientDataSet
@@ -3708,6 +3558,7 @@ object dmDatabase: TdmDatabase
     FieldDefs = <
       item
         Name = 'id'
+        Attributes = [faRequired]
         DataType = ftInteger
       end
       item
@@ -3733,38 +3584,22 @@ object dmDatabase: TdmDatabase
         Size = 50
       end
       item
-        Name = 'messages'
-        ChildDefs = <
-          item
-            Name = 'useString'
-            DataType = ftString
-            Size = 50
-          end
-          item
-            Name = 'useString2'
-            DataType = ftString
-            Size = 50
-          end
-          item
-            Name = 'failureMessage'
-            DataType = ftInteger
-          end>
-        DataType = ftADT
-        Size = 3
+        Name = 'useString'
+        DataType = ftString
+        Size = 50
+      end
+      item
+        Name = 'useString2'
+        DataType = ftString
+        Size = 50
+      end
+      item
+        Name = 'failureMessage'
+        DataType = ftInteger
       end
       item
         Name = 'usableWhere'
         DataType = ftInteger
-      end
-      item
-        Name = 'tag'
-        ChildDefs = <
-          item
-            Name = 'tag[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 4
       end
       item
         Name = 'tag[1]'
@@ -3777,6 +3612,136 @@ object dmDatabase: TdmDatabase
       item
         Name = 'tag[3]'
         DataType = ftInteger
+      end
+      item
+        Name = 'tag[4]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'range'
+        DataType = ftByte
+      end
+      item
+        Name = 'offensive'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'anim'
+        DataType = ftWord
+      end
+      item
+        Name = 'SkillPower[1]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'SkillPower[2]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'SkillPower[3]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'SkillPower[4]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'successRate'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[1]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[2]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[3]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[4]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[5]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[6]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'vampire'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'phased'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'condition'
+        DataType = ftBytes
+        Size = 32
+      end
+      item
+        Name = 'resistMod'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'target'
+        DataType = ftByte
+      end
+      item
+        Name = 'which'
+        DataType = ftWord
+      end
+      item
+        Name = 'magnitude'
+        DataType = ftSmallint
+      end
+      item
+        Name = 'style'
+        DataType = ftByte
+      end
+      item
+        Name = 'operation'
+        DataType = ftByte
+      end
+      item
+        Name = 'sfx.id'
+        DataType = ftInteger
+      end
+      item
+        Name = 'sfx.name'
+        DataType = ftString
+        Size = 255
+      end
+      item
+        Name = 'sfx.modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'sfx.fadeIn'
+        DataType = ftInteger
+      end
+      item
+        Name = 'sfx.tempo'
+        DataType = ftInteger
+      end
+      item
+        Name = 'sfx.volume'
+        DataType = ftByte
+      end
+      item
+        Name = 'sfx.leftBalance'
+        DataType = ftByte
+      end
+      item
+        Name = 'sfx.rightBalance'
+        DataType = ftByte
       end>
     IndexDefs = <>
     Params = <>
@@ -3784,19 +3749,37 @@ object dmDatabase: TdmDatabase
     Left = 256
     Top = 8
     Data = {
-      4A0100009619E0BD0200000018000000100000000000030000004A0102696404
-      00010000000000046E616D650100490000000100055749445448020002002000
+      620300009619E0BD01000000180000002D000000000003000000620302696404
+      00010004000000046E616D650100490000000100055749445448020002002000
       086D6F646966696564020003000000000004636F737404000100000000000B63
       6F737450657263656E7402000300000000000464657363010049000000010005
-      5749445448020002003200086D6573736167657303000C010000000009757365
-      537472696E6701004900000001000557494454480200020032000A7573655374
-      72696E673201004900000001000557494454480200020032000E6661696C7572
-      654D65737361676504000100000000000B757361626C65576865726504000100
-      000000000374616704000D0300000000067461675B305D040001000000000006
-      7461675B315D0400010000000000067461675B325D0400010000000000067461
-      675B335D04000100000000000000}
+      574944544802000200320009757365537472696E670100490000000100055749
+      4454480200020032000A757365537472696E6732010049000000010005574944
+      54480200020032000E6661696C7572654D65737361676504000100000000000B
+      757361626C6557686572650400010000000000067461675B315D040001000000
+      0000067461675B325D0400010000000000067461675B335D0400010000000000
+      067461675B345D04000100000000000572616E67650100020000000000096F66
+      66656E73697665020003000000000004616E696D02000200000000000D536B69
+      6C6C506F7765725B315D04000100000000000D536B696C6C506F7765725B325D
+      04000100000000000D536B696C6C506F7765725B335D04000100000000000D53
+      6B696C6C506F7765725B345D04000100000000000B7375636365737352617465
+      040001000000000007737461745B315D040001000000000007737461745B325D
+      040001000000000007737461745B335D040001000000000007737461745B345D
+      040001000000000007737461745B355D040001000000000007737461745B365D
+      04000100000000000776616D7069726502000300000000000670686173656402
+      0003000000000009636F6E646974696F6E20000B000000000009726573697374
+      4D6F640200030000000000067461726765740100020000000000057768696368
+      0200020000000000096D61676E69747564650200010000000000057374796C65
+      0100020000000000096F7065726174696F6E0100020000000000067366782E69
+      640400010000000000087366782E6E616D650200490000000100055749445448
+      02000200FF000C7366782E6D6F64696669656402000300000000000A7366782E
+      66616465496E0400010000000000097366782E74656D706F0400010000000000
+      0A7366782E766F6C756D6501000200000000000F7366782E6C65667442616C61
+      6E63650100020000000000107366782E726967687442616C616E636501000200
+      000000000000}
     object skillsid: TIntegerField
       FieldName = 'id'
+      Required = True
     end
     object skillsname: TStringField
       FieldName = 'name'
@@ -3815,37 +3798,126 @@ object dmDatabase: TdmDatabase
       FieldName = 'desc'
       Size = 50
     end
-    object skillsmessages: TADTField
-      FieldName = 'messages'
-      object skillsmessagesuseString: TStringField
-        FieldName = 'useString'
-        Size = 50
-      end
-      object skillsmessagesuseString2: TStringField
-        FieldName = 'useString2'
-        Size = 50
-      end
-      object skillsmessagesfailureMessage: TIntegerField
-        FieldName = 'failureMessage'
-      end
+    object skillsskillMessagesuseString: TStringField
+      FieldName = 'useString'
+      Size = 50
+    end
+    object skillsskillMessagesuseString2: TStringField
+      FieldName = 'useString2'
+      Size = 50
+    end
+    object skillsskillMessagesfailureMessage: TIntegerField
+      FieldName = 'failureMessage'
     end
     object skillsusableWhere: TIntegerField
       FieldName = 'usableWhere'
     end
-    object skillstag: TArrayField
-      FieldName = 'tag'
-      object skillstag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object skillstag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object skillstag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object skillstag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object skillstag1: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object skillstag2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object skillstag3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object skillstag4: TIntegerField
+      FieldName = 'tag[4]'
+    end
+    object skillsrange: TByteField
+      FieldName = 'range'
+    end
+    object skillsoffensive: TBooleanField
+      FieldName = 'offensive'
+    end
+    object skillsanim: TWordField
+      FieldName = 'anim'
+    end
+    object skillsSkillPower1: TIntegerField
+      FieldName = 'SkillPower[1]'
+    end
+    object skillsSkillPower2: TIntegerField
+      FieldName = 'SkillPower[2]'
+    end
+    object skillsSkillPower3: TIntegerField
+      FieldName = 'SkillPower[3]'
+    end
+    object skillsSkillPower4: TIntegerField
+      FieldName = 'SkillPower[4]'
+    end
+    object skillssuccessRate: TIntegerField
+      FieldName = 'successRate'
+    end
+    object skillsstat1: TIntegerField
+      FieldName = 'stat[1]'
+    end
+    object skillsstat2: TIntegerField
+      FieldName = 'stat[2]'
+    end
+    object skillsstat3: TIntegerField
+      FieldName = 'stat[3]'
+    end
+    object skillsstat4: TIntegerField
+      FieldName = 'stat[4]'
+    end
+    object skillsstat5: TIntegerField
+      FieldName = 'stat[5]'
+    end
+    object skillsstat6: TIntegerField
+      FieldName = 'stat[6]'
+    end
+    object skillsvampire: TBooleanField
+      FieldName = 'vampire'
+    end
+    object skillsphased: TBooleanField
+      FieldName = 'phased'
+    end
+    object skillscondition: TBytesField
+      FieldName = 'condition'
+      Size = 32
+    end
+    object skillsresistMod: TBooleanField
+      FieldName = 'resistMod'
+    end
+    object skillstarget: TByteField
+      FieldName = 'target'
+    end
+    object skillswhich: TWordField
+      FieldName = 'which'
+    end
+    object skillsmagnitude: TSmallintField
+      FieldName = 'magnitude'
+    end
+    object skillsstyle: TByteField
+      FieldName = 'style'
+    end
+    object skillsoperation: TByteField
+      FieldName = 'operation'
+    end
+    object skills_sfxid: TIntegerField
+      FieldName = 'sfx.id'
+    end
+    object skills_sfxname: TStringField
+      FieldName = 'sfx.name'
+      Size = 255
+    end
+    object skills_sfxmodified: TBooleanField
+      FieldName = 'sfx.modified'
+    end
+    object skills_sfxFadeIn: TIntegerField
+      FieldName = 'sfx.fadeIn'
+    end
+    object skills_sfxTempo: TIntegerField
+      FieldName = 'sfx.tempo'
+    end
+    object skills_sfxVolume: TByteField
+      FieldName = 'sfx.volume'
+    end
+    object skills_sfxLeftBalance: TByteField
+      FieldName = 'sfx.leftBalance'
+    end
+    object skills_sfxRightBalance: TByteField
+      FieldName = 'sfx.rightBalance'
     end
   end
   object items: TClientDataSet
@@ -3879,16 +3951,6 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'tag'
-        ChildDefs = <
-          item
-            Name = 'tag[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 10
-      end
-      item
         Name = 'tag[1]'
         DataType = ftInteger
       end
@@ -3898,6 +3960,10 @@ object dmDatabase: TdmDatabase
       end
       item
         Name = 'tag[3]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'tag[4]'
         DataType = ftInteger
       end
       item
@@ -3919,16 +3985,6 @@ object dmDatabase: TdmDatabase
         Size = 32
       end
       item
-        Name = 'stat'
-        ChildDefs = <
-          item
-            Name = 'stat[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 10
-      end
-      item
         Name = 'stat[1]'
         DataType = ftInteger
       end
@@ -3946,6 +4002,10 @@ object dmDatabase: TdmDatabase
       end
       item
         Name = 'stat[5]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[6]'
         DataType = ftInteger
       end
       item
@@ -3979,6 +4039,11 @@ object dmDatabase: TdmDatabase
       item
         Name = 'usable'
         DataType = ftBoolean
+      end
+      item
+        Name = 'conditions'
+        DataType = ftBytes
+        Size = 32
       end
       item
         Name = 'cursed'
@@ -4045,7 +4110,7 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'stype'
+        Name = 'style'
         DataType = ftInteger
       end
       item
@@ -4071,35 +4136,35 @@ object dmDatabase: TdmDatabase
     Left = 184
     Top = 8
     Data = {
-      990300009619E0BD020000001800000032000000000003000000990302696404
+      930300009619E0BD010000001800000031000000000003000000930302696404
       00010000000000046E616D650100490000000100055749445448020002002000
       086D6F6469666965640200030000000000086974656D54797065040001000000
       00000464657363010049000000010005574944544802000200320004636F7374
-      0400010000000000037461670A000D0300000000067461675B305D0400010000
-      000000067461675B315D0400010000000000067461675B325D04000100000000
-      00067461675B335D040001000000000008757365734C65667404000100000000
-      000B757361626C65576865726504000100000000000C757361626C6542794865
-      726F20000B00000000000D757361626C654279436C61737320000B0000000000
-      04737461740A000D030000000007737461745B305D0400010000000000077374
-      61745B315D040001000000000007737461745B325D0400010000000000077374
-      61745B335D040001000000000007737461745B345D0400010000000000077374
-      61745B355D04000100000000000765766173696F6E020003000000000005746F
-      48697404000100000000000A637269744368616E636504000100000000000B63
-      72697450726576656E7404000100000000000A707265656D7074697665040001
-      00000000000B6D70526564756374696F6E04000100000000000F6E6F54657272
-      61696E44616D616765020003000000000006757361626C650200030000000000
-      0663757273656402000300000000000974776F48616E64656402000300000000
-      000B61747461636B547769636502000300000000000761726561486974020003
-      00000000000A626174746C65416E696D0400010000000000066D70436F737404
-      000100000000000F636F6E646974696F6E4368616E6365040001000000000004
-      736C6F7404000100000000000C617265614D65646963696E6502000300000000
-      0009687050657263656E740400010000000000096D7050657263656E74040001
-      000000000008646561644F6E6C79020003000000000005736B696C6C04000100
-      0000000012637573746F6D536B696C6C4D657373616765020003000000000005
-      77686963680400010000000000096D61676E6974756465040001000000000005
-      73747970650400010000000000096F7065726174696F6E040001000000000005
-      6576656E74010049000000010005574944544802000200200006736372697074
-      04004B0000000100075355425459504502004900050054657874000000}
+      0400010000000000067461675B315D0400010000000000067461675B325D0400
+      010000000000067461675B335D0400010000000000067461675B345D04000100
+      0000000008757365734C65667404000100000000000B757361626C6557686572
+      6504000100000000000C757361626C6542794865726F20000B00000000000D75
+      7361626C654279436C61737320000B000000000007737461745B315D04000100
+      0000000007737461745B325D040001000000000007737461745B335D04000100
+      0000000007737461745B345D040001000000000007737461745B355D04000100
+      0000000007737461745B365D04000100000000000765766173696F6E02000300
+      0000000005746F48697404000100000000000A637269744368616E6365040001
+      00000000000B6372697450726576656E7404000100000000000A707265656D70
+      7469766504000100000000000B6D70526564756374696F6E0400010000000000
+      0F6E6F5465727261696E44616D616765020003000000000006757361626C6502
+      000300000000000A636F6E646974696F6E7320000B0000000000066375727365
+      6402000300000000000974776F48616E64656402000300000000000B61747461
+      636B54776963650200030000000000076172656148697402000300000000000A
+      626174746C65416E696D0400010000000000066D70436F737404000100000000
+      000F636F6E646974696F6E4368616E6365040001000000000004736C6F740400
+      0100000000000C617265614D65646963696E6502000300000000000968705065
+      7263656E740400010000000000096D7050657263656E74040001000000000008
+      646561644F6E6C79020003000000000005736B696C6C04000100000000001263
+      7573746F6D536B696C6C4D657373616765020003000000000005776869636804
+      00010000000000096D61676E69747564650400010000000000057374796C6504
+      00010000000000096F7065726174696F6E0400010000000000056576656E7401
+      004900000001000557494454480200020020000673637269707404004B000000
+      0100075355425459504502004900050054657874000000}
     object IntegerField30: TIntegerField
       FieldName = 'id'
     end
@@ -4120,20 +4185,17 @@ object dmDatabase: TdmDatabase
     object IntegerField31: TIntegerField
       FieldName = 'cost'
     end
-    object ArrayField3: TArrayField
-      FieldName = 'tag'
-      object IntegerField32: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object IntegerField33: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object IntegerField34: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object IntegerField35: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object itemstag1: TIntegerField
+      FieldName = 'tag[1]'
+    end
+    object itemstag2: TIntegerField
+      FieldName = 'tag[2]'
+    end
+    object itemstag3: TIntegerField
+      FieldName = 'tag[3]'
+    end
+    object itemstag4: TIntegerField
+      FieldName = 'tag[4]'
     end
     object IntegerField36: TIntegerField
       FieldName = 'usesLeft'
@@ -4148,27 +4210,6 @@ object dmDatabase: TdmDatabase
     object BytesField4: TBytesField
       FieldName = 'usableByClass'
       Size = 32
-    end
-    object ArrayField4: TArrayField
-      FieldName = 'stat'
-      object IntegerField38: TIntegerField
-        FieldName = 'stat[0]'
-      end
-      object IntegerField39: TIntegerField
-        FieldName = 'stat[1]'
-      end
-      object IntegerField40: TIntegerField
-        FieldName = 'stat[2]'
-      end
-      object IntegerField41: TIntegerField
-        FieldName = 'stat[3]'
-      end
-      object IntegerField42: TIntegerField
-        FieldName = 'stat[4]'
-      end
-      object IntegerField43: TIntegerField
-        FieldName = 'stat[5]'
-      end
     end
     object BooleanField10: TBooleanField
       FieldName = 'evasion'
@@ -4193,6 +4234,10 @@ object dmDatabase: TdmDatabase
     end
     object BooleanField12: TBooleanField
       FieldName = 'usable'
+    end
+    object itemsConditions: TBytesField
+      FieldName = 'conditions'
+      Size = 32
     end
     object BooleanField13: TBooleanField
       FieldName = 'cursed'
@@ -4242,10 +4287,10 @@ object dmDatabase: TdmDatabase
     object itemsmagnitude: TIntegerField
       FieldName = 'magnitude'
     end
-    object itemsstype: TIntegerField
-      FieldName = 'stype'
+    object itemsStyle: TIntegerField
+      FieldName = 'style'
     end
-    object itemsoperation: TIntegerField
+    object itemsOperation: TIntegerField
       FieldName = 'operation'
     end
     object itemsevent: TStringField
@@ -4255,6 +4300,24 @@ object dmDatabase: TdmDatabase
     object itemsscript: TMemoField
       FieldName = 'script'
       BlobType = ftMemo
+    end
+    object itemsstat1: TIntegerField
+      FieldName = 'stat[1]'
+    end
+    object itemsstat2: TIntegerField
+      FieldName = 'stat[2]'
+    end
+    object itemsstat3: TIntegerField
+      FieldName = 'stat[3]'
+    end
+    object itemsstat4: TIntegerField
+      FieldName = 'stat[4]'
+    end
+    object itemsstat5: TIntegerField
+      FieldName = 'stat[5]'
+    end
+    object itemsstat6: TIntegerField
+      FieldName = 'stat[6]'
     end
   end
   object offhands: TClientDataSet
@@ -4547,16 +4610,6 @@ object dmDatabase: TdmDatabase
         DataType = ftWord
       end
       item
-        Name = 'tag'
-        ChildDefs = <
-          item
-            Name = 'tag[0]'
-            DataType = ftInteger
-          end>
-        DataType = ftArray
-        Size = 10
-      end
-      item
         Name = 'tag[1]'
         DataType = ftInteger
       end
@@ -4567,6 +4620,10 @@ object dmDatabase: TdmDatabase
       item
         Name = 'tag[3]'
         DataType = ftInteger
+      end
+      item
+        Name = 'tag[4]'
+        DataType = ftInteger
       end>
     IndexDefs = <>
     Params = <>
@@ -4574,14 +4631,13 @@ object dmDatabase: TdmDatabase
     Left = 456
     Top = 64
     Data = {
-      DE0000009619E0BD02000000180000000C000000000003000000DE0002696404
+      D20000009619E0BD01000000180000000B000000000003000000D20002696404
       00010000000000046E616D650100490000000100055749445448020002002000
       086D6F64696669656402000300000000000B6F75744F66426174746C65020003
       000000000005636F6C6F720200020000000000087072696F7269747902000200
-      000000000B61747461636B4C696D69740200020000000000037461670A000D03
-      00000000067461675B305D0400010000000000067461675B315D040001000000
-      0000067461675B325D0400010000000000067461675B335D0400010000000000
-      0000}
+      000000000B61747461636B4C696D69740200020000000000067461675B315D04
+      00010000000000067461675B325D0400010000000000067461675B335D040001
+      0000000000067461675B345D04000100000000000000}
     object conditionsId: TIntegerField
       FieldName = 'id'
     end
@@ -4604,128 +4660,17 @@ object dmDatabase: TdmDatabase
     object conditionsattackLimit: TWordField
       FieldName = 'attackLimit'
     end
-    object conditionstag: TArrayField
-      FieldName = 'tag'
-      object conditionstag0: TIntegerField
-        FieldName = 'tag[0]'
-      end
-      object conditionstag1: TIntegerField
-        FieldName = 'tag[1]'
-      end
-      object conditionstag2: TIntegerField
-        FieldName = 'tag[2]'
-      end
-      object conditionstag3: TIntegerField
-        FieldName = 'tag[3]'
-      end
+    object conditionstag1: TIntegerField
+      FieldName = 'tag[1]'
     end
-  end
-  object skillGainRecords: TClientDataSet
-    Active = True
-    Aggregates = <>
-    FieldDefs = <
-      item
-        Name = 'name'
-        DataType = ftString
-        Size = 32
-      end
-      item
-        Name = 'designName'
-        DataType = ftString
-        Size = 32
-      end
-      item
-        Name = 'address'
-        DataType = ftInteger
-      end
-      item
-        Name = 'baseMethod'
-        DataType = ftInteger
-      end
-      item
-        Name = 'style'
-        DataType = ftInteger
-      end
-      item
-        Name = 'arrayArgs'
-        DataType = ftBoolean
-      end
-      item
-        Name = 'displayName'
-        DataType = ftString
-        Size = 32
-      end
-      item
-        Name = 'displayMethod'
-        DataType = ftInteger
-      end>
-    IndexDefs = <>
-    Params = <>
-    StoreDefs = True
-    Left = 752
-    Top = 64
-    Data = {
-      CB0000009619E0BD010000001800000008000000000003000000CB00046E616D
-      6501004900000001000557494454480200020020000A64657369676E4E616D65
-      0100490000000100055749445448020002002000076164647265737304000100
-      000000000A626173654D6574686F640400010000000000057374796C65040001
-      00000000000961727261794172677302000300000000000B646973706C61794E
-      616D6501004900000001000557494454480200020020000D646973706C61794D
-      6574686F6404000100000000000000}
-    object skillGainRecordsName: TStringField
-      FieldName = 'name'
-      Size = 32
+    object conditionstag2: TIntegerField
+      FieldName = 'tag[2]'
     end
-    object skillGainRecordsDesignName: TStringField
-      FieldName = 'designName'
-      Size = 32
+    object conditionstag3: TIntegerField
+      FieldName = 'tag[3]'
     end
-    object skillGainRecordsAddress: TIntegerField
-      FieldName = 'address'
-    end
-    object skillGainRecordsBaseMethod: TIntegerField
-      FieldName = 'baseMethod'
-    end
-    object skillGainRecordsStyle: TIntegerField
-      FieldName = 'style'
-    end
-    object skillGainRecordsArrayArgs: TBooleanField
-      FieldName = 'arrayArgs'
-    end
-    object skillGainRecordsDisplayName: TStringField
-      FieldName = 'displayName'
-      Size = 32
-    end
-    object skillGainRecordsDisplayMethod: TIntegerField
-      FieldName = 'displayMethod'
-    end
-    object _TScriptRecordStart: TIntegerField
-      FieldKind = fkLookup
-      FieldName = 'start'
-      LookupDataSet = scriptRange
-      LookupKeyFields = 'name'
-      LookupResultField = 'start'
-      KeyFields = 'displayName'
-      Lookup = True
-    end
-    object _TScriptRecordEnd: TIntegerField
-      FieldKind = fkLookup
-      FieldName = 'end'
-      LookupDataSet = scriptRange
-      LookupKeyFields = 'name'
-      LookupResultField = 'end'
-      KeyFields = 'displayName'
-      Lookup = True
-    end
-    object skillGainRecordsunit: TStringField
-      FieldKind = fkLookup
-      FieldName = 'unit'
-      LookupDataSet = scriptRange
-      LookupKeyFields = 'name'
-      LookupResultField = 'unit'
-      KeyFields = 'name'
-      Size = 32
-      Lookup = True
+    object conditionstag4: TIntegerField
+      FieldName = 'tag[4]'
     end
   end
   object scriptRange: TClientDataSet
@@ -4744,6 +4689,11 @@ object dmDatabase: TdmDatabase
       item
         Name = 'modified'
         DataType = ftBoolean
+      end
+      item
+        Name = 'designName'
+        DataType = ftString
+        Size = 255
       end
       item
         Name = 'start'
@@ -4770,11 +4720,12 @@ object dmDatabase: TdmDatabase
     Left = 752
     Top = 8
     Data = {
-      980000009619E0BD010000001800000006000000000003000000980002696404
+      B70000009619E0BD010000001800000007000000000003000000B70002696404
       00010000000000046E616D650100490000000100055749445448020002002000
-      086D6F6469666965640200030000000000057374617274040001000000000003
-      656E64040001000000000004756E697401004900000001000557494454480200
-      0200200001000D44454641554C545F4F524445520200820000000000}
+      086D6F64696669656402000300000000000A64657369676E4E616D6502004900
+      0000010005574944544802000200FF0005737461727404000100000000000365
+      6E64040001000000000004756E69740100490000000100055749445448020002
+      00200001000D44454641554C545F4F524445520200820000000000}
     object scriptRangeId: TIntegerField
       FieldName = 'id'
     end
@@ -4789,6 +4740,10 @@ object dmDatabase: TdmDatabase
     object scriptRangemodified: TBooleanField
       FieldName = 'modified'
     end
+    object scriptRangedesignName: TStringField
+      FieldName = 'designName'
+      Size = 255
+    end
     object IntegerField6: TIntegerField
       FieldName = 'start'
     end
@@ -4800,82 +4755,542 @@ object dmDatabase: TdmDatabase
       Size = 32
     end
   end
-  object expCalcRecords: TClientDataSet
+  object metadata: TClientDataSet
     Active = True
     Aggregates = <>
     FieldDefs = <
+      item
+        Name = 'id'
+        DataType = ftInteger
+      end
+      item
+        Name = 'name'
+        DataType = ftString
+        Size = 20
+      end
+      item
+        Name = 'modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'parent'
+        DataType = ftSmallint
+      end
+      item
+        Name = 'scrollPosition.x'
+        DataType = ftInteger
+      end
+      item
+        Name = 'scrollPosition.y'
+        DataType = ftInteger
+      end
+      item
+        Name = 'treeOpen'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'bgmState'
+        DataType = ftByte
+      end
+      item
+        Name = 'BgmData.id'
+        DataType = ftInteger
+      end
+      item
+        Name = 'BgmData.name'
+        DataType = ftString
+        Size = 255
+      end
+      item
+        Name = 'BgmData.modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'BgmData.fadeIn'
+        DataType = ftInteger
+      end
+      item
+        Name = 'BgmData.tempo'
+        DataType = ftInteger
+      end
+      item
+        Name = 'BgmData.volume'
+        DataType = ftByte
+      end
+      item
+        Name = 'BgmData.leftBalance'
+        DataType = ftByte
+      end
+      item
+        Name = 'BgmData.rightBalance'
+        DataType = ftByte
+      end
+      item
+        Name = 'battleBgState'
+        DataType = ftByte
+      end
+      item
+        Name = 'battleBgName'
+        DataType = ftString
+        Size = 255
+      end
+      item
+        Name = 'canPort'
+        DataType = ftByte
+      end
+      item
+        Name = 'canEscape'
+        DataType = ftByte
+      end
+      item
+        Name = 'canSave'
+        DataType = ftByte
+      end
+      item
+        Name = 'internalFilename.Name'
+        DataType = ftString
+        Size = 255
+      end
+      item
+        Name = 'internalFilename.duplicates'
+        DataType = ftInteger
+      end
+      item
+        Name = 'mapEngine'
+        DataType = ftShortint
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 664
+    Top = 8
+    Data = {
+      450200009619E0BD010000001800000018000000000003000000450202696404
+      00010000000000046E616D650100490000000100055749445448020002001400
+      086D6F646966696564020003000000000006706172656E740200010000000000
+      107363726F6C6C506F736974696F6E2E780400010000000000107363726F6C6C
+      506F736974696F6E2E79040001000000000008747265654F70656E0200030000
+      0000000862676D537461746501000200000000000A42676D446174612E696404
+      000100000000000C42676D446174612E6E616D65020049000000010005574944
+      544802000200FF001042676D446174612E6D6F64696669656402000300000000
+      000E42676D446174612E66616465496E04000100000000000D42676D44617461
+      2E74656D706F04000100000000000E42676D446174612E766F6C756D65010002
+      00000000001342676D446174612E6C65667442616C616E636501000200000000
+      001442676D446174612E726967687442616C616E636501000200000000000D62
+      6174746C654267537461746501000200000000000C626174746C6542674E616D
+      65020049000000010005574944544802000200FF000763616E506F7274010002
+      00000000000963616E45736361706501000200000000000763616E5361766501
+      0002000000000015696E7465726E616C46696C656E616D652E4E616D65020049
+      000000010005574944544802000200FF001B696E7465726E616C46696C656E61
+      6D652E6475706C6963617465730400010000000000096D6170456E67696E6501
+      000100000000000000}
+    object metadataId: TIntegerField
+      FieldName = 'id'
+    end
+    object metadataName: TStringField
+      FieldName = 'name'
+    end
+    object metadataModified: TBooleanField
+      FieldName = 'modified'
+    end
+    object metadataParent: TSmallintField
+      FieldName = 'parent'
+    end
+    object metadatascrollPositionx: TIntegerField
+      FieldName = 'scrollPosition.x'
+    end
+    object metadataScrollPositiony: TIntegerField
+      FieldName = 'scrollPosition.y'
+    end
+    object metadataTreeOpen: TBooleanField
+      FieldName = 'treeOpen'
+    end
+    object metadataBgmState: TByteField
+      FieldName = 'bgmState'
+    end
+    object skills_BgmDataid: TIntegerField
+      FieldName = 'BgmData.id'
+    end
+    object skills_BgmDataname: TStringField
+      FieldName = 'BgmData.name'
+      Size = 255
+    end
+    object skills_BgmDatamodified: TBooleanField
+      FieldName = 'BgmData.modified'
+    end
+    object skills_BgmDataFadeIn: TIntegerField
+      FieldName = 'BgmData.fadeIn'
+    end
+    object skills_BgmDataTempo: TIntegerField
+      FieldName = 'BgmData.tempo'
+    end
+    object skills_BgmDataVolume: TByteField
+      FieldName = 'BgmData.volume'
+    end
+    object skills_BgmDataLeftBalance: TByteField
+      FieldName = 'BgmData.leftBalance'
+    end
+    object skills_BgmDataRightBalance: TByteField
+      FieldName = 'BgmData.rightBalance'
+    end
+    object metadataBattleBgState: TByteField
+      FieldName = 'battleBgState'
+    end
+    object metadataBattleBgName: TStringField
+      FieldName = 'battleBgName'
+      Size = 255
+    end
+    object metadataCanPort: TByteField
+      FieldName = 'canPort'
+    end
+    object metadataCanEscape: TByteField
+      FieldName = 'canEscape'
+    end
+    object metadataCanSave: TByteField
+      FieldName = 'canSave'
+    end
+    object metadataInternalFilenameName: TStringField
+      FieldName = 'internalFilename.Name'
+      Size = 255
+    end
+    object metadataInternalFilenameDuplicates: TIntegerField
+      FieldName = 'internalFilename.duplicates'
+    end
+    object metadataMapEngine: TShortintField
+      FieldName = 'mapEngine'
+    end
+  end
+  object skills_attributes: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'master'
+        DataType = ftInteger
+      end
+      item
+        Name = 'x'
+        DataType = ftInteger
+      end
+      item
+        Name = 'y'
+        DataType = ftInteger
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 368
+    Top = 436
+    Data = {
+      3D0000009619E0BD0100000018000000030000000000030000003D00066D6173
+      7465720400010000000000017804000100000000000179040001000000000000
+      00}
+    object IntegerField10: TIntegerField
+      FieldName = 'master'
+    end
+    object IntegerField12: TIntegerField
+      FieldName = 'x'
+    end
+    object IntegerField16: TIntegerField
+      FieldName = 'y'
+    end
+  end
+  object animations_timingSec: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'master'
+        DataType = ftInteger
+      end
+      item
+        Name = 'id'
+        DataType = ftInteger
+      end
       item
         Name = 'name'
         DataType = ftString
         Size = 32
       end
       item
-        Name = 'designName'
+        Name = 'modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'sound.id'
+        DataType = ftInteger
+      end
+      item
+        Name = 'sound.name'
         DataType = ftString
         Size = 32
       end
       item
-        Name = 'address'
+        Name = 'sound.modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'sound.fadeIn'
         DataType = ftInteger
       end
       item
-        Name = 'baseMethod'
+        Name = 'sound.tempo'
+        DataType = ftInteger
+      end
+      item
+        Name = 'sound.volume'
+        DataType = ftByte
+      end
+      item
+        Name = 'sound.leftBalance'
+        DataType = ftByte
+      end
+      item
+        Name = 'sound.rightBalance'
+        DataType = ftByte
+      end
+      item
+        Name = 'flashWhere'
+        DataType = ftByte
+      end
+      item
+        Name = 'color'
         DataType = ftInteger
       end>
     IndexDefs = <>
     Params = <>
     StoreDefs = True
-    Left = 752
-    Top = 120
+    Left = 384
+    Top = 80
     Data = {
-      750000009619E0BD0100000018000000040000000000030000007500046E616D
-      6501004900000001000557494454480200020020000A64657369676E4E616D65
-      0100490000000100055749445448020002002000076164647265737304000100
-      000000000A626173654D6574686F6404000100000000000000}
-    object expCalcRecordsname: TStringField
+      390100009619E0BD01000000180000000E0000000000030000003901066D6173
+      74657204000100000000000269640400010000000000046E616D650100490000
+      000100055749445448020002002000086D6F6469666965640200030000000000
+      08736F756E642E696404000100000000000A736F756E642E6E616D6501004900
+      000001000557494454480200020020000E736F756E642E6D6F64696669656402
+      000300000000000C736F756E642E66616465496E04000100000000000B736F75
+      6E642E74656D706F04000100000000000C736F756E642E766F6C756D65010002
+      000000000011736F756E642E6C65667442616C616E6365010002000000000012
+      736F756E642E726967687442616C616E636501000200000000000A666C617368
+      5768657265010002000000000005636F6C6F7204000100000000000000}
+    object animations_timingSecIntegerField: TIntegerField
+      FieldName = 'master'
+    end
+    object animations_timingSecid: TIntegerField
+      FieldName = 'id'
+    end
+    object animations_timingSecname: TStringField
       FieldName = 'name'
       Size = 32
     end
-    object expCalcRecordsdesignName: TStringField
-      FieldName = 'designName'
+    object animations_timingSecmodified: TBooleanField
+      FieldName = 'modified'
+    end
+    object animations_timingSecsoundid: TIntegerField
+      FieldName = 'sound.id'
+    end
+    object animations_timingSecsoundname: TStringField
+      FieldName = 'sound.name'
       Size = 32
     end
-    object expCalcRecordsaddress: TIntegerField
-      FieldName = 'address'
+    object animations_timingSecsoundmodified: TBooleanField
+      FieldName = 'sound.modified'
     end
-    object expCalcRecordsBaseMethod: TIntegerField
-      FieldName = 'baseMethod'
+    object animations_timingSecsoundfadeIn: TIntegerField
+      FieldName = 'sound.fadeIn'
     end
-    object expCalcRecordsStart: TIntegerField
-      FieldKind = fkLookup
-      FieldName = 'start'
-      LookupDataSet = scriptRange
-      LookupKeyFields = 'name'
-      LookupResultField = 'start'
-      KeyFields = 'name'
-      Lookup = True
+    object animations_timingSecsoundtempo: TIntegerField
+      FieldName = 'sound.tempo'
     end
-    object expCalcRecordsEnd: TIntegerField
-      FieldKind = fkLookup
-      FieldName = 'end'
-      LookupDataSet = scriptRange
-      LookupKeyFields = 'name'
-      LookupResultField = 'end'
-      KeyFields = 'name'
-      Lookup = True
+    object animations_timingSecsoundvolume: TByteField
+      FieldName = 'sound.volume'
     end
-    object expCalcRecordsunit: TStringField
-      FieldKind = fkLookup
-      FieldName = 'unit'
-      LookupDataSet = scriptRange
-      LookupKeyFields = 'name'
-      LookupResultField = 'unit'
-      KeyFields = 'name'
-      Size = 32
-      Lookup = True
+    object animations_timingSecsoundleftBalance: TByteField
+      FieldName = 'sound.leftBalance'
+    end
+    object animations_timingSecsoundrightBalance: TByteField
+      FieldName = 'sound.rightBalance'
+    end
+    object animations_timingSecFlashWhere: TByteField
+      FieldName = 'flashWhere'
+    end
+    object animations_timingSecColor: TIntegerField
+      FieldName = 'color'
     end
   end
-  object charClasses_Events: TClientDataSet
+  object animations_frameSec: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'master'
+        DataType = ftInteger
+      end
+      item
+        Name = 'id'
+        DataType = ftInteger
+      end
+      item
+        Name = 'name'
+        DataType = ftString
+        Size = 32
+      end
+      item
+        Name = 'modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'sound.id'
+        DataType = ftInteger
+      end
+      item
+        Name = 'sound.name'
+        DataType = ftString
+        Size = 32
+      end
+      item
+        Name = 'sound.modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'sound.fadeIn'
+        DataType = ftInteger
+      end
+      item
+        Name = 'sound.tempo'
+        DataType = ftInteger
+      end
+      item
+        Name = 'sound.volume'
+        DataType = ftByte
+      end
+      item
+        Name = 'sound.leftBalance'
+        DataType = ftByte
+      end
+      item
+        Name = 'sound.rightBalance'
+        DataType = ftByte
+      end
+      item
+        Name = 'flashWhere'
+        DataType = ftByte
+      end
+      item
+        Name = 'color'
+        DataType = ftInteger
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 384
+    Top = 136
+    Data = {
+      390100009619E0BD01000000180000000E0000000000030000003901066D6173
+      74657204000100000000000269640400010000000000046E616D650100490000
+      000100055749445448020002002000086D6F6469666965640200030000000000
+      08736F756E642E696404000100000000000A736F756E642E6E616D6501004900
+      000001000557494454480200020020000E736F756E642E6D6F64696669656402
+      000300000000000C736F756E642E66616465496E04000100000000000B736F75
+      6E642E74656D706F04000100000000000C736F756E642E766F6C756D65010002
+      000000000011736F756E642E6C65667442616C616E6365010002000000000012
+      736F756E642E726967687442616C616E636501000200000000000A666C617368
+      5768657265010002000000000005636F6C6F7204000100000000000000}
+    object IntegerField17: TIntegerField
+      FieldName = 'master'
+    end
+    object IntegerField18: TIntegerField
+      FieldName = 'id'
+    end
+    object StringField9: TStringField
+      FieldName = 'name'
+      Size = 32
+    end
+    object BooleanField2: TBooleanField
+      FieldName = 'modified'
+    end
+    object animations_frameSecframe: TWordField
+      FieldKind = fkCalculated
+      FieldName = 'frame'
+      Calculated = True
+    end
+    object animations_frameSecpositionx: TIntegerField
+      FieldKind = fkCalculated
+      FieldName = 'position.x'
+      Calculated = True
+    end
+    object animations_frameSecpositiony: TIntegerField
+      FieldKind = fkCalculated
+      FieldName = 'position.y'
+      Calculated = True
+    end
+    object animations_frameSeczoomx: TIntegerField
+      FieldKind = fkCalculated
+      FieldName = 'zoom.x'
+      Calculated = True
+    end
+    object animations_frameSeczoomy: TIntegerField
+      FieldKind = fkCalculated
+      FieldName = 'zoom.y'
+      Calculated = True
+    end
+    object animations_frameSeccolor: TIntegerField
+      FieldKind = fkCalculated
+      FieldName = 'color'
+      Calculated = True
+    end
+    object animations_frameSecsaturation: TByteField
+      FieldKind = fkCalculated
+      FieldName = 'saturation'
+      Calculated = True
+    end
+  end
+  object tilesets: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'id'
+        DataType = ftInteger
+      end
+      item
+        Name = 'name'
+        DataType = ftString
+        Size = 32
+      end
+      item
+        Name = 'modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'HiSpeed'
+        DataType = ftBoolean
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 520
+    Top = 8
+    Data = {
+      5F0000009619E0BD0100000018000000040000000000030000005F0002696404
+      00010000000000046E616D650100490000000100055749445448020002002000
+      086D6F6469666965640200030000000000074869537065656402000300000000
+      000000}
+    object IntegerField19: TIntegerField
+      FieldName = 'id'
+    end
+    object StringField10: TStringField
+      FieldName = 'name'
+      Size = 32
+    end
+    object BooleanField3: TBooleanField
+      FieldName = 'modified'
+    end
+    object tilesetsHiSpeed: TBooleanField
+      FieldName = 'HiSpeed'
+    end
+  end
+  object scriptRecords: TClientDataSet
     Active = True
     Aggregates = <>
     FieldDefs = <
@@ -4900,8 +5315,9 @@ object dmDatabase: TdmDatabase
     IndexDefs = <>
     Params = <>
     StoreDefs = True
-    Left = 8
-    Top = 552
+    BeforeInsert = scriptRecordsBeforeInsert
+    Left = 752
+    Top = 64
     Data = {
       750000009619E0BD0100000018000000040000000000030000007500046E616D
       6501004900000001000557494454480200020020000A64657369676E4E616D65

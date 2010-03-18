@@ -19,22 +19,29 @@ unit turbu_script_basis;
 
 interface
 uses
-   sysUtils, db,
-   commons, turbu_classes, turbu_containers;
+   sysUtils, db, rtti,
+   commons, turbu_classes, turbu_containers, turbu_defs, turbu_serialization;
 
 type
    EScriptError = class(Exception);
 
+   TUploadRangeAttribute = class(TDBUploadAttribute)
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
    TScriptRange = class(TRpgDatafile)
    private
+      FDesignName: string;
+      [TUploadRange]
       FRange: TRpgPoint;
       FUnit: string;
    public
-      constructor Create(name: string; point: TRpgPoint);
-      procedure upload(db: TDataSet); override;
+      constructor Create(name, designName: string; point: TRpgPoint);
 
       property scriptUnitName: string read FUnit write FUnit;
       property range: TRpgPoint read FRange write FRange;
+      property designName: string read FDesignName;
    end;
 
    TScriptList = class(TRpgObjectList<TScriptRange>)
@@ -50,7 +57,7 @@ uses
 
 { TScriptRange }
 
-constructor TScriptRange.Create(name: string; point: TRpgPoint);
+constructor TScriptRange.Create(name, designName: string; point: TRpgPoint);
 var
    index: integer;
 begin
@@ -59,14 +66,7 @@ begin
    FUnit := strtok.GetNextToken(name, '.', index);
    Self.name := GetNextToken(name, ' ', index);
    FRange := point;
-end;
-
-procedure TScriptRange.upload(db: TDataSet);
-begin
-   inherited upload(db);
-   db.FieldByName('unit').AsString := FUnit;
-   db.FieldByName('start').AsInteger := FRange.x;
-   db.FieldByName('end').AsInteger := FRange.y;
+   FDesignName := designName;
 end;
 
 { TScriptList }
@@ -77,6 +77,28 @@ begin
       if result.name = name then
          Exit;
    result := nil;
+end;
+
+{ TUploadRangeAttribute }
+
+procedure TUploadRangeAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   range: TScriptRange absolute instance;
+begin
+   assert(instance is TScriptRange);
+   range.FRange.x := db.FieldByName('start').AsInteger;
+   range.FRange.y := db.FieldByName('end').AsInteger;
+end;
+
+procedure TUploadRangeAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   range: TScriptRange absolute instance;
+begin
+   assert(instance is TScriptRange);
+   db.FieldByName('start').AsInteger := range.FRange.x;
+   db.FieldByName('end').AsInteger := range.FRange.y;
 end;
 
 end.

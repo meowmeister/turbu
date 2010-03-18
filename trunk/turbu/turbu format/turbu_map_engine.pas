@@ -28,12 +28,14 @@ uses
 type
    TMapEngineData = class(TRpgMetadata);
 
+   TDeleteMapMode = (dmTree, dmSibling, dmTop, dmNone);
+
    IMapEngine = interface(IInterface)
    ['{A5FDC982-D72E-448E-8E37-7865094C5B5E}']
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase);
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
-      function loadMap(var map: IRpgMap): boolean;
+      function loadMap(map: IMapMetadata): IRpgMap;
       function getData: TMapEngineData;
       property data: TMapEngineData read getData;
    end;
@@ -54,6 +56,9 @@ type
       property autosaveMaps: boolean read getAutosaveMaps write setAutosaveMaps;
       procedure saveCurrent;
       procedure saveAll;
+      function AddNewMap(parentID: integer): IMapMetadata;
+      procedure EditMapProperties(mapID: integer);
+      procedure DeleteMap(mapID: integer; deleteResult: TDeleteMapMode);
    end;
 
    TMapEngine = class abstract (TRpgPlugBase, IMapEngine)
@@ -72,7 +77,7 @@ type
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase); virtual;
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
-      function loadMap(var map: IRpgMap): boolean; virtual; abstract;
+      function loadMap(map: IMapMetadata): IRpgMap; virtual; abstract;
 
       property data: TMapEngineData read GetData write FData;
    end;

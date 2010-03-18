@@ -19,17 +19,23 @@ unit turbu_animations;
 
 interface
 uses
-   classes, DB,
-   commons, turbu_sounds, turbu_classes;
+   classes, DB, RTTI,
+   commons, turbu_sounds, turbu_classes, turbu_containers, turbu_serialization;
 
 type
    TAnimYTarget = (at_top, at_center, at_bottom);
    TFlashTarget = (fl_none, fl_target, fl_screen);
 
+   TUploadColorAttribute = class(TDBUploadAttribute)
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
    TAnimEffects = class(TRpgDatafile)
    private
       FSound: TRpgSound;
       FFlashWhere: TFlashTarget;
+      [TUploadColor]
       FColor: TRpgColor;
    protected
       class function keyChar: ansiChar; override;
@@ -45,8 +51,10 @@ type
 
    TAnimCell = class(TRpgDatafile)
    private
+      FFrame: word;
       FPosition: TRpgPoint;
       FZoom: TRpgPoint;
+      [TUploadColor]
       FColor: TRpgColor;
       FSaturation: byte;
    protected
@@ -55,37 +63,36 @@ type
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
 
+      property frame: word read FFrame write FFrame;
       property position: TRpgPoint read FPosition write FPosition;
       property zoom: TRpgPoint read FZoom write FZoom;
       property color: TRpgColor read FColor write FColor;
       property saturation: byte read FSaturation write FSaturation;
    end;
 
-   TAnimFrame = array of TAnimCell;
-   TAnimFrameSet = array of TAnimFrame;
-   TAnimEffectSet = array of TAnimEffects;
+   TAnimFrameList = class(TRpgObjectList<TAnimCell>);
+   TAnimEffectList = class(TRpgObjectList<TAnimEffects>);
 
    TAnimTemplate = class(TRpgDatafile)
    private
       FFilename: string;
-      FTimingSec: TAnimEffectSet;
-      FFrameSec: TAnimFrameSet;
+      FTimingSec: TAnimEffectList;
+      FFrameSec: TAnimFrameList;
       FHitsAll: boolean;
       FYTarget: TAnimYTarget;
    protected
-      function getDatasetName: string; override;
+      class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
       destructor Destroy; override;
-      procedure upload(db: TDataSet); override;
 
       property filename: string read FFilename write FFilename;
       property hitsAll: boolean read FHitsAll write FHitsAll;
       property yTarget: TAnimYTarget read FYTarget write FYTarget;
-      property effect: TAnimEffectSet read FTimingSec write FTimingSec;
-      property frame: TAnimFrameSet read FFrameSec write FFrameSec;
+      property effect: TAnimEffectList read FTimingSec write FTimingSec;
+      property frame: TAnimFrameList read FFrameSec write FFrameSec;
    end;
 
 implementation
@@ -127,20 +134,13 @@ end;
 { TAnimTemplate }
 
 destructor TAnimTemplate.Destroy;
-var
-   i, j: integer;
 begin
-   for I := low(FTimingSec) to high(FTimingSec) do
-      FTimingSec[i].free;
-   for j := low(FFrameSec) to high(FFrameSec) do
-   begin
-      for I := low(FFrameSec[j]) to high(FFrameSec[j]) do
-         FFrameSec[j, i].free;
-   end;
+   FTimingSec.Free;
+   FFrameSec.free;
    inherited;
 end;
 
-function TAnimTemplate.getDatasetName: string;
+class function TAnimTemplate.getDatasetName: string;
 begin
    result := 'animations';
 end;
@@ -152,22 +152,21 @@ end;
 
 constructor TAnimTemplate.Load(savefile: TStream);
 var
-   i, j: integer;
+   i: integer;
 begin
    inherited Load(savefile);
    FFilename := savefile.readString();
-   setLength(FTimingSec, savefile.readInt);
-   for I := 1 to high(FTimingSec) do
-      FTimingSec[i] := TAnimEffects.load(savefile);
+   FTimingSec := TAnimEffectList.Create;
+   FTimingSec.Capacity := savefile.readInt;
+   FTimingSec.Add(TAnimEffects.Create);
+   for I := 1 to FTimingSec.Capacity - 1 do
+      FTimingSec.Add(TAnimEffects.load(savefile));
    lassert(savefile.readChar = 't');
-   setLength(FFrameSec, savefile.readInt);
-   for I := 0 to high(FFrameSec) do
-   begin
-      setLength(FFrameSec[i], savefile.readInt);
-      for j := 1 to high(FFrameSec[i]) do
-         FFrameSec[i, j] := TAnimCell.load(savefile);
-      lassert(savefile.readChar = 'f');
-   end;
+   FFrameSec := TAnimFrameList.Create;
+   FFrameSec.Capacity := savefile.readInt;
+   FFrameSec.Add(TAnimCell.Create);
+   for I := 1 to FFrameSec.Capacity - 1 do
+      FFrameSec.Add(TAnimCell.load(savefile));
    lassert(savefile.readChar = 's');
    FHitsAll := savefile.readBool;
    savefile.readBuffer(FYTarget, sizeof(TAnimYTarget));
@@ -176,34 +175,21 @@ end;
 
 procedure TAnimTemplate.save(savefile: TStream);
 var
-   i, j: integer;
+   i: integer;
 begin
    inherited save(savefile);
    savefile.writeString(FFilename);
-   savefile.writeInt(length(FTimingSec));
-   for I := 1 to high(FTimingSec) do
+   savefile.writeInt(FTimingSec.Count);
+   for I := 1 to FTimingSec.High do
       FTimingSec[i].save(savefile);
    savefile.writeChar('t');
-   savefile.writeInt(length(FFrameSec));
-   for I := 0 to high(FFrameSec) do
-   begin
-      savefile.writeInt(length(FFrameSec[i]));
-      for j := 1 to high(FFrameSec[i]) do
-         FFrameSec[i, j].save(savefile);
-      savefile.writeChar('f');
-   end;
+   savefile.writeInt(FFrameSec.Count);
+   for I := 1 to FFrameSec.High do
+      FFrameSec[i].save(savefile);
    savefile.writeChar('s');
    savefile.writeBool(FHitsAll);
    savefile.WriteBuffer(FYTarget, sizeof(TAnimYTarget));
    savefile.writeChar('A');
-end;
-
-procedure TAnimTemplate.upload(db: TDataSet);
-begin
-   inherited;
-   db.FieldByName('hitsAll').AsBoolean := FHitsAll;
-   db.FieldByName('yTarget').AsInteger := ord(FYTarget);
-   //upload object arrays later
 end;
 
 { TAnimCell }
@@ -216,6 +202,7 @@ end;
 constructor TAnimCell.Load(savefile: TStream);
 begin
    inherited Load(savefile);
+   FFrame := savefile.ReadWord;
    savefile.readBuffer(FPosition, sizeof(TRpgPoint));
    savefile.readBuffer(FZoom, sizeof(TRpgPoint));
    savefile.readBuffer(FColor, sizeof(TRpgColor));
@@ -226,11 +213,32 @@ end;
 procedure TAnimCell.save(savefile: TStream);
 begin
    inherited save(savefile);
+   savefile.writeWord(FFrame);
    savefile.WriteBuffer(FPosition, sizeof(TRpgPoint));
    savefile.WriteBuffer(FZoom, sizeof(TRpgPoint));
    savefile.WriteBuffer(FColor, sizeof(TRpgColor));
    savefile.writeByte(FSaturation);
    savefile.writeChar('C');
+end;
+
+{ TUploadColorAttribute }
+
+procedure TUploadColorAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   anim: TAnimEffects absolute instance;
+begin
+   assert(anim is TAnimEffects);
+   anim.FColor.color := cardinal(db.FieldByName('color').AsInteger);
+end;
+
+procedure TUploadColorAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   anim: TAnimEffects absolute instance;
+begin
+   assert(anim is TAnimEffects);
+   db.FieldByName('color').AsInteger := integer(anim.FColor.color);
 end;
 
 end.

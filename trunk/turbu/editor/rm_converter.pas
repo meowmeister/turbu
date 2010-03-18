@@ -129,7 +129,7 @@ begin
       try
          frmConversionReport.thread := TConverterThread.Create(frmConversionReport, dirProjectLocation.Text, dirOutput.Text, FFormat);
          case frmConversionReport.ShowModal of
-            mrOk:;
+            mrOk: self.Close;
             else ;
          end;
       finally
