@@ -146,7 +146,7 @@ var
 procedure TSdlRenderSurface.Clear;
 begin
    assert(lCurrentRenderTarget = self);
-   SDL_RenderFill(nil);
+   SDL_RenderRect(nil);
 end;
 
 constructor TSdlRenderTarget.Create(size: TSgPoint);

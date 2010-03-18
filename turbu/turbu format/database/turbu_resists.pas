@@ -37,7 +37,6 @@ type
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataset); override;
 
       property outOfBattle: boolean read FOutOfBattle write FOutOfBattle;
       property color: byte read FColor write FColor;
@@ -55,7 +54,6 @@ type
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataset); override;
 
       property requiredForSkills: boolean read FRequiredForSkills write FRequiredForSkills;
       property standard: smallint read FStandard write FStandard;
@@ -92,19 +90,6 @@ begin
    savefile.writeChar('C');
 end;
 
-procedure TConditionTemplate.upload(db: TDataset);
-var
-  i: Integer;
-begin
-   inherited upload(db);
-   db.FieldByName('outOfBattle').AsBoolean := FOutOfBattle;
-   db.FieldByName('color').AsInteger := FColor;
-   db.FieldByName('priority').AsInteger := FPriority;
-   db.FieldByName('attackLimit').AsInteger := integer(FAttackLimit);
-   for i := 1 to 4 do
-      TArrayField(db.FieldByName('tag'))[i - 1] := i;
-end;
-
 { TAttributeTemplate }
 
 class function TAttributeTemplate.keyChar: ansiChar;
@@ -126,13 +111,6 @@ begin
    savefile.writeBool(FRequiredForSkills);
    savefile.writeWord(FStandard);
    savefile.writeChar('A');
-end;
-
-procedure TAttributeTemplate.upload(db: TDataset);
-begin
-   inherited upload(db);
-   db.FieldByName('requiredForSkills').AsBoolean := requiredForSkills;
-   db.FieldByName('standard').AsInteger := standard;
 end;
 
 end.

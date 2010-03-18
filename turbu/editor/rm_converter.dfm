@@ -2,64 +2,88 @@ object frmRmConverter: TfrmRmConverter
   Left = 256
   Top = 230
   Caption = 'RPG Maker Project Importer'
-  ClientHeight = 250
-  ClientWidth = 500
+  ClientHeight = 327
+  ClientWidth = 654
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   Position = poDesigned
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object pagOptions: TPageControl
     Left = 0
     Top = 0
-    Width = 500
-    Height = 211
+    Width = 654
+    Height = 276
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     ActivePage = tshBasic
     TabOrder = 0
     object tshBasic: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Basic'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitLeft = 196
+      ExplicitTop = -68
       object lblLocation: TLabel
-        Left = 185
-        Top = 27
-        Width = 117
-        Height = 13
+        Left = 222
+        Top = 17
+        Width = 148
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Original project location:'
       end
       object lblConvertLocation: TLabel
-        Left = 170
-        Top = 54
-        Width = 132
-        Height = 13
+        Left = 222
+        Top = 78
+        Width = 169
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Converted project location:'
       end
       object dirProjectLocation: TJvDirectoryEdit
-        Left = 308
-        Top = 24
-        Width = 163
-        Height = 21
+        Left = 222
+        Top = 41
+        Width = 394
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         DialogKind = dkWin32
         DirectInput = False
+        ButtonWidth = 27
         TabOrder = 0
         OnClick = dirProjectLocationClick
       end
       object dirOutput: TJvDirectoryEdit
-        Left = 308
-        Top = 51
-        Width = 163
-        Height = 21
+        Left = 222
+        Top = 103
+        Width = 394
+        Height = 25
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         DialogKind = dkWin32
         DirectInput = False
+        ButtonWidth = 27
         ParentShowHint = False
         ReadOnly = True
         ShowHint = True
@@ -67,10 +91,14 @@ object frmRmConverter: TfrmRmConverter
         TabOrder = 1
       end
       object grpFormat: TRadioGroup
-        Left = 3
-        Top = 13
-        Width = 150
-        Height = 54
+        Left = 4
+        Top = 17
+        Width = 196
+        Height = 71
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Project &Format'
         ItemIndex = 0
         Items.Strings = (
@@ -80,17 +108,22 @@ object frmRmConverter: TfrmRmConverter
       end
     end
     object tshEvents: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Events'
+      Enabled = False
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object grpEventFormat: TRadioGroup
-        Left = 3
-        Top = 3
-        Width = 134
-        Height = 62
+        Left = 4
+        Top = 4
+        Width = 175
+        Height = 81
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Convert events to'
         ItemIndex = 0
         Items.Strings = (
@@ -100,74 +133,103 @@ object frmRmConverter: TfrmRmConverter
       end
     end
     object tshCull: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Culling'
+      Enabled = False
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblCullSelect: TLabel
-        Left = 16
-        Top = 100
-        Width = 33
-        Height = 13
+        Left = 21
+        Top = 131
+        Width = 41
+        Height = 17
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Select:'
       end
       object lstCull: TListView
-        Left = 4
-        Top = 4
-        Width = 170
-        Height = 90
+        Left = 5
+        Top = 5
+        Width = 223
+        Height = 118
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Checkboxes = True
         Columns = <
           item
             Caption = 'Cull Unused'
-            Width = 149
+            Width = 195
           end>
         TabOrder = 0
         ViewStyle = vsReport
       end
       object btnCullSelectDB: TButton
-        Left = 3
-        Top = 119
-        Width = 75
-        Height = 26
+        Left = 4
+        Top = 156
+        Width = 98
+        Height = 34
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'All &DB entries'
         TabOrder = 1
       end
       object btnCullClear: TButton
-        Left = 56
-        Top = 151
-        Width = 75
-        Height = 26
+        Left = 73
+        Top = 197
+        Width = 98
+        Height = 34
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = '&None'
         TabOrder = 2
       end
       object btnCullSelectGraphics: TButton
-        Left = 107
-        Top = 119
-        Width = 75
-        Height = 26
+        Left = 140
+        Top = 156
+        Width = 98
+        Height = 34
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'All &Graphics'
         TabOrder = 3
       end
     end
   end
   object btnCancel: TButton
-    Left = 400
-    Top = 218
-    Width = 75
-    Height = 25
+    Left = 523
+    Top = 285
+    Width = 98
+    Height = 33
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Cancel = True
     Caption = '&Cancel'
     ModalResult = 2
     TabOrder = 1
   end
   object btnConvert: TButton
-    Left = 304
-    Top = 217
-    Width = 75
-    Height = 25
+    Left = 398
+    Top = 284
+    Width = 98
+    Height = 32
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Caption = 'C&onvert'
     Enabled = False
     TabOrder = 2

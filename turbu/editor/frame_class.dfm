@@ -174,6 +174,7 @@ object frameClass: TframeClass
         Width = 106
         Height = 25
         Caption = 'C&urve Editor'
+        Enabled = False
         TabOrder = 0
       end
       object spnExpVal1: TJvDBSpinEdit
@@ -234,8 +235,8 @@ object frameClass: TframeClass
       Caption = 'Graphics'
       TabOrder = 4
       object tabGraphics: TTabControl
-        Left = 4
-        Top = 24
+        Left = 8
+        Top = 25
         Width = 173
         Height = 161
         TabOrder = 0
@@ -280,15 +281,11 @@ object frameClass: TframeClass
         Top = 16
         Width = 196
         Height = 186
-        ActivePage = tshEquipment
+        ActivePage = tshRepertoire
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 0
         object tshEquipment: TTabSheet
           Caption = 'Equipment'
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object lblEquip1: TLabel
             Left = 8
             Top = 8
@@ -378,10 +375,6 @@ object frameClass: TframeClass
         object tshSkills: TTabSheet
           Caption = 'Commands'
           ImageIndex = 1
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           inline frameHeroCommands: TframeHeroCommands
             Left = 0
             Top = 0
@@ -401,10 +394,6 @@ object frameClass: TframeClass
         object tshRepertoire: TTabSheet
           Caption = 'Skills'
           ImageIndex = 2
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object lstSkills: TRpgListGrid
             Left = 4
             Top = 4
@@ -498,10 +487,6 @@ object frameClass: TframeClass
         object tshAttributes: TTabSheet
           Caption = 'Attributes'
           OnShow = linkNav
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object lstAttributes: TRpgListGrid
             Left = 3
             Top = 3
@@ -545,10 +530,6 @@ object frameClass: TframeClass
         object tshConditions: TTabSheet
           Caption = 'Conditions'
           ImageIndex = 1
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object RpgListGrid1: TRpgListGrid
             Left = 3
             Top = 3
@@ -650,12 +631,12 @@ object frameClass: TframeClass
     Top = 456
   end
   object dsResist: TDataSource
-    DataSet = dmDatabase.charClasses_Resist
+    DataSet = dmDatabase.charClasses_Resists
     Left = 232
     Top = 456
   end
   object dsCondition: TDataSource
-    DataSet = dmDatabase.charClasses_Condition
+    DataSet = dmDatabase.charClasses_Conditions
     Left = 304
     Top = 456
   end
@@ -681,7 +662,7 @@ object frameClass: TframeClass
     object dsEventNamemethodName: TStringField
       FieldKind = fkLookup
       FieldName = 'methodName'
-      LookupDataSet = dmDatabase.charClasses_Events
+      LookupDataSet = dmDatabase.scriptRecords
       LookupKeyFields = 'baseMethod'
       LookupResultField = 'name'
       KeyFields = 'baseMethod'

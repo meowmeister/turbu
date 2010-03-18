@@ -34,7 +34,9 @@ implementation
 constructor T2k2SoundTemplate.Convert(base: TRmMusic);
 begin
    inherited Create;
-   self.filename := unicodeString(base.filename);
+   if base.filename <> '' then
+      self.filename := string(base.filename)
+   else self.filename := '(OFF)';
    self.fadeIn := base.fadeIn;
    self.tempo := base.tempo;
    self.left := base.left;

@@ -20,27 +20,32 @@ unit dm_database;
 interface
 
 uses
-   SysUtils, Classes, DBClient, DB, Generics.Collections;
+   SysUtils, Classes, DBClient, DB, Generics.Collections, RTTI;
 
 type
-  TDatasetList = TList<TClientDataSet>;
+   TDatasetList = class(TList<TClientDataSet>);
+
+   TRelationAttribute = class(TCustomAttribute);
 
    TdmDatabase = class(TDataModule)
       charClasses: TClientDataset;
+      [TRelation]
       charClasses_skillset: TClientDataset;
-      charClasses_Resist: TClientDataSet;
-      charClasses_Condition: TClientDataSet;
+      [TRelation]
+      charClasses_Resists: TClientDataSet;
+      [TRelation]
+      charClasses_Conditions: TClientDataSet;
       animations: TClientDataSet;
       items_script: TClientDataSet;
       items_armor: TClientDataSet;
-      equipment_conditions: TClientDataSet;
-      equipment_attributes: TClientDataSet;
       items_weapon: TClientDataSet;
       items_medicine: TClientDataSet;
       items_book: TClientDataSet;
       items_skill: TClientDataSet;
       items_upgrade: TClientDataSet;
       items_variable: TClientDataSet;
+      [TRelation]
+      items_attributes: TClientDataSet;
       shields: TClientDataSet;
       armors: TClientDataSet;
       helmets: TClientDataSet;
@@ -49,30 +54,36 @@ type
       weapons: TClientDataSet;
       commands: TClientDataSet;
       skills: TClientDataSet;
+      [TRelation]
+      skills_attributes: TClientDataSet;
       items: TClientDataSet;
       offhands: TClientDataSet;
       attributes: TClientDataSet;
       conditions: TClientDataSet;
-      skillGainRecords: TClientDataSet;
       scriptRange: TClientDataSet;
-      expCalcRecords: TClientDataSet;
-      charClasses_Events: TClientDataSet;
+      metadata: TClientDataSet;
 
       dsCharClasses: TDataSource;
       charClassesid: TIntegerField;
       charClassesName: TStringField;
       charClassesmodified: TBooleanField;
-      charClassesstatblock: TArrayField;
-      charClassesstatblock3: TLargeintField;
-      skillsmessages: TADTField;
       items_scriptusableByHero: TBytesField;
       items_scriptscript: TMemoField;
       conditionscolor: TWordField;
+      metadataParent: TSmallintField;
+      metadataBgmState: TByteField;
+      metadataMapEngine: TShortintField;
+      charClassesSp: TLargeintField;
+      animations_timingSec: TClientDataSet;
+      animations_frameSec: TClientDataSet;
+      tilesets: TClientDataSet;
+
       procedure DataModuleCreate(Sender: TObject);
       procedure restoreClone(DataSet: TDataSet);
       procedure charClasses_skillsetCalcFields(DataSet: TDataSet);
       procedure DataModuleDestroy(Sender: TObject);
       procedure classFilter(DataSet: TDataSet; var Accept: Boolean);
+      procedure scriptRecordsBeforeInsert(DataSet: TDataSet);
    private
       { Private declarations }
 
@@ -94,19 +105,27 @@ var
 implementation
 
 uses
-   turbu_skills, turbu_defs, turbu_classes;
+   turbu_skills, turbu_defs, turbu_classes, rttiHelper;
 
 {$R *.dfm}
 
 procedure TdmDatabase.DataModuleCreate(Sender: TObject);
 var
-   iterator: TComponent;
    clone: TClientDataset;
+   context: TRttiContext;
+   instance: TRttiInstanceType;
+   field: TRttiField;
 begin
+   context := TRttiContext.Create;
+   instance := context.GetType(TdmDatabase) as TRttiInstanceType;
+
    FDatasetList := TDatasetList.Create;
-   for iterator in self do
-      if iterator is TClientDataset then
-         FDatasetList.Add(TClientDataset(iterator));
+   for field in instance.GetDeclaredFields do
+      if (field.FieldType as TRttiInstanceType).metaclassType = TClientDataset then
+      begin
+         if not assigned(field.GetAttribute(TRelationAttribute)) then
+            FDatasetList.Add(field.GetValue(self).AsObject as TClientDataset);
+      end;
 
    FViewList := TDatasetList.Create;
    FViewList.AddRange([shields, armors, helmets, accessories, weapons, offhands]);
@@ -137,6 +156,7 @@ begin
    begin
       ds.AutoCalcFields := false;
       ds.LogChanges := false;
+      ds.DisableControls;
    end;
 end;
 
@@ -148,6 +168,7 @@ begin
    begin
       ds.AutoCalcFields := true;
       ds.LogChanges := true;
+      ds.EnableControls;
    end;
 end;
 
@@ -162,12 +183,12 @@ begin
       Exit;
 
    func := TSkillGainDisplayFunc(dataset.FieldByName('method.displayAddress').asPSMethod);
-   if not assigned(func) then
+   if not assigned(TMethod(func).data) then
       result := '?'
    else
    begin
-      for I := 0 to 3 do
-         args[i + 1] := dataset.FieldByName('num[' + intToStr(i) + ']').AsInteger;
+      for I := 1 to 4 do
+         args[i] := dataset.FieldByName(format('nums[%d]', [i])).AsInteger;
       if dataset.FieldByName('method.arrayArgs').AsBoolean then
          result := TSkillGainDisplayArrayFunc(func)(args)
       else
@@ -190,6 +211,11 @@ begin
       (dataSet as TClientDataSet).CloneCursor(TClientDataset(dataset.Tag), false, true);
       DataSet.AfterOpen := self.restoreClone;
    end;
+end;
+
+procedure TdmDatabase.scriptRecordsBeforeInsert(DataSet: TDataSet);
+begin
+   asm int 3 end;
 end;
 
 function TdmDatabase.usableByFilter(field: TBytesField; master: TDataset): boolean;

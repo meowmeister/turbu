@@ -89,10 +89,9 @@ begin
    else self.cost := base.cost;
    if GProjectFormat = pf_2k then
    begin
-      self.createMessages;
-      self.messages.useString := unicodeString(base.usage);
-      self.messages.useString2 := unicodeString(base.usage2);
-      self.messages.failureMessage := base.failure;
+      self.useString := string(base.usage);
+      self.useString2 := string(base.usage2);
+      self.failureMessage := base.failure;
    end;
    //fill in usableWhere later
 end;
@@ -186,6 +185,10 @@ begin
    inherited Convert(base);
    assert(base.skillType in [sk_teleport, sk_escape]);
    self.teleportTarget := ord(base.skillType);
+   case base.skillType of
+      sk_teleport: self.usableWhere := us_field;
+      sk_escape: self.usableWhere := us_battle;
+   end;
 end;
 
 { T2k2VariableSkillTemplate }
@@ -197,24 +200,29 @@ begin
    self.which := base.switch;
    self.style := vs_switch;
    self.operation := vo_add;
+   if base.field and base.battle then
+      self.usableWhere := us_both
+   else if base.field then
+      self.usableWhere := us_field
+   else if base.battle then
+      self.usableWhere := us_battle
+   else self.usableWhere := us_none;
 end;
 
 { T2k2SkillRecord }
 
 constructor T2k2SkillRecord.convert(base: THeroSkillRecord);
-var
-   dummy: integer;
 begin
    inherited Create;
+   self.id := -1;
    self.style := sf_bool;
    self.skill := base.id;
    self.num[1] := base.level;
    self.num[2] := 0;
    self.num[3] := 0;
    self.num[4] := 0;
-   dummy := GDatabase.skillFuncIndex('skillSelectByLevel');
-   assert(dummy <> -1);
-   self.method := GDatabase.skillFunc[dummy];
+   self.method := GDatabase.scriptByName('skillSelectByLevel');
+   assert(assigned(self.method));
 end;
 
 end.

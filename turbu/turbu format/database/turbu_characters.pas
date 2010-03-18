@@ -19,9 +19,9 @@ unit turbu_characters;
 
 interface
 uses
-   types, classes, DB, Generics.Collections,
+   types, classes, DB, Generics.Collections, rtti,
    turbu_constants, turbu_defs, turbu_classes, turbu_skills, turbu_containers,
-   turbu_heroes, turbu_script_interface;
+   turbu_heroes, turbu_script_interface, turbu_serialization;
 
 type
    TExpCalcFunc = function(int1, int2, int3, int4, int5: integer): integer of object;
@@ -29,19 +29,6 @@ type
 
    TCommandStyle = (cs_weapon, cs_skill, cs_defend, cs_item, cs_flee, cs_skillgroup, cs_special, cs_script);
    TWeaponStyle = (ws_single, ws_shield, ws_dual, ws_all);
-
-   TExpCalcRecord = class(TScriptRecord)
-   private
-      function getMethod: TExpCalcFunc; inline;
-      class function getExpFunc(name: string): TExpCalcFunc;
-   protected
-      procedure setName(const Value: string); override;
-   public
-      constructor Create(name, designName: string);
-      property method: TExpCalcFunc read getMethod;
-   end;
-
-   TExpRecordList = TRpgObjectList<TExpCalcRecord>;
 
    TBattleCommand = class(TRpgDatafile)
    private
@@ -52,7 +39,6 @@ type
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
 
       property style: TCommandStyle read FStyle write FStyle;
       property value: smallint read FValue write FValue;
@@ -72,6 +58,14 @@ type
       property size: word read getSize write setSize;
       property block: TIntArray read getBlock write setBlock;
       property index: integer read getIndex;
+   end;
+
+   TStatBlockUploadAttribute = class(TDBUploadAttribute)
+   private
+      function getField(db: TDataset; i: integer): TField;
+   public
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
    end;
 
    TStatBlock = class(TInterfacedObject, IStatBlock)
@@ -109,23 +103,27 @@ type
       property size: integer read getSize;
    end;
 
+   TCommandSet = packed array[1..COMMAND_COUNT] of smallint;
+   TEqArray = packed array[1..TOTAL_SLOTS] of smallint;
+
    TClassTemplate = class(TRpgDatafile)
    private
       FMapSprite: integer;
       FBattleSprite: integer;
       FPortrait: integer;
-      FCommandSet: packed array[1..COMMAND_COUNT] of smallint;
+      FCommand: TCommandSet;
       FCommands: byte;
+      [TStatBlockUpload]
       FStatBlocks: array[1..STAT_COUNT] of IStatBlock;
-      FExpCalc: string;
-      FExpVars: array[1..4] of integer;
+      FExpFunc: string;
+      FExpVars: T4IntArray;
       FSkillset: TSkillsetList;
       FResists: TPointArray;
       FConditions: TPointArray;
-      FInitialEq: packed array[1..TOTAL_SLOTS] of smallint;
+      FEquip: TEqArray;
       FDualWield: TWeaponStyle;
       FStaticEq: boolean;
-      FStrongDefense: boolean;
+      FStrongDef : boolean;
       FUnarmedAnim: integer;
       FOnJoin: TPartyEvent;
 
@@ -138,15 +136,13 @@ type
       function getEq(x: byte): smallint;
       procedure setEq(x: byte; const Value: smallint);
    protected
-      function getDatasetName: string; override;
+      class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       constructor Create;
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
-      procedure download(db: TDataset); override;
 
       procedure addResist(const value: TPoint); inline;
       procedure addCondition(const value: TPoint); inline;
@@ -162,12 +158,12 @@ type
       property battleSprite: integer read FBattleSprite write FBattleSprite;
       property portrait: integer read FPortrait write FPortrait;
       property commands: byte read FCommands write FCommands;
-      property expFunc: string read FExpCalc write FExpCalc;
+      property expFunc: string read FExpFunc write FExpFunc;
       property resist: TPointArray read FResists write FResists;
       property condition: TPointArray read FConditions write FConditions;
       property dualWield: TWeaponStyle read FDualWield write FDualWield;
       property staticEq: boolean read FStaticEq write FStaticEq;
-      property strongDef: boolean read FStrongDefense write FStrongDefense;
+      property strongDef: boolean read FStrongDef write FStrongDef;
       property unarmedAnim: integer read FUnarmedAnim write FUnarmedAnim;
 
       property OnJoin: TPartyEvent read FOnJoin write FOnJoin;
@@ -369,13 +365,6 @@ begin
    savefile.WriteBuffer(self.FStyle, sizeof(TCommandStyle));
 end;
 
-procedure TBattleCommand.upload(db: TDataSet);
-begin
-   inherited upload(db);
-   db.FieldByName('style').AsInteger := ord(FStyle);
-   db.FieldByName('value').AsInteger := FValue;
-end;
-
 { TCharClass }
 
 constructor TClassTemplate.Create;
@@ -401,7 +390,7 @@ begin
    FBattleSprite := savefile.readInt;
    FPortrait := savefile.readInt;
    lassert(savefile.readWord = COMMAND_COUNT);
-   savefile.readBuffer(FCommandSet[1], sizeof(FCommandSet));
+   savefile.readBuffer(FCommand[1], sizeof(FCommand));
    FCommands := savefile.readByte;
    lassert(savefile.readByte = STAT_COUNT);
    for I := 1 to STAT_COUNT do
@@ -415,7 +404,7 @@ begin
       end;}
    end;
    lassert(savefile.readChar = 'p');
-   FExpCalc := savefile.readString;
+   FExpFunc := savefile.readString;
    savefile.readBuffer(FExpVars[1], 16);
    for I := 1 to savefile.readInt do
       FSkillSet.add(TSkillGainInfo.Load(savefile));
@@ -427,10 +416,10 @@ begin
    if length(FConditions) > 0 then
       savefile.readBuffer(FConditions[0], sizeof(TPoint) * length(FConditions));
    lassert(savefile.readByte = TOTAL_SLOTS);
-   savefile.readBuffer(FInitialEQ[1], sizeof(smallint) * TOTAL_SLOTS);
+   savefile.readBuffer(FEquip[1], sizeof(smallint) * TOTAL_SLOTS);
    savefile.readBuffer(FDualWield, sizeof(TWeaponStyle));
    FStaticEq := savefile.readBool;
-   FStrongDefense := savefile.readBool;
+   FStrongDef := savefile.readBool;
    FUnarmedAnim := savefile.readInt;
    lassert(savefile.readChar = 'C');
 end;
@@ -444,13 +433,13 @@ begin
    savefile.writeInt(FBattleSprite);
    savefile.writeInt(FPortrait);
    savefile.writeWord(COMMAND_COUNT);
-   savefile.WriteBuffer(FCommandSet[1], sizeof(FCommandSet));
+   savefile.WriteBuffer(FCommand[1], sizeof(FCommand));
    savefile.writeByte(FCommands);
    savefile.writeByte(STAT_COUNT);
    for I := 1 to STAT_COUNT do
       savefile.WriteInt(FStatBlocks[i].index);
    savefile.writeChar('p');
-   savefile.writeString(FExpCalc);
+   savefile.writeString(FExpFunc);
    savefile.WriteBuffer(FExpVars[1], 16);
    savefile.writeInt(FSkillset.High);
    for I := 1 to FSkillset.high do
@@ -463,10 +452,10 @@ begin
    if length(FConditions) > 0 then
       savefile.WriteBuffer(FConditions[0], sizeof(TPoint) * length(FConditions));
    savefile.writeByte(TOTAL_SLOTS);
-   savefile.WriteBuffer(FInitialEQ[1], sizeof(smallint) * TOTAL_SLOTS);
+   savefile.WriteBuffer(FEquip[1], sizeof(smallint) * TOTAL_SLOTS);
    savefile.WriteBuffer(FDualWield, sizeof(TWeaponStyle));
    savefile.writeBool(FStaticEq);
-   savefile.writeBool(FStrongDefense);
+   savefile.writeBool(FStrongDef);
    savefile.writeInt(FUnarmedAnim);
    savefile.writechar('C');
 end;
@@ -475,69 +464,6 @@ destructor TClassTemplate.Destroy;
 begin
    FSkillset.Free;
    inherited Destroy;
-end;
-
-procedure TClassTemplate.download(db: TDataset);
-begin
-   inherited;
-end;
-
-procedure TClassTemplate.upload(db: TDataSet);
-var
-   i: integer;
-   tempDB: TDataSet;
-begin
-   inherited upload(db);
-   db.FieldByName('mapSprite').AsInteger := FMapSprite;
-   db.FieldByName('battleSprite').AsInteger := FBattleSprite;
-   db.FieldByName('portrait').AsInteger := FPortrait;
-   for i := 1 to high(FCommandSet) do
-      db.FieldByName(format('command[%d]', [i])).AsInteger := FCommandSet[i];
-   for i := 1 to high(FStatBlocks) do
-      TLargeintField((db.FieldByName('statblock') as TArrayField).fields[i - 1]).AsLargeInt := nativeInt(pointer(FStatBlocks[i]));
-   db.FieldByName('expFunc').AsString := FExpCalc;
-   for i := 1 to 4 do
-      db.FieldByName(format('expVars[%d]', [i])).asInteger := FExpVars[i];
-   if FSkillSet.Count > 0 then
-   begin
-      tempDB := db.Owner.FindComponent(db.Name + FSkillSet[0].datasetName) as TDataSet;
-      for I := 1 to FSkillset.high do
-      begin
-         FSkillset[i].upload(tempDB);
-         tempDB.FieldByName('master').AsInteger := self.id;
-         tempDB.Post;
-      end;
-   end;
-   if length(FResists) > 0 then
-   begin
-      tempDB := db.Owner.FindComponent(db.Name + '_Resist') as TDataset;
-      for i := 0 to high(FResists) do
-      begin
-         tempDB.Append;
-         tempDB.FieldByName('master').AsInteger := self.id;
-         tempDB.FieldByName('x').AsInteger := FResists[i].X;
-         tempDB.FieldByName('y').AsInteger := FResists[i].Y;
-         tempDB.Post;
-      end;
-   end;
-   if length(FConditions) > 0 then
-   begin
-      tempDB := db.Owner.FindComponent(db.Name + '_Condition') as TDataset;
-      for i := 0 to high(FConditions) do
-      begin
-         tempDB.Append;
-         tempDB.FieldByName('master').AsInteger := self.id;
-         tempDB.FieldByName('x').AsInteger := FConditions[i].X;
-         tempDB.FieldByName('y').AsInteger := FConditions[i].Y;
-         tempDB.Post;
-      end;
-   end;
-   for i := 1 to 5 do
-      db.FieldByName(format('equip[%d]', [i - 1])).AsInteger := FInitialEq[i];
-   db.FieldByName('dualWield').AsInteger := ord(FDualWield);
-   db.FieldByName('staticEq').AsBoolean := FStaticEq;
-   db.FieldByName('strongDef').AsBoolean := FStrongDefense;
-   db.FieldByName('unarmedAnim').AsInteger := FUnarmedAnim;
 end;
 
 procedure TClassTemplate.addCondition(const value: TPoint);
@@ -554,17 +480,17 @@ end;
 
 function TClassTemplate.getCommand(x: byte): smallint;
 begin
-   result := FCommandSet[x];
+   result := FCommand[x];
 end;
 
-function TClassTemplate.getDatasetName: string;
+class function TClassTemplate.getDatasetName: string;
 begin
    result := 'charClasses';
 end;
 
 function TClassTemplate.getEq(x: byte): smallint;
 begin
-   result := FInitialEq[x];
+   result := FEquip[x];
 end;
 
 function TClassTemplate.getExpVar(x: byte): integer;
@@ -584,12 +510,12 @@ end;
 
 procedure TClassTemplate.setCommand(x: byte; const Value: smallint);
 begin
-   FCommandSet[x] := value;
+   FCommand[x] := value;
 end;
 
 procedure TClassTemplate.setEq(x: byte; const Value: smallint);
 begin
-   FInitialEq[x] := value;
+   FEquip[x] := value;
 end;
 
 procedure TClassTemplate.setExpVar(x: byte; const Value: integer);
@@ -639,27 +565,33 @@ begin
    savefile.writeChar('H');
 end;
 
-{ TExpCalcRecord }
+{ TStatBlockUploadAttribute }
 
-constructor TExpCalcRecord.Create(name, designName: string);
+function TStatBlockUploadAttribute.getField(db: TDataset; i: integer): TField;
 begin
-   inherited Create(name, designName, TRpgMethod(getExpFunc(name)));
+   result := db.FieldByName(format('statblock[%d]', [i]));
 end;
 
-class function TExpCalcRecord.getExpFunc(name: string): TExpCalcFunc;
+procedure TStatBlockUploadAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   i: integer;
+   template: TClassTemplate absolute instance;
 begin
-   result := TExpCalcFunc(GScriptEngine.exec.GetProcAsMethodN(rawByteString(name)));
+   assert(template is TClassTemplate);
+   for i := 1 to high(template.FStatBlocks) do
+      template.FStatBlocks[i] := GDatabase.statSet.FBlocks[getField(db, i).AsInteger];
 end;
 
-function TExpCalcRecord.getMethod: TExpCalcFunc;
+procedure TStatBlockUploadAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   i: integer;
+   template: TClassTemplate absolute instance;
 begin
-   result := TExpCalcFunc(FMethod);
-end;
-
-procedure TExpCalcRecord.setName(const Value: string);
-begin
-   inherited setName(value);
-   FMethod := TRpgMethod(getExpFunc(value));
+   assert(template is TClassTemplate);
+   for i := 1 to high(template.FStatBlocks) do
+      getField(db, i).AsInteger := template.FStatBlocks[i].index;
 end;
 
 end.

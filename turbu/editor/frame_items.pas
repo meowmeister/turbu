@@ -70,7 +70,8 @@ var
 begin
    for iterator in dmDatabase.datasets do
       cboDatasets.Items.Add(iterator.Name);
-   cboDatasets.ItemIndex := cboDatasets.Items.IndexOf(dsWeapons.DataSet.Name);
+   cboDatasets.ItemIndex := 0;
+   cboDatasetsChange(self)
 end;
 
 end.

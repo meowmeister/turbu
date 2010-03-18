@@ -130,7 +130,7 @@ begin
    inherited create;
    converter := TBerConverter.Create(input);
    if converter.getData <> id then
-      raise EParseMessage.create('Skill record' + intToStr(id) + ' of RPG_RT.LDB not found!');
+      raise EParseMessage.createFmt('Skill record %d of RPG_RT.LDB not found!', [id]);
    FId := id;
    FName := getStrSec(1, input, fillInBlankStr);
    FDesc := getStrSec(2, input, fillInBlankStr);

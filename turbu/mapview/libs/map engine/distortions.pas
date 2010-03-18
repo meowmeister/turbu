@@ -59,6 +59,7 @@ begin
    height := image.patternHeight;
    x := image.x - (width / 2);
    y := image.y - (height / 2);
+   //TODO: Any reason why this isn't "base := image.Image;" ?
    base := image.engine.Images.Image[image.ImageName];
    for i := 0 to Height - 1 do
    begin

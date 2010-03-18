@@ -21,6 +21,7 @@ interface
 uses
    types;
 
+{$J+}
 const
    //game "constant variables"
    STAT_COUNT = 6;
@@ -30,6 +31,7 @@ const
    TOTAL_SLOTS = WEAPON_SLOTS + ARMOR_SLOTS;
    PORTRAITS_PER_SHEET = 16;
    SPRITES_PER_SHEET = 8;
+   LAYERS: byte = 2;
 
    //sizes
    PORTRAIT_SIZE: TPoint  = (X: 48;  Y: 48);

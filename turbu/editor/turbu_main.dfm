@@ -2,12 +2,12 @@ object frmTurbuMain: TfrmTurbuMain
   Left = 183
   Top = 38
   Caption = 'TURBU - The Ultimate Rpg BUilder'
-  ClientHeight = 660
-  ClientWidth = 925
+  ClientHeight = 1066
+  ClientWidth = 1210
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = mnuMain
@@ -16,17 +16,21 @@ object frmTurbuMain: TfrmTurbuMain
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object sbxMain: TScrollBox
-    Left = 213
+    Left = 218
     Top = 25
-    Width = 712
-    Height = 635
+    Width = 992
+    Height = 1041
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     HorzScrollBar.Tracking = True
     VertScrollBar.ButtonSize = 15
     VertScrollBar.Margin = 10
-    VertScrollBar.Range = 100
+    VertScrollBar.Range = 131
     VertScrollBar.Size = 15
     VertScrollBar.Style = ssHotTrack
     VertScrollBar.ThumbSize = 10
@@ -39,8 +43,12 @@ object frmTurbuMain: TfrmTurbuMain
     object imgLogo: TSdlFrame
       Left = 0
       Top = 0
-      Width = 691
-      Height = 614
+      Width = 966
+      Height = 1015
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Framerate = 0
       Active = False
       OnAvailable = imgLogoAvailable
@@ -51,45 +59,65 @@ object frmTurbuMain: TfrmTurbuMain
     end
     object pnlHorizScroll: TPanel
       Left = 0
-      Top = 614
-      Width = 708
-      Height = 17
+      Top = 1015
+      Width = 988
+      Height = 22
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
       object sbHoriz: TScrollBar
         Left = 0
         Top = 0
-        Width = 691
-        Height = 17
+        Width = 966
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         PageSize = 100
         TabOrder = 0
         OnScroll = OnScrollMap
       end
       object pnlCorner: TPanel
-        Left = 691
+        Left = 966
         Top = 0
-        Width = 17
-        Height = 17
+        Width = 22
+        Height = 22
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alRight
         Caption = 'pnlCorner'
         TabOrder = 1
       end
     end
     object pnlVertScroll: TPanel
-      Left = 691
+      Left = 966
       Top = 0
-      Width = 17
-      Height = 614
+      Width = 22
+      Height = 1015
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 2
       object sbVert: TScrollBar
         Left = 0
         Top = 0
-        Width = 17
-        Height = 614
+        Width = 22
+        Height = 1015
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alClient
         Kind = sbVertical
         PageSize = 100
@@ -101,32 +129,42 @@ object frmTurbuMain: TfrmTurbuMain
   object pnlSidebar: TPanel
     Left = 0
     Top = 25
-    Width = 213
-    Height = 635
+    Width = 218
+    Height = 1041
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
     object splSidebar: TSplitter
       Left = 0
-      Top = 384
-      Width = 213
-      Height = 3
+      Top = 502
+      Width = 218
+      Height = 4
       Cursor = crVSplit
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alTop
       OnMoved = splSidebarMoved
-      ExplicitLeft = 1
-      ExplicitTop = 385
-      ExplicitWidth = 194
+      ExplicitWidth = 279
     end
     object sbxPallette: TScrollBox
       Left = 0
       Top = 0
-      Width = 213
-      Height = 384
+      Width = 218
+      Height = 502
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       HorzScrollBar.Visible = False
       VertScrollBar.ButtonSize = 15
       VertScrollBar.Margin = 15
-      VertScrollBar.Range = 100
+      VertScrollBar.Range = 131
       VertScrollBar.Size = 10
       VertScrollBar.ThumbSize = 10
       VertScrollBar.Tracking = True
@@ -139,7 +177,11 @@ object frmTurbuMain: TfrmTurbuMain
         Left = 0
         Top = 0
         Width = 192
-        Height = 380
+        Height = 498
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Framerate = 0
         Active = False
         Align = alClient
@@ -149,8 +191,12 @@ object frmTurbuMain: TfrmTurbuMain
       object sbPalette: TScrollBar
         Left = 192
         Top = 0
-        Width = 17
-        Height = 380
+        Width = 22
+        Height = 498
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Align = alRight
         Kind = sbVertical
         PageSize = 100
@@ -160,19 +206,26 @@ object frmTurbuMain: TfrmTurbuMain
     end
     object trvMapTree: TTreeView
       Left = 0
-      Top = 387
-      Width = 213
-      Height = 248
+      Top = 506
+      Width = 218
+      Height = 535
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Align = alClient
       Indent = 19
+      PopupMenu = mnuTreePopup
+      ReadOnly = True
       TabOrder = 1
       OnChange = trvMapTreeChange
+      OnContextPopup = trvMapTreeContextPopup
     end
   end
   object ToolBar2: TToolBar
     Left = 0
     Top = 0
-    Width = 925
+    Width = 1210
     Height = 25
     Caption = 'ToolBar2'
     Images = ilToolbarIcons
@@ -220,8 +273,8 @@ object frmTurbuMain: TfrmTurbuMain
     end
   end
   object mnuMain: TMainMenu
-    Left = 400
-    Top = 64
+    Left = 544
+    Top = 160
     object mnuFile: TMenuItem
       Caption = '&File'
       object mnuNew: TMenuItem
@@ -267,7 +320,7 @@ object frmTurbuMain: TfrmTurbuMain
   end
   object dlgOpen: TOpenDialog
     Filter = 'TURBU Projects (project.tdb)|project.tdb'
-    Left = 184
+    Left = 472
     Top = 96
   end
   object pluginManager: TJvPluginManager
@@ -280,7 +333,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C010104000800040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800180010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -554,9 +607,17 @@ object frmTurbuMain: TfrmTurbuMain
   object mnuTreePopup: TPopupMenu
     Left = 96
     Top = 592
+    object mnuEditMapProperties: TMenuItem
+      Caption = 'Map &Properties'
+      OnClick = mnuEditMapPropertiesClick
+    end
     object mnuAddNewMap: TMenuItem
       Caption = 'Add &New Map'
       OnClick = mnuAddNewMapClick
+    end
+    object mnuDeleteMap: TMenuItem
+      Caption = '&Delete Map'
+      OnClick = mnuDeleteMapClick
     end
   end
 end

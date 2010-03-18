@@ -19,8 +19,8 @@ unit turbu_classes;
 
 interface
 uses
-   classes, sysUtils, generics.collections, DB,
-   turbu_containers, turbu_defs, turbu_constants;
+   classes, sysUtils, generics.collections, DB, RTTI,
+   turbu_containers, turbu_defs, turbu_constants, turbu_serialization;
 
 type
    TRpgDecl = class;
@@ -56,6 +56,18 @@ type
       property OnDestroy: TScriptEvent read FOnDestroy write FOnDestroy;
    end;
 
+   TDatafileIsUploadableAttribute = class(TIsUploadableAttribute)
+   protected
+      function IsUploadable(instance: TValue): boolean; override;
+   end;
+
+   TDatafileRelationKeyAttribute = class(TDBRelationKeyAttribute)
+   protected
+      procedure SetRelationKey(instance: TValue; DB: TDataSet); override;
+   end;
+
+   [TDatafileIsUploadableAttribute]
+   [TDatafileRelationKeyAttribute]
    TRpgDatafile = class abstract(TObject)
    private
       function getSignature(methodname: string): TRpgDecl;
@@ -68,22 +80,23 @@ type
 
       class function getSetLength(mySet: TByteSet): byte;
       class function keyChar: ansiChar; virtual; abstract; //this should be a lower-case letter
-      procedure readEnd(savefile: TStream);
-      procedure writeEnd(savefile: TStream);
-      function getDatasetName: string; virtual;
-
+      class procedure readEnd(savefile: TStream);
+      class procedure writeEnd(savefile: TStream);
+      class function getDatasetName: string; virtual;
       {For any descendants that implement interfaces}
       function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
       function _AddRef: Integer; stdcall;
       function _Release: Integer; stdcall;
+      function GetID: integer;
+      function GetName: string;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); virtual;
-      procedure upload(db: TDataSet); virtual;
+      procedure upload(db: TDataSet);
       procedure download(db: TDataset); virtual;
       function GetAllEvents: TStringList;
 
-      property datasetName: string read getDatasetName;
+      {property }function datasetName: string; {read getDatasetName;} //hope they fix this...
       property signature[methodname: string]: TRpgDecl read getSignature;
    published
       property name: string read FName write FName;
@@ -94,24 +107,6 @@ type
       property OnDestroy: TScriptEvent read FOnDestroy write FOnDestroy;
    end;
    {$M-}
-
-   TScriptRecord = class abstract(TObject)
-   private
-      FName: string;
-      FDesignName: string;
-      function getMethod: TRpgMethod;
-   protected
-      FMethod: TRpgMethod;
-      constructor Create(name, designName: string; script: TRpgMethod);
-      procedure setName(const Value: string); virtual;
-   public
-      procedure upload(db: TDataSet); virtual;
-      procedure update(db: TDataSet); virtual;
-
-      property name: string read FName write setName;
-      property designName: string read FDesignName write FDesignName;
-      property baseMethod: TRpgMethod read getMethod;
-   end;
 
    TColorShift = packed record
    private
@@ -179,17 +174,20 @@ type
    TRpgDecl = class(TEnumerable<TNameType> {TObject})
    private
       FName: string;
+      FDesignName: string;
       FRetval: integer;
       FParams: TNameTypeList;
    protected
       function DoGetEnumerator: TEnumerator<TNameType>; override;
    public
-      constructor Create(aName: string);
+      constructor Create(aName: string; aDesignName: string);
       destructor Destroy; override;
 
       function equals(other: TRpgDecl): boolean; reintroduce;
+      function fourInts: boolean;
 
       property name: string read FName write FName;
+      property designName: string read FDesignName write FDesignName;
       property retval: integer read FRetval write FRetval;
       property params: TNameTypeList read FParams write FParams;
    end;
@@ -221,15 +219,22 @@ type
       procedure postSafe;
    end;
 
+   TUploadByteSetAttribute = class(TDBUploadAttribute)
+   public
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
    ERpgLoadError = class(Exception);
 
    procedure lassert(cond: boolean);
 
 implementation
 uses
-   Generics.Defaults, TypInfo, math,
+windows,
+   Generics.Defaults, TypInfo, Math,
    commons, turbu_decl_utils, turbu_functional,
-   ps_pointer;
+   ps_pointer, rttiHelper;
 
 type
    TSetSaver = record
@@ -262,19 +267,39 @@ end;
 
 { TRpgDatafile }
 
-procedure TRpgDatafile.download(db: TDataset);
+function TRpgDatafile.datasetName: string;
 begin
-   //this procedure intentionally left blank
+   result := self.getDatasetName;
 end;
 
-procedure TRpgDatafile.upload(db: TDataSet);
+procedure TRpgDatafile.download(db: TDataset);
+var
+   serializer: TDatasetSerializer;
 begin
    if self.datasetName <> '' then
       assert((db.Name = self.datasetName) or (self.datasetName[1] = '_'));
-   db.Append;
-   db.FieldByName('id').AsInteger := FId;
-   db.FieldByName('name').AsString := FName;
-   db.FieldByName('modified').AsBoolean := false;
+
+   serializer := TDatasetSerializer.Create;
+   try
+      serializer.download(self, db);
+   finally
+      serializer.Free;
+   end;
+end;
+
+procedure TRpgDatafile.upload(db: TDataSet);
+var
+   serializer: TDatasetSerializer;
+begin
+   if self.datasetName <> '' then
+      assert((db.Name = self.datasetName) or (self.datasetName[1] = '_'));
+
+   serializer := TDatasetSerializer.Create;
+   try
+      serializer.upload(self, db);
+   finally
+      serializer.Free;
+   end;
 end;
 
 function TRpgDatafile.GetAllEvents: TStringList;
@@ -283,12 +308,10 @@ var
    i, count: integer;
    event: TMethod;
 begin
-   GetMem(list, sizeof(pointer) * 50); //If you've got more than 50 events on
-                                       //one object, you're absolutely nuts :P
+   new(list);
    try
       //get all published methods (events)
       count := GetPropList(PTypeInfo(self.ClassInfo), [tkMethod], list, false);
-      assert(count <= 50, 'Some insane coder created a class with more than 50 events!');
 
       //fill a TStringList with the method names and addresses
       result := TStringList.Create;
@@ -303,13 +326,23 @@ begin
          end;
       end;
    finally
-      freeMem(list);
+      dispose(list);
    end;
 end;
 
-function TRpgDatafile.getDatasetName: string;
+class function TRpgDatafile.getDatasetName: string;
 begin
    result := '';
+end;
+
+function TRpgDatafile.GetID: integer;
+begin
+   result := self.id;
+end;
+
+function TRpgDatafile.GetName: string;
+begin
+   result := self.name;
 end;
 
 class function TRpgDatafile.getSetLength(mySet: TByteSet): byte;
@@ -335,12 +368,12 @@ begin
    result := turbu_decl_utils.GetSignature(info.PropType^);
 end;
 
-procedure TRpgDatafile.writeEnd(savefile: TStream);
+class procedure TRpgDatafile.writeEnd(savefile: TStream);
 begin
    savefile.writeChar(upCase(keyChar));
 end;
 
-procedure TRpgDatafile.readEnd(savefile: TStream);
+class procedure TRpgDatafile.readEnd(savefile: TStream);
 begin
    lassert(savefile.readChar = UpCase(keyChar));
 end;
@@ -553,39 +586,6 @@ begin
       raise ERpgLoadError.Create('Savefile corrupt at address ' + intToStr(currentloader.Position));
 end;
 
-{ TScriptRecord }
-
-constructor TScriptRecord.Create(name, designName: string; script: TRpgMethod);
-begin
-   FName := name;
-   FDesignName := designName;
-   FMethod := script;
-end;
-
-function TScriptRecord.getMethod: TRpgMethod;
-begin
-   result := FMethod;
-end;
-
-procedure TScriptRecord.setName(const Value: string);
-begin
-  FName := Value;
-end;
-
-procedure TScriptRecord.update(db: TDataSet);
-begin
-   db.FieldByName('name').AsString := name;
-   db.FieldByName('designName').AsString := designName;
-   db.FieldByName('address').AsInteger := integer(Self);
-   db.FieldByName('baseMethod').asPSMethod := TMethod(FMethod);
-end;
-
-procedure TScriptRecord.upload(db: TDataSet);
-begin
-   db.Append;
-   self.update(db);
-end;
-
 { TDeclList }
 
 function declComp(const Left, Right: TRpgDecl): Integer;
@@ -608,7 +608,7 @@ function TDeclList.IndexOf(const Value: string): Integer;
 var
    dummy: TRpgDecl;
 begin
-   dummy := TRpgDecl.Create(value);
+   dummy := TRpgDecl.Create(value, '');
    try
       if not self.BinarySearch(dummy, result) then
          result := -1;
@@ -633,9 +633,10 @@ end;
 
 { TRpgDecl }
 
-constructor TRpgDecl.Create(aName: string);
+constructor TRpgDecl.Create(aName, aDesignName: string);
 begin
    FName := aName;
+   FDesignName := aDesignName;
    FParams := TNameTypeList.Create;
 end;
 
@@ -657,7 +658,18 @@ begin
    result := (FParams.Count = other.params.Count) and (Self.retval = other.retval);
    if result then
       for i := 0 to FParams.Count - 1 do
-         result := result and (FParams[i].typeVar = other.params[i].typeVar) and (FParams[i].flags = other.params[i].flags)
+         result := result and (FParams[i].typeVar = other.params[i].typeVar)
+                   and (FParams[i].flags = other.params[i].flags)
+end;
+
+function TRpgDecl.fourInts: boolean;
+var
+   i: integer;
+begin
+   result := FParams.Count >= 5;
+   if result then
+      for I := 1 to 4 do
+         result := result and (FParams[i].typeVar = vt_S32);
 end;
 
 { TFieldExt }
@@ -772,6 +784,39 @@ begin
   Result := FIndex < FMyList.Count - 1;
   if Result then
     Inc(FIndex);
+end;
+
+{ TUploadByteSetAttribute }
+
+procedure TUploadByteSetAttribute.download(db: TDataset; field: TRttiField; instance: TObject);
+begin
+   field.SetValue(instance, TValue.From<TByteSet>(TDatasetSerializer.getField(db, field).asSet));
+end;
+
+procedure TUploadByteSetAttribute.upload(db: TDataset; field: TRttiField; instance: TObject);
+begin
+   TDatasetSerializer.getField(db, field).asSet := field.GetValue(instance).AsType<TByteSet>;
+end;
+
+{ TDatafileIsUploadableAttribute }
+
+function TDatafileIsUploadableAttribute.IsUploadable(instance: TValue): boolean;
+var
+   datafile: TRpgDatafile;
+begin
+   datafile := instance.AsObject as TRpgDatafile;
+   result := datafile.id <> 0;
+end;
+
+{ TDatafileRelationKeyAttribute }
+
+procedure TDatafileRelationKeyAttribute.SetRelationKey(instance: TValue;
+  DB: TDataSet);
+var
+   datafile: TRpgDatafile;
+begin
+   datafile := instance.AsType<TRpgDatafile>;
+   db.FieldByName('master').AsInteger := datafile.id;
 end;
 
 end.

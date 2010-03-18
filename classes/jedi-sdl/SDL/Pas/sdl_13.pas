@@ -473,8 +473,8 @@ function SDL_SetRenderDrawColor(r, g, b, a: byte): integer; cdecl; external SDLL
 function SDL_GetRenderDrawColor(var r, g, b, a: byte): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetRenderDrawColor}
 
-function SDL_RenderFill(const rect: PSdlRect): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_RenderFill}
+function SDL_RenderRect(const rect: PSdlRect): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderRect}
 
 function SDL_RenderLine(x1, y1, x2, y2: integer): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderLine}

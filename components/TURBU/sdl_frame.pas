@@ -150,7 +150,7 @@ begin
    if CreateRenderer then
    begin
       assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
-      assert(SDL_RenderFill(@region) = 0);
+      assert(SDL_RenderRect(@region) = 0);
    end;
 end;
 
@@ -181,7 +181,7 @@ begin
    if CreateRenderer then
    begin
       assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
-      assert(SDL_RenderFill(nil) = 0);
+      assert(SDL_RenderRect(nil) = 0);
    end;
 end;
 
@@ -309,7 +309,7 @@ begin
       for I := 1 to 3 do
       begin
          assert(SDL_SetRenderDrawColor(0, 0, 0, 255) = 0);
-         assert(SDL_RenderFill(nil) = 0);
+         assert(SDL_RenderRect(nil) = 0);
          SDL_RenderPresent;
       end;
 end;

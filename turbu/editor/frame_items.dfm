@@ -5,7 +5,7 @@ object frameItems: TframeItems
   Height = 538
   TabOrder = 0
   object pnlItems: TPanel
-    Left = 0
+    Left = 3
     Top = 0
     Width = 785
     Height = 459
@@ -28,7 +28,6 @@ object frameItems: TframeItems
       Top = 415
       Width = 145
       Height = 21
-      ItemHeight = 13
       TabOrder = 1
       Text = 'cboDatasets'
       OnChange = cboDatasetsChange

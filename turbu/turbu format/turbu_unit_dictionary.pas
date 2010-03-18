@@ -24,11 +24,16 @@ uses
 type
    TUnitDictionary = class(TObjectDictionary<string,TStringList>)
    private
+      FNames: TDictionary<string, string>;
+
       function GetItem(const Key: string): TStringList;
       procedure SetItem(const Key: string; const Value: TStringList);
    public
+      constructor Create(size: integer);
+      destructor Destroy; override;
       procedure Add(const Key: string; const Value: TStringList);
       function ContainsKey(const Key: string): Boolean;
+      function original(const key: string): string;
 
       property Items[const Key: string]: TStringList read GetItem write SetItem; default;
    end;
@@ -42,6 +47,7 @@ uses
 procedure TUnitDictionary.Add(const Key: string; const Value: TStringList);
 begin
    inherited Add(uppercase(key), value);
+   FNames.Add(uppercase(key), key);
 end;
 
 function TUnitDictionary.ContainsKey(const Key: string): Boolean;
@@ -49,9 +55,26 @@ begin
    result := inherited ContainsKey(uppercase(key));
 end;
 
+constructor TUnitDictionary.Create(size: integer);
+begin
+   inherited Create([doOwnsValues], size);
+   FNames := TDictionary<string, string>.Create;
+end;
+
+destructor TUnitDictionary.Destroy;
+begin
+   FNames.Free;
+   inherited Destroy;
+end;
+
 function TUnitDictionary.GetItem(const Key: string): TStringList;
 begin
    result := inherited Items[uppercase(key)];
+end;
+
+function TUnitDictionary.original(const key: string): string;
+begin
+   result := FNames[key];
 end;
 
 procedure TUnitDictionary.SetItem(const Key: string; const Value: TStringList);

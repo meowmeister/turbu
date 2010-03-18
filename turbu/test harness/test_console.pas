@@ -20,7 +20,8 @@ unit test_console;
 interface
 
 uses
-  SysUtils, Classes, Controls, Forms, Menus, StdCtrls, DBCtrls, Dialogs;
+  SysUtils, Classes, Controls, Forms, Menus, StdCtrls, Dialogs,
+  turbu_map_engine, turbu_map_interface;
 
 type
    TfrmTestConsole = class(TForm)
@@ -39,6 +40,9 @@ type
       mnuTree: TMenuItem;
       mnuTestMapTree: TMenuItem;
       estLDBLoading1: TMenuItem;
+      mnuEditMapProperties: TMenuItem;
+      mnuTestMapResizing: TMenuItem;
+      mnuDebugMapResizing: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -52,9 +56,14 @@ type
       procedure mnuTestMapLoadingClick(Sender: TObject);
       procedure mnuTestMapTreeClick(Sender: TObject);
       procedure estLDBLoading1Click(Sender: TObject);
+      procedure mnuEditMapPropertiesClick(Sender: TObject);
+      procedure mnuTestMapResizingClick(Sender: TObject);
+      procedure mnuDebugMapResizingClick(Sender: TObject);
    private
       { Private declarations }
+      FEngine: IDesignMapEngine;
       folder, outFolder: string;
+      FCurrentMap: IRpgMap;
       procedure setupConversionPaths;
    public
       { Public declarations }
@@ -72,14 +81,14 @@ uses
    turbu_constants, conversion_report, conversion_report_form,
    rm2_turbu_converter_thread, design_script_engine,
    commons, fileIO, formats, LDB, LMT, LMU,
-   turbu_characters, locate_files, map_tree_controller,
+   turbu_characters, locate_files, map_tree_controller, turbu_containers,
    rm2_turbu_characters, rm2_turbu_database, turbu_unit_dictionary,
    turbu_engines, turbu_plugin_interface, turbu_battle_engine,
    turbu_2k3_battle_engine, turbu_2k_battle_engine, turbu_sprites,
-   turbu_map_engine, turbu_2k_map_engine, turbu_maps, turbu_classes,
-   turbu_tbi_lib, turbu_sdl_image, turbu_map_interface,
-   sdl_canvas, sdl_13,
-   strtok;
+   turbu_maps, turbu_classes, turbu_2k_map_engine_D,
+   turbu_tbi_lib, turbu_sdl_image,
+   sdl_canvas, sdl_13, SG_defs,
+   strtok, test_map_size;
 
 {$R *.dfm}
 
@@ -148,25 +157,25 @@ begin
 end;
 
 procedure TfrmTestConsole.mnuTestMapLoadingClick(Sender: TObject);
-var
-   engine: IDesignMapEngine;
-   map: IRpgMap;
-   mapStream: TStream;
 begin
    if not assigned(GDatabase) then
       mnuTestLoadingClick(Sender);
 
-   engine := T2kMapEngine.Create;
-   engine.initialize(0, gdatabase);
-   mapStream := GArchives[MAP_ARCHIVE].getFile(GDatabase.mapTree[1].internalFilename.name);
-   try
-      map := TRpgMap.Load(mapStream);
-   finally
-      mapStream.Free;
-   end;
-   engine.loadMap(map);
+   FEngine := T2kMapEngineD.Create;
+   FEngine.initialize(0, gdatabase);
+   FCurrentMap := FEngine.loadMap(GDatabase.mapTree[1]);
 
    if sender = mnuTestMapLoading then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
+procedure TfrmTestConsole.mnuEditMapPropertiesClick(Sender: TObject);
+begin
+   if not assigned(FEngine) then
+      mnuTestMapLoadingClick(Sender);
+
+   FEngine.editMapProperties(1);
+   if sender = mnuEditMapProperties then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;
 
@@ -181,6 +190,8 @@ const
 	SECTIONS_I_KNOW_HOW_TO_READ = [$0b..$0d, $11..$14, $17..$18, $1e];
 begin
    optimStream := nil;
+   fLDB := nil;
+   legacy := nil;
    fromFolder := discInterface.openFolder(folder);
    try
       datafile := fromFolder.getFile('RPG_RT.ldb');
@@ -223,7 +234,7 @@ begin
       mnuTestLoadingClick(Sender);
    form := TfrmMapTree.Create(nil);
    try
-      map_tree_controller.buildMapTree(GDatabase.mapTree, form.trvMapTree);
+      form.trvMapTree.buildMapTree(GDatabase.mapTree);
       form.ShowModal;
    finally
       form.Free;
@@ -244,15 +255,60 @@ begin
   end;
 end;
 
+procedure TfrmTestConsole.mnuTestMapResizingClick(Sender: TObject);
+var
+   map: TRpgMap;
+   i: Integer;
+   newsize: TSgPoint;
+   mode: byte;
+   msg: string;
+begin
+   if not assigned(FEngine) then
+      mnuTestMapLoadingClick(Sender);
+
+   map := (FCurrentMap as TRpgMap);
+   for i := 1 to 100 do
+   begin
+      newsize := sgPoint(Random(300) + 1, Random(300) + 1);
+      mode := random(9) + 1;
+      msg := format('Resizing: (%d, %d), mode %d.', [newsize.x, newsize.y, mode]);
+      OutputDebugString(PChar(msg));
+      map.calcBlitBounds(newsize, mode);
+   end;
+   if sender = mnuTestMapResizing then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
+procedure TfrmTestConsole.mnuDebugMapResizingClick(Sender: TObject);
+var
+   map: TRpgMap;
+   newsize: TSgPoint;
+   mode: byte;
+begin
+   if not assigned(FEngine) then
+      mnuTestMapLoadingClick(Sender);
+
+   map := (FCurrentMap as TRpgMap);
+   frmTestMapSize.showmodal;
+   newsize := sgPoint(frmTestMapSize.spnX.Value, frmTestMapSize.spnY.Value);
+   mode := frmTestMapSize.spnMode.Value;
+   asm int 3 end;
+   map.adjustSize(newsize, mode);
+   if sender = mnuDebugMapResizing then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
 procedure TfrmTestConsole.FormCreate(Sender: TObject);
 begin
-   if getProjectFolder = '' then
+   if getProjectFolder = '\' then
       createProjectFolder;
 end;
 
 procedure TfrmTestConsole.FormDestroy(Sender: TObject);
 begin
    lCanvas.Free;
+   FCurrentMap := nil;
+   FEngine := nil;
 end;
 
 procedure TfrmTestConsole.FormShow(Sender: TObject);
@@ -284,7 +340,7 @@ begin
    assert(GArchives.Add(openFolder(GProjectFolder + DESIGN_DB)) = BASE_ARCHIVE);
    addBattleEngine(T2kBattleEngine);
    addBattleEngine(T2k3BattleEngine);
-   addMapEngine(T2kMapEngine);
+   addMapEngine(T2kMapEngineD);
    setupConversionPaths;
    mnuTestConversion1.Enabled := folder <> '\';
 end;
@@ -299,8 +355,8 @@ begin
       dataset.CreateDataSet;
 //      dataset.Open;
    except
-      on E: Exception do
-         asm int 3 end;
+      asm int 3 end;
+      Abort;
    end;
    if sender = mnuTestDatasets then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
@@ -343,8 +399,8 @@ begin
          loadStream.free;
       end;
    except
-      on E: Exception do
-         asm int 3 end;
+      asm int 3 end;
+      Abort;
    end;
    if sender = mnuTestLoading then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
@@ -371,7 +427,7 @@ begin
    finally
       fileStream.Free;
    end;
-   lCanvas.Draw(image, point(0, 0));
+   lCanvas.Draw(image, sgPoint(0, 0));
    SDL_RenderPresent;
    image.Free;
    if sender = mnuTestSdl then

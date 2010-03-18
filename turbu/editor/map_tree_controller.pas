@@ -20,18 +20,24 @@ unit map_tree_controller;
 interface
 uses
    ComCtrls,
-   turbu_map_metadata;
+   turbu_map_interface;
 
-procedure buildMapTree(const data: TMapTree; tree: TTreeView);
+type
+   TMapTreeController = class helper for TTreeView
+      procedure buildMapTree(data: IMapTree);
+      function currentMapID: integer;
+      function currentMap: IMapMetadata;
+      procedure addChildMap(data: IMapMetadata);
+   end;
 
 implementation
 uses
    windows, Generics.Collections, sysUtils;
 
-procedure buildMapTree(const data: TMapTree; tree: TTreeView);
+procedure TMapTreeController.buildMapTree(data: IMapTree);
 var
    nodeDic: TDictionary<word,TTreeNode>;
-   enumerator: TMapMetadata;
+   enumerator: IMapMetadata;
    parent: TTreeNode;
 //   i: integer;
 
@@ -42,9 +48,9 @@ var
 
 begin
    nodeDic := TDictionary<word, TTreeNode>.Create;
-   tree.Items.BeginUpdate;
+   self.Items.BeginUpdate;
    try
-      tree.Items.Clear;
+      self.Items.Clear;
 //      i := 0;
       for enumerator in data do
       begin
@@ -52,21 +58,39 @@ begin
          parent := findParentNode(enumerator.parent);
          if assigned(parent) or (enumerator = data[0]) then
          begin
-            nodeDic.Add(enumerator.id, tree.Items.AddChildObject(parent,
-                        enumerator.name, enumerator));
+            nodeDic.Add(enumerator.id, self.Items.AddChildObject(parent,
+                        enumerator.name, pointer(enumerator)));
             if assigned(parent) then
-               parent.expanded := TMapMetadata(parent.data).treeOpen
+               parent.expanded := IMapMetadata(parent.data).treeOpen
 //            else OutputDebugString(pWideChar(format('Map %s, id %d missing parent id %d.',[enumerator.name, enumerator.id, enumerator.parent])));
          end
          else
             assert(false);
       end;
-      tree.Select(findParentNode(data.currentMap));
+      self.Select(findParentNode(data.currentMap));
    finally
-      tree.Items.EndUpdate;
+      self.Items.EndUpdate;
       nodeDic.Free;
    end;
-   tree.Selections[0].MakeVisible;
+   self.Selections[0].MakeVisible;
+end;
+
+function TMapTreeController.currentMap: IMapMetadata;
+begin
+   result := (IInterface(self.Selected.Data) as IMapMetadata);
+end;
+
+function TMapTreeController.currentMapID: integer;
+begin
+   result := currentMap.id;
+end;
+
+procedure TMapTreeController.addChildMap(data: IMapMetadata);
+var
+   newNode: TTreeNode;
+begin
+   newNode := self.Items.AddChildObject(self.Selected, data.name, pointer(data));
+   self.Select(newNode);
 end;
 
 end.

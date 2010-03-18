@@ -2,8 +2,9 @@ unit turbu_maps;
 
 interface
 uses
-   types, classes, generics.collections, DB,
+   types, classes, generics.collections, DB, RTTI,
    turbu_defs, turbu_classes, turbu_map_interface, turbu_tilesets,
+   turbu_serialization, turbu_map_metadata,
    SG_defs;
 
 type
@@ -31,7 +32,6 @@ type
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
       procedure download(db: TDataset); override;
 
       property bounds: TRect read FBounds write FBounds;
@@ -43,12 +43,35 @@ type
 
    TRegionList = class(TObjectList<TMapRegion>);
 
+   TUploadSetAttribute = class(TDBUploadAttribute)
+   protected
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
+   TUploadTilesAttribute = class(TDBUploadAttribute)
+   protected
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
+   TUploadSizeAttribute = class(TDBUploadAttribute)
+   protected
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
    TRpgMap = class(TRpgDatafile, IRpgMap)
+   private type
+      TTileBlitGrid = array of array of packed array of TTileRef;
    private
       FTileset: integer;
+      [TUploadSize]
       FSize: TSgPoint;
       FDepth: byte;
+      [TUploadSet]
       FWraparound: TWraparound;
+      [TUploadTiles]
       FTileMap: TTileMap;
       FHasBG: boolean;
       FBgName: string;
@@ -57,6 +80,7 @@ type
       FScrollSpeed: TSgPoint;
       FScriptFormat: TScriptFormat;
       FScriptFile: string;
+      [TUploadTiles]
       FRegions: TRegionList;
       FEncounterScript: string;
       procedure SetSize(const Value: TSgPoint);
@@ -66,19 +90,26 @@ type
       procedure SetBattleCount(const Value: integer);
       function GetTileset: integer;
       procedure SetTileset(const Value: integer);
+
+      procedure blitToGrid(var grid: TTileBlitGrid; const bounds: TRect);
+      procedure blitFromGrid(const grid: TTileBlitGrid; const bounds: TRect);
+      function calcGridDelta(const size: TSgPoint; position: byte): TRect;
    protected
       FEncounters: T4IntArray;
+      [TUploadTiles]
       FBattles: TPWordArray;
       class function keyChar: ansiChar; override;
    public
+      constructor Create(meta: TMapMetadata); overload;
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
-      procedure download(db: TDataset); override;
       destructor Destroy; override;
 
       procedure assignTile(const x, y, layer: integer; const tile: TTileRef);
       function getTile(const x, y, layer: integer): TTileRef;
+      procedure adjustSize(const size: TSgPoint; position: byte);
+      function calcBlitBounds(const size: TSgPoint; position: byte): TRect;
+      procedure removeInvalidEvents;
 
       property tileset: integer read FTileset write FTileset;
       property size: TSgPoint read FSize write SetSize;
@@ -101,9 +132,24 @@ type
 
 implementation
 uses
-   math;
+   math,
+   commons, turbu_constants;
 
 { TRpgMap }
+
+constructor TRpgMap.Create(meta: TMapMetadata);
+const
+   NEW_SIZE: TSgPoint = (X: 30; y: 25);
+begin
+   inherited Create;
+   FName := meta.name;
+   FId := meta.id;
+   FSize := NEW_SIZE;
+   self.SetDepth(turbu_constants.LAYERS);
+   FTileset := 1;
+   FRegions := TRegionList.Create;
+   FModified := true;
+end;
 
 constructor TRpgMap.Load(savefile: TStream);
 var
@@ -120,6 +166,7 @@ begin
    for I := 0 to self.depth - 1 do
       savefile.ReadBuffer(FTileMap[i, 0], length(FTileMap[i]) * sizeof(TTileRef));
    FHasBG := savefile.readBool;
+   FBgName := savefile.readString;
    savefile.ReadBuffer(FHScroll, sizeof(TMapScrollType));
    savefile.ReadBuffer(FVScroll, sizeof(TMapScrollType));
    savefile.ReadBuffer(FScrollSpeed, sizeof(TSgPoint));
@@ -143,6 +190,12 @@ begin
    lassert(savefile.readChar = self.keyChar);
 end;
 
+procedure TRpgMap.removeInvalidEvents;
+begin
+   //TODO: implement TRpgMap.removeInvalidEvents
+   //TODO: Implement events ;)
+end;
+
 procedure TRpgMap.save(savefile: TStream);
 var
    region: TMapRegion;
@@ -156,6 +209,7 @@ begin
    for tileList in FTileMap do
       savefile.WriteBuffer(tileList[0], length(tileList) * sizeof(TTileRef));
    savefile.writeBool(FHasBG);
+   savefile.writeString(FBgName);
    savefile.WriteBuffer(FHScroll, sizeof(TMapScrollType));
    savefile.WriteBuffer(FVScroll, sizeof(TMapScrollType));
    savefile.WriteBuffer(FScrollSpeed, sizeof(TSgPoint));
@@ -177,6 +231,140 @@ begin
    savefile.writeChar(self.keyChar);
 end;
 
+function TRpgMap.calcBlitBounds(const size: TSgPoint; position: byte): TRect;
+
+   function calcBounds(first, second: integer; mode: byte): TSgPoint;
+   var
+      midpoint, minsize: integer;
+   begin
+      minsize := min(first, second);
+      case mode of
+         0:
+         begin
+            result.x := 0;
+            result.y := minsize;
+         end;
+         1:
+         begin
+            if first > second then
+               result := calcBounds(first, second, 0)
+            else
+            begin
+               midpoint := second div 2;
+               result.x := midpoint - (first div 2);
+               result.y := result.x + first;
+            end;
+         end;
+         2:
+         begin
+            result.x := max(0, second - first);
+            result.y := result.x + minsize;
+         end;
+         else assert(false);
+      end;
+   end;
+
+const
+   nullTile: TTileRef = (group: 0; tile: 255);
+var
+   halfbounds: TSgPoint;
+begin
+   halfbounds := calcBounds(size.x, FSize.x, position mod 3);
+   result.Left := halfBounds.x;
+   result.Right := halfBounds.y;
+   halfbounds := calcBounds(size.y, FSize.y, position div 3);
+   result.Top := halfBounds.x;
+   result.Bottom := halfBounds.y;
+   assert(result.Left >= 0);
+   assert(result.Top >= 0);
+   assert(result.Right <= FSize.x);
+   assert(result.Bottom <= FSize.y);
+   assert(result.Right - result.Left = min(FSize.x, size.x));
+   assert(result.Bottom - result.Top = min(FSize.y, size.y));
+end;
+
+function TRpgMap.calcGridDelta(const size: TSgPoint; position: byte): TRect;
+
+   function calcPoints(first, second, position: integer): TSgPoint;
+   var
+      midpoint: integer;
+   begin
+      case position of
+         0:
+         begin
+            result.X := 0;
+            result.Y := first - second;
+         end;
+         1:
+         begin
+            midpoint := second div 2;
+            result.X := midpoint - (first div 2);
+            result.Y := midpoint + (first div 2);
+         end;
+         2:
+         begin
+            result.X := first - second;
+            result.Y := result.X;
+         end;
+      end;
+   end;
+
+var
+   point: TSgPoint;
+begin
+   point := calcPoints(FSize.x, size.x, position mod 3);
+   result.Left := point.x;
+   result.Right := point.y;
+   point := calcPoints(FSize.x, size.x, position div 3);
+   result.Top := point.x;
+   result.Bottom := point.y
+end;
+
+procedure TRpgMap.adjustSize(const size: TSgPoint; position: byte);
+var
+   gridSize: TSgPoint;
+   grid: TTileBlitGrid;
+   list: TTileList;
+   delta: TRect;
+begin
+   assert(position in [1..9]);
+   if size = FSize then
+      Exit;
+
+   dec(position);
+   gridsize := sgPoint(min(FSize.x, size.x), min(FSize.y, size.y));
+   delta := calcGridDelta(size, position);
+   setLength(grid, Self.FDepth, gridsize.y, gridsize.x);
+   blitToGrid(grid, calcBlitBounds(size, position));
+   self.SetSize(size);
+   for list in FTileMap do
+      system.FillChar(list[0], length(list) * sizeof(TTileRef), 0);
+   blitFromGrid(grid, calcBlitBounds(gridsize, position));
+   removeInvalidEvents;
+end;
+
+procedure TRpgMap.blitFromGrid(const grid: TTileBlitGrid; const bounds: TRect);
+var
+   i, j: integer;
+   lineLength: integer;
+begin
+   lineLength := (bounds.Right - bounds.Left) * sizeof(TTileRef);
+   for j := 0 to FDepth - 1 do
+      for i := 0 to high(grid[j]) do
+         system.Move(grid[j, i, 0], Self.FTileMap[j, ((i + bounds.Top) * FSize.x) + bounds.Left], lineLength);
+end;
+
+procedure TRpgMap.blitToGrid(var grid: TTileBlitGrid; const bounds: TRect);
+var
+   i, j: integer;
+   lineLength: integer;
+begin
+   lineLength := (bounds.Right - bounds.Left) * sizeof(TTileRef);
+   for j := 0 to FDepth - 1 do
+      for i := 0 to high(grid[j]) do
+         system.Move(Self.FTileMap[j, ((i + bounds.Top) * FSize.x) + bounds.Left], grid[j, i, 0], lineLength);
+end;
+
 procedure TRpgMap.assignTile(const x, y, layer: integer; const tile: TTileRef);
 begin
    FTileMap[layer][(y * FSize.x) + x] := tile;
@@ -191,18 +379,6 @@ destructor TRpgMap.Destroy;
 begin
    FRegions.Free;
    inherited Destroy;
-end;
-
-procedure TRpgMap.upload(db: TDataSet);
-begin
-   inherited;
-   assert(false);
-end;
-
-procedure TRpgMap.download(db: TDataset);
-begin
-   inherited;
-   assert(false);
 end;
 
 function TRpgMap.GetBattleCount: integer;
@@ -293,16 +469,64 @@ begin
    setLength(FBattles, Value);
 end;
 
-procedure TMapRegion.upload(db: TDataSet);
+procedure TMapRegion.download(db: TDataset);
 begin
    inherited;
    assert(false);
 end;
 
-procedure TMapRegion.download(db: TDataset);
+{ TUploadSetAttribute }
+
+procedure TUploadSetAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   map: TRpgMap absolute instance;
 begin
-   inherited;
-   assert(false);
+   assert(instance is TRpgMap);
+   map.FWraparound := TWraparound(byte(db.FieldByName('wraparound').AsInteger));
+end;
+
+procedure TUploadSetAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   map: TRpgMap absolute instance;
+begin
+   assert(instance is TRpgMap);
+   db.FieldByName('wraparound').AsInteger := byte(map.FWraparound);
+end;
+
+{ TUploadTilesAttribute }
+
+procedure TUploadTilesAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+begin
+  inherited;
+   //TODO: figure this out later
+end;
+
+procedure TUploadTilesAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+begin
+  inherited;
+   //figure this out later
+end;
+
+{ TUploadSizeAttribute }
+
+procedure TUploadSizeAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+begin
+   //do nothing here; this is handled externally
+end;
+
+procedure TUploadSizeAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   map: TRpgMap absolute instance;
+begin
+   assert(instance is TRpgMap);
+   db.FieldByName('size.x').AsInteger := map.FSize.x;
+   db.FieldByName('size.y').AsInteger := map.FSize.y;
 end;
 
 end.

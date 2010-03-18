@@ -2,7 +2,7 @@ unit turbu_script_interface;
 
 interface
 uses
-   uPSCompiler, uPSRuntime, turbu_classes, turbu_unit_dictionary;
+   uPSCompiler, uPSRuntime, turbu_classes, turbu_unit_dictionary, dm_database;
 
 type
    IScriptEngine = interface(IInterface)
@@ -17,6 +17,11 @@ type
       property decl: TDeclList read getDeclarations;
       property dbScript: ansiString write setDBScript;
       property units: TUnitDictionary read getUnits write setUnits;
+   end;
+
+   IDesignScriptEngine = interface(IScriptEngine)
+   ['{A3B2746C-F3D1-4B61-B9D8-9D8E82229979}']
+      procedure upload(db: TdmDatabase);
    end;
 implementation
 

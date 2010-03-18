@@ -58,6 +58,7 @@ begin
    for I := 0 to high(base.highChip) do
       self.tileMap[1][i] := convertDecodeResult(decode(base.highChip[i]));
    self.hasBackground := base.usesPano;
+   self.bgName := string(base.panoName);
    if not base.hPan then
       self.hScroll := stNone
    else if not base.hPanAutoscroll then

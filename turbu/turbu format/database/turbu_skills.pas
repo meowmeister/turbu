@@ -20,7 +20,8 @@ unit turbu_skills;
 interface
 uses
    types, classes, DB,
-   turbu_constants, turbu_defs, turbu_classes, turbu_sounds, turbu_containers;
+   turbu_constants, turbu_defs, turbu_classes, turbu_sounds, turbu_containers,
+   turbu_decl_utils, turbu_serialization;
 
 type
    TSkillGainDisplayFunc = function(one, two, three, four: integer): string of object;
@@ -29,60 +30,40 @@ type
    TSkillFuncStyle = (sf_bool, sf_percent, sf_level, sf_both);
    TSkillRange = (sr_self, sr_target, sr_area);
 
-   TSkillMessages = record
-      useString: string;
-      useString2: string;
-      failureMessage: word;
-   end;
-
-   PSkillMessages = ^TSkillMessages;
-
-   TSkillGainRecord = class(TScriptRecord)
-   private
-      FStyle: TSkillFuncStyle;
-      FArray: boolean;
-      FDisplayMethod: TSkillGainDisplayFunc;
-   protected
-      procedure setName(const Value: string); override;
-   public
-      constructor Create(name, designName: string; style: TSkillFuncStyle; arrayArgs: boolean);
-      procedure upload(db: TDataSet); override;
-
-      property style: TSkillFuncStyle read FStyle write FStyle;
-      property arrayArgs: boolean read FArray write FArray;
-      property displayMethod: TSkillGainDisplayFunc read FDisplayMethod;
-   end;
-
    TSkillGainInfo = class(TRpgDatafile)
    private
       FStyle: TSkillFuncStyle;
-      FPointer: TSkillGainRecord;
+      [TNoUpload]
+      FPointer: TScriptRecord;
       FSkill: integer;
-      FNums: array[1..4] of integer;
+      FNums: T4IntArray;
       function getNum(x: byte): integer; inline;
       procedure setNum(x: byte; const Value: integer); inline;
    protected
-      function getDatasetName: string; override;
+      class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
 
       property style: TSkillFuncStyle read FStyle write FStyle;
-      property method: TSkillGainRecord read  FPointer write FPointer;
+      property method: TScriptRecord read  FPointer write FPointer;
       property skill: integer read FSkill write FSkill;
       property num[x: byte]: integer read getNum write setNum;
    end;
 
-   TSkillsetList = TRpgObjectList<TSkillGainInfo>;
+   TSkillsetList = class(TRpgObjectList<TSkillGainInfo>);
+
+   TStatArray = array[1..STAT_COUNT] of boolean;
 
    TSkillTemplate = class abstract(TRpgDatafile)
    private
       FCost: integer;
       FCostPercent: boolean;
       FDesc: string;
-      FSkillMessages: PSkillMessages;
+      FUseString: string;
+      FUseString2: string;
+      FFailureMessage: word;
       FUsableWhere: TUsableWhere;
       FTag: T4IntArray;
    protected
@@ -90,15 +71,13 @@ type
    public
       constructor Load(savefile: TStream); virtual;
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
-      destructor Destroy; override;
-
-      procedure createMessages;
 
       property cost: integer read FCost write FCost;
       property desc: string read FDesc write FDesc;
       property costAsPercentage: boolean read FCostPercent write FCostPercent;
-      property messages: PSkillMessages read FSkillMessages write FSkillMessages;
+      property useString: string read FUseString write FUseString;
+      property useString2: string read FUseString2 write FUseString2;
+      property failureMessage: word read FFailureMessage write FFailureMessage;
       property usableWhere: TUsableWhere read FUsableWhere write FUsableWhere;
       property tag: T4IntArray read FTag write FTag;
    end;
@@ -110,11 +89,12 @@ type
       FAnim: word;
       FSkillPower: T4IntArray;
       FSuccessRate: integer;
-      FStat: array[1..STAT_COUNT] of boolean;
+      FStat: TStatArray;
       FVampire: boolean;
       FPhased: boolean;
+      [TUploadByteSet]
       FCondition: TByteSet;
-      FAttribute: TPointArray;
+      FAttributes: TPointArray;
       FResistMod: boolean;
 
       function getStat(x: byte): boolean;
@@ -134,7 +114,7 @@ type
       property drain: boolean read FVampire write FVampire;
       property phased: boolean read FPhased write FPhased;
       property condition: TByteSet read FCondition write FCondition;
-      property attribute: TPointArray read FAttribute write FAttribute;
+      property attribute: TPointArray read FAttributes write FAttributes;
       property resistMod: boolean read FResistMod write FResistMod;
    end;
 
@@ -190,7 +170,7 @@ procedure SetDatabase(value: TRpgDatafile);
 implementation
 uses
    sysutils,
-   turbu_database {$IFDEF EDITOR}, design_script_engine{$ENDIF};
+   turbu_database, turbu_script_interface;
 
 var
    GDatabase: TRpgDatabase;
@@ -201,19 +181,6 @@ begin
 end;
 
 { TSkillTemplate }
-
-procedure TSkillTemplate.createMessages;
-begin
-   assert(not assigned(FSkillMessages));
-   new(FSkillMessages);
-end;
-
-destructor TSkillTemplate.Destroy;
-begin
-   if assigned(FSkillMessages) then
-      dispose(FSkillMessages);
-   inherited;
-end;
 
 class function TSkillTemplate.keyChar: ansiChar;
 begin
@@ -226,13 +193,9 @@ begin
    FCost := savefile.readInt;
    FCostPercent := savefile.readBool;
    FDesc := savefile.readString;
-   if savefile.readBool then
-   begin
-      self.createMessages;
-      FSkillMessages.useString := savefile.readString;
-      FSkillMessages.useString2 := savefile.readString;
-      FSkillMessages.failureMessage := savefile.readWord;
-   end;
+   FUseString := savefile.readString;
+   FUseString2 := savefile.readString;
+   FFailureMessage := savefile.readWord;
    savefile.readBuffer(FUsableWhere, sizeof(TUsableWhere));
    savefile.readBuffer(FTag[1], sizeof(T4IntArray));
    lassert(savefile.readChar = 'S');
@@ -244,36 +207,12 @@ begin
    savefile.writeInt(FCost);
    savefile.writeBool(FCostPercent);
    savefile.writeString(FDesc);
-   savefile.writeBool(assigned(FSkillMessages));
-   if assigned(FSkillMessages) then
-   begin
-      savefile.writeString(FSkillMessages.useString);
-      savefile.writeString(FSkillMessages.useString2);
-      savefile.writeWord(FSkillMessages.failureMessage);
-   end;
+   savefile.writeString(FUseString);
+   savefile.writeString(FUseString2);
+   savefile.writeWord(FFailureMessage);
    savefile.WriteBuffer(FUsableWhere, sizeof(TUsableWhere));
    savefile.WriteBuffer(FTag[1], sizeof(T4IntArray));
    savefile.writeChar('S');
-end;
-
-procedure TSkillTemplate.upload(db: TDataSet);
-var
-   i: integer;
-begin
-   inherited upload(db);
-   db.FieldByName('cost').AsInteger := FCost;
-   db.FieldByName('costPercent').AsBoolean := FCostPercent;
-   db.FieldByName('desc').asString := FDesc;
-   if assigned(FSkillMessages) then
-   begin
-      db.FieldByName('messages.useString').AsString := Self.messages.useString;
-      db.FieldByName('messages.useString2').AsString := Self.messages.useString2;
-      db.FieldByName('messages.failureMessage').AsInteger := Self.messages.failureMessage;
-   end
-   else db.FieldByName('messages').clear;
-   db.FieldByName('usableWhere').AsInteger := ord(FUsableWhere);
-   for i := 1 to 4 do
-      (db.FieldByName('tag') as TArrayField)[i - 1] := FTag[i];
 end;
 
 { TNormalSkillTemplate }
@@ -295,9 +234,9 @@ begin
    dummy := savefile.readInt;
    if dummy > 0 then
       savefile.readBuffer(self.FCondition, dummy);
-   setLength(FAttribute, savefile.readInt);
-   if length(FAttribute) > 0 then
-      savefile.readBuffer(FAttribute[0], length(FAttribute) * sizeof(TPoint));
+   setLength(FAttributes, savefile.readInt);
+   if length(FAttributes) > 0 then
+      savefile.readBuffer(FAttributes[0], length(FAttributes) * sizeof(TPoint));
    FResistMod := savefile.readBool();
    lassert(savefile.readChar = 'n');
 end;
@@ -321,9 +260,9 @@ begin
    savefile.writeInt(dummy);
    if dummy > 0 then
       savefile.WriteBuffer(self.FCondition, dummy);
-   savefile.writeInt(length(FAttribute));
-   if length(FAttribute) > 0 then
-      savefile.WriteBuffer(FAttribute[0], length(FAttribute) * sizeof(TPoint));
+   savefile.writeInt(length(FAttributes));
+   if length(FAttributes) > 0 then
+      savefile.WriteBuffer(FAttributes[0], length(FAttributes) * sizeof(TPoint));
    savefile.writeBool(FResistMod);
    savefile.writeChar('n');
 end;
@@ -388,10 +327,11 @@ end;
 constructor TSkillGainInfo.Load(savefile: TStream);
 begin
    inherited Load(savefile);
-   lassert((FId = 0) and (FName = ''));
+   lassert((FId = -1) and (FName = ''));
    savefile.ReadBuffer(FStyle, sizeof(FStyle));
-   FPointer := GDatabase.skillFunc[savefile.readInt];
-   assert(assigned(FPointer) and assigned(FPointer.displayMethod));
+   FPointer := GDatabase.scripts[savefile.readInt];
+   assert(FPointer.name = savefile.readString);
+//   assert(assigned(FPointer) and assigned(FPointer.displayMethod));
    FSkill := savefile.readInt;
    savefile.ReadBuffer(FNums[1], 16);
    lassert(savefile.readChar = 'G');
@@ -401,7 +341,8 @@ procedure TSkillGainInfo.save(savefile: TStream);
 begin
    inherited save(savefile);
    savefile.WriteBuffer(FStyle, sizeof(FStyle));
-   savefile.writeInt(GDatabase.skillFunc.indexOf(FPointer));
+   savefile.WriteInt(GDatabase.scripts.indexOf(FPointer));
+   savefile.WriteString(FPointer.name);
    savefile.writeInt(FSkill);
    savefile.WriteBuffer(FNums[1], 16);
    savefile.writeChar('G');
@@ -412,25 +353,7 @@ begin
    FNums[x] := Value;
 end;
 
-procedure TSkillGainInfo.upload(db: TDataSet);
-var
-   i: integer;
-begin
-   //do not call inherited
-   db.Append;
-   db.FieldByName('style').AsInteger := ord(FStyle);
-   db.FieldByName('method.methodName').AsString := FPointer.name;
-   db.FieldByName('method.arrayArgs').AsBoolean := FPointer.FArray;
-   db.FieldByName('method.methodStyle').AsInteger := ord(FPointer.FStyle);
-   db.FieldByName('method.address').asPSMethod := TMethod(FPointer.FMethod);
-   db.FieldByName('method.displayAddress').asPSMethod := TMethod(FPointer.displayMethod);
-   db.FieldByName('skill').AsInteger := self.FSkill;
-   for I := 1 to 4 do
-      (db.FieldByName('num') as TArrayField)[i - 1] := FNums[i];
-   db.FieldByName('modified').AsBoolean := false;
-end;
-
-function TSkillGainInfo.getDatasetName: string;
+class function TSkillGainInfo.getDatasetName: string;
 begin
    result := '_skillset';
 end;
@@ -443,32 +366,6 @@ end;
 class function TSkillGainInfo.keyChar: ansiChar;
 begin
    result := 'g';
-end;
-
-{ TSkillGainFunction }
-
-constructor TSkillGainRecord.Create(name, designName: string; style: TSkillFuncStyle; arrayArgs: boolean);
-begin
-   setName(name);
-   inherited Create(name, designName, TRpgMethod(FMethod));
-   FStyle := style;
-   FArray := arrayArgs;
-end;
-
-procedure TSkillGainRecord.setName(const Value: string);
-begin
-   inherited setName(Value);
-   FMethod := TRpgMethod(GScriptEngine.exec.GetProcAsMethodN(ansiString(Value)));
-   FDisplayMethod := TSkillGainDisplayFunc(GScriptEngine.exec.GetProcAsMethodN(ansiString(Value) + '_display'))
-end;
-
-procedure TSkillGainRecord.upload(db: TDataSet);
-begin
-   inherited upload(db);
-   db.FieldByName('style').AsInteger := Ord(style);
-   db.FieldByName('arrayArgs').AsBoolean := arrayArgs;
-   db.FieldByName('displayMethod').asPSMethod := TMethod(displayMethod);
-   db.FieldByName('displayName').AsString := name + '_display';
 end;
 
 { TTeleportSkillTemplate }

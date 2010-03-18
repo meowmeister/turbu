@@ -3,7 +3,7 @@
 			<ProjectGuid>{920169D8-3955-472E-B306-74E825F6E932}</ProjectGuid>
 			<ProjectVersion>12.0</ProjectVersion>
 			<MainSource>testing.dpr</MainSource>
-			<Config Condition="'$(Config)'==''">Profiler</Config>
+			<Config Condition="'$(Config)'==''">Memleak Report</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -39,7 +39,7 @@
 			<DCC_DcpOutput>..\dcus</DCC_DcpOutput>
 			<DCC_UsePackage>vcl;rtl;vclx;vclactnband;dbrtl;vcldb;vcldbx;bdertl;dsnap;dsnapcon;TeeUI;TeeDB;Tee;adortl;vclib;ibxpress;IndyCore;IndySystem;IndyProtocols;xmlrtl;inet;intrawebdb_100_120;Intraweb_100_120;VclSmp;vclie;websnap;webdsnap;inetdbbde;inetdbxpress;soaprtl;DbxCommonDriver;DbxClientDriver;DBXInterBaseDriver;DBXMySQLDriver;dbexpress;dbxcds;Jcl;JclVcl;JvCoreD12R;JvSystemD12R;JvStdCtrlsD12R;JvAppFrmD12R;JvBandsD12R;JvDBD12R;JvDlgsD12R;JvBDED12R;JvCmpD12R;JvCryptD12R;JvCtrlsD12R;JvCustomD12R;JvDockingD12R;JvEDID12R;JvGlobusD12R;JvHMID12R;JvInterpreterD12R;JvJansD12R;JvManagedThreadsD12R;JvMMD12R;JvNetD12R;JvPageCompsD12R;JvPluginD12R;JvPrintPreviewD12R;JvRuntimeDesignD12R;JvTimeFrameworkD12R;JvValidatorsD12R;JvWizardD12R;JvXPCtrlsD12R;turbu_components;vclAbsDBd12</DCC_UsePackage>
 			<DCC_Define>EDITOR;PS_USESSUPPORT;SDL_13;$(DCC_Define)</DCC_Define>
-			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\turbu\turbu format\database;..\..\turbu\editor;..\..\classes\sdl custom;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\classes\sdl custom;..\bin;..\dcus;..\..\classes\FastMM4;..\..\components\TURBU;..\..\components\PascalScript;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DependencyCheckOutputName>..\bin\testing.exe</DCC_DependencyCheckOutputName>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
@@ -191,6 +191,15 @@
 				<Form>frmMapTree</Form>
 			</DCCReference>
 			<DCCReference Include="..\engines\basis\ps_pointer.pas"/>
+			<DCCReference Include="..\engines\map engine\design\turbu_2k_map_engine_D.pas"/>
+			<DCCReference Include="..\engines\map engine\design\eval.pas">
+				<Form>frmMapProperties</Form>
+			</DCCReference>
+			<DCCReference Include="..\rttiHelper.pas"/>
+			<DCCReference Include="..\turbu_serialization.pas"/>
+			<DCCReference Include="test_map_size.pas">
+				<Form>frmTestMapSize</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

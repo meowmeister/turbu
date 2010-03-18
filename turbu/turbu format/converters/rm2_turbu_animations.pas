@@ -25,7 +25,7 @@ type
 
    T2k2AnimCell = class helper for turbu_animations.TAnimCell
    public
-      constructor Convert(base: battle_anims.TAnimCell);
+      constructor Convert(base: battle_anims.TAnimCell; frame: word);
    end;
 
    T2k2AnimEffects = class helper for turbu_animations.TAnimEffects
@@ -44,48 +44,38 @@ uses
    commons, turbu_sounds,
    rm2_turbu_sounds;
 
-type
-   PAnimFrameSet = ^TAnimFrameSet;
-   PAnimEffectSet = ^TAnimEffectSet;
-
 { T2k2RpgAnim }
 
 constructor T2k2RpgAnim.convert(base: TBattleAnim; id: word);
 var
    i, j: integer;
-   frames: PAnimFrameSet;
-   effects: PAnimEffectSet;
 begin
    inherited Create;
    self.id := id;
-   self.name := unicodeString(base.name);
-   self.filename := unicodeString(base.filename);
+   self.name := string(base.name);
+   self.filename := string(base.filename);
    self.hitsAll := base.hitsAll;
    self.yTarget := TAnimYTarget(base.yTarget);
 
-   frames := @self.frame;
-   setLength(frames^, base.frames + 1);
+   self.frame := TAnimFrameList.Create;
+   frame.Capacity := (base.frames + 1) * 2;
    for I := 1 to base.frames do
-   begin
-      setLength(self.frame[i], length(base.frame[i]));
-      for j := 1 to high(self.frame[i]) do
-         self.frame[i][j] := TAnimCell.Convert(base.frame[i][j]);
-      //end for
-   end;
+      for j := 1 to high(base.frame[i]) do
+         self.frame.Add(TAnimCell.Convert(base.frame[i][j], i));
 
-   effects := @self.effect;
-   setLength(effects^, base.effects + 1);
+   effect := TAnimEffectList.Create;
+   effect.Add(TAnimEffects.Create);
+   effect.Capacity := base.effects + 1;
    for i := 1 to base.effects do
-   begin
-      self.effect[i] := TAnimEffects.Convert(base.effect[i]);
-   end;
+      effect.add(TAnimEffects.Convert(base.effect[i]));
 end;
 
 { T2k2AnimCell }
 
-constructor T2k2AnimCell.Convert(base: battle_anims.TAnimCell);
+constructor T2k2AnimCell.Convert(base: battle_anims.TAnimCell; frame: word);
 begin
    self.id := base.index;
+   self.frame := frame;
    self.position := point(base.x, base.y);
    self.zoom := point(base.zoom, base.zoom);
    self.color := base.color;

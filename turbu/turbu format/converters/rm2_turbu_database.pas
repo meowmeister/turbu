@@ -182,7 +182,6 @@ var
    i, j: integer;
    counter, classes: integer;
    classTable, heroClassTable: TConversionTable;
-   reader: TStream;
    battleEngine: TBattleEngineData;
    defMoveMatrix: TMoveMatrix;
    moveArray: ^TMoveMatrixArray;
@@ -191,12 +190,6 @@ begin
    self.Create;
    GDatabase := self;
    GLcfDatabase := base;
-   reader := GArchives[0].getFile('metadata');
-   try
-      self.algorithmLookup.loadFromStream(reader);
-   finally
-      reader.free;
-   end;
    self.units.free;
    self.units := dic;
    FLegacyCruft.Free;
@@ -255,7 +248,7 @@ begin
             if base.hero[i].hasSkillName then
             begin
                command.add(TBattleCommand.Create);
-               command.Last.id := command. High;
+               command.Last.id := command.High;
                command.Last.name := (string(base.hero[i].skillName));
                command.Last.style := cs_skillgroup;
                command.Last.value := command. High;

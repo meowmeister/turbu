@@ -1,10 +1,12 @@
 unit skill_algorithms;
 
+[DesignName('Level (default)')]
 function skillSelectByLevel(Character: TRpgHero; Level, unused2, unused3, unused4: integer): boolean;
 begin
    result := character.level >= Level;
 end;
 
+[DesignName('Equipment (default)')]
 function skillSelectByEq(Character: TRpgHero; Item1, Item2, Item3, Item4: integer): boolean;
 var
    values: array[1..4] of integer;
@@ -26,6 +28,7 @@ begin
    end;
 end;
 
+[DesignName('Global Boolean (default)')]
 function skillSelectByBoolean(Character: TRpgHero; which, unused2, unused3, unused4: integer): boolean;
 begin
    if which > 0 then
@@ -33,6 +36,7 @@ begin
    else result := not (switch[-which]);
 end;
 
+[DesignName('Global Variable (default)')]
 function skillSelectByVar(Character: TRpgHero; which, value, unused3, unused4: integer): boolean;
 var
    whichvar: integer;

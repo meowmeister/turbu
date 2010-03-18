@@ -12,6 +12,7 @@ uses
   sdl,
   sdl_canvas,
   types,
+  dm_database,
   LMT in '..\LMT.pas',
   fileIO in '..\fileIO.pas',
   LDB in '..\LDB.pas',
@@ -43,7 +44,6 @@ uses
   rm2_turbu_resists in '..\turbu format\converters\rm2_turbu_resists.pas',
   discInterface in '..\discInterface.pas',
   frame_params in 'frame_params.pas' {frameParams: TFrame},
-  dm_database in 'dm_database.pas' {dmDatabase: TDataModulet},
   attributes_editor in 'attributes_editor.pas' {frmAttributesEditor},
   frame_items in 'frame_items.pas' {frameItems: TFrame},
   turbu_script_basis in '..\turbu format\turbu_script_basis.pas',
@@ -62,7 +62,8 @@ uses
   turbu_functional in '..\turbu_functional.pas',
   rm2_turbu_tilesets in '..\turbu format\converters\rm2_turbu_tilesets.pas',
   addition_sprite in '..\mapview\libs\map engine\addition_sprite.pas',
-  map_tree_controller in 'map_tree_controller.pas';
+  map_tree_controller in 'map_tree_controller.pas',
+  delete_map in 'delete_map.pas' {dlgDeleteMap};
 
 {$R *.res}
 

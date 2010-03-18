@@ -37,6 +37,7 @@ type
       function makeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;
       procedure setCurrentFolder(const value: string);
       function getCurrentFolder: string;
+      procedure deleteFile(name: string);
       property currentFolder: string read getCurrentFolder write setCurrentFolder;
    end;
 

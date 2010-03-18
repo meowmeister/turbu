@@ -41,7 +41,6 @@ contains
   turbu_sounds in 'database\turbu_sounds.pas',
   dm_database in '..\editor\dm_database.pas' {dmDatabase: TDataModule},
   turbu_heroes in '..\engines\map engine\turbu_heroes.pas',
-  archiveInterface in '..\archiveInterface.pas',
   turbu_sprites in 'turbu_sprites.pas',
   turbu_unit_dictionary in 'turbu_unit_dictionary.pas',
   turbu_defs in 'turbu_defs.pas',
@@ -56,6 +55,8 @@ contains
   turbu_functional in '..\turbu_functional.pas',
   timing in '..\mapview\libs\timing.pas',
   turbu_script_interface in 'turbu_script_interface.pas',
-  commons in '..\commons.pas';
+  commons in '..\commons.pas',
+  turbu_serialization in '..\turbu_serialization.pas',
+  rttiHelper in '..\rttiHelper.pas';
 
 end.

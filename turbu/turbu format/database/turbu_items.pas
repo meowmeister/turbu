@@ -26,20 +26,21 @@ type
    TItemType = (it_junk, it_weapon, it_armor, it_medicine, it_upgrade, it_book,
                 it_skill, it_variable, it_script);
 
+   TStatArray = array[1..STAT_COUNT] of integer;
+
    TItemTemplate = class abstract(TRpgDatafile)
    private
       FDesc: string;
-      FPrice: integer;
+      FCost: integer;
       FTag: T4IntArray;
    protected
       class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream); virtual;
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
 
       property desc: string read FDesc write FDesc;
-      property cost: integer read FPrice write FPrice;
+      property cost: integer read FCost write FCost;
       property tag: T4IntArray read FTag write FTag;
    end;
 
@@ -47,24 +48,25 @@ type
 
    TUsableItemTemplate = class abstract(TItemTemplate)
    private
-      FUses: integer;
+      FUsesLeft: integer;
       FUsable: TUsableWhere;
-      FUsedByHero: TByteSet;
-      FUsedByClass: TByteSet;
-      FStat: array[1..STAT_COUNT] of integer;
+      [TUploadByteSet]
+      FUsableByHero: TByteSet;
+      [TUploadByteSet]
+      FUsableByClass: TByteSet;
+      FStat: TStatArray;
 
       function getStat(i: byte): integer;
       procedure setStat(i: byte; const Value: integer);
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
 
       property stat[i: byte]: integer read getStat write setStat;
-      property usesLeft: integer read FUses write FUses;
+      property usesLeft: integer read FUsesLeft write FUsesLeft;
       property usableWhere: TUsableWhere read FUsable write FUsable;
-      property usableByHero: TByteSet read FUsedByHero write FUsedByHero;
-      property usableByClass: TByteSet read FUsedByClass write FUsedByClass;
+      property usableByHero: TByteSet read FUsableByHero write FUsableByHero;
+      property usableByClass: TByteSet read FUsableByClass write FUsableByClass;
    end;
 
    TEquipmentTemplate = class abstract(TUsableItemTemplate)
@@ -72,23 +74,23 @@ type
       FEvasion: boolean;
       FToHit: integer;
       FCritChance: integer;
-      FPreventCrits: integer;
+      FCritPrevent: integer;
       FPreemptive: integer;
       FMpReduction: integer;
       FNoTerrainDamage: boolean;
       FUsable: boolean;
+      [TUploadByteSet]
       FConditions: TByteSet;
       FAttributes: TPointArray;
       FCursed: boolean;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
 
       property evasion: boolean read FEvasion write FEvasion;
       property toHit: integer read FToHit write FToHit;
       property critChance: integer read FCritChance write FCritChance;
-      property critPrevent: integer read FPreventCrits write FPreventCrits;
+      property critPrevent: integer read FCritPrevent write FCritPrevent;
       property preemptive: integer read FPreemptive write FPreemptive;
       property mpReduction: integer read FMpReduction write FMpReduction;
       property noTerrainDamage: boolean read FNoTerrainDamage write FNoTerrainDamage;
@@ -105,18 +107,17 @@ type
       FAreaHit: boolean;
       FBattleAnim: word;
       FMPCost: word;
-      FConditionInflictChance: byte;
+      FConditionChance: byte;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
 
       property twoHanded: boolean read FTwoHanded write FTwoHanded;
       property attackTwice: boolean read FAttackTwice write FAttackTwice;
       property areaHit: boolean read FAreaHit write FAreaHit;
       property battleAnim: word read FBattleAnim write FBattleAnim;
       property mpCost: word read FMpCost write FMpCost;
-      property conditionChance: byte read FConditionInflictChance write FConditionInflictChance;
+      property conditionChance: byte read FConditionChance write FConditionChance;
    end;
 
    TArmorTemplate = class(TEquipmentTemplate)
@@ -125,7 +126,6 @@ type
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
-      procedure upload(db: TDataSet); override;
 
       property slot: byte read FSlot write FSlot;
    end;
@@ -158,12 +158,12 @@ type
 
    TSkillItemTemplate = class(TSkillBookTemplate)
    private
-      FDisplaySkillMessage: boolean;
+      FCustomSkillMessage: boolean;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
-      property customSkillMessage: boolean read FDisplaySkillMessage write FDisplaySkillMessage;
+      property customSkillMessage: boolean read FCustomSkillMessage write FCustomSkillMessage;
    end;
 
    TStatItemTemplate = class(TUsableItemTemplate); //it_upgrade
@@ -209,7 +209,7 @@ constructor TItemTemplate.Load(savefile: TStream);
 begin
    inherited Load(savefile);
    FDesc := savefile.readString;
-   FPrice := savefile.readInt;
+   FCost := savefile.readInt;
    savefile.readBuffer(FTag, sizeof(T4IntArray));
    lassert(savefile.readChar = 'I');
 end;
@@ -218,20 +218,9 @@ procedure TItemTemplate.save(savefile: TStream);
 begin
    inherited save(savefile);
    savefile.writeString(FDesc);
-   savefile.writeInt(FPrice);
+   savefile.writeInt(FCost);
    savefile.WriteBuffer(FTag, sizeof(T4IntArray));
    savefile.writeChar('I');
-end;
-
-procedure TItemTemplate.upload(db: TDataSet);
-var
-   i: integer;
-begin
-   inherited upload(db);
-   db.FieldByName('desc').asString := FDesc;
-   db.FieldByName('cost').AsInteger := FPrice;
-   for i := 1 to 4 do
-      (db.FieldByName('tag') as TArrayField)[i - 1] := FTag[i];
 end;
 
 { TUsableItemTemplate }
@@ -241,14 +230,14 @@ var
    dummy: byte;
 begin
    inherited Load(savefile);
-   FUses := savefile.readInt;
+   FUsesLeft := savefile.readInt;
    savefile.readBuffer(FUsable, sizeof(TUsableWhere));
    dummy := savefile.readByte;
    if dummy > 0 then
-      savefile.readBuffer(self.FUsedByHero, dummy);
+      savefile.readBuffer(self.FUsableByHero, dummy);
    dummy := savefile.readByte;
    if dummy > 0 then
-      savefile.readBuffer(self.FUsedByClass, dummy);
+      savefile.readBuffer(self.FUsableByClass, dummy);
    lassert(savefile.readInt = STAT_COUNT);
    savefile.readBuffer(FStat[1], sizeof(integer) * STAT_COUNT);
    lassert(savefile.readChar = 'U');
@@ -259,16 +248,16 @@ var
    dummy: byte;
 begin
    inherited save(savefile);
-   savefile.writeInt(FUses);
+   savefile.writeInt(FUsesLeft);
    savefile.WriteBuffer(FUsable, sizeof(TUsableWhere));
-   dummy := getSetLength(FUsedByHero);
+   dummy := getSetLength(FUsableByHero);
    savefile.writeByte(dummy);
    if dummy > 0 then
-      savefile.WriteBuffer(self.FUsedByHero, dummy);
-   dummy := getSetLength(FUsedByClass);
+      savefile.WriteBuffer(self.FUsableByHero, dummy);
+   dummy := getSetLength(FUsableByClass);
    savefile.writeByte(dummy);
    if dummy > 0 then
-      savefile.WriteBuffer(self.FUsedByClass, dummy);
+      savefile.WriteBuffer(self.FUsableByClass, dummy);
    savefile.writeInt(STAT_COUNT);
    savefile.WriteBuffer(FStat[1], sizeof(integer) * STAT_COUNT);
    savefile.writeChar('U');
@@ -286,19 +275,6 @@ begin
    FStat[i] := value;
 end;
 
-procedure TUsableItemTemplate.upload(db: TDataSet);
-var
-   i: integer;
-begin
-   inherited upload(db);
-   for I := 1 to 6 do
-      (db.FieldByName('stat') as TArrayField)[i - 1] := FStat[i];
-   db.FieldByName('usesLeft').AsInteger := FUses;
-   db.FieldByName('usableWhere').AsInteger := Ord(FUsable);
-   (db.FieldByName('usableByHero') as TBytesField).asSet := FUsedByHero;
-   (db.FieldByName('usableByClass') as TBytesField).asSet := FUsedByClass;
-end;
-
 { TEquipmentTemplate }
 
 constructor TEquipmentTemplate.Load(savefile: TStream);
@@ -309,7 +285,7 @@ begin
    FEvasion := savefile.readBool;
    FToHit := savefile.readInt;
    FCritChance := savefile.readInt;
-   FPreventCrits := savefile.readInt;
+   FCritPrevent := savefile.readInt;
    FPreemptive := savefile.readInt;
    FMpReduction := savefile.readInt;
    FNoTerrainDamage := savefile.readBool;
@@ -332,7 +308,7 @@ begin
    savefile.writeBool(FEvasion);
    savefile.writeInt(FToHit);
    savefile.writeInt(FCritChance);
-   savefile.writeInt(FPreventCrits);
+   savefile.writeInt(FCritPrevent);
    savefile.writeInt(FPreemptive);
    savefile.writeInt(FMpReduction);
    savefile.writeBool(FNoTerrainDamage);
@@ -348,20 +324,6 @@ begin
    savefile.writeChar('E');
 end;
 
-procedure TEquipmentTemplate.upload(db: TDataSet);
-begin
-   inherited upload(db);
-   db.FieldByName('evasion').AsBoolean := evasion;
-   db.FieldByName('toHit').AsInteger := toHit;
-   db.FieldByName('critChance').AsInteger := critChance;
-   db.FieldByName('critPrevent').AsInteger := critPrevent;
-   db.FieldByName('preemptive').AsInteger := preemptive;
-   db.FieldByName('mpReduction').AsInteger := mpReduction;
-   db.FieldByName('noTerrainDamage').AsBoolean := noTerrainDamage;
-   db.FieldByName('usable').AsBoolean := usable;
-   db.FieldByName('cursed').AsBoolean := cursed;
-end;
-
 { TWeaponTemplate }
 
 constructor TWeaponTemplate.Load(savefile: TStream);
@@ -372,7 +334,7 @@ begin
    FAreaHit := savefile.readBool;
    FBattleAnim := savefile.readWord;
    FMPCost := savefile.readWord;
-   FConditionInflictChance := savefile.readByte;
+   FConditionChance := savefile.readByte;
    lassert(savefile.readChar = 'W');
 end;
 
@@ -384,19 +346,8 @@ begin
    savefile.writeBool(FAreaHit);
    savefile.writeWord(FBattleAnim);
    savefile.writeWord(FMPCost);
-   savefile.writeByte(FConditionInflictChance);
+   savefile.writeByte(FConditionChance);
    savefile.writeChar('W');
-end;
-
-procedure TWeaponTemplate.upload(db: TDataSet);
-begin
-   inherited upload(db);
-   db.FieldByName('twoHanded').AsBoolean := twoHanded;
-   db.FieldByName('attackTwice').AsBoolean := attackTwice;
-   db.FieldByName('areaHit').AsBoolean := areaHit;
-   db.FieldByName('battleAnim').AsInteger := battleAnim;
-   db.FieldByName('mpCost').AsInteger := mpCost;
-   db.FieldByName('conditionChance').AsInteger := conditionChance;
 end;
 
 { TArmorTemplate }
@@ -413,12 +364,6 @@ begin
    inherited save(savefile);
    savefile.writeByte(FSlot);
    savefile.writeChar('A');
-end;
-
-procedure TArmorTemplate.upload(db: TDataSet);
-begin
-   inherited upload(db);
-   db.FieldByName('slot').AsInteger := slot;
 end;
 
 { TMedicineTemplate }
@@ -464,14 +409,14 @@ end;
 constructor TSkillItemTemplate.Load(savefile: TStream);
 begin
    inherited Load(savefile);
-   FDisplaySkillMessage := savefile.readBool;
+   FCustomSkillMessage := savefile.readBool;
    lassert(savefile.readChar = 'K');
 end;
 
 procedure TSkillItemTemplate.save(savefile: TStream);
 begin
    inherited save(savefile);
-   savefile.writeBool(FDisplaySkillMessage);
+   savefile.writeBool(FCustomSkillMessage);
    savefile.writeChar('K');
 end;
 

@@ -8,6 +8,7 @@ uses
 
 type
    TTileMatrix = TMatrix<TTile>;
+   TTileMatrixList = class(TObjectList<TTileMatrix>);
 
    TFacingSet = set of TFacing;
 
@@ -15,7 +16,7 @@ type
    private
       FMap: TRpgMap;
       FBgImage: TSdlImage;
-      FTiles: TObjectList<TTileMatrix>;
+      FTiles: TTileMatrixList;
       FTileset: TTileset;
       FOverlapping: TFacingSet;
       FViewport: TRect;
@@ -33,6 +34,8 @@ type
       procedure assignTile(const x, y, layer: integer; const tile: TTileRef);
       procedure updateBorders(x, y, layer: integer);
 
+      procedure RecreateTileMatrix;
+
       property overlapping: TFacingSet read FOverlapping;
       property viewport: TRect read FViewport write SetViewport;
       property mapRect: TRect read FMapRect;
@@ -43,7 +46,8 @@ type
 
 implementation
 uses
-   commons, turbu_constants,
+   SysUtils,
+   commons, turbu_constants, archiveInterface,
    SG_defs;
 
 { T2kSpriteEngine }
@@ -65,8 +69,6 @@ procedure T2kSpriteEngine.updateBorders(x, y, layer: integer);
 var
    tile: TBorderTile;
    neighbors: TNeighborSet;
-   tileRef: TTileRef;
-   newTile: TTile;
 
    function normalizePoint(var x, y: integer): boolean;
    var
@@ -91,6 +93,9 @@ var
       else include(neighbors, neighbor);
    end;
 
+var
+   tileRef: TTileRef;
+   newTile: TTile;
 begin
    if not normalizePoint(x, y) then
       Exit;
@@ -128,7 +133,7 @@ var
 begin
    inherited Create(nil, canvas);
    self.Images := images;
-   FTiles := TObjectList<TTileMatrix>.Create;
+   FTiles := TTileMatrixList.Create;
    FTileset := tileset;
    FMap := map;
    size := FMap.size;
@@ -137,8 +142,9 @@ begin
    self.SetViewport(viewport);
    self.VisibleWidth := canvas.Width;
    self.VisibleHeight := canvas.Height;
+//   GArchives[IMAGE_ARCHIVE].
    if map.bgName <> '' then
-      FBgImage := TSdlImage.Create(map.bgName, map.bgName, images);
+      {FBgImage := TSdlImage.Create(map.bgName, map.bgName, images)}; //needs a real filename
    FMapRect := rect(0, 0, size.x, size.y);
 end;
 
@@ -175,6 +181,7 @@ begin
    result := tileClass.Create(Self, filename)
 end;
 
+{$Q+R+}
 procedure T2kSpriteEngine.loadTileMatrix(value: TTileList; index: integer; const viewport: TRect);
 var
    size: TSgPoint;
@@ -198,6 +205,8 @@ var
    equivX, equivY: integer;
    newTile: TTile;
    tileRef: TTileRef;
+   //Yay for b0rked bounds checking in packages!
+   newindex: integer;
 begin
    size := FMap.size;
    for y := viewport.top - 1 to viewport.top + viewport.bottom + 1 do
@@ -206,7 +215,13 @@ begin
          EquivalizeCoords(x, y, equivX, equivY);
          if assigned(FTiles[index][equivX, equivY]) then
             Continue;
-         tileRef := value[getIndex(equivX, equivY)];
+
+         //FIXME: Fix this when bounds checking gets fixed
+         newIndex := getIndex(equivX, equivY);
+         if (newIndex > high(value)) or (newIndex < low(value)) then
+            raise ERangeError.Create('Tile list bounds out of range');
+         tileRef := value[newIndex];
+{         tileRef := value[getIndex(equivX, equivY)];}
          //don't create anything for the "blank tile"
          if smallint(tileref.value) = -1 then
             Continue;
@@ -214,6 +229,17 @@ begin
          FTiles[index][equivX, equivY] := newTile;
          newTile.place(equivX, equivY, index, tileRef, FTileset);
       end;
+end;
+
+procedure T2kSpriteEngine.RecreateTileMatrix;
+var
+   i: integer;
+begin
+   FTiles.Free;
+   FTiles := TTileMatrixList.Create;
+   for i := low(FMap.tileMap) to high(FMap.tileMap) do
+      FTiles.add(TTileMatrix.Create(FMap.size));
+   self.SetViewport(FViewport);
 end;
 
 procedure T2kSpriteEngine.SetViewport(const viewport: TRect);

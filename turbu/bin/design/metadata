@@ -1,8 +1,0 @@
-calcExp2k=RPG Maker 2000 algorithm
-calcExp2k3=RPG Maker 2003 algorithm
-calcSkillDamage=RPG Maker 2000 skill damage algorithm
-calcToHit=RPG Maker 2000 to-hit algorithm
-skillSelectByLevel=Level (default)
-skillSelectByEq=Equipment (default)
-skillSelectByBoolean=Global Boolean (default)
-skillSelectByVar=Global Variable (default)

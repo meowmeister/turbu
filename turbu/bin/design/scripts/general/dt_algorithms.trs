@@ -4,6 +4,7 @@ const
    MAXEXP2K  =  1000000;
    MAXEXP2K3 = 10000000;
 
+[DesignName('RM2K level algorithm')]
 function calcExp2k(currentLevel: integer; const stdIncrease, addIncrease, correction: integer; dummy: integer): integer;
 var
    standard, additional: double;
@@ -21,6 +22,7 @@ begin
    result := min(result, MAXEXP2K);
 end;
 
+[DesignName('RM2K3 level algorithm')]
 function calcExp2k3(level: integer; const primary, secondary, tertiary: integer; dummy: integer): integer;
 var
    i: integer;
