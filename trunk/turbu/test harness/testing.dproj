@@ -200,6 +200,7 @@
 			<DCCReference Include="test_map_size.pas">
 				<Form>frmTestMapSize</Form>
 			</DCCReference>
+			<DCCReference Include="..\turbu format\database\turbu_map_metadata.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

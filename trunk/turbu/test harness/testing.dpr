@@ -96,7 +96,8 @@ uses
   eval in '..\engines\map engine\design\eval.pas' {frmMapProperties},
   rttiHelper in '..\rttiHelper.pas',
   turbu_serialization in '..\turbu_serialization.pas',
-  test_map_size in 'test_map_size.pas' {frmTestMapSize};
+  test_map_size in 'test_map_size.pas' {frmTestMapSize},
+  turbu_map_metadata in '..\turbu format\database\turbu_map_metadata.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

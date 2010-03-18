@@ -405,9 +405,6 @@ begin
 end;
 
 procedure TfrmTurbuMain.loadMap(const value: IMapMetadata);
-var
-   mapStream: TStream;
-   tileset: TTileset;
 const
    SDL_BLACK: SDL_Color = ();
 begin
@@ -418,8 +415,6 @@ begin
    FCurrentMap := FMapEngine.loadMap(value);
    self.configureScrollBars(FMapEngine.mapSize, FMapEngine.mapPosition);
    fMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
-
-   tileset := GDatabase.tileset[FCurrentMap.tileset];
 
    // I don't know why this is necessary, but without the next two lines,
    // nothing will ever actually show in imgPalette;
@@ -579,8 +574,6 @@ end;
 
 procedure TfrmTurbuMain.bindPaletteCursor;
 var
-   tempRect: TRect;
-   delta: integer;
    height, width: integer;
    i, j: integer;
    list: TList<integer>;
