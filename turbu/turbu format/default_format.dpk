@@ -26,8 +26,7 @@ package default_format;
 {$IMPLICITBUILD OFF}
 
 requires
-  EngineBasis,
-  dsnap;
+  EngineBasis;
 
 contains
   SimpleShareMem_DefaultFormat in 'SimpleShareMem_DefaultFormat.pas',

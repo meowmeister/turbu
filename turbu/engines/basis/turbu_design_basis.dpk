@@ -26,7 +26,6 @@ package turbu_design_basis;
 {$IMPLICITBUILD OFF}
 
 requires
-  rtl,
   EngineBasis,
   dbrtl,
   vcldb;

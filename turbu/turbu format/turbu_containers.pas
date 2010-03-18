@@ -39,8 +39,6 @@ type
       private
          FTopNode: THeirarchyTreeNode<T>;
          FList: TListNode<T>;
-         FIndex: integer;
-         FNext: TEnumerator;
       protected
          function DoGetCurrent: T; override;
          function DoMoveNext: Boolean; override;

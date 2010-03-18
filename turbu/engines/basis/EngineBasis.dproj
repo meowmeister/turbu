@@ -36,7 +36,6 @@
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
 			<GenDll>true</GenDll>
-			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
 			<GenPackage>true</GenPackage>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -62,7 +61,7 @@
 			<DelphiCompile Include="EngineBasis.dpk">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="dsnap.dcp"/>
 			<DCCReference Include="SimpleShareMem_EngineBasis.pas"/>
 			<DCCReference Include="..\..\..\components\PascalScript\upsCompiler.pas"/>
 			<DCCReference Include="..\..\..\components\PascalScript\uPSRuntime.pas"/>
@@ -109,6 +108,7 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">C:\Users\mason\Documents\RAD Studio Weaver\Projects\turbu\turbu\bin\Turbu.exe</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

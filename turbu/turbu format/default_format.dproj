@@ -59,7 +59,6 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="EngineBasis.dcp"/>
-			<DCCReference Include="dsnap.dcp"/>
 			<DCCReference Include="SimpleShareMem_DefaultFormat.pas"/>
 			<DCCReference Include="database\turbu_database.pas"/>
 			<DCCReference Include="database\turbu_characters.pas"/>

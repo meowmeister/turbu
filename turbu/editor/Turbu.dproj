@@ -36,7 +36,7 @@
 			<DCC_DcpOutput>..\dcus\</DCC_DcpOutput>
 			<DCC_Define>JCLINSTALL;PS_USESSUPPORT;NOPARSE_EVENTS;$(DCC_Define)</DCC_Define>
 			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\classes\sdl custom;..\bin;..\dcus;..\..\classes\FastMM4;..\..\components\TURBU;..\..\components\PascalScript;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_UsePackage>default_format;EngineBasis</DCC_UsePackage>
+			<DCC_UsePackage>default_format;EngineBasis;JvPluginSystem</DCC_UsePackage>
 			<DCC_DependencyCheckOutputName>..\bin\Turbu.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -210,8 +210,8 @@
 						<VersionInfo Name="AutoIncBuild">True</VersionInfo>
 						<VersionInfo Name="MajorVer">0</VersionInfo>
 						<VersionInfo Name="MinorVer">7</VersionInfo>
-						<VersionInfo Name="Release">3</VersionInfo>
-						<VersionInfo Name="Build">1213</VersionInfo>
+						<VersionInfo Name="Release">5</VersionInfo>
+						<VersionInfo Name="Build">1218</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -223,22 +223,19 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc,</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">TURBU Editor</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">0.7.3.1213</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.7.5.1218</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">TURBU Editor</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">Turbu.exe</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">TURBU editor</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">0.7.3</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">0.7.5</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Source>
 						<Source Name="MainSource">Turbu.dpr</Source>
 					</Source>
-					<Excluded_Packages>
-						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k120.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-						<Excluded_Packages Name="$(BDS)\bin\dclofficexp120.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-					</Excluded_Packages>
+					<Excluded_Packages/>
 				</Delphi.Personality>
 				<ModelSupport>False</ModelSupport>
 			</BorlandProject>

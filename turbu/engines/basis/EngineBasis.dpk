@@ -27,7 +27,7 @@ package EngineBasis;
 {$DEFINE PS_USESSUPPORT}
 
 requires
-  vcl;
+  dsnap;
 
 contains
   SimpleShareMem_EngineBasis in 'SimpleShareMem_EngineBasis.pas',
@@ -53,6 +53,8 @@ contains
   turbu_engines in '..\..\turbu format\turbu_engines.pas',
   sg_utils in '..\..\..\classes\sdl custom\sg_utils.pas',
   ps_pointer in 'ps_pointer.pas',
-  archiveInterface in '..\..\archiveInterface.pas';
+  archiveInterface in '..\..\archiveInterface.pas',
+  midaslib,
+  crtl;
 
 end.

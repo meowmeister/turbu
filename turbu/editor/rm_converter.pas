@@ -152,9 +152,6 @@ begin
 end;
 
 procedure TfrmRmConverter.FormShow(Sender: TObject);
-var
-   dummy: ansiString;
-   stream: TStream;
 begin
    assert(fsModal in FFormState);
    self.grabFormat;
