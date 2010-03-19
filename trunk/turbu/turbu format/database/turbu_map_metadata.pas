@@ -79,7 +79,7 @@ type
          property Current: IMapMetadata read GetCurrent;
       end;
 
-      TMapNode = class(THeirarchyTreeNode<TMapMetadata>);
+      TMapNode = class(THierarchyTreeNode<TMapMetadata>);
       TMapDic = class(TDictionary<smallint, TMapNode>);
 
    private
@@ -358,8 +358,8 @@ end;
 
 function TMapTree.ChildrenOf(id: smallint): TList<TMapMetadata>;
 var
-   node: THeirarchyTreeNode<TMapMetadata>;
-   list: THeirarchyTreeList<TMapMetadata>;
+   node: THierarchyTreeNode<TMapMetadata>;
+   list: THierarchyTreeList<TMapMetadata>;
 begin
    node := FTranslationTable[id];
    result := TList<TMapMetadata>.Create;

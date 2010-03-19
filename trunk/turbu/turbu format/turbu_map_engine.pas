@@ -30,6 +30,11 @@ type
 
    TDeleteMapMode = (dmTree, dmSibling, dmTop, dmNone);
 
+   IBreakable = interface
+   ['{70501C2F-5A15-4033-B3FF-17946D27A0E1}']
+      procedure BreakSomething;
+   end;
+
    IMapEngine = interface(IInterface)
    ['{A5FDC982-D72E-448E-8E37-7865094C5B5E}']
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase);
@@ -59,6 +64,7 @@ type
       function AddNewMap(parentID: integer): IMapMetadata;
       procedure EditMapProperties(mapID: integer);
       procedure DeleteMap(mapID: integer; deleteResult: TDeleteMapMode);
+      procedure Reset;
    end;
 
    TMapEngine = class abstract (TRpgPlugBase, IMapEngine)
@@ -70,7 +76,7 @@ type
       FDefaultBattleEngine: IBattleEngine;
       fWindow: TSdlWindowId;
       FInitialized: boolean;
-      procedure cleanup; virtual; abstract;
+      procedure cleanup; virtual;
    public
       destructor Destroy; override;
       procedure AfterConstruction; override;
@@ -109,11 +115,15 @@ begin
    assert(data.version > TVersion.create(0, 0, 0));
 end;
 
+procedure TMapEngine.cleanup;
+begin
+   FreeAndNil(FBattleEngines);
+end;
+
 destructor TMapEngine.Destroy;
 begin
    if FInitialized then
       self.cleanup;
-   FBattleEngines.Free;
    FData.Free;
    inherited Destroy;
 end;
