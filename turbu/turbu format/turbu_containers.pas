@@ -30,61 +30,61 @@ type
       function append(value: TListNode<T>): TListNode<T>;
    end;
 
-   THeirarchyTreeList<T: class> = class;
+   THierarchyTreeList<T: class> = class;
 
-   THeirarchyTreeNode<T: class> = class
+   THierarchyTreeNode<T: class> = class
    private type
 
       TEnumerator = class(TEnumerator<T>)
       private
-         FTopNode: THeirarchyTreeNode<T>;
+         FTopNode: THierarchyTreeNode<T>;
          FList: TListNode<T>;
       protected
          function DoGetCurrent: T; override;
          function DoMoveNext: Boolean; override;
          function ToList: TListNode<T>;
       public
-         constructor Create(value: THeirarchyTreeNode<T>);
+         constructor Create(value: THierarchyTreeNode<T>);
          destructor Destroy; override;
          function GetCurrent: T;
          function MoveNext: boolean;
          property Current: T read GetCurrent;
       end;
 
-      TNodeList = THeirarchyTreeList<T>;
+      TNodeList = THierarchyTreeList<T>;
 
    private
       FData: T;
       FRight: TNodeList;
       FList: TNodeList;
-      function GetParent: THeirarchyTreeNode<T>;
+      function GetParent: THierarchyTreeNode<T>;
       function GetLevel: integer;
-      procedure SetParent(const Value: THeirarchyTreeNode<T>);
+      procedure SetParent(const Value: THierarchyTreeNode<T>);
    public
       constructor Create(value: T);
       destructor Destroy; override;
-      procedure Add(node: THeirarchyTreeNode<T>); overload;
+      procedure Add(node: THierarchyTreeNode<T>); overload;
       procedure Add(value: T); overload;
       function GetEnumerator: TEnumerator;
 
       property List: TNodeList read FList;
       property Right: TNodeList read FRight;
-      property Parent: THeirarchyTreeNode<T> read GetParent write SetParent;
+      property Parent: THierarchyTreeNode<T> read GetParent write SetParent;
       property Level: integer read GetLevel;
       property Data: T read FData write FData;
    end;
 
-   THeirarchyTreeList<T: class> = class(TRpgObjectList<THeirarchyTreeNode<T>>)
+   THierarchyTreeList<T: class> = class(TRpgObjectList<THierarchyTreeNode<T>>)
    private
-      FParent: THeirarchyTreeNode<T>;
+      FParent: THierarchyTreeNode<T>;
       FLevel: integer;
-      procedure SetParent(Value: THeirarchyTreeNode<T>);
+      procedure SetParent(Value: THierarchyTreeNode<T>);
    public
-      constructor Create(parent: THeirarchyTreeNode<T>);
-      function Add(value: THeirarchyTreeNode<T>): integer;
-      function Remove(value: THeirarchyTreeNode<T>): integer;
+      constructor Create(parent: THierarchyTreeNode<T>);
+      function Add(value: THierarchyTreeNode<T>): integer;
+      function Remove(value: THierarchyTreeNode<T>): integer;
       function ToLinkedList(out tail: TListNode<T>): TListNode<T>;
-      property Parent: THeirarchyTreeNode<T> read FParent write SetParent;
+      property Parent: THierarchyTreeNode<T> read FParent write SetParent;
       property Level: integer read FLevel;
    end;
 
@@ -176,71 +176,71 @@ begin
    result := output;
 end;
 
-{ THeirarchyTreeNode<T> }
+{ THierarchyTreeNode<T> }
 
-constructor THeirarchyTreeNode<T>.Create(value: T);
+constructor THierarchyTreeNode<T>.Create(value: T);
 begin
    inherited Create;
    FData := value;
 end;
 
-destructor THeirarchyTreeNode<T>.Destroy;
+destructor THierarchyTreeNode<T>.Destroy;
 begin
    FRight.Free;
    FData.Free;
    inherited Destroy;
 end;
 
-function THeirarchyTreeNode<T>.GetEnumerator: TEnumerator;
+function THierarchyTreeNode<T>.GetEnumerator: TEnumerator;
 begin
    result := TEnumerator.Create(self);
 end;
 
-function THeirarchyTreeNode<T>.GetLevel: integer;
+function THierarchyTreeNode<T>.GetLevel: integer;
 begin
    if assigned(FList) then
       result := FList.Level
    else result := 0;
 end;
 
-function THeirarchyTreeNode<T>.GetParent: THeirarchyTreeNode<T>;
+function THierarchyTreeNode<T>.GetParent: THierarchyTreeNode<T>;
 begin
    result := FList.FParent;
 end;
 
-procedure THeirarchyTreeNode<T>.SetParent(const Value: THeirarchyTreeNode<T>);
+procedure THierarchyTreeNode<T>.SetParent(const Value: THierarchyTreeNode<T>);
 begin
    FList.Extract(self);
    value.Add(self);
 end;
 
-procedure THeirarchyTreeNode<T>.Add(node: THeirarchyTreeNode<T>);
+procedure THierarchyTreeNode<T>.Add(node: THierarchyTreeNode<T>);
 begin
    if not assigned(FRight) then
       FRight := TNodeList.Create(self);
    FRight.Add(node);
 end;
 
-procedure THeirarchyTreeNode<T>.Add(value: T);
+procedure THierarchyTreeNode<T>.Add(value: T);
 begin
-   self.Add(THeirarchyTreeNode<T>.Create(value));
+   self.Add(THierarchyTreeNode<T>.Create(value));
 end;
 
-{ THeirarchyTreeList<T> }
+{ THierarchyTreeList<T> }
 
-function THeirarchyTreeList<T>.Add(value: THeirarchyTreeNode<T>): integer;
+function THierarchyTreeList<T>.Add(value: THierarchyTreeNode<T>): integer;
 begin
    result := inherited Add(value);
    value.FList := self;
 end;
 
-constructor THeirarchyTreeList<T>.Create(parent: THeirarchyTreeNode<T>);
+constructor THierarchyTreeList<T>.Create(parent: THierarchyTreeNode<T>);
 begin
    inherited Create(true);
    SetParent(parent);
 end;
 
-function THeirarchyTreeList<T>.Remove(value: THeirarchyTreeNode<T>): integer;
+function THierarchyTreeList<T>.Remove(value: THierarchyTreeNode<T>): integer;
 begin
    result := inherited Remove(value);
    if count = 0 then
@@ -250,15 +250,15 @@ begin
    end;
 end;
 
-procedure THeirarchyTreeList<T>.SetParent(Value: THeirarchyTreeNode<T>);
+procedure THierarchyTreeList<T>.SetParent(Value: THierarchyTreeNode<T>);
 begin
    FParent := value;
    FLevel := parent.level + 1;
 end;
 
-function THeirarchyTreeList<T>.ToLinkedList(out tail: TListNode<T>): TListNode<T>;
+function THierarchyTreeList<T>.ToLinkedList(out tail: TListNode<T>): TListNode<T>;
 var
-   enumerator: THeirarchyTreeNode<T>;
+   enumerator: THierarchyTreeNode<T>;
    looping: boolean;
    newtail: TListNode<T>;
 begin
@@ -278,39 +278,39 @@ begin
    end;
 end;
 
-{ THeirarchyTreeNode<T>.TEnumerator }
+{ THierarchyTreeNode<T>.TEnumerator }
 
-constructor THeirarchyTreeNode<T>.TEnumerator.Create(
-  value: THeirarchyTreeNode<T>);
+constructor THierarchyTreeNode<T>.TEnumerator.Create(
+  value: THierarchyTreeNode<T>);
 begin
    FTopNode := value;
    FList := TListNode<T>.Create(nil);
    FList.append(self.ToList);
 end;
 
-destructor THeirarchyTreeNode<T>.TEnumerator.Destroy;
+destructor THierarchyTreeNode<T>.TEnumerator.Destroy;
 begin
    while assigned(FList) do
       MoveNext;
    inherited Destroy;
 end;
 
-function THeirarchyTreeNode<T>.TEnumerator.DoGetCurrent: T;
+function THierarchyTreeNode<T>.TEnumerator.DoGetCurrent: T;
 begin
    result := self.GetCurrent;
 end;
 
-function THeirarchyTreeNode<T>.TEnumerator.DoMoveNext: Boolean;
+function THierarchyTreeNode<T>.TEnumerator.DoMoveNext: Boolean;
 begin
    result := self.MoveNext;
 end;
 
-function THeirarchyTreeNode<T>.TEnumerator.GetCurrent: T;
+function THierarchyTreeNode<T>.TEnumerator.GetCurrent: T;
 begin
    result := FList.FValue;
 end;
 
-function THeirarchyTreeNode<T>.TEnumerator.MoveNext: boolean;
+function THierarchyTreeNode<T>.TEnumerator.MoveNext: boolean;
 var
    nextnode: TListNode<T>;
 begin
@@ -320,7 +320,7 @@ begin
    FList := nextnode;
 end;
 
-function THeirarchyTreeNode<T>.TEnumerator.ToList: TListNode<T>;
+function THierarchyTreeNode<T>.TEnumerator.ToList: TListNode<T>;
 var
    node: TListNode<T>;
 begin
@@ -330,7 +330,7 @@ begin
       result.append(FTopNode.Right.ToLinkedList(node));
 end;
 
-{ THeirarchyTreeNode<T>.TListNode }
+{ THierarchyTreeNode<T>.TListNode }
 
 constructor TListNode<T>.Create(value: T);
 begin

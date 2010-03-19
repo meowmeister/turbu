@@ -94,12 +94,13 @@ begin
    FSignal.Free;
    for I := 0 to high(FMaps) do
       FMaps[i].Free;
-   inherited;
+   setLength(FMaps, 0);
+   inherited Cleanup;
 end;
 
 constructor T2kMapEngine.Create;
 begin
-  inherited;
+  inherited Create;
   self.data := TMapEngineData.Create('TURBU basic map engine', TVersion.Create(0, 1, 0));
 end;
 

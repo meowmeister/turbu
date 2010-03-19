@@ -57,6 +57,8 @@ procedure T2kSpriteEngine.assignTile(const x, y, layer: integer;
 var
    newTile: TTile;
 begin
+   if (x >= FMap.size.X) or (y >= FMap.size.Y) then
+      Exit;
    FMap.AssignTile(x, y, layer, tile);
    if assigned(FTiles[layer][x, y]) then
       FTiles[layer][x, y].Dead;

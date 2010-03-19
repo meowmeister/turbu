@@ -66,6 +66,7 @@ type
       mnuAddNewMap: TMenuItem;
       mnuEditMapProperties: TMenuItem;
       mnuDeleteMap: TMenuItem;
+    mnuTestbugreps: TMenuItem;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -100,6 +101,7 @@ type
       procedure trvMapTreeContextPopup(Sender: TObject; MousePos: TPoint;
         var Handled: Boolean);
       procedure mnuDeleteMapClick(Sender: TObject);
+    procedure mnuTestbugrepsClick(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentMap: IRpgMap;
@@ -236,8 +238,12 @@ end;
 procedure TfrmTurbuMain.closeProject;
 begin
    //check for modifications first
+   FCurrentMap := nil;
+   if assigned(FMapEngine) then
+      FMapEngine.Reset;
    FreeAndNil(GDatabase);
    GArchives.clearFrom(1);
+   FPaletteTexture := -1;
 end;
 
 procedure TfrmTurbuMain.configureScrollBars(const size, position: TSgPoint);
@@ -483,6 +489,12 @@ begin
       openProject(filename);
       mnuDatabase.Enabled := true;
    end;
+end;
+
+procedure TfrmTurbuMain.mnuTestbugrepsClick(Sender: TObject);
+begin
+   RequireMapEngine;
+   (FMapEngine as IBreakable).BreakSomething;
 end;
 
 procedure TfrmTurbuMain.OnScrollMap(Sender: TObject; ScrollCode: TScrollCode;

@@ -26,7 +26,7 @@ uses
    sdl_13, SG_defs;
 
 type
-   T2kMapEngineD = class(T2kMapEngine, IDesignMapEngine)
+   T2kMapEngineD = class(T2kMapEngine, IDesignMapEngine, IBreakable)
    private
       FTilesetListD: TList<TTileGroupPair>;
       FTileSize: TSgPoint;
@@ -37,6 +37,8 @@ type
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
       procedure saveMap(value: TRpgMap);
       procedure saveAndClearMapCache;
+   private //IBreakable
+      procedure BreakSomething;
    private //IDesignMapEngine
       procedure initializeDesigner(window: TSdlWindowId; database: IRpgDatabase);
       function GetTilesetImageSize(const index: byte): TSgPoint;
@@ -56,6 +58,7 @@ type
       function addNewMap(parentID: integer): IMapMetadata;
       procedure editMapProperties(mapID: integer);
       procedure DeleteMap(mapID: integer; deleteMode: TDeleteMapMode);
+      procedure Reset;
 
       procedure IDesignMapEngine.initialize = initializeDesigner;
       function IDesignMapEngine.loadMap = DesignLoadMap;
@@ -89,11 +92,28 @@ begin
    //do more
 end;
 
+procedure T2kMapEngineD.BreakSomething;
+begin
+   raise Exception.Create('Error Message');
+end;
+
 procedure T2kMapEngineD.cleanup;
 begin
-   inherited;
-   FPaletteList.Free;
-   FTilesetListD.Free;
+   inherited cleanup;
+   FreeAndNil(FPaletteList);
+   FreeAndNil(FTilesetListD);
+end;
+
+procedure T2kMapEngineD.Reset;
+begin
+   self.cleanup;
+   self.FDatabase := nil;
+   self.FCanvas := nil;
+   self.FCurrentMap := nil;
+   self.FWaitingMap := nil;
+   self.FImages := nil;
+   self.FDefaultBattleEngine := nil;
+   self.FInitialized := false;
 end;
 
 function T2kMapEngineD.DesignLoadMap(map: IMapMetadata): IRpgMap;

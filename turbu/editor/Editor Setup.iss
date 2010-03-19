@@ -33,6 +33,7 @@ Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:Ad
 Source: ..\bin\Turbu.exe; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\battle_default.tep; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\EngineBasis.bpl; DestDir: {app}; Flags: ignoreversion
+Source: ..\bin\turbu_design_basis.bpl; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\map_default.tep; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\map_default_design.tep; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\default_format.bpl; DestDir: {app}; Flags: ignoreversion
@@ -53,6 +54,12 @@ Source: ..\bin\design\scripts\menu\menuscripts.trs; DestDir: {app}\design\script
 Source: ..\bin\design\plugins; DestDir: {app}\design\
 Source: C:\Users\mason\Documents\RAD Studio\7.0\bpl\JvPluginSystem140.bpl; DestDir: {sys}
 Source: C:\Users\mason\Documents\RAD Studio\7.0\bpl\JvCore140.bpl; DestDir: {sys}
+Source: C:\Users\mason\Documents\RAD Studio\7.0\bpl\JvControls140.bpl; DestDir: {sys}
+Source: C:\Users\mason\Documents\RAD Studio\7.0\bpl\JvCustom140.bpl; DestDir: {sys}
+Source: C:\Users\mason\Documents\RAD Studio\7.0\bpl\JvDB140.bpl; DestDir: {sys}
+Source: C:\Users\mason\Documents\RAD Studio\7.0\bpl\JvDlgs140.bpl; DestDir: {sys}
+Source: C:\Users\mason\Documents\RAD Studio\7.0\bpl\JvSystem140.bpl; DestDir: {sys}
+Source: C:\Users\mason\Documents\RAD Studio\7.0\bpl\JvStdCtrls140.bpl; DestDir: {sys}
 Source: C:\Users\Public\Documents\RAD Studio\7.0\Bpl\JclVcl140.bpl; DestDir: {sys}
 Source: C:\Users\Public\Documents\RAD Studio\7.0\Bpl\Jcl140.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\rtl140.bpl; DestDir: {sys}

@@ -2,7 +2,7 @@ object frmTurbuMain: TfrmTurbuMain
   Left = 183
   Top = 38
   Caption = 'TURBU - The Ultimate Rpg BUilder'
-  ClientHeight = 1066
+  ClientHeight = 1095
   ClientWidth = 1210
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,7 +22,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 218
     Top = 25
     Width = 992
-    Height = 1041
+    Height = 1070
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -40,11 +40,12 @@ object frmTurbuMain: TfrmTurbuMain
     Color = clBlack
     ParentColor = False
     TabOrder = 0
+    ExplicitHeight = 1041
     object imgLogo: TSdlFrame
       Left = 0
       Top = 0
       Width = 966
-      Height = 1015
+      Height = 1044
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -56,10 +57,11 @@ object frmTurbuMain: TfrmTurbuMain
       OnMouseDown = imgLogoMouseDown
       OnMouseMove = imgLogoMouseMove
       OnMouseUp = imgLogoMouseUp
+      ExplicitHeight = 1015
     end
     object pnlHorizScroll: TPanel
       Left = 0
-      Top = 1015
+      Top = 1044
       Width = 988
       Height = 22
       Margins.Left = 4
@@ -69,6 +71,7 @@ object frmTurbuMain: TfrmTurbuMain
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitTop = 1015
       object sbHoriz: TScrollBar
         Left = 0
         Top = 0
@@ -101,7 +104,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 966
       Top = 0
       Width = 22
-      Height = 1015
+      Height = 1044
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -109,11 +112,12 @@ object frmTurbuMain: TfrmTurbuMain
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 2
+      ExplicitHeight = 1015
       object sbVert: TScrollBar
         Left = 0
         Top = 0
         Width = 22
-        Height = 1015
+        Height = 1044
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -123,6 +127,7 @@ object frmTurbuMain: TfrmTurbuMain
         PageSize = 100
         TabOrder = 0
         OnScroll = OnScrollMap
+        ExplicitHeight = 1015
       end
     end
   end
@@ -130,7 +135,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 0
     Top = 25
     Width = 218
-    Height = 1041
+    Height = 1070
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -138,6 +143,7 @@ object frmTurbuMain: TfrmTurbuMain
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitHeight = 1041
     object splSidebar: TSplitter
       Left = 0
       Top = 502
@@ -208,7 +214,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 506
       Width = 218
-      Height = 535
+      Height = 564
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -220,6 +226,7 @@ object frmTurbuMain: TfrmTurbuMain
       TabOrder = 1
       OnChange = trvMapTreeChange
       OnContextPopup = trvMapTreeContextPopup
+      ExplicitHeight = 535
     end
   end
   object ToolBar2: TToolBar
@@ -316,6 +323,10 @@ object frmTurbuMain: TfrmTurbuMain
         Caption = '&Autosave maps on change'
         OnClick = mnuAutosaveMapsClick
       end
+      object mnuTestbugreps: TMenuItem
+        Caption = '&Test bugreps'
+        OnClick = mnuTestbugrepsClick
+      end
     end
   end
   object dlgOpen: TOpenDialog
@@ -333,7 +344,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C010104000800180010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800200010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -616,7 +627,7 @@ object frmTurbuMain: TfrmTurbuMain
       OnClick = mnuAddNewMapClick
     end
     object mnuDeleteMap: TMenuItem
-      Caption = '&Delete Map'
+      Caption = '&Delete Map...'
       OnClick = mnuDeleteMapClick
     end
   end

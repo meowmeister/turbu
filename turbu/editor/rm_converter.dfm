@@ -77,6 +77,10 @@ object frmRmConverter: TfrmRmConverter
         Top = 103
         Width = 394
         Height = 25
+        Hint = 
+          'Output folder selection is unavailable.  The project folder'#39's na' +
+          'me and location'#13#10'will be generated automatically based on the or' +
+          'iginal project folder'#39's name.'
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
