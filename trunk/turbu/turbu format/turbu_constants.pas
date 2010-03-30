@@ -32,6 +32,8 @@ const
    PORTRAITS_PER_SHEET = 16;
    SPRITES_PER_SHEET = 8;
    LAYERS: byte = 2;
+   ANIM_RATE: byte = 44;  //for water tiles
+   ANIM_RATE2: byte = 12; //for animated tiles
 
    //sizes
    PORTRAIT_SIZE: TPoint  = (X: 48;  Y: 48);

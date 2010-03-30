@@ -34,6 +34,7 @@ type
       FPaletteList: TList<integer>;
       FCurrentLayer: byte;
       FAutosaveMaps: boolean;
+
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
       procedure saveMap(value: TRpgMap);
       procedure saveAndClearMapCache;
@@ -59,6 +60,9 @@ type
       procedure editMapProperties(mapID: integer);
       procedure DeleteMap(mapID: integer; deleteMode: TDeleteMapMode);
       procedure Reset;
+
+      procedure Pause;
+      procedure Stop;
 
       procedure IDesignMapEngine.initialize = initializeDesigner;
       function IDesignMapEngine.loadMap = DesignLoadMap;
@@ -225,6 +229,12 @@ begin
    assert((value[0] = 1) or (value.Count mod value[0] = 1));
    FPaletteList.Free;
    FPaletteList := value;
+end;
+
+procedure T2kMapEngineD.Stop;
+begin
+   Pause;
+   Assert(false, 'not implemented yet');
 end;
 
 procedure T2kMapEngineD.draw(const position: TSgPoint; new: boolean);
@@ -485,6 +495,11 @@ end;
 function T2kMapEngineD.mapSize: TSgPoint;
 begin
    result := TSgPoint(FCurrentMap.mapRect.BottomRight) * TILE_SIZE;
+end;
+
+procedure T2kMapEngineD.Pause;
+begin
+   FTimer.Enabled := false;
 end;
 
 procedure T2kMapEngineD.scrollMap(const newPosition: TSgPoint);

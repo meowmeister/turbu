@@ -4,6 +4,7 @@ interface
 uses
    types, Generics.Collections,
    charset_data, turbu_maps, turbu_map_engine, tiles, turbu_tilesets,
+   turbu_map_objects,
    sdl_sprite, sdl_canvas, SDL_ImageManager;
 
 type
@@ -22,10 +23,12 @@ type
       FViewport: TRect;
       FMapRect: TRect;
       FCurrentLayer: integer;
+      FBlank: boolean;
 
       procedure SetViewport(const viewport: TRect);
-      procedure loadTileMatrix(value: TTileList; index: integer; const viewport: TRect);
+      procedure loadTileMatrix(const value: TTileList; index: integer; const viewport: TRect);
       function CreateNewTile(value: TTileRef): TTile;
+      function GetMaxLayer: integer; inline;
    public
       constructor Create(map: TRpgMap; const viewport: TRect;
                          canvas: TSdlCanvas; tileset: TTileset; images: TSdlImages);
@@ -33,6 +36,10 @@ type
 
       procedure assignTile(const x, y, layer: integer; const tile: TTileRef);
       procedure updateBorders(x, y, layer: integer);
+      procedure Process(Sender: TObject);
+      procedure AdvanceFrame;
+      function GetTile(x, y, layer: integer): TTile;
+      function GetTopTile(x, y: integer): TTile;
 
       procedure RecreateTileMatrix;
 
@@ -41,7 +48,9 @@ type
       property mapRect: TRect read FMapRect;
       property tileset: TTileSet read FTileset;
       property currentLayer: integer read FCurrentLayer write FCurrentLayer;
+      property maxLayer: integer read GetMaxLayer;
       property mapObj: TRpgMap read FMap;
+      property blank: boolean read FBlank write FBlank;
    end;
 
 implementation
@@ -51,6 +60,11 @@ uses
    SG_defs;
 
 { T2kSpriteEngine }
+
+procedure T2kSpriteEngine.AdvanceFrame;
+begin
+   TTile.Heartbeat;
+end;
 
 procedure T2kSpriteEngine.assignTile(const x, y, layer: integer;
   const tile: TTileRef);
@@ -132,22 +146,34 @@ constructor T2kSpriteEngine.Create(map: TRpgMap; const viewport: TRect;
 var
    i: integer;
    size: TSgPoint;
+   mapObj: TRpgMapObject;
 begin
+   //initial setup
    inherited Create(nil, canvas);
    self.Images := images;
    FTiles := TTileMatrixList.Create;
    FTileset := tileset;
    FMap := map;
    size := FMap.size;
-   for i := low(FMap.tileMap) to high(FMap.tileMap) do
-      FTiles.add(TTileMatrix.Create(size));
-   self.SetViewport(viewport);
    self.VisibleWidth := canvas.Width;
    self.VisibleHeight := canvas.Height;
+   FMapRect := rect(0, 0, size.x, size.y);
+
+   //create layers
+   for i := low(FMap.tileMap) to high(FMap.tileMap) do
+      FTiles.add(TTileMatrix.Create(size));
+
+   //set viewport and populate it with initial tiles
+   self.SetViewport(viewport);
+
+   //load background
 //   GArchives[IMAGE_ARCHIVE].
    if map.bgName <> '' then
       {FBgImage := TSdlImage.Create(map.bgName, map.bgName, images)}; //needs a real filename
-   FMapRect := rect(0, 0, size.x, size.y);
+
+   //populate events
+   for mapObj in map.mapObjects do
+      ;
 end;
 
 destructor T2kSpriteEngine.Destroy;
@@ -157,6 +183,36 @@ begin
    inherited;
 end;
 
+function T2kSpriteEngine.GetMaxLayer: integer;
+begin
+   result := FTiles.Count - 1;
+end;
+
+function T2kSpriteEngine.GetTile(x, y, layer: integer): TTile;
+var
+   i: integer;
+begin
+   if not assigned(FTiles.First[x, y]) then
+      for I := 0 to FTiles.Count - 1 do
+         FTiles[i][x, y] := CreateNewTile(FMap.getTile(x, y, layer));
+   result := FTiles[layer][x, y];
+end;
+
+function T2kSpriteEngine.GetTopTile(x, y: integer): TTile;
+var
+   i: integer;
+begin
+   result := GetTile(x, y, GetMaxLayer);
+   if not assigned(result) then
+      for i := self.MaxLayer - 1 downto 0 do
+      begin
+         result := FTiles[i][x, y];
+         if assigned(result) then
+            Exit;
+      end;
+   assert(false); //should not reach this point
+end;
+
 function T2kSpriteEngine.CreateNewTile(value: TTileRef): TTile;
 var
    tileType: TTileType;
@@ -164,11 +220,15 @@ var
    filename: string;
    tileGroup: TTileGroup;
 begin
+   //don't create anything for the "blank tile"
+   if smallint(value.value) = -1 then
+      Exit(nil);
+
    tileGroup := FTileset.Records[value.group].group;
    tileType := tileGroup.tileType;
    filename := tileGroup.filename;
    if tileType = [] then
-      tileClass := TLowerTile
+      tileClass := TMapTile
    else if tileType = [tsBordered] then
       tileClass := TBorderTile
    else if tileType = [tsAnimated] then
@@ -184,7 +244,7 @@ begin
 end;
 
 {$Q+R+}
-procedure T2kSpriteEngine.loadTileMatrix(value: TTileList; index: integer; const viewport: TRect);
+procedure T2kSpriteEngine.loadTileMatrix(const value: TTileList; index: integer; const viewport: TRect);
 var
    size: TSgPoint;
 
@@ -224,13 +284,18 @@ begin
             raise ERangeError.Create('Tile list bounds out of range');
          tileRef := value[newIndex];
 {         tileRef := value[getIndex(equivX, equivY)];}
-         //don't create anything for the "blank tile"
-         if smallint(tileref.value) = -1 then
-            Continue;
          newTile := CreateNewTile(tileRef);
          FTiles[index][equivX, equivY] := newTile;
-         newTile.place(equivX, equivY, index, tileRef, FTileset);
+         if assigned(newTile) then
+            newTile.place(equivX, equivY, index, tileRef, FTileset);
       end;
+end;
+
+procedure T2kSpriteEngine.Process(Sender: TObject);
+begin
+   self.Dead;
+//   FMap.PlaceAllChars;
+//TODO: calculate map shaking, fading, and overlay colors
 end;
 
 procedure T2kSpriteEngine.RecreateTileMatrix;

@@ -17,10 +17,9 @@ unit turbu_sprites;
 * www.turbu-rpg.com.
 *****************************************************************************}
 
-//note: sprite file names should not contain a comma
 interface
 uses
-   commons;
+   sg_defs;
 
 type
    TMoveMatrix = array of packed array of byte;
@@ -30,30 +29,25 @@ type
       moveMatrix: integer;
    end;
 
-   function extractSpriteData(value: string): TSpriteData;
-   function nextPosition(matrix: TMoveMatrix; var current: TRpgPoint): byte;
+   function extractSpriteData(const value: string): TSpriteData;
+   function nextPosition(matrix: TMoveMatrix; var current: TSgPoint): byte;
 
 implementation
 uses
    sysUtils, types,
    classes;
 
-function extractSpriteData(value: string): TSpriteData;
+function extractSpriteData(const value: string): TSpriteData;
 var
-   list: TStringList;
+   star: integer;
 begin
-   list := TStringList.Create;
-   try
-      list.StrictDelimiter := true;
-      list.CommaText := value;
-      result.name := list[0];
-      result.moveMatrix := strToInt(list[1]);
-   finally
-      list.Free;
-   end;
+   star := pos(value, '*');
+   assert(star <> 0);
+   result.name := copy(value, 1, star - 1);
+   result.moveMatrix := strToInt(copy(value, star + 1, MAXINT));
 end;
 
-function nextPosition(matrix: TMoveMatrix; var current: TRpgPoint): byte;
+function nextPosition(matrix: TMoveMatrix; var current: TSgPoint): byte;
 begin
    if (current.x > high(matrix)) or (current.y > high(matrix[current.x])) then
       current := point(0, 0)

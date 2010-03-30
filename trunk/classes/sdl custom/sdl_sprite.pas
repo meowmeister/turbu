@@ -324,8 +324,8 @@ end;
 
 function TSprite.InVisibleRect: boolean;
 begin
-   result := (X > FEngine.WorldX - Width ) and
-   (Y > FEngine.WorldY - Height)    and
+   result := (X > FEngine.WorldX - (Width * 2) ) and
+   (Y > FEngine.WorldY - (Height * 2)) and
    (X < FEngine.WorldX + FEngine.VisibleWidth)  and
    (Y < FEngine.WorldY + FEngine.VisibleHeight);
 end;

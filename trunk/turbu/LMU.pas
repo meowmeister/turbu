@@ -155,7 +155,7 @@ var
    i: word;
 begin
    result := 0;
-   for i := 0 to FEvents.len - 1do
+   for i := 0 to FEvents.len - 1 do
       if not(FEvents[i].isTile) then
          inc(result);
 end;

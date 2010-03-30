@@ -4,28 +4,32 @@ object frmAlgorithmEditor: TfrmAlgorithmEditor
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Algorithm editor'
-  ClientHeight = 544
-  ClientWidth = 530
+  ClientHeight = 670
+  ClientWidth = 652
   Color = clBtnFace
-  Constraints.MinWidth = 464
+  Constraints.MinWidth = 571
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clBlack
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
   DesignSize = (
-    530
-    544)
-  PixelsPerInch = 96
-  TextHeight = 13
+    652
+    670)
+  PixelsPerInch = 120
+  TextHeight = 16
   object btnOK: TButton
-    Left = 360
-    Top = 511
-    Width = 73
-    Height = 25
+    Left = 443
+    Top = 629
+    Width = 90
+    Height = 31
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Anchors = [akLeft, akBottom]
     Caption = '&OK'
     Default = True
@@ -33,10 +37,14 @@ object frmAlgorithmEditor: TfrmAlgorithmEditor
     OnClick = btnOKClick
   end
   object btnCancel: TButton
-    Left = 447
-    Top = 511
-    Width = 75
-    Height = 25
+    Left = 550
+    Top = 629
+    Width = 92
+    Height = 31
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = '&Cancel'
@@ -44,74 +52,106 @@ object frmAlgorithmEditor: TfrmAlgorithmEditor
     TabOrder = 2
   end
   object btnUnitView: TButton
-    Left = 169
-    Top = 511
-    Width = 104
-    Height = 25
+    Left = 208
+    Top = 629
+    Width = 128
+    Height = 31
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Anchors = [akLeft, akBottom]
     Caption = '&View full unit...'
     Enabled = False
     TabOrder = 0
   end
   object grpEditor: TGroupBox
-    Left = 8
-    Top = 8
-    Width = 514
-    Height = 496
+    Left = 10
+    Top = 10
+    Width = 632
+    Height = 610
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 3
     DesignSize = (
-      514
-      496)
+      632
+      610)
     object grpFuncNames: TGroupBox
-      Left = 9
-      Top = 14
-      Width = 497
-      Height = 42
+      Left = 11
+      Top = 17
+      Width = 612
+      Height = 52
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Function names:'
       TabOrder = 0
       DesignSize = (
-        497
-        42)
+        612
+        52)
       object lblDesign: TLabel
-        Left = 16
-        Top = 16
-        Width = 36
-        Height = 13
+        Left = 20
+        Top = 20
+        Width = 46
+        Height = 16
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Caption = 'Design:'
       end
       object lblCode: TLabel
-        Left = 256
-        Top = 16
-        Width = 28
-        Height = 13
+        Left = 315
+        Top = 20
+        Width = 36
+        Height = 16
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Anchors = [akLeft, akRight]
         Caption = 'Code:'
       end
       object txtDesignName: TEdit
-        Left = 58
-        Top = 14
-        Width = 192
+        Left = 71
+        Top = 17
+        Width = 237
         Height = 21
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
       end
       object txtCodeName: TMaskEdit
-        Left = 288
-        Top = 14
-        Width = 201
+        Left = 354
+        Top = 17
+        Width = 248
         Height = 21
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         EditMask = 'Laaaaaaaaaaaaaaaaaaaaaaaaaaaaa;0; '
         MaxLength = 30
         TabOrder = 1
       end
     end
     object txtHeader: TEdit
-      Left = 9
-      Top = 120
-      Width = 497
+      Left = 11
+      Top = 148
+      Width = 612
       Height = 21
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       ParentShowHint = False
       ReadOnly = True
       ShowHint = True
@@ -119,20 +159,28 @@ object frmAlgorithmEditor: TfrmAlgorithmEditor
       TextHint = 'This is the function declaration.'
     end
     object Button1: TButton
-      Left = 128
-      Top = 62
-      Width = 75
-      Height = 25
+      Left = 158
+      Top = 76
+      Width = 92
+      Height = 31
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Button1'
       TabOrder = 2
       OnClick = Button1Click
     end
     object txtEditor: TJvHLEditor
-      Left = 9
-      Top = 152
-      Width = 497
-      Height = 336
+      Left = 11
+      Top = 187
+      Width = 612
+      Height = 414
       Cursor = crIBeam
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Completion.ItemHeight = 13
       Completion.CRLF = '/n'
       Completion.Separator = '='
@@ -142,7 +190,7 @@ object frmAlgorithmEditor: TfrmAlgorithmEditor
       OnKeyDown = txtEditorKeyDown
       Font.Charset = ANSI_CHARSET
       Font.Color = clBlack
-      Font.Height = -13
+      Font.Height = -17
       Font.Name = 'Courier New'
       Font.Style = []
       Anchors = [akLeft, akTop, akRight, akBottom]

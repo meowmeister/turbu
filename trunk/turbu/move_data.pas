@@ -59,8 +59,7 @@ type
 implementation
 uses
    classes, sysUtils,
-   BER, fileIO,
-   strtok;
+   BER, fileIO;
 
 { TMoveOrder }
 

@@ -64,7 +64,7 @@ object frameClass: TframeClass
         Left = 8
         Top = 100
         Width = 168
-        Height = 21
+        Height = 24
         Style = csDropDownList
         ItemIndex = 0
         TabOrder = 0
@@ -143,29 +143,29 @@ object frameClass: TframeClass
       object lblExpVal1: TLabel
         Left = 8
         Top = 40
-        Width = 40
-        Height = 13
+        Width = 49
+        Height = 16
         Caption = 'Primary:'
       end
       object lblExpVal2: TLabel
         Left = 96
         Top = 40
-        Width = 51
-        Height = 13
+        Width = 61
+        Height = 16
         Caption = 'Additional:'
       end
       object lblExpVal3: TLabel
         Left = 8
         Top = 80
-        Width = 59
-        Height = 13
+        Width = 70
+        Height = 16
         Caption = 'Adjustment:'
       end
       object lblExpVal4: TLabel
         Left = 101
         Top = 80
-        Width = 22
-        Height = 13
+        Width = 26
+        Height = 16
         Caption = 'N/A:'
       end
       object btnExpCurveEditor: TButton
@@ -221,7 +221,7 @@ object frameClass: TframeClass
         Left = 8
         Top = 14
         Width = 161
-        Height = 21
+        Height = 24
         DataField = 'expFuncDesignName'
         DataSource = dsCharClass
         TabOrder = 1
@@ -286,46 +286,50 @@ object frameClass: TframeClass
         TabOrder = 0
         object tshEquipment: TTabSheet
           Caption = 'Equipment'
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object lblEquip1: TLabel
             Left = 8
             Top = 8
-            Width = 44
-            Height = 13
+            Width = 52
+            Height = 16
             Caption = 'Weapon:'
           end
           object lblEquip2: TLabel
             Left = 8
             Top = 38
-            Width = 32
-            Height = 13
+            Width = 40
+            Height = 16
             Caption = 'Shield:'
           end
           object lblEquip3: TLabel
             Left = 8
             Top = 64
-            Width = 33
-            Height = 13
+            Width = 41
+            Height = 16
             Caption = 'Armor:'
           end
           object lblEquip4: TLabel
             Left = 8
             Top = 92
-            Width = 37
-            Height = 13
+            Width = 45
+            Height = 16
             Caption = 'Helmet:'
           end
           object lblEquip5: TLabel
             Left = 8
             Top = 122
-            Width = 53
-            Height = 13
+            Width = 62
+            Height = 16
             Caption = 'Accessory:'
           end
           object cbxEquip1: TDBLookupComboBox
             Left = 64
             Top = 5
             Width = 121
-            Height = 21
+            Height = 24
             DataField = 'weaponName'
             DataSource = dsCharClass
             TabOrder = 0
@@ -335,7 +339,7 @@ object frameClass: TframeClass
             Left = 64
             Top = 89
             Width = 121
-            Height = 21
+            Height = 24
             DataField = 'helmetName'
             DataSource = dsCharClass
             ListField = 'name'
@@ -345,7 +349,7 @@ object frameClass: TframeClass
             Left = 64
             Top = 62
             Width = 121
-            Height = 21
+            Height = 24
             DataField = 'armorName'
             DataSource = dsCharClass
             ListField = 'name'
@@ -355,7 +359,7 @@ object frameClass: TframeClass
             Left = 64
             Top = 122
             Width = 121
-            Height = 21
+            Height = 24
             DataField = 'accessoryName'
             DataSource = dsCharClass
             ListField = 'name'
@@ -365,7 +369,7 @@ object frameClass: TframeClass
             Left = 64
             Top = 35
             Width = 121
-            Height = 21
+            Height = 24
             DataSource = dsCharClass
             KeyField = 'id'
             ListField = 'name'
@@ -375,6 +379,10 @@ object frameClass: TframeClass
         object tshSkills: TTabSheet
           Caption = 'Commands'
           ImageIndex = 1
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           inline frameHeroCommands: TframeHeroCommands
             Left = 0
             Top = 0
@@ -387,13 +395,19 @@ object frameClass: TframeClass
             ExplicitWidth = 185
             ExplicitHeight = 156
             inherited spnCount: TJvSpinEdit
+              Height = 24
               ButtonKind = bkClassic
+              ExplicitHeight = 24
             end
           end
         end
         object tshRepertoire: TTabSheet
           Caption = 'Skills'
           ImageIndex = 2
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object lstSkills: TRpgListGrid
             Left = 4
             Top = 4
@@ -403,7 +417,7 @@ object frameClass: TframeClass
             TabOrder = 0
             TitleFont.Charset = DEFAULT_CHARSET
             TitleFont.Color = clWindowText
-            TitleFont.Height = -11
+            TitleFont.Height = -13
             TitleFont.Name = 'Tahoma'
             TitleFont.Style = []
             OnDblClick = lstSkillsDblClick
@@ -464,7 +478,7 @@ object frameClass: TframeClass
         Left = 8
         Top = 16
         Width = 193
-        Height = 21
+        Height = 24
         DataField = 'animName'
         DataSource = dsCharClass
         TabOrder = 0
@@ -487,6 +501,10 @@ object frameClass: TframeClass
         object tshAttributes: TTabSheet
           Caption = 'Attributes'
           OnShow = linkNav
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object lstAttributes: TRpgListGrid
             Left = 3
             Top = 3
@@ -497,7 +515,7 @@ object frameClass: TframeClass
             TabOrder = 0
             TitleFont.Charset = DEFAULT_CHARSET
             TitleFont.Color = clWindowText
-            TitleFont.Height = -11
+            TitleFont.Height = -13
             TitleFont.Name = 'Tahoma'
             TitleFont.Style = []
             Columns = <
@@ -530,6 +548,10 @@ object frameClass: TframeClass
         object tshConditions: TTabSheet
           Caption = 'Conditions'
           ImageIndex = 1
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object RpgListGrid1: TRpgListGrid
             Left = 3
             Top = 3
@@ -540,7 +562,7 @@ object frameClass: TframeClass
             TabOrder = 0
             TitleFont.Charset = DEFAULT_CHARSET
             TitleFont.Color = clWindowText
-            TitleFont.Height = -11
+            TitleFont.Height = -13
             TitleFont.Name = 'Tahoma'
             TitleFont.Style = []
             Columns = <
@@ -573,7 +595,7 @@ object frameClass: TframeClass
     TabOrder = 1
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
-    TitleFont.Height = -11
+    TitleFont.Height = -13
     TitleFont.Name = 'Tahoma'
     TitleFont.Style = []
     OnRowEnter = grdClassesRowEnter

@@ -71,7 +71,6 @@ var
    counter: integer;
    dummy: string;
    i, j: integer;
-   // converter: TMemoryStream;
 
    function scanMapSprite(name: ansiString; index: byte): boolean;
    begin
@@ -118,7 +117,7 @@ var
          assert(nameTable[i].id = j + 1);
          dummy := nameTable[i].name;
          if appendZero then
-            dummy := dummy + ', 0';
+            dummy := dummy + '* 0';
          result.add(dummy);
          inc(i);
          inc(j);

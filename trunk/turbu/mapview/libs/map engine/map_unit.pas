@@ -312,7 +312,7 @@ end;
 
 procedure TRpgMap.setBG;
 begin
-   FBgImage := TBackgroundSprite.Create(FEngine, FTemplate);
+//   FBgImage := TBackgroundSprite.Create(FEngine, FTemplate);
    FBgImage.ImageName := 'Background ' + FTemplate.panoName;
    FBgImage.Engine := GGameEngine;
 end;

@@ -160,7 +160,6 @@ begin
    end;
 end;
 
-
 function TSerializer.GetCurrentInstance: pointer;
 begin
    result := FInstances.Peek.Key;

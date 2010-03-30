@@ -41,6 +41,8 @@ type
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
       function loadMap(map: IMapMetadata): IRpgMap;
+      procedure Play;
+
       function getData: TMapEngineData;
       property data: TMapEngineData read getData;
    end;
@@ -65,6 +67,8 @@ type
       procedure EditMapProperties(mapID: integer);
       procedure DeleteMap(mapID: integer; deleteResult: TDeleteMapMode);
       procedure Reset;
+      procedure Pause;
+      procedure Stop;
    end;
 
    TMapEngine = class abstract (TRpgPlugBase, IMapEngine)
@@ -84,6 +88,7 @@ type
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
       function loadMap(map: IMapMetadata): IRpgMap; virtual; abstract;
+      procedure Play; virtual; abstract;
 
       property data: TMapEngineData read GetData write FData;
    end;

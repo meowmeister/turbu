@@ -55,6 +55,7 @@ contains
   ps_pointer in 'ps_pointer.pas',
   archiveInterface in '..\..\archiveInterface.pas',
   midaslib,
-  crtl;
+  crtl,
+  AsphyreTimer in '..\..\..\classes\Asphyre\AsphyreTimer.pas';
 
 end.

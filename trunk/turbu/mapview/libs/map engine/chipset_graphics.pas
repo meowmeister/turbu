@@ -236,7 +236,6 @@ uses
 const
    SHAKE_MAX = 23;
 var
-   Li: integer;
    LSineTable: array[0..SHAKE_MAX - 1] of extended;
 
 { TGameMap }
@@ -424,7 +423,7 @@ var
    oldmap: integer;
    dummy: word;
 begin
-   assert(assigned(GCurrentThread));
+//   assert(assigned(GCurrentThread));
    if newmap = FCurrMap.mapID then
       Exit;
 
@@ -532,7 +531,7 @@ constructor TGameMap.create(theMap: TMapUnit; theLDB: TLcfDataBase; theLMT: TFul
 var
    sysName: string;
 begin
-   inherited create(nil);
+//   inherited create(nil);
    GGameEngine := self;
    GFileLoader := TCriticalSection.Create;
 //   GDatabase := theLDB;
@@ -540,7 +539,7 @@ begin
    setLength(FMapSet, theLMT.getMax + 1);
    FCurrMap := TRpgMap.Create(theMap, self);
    FMapSet[FCurrMap.mapID] := FCurrMap;
-   FCurrMap.spriteList := FSpriteList;
+//   FCurrMap.spriteList := FSpriteList;
    self.Images := images;
    FLoadedImages := TStringList.Create;
    FDatabase := theLDB;
@@ -600,7 +599,7 @@ const
 begin
    filename := imagename;
    locate_files.findGraphic(filename, 'battle');
-   GXyzHack := false;
+//   GXyzHack := false;
    if filename = '' then
       raise EParseMessage.create('Image file "' + imageName + '" not found!');
    if FLoadedImages.IndexOf(filename) <> -1 then
@@ -632,7 +631,7 @@ var
    realsize: tpoint;
    checkmap: TPngObject;
 begin
-   GXyzHack := false;
+//   GXyzHack := false;
    if FLoadedImages.IndexOf(filename) <> -1 then
       Exit;
 
@@ -666,20 +665,20 @@ var
 begin
    if FLoadedImages.IndexOf(filename) <> -1 then
    begin
-      GXyzHack := false;
+//      GXyzHack := false;
       Exit;
    end;
 
    GFileLoader.Enter;
 try
-   if GXyzHack = true then
+{   if GXyzHack = true then
    begin
       GXyzHack := false;
       theImage := TPngObject.Create;
       theImage.LoadFromFile(filename);
       bgColor := theImage.Pixels[0, 0];
       theImage.Free;
-   end; //else bgColor := getBGColor(filename);
+   end; //else bgColor := getBGColor(filename); }
    //load files
 //fixme
 {   image.AddFromFile(filename, SPRITE, SPRITE, SPRITE_SET, aqHigh, alMask, true, bgColor, 1);}
@@ -727,7 +726,7 @@ var
 begin
    facesetName := filename;
    findGraphic(facesetName, 'faceset');
-   GXyzHack := false;
+//   GXyzHack := false;
    if facesetName = '' then
       raise EParseMessage.create('FaceSet graphic file "' + filename + '" not found!');
    if FLoadedImages.IndexOf(facesetName) <> -1 then
@@ -763,7 +762,7 @@ begin
    if FLoadedImages.IndexOf(codeName) <> -1 then
       Exit;
    locate_files.findGraphic(filename, 'picture');
-   GXyzHack := false;
+//   GXyzHack := false;
    if filename = '' then
       raise EParseMessage.create('Image file "' + inName + '" not found!');
 
@@ -809,12 +808,12 @@ begin
    findGraphic(charsetName, 'charset');
    if charsetName = '' then
    begin
-      GXyzHack := false;
+//      GXyzHack := false;
       raise EParseMessage.create('CharSet graphic file "' + filename + '" not found!');
    end;
    if FLoadedImages.indexOf('shop ' + imagename) <> -1 then
    begin
-      GXyzHack := false;
+//      GXyzHack := false;
       Exit;
    end;
 
@@ -822,14 +821,14 @@ begin
 try
    theImage := TPNGObject.Create;
    theImage.LoadFromFile(charsetName);
-   if GXyzHack = true then
+{   if GXyzHack = true then
    begin
       GXyzHack := false;
       theImage := TPngObject.Create;
       theImage.LoadFromFile(filename);
       bgColor := theImage.Pixels[0, 0];
       theImage.Free;
-   end; //else bgcolor := getPaletteColor(theImage, 0, dummy);
+   end; //else bgcolor := getPaletteColor(theImage, 0, dummy); }
 {   temp1 := getPNGRect(theImage, rect(0, 64, 288, 32));
    tempFilename := temp1.FileName;
    temp1.Free;
@@ -1001,8 +1000,8 @@ end;
 
 function TGameMap.swapOutSpriteList(newList: TSpriteList): TSpriteList;
 begin
-   result := FSpriteList;
-   FSpriteList := newList;
+{   result := FSpriteList;
+   FSpriteList := newList; }
 end;
 
 procedure TGameMap.systemMenu(which: TSysMenuList);
@@ -1367,10 +1366,12 @@ begin
    FCurrMap[layer,x,y] := theTile;
 end;
 
+var
+   i: integer;
 initialization
 begin
-   for Li := 0 to SHAKE_MAX - 1 do
-      LSineTable[Li] := sin(2 * pi * Li / SHAKE_MAX);
+   for i := 0 to SHAKE_MAX - 1 do
+      LSineTable[i] := sin(2 * pi * i / SHAKE_MAX);
 end;
 
 end.

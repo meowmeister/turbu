@@ -22,7 +22,8 @@ interface
 uses
    types, Forms, Controls, Dialogs, StdCtrls, ExtCtrls, Mask, Classes, DB,
    JvExControls, JvEditorCommon, JvEditor, JvHLEditor,
-   commons, turbu_defs, turbu_classes, dm_database, turbu_decl_utils;
+   commons, turbu_defs, turbu_classes, dm_database, turbu_decl_utils,
+   sg_defs;
 
 type
    TNameChangeResult = (nr_new, nr_renamed, nr_cancel);
@@ -51,7 +52,7 @@ type
       FReturnType: string;
       FScript: TScriptRecord;
       FStyle: TScriptStyle;
-      FPadding: TRpgPoint;
+      FPadding: TSgPoint;
 
       dsFunction: TDataSet;
 
@@ -84,7 +85,7 @@ end;
 
 procedure TfrmAlgorithmEditor.btnOKClick(Sender: TObject);
 var
-   bounds: TRpgPoint;
+   bounds: TSgPoint;
    verifyResult: TNameChangeSet;
    newName: string;
    algs: TStringList;

@@ -20,7 +20,8 @@ unit turbu_animations;
 interface
 uses
    classes, DB, RTTI,
-   commons, turbu_sounds, turbu_classes, turbu_containers, turbu_serialization;
+   commons, turbu_sounds, turbu_classes, turbu_containers, turbu_serialization,
+   sg_defs;
 
 type
    TAnimYTarget = (at_top, at_center, at_bottom);
@@ -52,8 +53,8 @@ type
    TAnimCell = class(TRpgDatafile)
    private
       FFrame: word;
-      FPosition: TRpgPoint;
-      FZoom: TRpgPoint;
+      FPosition: TSgPoint;
+      FZoom: TSgPoint;
       [TUploadColor]
       FColor: TRpgColor;
       FSaturation: byte;
@@ -64,8 +65,8 @@ type
       procedure save(savefile: TStream); override;
 
       property frame: word read FFrame write FFrame;
-      property position: TRpgPoint read FPosition write FPosition;
-      property zoom: TRpgPoint read FZoom write FZoom;
+      property position: TSgPoint read FPosition write FPosition;
+      property zoom: TSgPoint read FZoom write FZoom;
       property color: TRpgColor read FColor write FColor;
       property saturation: byte read FSaturation write FSaturation;
    end;
@@ -203,8 +204,8 @@ constructor TAnimCell.Load(savefile: TStream);
 begin
    inherited Load(savefile);
    FFrame := savefile.ReadWord;
-   savefile.readBuffer(FPosition, sizeof(TRpgPoint));
-   savefile.readBuffer(FZoom, sizeof(TRpgPoint));
+   savefile.readBuffer(FPosition, sizeof(TSgPoint));
+   savefile.readBuffer(FZoom, sizeof(TSgPoint));
    savefile.readBuffer(FColor, sizeof(TRpgColor));
    FSaturation := savefile.readByte;
    lassert(savefile.readChar = 'C');
@@ -214,8 +215,8 @@ procedure TAnimCell.save(savefile: TStream);
 begin
    inherited save(savefile);
    savefile.writeWord(FFrame);
-   savefile.WriteBuffer(FPosition, sizeof(TRpgPoint));
-   savefile.WriteBuffer(FZoom, sizeof(TRpgPoint));
+   savefile.WriteBuffer(FPosition, sizeof(TSgPoint));
+   savefile.WriteBuffer(FZoom, sizeof(TSgPoint));
    savefile.WriteBuffer(FColor, sizeof(TRpgColor));
    savefile.writeByte(FSaturation);
    savefile.writeChar('C');

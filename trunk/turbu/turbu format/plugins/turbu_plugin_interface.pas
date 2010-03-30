@@ -51,7 +51,6 @@ type
       FEngine: TPlugClass;
    public
       constructor Create(style: TEngineStyle; engine: TPlugClass);
-      destructor Destroy; override;
       property style: TEngineStyle read FStyle;
       property engine: TPlugClass read FEngine;
    end;
@@ -76,13 +75,9 @@ begin
    FEngine := engine;
 end;
 
-destructor TEngineData.Destroy;
-begin
-   inherited Destroy;
-end;
-
 { TRpgPlugBase }
 
+//does nothing, but just leave it. It's virtual and shouldn't be abstract
 constructor TRpgPlugBase.Create;
 begin
    inherited Create;

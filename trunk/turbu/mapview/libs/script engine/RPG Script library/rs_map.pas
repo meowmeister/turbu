@@ -58,8 +58,7 @@ implementation
 uses
    windows, types, contnrs, math, sysUtils,
    chipset_data, tiles, chipset_graphics, charset_graphics,
-   script_engine, locate_files, battle_anims, timing, rpg_anim, move_data,
-   SDL;
+   script_engine, locate_files, battle_anims, timing, rpg_anim, move_data;
 
 var
    FDefaultTransitions: array[TTransitionTypes] of TTransitions;

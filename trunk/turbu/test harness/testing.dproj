@@ -180,7 +180,7 @@
 			</DCCReference>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_converter_thread.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_maps.pas"/>
-			<DCCReference Include="..\turbu format\turbu_maps.pas"/>
+			<DCCReference Include="..\turbu format\maps\turbu_maps.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_tilesets.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_tilesets.pas"/>
 			<DCCReference Include="..\engines\map engine\tiles.pas"/>

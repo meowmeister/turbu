@@ -104,7 +104,7 @@ end;
 
 constructor TWeatherSystem.Create(images: TSdlImages);
 begin
-   inherited Create(GGameEngine);
+//   inherited Create(GGameEngine);
    self.Images := images;
 //fixme
 {   images.AddFromASDb('rain', GDataArchive, aqHigh, alMask);

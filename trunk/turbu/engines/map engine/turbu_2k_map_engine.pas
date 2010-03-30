@@ -23,8 +23,8 @@ uses
    turbu_map_engine, turbu_versioning,
    turbu_database_interface, turbu_map_interface, turbu_sdl_image,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine,
-   SG_defs, SDL_ImageManager, sdl_canvas,
-   sdl_13;
+   AsphyreTimer,
+   SG_defs, SDL_ImageManager, sdl_canvas, sdl_13;
 
 type
    TTileGroupPair = TPair<TTileGroupRecord, PSdlSurface>;
@@ -41,6 +41,7 @@ type
       FImages: TSdlImages;
       FMaps: array of T2kSpriteEngine;
       FScrollPosition: TSgPoint;
+      FTimer: TAsphyreTimer;
 
       function retrieveImage(const filename: string): TRpgSdlImage;
 
@@ -49,12 +50,19 @@ type
       function CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
       function doneLoadingMap: boolean;
       procedure prepareMap(const data: IMapMetadata);
+   private //timing and animation
+      FFrame: integer;
+      FHeartbeat: integer;
+      FLatency: integer;
+      procedure OnTimer(Sender: TObject);
    protected
       procedure cleanup; override;
    public
       constructor Create; override;
+      destructor Destroy; override;
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase); override;
       function loadMap(map: IMapMetadata): IRpgMap; override;
+      procedure Play; override;
    end;
 
 implementation
@@ -100,8 +108,10 @@ end;
 
 constructor T2kMapEngine.Create;
 begin
-  inherited Create;
-  self.data := TMapEngineData.Create('TURBU basic map engine', TVersion.Create(0, 1, 0));
+   inherited Create;
+   self.data := TMapEngineData.Create('TURBU basic map engine', TVersion.Create(0, 1, 0));
+   FTimer := TAsphyreTimer.Create;
+   FTimer.MaxFPS := 60;
 end;
 
 function T2kMapEngine.CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
@@ -128,6 +138,12 @@ begin
    result.BottomRight := screensize;
 end;
 
+destructor T2kMapEngine.Destroy;
+begin
+   FTimer.Free;
+   inherited;
+end;
+
 procedure T2kMapEngine.initialize(window: TSdlWindowId; database: IRpgDatabase);
 var
    layout: TGameLayout;
@@ -149,7 +165,7 @@ begin
                         layout.physWidth, layout.physHeight,
                         [sdlwOpenGl, sdlwShown {,sdlwResizable, sdlwInputGrabbed}]);
 
-      //add sdlwResizable if Sam's able to add in a "logical size" concept, or
+      //TODO: add sdlwResizable if Sam's able to add in a "logical size" concept, or
       //if I end up doing it on this end
 
       if window = 0 then
@@ -194,6 +210,7 @@ var
    mapStream: TStream;
    map: TMapMetadata;
 begin
+   FTimer.Enabled := false;
    if not (FInitialized) then
       raise ERpgPlugin.Create('Can''t load a map on an uninitialized map engine.');
    map := TMapMetadata(data);
@@ -251,6 +268,43 @@ begin
          if not FImages.contains(filename) then
             FImages.AddSpriteFromArchive(filename, '', input.group.filename, input.group.dimensions);
       end);
+end;
+
+{$R-}
+procedure T2kMapEngine.OnTimer(Sender: TObject);
+begin
+   //TODO: Remove commented-out code blocks when render targets, transitions and script events are implemented
+   inc(FFrame);
+   FLatency := max(commons.round(FTimer.latency), 1);
+{   if assigned(mapEngine.transProc) then
+      mapEngine.Draw
+   else if mapEngine.blank then
+      //do nothing
+   else begin
+      GRenderTargets.RenderOn(2, standardRender, 0, true);
+   end; }
+   FCurrentMap.Draw;
+
+//   dummy := device.Render(0, true);
+   FTimer.Process;
+//   if dummy then
+      FCanvas.Flip;
+   if FFrame > FHeartbeat then
+   begin
+      FCurrentMap.advanceFrame;
+      FFrame := 0;
+   end;
+{   GScriptEngine.eventTick;
+   mapEngine.scriptEngine.timer.tick;}
+end;
+{$R+}
+
+procedure T2kMapEngine.Play;
+begin
+   assert(assigned(FCurrentMap));
+   FTimer.Enabled := true;
+   FTimer.OnTimer := self.OnTimer;
+   FTimer.OnProcess := FCurrentMap.Process;
 end;
 
 end.
