@@ -276,7 +276,12 @@ end;
 
 function TAdditionSprite.canJump(which: TMoveOrder): boolean;
 
-   procedure processJumpMove(const opcode: byte; var location: TPoint);
+   procedure processJumpMove(const opcode: byte; var location: TSgPoint);
+   const
+      UP_LEFT: TSgPoint = (x: 1; y: -1);
+      UP_RIGHT: TSgPoint = (x: 1; y: 1);
+      DOWN_LEFT: TSgPoint = (x: -1; y: -1);
+      DOWN_RIGHT: TSgPoint = (x: -1; y: 1);
    var
       dummy: byte;
    begin
@@ -289,10 +294,10 @@ function TAdditionSprite.canJump(which: TMoveOrder): boolean;
          1: inc(location.X);
          2: inc(location.y);
          3: dec(location.x);
-         4: location := location + TRpgPoint(point(1, -1));
-         5: location := location + TRpgPoint(point(1, 1));
-         6: location := location + TRpgPoint(point(1, -1));
-         7: location := location + TRpgPoint(point(-1, -1));
+         4: location := location + UP_LEFT;
+         5: location := location + UP_RIGHT;
+         6: location := location + DOWN_LEFT;
+         7: location := location + DOWN_RIGHT;
          8:
          begin
             dummy := random(4);
@@ -322,7 +327,7 @@ function TAdditionSprite.canJump(which: TMoveOrder): boolean;
 
 var
    i: word;
-   target: TPoint;
+   target: TSgPoint;
 begin
    i := which.index;
    target := FLocation;
@@ -376,7 +381,7 @@ begin
 end;
 
 function TAdditionSprite.move(whichDir: TFacing): boolean;
-var target: TPoint;
+var target: TSgPoint;
 begin
    result := false;
    if assigned(FMoveTime) then
@@ -390,7 +395,7 @@ begin
    if FSlipThrough or (self.canMoveForward) then
    begin
       self.leaveTile;
-      target := point(FLocation.X, FLocation.Y);
+      target := SgPoint(FLocation.X, FLocation.Y);
       case FMoveDir of
          facing_up:
             dec(target.Y);
@@ -775,12 +780,12 @@ begin
 end;
 
 function TAdditionSprite.towardsHero: TFacing;
-var dummy: TPoint;
+var dummy: TSgPoint;
 begin
 {   if assigned(GGameEngine.currentParty) then
-      dummy := point(trunc(GGameEngine.currentParty.baseTile.x), trunc(GGameEngine.currentParty.baseTile.y))
-   else dummy := point(0, 100);
-   result := towards(point(trunc(baseTile.x), trunc(baseTile.y)), dummy);}
+      dummy := SgPoint(trunc(GGameEngine.currentParty.baseTile.x), trunc(GGameEngine.currentParty.baseTile.y))
+   else dummy := SgPoint(0, 100);
+   result := towards(SgPoint(trunc(baseTile.x), trunc(baseTile.y)), dummy);}
 end;
 
 { TRpgCharacter }

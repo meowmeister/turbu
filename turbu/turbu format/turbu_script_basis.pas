@@ -20,7 +20,8 @@ unit turbu_script_basis;
 interface
 uses
    sysUtils, db, rtti,
-   commons, turbu_classes, turbu_containers, turbu_defs, turbu_serialization;
+   turbu_classes, turbu_containers, turbu_defs, turbu_serialization,
+   sg_defs;
 
 type
    EScriptError = class(Exception);
@@ -34,13 +35,13 @@ type
    private
       FDesignName: string;
       [TUploadRange]
-      FRange: TRpgPoint;
+      FRange: TSgPoint;
       FUnit: string;
    public
-      constructor Create(name, designName: string; point: TRpgPoint);
+      constructor Create(name, designName: string; point: TSgPoint);
 
       property scriptUnitName: string read FUnit write FUnit;
-      property range: TRpgPoint read FRange write FRange;
+      property range: TSgPoint read FRange write FRange;
       property designName: string read FDesignName;
    end;
 
@@ -57,7 +58,7 @@ uses
 
 { TScriptRange }
 
-constructor TScriptRange.Create(name, designName: string; point: TRpgPoint);
+constructor TScriptRange.Create(name, designName: string; point: TSgPoint);
 var
    index: integer;
 begin

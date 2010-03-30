@@ -66,7 +66,10 @@ type
       mnuAddNewMap: TMenuItem;
       mnuEditMapProperties: TMenuItem;
       mnuDeleteMap: TMenuItem;
-    mnuTestbugreps: TMenuItem;
+      mnuTestbugreps: TMenuItem;
+      ToolButton2: TToolButton;
+      btnRun: TToolButton;
+    btnPause: TToolButton;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -101,7 +104,9 @@ type
       procedure trvMapTreeContextPopup(Sender: TObject; MousePos: TPoint;
         var Handled: Boolean);
       procedure mnuDeleteMapClick(Sender: TObject);
-    procedure mnuTestbugrepsClick(Sender: TObject);
+      procedure mnuTestbugrepsClick(Sender: TObject);
+      procedure btnRunClick(Sender: TObject);
+      procedure btnPauseClick(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentMap: IRpgMap;
@@ -130,6 +135,7 @@ type
 
       procedure configureScrollBars(const size, position: TSgPoint);
       procedure RequireMapEngine;
+      procedure enableRunButtons(running: boolean);
    public
       { Public declarations }
    end;
@@ -183,6 +189,14 @@ end;
 procedure TfrmTurbuMain.displayPalette;
 begin
    displayPalette(sbPalette.Position);
+end;
+
+procedure TfrmTurbuMain.enableRunButtons(running: boolean);
+begin
+   btnRun.Enabled := not running;
+   trvMapTree.Enabled := not running;
+   btnPause.Enabled := running;
+//   btnStop.Enabled := running;
 end;
 
 procedure TfrmTurbuMain.resizePalette;
@@ -633,6 +647,20 @@ end;
 procedure TfrmTurbuMain.btnLayer2Click(Sender: TObject);
 begin
    setLayer(1);
+end;
+
+procedure TfrmTurbuMain.btnPauseClick(Sender: TObject);
+begin
+   RequireMapEngine;
+   FMapEngine.Pause;
+   enableRunButtons(false);
+end;
+
+procedure TfrmTurbuMain.btnRunClick(Sender: TObject);
+begin
+   RequireMapEngine;
+   FMapEngine.Play;
+   enableRunButtons(true);
 end;
 
 procedure TfrmTurbuMain.btnSaveAllClick(Sender: TObject);

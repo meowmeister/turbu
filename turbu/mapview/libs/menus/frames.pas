@@ -231,7 +231,7 @@ begin
    assert(TGameMap(parent).loadedImages.IndexOf(filename) = -1);
    FFilename := filename;
    locate_files.findGraphic(FFilename, 'System');
-   GXyzHack := false;
+//   GXyzHack := false;
 
    GFileLoader.Enter;
 try
@@ -535,9 +535,9 @@ begin
    //these three go before the inherited constructor because they're
    //needed (the first, at least) by the virtual MoveTo function that gets
    //called from the inherited constructor
-   FNextArrow := TSystemMiniTile.Create(parent, nil);
+{   FNextArrow := TSystemMiniTile.Create(parent, nil);
    FNextArrow.ImageName := 'SysArrow D';
-   FPortrait := TSystemMiniTile.Create(parent, nil);
+   FPortrait := TSystemMiniTile.Create(parent, nil); }
 
    inherited;
    FMessageText := '';
@@ -886,7 +886,7 @@ begin
    inherited Create(parent);
    for I := 1 to 5 do
    begin
-      FTiles[i] := TSystemMiniTile.Create(parent, nil);
+//      FTiles[i] := TSystemMiniTile.Create(parent, nil);
       FTiles[i].ImageName := 'SysTimer';
    end;
    FTiles[1].ImageIndex := 11;

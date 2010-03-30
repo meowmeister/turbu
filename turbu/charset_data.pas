@@ -19,7 +19,7 @@ unit charset_data;
 
 interface
 
-uses types;
+uses sg_defs;
 
 type
    TAnimFrame = (left, center, right);
@@ -28,11 +28,11 @@ type
    TVehicleSet = (vh_boat, vh_ship, vh_airship);
 
 const
-   SPRITE: TPoint = (x: 24; y: 16);
-   SPRITE_SET: TPoint = (x: 288; y: 256);
+   SPRITE: TSgPoint = (x: 24; y: 16);
+   SPRITE_SET: TSgPoint = (x: 288; y: 256);
 
-function opposite_facing(const whichDir: TFacing): TFacing;
-function towards(location, target: TPoint): TFacing;
+function opposite_facing(const whichDir: TFacing): TFacing; inline;
+function towards(location, target: TSgPoint): TFacing;
 
 implementation
 
@@ -41,7 +41,7 @@ begin
    result := TFacing((ord(whichDir) + 2) mod 4);
 end;
 
-function towards(location, target: TPoint): TFacing;
+function towards(location, target: TSgPoint): TFacing;
 var
    dX, dY: integer;
 begin

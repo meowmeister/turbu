@@ -50,19 +50,6 @@ type
       function peek: TObject;
    end;
 
-   TRpgPoint = record
-   public
-      x, y: integer;
-      class operator Equal(a, b: TRpgPoint): boolean; inline;
-      class operator NotEqual(a, b: TRpgPoint): boolean; inline;
-      class operator Multiply(a: TRpgPoint; b: integer): TRpgPoint; inline;
-      class operator Divide(a: TRpgPoint; b: integer): TRpgPoint; inline;
-      class operator Add(a, b: TRpgPoint): TRpgPoint; inline;
-      class operator Subtract(a, b: TRpgPoint): TRpgPoint; inline;
-      class operator Implicit(a: TPoint): TRpgPoint; inline;
-      class operator Implicit(a: TRpgPoint): TPoint; inline;
-   end;
-
    {Custom exception for handling parse errors.}
    EParseMessage = class(Exception);
 
@@ -286,54 +273,6 @@ end;
 procedure TRpgThread.syncRun(AMethod: TThreadMethod);
 begin
    self.Synchronize(AMethod);
-end;
-
-{ TPoint }
-
-class operator TRpgPoint.Add(a, b: TRpgPoint): TRpgPoint;
-begin
-   result.x := a.x + b.x;
-   result.y := a.y + b.y;
-end;
-
-class operator TRpgPoint.Subtract(a, b: TRpgPoint): TRpgPoint;
-begin
-   result.x := a.x - b.x;
-   result.y := a.y - b.y;
-end;
-
-class operator TRpgPoint.Multiply(a: TRpgPoint; b: integer): TRpgPoint;
-begin
-   result.x := a.x * b;
-   result.y := a.y * b;
-end;
-
-class operator TRpgPoint.Divide(a: TRpgPoint; b: integer): TRpgPoint;
-begin
-   result.x := commons.round(a.x / b);
-   result.y := commons.round(a.y / b);
-end;
-
-class operator TRpgPoint.Equal(a, b: TRpgPoint): boolean;
-begin
-   result := (a.x = b.x) and (a.y = b.y);
-end;
-
-class operator TRpgPoint.Implicit(a: TRpgPoint): TPoint;
-begin
-   result.x := a.x;
-   result.y := a.y;
-end;
-
-class operator TRpgPoint.Implicit(a: TPoint): TRpgPoint;
-begin
-   result.x := a.x;
-   result.y := a.y;
-end;
-
-class operator TRpgPoint.NotEqual(a, b: TRpgPoint): boolean;
-begin
-   result := not (a = b);
 end;
 
 function getPersonalFolder: string;

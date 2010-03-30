@@ -486,7 +486,7 @@ constructor TCompatSprite.Create(const AParent: TSpriteEngine; const template: T
 var
    dummy: string;
 begin
-   inherited Create(AParent, nil);
+//   inherited Create(AParent, nil);
    FTemplate := template;
 //   dummy := template.template.sprite;
    GGameEngine.loadShopCharset(dummy);

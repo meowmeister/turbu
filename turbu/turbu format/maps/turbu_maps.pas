@@ -4,7 +4,7 @@ interface
 uses
    types, classes, generics.collections, DB, RTTI,
    turbu_defs, turbu_classes, turbu_map_interface, turbu_tilesets,
-   turbu_serialization, turbu_map_metadata,
+   turbu_serialization, turbu_map_metadata, turbu_containers, turbu_map_objects,
    SG_defs;
 
 type
@@ -43,35 +43,37 @@ type
 
    TRegionList = class(TObjectList<TMapRegion>);
 
-   TUploadSetAttribute = class(TDBUploadAttribute)
+   UploadSetAttribute = class(TDBUploadAttribute)
    protected
       procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
       procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
    end;
 
-   TUploadTilesAttribute = class(TDBUploadAttribute)
+   UploadTilesAttribute = class(TDBUploadAttribute)
    protected
       procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
       procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
    end;
 
-   TUploadSizeAttribute = class(TDBUploadAttribute)
+   UploadSizeAttribute = class(TDBUploadAttribute)
    protected
       procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
       procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
    end;
+
+   TMapObjectList = class(TRpgObjectList<TRpgMapObject>);
 
    TRpgMap = class(TRpgDatafile, IRpgMap)
    private type
       TTileBlitGrid = array of array of packed array of TTileRef;
    private
       FTileset: integer;
-      [TUploadSize]
+      [UploadSize]
       FSize: TSgPoint;
       FDepth: byte;
-      [TUploadSet]
+      [UploadSet]
       FWraparound: TWraparound;
-      [TUploadTiles]
+      [UploadTiles]
       FTileMap: TTileMap;
       FHasBG: boolean;
       FBgName: string;
@@ -80,9 +82,9 @@ type
       FScrollSpeed: TSgPoint;
       FScriptFormat: TScriptFormat;
       FScriptFile: string;
-      [TUploadTiles]
-      FRegions: TRegionList;
+      [UploadTiles]
       FEncounterScript: string;
+
       procedure SetSize(const Value: TSgPoint);
       procedure SetDepth(const Value: byte);
       procedure SetScriptFormat(const Value: TScriptFormat);
@@ -96,8 +98,11 @@ type
       function calcGridDelta(const size: TSgPoint; position: byte): TRect;
    protected
       FEncounters: T4IntArray;
-      [TUploadTiles]
+      [UploadTiles]
       FBattles: TPWordArray;
+      FRegions: TRegionList;
+      FMapObjects: TMapObjectList;
+
       class function keyChar: ansiChar; override;
    public
       constructor Create(meta: TMapMetadata); overload;
@@ -127,7 +132,8 @@ type
       property battleCount: integer read GetBattleCount write SetBattleCount;
       property encounterScript: string read FEncounterScript write FEncounterScript;
       property encounterParams: T4IntArray read FEncounters write FEncounters;
-      property regions: TRegionList read FRegions write FRegions;
+      property regions: TRegionList read FRegions;
+      property mapObjects: TMapObjectList read FMapObjects;
    end;
 
 implementation
@@ -187,7 +193,13 @@ begin
          FRegions.Add(TMapRegion.Load(savefile));
       lassert(savefile.readChar = UpCase(TMapRegion.keyChar));
    end;
-   lassert(savefile.readChar = self.keyChar);
+   FMapObjects := TMapObjectList.Create;
+   lassert(savefile.readChar = TRpgMapObject.keyChar);
+   FMapObjects.Add(TRpgMapObject.Create);
+   for I := 1 to savefile.readInt do
+      FMapObjects.Add(TRpgMapObject.Load(savefile));
+   lassert(savefile.readChar = UpCase(TRpgMapObject.keyChar));
+   self.readEnd(savefile);
 end;
 
 procedure TRpgMap.removeInvalidEvents;
@@ -200,6 +212,7 @@ procedure TRpgMap.save(savefile: TStream);
 var
    region: TMapRegion;
    tileList: TTileList;
+   mapObj: TRpgMapObject;
 begin
    inherited Save(savefile);
    savefile.writeInt(FTileset);
@@ -228,7 +241,12 @@ begin
          region.save(savefile);
       savefile.writeChar(UpCase(TMapRegion.keyChar));
    end;
-   savefile.writeChar(self.keyChar);
+   savefile.WriteChar(TRpgMapObject.keyChar);
+   savefile.writeInt(FMapObjects.Count);
+   for mapObj in FMapObjects do
+      mapObj.save(savefile);
+   savefile.writeChar(UpCase(TRpgMapObject.keyChar));
+   self.writeEnd(savefile);
 end;
 
 function TRpgMap.calcBlitBounds(const size: TSgPoint; position: byte): TRect;
@@ -378,6 +396,7 @@ end;
 destructor TRpgMap.Destroy;
 begin
    FRegions.Free;
+   FMapObjects.Free;
    inherited Destroy;
 end;
 
@@ -475,9 +494,9 @@ begin
    assert(false);
 end;
 
-{ TUploadSetAttribute }
+{ UploadSetAttribute }
 
-procedure TUploadSetAttribute.download(db: TDataset; field: TRttiField;
+procedure UploadSetAttribute.download(db: TDataset; field: TRttiField;
   instance: TObject);
 var
    map: TRpgMap absolute instance;
@@ -486,7 +505,7 @@ begin
    map.FWraparound := TWraparound(byte(db.FieldByName('wraparound').AsInteger));
 end;
 
-procedure TUploadSetAttribute.upload(db: TDataset; field: TRttiField;
+procedure UploadSetAttribute.upload(db: TDataset; field: TRttiField;
   instance: TObject);
 var
    map: TRpgMap absolute instance;
@@ -495,31 +514,31 @@ begin
    db.FieldByName('wraparound').AsInteger := byte(map.FWraparound);
 end;
 
-{ TUploadTilesAttribute }
+{ UploadTilesAttribute }
 
-procedure TUploadTilesAttribute.download(db: TDataset; field: TRttiField;
+procedure UploadTilesAttribute.download(db: TDataset; field: TRttiField;
   instance: TObject);
 begin
   inherited;
    //TODO: figure this out later
 end;
 
-procedure TUploadTilesAttribute.upload(db: TDataset; field: TRttiField;
+procedure UploadTilesAttribute.upload(db: TDataset; field: TRttiField;
   instance: TObject);
 begin
   inherited;
    //figure this out later
 end;
 
-{ TUploadSizeAttribute }
+{ UploadSizeAttribute }
 
-procedure TUploadSizeAttribute.download(db: TDataset; field: TRttiField;
+procedure UploadSizeAttribute.download(db: TDataset; field: TRttiField;
   instance: TObject);
 begin
    //do nothing here; this is handled externally
 end;
 
-procedure TUploadSizeAttribute.upload(db: TDataset; field: TRttiField;
+procedure UploadSizeAttribute.upload(db: TDataset; field: TRttiField;
   instance: TObject);
 var
    map: TRpgMap absolute instance;

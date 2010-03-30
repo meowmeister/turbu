@@ -137,8 +137,8 @@ end;
 
 constructor TCustomScrollBox.Create(parent: TSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage);
 begin
-   FNextArrow := TSystemMiniTile.Create(parent, nil);
-   FPrevArrow := TSystemMiniTile.Create(parent, nil);
+{   FNextArrow := TSystemMiniTile.Create(parent, nil);
+   FPrevArrow := TSystemMiniTile.Create(parent, nil); }
    FNextArrow.ImageName := 'SysArrow D';
    FPrevArrow.ImageName := 'SysArrow D';
    FPrevArrow.Visible := false;
@@ -400,7 +400,7 @@ begin
    engine := GScriptEngine.parent as TGameMap;
    if Engine.Images.IndexOf('portrait ' + filename) = -1 then
       TGameMap(Engine).loadPortrait(filename);
-   result := TSystemMiniTile.Create(Engine, nil);
+//   result := TSystemMiniTile.Create(Engine, nil);
    result.Visible := true;
    result.ImageName := 'portrait ' + filename;
    result.ImageIndex := index;

@@ -193,8 +193,8 @@ uses
    turbu_functional;
 
 const
-   MIN_DBVERSION = 30;
-   DBVERSION = 30;
+   MIN_DBVERSION = 31;
+   DBVERSION = 31;
 
 { TRpgDatabase }
 

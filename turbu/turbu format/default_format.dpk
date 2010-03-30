@@ -49,13 +49,16 @@ contains
   turbu_constants in 'turbu_constants.pas',
   turbu_game_data in 'database\turbu_game_data.pas',
   turbu_map_metadata in 'database\turbu_map_metadata.pas',
-  turbu_maps in 'turbu_maps.pas',
+  turbu_maps in 'maps\turbu_maps.pas',
   turbu_tilesets in 'database\turbu_tilesets.pas',
   turbu_functional in '..\turbu_functional.pas',
   timing in '..\mapview\libs\timing.pas',
   turbu_script_interface in 'turbu_script_interface.pas',
   commons in '..\commons.pas',
   turbu_serialization in '..\turbu_serialization.pas',
-  rttiHelper in '..\rttiHelper.pas';
+  rttiHelper in '..\rttiHelper.pas',
+  turbu_map_objects in 'maps\turbu_map_objects.pas',
+  charset_data in '..\charset_data.pas',
+  turbu_pathing in 'turbu_pathing.pas';
 
 end.

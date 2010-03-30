@@ -103,8 +103,8 @@ try
 try
 try
    GCurrentFolder := GetCurrentDir;
-   theLMT := commons.openFile(GCurrentFolder + '\RPG_RT.lmt');
-   theLDB := commons.openFile(GCurrentFolder + '\RPG_RT.ldb');
+{   theLMT := commons.openFile(GCurrentFolder + '\RPG_RT.lmt');
+   theLDB := commons.openFile(GCurrentFolder + '\RPG_RT.ldb'); }
    if getString(theLMT) <> 'LcfMapTree' then
       raise EParseMessage.create('Error! RPG_RT.LMT file header is missing');
    mapTree := TFullTree.Create(theLMT);
@@ -133,7 +133,7 @@ try
          filename := filename + '0';
       filename := filename + intToStr(mapTree.heroStartMap) + '.lmu';
    end;
-   theMap := commons.openFile(FileName);
+//   theMap := commons.openFile(FileName);
    if getString(theMap) <> 'LcfMapUnit' then
       raise EParseMessage.create('Error! LMU file header is missing');
    dummy := FileName;
@@ -176,7 +176,7 @@ begin
 //   dummy := device.Render(0, true);
 //   timer.Process;
    if dummy then
-      screenCanvas.Flip;
+//      screenCanvas.Flip;
    if frames > heartbeat then
    begin
       mapEngine.advanceFrame;
@@ -252,8 +252,8 @@ var
    multiplierX, multiplierY: single;
    whichTile: TPoint;
 begin
-   multiplierX := (clientWidth / ScreenCanvas.Width);
-   multiplierY := (clientHeight / ScreenCanvas.Height);
+{   multiplierX := (clientWidth / ScreenCanvas.Width);
+   multiplierY := (clientHeight / ScreenCanvas.Height); }
    x := round(x / multiplierX);
    y := round(y / multiplierY);
    inc (x, round(mapEngine.WorldX));
@@ -288,7 +288,7 @@ try
    SDL_init(SDL_INIT_AUDIO);
    FImages := TSdlImages.Create;
    currentMap := TMapUnit.Create(theMap, ldbData, mapTree, mapID);
-   FCanvas := TSdlCanvas.Create(cmHardware, false, rect(100, 100, 320, 240), 16);
+//   FCanvas := TSdlCanvas.Create(cmHardware, false, rect(100, 100, 320, 240), 16);
    mapEngine := TGameMap.create(currentMap, ldbData, mapTree, FCanvas, FImages, rtpLocation);
    transitions.init;
    GRenderTargets := TSdlRenderTargets.Create;
@@ -352,9 +352,9 @@ try
    begin
       for i := 0 to currentMap.width - 1 do
       begin
-         mapEngine[lower, i, j].place(i, j, lower, currentMap.lowChip[tileIndex], currentChipset);
+//         mapEngine[lower, i, j].place(i, j, lower, currentMap.lowChip[tileIndex], currentChipset);
          if currentMap.highChip[tileIndex] <> 10000 then
-            TLowerTile(mapEngine[lower, i, j]).placeUpper(i, j, upper, currentMap.highChip[tileIndex], currentChipset);
+//            TLowerTile(mapEngine[lower, i, j]).placeUpper(i, j, upper, currentMap.highChip[tileIndex], currentChipset);
          inc(tileIndex);
       end;
    end;
@@ -405,7 +405,7 @@ var
    BUTTON_LIST: array[1..9] of integer = (DIK_DOWN, DIK_LEFT, DIK_RIGHT, DIK_UP, DIK_RETURN, DIK_NUMPADENTER, DIK_ESCAPE, DIK_INSERT, DIK_SPACE);}
 begin
    inherited;
-   GCurrentThread := self;
+//   GCurrentThread := self;
    FScanVal := [];
    repeat
       if GetForegroundWindow = frmGameForm.Handle then

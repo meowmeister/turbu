@@ -17,25 +17,24 @@ type
       constructor Convert(base: TMapTreeData; id: smallint);
    end;
 
-implementation
-uses
-   types, sysUtils, classes,
-   turbu_tilesets, archiveInterface, turbu_constants, turbu_classes;
-
-type
-   ETileError = class(Exception);
-
    TDecodeResult = record
       baseTile: word;
       neighbors: TNeighbors;
       group: byte;
    end;
 
-   TRpgMapHelper = class(TRpgMap);
-   TMapRegionHelper = class(TMapRegion);
+function decode(const readID: integer): TDecodeResult;
+
+implementation
+uses
+   types, sysUtils, classes,
+   turbu_tilesets, archiveInterface, turbu_constants, turbu_classes,
+   turbu_map_objects, rm2_turbu_map_objects;
+
+type
+   ETileError = class(Exception);
 
 function decodeNeighbors(neighbors: byte): TNeighbors; forward;
-function decode(const readID: integer): TDecodeResult; forward;
 function convertDecodeResult(value: TDecodeResult): TTileRef; forward;
 
 { T2k2RpgMap }
@@ -74,8 +73,11 @@ begin
    for I := 0 to battleCount - 1 do
       self.battles[i] := (metadata.battle[i]);
    self.encounterScript := RANDOM_ENCOUNTER_SCRIPT;
-   TRpgMapHelper(self).FEncounters[1] := metadata.encounterRate;
-   self.regions := TRegionList.Create;
+   FEncounters[1] := metadata.encounterRate;
+   self.FRegions := TRegionList.Create;
+   self.FMapObjects := TMapObjectList.Create;
+   for I := 0 to base.eventCount - 1 do
+      FMapObjects.Add(TRpgMapObject.Convert(base.events[i]));
    self.saveScript(base.eventData);
 end;
 
@@ -110,7 +112,7 @@ begin
    for I := 0 to battleCount - 1 do
       self.battles[i] := (base.battle[i]);
    self.encounterScript := RANDOM_ENCOUNTER_SCRIPT;
-   TMapRegionHelper(self).FEncounters[1] := base.encounterRate;
+   FEncounters[1] := base.encounterRate;
 end;
 
 { Classless }

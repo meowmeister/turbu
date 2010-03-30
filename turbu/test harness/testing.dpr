@@ -83,7 +83,7 @@ uses
   conversion_report_form in '..\turbu format\converters\conversion_report_form.pas' {frmConversionReport},
   rm2_turbu_converter_thread in '..\turbu format\converters\rm2_turbu_converter_thread.pas',
   rm2_turbu_maps in '..\turbu format\converters\rm2_turbu_maps.pas',
-  turbu_maps in '..\turbu format\turbu_maps.pas',
+  turbu_maps in '..\turbu format\maps\turbu_maps.pas',
   turbu_tilesets in '..\turbu format\database\turbu_tilesets.pas',
   rm2_turbu_tilesets in '..\turbu format\converters\rm2_turbu_tilesets.pas',
   tiles in '..\engines\map engine\tiles.pas',

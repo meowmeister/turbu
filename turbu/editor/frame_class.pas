@@ -21,11 +21,11 @@ interface
 
 uses
    SysUtils, Classes, Controls, Forms, ComCtrls, StdCtrls, ExtCtrls, Graphics,
-   DBGrids, DB, Mask, DBCtrls, Grids,
+   DBGrids, DB, Mask, DBCtrls, Grids, DBClient,
+   JvDBSpinEdit, JvListBox, JvExStdCtrls, JvExMask, JvSpin,
+   sdl_frame, turbu_listGrid,
    commons, frame_commands, turbu_sprites, turbu_characters, turbu_defs,
-   SDL_ImageManager,
-   JvListBox, JvExStdCtrls, JvExMask, JvSpin, JvDBSpinEdit, turbu_listGrid,
-  DBClient, sdl_frame;
+   SDL_ImageManager, sg_defs;
 
 type
    TframeClass = class(TFrame)
@@ -116,7 +116,7 @@ type
       FId: integer;
       FTemplate: TClassTemplate;
       FSpriteData: TSpriteData;
-      FMatrixPosition: TRpgPoint;
+      FMatrixPosition: TSgPoint;
       FCurrentTexture: integer;
       FSpriteToLoad: integer;
       FOldWeaponScroll: TDatasetNotifyEvent;
@@ -441,7 +441,7 @@ begin
    spriteRect := image.spriteRect[frame];
    destRect.left := (imgMapSprite.Width div 2) - (spriteRect.right);
    destRect.top := (imgMapSprite.height div 2) - (spriteRect.bottom);
-   destRect.BottomRight := TRpgPoint(spriteRect.BottomRight) * 2;
+   destRect.BottomRight := TSgPoint(spriteRect.BottomRight) * 2;
    imgMapSprite.fillColor(image.surface.Format.palette.colors[image.surface.ColorKey], 255);
    imgMapSprite.DrawTexture(image.Texture, @spriteRect, @destRect);
    imgMapSprite.Flip;

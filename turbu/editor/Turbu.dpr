@@ -6,6 +6,11 @@ program Turbu;
 uses
   FastMM4,
   SimpleShareMem,
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   Forms,
   dialogs,
   SysUtils,
@@ -63,7 +68,8 @@ uses
   rm2_turbu_tilesets in '..\turbu format\converters\rm2_turbu_tilesets.pas',
   addition_sprite in '..\mapview\libs\map engine\addition_sprite.pas',
   map_tree_controller in 'map_tree_controller.pas',
-  delete_map in 'delete_map.pas' {dlgDeleteMap};
+  delete_map in 'delete_map.pas' {dlgDeleteMap},
+  rm2_turbu_map_objects in '..\turbu format\converters\rm2_turbu_map_objects.pas';
 
 {$R *.res}
 

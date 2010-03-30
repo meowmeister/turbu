@@ -19,8 +19,8 @@ unit tiles;
 
 interface
 uses
-   types, classes, contnrs,
-   commons, timing, charset_data, turbu_maps, turbu_tilesets,
+   types, classes, contnrs, Generics.Collections,
+   commons, timing, charset_data, turbu_maps, turbu_tilesets, turbu_map_objects,
    SDL_sprite, SG_Defs;
 
 type
@@ -28,7 +28,15 @@ type
    TTileClass = class of TTile;
    TNeighborSet = set of TDirs8;
 
+   TBroadcastProc = procedure of object;
+
    TTile = class abstract(TParentSprite) //ASPHYRE version of TTileData
+   protected
+   class var
+      FHeartbeat: byte;
+      FBroadcastList: TList<TBroadcastProc>;
+      class constructor Create;
+      class destructor Destroy;
    private
       FTileID: word; // which tile from the overall x,y grid of the chipset
       FGridLoc: TSgPoint; //where this tile is located on the map
@@ -42,13 +50,11 @@ type
       procedure saveColor;
       procedure restoreColor(which: TRpgColor);
       procedure setEngine(newEngine: TSpriteEngine); virtual;
-   private
-      class function DecodeZOrder(const value: TTileAttributes): byte; static;
    protected
       function InVisibleRect: boolean; override;
       procedure DoDraw; override;
    public
-      constructor Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false); reintroduce; overload; virtual;
+      constructor Create(const AParent: TSpriteEngine; tileset: string); reintroduce; overload; virtual;
       destructor Destroy; override;
       procedure Draw; override;
       procedure Assign(const value: TTile); reintroduce;
@@ -56,7 +62,9 @@ type
                      chip_data: TTileSet): TTileAttributes; virtual;
       function open(exceptFor: TObject): boolean; virtual;
       procedure flash(r, g, b, a: byte; time: cardinal);
-      function canEnter: boolean; virtual;
+      function canEnter: boolean;
+
+      class procedure heartbeat;
 
       property id: word read FTileID write FTileID;
       property location: TSgPoint read FGridLoc write FGridLoc;
@@ -64,40 +72,34 @@ type
       property attributes: TTileAttributes read FAttributes write FAttributes;
    end;
 
-   TUpperTile = class(TTile);
-
-   TLowerTile = class(TTile)
+   TMapTile = class(TTile)
    private
       FOccupied: TObjectList;
-      FUpperTile: TUpperTile;
 
       function isOccupied: boolean;
-      function hasCountertop: boolean; inline;
    protected
       FNeighbors: TNeighborSet;
    public
-      constructor Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false); override;
+      constructor Create(const AParent: TSpriteEngine; tileset: string); override;
       destructor Destroy; override;
       function open(exceptFor: TObject): boolean; override;
-      function canEnter: boolean; override;
 //      procedure bump(character: TObject);
 
-      property upperTile: TUpperTile read FUpperTile write FUpperTile;
       property occupied: boolean read isOccupied;
       property event: TObjectList read FOccupied write FOccupied;
-      property countertop: boolean read hasCountertop;
    end;
 
-   TAnimTile = class(TLowerTile)
+   TAnimTile = class(TMapTile)
    private
-   class var
-      FHeartbeat: byte;
-      FDisplacement: byte;
+      class var
+      FDisplacement: word;
+      FStepFlag: boolean;
+      class constructor Create;
+      class procedure OnHeartbeat;
    public
       procedure Draw; override;
       function place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
                     chip_data: TTileSet): TTileAttributes; override;
-      class procedure heartbeat;
    end;
 
    TBorderTile = class;
@@ -107,14 +109,14 @@ type
       constructor Create(const AParent: TBorderTile; tileset: string);
    end;
 
-   TBorderTile = class(TLowerTile)
+   TBorderTile = class(TMapTile)
    private
       minitiles: array[1..4] of TMiniTile;
       procedure setEngine(newEngine: TSpriteEngine); override;
    protected
       procedure doPlace; virtual;
    public
-      constructor Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false); override;
+      constructor Create(const AParent: TSpriteEngine; tileset: string); override;
       destructor Destroy; override;
       procedure Draw; override;
       function place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
@@ -125,6 +127,11 @@ type
    end;
 
    TWaterTile = class abstract(TBorderTile)
+   private
+      class var
+      FDisplacement: word;
+      class constructor Create;
+      class procedure OnHeartbeat;
    private
       FLinkedFilename: string;
    public
@@ -144,16 +151,16 @@ type
       procedure doPlace; override;
    end;
 
-{   TEventTile = class(TTile)
+   TEventTile = class(TTile)
    private
-      FEvent: TEvent;
+      FEvent: TRpgMapObject;
    public
-      constructor create(baseEvent: TEvent; const AParent: TSpriteEngine; map: TMapUnit); reintroduce;
+      constructor Create(baseEvent: TRpgMapObject; const AParent: TSpriteEngine); reintroduce;
       procedure assign(data: TEventTile); reintroduce;
-      procedure update(newPage: TEventPage);
+      procedure update(newPage: TRpgEventPage);
 
-      property event: TEvent read FEvent write FEvent;
-   end;}
+      property event: TRpgMapObject read FEvent write FEvent;
+   end;
 
    TScrollData = class(TObject)
    private
@@ -185,28 +192,17 @@ type
    end;
 
 const
-   ANIM_RATE = 5;
-   ANIM_STEP = 3;
-   ANIM_MAX = 9;
    BG_SCROLL_RATE = 0.1;
+   ANIM_LCM = 8 * 9 * 5 * 7 * 11 ; //least common multiple of all numbers 1..12
 
 implementation
 
 uses
-   sysUtils,
+   SysUtils, Math,
    turbu_constants, turbu_2k_sprite_engine,
    SDL_ImageManager;
 
-class function TTile.DecodeZOrder(const value: TTileAttributes): byte;
-begin
-   if taOverhang in value then
-      result := 10
-   else if taCeiling in value then
-      result := 6
-   else result := 1;
-end;
-
-constructor TTile.Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false);
+constructor TTile.Create(const AParent: TSpriteEngine; tileset: string);
 begin
    assert(AParent is T2kSpriteEngine);
    inherited create(AParent);
@@ -235,6 +231,16 @@ begin
    result := false;
    for i := taUp to taRight do
       result := result or (i in FAttributes);
+end;
+
+class constructor TTile.Create;
+begin
+   FBroadcastList := TList<TBroadcastProc>.Create;
+end;
+
+class destructor TTile.Destroy;
+begin
+   FBroadcastList.Free;
 end;
 
 {$WARN USE_BEFORE_DEF OFF}
@@ -311,8 +317,8 @@ begin
    else begin
       corrected := NormalizePoint(FGridLoc, T2kSpriteEngine(FEngine).mapRect) * TILE_SIZE;
 
-      result := (corrected.X > FEngine.WorldX - Width ) and
-      (corrected.Y > FEngine.WorldY - Height)    and
+      result := (corrected.X > FEngine.WorldX - (Width * 2) ) and
+      (corrected.Y > FEngine.WorldY - (Height * 2)) and
       (corrected.X < FEngine.WorldX + FEngine.VisibleWidth + Width)  and
       (corrected.Y < FEngine.WorldY + FEngine.VisibleHeight + Height);
    end;
@@ -357,9 +363,27 @@ begin
    FFlashTimer := TRpgTimestamp.Create(time);
 end;
 
+class procedure TTile.heartbeat;
+var
+   proc: TBroadcastProc;
+begin
+   FHeartbeat := (FHeartbeat + 1) mod ANIM_LCM;
+   for proc in FBroadcastList do
+      proc;
+end;
+
 function TTile.open(exceptFor: TObject): boolean;
 begin
    result := Self.canEnter;
+end;
+
+function DecodeZOrder(const value: TTileAttributes): byte;
+begin
+   if taOverhang in value then
+      result := 10
+   else if taCeiling in value then
+      result := 6
+   else result := 1;
 end;
 
 function TTile.place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
@@ -412,10 +436,10 @@ end;
 
 { TBorderTile }
 
-constructor TBorderTile.Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false);
+constructor TBorderTile.Create(const AParent: TSpriteEngine; tileset: string);
 var i: byte;
 begin
-   inherited create(AParent, tileset, true);
+   inherited create(AParent, tileset);
    for i := 1 to 4 do
    begin
       minitiles[i] := TMiniTile.Create(self, tileset);
@@ -614,6 +638,11 @@ end;
 
 { TWaterTile }
 
+class constructor TWaterTile.Create;
+begin
+   FBroadcastList.Add(TWaterTile.OnHeartbeat);
+end;
+
 procedure TWaterTile.Draw;
 begin
    doPlace;
@@ -630,6 +659,14 @@ end;
 function TWaterTile.sharesBorder(neighbor: TTile): boolean;
 begin
    result := neighbor is TWaterTile;
+end;
+
+class procedure TWaterTile.OnHeartbeat;
+begin
+   if FHeartbeat mod ANIM_RATE = 0 then
+   begin
+      FDisplacement := (FDisplacement + 1) mod ANIM_LCM;
+   end;
 end;
 
 { TShoreTile }
@@ -812,17 +849,18 @@ begin
       end; //end of misc block
    end; //end of skip
 
-{   case TGameMap(Engine).animFrame of
-   1:;
-   2, 4:
+   case FDisplacement mod 4 of
+   0:;
+   1, 3:
       for i := 1 to 4 do
          inc(minis[i], 2);
       //end for
-   3:
+   2:
       for i := 1 to 4 do
          inc(minis[i], 4);
       //end for
-   end; }
+   end;
+
    for i := 1 to 4 do
    begin
       miniTiles[i].ImageIndex := minis[i];
@@ -1021,17 +1059,17 @@ begin
       end; //end of misc block
    end; //end of skip
 
-{   case TGameMap(Engine).animFrame of
-   1:;
-   2, 4:
+   case FDisplacement mod 4 of
+   0:;
+   1, 3:
       for i := 1 to 4 do
          inc(minis[i], 2);
       //end for
-   3:
+   2:
       for i := 1 to 4 do
          inc(minis[i], 4);
       //end for
-   end;}
+   end;
 
    for i := 1 to 4 do
    begin
@@ -1047,23 +1085,26 @@ end;
 
 { TAnimTile }
 
-procedure TAnimTile.draw;
+class constructor TAnimTile.Create;
 begin
-   if FHeartbeat = 0 then
-      ImageIndex := FTileID + FDisplacement;
-   inherited;
+   FBroadcastList.Add(TAnimTile.OnHeartbeat);
 end;
 
-class procedure TAnimTile.heartbeat;
+procedure TAnimTile.draw;
 begin
-   inc(FHeartbeat);
-   if FHeartbeat >= ANIM_RATE then
+   if FStepFlag then
+      ImageIndex := FTileID + ((FDisplacement mod 4) * 3);
+   inherited Draw;
+end;
+
+class procedure TAnimTile.OnHeartbeat;
+begin
+   if FHeartbeat mod ANIM_RATE2 = 0 then
    begin
-      FHeartbeat := 0;
-      inc(FDisplacement, ANIM_STEP);
-      if FDisplacement > ANIM_MAX then
-         FDisplacement := 0;
-   end;
+      FDisplacement := (FDisplacement + 1) mod ANIM_LCM;
+      FStepFlag := true;
+   end
+   else FStepFlag := false;
 end;
 
 function TAnimTile.place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
@@ -1073,7 +1114,6 @@ begin
    FTileID := ImageIndex;
 end;
 
-(*
 { TEventTile }
 
 procedure TEventTile.assign(data: TEventTile);
@@ -1081,51 +1121,43 @@ begin
    inherited assign(TTile(data));
 end;
 
-constructor TEventTile.create(baseEvent: TEvent; const AParent: TSpriteEngine; map: TMapUnit);
+constructor TEventTile.Create(baseEvent: TRpgMapObject; const AParent: TSpriteEngine);
 begin
-   inherited Create(AParent, map);
-   update(baseEvent.lastCurrentPage);
-   self.X := baseEvent.location.X * TILESIZE;
-   self.Y := baseEvent.location.Y * TILESIZE;
+   inherited Create(AParent, '');
+   self.X := baseEvent.location.X * TILE_SIZE.X;
+   self.Y := baseEvent.location.Y * TILE_SIZE.Y;
    FEvent := baseEvent;
+   update(baseEvent.currentPage);
 end;
 
-procedure TEventTile.update(newPage: TEventPage);
+procedure TEventTile.update(newPage: TRpgEventPage);
+const
+   Z_TABLE: array [0..2] of integer = (3, 4, 8);
 var
-   data: TDecodeResult;
-   x, y: integer;
+   x, y, z: integer;
+   engine: T2kSpriteEngine;
 begin
-   if newpage <> nil then
+   engine := FEngine as T2kSpriteEngine;
+   if assigned(newpage) then
    begin
-      data := decode(newpage.whichChip + 10000);
-      case newpage.zOrder of
-         0: z := 3;
-         1: z := 4;
-         2: z := 8;
-      end;
-      x := trunc(self.X / TILESIZE);
-      y := trunc(self.Y / TILESIZE);
-      if assigned(TGameMap(FEngine)[upper, x, y]) then
-      begin
-         if (TGameMap(FEngine)[upper, x, y].Z > z) then
-            TGameMap(FEngine)[upper, x, y].Z := z - 1;
-         if TGameMap(FEngine)[lower, x, y].Z > TGameMap(FEngine)[upper, x, y].Z then
-            TGameMap(FEngine)[lower, x, y].Z := TGameMap(FEngine)[upper, x, y].Z - 1;
-      end;
+      self.Visible := true;
+      z := Z_TABLE[newpage.zOrder];
+      x := trunc(self.X / TILE_SIZE.X);
+      y := trunc(self.Y / TILE_SIZE.Y);
+      self.z := max(z, engine.GetTopTile(x, y).Z + 1);
+      self.Visible := true;
    end
    else begin
-      data := decode(10000);
       self.z := 10;
       self.visible := false;
    end;
-   self.ImageIndex := data.baseTile;
-   self.ImageName := FBaseMap.chipsetName + ' ' + data.group;
+   self.ImageIndex := FEvent.currentPage.whichTile;
+   self.ImageName := engine.tileset.Records[FEvent.currentPage.TileGroup].name;
 end;
-*)
 
-{ TLowerTile }
+{ TMapTile }
 
-{procedure TLowerTile.bump(character: TObject);
+{procedure TMapTile.bump(character: TObject);
 var
    bumper, dummy: TAdditionSprite;
    I: Integer;
@@ -1148,47 +1180,31 @@ begin
    //end if
 end;}
 
-function TLowerTile.canEnter: boolean;
+constructor TMapTile.Create(const AParent: TSpriteEngine; tileset: string);
 begin
-   result := inherited canEnter;
-   if assigned(FUpperTile) then
-      result := result and FUpperTile.canEnter;
-end;
-
-constructor TLowerTile.Create(const AParent: TSpriteEngine; tileset: string; const addself: boolean = false);
-begin
-   inherited Create(AParent, tileset, addself);
+   inherited Create(AParent, tileset);
    FOccupied := TObjectList.Create(false);
 end;
 
-destructor TLowerTile.Destroy;
+destructor TMapTile.Destroy;
 begin
    FOccupied.Clear;
    FOccupied.Free;
-   upperTile.Free;
    inherited;
 end;
 
-function TLowerTile.hasCountertop: boolean;
-begin
-   result := assigned(FUpperTile) and  (taCountertop in FUpperTile.attributes);
-end;
-
-function TLowerTile.isOccupied: boolean;
+function TMapTile.isOccupied: boolean;
 begin
    result := FOccupied.Count > 0;
 end;
 
-function TLowerTile.open(exceptFor: TObject): boolean;
+function TMapTile.open(exceptFor: TObject): boolean;
 var
    I: Integer;
 begin
    result := (inherited open(exceptFor));
    for I := 0 to FOccupied.Count - 1 do
       result := result and (FOccupied[i] = exceptFor);
-   if assigned(FUpperTile) then
-      result := result and FUpperTile.open(exceptFor);
-   //end if
 end;
 
 { TBackgroundSprite }

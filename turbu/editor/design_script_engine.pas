@@ -27,7 +27,8 @@ uses
    dm_database,
    upsCompiler, upsRuntime, upsPreProcessor, upsUtils,
    turbu_defs, turbu_classes, commons, turbu_script_basis, turbu_unit_dictionary,
-   turbu_script_interface;
+   turbu_script_interface,
+   sg_defs;
 
 type
    TTurbuScriptEngine = class(TObject, IScriptEngine, IDesignScriptEngine)
@@ -50,7 +51,7 @@ type
       procedure startFunction(name: tbtString; pos, column, row: integer);
       procedure endFunction(name: tbtString; pos, column, row: integer);
       function buildProcList(Sender: TPSPascalCompiler): Boolean;
-      function getBounds(name: string): TRpgPoint;
+      function getBounds(name: string): TSgPoint;
       function tryUseFile(Sender: TPSPascalCompiler; const Name: tbtstring): Boolean;
       function GetExec: TPSExec;
       function GetDeclarations: TDeclList;
@@ -78,7 +79,7 @@ type
       property units: TUnitDictionary read GetUnits write SetUnits;
       property func[name: string]: string read getFunc;
       property decl: TDeclList read FDeclarations;
-      property bounds[name: string]: TRpgPoint read getBounds;
+      property bounds[name: string]: TSgPoint read getBounds;
    end;
 
 var
@@ -241,7 +242,7 @@ begin
    result := -1;
 end;
 
-function TTurbuScriptEngine.getBounds(name: string): TRpgPoint;
+function TTurbuScriptEngine.getBounds(name: string): TSgPoint;
 var
    dummy: TScriptRange;
 begin

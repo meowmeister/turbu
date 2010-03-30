@@ -227,7 +227,7 @@ end;
 
 constructor TVehicleTile.Create(const base: TCharTile; parent: TSpriteEngine);
 begin
-   inherited Create(parent as TGameMap, nil);
+//   inherited Create(parent as TGameMap, nil);
    Self.FWhichChar := base.FWhichChar;
    self.FPatternIndex := base.FPatternIndex;
    self.z := base.z;
@@ -295,7 +295,7 @@ end;
 constructor TEventSprite.create(baseEvent: TEvent; const AParent: TSpriteEngine; char: TRpgCharacter);
 begin
    inherited Create(baseEvent, AParent, char);
-   FTiles[bottom] := TEventTile.create(baseEvent, TGameMap(AParent), GGameEngine.currentMap.template);
+//   FTiles[bottom] := TEventTile.create(baseEvent, TGameMap(AParent), GGameEngine.currentMap.template);
    FTiles[top] := nil;
    if assigned(FEvent.lastCurrentPage) and FEvent.lastCurrentPage.transparent then
       translucency := 3
@@ -322,7 +322,7 @@ end;
 
 procedure TEventSprite.updatePage(data: TEventPage);
 begin
-   TEventTile(FTiles[bottom]).update(data);
+//   TEventTile(FTiles[bottom]).update(data);
 end;
 
 { TCharSprite }
@@ -357,8 +357,8 @@ constructor TCharSprite.create(baseEvent: TEvent; const AParent: TSpriteEngine; 
 begin
    inherited Create(baseEvent, AParent, char);
    FUnderConstruction := true;
-   FTiles[bottom] := TCharTile.Create(TGameMap(AParent), nil);
-   FTiles[top] := TCharTile.Create(TGameMap(AParent), nil);
+//   FTiles[bottom] := TCharTile.Create(TGameMap(AParent), nil);
+//   FTiles[top] := TCharTile.Create(TGameMap(AParent), nil);
    if baseEvent <> nil then
    begin
       assert(baseEvent.lastCurrentPage <> nil);
@@ -499,7 +499,7 @@ begin
       btn_enter:
       begin
          activateEvents(TLowerTile(TGameMap(FEngine)[lower, FLocation.x, FLocation.y]));
-         currentTile := TLowerTile(self.inFrontTile);
+//         currentTile := TLowerTile(self.inFrontTile);
          if assigned(currentTile) then
          begin
             activateEvents(currentTile);
@@ -789,7 +789,7 @@ end;
 constructor TAirshipSprite.Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle; tileClass: TTileClass);
 begin
    inherited Create(parent, whichVehicle, TAirshipTile);
-   FShadow := TMiniTile.Create(parent, nil);
+//   FShadow := TMiniTile.Create(parent, nil);
    FShadow.ImageName := 'SysShadow';
    FShadow.Alpha := 160;
    FShadow.Visible := false;
@@ -879,7 +879,7 @@ begin
    result := inherited canMoveForward;
    if result then
    begin
-      events := (inFrontTile as TLowerTile).event;
+//      events := (inFrontTile as TLowerTile).event;
       for I := 0 to events.count - 1 do
       begin
          sprite := events.items[i];
