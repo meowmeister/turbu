@@ -21,6 +21,7 @@ type
       FCursor: integer;
       FLoop: boolean;
       FLooped: boolean;
+    function GetLast: integer;
 
    public
       constructor Create; overload;
@@ -33,6 +34,7 @@ type
 
       function nextCommand: TMoveStep;
 
+      property last: integer read GetLast;
       property base: string read FBase;
       property opcodes: TMovelist read FOpcodes;
       property cursor: integer read FCursor write FCursor;
@@ -52,6 +54,13 @@ const MOVE_CODES: array[0..$29] of string =
 'AnimStop', 'AnimResume', 'TransparencyUp', 'TransparencyDown');
 
 CODES_WITH_PARAMS = [$20..$23];
+
+const
+   MOVECODE_RANDOM = 8;
+   MOVECODE_CHASE = 9;
+   MOVECODE_FLEE = 10;
+   MOVECODE_CHANGE_SPRITE = $22;
+   MOVECODE_PLAY_SFX = $23;
 
 function lookupMoveCode(const opcode: string): integer;
 
@@ -88,6 +97,11 @@ destructor TPath.Destroy;
 begin
    FOpcodes.Free;
    inherited;
+end;
+
+function TPath.GetLast: integer;
+begin
+   result := FOpcodes.Count - 1;
 end;
 
 constructor TPath.Create;
@@ -170,13 +184,20 @@ end;
 procedure parseName(parser: TPsPascalParser; var step: TMoveStep);
 begin
    assert(parser.CurrTokenID = CSTI_String);
-   step.name := string(parser.OriginalToken);
+   step.name := AnsiDequotedStr(string(parser.OriginalToken), '''');
    parser.Next;
 end;
 
 procedure parseOneInt(parser: TPsPascalParser; var step: TMoveStep);
 begin
    step.data[1] := parseInt(parser);
+end;
+
+procedure parseNameAndInt(parser: TPsPascalParser; var step: TMoveStep);
+begin
+   parseName(parser, step);
+   parseAssert(parser, CSTI_Comma);
+   parseOneInt(parser, step);
 end;
 
 procedure parseFull(parser: TPsPascalParser; var step: TMoveStep);
@@ -206,7 +227,7 @@ begin
       if result.opcode in CODES_WITH_PARAMS then
          case result.opcode of
             $20, $21: parseOneInt(parser, result);
-            $22: parseName(parser, result);
+            $22: parseNameAndInt(parser, result);
             $23: parseFull(parser, result);
          end;
       parseAssert(parser, CSTI_CloseRound);

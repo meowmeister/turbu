@@ -19,7 +19,7 @@ unit script_backend;
 
 interface
 uses sysUtils,
-     {addition_sprite, charset_data, item_data,} turbu_characters, rpg_list,
+     {charset_data, item_data,} turbu_characters, rpg_list,
      {LMT,} turbu_database;
 
 {$I ..\..\..\..\unfinished.inc}
@@ -140,7 +140,7 @@ implementation
 uses
    windows,
    {chipset_graphics, charset_graphics, script_engine, locate_files,
-   item_code,} script_interface, turbu_items, commons; //turbu libs
+   item_code,} turbu_items, commons, turbu_constants; //turbu libs
 
 { TRpgHero }
 

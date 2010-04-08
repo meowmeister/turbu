@@ -144,7 +144,6 @@ begin
          result := position;
          Exit;
       end;
-   //end FOR
 end;
 
 function inStringA(const input: ansiString; const character: ansiChar; const start: cardinal = 1): integer;
@@ -157,7 +156,6 @@ begin
          result := position;
          Exit;
       end;
-   //end FOR
 end;
 
 procedure strInsertAnsi(var input: ansiString; const character: ansiChar; const position: integer);

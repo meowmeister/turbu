@@ -41,7 +41,7 @@ function extractSpriteData(const value: string): TSpriteData;
 var
    star: integer;
 begin
-   star := pos(value, '*');
+   star := pos('*', value);
    assert(star <> 0);
    result.name := copy(value, 1, star - 1);
    result.moveMatrix := strToInt(copy(value, star + 1, MAXINT));

@@ -108,9 +108,12 @@ type
 
    TClassTemplate = class(TRpgDatafile)
    private
-      FMapSprite: integer;
+      FMapSprite: string;
+      FActionMatrix: integer;
       FBattleSprite: integer;
-      FPortrait: integer;
+      FBattleMatrix: integer;
+      FPortrait: string;
+      FPortraitIndex: integer;
       FCommand: TCommandSet;
       FCommands: byte;
       [TStatBlockUpload]
@@ -154,9 +157,10 @@ type
       property skillset: TSkillsetList read FSkillset write FSkillset;
    published
       property clsName: string read FName write FName;
-      property mapSprite: integer read FMapSprite write FMapSprite;
+      property mapSprite: string read FMapSprite write FMapSprite;
       property battleSprite: integer read FBattleSprite write FBattleSprite;
-      property portrait: integer read FPortrait write FPortrait;
+      property portrait: string read FPortrait write FPortrait;
+      property portraitIndex: integer read FPortraitIndex write FPortraitIndex;
       property commands: byte read FCommands write FCommands;
       property expFunc: string read FExpFunc write FExpFunc;
       property resist: TPointArray read FResists write FResists;
@@ -386,23 +390,18 @@ begin
    FSkillset := TSkillsetList.Create;
    FSkillSet.add(TSkillGainInfo.Create);
 
-   FMapSprite := savefile.readInt;
+   FMapSprite := savefile.readString;
+   FActionMatrix := savefile.readInt;
    FBattleSprite := savefile.readInt;
-   FPortrait := savefile.readInt;
+   FBattleMatrix := savefile.readInt;
+   FPortrait := savefile.readString;
+   FPortraitIndex := savefile.readInt;
    lassert(savefile.readWord = COMMAND_COUNT);
    savefile.readBuffer(FCommand[1], sizeof(FCommand));
    FCommands := savefile.readByte;
    lassert(savefile.readByte = STAT_COUNT);
    for I := 1 to STAT_COUNT do
-   begin
       FStatBlocks[i] := GDatabase.statSet.FBlocks[savefile.readInt];
-{      savefile.ReadBuffer(FStatBlocks[i].fullvalue, sizeof(int64));
-      if FStatBlocks[i].index = 0 then
-      begin
-         FStatBlocks[i].address := GStatSet.FBlocks[integer(FStatBlocks[i].val16[3])];
-         inc(FStatBlocks[i].address.FRefcount);
-      end;}
-   end;
    lassert(savefile.readChar = 'p');
    FExpFunc := savefile.readString;
    savefile.readBuffer(FExpVars[1], 16);
@@ -429,9 +428,12 @@ var
    i: integer;
 begin
    inherited save(savefile);
-   savefile.writeInt(FMapSprite);
+   savefile.writeString(FMapSprite);
+   savefile.writeInt(FActionMatrix);
    savefile.writeInt(FBattleSprite);
-   savefile.writeInt(FPortrait);
+   savefile.writeInt(FBattleMatrix);
+   savefile.writeString(FPortrait);
+   savefile.writeInt(FPortraitIndex);
    savefile.writeWord(COMMAND_COUNT);
    savefile.WriteBuffer(FCommand[1], sizeof(FCommand));
    savefile.writeByte(FCommands);

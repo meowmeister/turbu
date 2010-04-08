@@ -50,7 +50,7 @@ type
    * TArchiveCallback provides an opportunity to do something else with the
    * RWops once the file has been read.
    ***************************************************************************}
-   TArchiveLoader = function(filename, keyname: string): PSDL_RWops;
+   TArchiveLoader = function(filename: string): PSDL_RWops;
    TArchiveCallback = procedure(var rw: PSdl_RWops);
 
    TSdlImages = class;
@@ -201,8 +201,8 @@ type
       * be set to 0 (the start of the file.)  If the callback is unassigned,
       * AddFromArchive will automatically free the RWops.
       ************************************************************************}
-      function AddFromArchive(filename, keyname, imagename: string; loader: TArchiveLoader = nil): integer;
-      function AddSpriteFromArchive(filename, keyname, imagename: string; spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
+      function AddFromArchive(filename, imagename: string; loader: TArchiveLoader = nil): integer;
+      function AddSpriteFromArchive(filename, imagename: string; spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
 
       {************************************************************************
       * Frees the TSdlImage at the current index and removes it from the list.
@@ -512,17 +512,17 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-function TSdlImages.AddFromArchive(filename, keyname, imagename: string; loader: TArchiveLoader = nil): integer;
+function TSdlImages.AddFromArchive(filename, imagename: string; loader: TArchiveLoader = nil): integer;
 var
    dummy: PSDL_RWops;
 begin
    if assigned(loader) then
-      dummy := loader(filename, keyname)
+      dummy := loader(filename)
    else if assigned(FArchiveLoader) then
-      dummy := FArchiveLoader(filename, keyname)
+      dummy := FArchiveLoader(filename)
    else raise ESdlImageException.Create('No archive loader available!');
    if dummy = nil then
-      raise ESdlImageException.CreateFmt('Archive loader failed to extract "%s" from the archive "%s".', [keyname, filename]);
+      raise ESdlImageException.CreateFmt('Archive loader failed to extract "%s" from the archive.', [filename]);
    result := self.Add(TSdlImage.Create(dummy, ExtractFileExt(filename), imagename, nil));
    if assigned(FArchiveCallback) then
       FArchiveCallback(dummy)
@@ -530,18 +530,18 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-function TSdlImages.AddSpriteFromArchive(filename, keyname, imagename: string;
+function TSdlImages.AddSpriteFromArchive(filename, imagename: string;
   spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
 var
    dummy: PSDL_RWops;
 begin
    if assigned(loader) then
-      dummy := loader(filename, keyname)
+      dummy := loader(filename)
    else if assigned(FArchiveLoader) then
-      dummy := FArchiveLoader(filename, keyname)
+      dummy := FArchiveLoader(filename)
    else raise ESdlImageException.Create('No archive loader available!');
    if dummy = nil then
-      raise ESdlImageException.CreateFmt('Archive loader failed to extract "%s" from the archive "%s".', [keyname, filename]);
+      raise ESdlImageException.CreateFmt('Archive loader failed to extract "%s" from the archive.', [filename]);
 
    result := self.Add(TSdlImage.CreateSprite(dummy, ExtractFileExt(filename), imagename, nil, spriteSize));
    if assigned(FArchiveCallback) then

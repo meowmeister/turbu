@@ -43,11 +43,13 @@ type
       FScrollPosition: TSgPoint;
       FTimer: TAsphyreTimer;
 
-      function retrieveImage(const filename: string): TRpgSdlImage;
+      function retrieveImage(const folder, filename: string): TRpgSdlImage;
 
       procedure repaint;
       procedure loadTileset(const value: TTileSet);
+      procedure loadSprite(const filename: string);
       function CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
+      procedure LoadMapSprites(map: TRpgMap);
       function doneLoadingMap: boolean;
       procedure prepareMap(const data: IMapMetadata);
    private //timing and animation
@@ -70,11 +72,12 @@ uses
    sysUtils, classes, math,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
    turbu_constants, turbu_map_metadata, turbu_functional, turbu_classes,
+   turbu_map_objects,
    SDL, sdlstreams, sdl_sprite, sg_utils;
 
 { Callbacks }
 
-function ALoader(filename, keyname: string): PSDL_RWops;
+function ALoader(filename: string): PSDL_RWops;
 var
    stream: TStream;
 begin
@@ -205,6 +208,17 @@ begin
    else result := nil;
 end;
 
+procedure T2kMapEngine.LoadMapSprites(map: TRpgMap);
+var
+   mapObj: TRpgMapObject;
+   page: TRpgEventPage;
+begin
+   for mapObj in map.mapObjects do
+      for page in mapObj.pages do
+         if not page.isTile then
+            loadSprite(page.name);
+end;
+
 procedure T2kMapEngine.prepareMap(const data: IMapMetadata);
 var
    mapStream: TStream;
@@ -239,20 +253,17 @@ begin
    FCanvas.Flip;
 end;
 
-function T2kMapEngine.retrieveImage(const filename: string): TRpgSdlImage;
-var
-   fullName: string;
+function T2kMapEngine.retrieveImage(const folder, filename: string): TRpgSdlImage;
 begin
-   fullName := 'tileset\' + filename + '.png';
    if not FImages.contains(filename) then
-      result := nil
-   else
-      result := FImages.Image[filename] as TRpgSdlImage;
+      FImages.AddFromFile(format('%s\%s.png', [folder,filename]), filename);
+   result := FImages.Image[filename] as TRpgSdlImage;
 end;
 
 function T2kMapEngine.doneLoadingMap: boolean;
 begin
    FCurrentMap := FMaps[FWaitingMap.id];
+   LoadMapSprites(FCurrentMap.mapObj);
    result := FSignal.WaitFor(INFINITE) = wrSignaled;
    if result then
       self.repaint;
@@ -266,8 +277,17 @@ begin
       begin
          filename := 'tileset\' + input.group.filename + '.png';
          if not FImages.contains(filename) then
-            FImages.AddSpriteFromArchive(filename, '', input.group.filename, input.group.dimensions);
+            FImages.AddSpriteFromArchive(filename, input.group.filename, input.group.dimensions);
       end);
+end;
+
+procedure T2kMapEngine.loadSprite(const filename: string);
+var
+   lName: string;
+begin
+   lname := 'mapsprite\' + filename + '.png';
+   if not FImages.contains(filename) then
+      FImages.AddSpriteFromArchive(lname, filename, SPRITE_SIZE);
 end;
 
 {$R-}

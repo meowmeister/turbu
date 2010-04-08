@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls,
-  conversion_report;
+  conversion_report, conversion_output;
 
 type
    TfrmConversionReport = class(TForm, IConversionReport)
@@ -28,14 +28,13 @@ type
       btnDone: TButton;
       procedure FormShow(Sender: TObject);
       procedure FormCreate(Sender: TObject);
-      procedure FormDestroy(Sender: TObject);
    private
       { Private declarations }
       FRunning: boolean;
       FCurrentTaskRunning: boolean;
       FThread: TThread;
       FFatal: boolean;
-      FOutput: TStringList;
+      FOutput: TfrmConversionOutput;
 
       procedure setTasks(const value: integer);
       procedure setCurrentTask(const name: string; const steps: integer); overload;
@@ -82,16 +81,14 @@ end;
 
 procedure TfrmConversionReport.FormCreate(Sender: TObject);
 begin
-   FOutput := TStringList.Create;
-end;
-
-procedure TfrmConversionReport.FormDestroy(Sender: TObject);
-begin
-   FOutput.Free;
+   FOutput := TfrmConversionOutput.Create(self);
+   FOutput.Left := self.left;
+   FOutput.Top := self.Top + self.Height + 20;
 end;
 
 procedure TfrmConversionReport.FormShow(Sender: TObject);
 begin
+
    if FFatal then
    begin
       self.ModalResult := mrAbort;
@@ -114,17 +111,19 @@ end;
 
 procedure TfrmConversionReport.makeError(text: string; group: integer);
 begin
-   assert(false);
+   FOutput.AddItem(format('Error: %s', [text]), group);
+   lblErrorCount.Caption := intToStr(StrToInt(lblErrorCount.Caption) + 1);
 end;
 
 procedure TfrmConversionReport.makeHint(text: string; group: integer);
 begin
-   assert(false);
+   FOutput.AddItem(format('Hint: %s', [text]), group);
+   lblHintCount.Caption := intToStr(StrToInt(lblHintCount.Caption) + 1);
 end;
 
 procedure TfrmConversionReport.makeNotice(text: string; group: integer);
 begin
-   FOutput.AddObject(format('Note: %s', [text]), TObject(group));
+   FOutput.AddItem(format('Note: %s', [text]), group);
    lblWarningCount.Caption := intToStr(StrToInt(lblWarningCount.Caption) + 1);
 end;
 

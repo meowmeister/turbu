@@ -30,7 +30,7 @@ type
 
    TBroadcastProc = procedure of object;
 
-   TTile = class abstract(TParentSprite) //ASPHYRE version of TTileData
+   TTile = class abstract(TParentSprite)
    protected
    class var
       FHeartbeat: byte;
@@ -83,7 +83,7 @@ type
       constructor Create(const AParent: TSpriteEngine; tileset: string); override;
       destructor Destroy; override;
       function open(exceptFor: TObject): boolean; override;
-//      procedure bump(character: TObject);
+      procedure bump(character: TObject);
 
       property occupied: boolean read isOccupied;
       property event: TObjectList read FOccupied write FOccupied;
@@ -159,6 +159,7 @@ type
       procedure assign(data: TEventTile); reintroduce;
       procedure update(newPage: TRpgEventPage);
 
+      procedure Draw; override;
       property event: TRpgMapObject read FEvent write FEvent;
    end;
 
@@ -317,8 +318,8 @@ begin
    else begin
       corrected := NormalizePoint(FGridLoc, T2kSpriteEngine(FEngine).mapRect) * TILE_SIZE;
 
-      result := (corrected.X > FEngine.WorldX - (Width * 2) ) and
-      (corrected.Y > FEngine.WorldY - (Height * 2)) and
+      result := (corrected.X >= FEngine.WorldX - (Width * 2)) and
+      (corrected.Y >= FEngine.WorldY - (Height * 2)) and
       (corrected.X < FEngine.WorldX + FEngine.VisibleWidth + Width)  and
       (corrected.Y < FEngine.WorldY + FEngine.VisibleHeight + Height);
    end;
@@ -1130,12 +1131,18 @@ begin
    update(baseEvent.currentPage);
 end;
 
+procedure TEventTile.Draw;
+begin
+  inherited Draw;
+end;
+
 procedure TEventTile.update(newPage: TRpgEventPage);
 const
    Z_TABLE: array [0..2] of integer = (3, 4, 8);
 var
    x, y, z: integer;
    engine: T2kSpriteEngine;
+   name: string;
 begin
    engine := FEngine as T2kSpriteEngine;
    if assigned(newpage) then
@@ -1145,6 +1152,7 @@ begin
       x := trunc(self.X / TILE_SIZE.X);
       y := trunc(self.Y / TILE_SIZE.Y);
       self.z := max(z, engine.GetTopTile(x, y).Z + 1);
+      FGridLoc := SgPoint(x, y);
       self.Visible := true;
    end
    else begin
@@ -1152,17 +1160,22 @@ begin
       self.visible := false;
    end;
    self.ImageIndex := FEvent.currentPage.whichTile;
-   self.ImageName := engine.tileset.Records[FEvent.currentPage.TileGroup].name;
+   if FEvent.currentPage.TileGroup <> -1 then
+      name := engine.tileset.Records[FEvent.currentPage.TileGroup].name
+   else name := FEvent.CurrentPage.Name;
+   engine.EnsureImage(name);
+   self.ImageName := name;
 end;
 
 { TMapTile }
 
-{procedure TMapTile.bump(character: TObject);
-var
-   bumper, dummy: TAdditionSprite;
-   I: Integer;
+procedure TMapTile.bump(character: TObject);
+{var
+//   bumper, dummy: TAdditionSprite;
+   I: Integer; }
 begin
-   bumper := character as TAdditionSprite;
+{$MESSAGE WARN 'Commented-out code in live unit'}
+{   bumper := character as TAdditionSprite;
    if bumper is THeroSprite then
       for I := 0 to FOccupied.Count - 1 do
       begin
@@ -1177,8 +1190,8 @@ begin
             GScriptEngine.executeEvent(bumper.event, bumper);
          //end if
       //end for
-   //end if
-end;}
+   //end if  }
+end;
 
 constructor TMapTile.Create(const AParent: TSpriteEngine; tileset: string);
 begin
@@ -1232,16 +1245,21 @@ begin
    if (FScroll.FAutoX) and (engine.WorldX <> FSavedOrigin.x) then
       self.OffsetX := self.OffsetX + ((engine.worldX - FSavedOrigin.x) / 2)
    else self.OffsetX := self.OffsetX + (FScroll.FX * BG_SCROLL_RATE);
+
    if (FScroll.FAutoY) and (engine.WorldY <> FSavedOrigin.Y) then
       self.OffsetY := self.OffsetY + ((engine.worldY - FSavedOrigin.Y) / 2)
    else Self.OffsetY := Self.OffsetY + (FScroll.FY * BG_SCROLL_RATE);
+
    FSavedOrigin := sgPointF(engine.WorldX, engine.WorldY);
    while self.OffsetX > 0 do
       self.offsetX := self.offsetX - self.PatternWidth;
+
    while self.OffsetX < -self.patternWidth do
       self.offsetX := self.offsetX + self.PatternWidth;
+
    while self.OffsetY > 0 do
       self.OffsetY := self.OffsetY - self.PatternHeight;
+
    while self.OffsetY < -self.PatternHeight do
       self.OffsetY := self.OffsetY + self.PatternHeight;
 end;

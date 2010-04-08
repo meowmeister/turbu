@@ -43,16 +43,16 @@ constructor TXyzImage.Create(filename: string);
 var
    inFile: TFileStream;
    decStream: TDecompressionStream;
-   dummy: string;
+   header: AnsiString;
    i: cardinal;
 begin
    inFile := nil;
    decStream := nil;
    try
       inFile := TFileStream.Create(filename, fmOpenRead);
-      setLength(dummy, 4);
-      inFile.Read(dummy[1], 4);
-      if dummy <> 'XYZ1' then
+      setLength(header, 4);
+      inFile.Read(header[1], 4);
+      if header <> 'XYZ1' then
          raise EInvalidGraphic.create('Invalid XYZ image.');
       inFile.read(FWidth, 2);
       inFile.Read(FHeight, 2);

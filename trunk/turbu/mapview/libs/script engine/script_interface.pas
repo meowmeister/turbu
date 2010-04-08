@@ -20,10 +20,10 @@ unit script_interface;
 interface
 uses
    types, contnrs, //windows libs
-   turbu_database, {LMT,} LDB, hero_data, item_data, rpg_list, charset_data, script_backend,
-   events, rm_sound, addition_sprite, {rpg_image,} commons, turbu_defs, //turbu libs
-   {AsphyreSprite,} SDL_sprite, SG_Defs,//Asphyre libs
-   sdl_mixer, sdlaudiomixer; //SDL libs
+   turbu_database, hero_data, item_data, rpg_list, charset_data, script_backend,
+   events, rm_sound, turbu_map_sprites, {rpg_image,} commons, turbu_defs, //turbu libs
+   turbu_map_objects,
+   SDL_sprite, SG_Defs, sdl_mixer, sdlaudiomixer; //SDL libs
 
 {$I ..\..\..\..\unfinished.inc}
 const
@@ -55,6 +55,7 @@ type
       procedure playMusic(musicFile: TRmMusic);
       procedure loadSystemSound(which: TSfxTypes; soundFile: TRmSound);
       procedure playSfx(soundFile: TRmSound);
+      procedure playAndFreeSfx(soundFile: TRmSound);
       procedure setSystemSound(which: TSfxTypes; filename: string);
       procedure playSystemSound(which: turbu_defs.TSfxTypes);
       procedure playSystemMusic(which: TBgmTypes);
@@ -85,13 +86,39 @@ type
       property event: TEvent read FEvent;
    end;
 
+   TRpgCharacter = class(TInterfacedObject, IRpgCharacter)
+   private
+      function getScreenX: integer; inline;
+      function getScreenY: integer; inline;
+      function getScreenXP: integer; inline;
+      function getScreenYP: integer; inline;
+   protected
+      procedure doFlash(r, g, b, power: byte; time: cardinal); virtual; abstract;
+      function getX: word; virtual; abstract;
+      function getY: word; virtual; abstract;
+      function getBase: TMapSprite; virtual; abstract;
+      function getTranslucency: byte; virtual;
+      procedure setTranslucency(const Value: byte); virtual;
+   public
+      procedure flash(r, g, b, power: byte; time: cardinal; wait: boolean);
+      procedure move(frequency: byte; skip: boolean; route: word);
+      procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite); virtual; abstract;
+
+      property screenX: integer read getScreenX;
+      property screenY: integer read getScreenY;
+      property screenXP: integer read getScreenXP;
+      property screenYP: integer read getScreenYP;
+      property base: TMapSprite read getBase;
+      property translucency: byte read getTranslucency write setTranslucency;
+   end;
+
    TRpgEvent = class(TRpgCharacter)
    private
       FID: word;
       FTile: TSprite;
-      FBase: TAdditionSprite;
+      FBase: TMapSprite;
       FIsChar: boolean;
-      FEvent: TEvent;
+      FEvent: TRpgMapObject;
 
       function getLocation: TSgPoint;
       procedure setLocation(const Value: TSgPoint);
@@ -100,14 +127,14 @@ type
    protected
       function getX: word; override;
       function getY: word; override;
-      function getBase: TAdditionSprite; override;
+      function getBase: TMapSprite; override;
       procedure doFlash(r, g, b, power: byte; time: cardinal); override;
    public
-      constructor create(base: TAdditionSprite);
+      constructor create(base: TMapSprite);
       destructor Destroy; override;
       destructor delete;
       procedure update;
-      procedure changeSprite(filename: string; index: byte); override;
+      procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite); override;
       procedure switchType;
 
       property map: word read getMap;
@@ -115,7 +142,7 @@ type
       property y: word read getY;
       property facing: byte read getFacing;
       property id: word read FID;
-      property base: TAdditionSprite read FBase;
+      property base: TMapSprite read FBase;
       property location : TSgPoint read getLocation write setLocation;
    end;
 
@@ -144,7 +171,7 @@ type
       function getTranslucency: byte; override;
       procedure setTranslucency(const Value: byte); override;
       procedure doFlash(r, g, b, power: byte; time: cardinal); override;
-      function getBase: TAdditionSprite; override;
+      function getBase: TMapSprite; override;
    public
       constructor Create(database: TRpgDatabase);
       destructor Destroy; override;
@@ -155,7 +182,7 @@ type
       procedure addLevels(const id: smallint; number: integer);
       procedure removeLevels(const id: smallint; number: integer);
       procedure sort;
-      procedure changeSprite(filename: string; index: byte); override;
+      procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite); override;
 
       function takeDamage(power: word; defense, mDefense, variance: byte): word;
       function openSlot: byte;
@@ -180,7 +207,7 @@ type
       FMap: smallint;
       FX: word;
       FY: word;
-      FGameSprite: TAdditionSprite;
+      FGameSprite: TMapSprite;
       FVehicleType: TVehicleSet;
       FCarrying: TRpgParty;
 
@@ -194,13 +221,13 @@ type
    protected
       function getX: word; override;
       function getY: word; override;
-      function getBase: TAdditionSprite; override;
+      function getBase: TMapSprite; override;
       procedure doFlash(r, g, b, power: byte; time: cardinal); override;
    public
       constructor Create({mapTree: TFullTree;} which: TVehicleSet);
       destructor Destroy; override;
       procedure setSprite(filename: string; index: byte);
-      procedure changeSprite(filename: string; index: byte); override;
+      procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite); override;
       function inUse: boolean;
 
       property sprite: string read FSprite;
@@ -210,7 +237,7 @@ type
       property y: word read getY write setY;
       property location: TSgPoint read getLocation write setLocation;
       property facing: byte read getFacing write setFacing;
-      property gamesprite: TAdditionSprite read FGameSprite write FGameSprite;
+      property gamesprite: TMapSprite read FGameSprite write FGameSprite;
       property vehicleType: TVehicleSet read FVehicleType;
       property carrying: TRPgParty read FCarrying write FCarrying;
    end;
@@ -483,7 +510,7 @@ end;
 
 { TRpgEvent }
 
-constructor TRpgEvent.create(base: TAdditionSprite);
+constructor TRpgEvent.create(base: TMapSprite);
 begin
 //   FIsChar := (base is TCharSprite);
    FBase := base;
@@ -518,9 +545,9 @@ begin
    inherited;
 end;
 
-procedure TRpgEvent.changeSprite(filename: string; index: byte);
+procedure TRpgEvent.ChangeSprite(name: string; index: integer; oldSprite: TMapSprite);
 begin
-   base.update(filename, index, base.translucency >= 3);
+   base.update(name, index, base.translucency >= 3);
 end;
 
 procedure TRpgEvent.doFlash(r, g, b, power: byte; time: cardinal);
@@ -528,7 +555,7 @@ begin
    FBase.flash(r, g, b, power, time);
 end;
 
-function TRpgEvent.getBase: TAdditionSprite;
+function TRpgEvent.getBase: TMapSprite;
 begin
    result := self.FBase;
 end;
@@ -766,6 +793,12 @@ begin
    FSavedBgm := FCurrentTrack;
 end;
 
+procedure TRpgMediaPlayer.playAndFreeSfx(soundFile: TRmSound);
+begin
+   playSfx(soundFile);
+   soundFile.Free;
+end;
+
 procedure TRpgMediaPlayer.playMemorizedBgm;
 begin
    if assigned(FSavedBgm) then
@@ -940,7 +973,7 @@ begin
    //end if
 end;
 
-procedure TRpgParty.changeSprite(filename: string; index: byte);
+procedure TRpgParty.ChangeSprite(name: string; index: integer; oldSprite: TMapSprite);
 begin
 {   if assigned(GGameEngine.character[0]) then
    with GGameEngine.character[0] do
@@ -960,7 +993,7 @@ begin
    inherited;
 end;
 
-function TRpgParty.getBase: TAdditionSprite;
+function TRpgParty.getBase: TMapSprite;
 begin
 //   result := GGameEngine.currentParty;
 end;
@@ -1106,7 +1139,7 @@ begin
 end;
 
 procedure TRpgParty.setFacing(const Value: byte);
-var dummy: TAdditionSprite;
+var dummy: TMapSprite;
 begin
 //   dummy := GGameEngine.currentParty;
    case value of
@@ -1174,9 +1207,9 @@ end;
 
 { TRpgVehicle }
 
-procedure TRpgVehicle.changeSprite(filename: string; index: byte);
+procedure TRpgVehicle.ChangeSprite(name: string; index: integer; oldSprite: TMapSprite);
 begin
-   Self.setSprite(filename, index);
+   Self.setSprite(name, index);
 end;
 
 constructor TRpgVehicle.Create({mapTree: TFullTree;} which: TVehicleSet);
@@ -1224,7 +1257,7 @@ begin
    //end if}
 end;
 
-function TRpgVehicle.getBase: TAdditionSprite;
+function TRpgVehicle.getBase: TMapSprite;
 begin
    result := FGameSprite;
 end;
@@ -1330,6 +1363,57 @@ begin
    assert(assigned(page));
 {   if (page.hasScript) and (page.startCondition in [parallel, automatic]) and (not FEvent.playing) and page.valid then
       GCurrentEngine.executeEvent(FEvent, nil);}
+end;
+
+{ TRpgCharacter }
+
+procedure TRpgCharacter.flash(r, g, b, power: byte; time: cardinal; wait: boolean);
+begin
+   doFlash(r, g, b, power, time);
+{   if wait then
+      TEventThread(GCurrentThread).threadSleep(time, true);}
+end;
+
+function TRpgCharacter.getScreenX: integer;
+begin
+//   result := getX - round(GCurrentEngine.parent.WorldX / TILESIZE);
+end;
+
+function TRpgCharacter.getScreenXP: integer;
+begin
+//   result := self.screenX * TILESIZE;
+end;
+
+function TRpgCharacter.getScreenYP: integer;
+begin
+//   result := self.screenY * TILESIZE;
+end;
+
+function TRpgCharacter.getTranslucency: byte;
+begin
+   result := base.translucency;
+end;
+
+procedure TRpgCharacter.move(frequency: byte; skip: boolean; route: word);
+begin
+{   if route > high(GGameEngine.currentMap.routes) then
+      Exit;
+   if not assigned(self.base) then
+      Exit;
+
+   self.base.moveOrder := GGameEngine.currentMap.routes[route];}
+   self.base.canSkip := skip;
+   self.base.moveFreq := between(frequency, 1, 8);
+end;
+
+procedure TRpgCharacter.setTranslucency(const Value: byte);
+begin
+   base.translucency := Value;
+end;
+
+function TRpgCharacter.getScreenY: integer;
+begin
+//   result := getY - round(GCurrentEngine.parent.WorldY / TILESIZE);
 end;
 
 end.

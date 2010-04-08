@@ -69,6 +69,7 @@
 			<DCCReference Include="turbu_2k_map_engine.pas"/>
 			<DCCReference Include="turbu_2k_sprite_engine.pas"/>
 			<DCCReference Include="tiles.pas"/>
+			<DCCReference Include="turbu_map_sprites.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

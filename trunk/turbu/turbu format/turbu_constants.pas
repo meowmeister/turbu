@@ -19,7 +19,7 @@ unit turbu_constants;
 
 interface
 uses
-   types;
+   sg_defs;
 
 {$J+}
 const
@@ -34,13 +34,14 @@ const
    LAYERS: byte = 2;
    ANIM_RATE: byte = 44;  //for water tiles
    ANIM_RATE2: byte = 12; //for animated tiles
+   MAXPARTYSIZE = 4;
 
    //sizes
-   PORTRAIT_SIZE: TPoint  = (X: 48;  Y: 48);
-   SPRITE_SIZE: TPoint    = (X: 24;  Y: 32);
-   LOGICAL_SIZE: TPoint   = (X: 320; Y: 240);
-   PHYSICAL_SIZE: TPoint  = (X: 640; Y: 480);
-   TILE_SIZE: TPoint = (X: 16; Y: 16);
+   PORTRAIT_SIZE: TSgPoint    = (X: 48;  Y: 48);
+   SPRITE_SIZE: TSgPoint      = (X: 24;  Y: 16);
+   LOGICAL_SIZE: TSgPoint     = (X: 320; Y: 240);
+   PHYSICAL_SIZE: TSgPoint    = (X: 640; Y: 480);
+   TILE_SIZE: TSgPoint        = (X: 16; Y: 16);
 
    //archive constants
    BASE_ARCHIVE      = 0;

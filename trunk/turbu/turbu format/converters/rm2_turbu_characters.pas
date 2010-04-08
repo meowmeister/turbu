@@ -48,12 +48,9 @@ type
    function isEmpty(data: THeroRecord): boolean; overload;
    function isEmpty(data: TRm2CharClass): boolean; overload;
 
-var
-   GDefaultExp: TExpCalcFunc = nil;   
-
 implementation
 uses
-   classes, types,
+   Classes, Types, SysUtils,
    formats, turbu_database, turbu_constants, turbu_items, turbu_skills,
    rm2_turbu_skills, rm2_turbu_database;
 
@@ -111,9 +108,7 @@ begin
    self.Create;
    self.id := base.id;
    self.clsName := unicodeString(base.name);
-   self.mapSprite := -1;
    self.battleSprite := base.spriteIndex;
-   self.portrait := -1;
    for i := 1 to COMMAND_COUNT do
    begin
       self.command[i] := base.battleCommand[i] - 1;
@@ -167,13 +162,14 @@ begin
    if (base.charClass <> '') and (base.charClass <> 'None') then
       self.clsName := unicodeString(base.charClass)
    else self.clsName := unicodeString(base.name) + ' Class';
-   if base.sprite <> '' then
-      self.mapSprite := GDatabase.lookupMapSprite(base.sprite, base.spriteIndex)
-   else self.mapsprite := -1;
+   self.mapSprite := format('%s %d', [string(base.sprite), base.spriteIndex]);
    self.battleSprite := base.battleSprite;
    if base.portrait <> '' then
-      self.portrait := GDatabase.lookupPortrait(base.portrait, base.portraitIndex)
-   else self.portrait := -1;
+   begin
+      self.portrait := string(base.portrait);
+      self.portraitIndex := base.portraitIndex;
+   end
+   else self.portraitIndex := -1;
    if (GProjectFormat = pf_2k) or (base.classNum = 0) then
    begin
       for I := 1 to 4 do
@@ -250,7 +246,7 @@ begin
    self.maxLevel := base.maxLevel;
    self.guest := base.computerControlled;
    if base.classNum = 0 then
-      self.charClass := classTable[classTable.indexOf(base.id)].after;
+      self.charClass := classTable[base.id];
 end;
 
 { T2k2BattleCommand }

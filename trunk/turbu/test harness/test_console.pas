@@ -418,12 +418,12 @@ begin
    if not assigned(lCanvas) then
       mnuCreateSdlWindowClick(Sender);
 
-   filename := GDatabase.spriteList[GDatabase.charClass[1].portrait];
+   filename := GDatabase.charClass[1].portrait;
    spriteData := extractSpriteData(filename);
    filename := spriteData.name + '.tbi';
    fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
    try
-      image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, nil, SPRITE_SIZE);
+      image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, nil, SPRITE_TILE_SIZE);
    finally
       fileStream.Free;
    end;

@@ -60,6 +60,8 @@ type
       FItem: word;
       FHero: byte;
       FClock: word;
+      FClock2: word;
+      FVarOperator: byte;
 {$IFDEF ENGINE}
       function evaluate: boolean;
 {$ENDIF}
@@ -205,7 +207,8 @@ type
       property hasScript: boolean read hasScriptFunction;
       property parseStack: TStack read FParseStack write FParseStack;
       property opcode[x: word]: TEventCommand read getOpcode;
-      property len: word read getLength; 
+      property len: word read getLength;
+      property commands: TRpgObjectList<TEventCommand> read FCommands;
 {$IFDEF ENGINE}
       property valid: boolean read isValid;
 {$ENDIF}
@@ -233,7 +236,7 @@ type
       procedure setCurrentlyPlaying(value: boolean); inline;
    public
       constructor createGlobal(input: TStream; expected: word; parent: TEventBlock);
-      constructor create(var input: TStringStream; parent: TEventBlock); {$IFDEF ENGINE} overload;
+      constructor create(input: TStringStream; parent: TEventBlock); {$IFDEF ENGINE} overload;
       constructor create(newScript: string); overload; {$ENDIF}
       destructor Destroy; override;
 {$IFDEF ENGINE}
@@ -423,7 +426,7 @@ end;
 
 { TEvent }
 
-constructor TEvent.create(var input: TStringStream; parent: TEventBlock);
+constructor TEvent.create(input: TStringStream; parent: TEventBlock);
 var
    pagesData: TStringStream;
    i: word;
@@ -858,6 +861,10 @@ begin
    FItem := getNumSec(6, input, fillInEConInt);
    FHero := getNumSec(7, input, fillInEConInt);
    FClock := getNumSec(8, input, fillInEConInt);
+   FClock2 := getNumSec(9, input, fillInEConInt);
+   FVarOperator := getNumSec($A, input, fillInEConInt);
+   if not (peekAhead(input, 0)) then
+      raise EParseMessage.CreateFmt('Unknown section %d found at end of TEventConditions', [peekAhead(input)]);
 end;
 
 constructor TEventConditions.createGlobal(input: TStream);
@@ -2538,8 +2545,8 @@ end;
 procedure fillInEConInt(const expected: byte; out theResult: integer);
 begin
    case expected of
-      2..4, 6, 7: theResult := 1;
-      0, 5, 8: theResult := 0;
+      2..4, 6, 7, $A: theResult := 1;
+      0, 5, 8, 9: theResult := 0;
    else
       begin
          msgBox ('No case implemented for x' + IntToHex(expected, 2) + '!', 'fillInEConInt says:', MB_OK);

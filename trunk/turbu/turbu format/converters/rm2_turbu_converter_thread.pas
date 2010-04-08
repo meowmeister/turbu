@@ -19,9 +19,9 @@ unit rm2_turbu_converter_thread;
 
 interface
 uses
-   classes, windows,
+   classes, windows, Generics.Collections,
    commons, conversion_report, formats, turbu_map_metadata, archiveInterface,
-   LDB, LMT, LMU;
+   LDB, LMT, LMU, events;
 
 type
    TConverterThread = class(TRpgThread)
@@ -31,13 +31,25 @@ type
       FLmt: TFullTree;
       FFromLoc, FToLoc: string;
       FFormat: TProjectFormat;
+      FMapSprites: TStringList;
+      FPortraits: TStringList;
       FBackgrounds: TStringList;
       FBattleBackgrounds: TStringList;
       FSongs: TStringList;
+      FSounds: TStringList;
+      FSysTiles: TStringList;
+      FPictures: TStringList;
+      FMovies: TStringList;
+      FAnims: TStringList;
+      FBattleSprites: TStringList;
       procedure VerifyFormat(datafile: TStream);
       procedure ConvertMap(const filename: string; database: TLcfDataBase; mapTree: TFullTree;
                      metadata: TMapTree; input, output: IArchive);
       procedure CopyResources(input, output: IArchive);
+      procedure ScanCommands(list: TList<TEventCommand>);
+      procedure ScanEventsForResources(block: TEventBlock);
+      procedure ScanPage(page: TEventPage);
+      procedure ScanMove(block: TEventMoveBlock);
    protected
       procedure Execute; override;
    public
@@ -50,14 +62,24 @@ var
 
 implementation
 uses
-   Generics.Collections, SysUtils, StrUtils,
+   SysUtils, StrUtils,
    fileIO, discInterface, logs, locate_files,
    turbu_constants, turbu_database, turbu_unit_dictionary, turbu_engines,
-   turbu_functional, turbu_maps, turbu_classes,
-   rm2_turbu_database, rm2_turbu_maps, rm2_turbu_map_metadata;
+   turbu_functional, turbu_maps, turbu_classes, turbu_pathing, turbu_tbi_lib,
+   rm2_turbu_database, rm2_turbu_maps, rm2_turbu_map_metadata, rm2_turbu_map_objects,
+   sdl, sdl_13, sdlStreams, sdl_image, sg_defs;
 
 const
    CONVERSION_TASKS = 7;
+
+type
+   TImageProcessor = function (archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
+
+function convertSprite(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward; overload;
+function convertPortrait(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
+function convertAnim(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
+function extLength(filename: string): integer; forward; inline;
+function ProcessImage(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
 
 { TConverterThread }
 
@@ -101,6 +123,8 @@ begin
       FSongs.Add(metadata[id].bgmData.name);
       FBattleBackgrounds.Add(metadata[id].battleBgName);
 
+      scanEventsForResources(map.eventBlock);
+
       output.currentFolder := 'maps';
       dummy := 1;
       metadata[id].internalFilename := output.MakeValidFilename(format('%s.tmf', [cmap.name]), dummy);
@@ -114,50 +138,51 @@ begin
 end;
 
 procedure TConverterThread.CopyResources(input, output: IArchive);
+var
+   index: integer;
+   rtpInput: IArchive;
 
-   function extLength(filename: string): integer;
-   begin
-      result := length(ExtractFileExt(filename));
-   end;
-
-   procedure ProcessImage(archive: IArchive; filename: string);
+   procedure processImageList(const folderName, outFolderName, stepname: string;
+                              fileList: TStringList; processor: TImageProcessor);
+   const NOT_FOUND = 'File %s from %s not found!';
    var
-      aFile: TStream;
+      filename: string;
+      lFilename: string;
    begin
-      aFile := archive.getFile(filename);
-      if strUtils.RightStr(filename, 4) = '.png' then
+      if fileList.Find('', index) then
+         filelist.Delete(index);
+      rtpInput.currentFolder := folderName;
+      FReport.newStep(stepname);
+      for filename in input.allFiles(folderName) do
       begin
-         output.writeFile(format('Backgrounds\%s', [filename]), aFile);
-         aFile.Free;
-      end
-      else begin
-         aFile.Free;
+//         lFilename := extractFilename(leftStr(filename, length(filename) - extLength(filename)));
+         if processor(input, outFolderName, filename, false) then
+         begin
+            if fileList.Find(lFilename, index) then
+               fileList.Delete(index);
+         end
+         else FReport.makeError(format(NOT_FOUND, [filename, folderName]));
+      end;
+      for filename in fileList do
+      begin
+         lFilename := ExtractFilename(locate_files.findGraphicF(filename, folderName));
+         if processor(rtpInput, outFolderName, format('%s\%s', [folderName, lFilename]), true) then
+            FReport.makeNotice(format('Copied RTP resource %s.', ['Panorama\'+ filename]))
+         else FReport.makeError(format(NOT_FOUND, [filename, folderName]));
       end;
    end;
 
-var
-   index: integer;
-   filename: string;
-   lFilename: string;
-   rtpInput: IArchive;
 begin
    rtpInput := OpenFolder(locate_files.rtpLocation);
-   rtpInput.currentFolder := 'Panorama';
-   FReport.newStep('Backgrounds');
-   for filename in input.allFiles('Panorama') do
-   begin
-      processImage(input, filename);
-      lFilename := extractFilename(leftStr(filename, length(filename) - extLength(filename)));
-      if FBackgrounds.Find(lFilename, index) then
-         FBackgrounds.Delete(index);
-   end;
-   for filename in FBackgrounds do
-   begin
-      if filename = '' then
-         Continue;
-      processImage(rtpInput, 'Panorama\' + ExtractFilename(locate_files.findGraphicF(filename, 'Panorama')));
-      FReport.makeNotice(format('Copied RTP resource %s.', ['Panorama\'+ filename]));
-   end;
+   processImageList('Panorama', 'Backgrounds', 'Backgrounds', FBackgrounds, processImage);
+   processImageList('System', 'System', 'System layout', FSysTiles, processImage);
+   processImageList('Picture', 'Pictures', 'Images', FPictures, processImage);
+   processImageList('CharSet', 'Mapsprite', 'Character sprites', FMapSprites, convertSprite);
+   processImageList('FaceSet', 'Portrait', 'Character portraits', FPortraits, convertPortrait);
+   processImageList('Battle', 'Animation', 'Battle animations', FAnims, convertAnim);
+   if FFormat = pf_2k3 then
+      processImageList('CharSet', 'Mapsprite', 'Character sprites', FMapSprites, convertSprite);
+   //FSongs FSounds FMovies
 end;
 
 constructor TConverterThread.Create(report: IConversionReport; fromLoc, toLoc: string; format: TProjectFormat);
@@ -179,10 +204,26 @@ begin
    FBackgrounds := CreateSortedStringList;
    FBattleBackgrounds := CreateSortedStringList;
    FSongs := CreateSortedStringList;
+   FMapSprites := CreateSortedStringList;
+   FPortraits := CreateSortedStringList;
+   FSounds := CreateSortedStringList;
+   FSysTiles := CreateSortedStringList;
+   FPictures :=  CreateSortedStringList;
+   FMovies := CreateSortedStringList;
+   FAnims := CreateSortedStringList;
+   FBattleSprites := CreateSortedStringList;
 end;
 
 destructor TConverterThread.Destroy;
 begin
+   FBattleSprites.Free;
+   FAnims.Free;
+   FMovies.Free;
+   FPictures.Free;
+   FSysTiles.Free;
+   FSounds.Free;
+   FMapSprites.Free;
+   FPortraits.Free;
    FBackgrounds.Free;
    FBattleBackgrounds.Free;
    FSongs.Free;
@@ -266,7 +307,8 @@ begin
 
          try
             FReport.setCurrentTask('Converting Database', 12);
-            GDatabase := TRpgDatabase.convert(FLdb, FLmt, dic, legacy, FReport);
+            GDatabase := TRpgDatabase.convert(FLdb, FLmt, dic, legacy, FReport,
+                                              FMapSprites, FPortraits, FAnims, FBattleSprites);
          except
             on E: EMissingPlugin do
             begin
@@ -316,6 +358,75 @@ begin
    end;
 end;
 
+procedure TConverterThread.ScanCommands(list: TList<TEventCommand>);
+var
+   command: TEventCommand;
+   name: string;
+begin
+   try
+      for command in list do
+      begin
+         name := string(command.name);
+         case command.opcode of
+            10130, 10640: FPortraits.Add(name);
+            10630, 10650: FMapSprites.Add(name);
+            10660, 11550: FSongs.Add(name);
+            10670: FSounds.Add(name);
+            10680: FSysTiles.Add(name);
+            11110: FPictures.Add(name);
+            11560: FMovies.Add(name);
+            11720: FBackgrounds.Add(name);
+         end;
+      end;
+   finally
+      list.Free;
+   end;
+end;
+
+procedure TConverterThread.ScanEventsForResources(block: TEventBlock);
+var
+   i, j: integer;
+begin
+   for I := 0 to block.len - 1 do
+      for j := 0 to block.events[i].len - 1 do
+         ScanPage(block.events[i].page[j]);
+end;
+
+procedure TConverterThread.ScanMove(block: TEventMoveBlock);
+var
+   path: TPath;
+   step: TMoveStep;
+begin
+   path := TPath.convert(block);
+   try
+      for step in path.opcodes do
+         if (step.opcode = MOVECODE_CHANGE_SPRITE) then
+            FMapSprites.Add(step.name)
+         else if step.opcode = MOVECODE_PLAY_SFX then
+            FSounds.Add(step.name);
+   finally
+      path.Free;
+   end;
+end;
+
+procedure TConverterThread.ScanPage(page: TEventPage);
+const OPCODES: array [1..12] of integer =
+   (10130, 10630, 10640, 10650, 10660, 10670, 10680, 11110, 11510, 11550, 11560,
+    11720);
+begin
+   if page.filename <> '' then
+      FMapSprites.Add(string(page.filename));
+   if assigned(page.moveBlock.moveBlock) and (page.moveBlock.moveBlock.base <> '') then
+      scanMove(page.moveBlock);//do something
+   scanCommands(page.commands.where(
+      function(arg1: TEventCommand): boolean
+      var
+         dummy: integer;
+      begin
+         result := TArray.BinarySearch<integer>(OPCODES, arg1.opcode, dummy);
+      end));
+end;
+
 procedure TConverterThread.VerifyFormat(datafile: TStream);
 begin
    GProjectFormat := scanRmFormat(datafile);
@@ -324,5 +435,177 @@ begin
 end;
 
 { Classless }
+
+procedure convertImage(image: PSdlSurface; id: integer; frame, sprite, sheet: TSgPoint; name, style: string; dirty: boolean = false);
+var
+   blitSurface: PSdlSurface;
+   framesPerSprite: integer;
+   startingPoint: TSgPoint;
+   i: integer;
+   srcrect, dstrect: TSDLRect;
+   convertedImage: TStream;
+   writename: string;
+begin
+   framesPerSprite := sprite.X * sprite.Y;
+   blitSurface := TSdlSurface.Create(frame.X, frame.Y * framesPerSprite, 8, 0, 0, 0, 0);
+   try
+      if not blitSurface.SetPalette(image.format.palette.colors, 0, image.format.palette.count) then
+         raise EInvalidImage.CreateFmt('Unable to convert sprite %s due to colorkey failure!', [name]);
+      blitSurface.ColorKey := image.ColorKey;
+
+      if id = -1 then
+         startingPoint := SgPoint(0, 0)
+      else
+         startingPoint := SgPoint((id mod sheet.X) * frame.X * sprite.X, (id div sheet.X) * frame.Y * sprite.Y);
+      blitSurface.Fill(nil, blitSurface.ColorKey);
+      for i := 0 to framesPerSprite - 1 do
+      begin
+         srcrect := rect(SgPoint(frame.X * (i mod sprite.X), frame.Y * (i div sprite.X)), frame);
+         inc(srcrect.left, startingPoint.X);
+         inc(srcrect.top, startingPoint.Y);
+         dstrect := rect(SgPoint(0, i * frame.Y), frame);
+         SDL_BlitSurface(image, @srcrect, blitSurface, @dstrect);
+      end;
+      convertedImage := saveToTBI(blitSurface, frame, dirty);
+      convertedImage.Seek(0, soFromBeginning);
+      try
+         writename := style + '\' + ChangeFileExt(name, '');
+         if id <> -1 then
+            writename := writename + ' ' + intToStr(id);
+         writename := writename + '.png';
+         GArchives[IMAGE_ARCHIVE].writeFile(writename, convertedImage);
+      finally
+         convertedImage.free;
+      end;
+   finally
+      blitSurface.free;
+   end;
+end;
+
+function ConvertWholeImage(input: TStream; dirty: boolean): TStream;
+var
+   surface: PSdlSurface;
+   rw: PSdl_RWops;
+begin
+   surface := nil;
+   rw := SDLStreamSetup(input);
+   try
+      surface := PSdlSurface(IMG_Load_RW(rw, 0));
+      if surface = nil then
+         Exit(nil);
+      result := saveToTBI(surface, SgPoint(surface.Width, surface.Height), dirty);
+   finally
+      SDLStreamCloseRWops(rw);
+      surface.Free;
+   end;
+end;
+
+function convertSprite(name: string; id: integer; dirty: boolean): boolean; overload;
+const
+   FRAME: TSgPoint = (X: 24; Y: 32);
+   SPRITE: TSgPoint = (X: 3; Y: 4);
+   SHEET: TSgPoint = (X: 4; Y: 2);
+var
+   oname: string;
+   image: PSdlSurface;
+begin
+   name := extractFileName(name);
+   oname := name;
+   findGraphic(name, 'charset');
+   if name = '' then
+      Exit(false);
+   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(name))));
+   try
+      convertImage(image, id, FRAME, SPRITE, SHEET, oname, 'mapsprite', dirty);
+   finally
+      image.free;
+   end;
+   result := true;
+end;
+
+function convertSprite(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; overload;
+var i: integer;
+begin
+   result := true;
+   for I := 0 to 7 do
+      result := result and convertSprite(filename, i, dirty);
+end;
+
+function convertPortrait(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
+const
+   FRAME: TSgPoint = (X: 48; Y: 48);
+   SPRITE: TSgPoint = (X: 4; Y: 4);
+   SHEET: TSgPoint = (X: 1; Y: 1);
+var
+   oname: string;
+   image: PSdlSurface;
+begin
+   filename := extractFileName(filename);
+   oname := filename;
+   findGraphic(filename, 'faceset');
+   if filename = '' then
+      Exit(false);
+   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(filename))));
+   try
+      convertImage(image, -1, FRAME, SPRITE, SHEET, oname, 'portrait', dirty);
+   finally
+      image.free;
+   end;
+   result := true;
+end;
+
+function convertAnim(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
+const
+   FRAME: TSgPoint = (X: 96; Y: 96);
+   SHEET: TSgPoint = (X: 1; Y: 1);
+var
+   oname: string;
+   image: PSdlSurface;
+   sprite: TSgPoint;
+begin
+   filename := extractFileName(filename);
+   oname := filename;
+   findGraphic(filename, 'battle');
+   if filename = '' then
+      Exit(false);
+   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(filename))));
+   sprite := SgPoint(5, image.width div 96);
+   try
+      convertImage(image, -1, FRAME, sprite, SHEET, oname, 'animation', dirty);
+   finally
+      image.free;
+   end;
+   result := true;
+end;
+
+function extLength(filename: string): integer;
+begin
+   result := length(ExtractFileExt(filename));
+end;
+
+function ProcessImage(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
+var
+   aFile, tbi: TStream;
+begin
+   result := archive.fileExists(filename);
+   if not result then
+      Exit;
+
+   aFile := archive.getFile(filename);
+   try
+      if strUtils.RightStr(filename, 4) <> '.png' then
+      begin
+         tbi := ConvertWholeImage(aFile, dirty);
+         if not assigned(tbi) then
+            Exit;
+         filename := ChangeFileExt(filename, '.png');
+         aFile.Free;
+         aFile := tbi;
+      end;
+      GArchives[IMAGE_ARCHIVE].writeFile(format('%s\%s', [outFolderName, extractFileName(filename)]), aFile)
+   finally
+      aFile.Free;
+   end;
+end;
 
 end.

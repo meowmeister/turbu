@@ -102,7 +102,7 @@ end;
 
 function TRttiEnumerator.GetCurrent: TValue;
 begin
-   result := FCurrent.GetValue(FBase.GetReferenceToRawData);
+   result := FCurrent.GetValue(PPointer(FBase.GetReferenceToRawData)^);
 end;
 
 function TRttiEnumerator.GetEnumerator: TRttiEnumerator;
