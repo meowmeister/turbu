@@ -432,6 +432,7 @@ begin
                  TVersion.Create(0, 0, 0)) as IDesignMapEngine;
    FMapEngine.initialize(imgLogo.sdlWindow, GDatabase);
    FMapEngine.autosaveMaps := mnuAutosaveMaps.checked;
+   FCurrentMap := nil; //The map engine can free this, so we can't hold a reference
    FCurrentMap := FMapEngine.loadMap(value);
    self.configureScrollBars(FMapEngine.mapSize, FMapEngine.mapPosition);
    fMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));

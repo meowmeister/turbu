@@ -275,7 +275,6 @@ uses
 
 constructor TSprite.Create(const AParent: TParentSprite);
 begin
-   inherited Create;
    if assigned(AParent) then
    begin
       FParent := AParent;
@@ -285,7 +284,7 @@ begin
       else
          FEngine := FParent.Engine;
       Inc(FEngine.FAllCount);
-     end;
+   end;
    FVisible := True;
 end;
 
@@ -429,7 +428,8 @@ begin
                FImageType := itSpriteSheet
             else FImageType := itSingleImage;
          FImageIndex := FEngine.FImages.IndexOf(FImageName);
-      end;
+      end
+      else asm int 3 end;
    end;
 end;
 

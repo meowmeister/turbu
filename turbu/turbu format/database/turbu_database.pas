@@ -83,9 +83,6 @@ type
       FUnits: TUnitDictionary;
       FSkillAlgs: TStringList;
       FStatAlgs: TStringList;
-      FSpriteList: TStringList;
-      FPortraitList: TStringList;
-      FAnimList: TStringList;
       FMapTree: TMapTree;
 
       FMoveMatrix: TMoveMatrixArray;
@@ -174,9 +171,6 @@ type
       property tileGroup: TTileDictionary read FTileGroup write FTileGroup;
       property scripts: TScriptList read FScripts write FScripts;
 
-      property spriteList: TStringList read FSpriteList write FSpriteList;
-      property portraitList: TStringList read FPortraitList write FPortraitList;
-      property animList: TStringList read FAnimList write FAnimlist;
       property units: TUnitDictionary read FUnits write setUnits;
       property projectName: string read getProjectName;
    end;
@@ -193,8 +187,8 @@ uses
    turbu_functional;
 
 const
-   MIN_DBVERSION = 31;
-   DBVERSION = 31;
+   MIN_DBVERSION = 32;
+   DBVERSION = 32;
 
 { TRpgDatabase }
 
@@ -306,9 +300,6 @@ begin
       lassert(subStream.readChar = 'L');
       loadStringList(subStream, FSkillAlgs);
       loadStringList(subStream, FStatAlgs);
-      loadStringList(subStream, FSpriteList);
-      loadStringList(subStream, FPortraitList);
-      loadStringList(subStream, FAnimList);
       loadStringList(substream, FSwitches);
       loadStringList(substream, FVariables);
       loadStringList(substream, FFloats);
@@ -319,9 +310,6 @@ begin
    end;
    lassert(savefile.readInt = FSkillAlgs.Count);
    lassert(savefile.readInt = FStatAlgs.Count);
-   lassert(savefile.readInt = FSpriteList.Count);
-   lassert(savefile.readInt = FPortraitList.Count);
-   lassert(savefile.readInt = FAnimList.Count);
 
    k := savefile.readInt;
    FUnits := TUnitDictionary.Create(k * 2);
@@ -347,6 +335,7 @@ begin
    turbu_skills.setDatabase(self);
    turbu_tilesets.setDatabase(self);
 
+   GArchives[DATABASE_ARCHIVE].CurrentFolder := '';
    j := savefile.readInt;
    if j > 0 then
    begin
@@ -594,17 +583,11 @@ begin
 
    savefile.writeInt(FSkillAlgs.Count);
    savefile.writeInt(FStatAlgs.Count);
-   savefile.writeInt(FSpriteList.Count);
-   savefile.writeInt(FPortraitList.Count);
-   savefile.writeInt(FAnimList.Count);
    substream := TMemoryStream.Create;
    try
       substream.writeChar('L');
       saveStringList(substream, FSkillAlgs);
       saveStringList(substream, FStatAlgs);
-      saveStringList(substream, FSpriteList);
-      saveStringList(substream, FPortraitList);
-      saveStringList(substream, FAnimList);
       saveStringList(substream, FSwitches);
       saveStringList(substream, FVariables);
       saveStringList(substream, FFloats);
@@ -882,9 +865,6 @@ begin
    FStrings.Free;
    FUnits.Free;
    FStatAlgs.Free;
-   FSpriteList.Free;
-   FPortraitList.Free;
-   FAnimList.Free;
    FClass.Free;
    FHero.Free;
    FCommand.Free;

@@ -156,7 +156,6 @@ const
    BASE_MOVE_DELAY = 133;
    MOVE_DELAY: array[1..6] of integer = (BASE_MOVE_DELAY * 8, BASE_MOVE_DELAY * 4, BASE_MOVE_DELAY * 2, BASE_MOVE_DELAY, BASE_MOVE_DELAY div 2, BASE_MOVE_DELAY div 4);
    WIDTH_BIAS = 4;
-//   BASE_FOOTSTEP_CONSTANT = 6;
    FOOTSTEP_CONSTANT: array[1..6] of integer = (11, 10, 8, 6, 5, 5); //yay for fudge factors!
    MAX_TRANSPARENCY = 7;
    TRANSPARENCY_STEP = 255 div (MAX_TRANSPARENCY + 1);
@@ -174,7 +173,7 @@ constructor TAdditionSprite.create(baseEvent: TEvent; const AParent: TSpriteEngi
 begin
    inherited Create;
    FCharacter := char;
-{   FEngine := AParent as TGameMap;
+//   FEngine := AParent as TGameMap;
    FMoveRate := 4;
    FEvent := baseEvent;
    FWhichFrame := -1;
@@ -197,7 +196,7 @@ begin
          end;
          else assert(false);
       end;
-   end;}
+   end;
 end;
 
 procedure TAdditionSprite.decTransparencyFactor;
@@ -326,7 +325,7 @@ function TAdditionSprite.canJump(which: TMoveOrder): boolean;
    end;
 
 var
-   i: word;
+   i: smallint;
    target: TSgPoint;
 begin
    i := which.index;

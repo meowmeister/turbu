@@ -38,7 +38,7 @@ type
 
       procedure addOpcode(input: TMoveRecord);
       function getCommand(index: word): TMoveRecord;
-      function getLast: word;
+      function getLast: smallint;
    public
       constructor Create(data: ansiString; loop: boolean); overload;
       constructor Create(direction: TFacing); overload;
@@ -49,7 +49,7 @@ type
       property base: ansiString read FString;
       property command[index: word]: TMoveRecord read getCommand;
       property index: word read FPointer write FPointer;
-      property last: word read getLast;
+      property last: smallint read getLast;
       property loop: boolean read FLoop;
       property looped: boolean read FLooped write FLooped;
    end;
@@ -74,7 +74,7 @@ begin
    result := FOpcodes[index];
 end;
 
-function TMoveOrder.getLast: word;
+function TMoveOrder.getLast: smallint;
 begin
    result := high(FOpcodes);
 end;
@@ -140,13 +140,19 @@ begin
                            //in the debugger
          numStream.Read(dummy.opcode, 1);
          assert(dummy.opcode in [0..$29]);
+         if not (dummy.opcode in [$20..$23]) then
+            Continue;
          if dummy.opcode in [$20, $21] then
          begin
             converter := TBerConverter.Create(numStream);
             dummy.data[1] := converter.getData;
          end
          else if dummy.opcode = $22 then
-            dummy.name := string(getString(numStream))
+         begin
+            dummy.name := string(getString(numStream));
+            converter := TBerConverter.Create(numStream);
+            dummy.data[1] := converter.getData;
+         end
          else if dummy.opcode = $23 then
          begin
             dummy.name := string(getString(numStream));

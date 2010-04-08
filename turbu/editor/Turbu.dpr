@@ -32,7 +32,6 @@ uses
   turbu_main in 'turbu_main.pas' {frmTurbuMain},
   formats in '..\formats.pas',
   rm_converter in 'rm_converter.pas' {frmRmConverter},
-  archiveInterface in '..\archiveInterface.pas',
   rm2_turbu_characters in '..\turbu format\converters\rm2_turbu_characters.pas',
   skill_settings in 'skill_settings.pas' {frmSkillLearning},
   generic_algorithm_editor in 'generic_algorithm_editor.pas' {frmAlgorithmEditor},
@@ -66,10 +65,10 @@ uses
   rm2_turbu_converter_thread in '..\turbu format\converters\rm2_turbu_converter_thread.pas',
   turbu_functional in '..\turbu_functional.pas',
   rm2_turbu_tilesets in '..\turbu format\converters\rm2_turbu_tilesets.pas',
-  addition_sprite in '..\mapview\libs\map engine\addition_sprite.pas',
   map_tree_controller in 'map_tree_controller.pas',
   delete_map in 'delete_map.pas' {dlgDeleteMap},
-  rm2_turbu_map_objects in '..\turbu format\converters\rm2_turbu_map_objects.pas';
+  rm2_turbu_map_objects in '..\turbu format\converters\rm2_turbu_map_objects.pas',
+  conversion_output in '..\turbu format\converters\conversion_output.pas' {frmConversionOutput};
 
 {$R *.res}
 

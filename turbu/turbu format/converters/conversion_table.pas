@@ -19,7 +19,7 @@ unit conversion_table;
 
 interface
 uses
-   sysUtils;
+   sysUtils, Generics.Collections;
 
 type
    EConversionTableError = class(Exception);
@@ -29,18 +29,7 @@ type
       before, after: integer;
    end;
 
-   TConversionTable = class(TObject)
-   private
-      FTable: array of TConvertRecord;
-      function getValue(x: integer): TConvertRecord; inline;
-      function getLength: integer; inline;
-   public
-      procedure add(const before, after: integer);
-      function indexOf(value: integer): integer;
-
-      property len: integer read getLength;
-      property list[x: integer]: TConvertREcord read getValue; default;
-   end;
+   TConversionTable = class(TDictionary<integer, integer>);
 
    TNameRecord = record
       name: string;
@@ -63,32 +52,6 @@ type
    end;
 
 implementation
-
-{ TConversionTable }
-
-procedure TConversionTable.add(const before, after: integer);
-begin
-   setLength(FTable, length(FTable) + 1);
-   FTable[high(FTable)].before := before;
-   FTable[high(FTable)].after := after;
-end;
-
-function TConversionTable.getLength: integer;
-begin
-   result := length(FTable);
-end;
-
-function TConversionTable.getValue(x: integer): TConvertRecord;
-begin
-   result := FTable[x];
-end;
-
-function TConversionTable.indexOf(value: integer): integer;
-begin
-   result := high(FTable);
-   while (result >= 0) and (FTable[result].before <> value) do
-      dec(result);
-end;
 
 { TNameTable }
 

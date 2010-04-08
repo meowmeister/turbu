@@ -28,6 +28,8 @@ type
    end;
 
 implementation
+uses
+   SysUtils;
 
 { T2k2SoundTemplate }
 
@@ -35,7 +37,7 @@ constructor T2k2SoundTemplate.Convert(base: TRmMusic);
 begin
    inherited Create;
    if base.filename <> '' then
-      self.filename := string(base.filename)
+      self.filename := ExtractFileName(string(base.filename))
    else self.filename := '(OFF)';
    self.fadeIn := base.fadeIn;
    self.tempo := base.tempo;

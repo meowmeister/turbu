@@ -30,6 +30,7 @@ type
    end;
 
    IArchive = interface(IInterface)
+      function fileExists(name: string): boolean;
       function getFile(key: string): TStream;
       procedure writeFile(key: string; theFile: TStream);
       function allFiles(folder: string = ''): TEnumerable<string>;

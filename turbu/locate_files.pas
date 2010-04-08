@@ -40,16 +40,25 @@ var
    lFilename: string;
    extension: string;
 begin
-   for extension in list do
+   if pos('.', filename) = 0 then
    begin
-      lFileName := folder + fileName + extension;
-      if FileExists(lFilename) then
+      for extension in list do
       begin
-         filename := lFilename;
-         Exit(true);
+         lFilename := folder + fileName + extension;
+         if FileExists(lFilename) then
+         begin
+            filename := lFilename;
+            Exit(true);
+         end;
       end;
+      result := false;
+   end
+   else begin
+      lFilename := folder + filename;
+      result := FileExists(lFilename);
+      if result then
+         filename := lFilename;
    end;
-   result := false;
 end;
 
 

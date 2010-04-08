@@ -54,6 +54,7 @@ type
       FRoot: string;
       FCollection: TFileCollection;
       procedure setFilter(filter: string);
+      function adjustFilename(name: string): string;
    private //IArchive implementation
       function getFile(key: string): TStream;
       procedure writeFile(key: string; theFile: TStream);
@@ -63,6 +64,7 @@ type
       procedure setCurrentFolder(const value: string);
       function getCurrentFolder: string;
       procedure deleteFile(name: string);
+      function FileExists(key: string): boolean;
    public
       constructor Create(root: string);
       destructor Destroy; override;
@@ -189,14 +191,35 @@ begin
    result := FCollection.FList.Count;
 end;
 
+function TDiscArchive.adjustFilename(name: string): string;
+var
+   path: string;
+begin
+   path := ExtractFilePath(FCollection.path);
+   if pos(path, name) <> 1 then
+   begin
+      if pos(FCollection.FPath, name) = 1 then
+         result := FRoot + name
+      else result := path + name;
+   end
+   else result := name;
+end;
+
+function TDiscArchive.FileExists(key: string): boolean;
+var
+   filename: string;
+begin
+   key := adjustFilename(key);
+   result := sysUtils.FileExists(key);
+end;
+
 function TDiscArchive.getFile(key: string): TStream;
 var
    filestream: TFileStream;
 begin
    try
-      if pos(FRoot, key) <> 1 then
-         fileStream := TFileStream.Create(FRoot + key, fmOpenRead)
-      else fileStream := TFileStream.Create(key, fmOpenRead);
+      key := adjustFilename(key);
+      fileStream := TFileStream.Create(key, fmOpenRead);
       try
          result := TMemoryStream.Create;
          result.CopyFrom(fileStream, fileStream.Size);
@@ -282,7 +305,7 @@ begin
       if not ForceDirectories(foldername) then
          raise EArchiveError.Create('Unable to create folder ' + foldername);
    end;
-   if fileExists(filename) then
+   if sysUtils.fileExists(filename) then
       sysUtils.DeleteFile(filename);
    dummy := TFileStream.Create(filename, fmCreate);
    try
@@ -344,8 +367,17 @@ begin
 end;
 
 function TFileCollection.getPath: string;
+var
+   lPath: string;
 begin
-   result := IncludeTrailingPathDelimiter(FRoot) + IncludeTrailingPathDelimiter(FPath);
+   result := IncludeTrailingPathDelimiter(FRoot);
+   if FPath <> '' then
+   begin
+      if pos('*', FPath) = 0 then
+         lPath := FPath
+      else lPath := ExtractFilePath(ExcludeTrailingPathDelimiter(FPath));
+      result := result + IncludeTrailingPathDelimiter(lPath);
+   end;
 end;
 
 procedure TFileCollection.pureSetPath(const Value: string);

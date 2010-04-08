@@ -4,12 +4,13 @@ interface
 uses
    types, Generics.Collections,
    charset_data, turbu_maps, turbu_map_engine, tiles, turbu_tilesets,
-   turbu_map_objects,
+   turbu_map_objects, turbu_containers, turbu_map_sprites,
    sdl_sprite, sdl_canvas, SDL_ImageManager;
 
 type
    TTileMatrix = TMatrix<TTile>;
    TTileMatrixList = class(TObjectList<TTileMatrix>);
+   TMapSpriteList = class(TRpgObjectList<TMapSprite>);
 
    TFacingSet = set of TFacing;
 
@@ -24,10 +25,12 @@ type
       FMapRect: TRect;
       FCurrentLayer: integer;
       FBlank: boolean;
+      FMapObjects: TMapSpriteList;
 
       procedure SetViewport(const viewport: TRect);
       procedure loadTileMatrix(const value: TTileList; index: integer; const viewport: TRect);
       function CreateNewTile(value: TTileRef): TTile;
+      function FullCreateNewTile(x, y, layer: integer): TTile;
       function GetMaxLayer: integer; inline;
    public
       constructor Create(map: TRpgMap; const viewport: TRect;
@@ -40,8 +43,9 @@ type
       procedure AdvanceFrame;
       function GetTile(x, y, layer: integer): TTile;
       function GetTopTile(x, y: integer): TTile;
-
       procedure RecreateTileMatrix;
+
+      procedure EnsureImage(const filename: string);
 
       property overlapping: TFacingSet read FOverlapping;
       property viewport: TRect read FViewport write SetViewport;
@@ -172,15 +176,40 @@ begin
       {FBgImage := TSdlImage.Create(map.bgName, map.bgName, images)}; //needs a real filename
 
    //populate events
+   FMapObjects := TMapSpriteList.Create;
    for mapObj in map.mapObjects do
-      ;
+   begin
+      if mapObj.id = 0 then
+         Continue;
+      if mapObj.isTile then
+         FMapObjects.Add(TEventSprite.Create(mapObj, self, nil))
+      else
+         FMapObjects.Add(TCharSprite.Create(mapObj, self, nil));
+   end;
 end;
 
 destructor T2kSpriteEngine.Destroy;
 begin
+   FMapObjects.Free;
    FTiles.Free;
    FMap.Free;
    inherited;
+end;
+
+procedure T2kSpriteEngine.EnsureImage(const filename: string);
+begin
+   if (filename <> '') and (not self.Images.Contains(filename)) then
+      self.Images.AddSpriteFromArchive(format('mapsprite\%s.png', [filename]), filename, SPRITE_SIZE);
+end;
+
+function T2kSpriteEngine.FullCreateNewTile(x, y, layer: integer): TTile;
+var
+   tile: TTileRef;
+begin
+   tile := FMap.getTile(x, y, layer);
+   result := CreateNewTile(tile);
+   if assigned(result) then
+      result.place(x, y, layer, tile, FTileset);
 end;
 
 function T2kSpriteEngine.GetMaxLayer: integer;
@@ -194,7 +223,7 @@ var
 begin
    if not assigned(FTiles.First[x, y]) then
       for I := 0 to FTiles.Count - 1 do
-         FTiles[i][x, y] := CreateNewTile(FMap.getTile(x, y, layer));
+         FTiles[i][x, y] := FullCreateNewTile(x, y, i);
    result := FTiles[layer][x, y];
 end;
 
@@ -203,13 +232,14 @@ var
    i: integer;
 begin
    result := GetTile(x, y, GetMaxLayer);
-   if not assigned(result) then
-      for i := self.MaxLayer - 1 downto 0 do
-      begin
-         result := FTiles[i][x, y];
-         if assigned(result) then
-            Exit;
-      end;
+   if assigned(result) then
+      Exit;
+   for i := self.MaxLayer - 1 downto 0 do
+   begin
+      result := FTiles[i][x, y];
+      if assigned(result) then
+         Exit;
+   end;
    assert(false); //should not reach this point
 end;
 

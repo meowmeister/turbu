@@ -118,11 +118,12 @@ type
       FSpriteData: TSpriteData;
       FMatrixPosition: TSgPoint;
       FCurrentTexture: integer;
-      FSpriteToLoad: integer;
+      FSpriteIndexToLoad: integer;
+      FSpriteToLoad: string;
       FOldWeaponScroll: TDatasetNotifyEvent;
 
-      procedure loadPortrait(id: integer);
-      procedure loadMapSprite(id: integer; frame: byte);
+      procedure loadPortrait(name: string; id: integer);
+      procedure loadMapSprite(name: string; id: integer; frame: byte);
       procedure weaponsAfterScroll(DataSet: TDataSet);
    public
       constructor Create(AOwner: TComponent); override;
@@ -230,9 +231,9 @@ end;
 
 procedure TframeClass.imgMapSpriteAvailable(Sender: TObject);
 begin
-   if FSpriteToLoad > 0 then
+   if FSpriteToLoad <> '' then
    begin
-      loadPortrait(FSpriteToLoad);
+      loadPortrait(FSpriteToLoad, FSpriteIndexToLoad);
       imgMapSprite.Flip;
    end;
 end;
@@ -313,7 +314,7 @@ begin
    end;
 end;
 
-procedure TframeClass.loadPortrait(id: integer);
+procedure TframeClass.loadPortrait(name: string; id: integer);
 var
    filename: string;
    dummy: integer;
@@ -323,20 +324,19 @@ var
 begin
    if not imgMapSprite.Available then
    begin
-      FSpriteToLoad := id;
+      FSpriteIndexToLoad := id;
+      FSpriteToLoad := name;
       exit;
    end;
-   assert(assigned(GDatabase.portraitList));
    if not assigned(FImageList) then
    begin
       FImageList := TSdlImages.Create;
       FNameList := TStringList.Create;
    end;
 
-   if id >= 0 then
+   if name <> '' then
    begin
-     dummy := id div 16;
-     filename := GDatabase.portraitList[dummy] + '.tbi';
+     filename := format('portrait\%s.png', [name]);
      if FImageList.IndexOf(filename) = -1 then
      begin
         try
@@ -355,7 +355,7 @@ begin
      assert(image.Texture.ID > 0);
      imgMapSprite.Textures.Add(image.Texture);
 
-     spriteRect := image.spriteRect[id mod 16];
+     spriteRect := image.spriteRect[id];
      imgMapSprite.DrawTexture(image.Texture, @spriteRect);
      imgMapSprite.Flip;
    end
@@ -400,7 +400,7 @@ begin
    imgMapSprite.Active := false;
 end;
 
-procedure TframeClass.loadMapSprite(id: integer; frame: byte);
+procedure TframeClass.loadMapSprite(name: string; id: integer; frame: byte);
 var
    filename: string;
    dummy: integer;
@@ -408,7 +408,6 @@ var
    fileStream: TStream;
    spriteRect, destRect: TRect;
 begin
-   assert(assigned(GDatabase.spriteList));
    if not assigned(FImageList) then
    begin
       FImageList := TSdlImages.Create;
@@ -416,8 +415,9 @@ begin
    end;
 
    dummy := id;
-   FSpriteData := extractSpriteData(GDatabase.spriteList[dummy]);
-   filename := FSpriteData.name + '.tbi';
+   FSpriteData.name := name;
+   FSpriteData.moveMatrix := id;
+   filename := format('mapsprite\%s.png', [FSpriteData.name]);
    if FImageList.IndexOf(filename) = -1 then
    begin
       try
@@ -477,8 +477,10 @@ end;
 procedure TframeClass.tabGraphicsChange(Sender: TObject);
 begin
    case (sender as TTabControl).TabIndex of
-      0: loadPortrait(dsCharClass.DataSet.FieldByName('portrait').AsInteger);
-      1: loadMapSprite(max(0, (dsCharClass.DataSet.FieldByName('mapSprite').AsInteger)),
+      0: loadPortrait(dsCharClass.DataSet.FieldByName('portrait').AsString,
+                      dsCharClass.DataSet.FieldByName('portraitIndex').AsInteger);
+      1: loadMapSprite(dsCharClass.DataSet.FieldByName('mapSprite').asString,
+                       max(0, (dsCharClass.DataSet.FieldByName('actionMatrix').asInteger)),
                        nextPosition(GDatabase.moveMatrix[FSpriteData.moveMatrix], FMatrixPosition));
       2: {fix this later};
       else assert(false);
@@ -496,7 +498,9 @@ begin
 
    matrix := GDatabase.moveMatrix[FSpriteData.moveMatrix];
    case tabGraphics.TabIndex of
-      1: loadMapSprite(max(0, (dsCharClass.DataSet.FieldByName('mapSprite').AsInteger)), nextPosition(matrix, FMatrixPosition));
+      1: loadMapSprite(dsCharClass.DataSet.FieldByName('mapSprite').AsString,
+                       max(0, (dsCharClass.DataSet.FieldByName('moveMatrix').AsInteger)),
+                       nextPosition(matrix, FMatrixPosition));
       2: {fix this later};
       else assert(false);
    end;

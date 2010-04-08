@@ -34,7 +34,8 @@ contains
   map_default_plugin in 'map_default_plugin.pas',
   turbu_2k_map_engine in 'turbu_2k_map_engine.pas',
   turbu_2k_sprite_engine in 'turbu_2k_sprite_engine.pas',
-  tiles in 'tiles.pas';
+  tiles in 'tiles.pas',
+  turbu_map_sprites in 'turbu_map_sprites.pas';
 
 end.
 

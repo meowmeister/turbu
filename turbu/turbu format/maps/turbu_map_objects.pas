@@ -89,11 +89,14 @@ type
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
 
+      function isTile: boolean; inline;
+
       property conditionBlock: TRpgEventConditions read FConditions;
       property whichTile: word read FFrame write FFrame;
       property direction: TFacing read FDirection write FDirection;
       property transparent: boolean read FTransparent write FTransparent;
       property path: TPath read FPath write FPath;
+      property moveIgnore: boolean read FMoveIgnore write FMoveIgnore;
       property moveType: TMoveType read FMoveType write FMoveType;
       property moveFrequency: byte read FMoveFrequency write FMoveFrequency;
       property startCondition: TStartCondition read FStartCondition write FStartCondition;
@@ -122,6 +125,7 @@ type
    private
       FCurrentPage: TRpgEventPage;
       FPageChanged: boolean;
+      FLocked: boolean;
    public //no idea why, but marking this protected generates a bad VMT.
       class function keyChar: ansiChar; override;
    public
@@ -134,6 +138,7 @@ type
       function isTile: boolean;
 
       property location: TSgPoint read FLocation write FLocation;
+      property pages: TPageList read FPages;
       property page[x: integer]: TRpgEventPage read getPage; default;
 {      constructor createGlobal(input: TStream; expected: word; parent: TEventBlock);
       constructor create(var input: TStringStream; parent: TEventBlock); overload;
@@ -143,9 +148,9 @@ type
       property parent: TEventBlock read FParent;
       property newCurrentPage: TRpgEventPage read getCurrentPage;
       property playing: boolean read isCurrentlyPlaying write setCurrentlyPlaying;
-      property locked: boolean read FLocked write FLocked;
       property deleted: boolean read FDeleted write FDeleted;
 }
+      property locked: boolean read FLocked write FLocked;
       property currentPage: TRpgEventPage read FCurrentPage;
       property updated: boolean read FPageChanged;
    end;
@@ -167,6 +172,8 @@ begin
    for i := 0 to savefile.readInt - 1 do
       FPages.Add(TRpgEventPage.Load(savefile, self));
    readEnd(savefile);
+   if FPages.Count > 0 then
+      FCurrentPage := FPages[0];
 end;
 
 procedure TRpgMapObject.save(savefile: TStream);
@@ -206,7 +213,7 @@ end;
 
 function TRpgMapObject.isTile: boolean;
 begin
-   result := FCurrentPage.tilegroup <> -1;
+   result := FCurrentPage.isTile;
 end;
 
 class function TRpgMapObject.keyChar: ansiChar;
@@ -255,6 +262,11 @@ begin
    FPath.Free;
    FConditions.Free;
    inherited Destroy;
+end;
+
+function TRpgEventPage.isTile: boolean;
+begin
+   result := self.tilegroup <> -1;
 end;
 
 function TRpgEventPage.isValid: boolean;

@@ -65,8 +65,7 @@ implementation
 
 
 uses
-   rpg_list, script_interface, script_backend, charset_data, {rpg_image,}
-   addition_sprite;
+   rpg_list, script_interface, script_backend, charset_data {, rpg_image};
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)

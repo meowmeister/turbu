@@ -213,9 +213,9 @@ begin
    FCurrentLayer := value;
    for enumerator in FCurrentMap.tileset.Records do
    begin
-      image := retrieveImage(enumerator.group.filename);
+      image := retrieveImage('tileset', enumerator.group.filename);
       if not assigned(image) then
-         Continue;
+         asm int 3 end;
       texture := image.Texture;
       if value in enumerator.layers then
          texture.alpha := $FF

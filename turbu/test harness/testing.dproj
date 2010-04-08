@@ -88,7 +88,6 @@
 			<DCCReference Include="..\turbu format\database\turbu_items.pas"/>
 			<DCCReference Include="..\mapview\libs\script engine\script_interface.pas"/>
 			<DCCReference Include="..\mapview\libs\script engine\script_backend.pas"/>
-			<DCCReference Include="..\mapview\libs\map engine\addition_sprite.pas"/>
 			<DCCReference Include="..\mapview\libs\timing.pas"/>
 			<DCCReference Include="..\turbu format\turbu_unit_dictionary.pas"/>
 			<DCCReference Include="..\..\classes\findfile\findfile.pas"/>
@@ -201,6 +200,12 @@
 				<Form>frmTestMapSize</Form>
 			</DCCReference>
 			<DCCReference Include="..\turbu format\database\turbu_map_metadata.pas"/>
+			<DCCReference Include="..\turbu format\maps\turbu_map_objects.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_map_sprites.pas"/>
+			<DCCReference Include="..\turbu format\turbu_pathing.pas"/>
+			<DCCReference Include="..\turbu format\converters\conversion_output.pas">
+				<Form>frmConversionOutput</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

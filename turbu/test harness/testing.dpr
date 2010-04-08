@@ -20,7 +20,6 @@ uses
   turbu_items in '..\turbu format\database\turbu_items.pas',
   script_interface in '..\mapview\libs\script engine\script_interface.pas',
   script_backend in '..\mapview\libs\script engine\script_backend.pas',
-  addition_sprite in '..\mapview\libs\map engine\addition_sprite.pas',
   timing in '..\mapview\libs\timing.pas',
   turbu_unit_dictionary in '..\turbu format\turbu_unit_dictionary.pas',
   findfile in '..\..\classes\findfile\findfile.pas',
@@ -97,7 +96,11 @@ uses
   rttiHelper in '..\rttiHelper.pas',
   turbu_serialization in '..\turbu_serialization.pas',
   test_map_size in 'test_map_size.pas' {frmTestMapSize},
-  turbu_map_metadata in '..\turbu format\database\turbu_map_metadata.pas';
+  turbu_map_metadata in '..\turbu format\database\turbu_map_metadata.pas',
+  turbu_map_objects in '..\turbu format\maps\turbu_map_objects.pas',
+  turbu_map_sprites in '..\engines\map engine\turbu_map_sprites.pas',
+  turbu_pathing in '..\turbu format\turbu_pathing.pas',
+  conversion_output in '..\turbu format\converters\conversion_output.pas' {frmConversionOutput};
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

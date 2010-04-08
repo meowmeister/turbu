@@ -20,18 +20,19 @@ unit rm2_turbu_database;
 interface
 
 uses
+   classes,
    LDB, LMT, turbu_database, turbu_unit_dictionary, conversion_report;
 
 type
 
    T2k2Database = class helper for TRpgDatabase
    private
-      procedure buildNameLists(base: TLcfDatabase; ConversionReport: IConversionReport);
+      procedure buildNameLists(base: TLcfDatabase; ConversionReport: IConversionReport;
+                          spriteList, portList, animList, battleSpriteList: TStringList);
    public
       constructor convert(base: TLcfDatabase; tree: TFullTree; dic: TUnitDictionary;
-                          legacy: TLegacySections; ConversionReport: IConversionReport);
-      function lookupMapSprite(name: ansiString; index: byte): integer;
-      function lookupPortrait(name: ansiString; index: byte): integer;
+                          legacy: TLegacySections; ConversionReport: IConversionReport;
+                          spriteList, portList, animList, battleSpriteList: TStringList);
    end;
 
 var
@@ -39,7 +40,7 @@ var
 
 implementation
 uses
-   sysUtils, classes, zlib,
+   sysUtils, zlib,
    turbu_characters, turbu_items, turbu_skills, turbu_animations, conversion_table,
    turbu_resists, turbu_map_metadata,
    rm2_turbu_items, rm2_turbu_characters, rm2_turbu_skills, rm2_turbu_animations,
@@ -49,112 +50,28 @@ uses
    hero_data, locate_files,
    archiveInterface, formats, commons, turbu_battle_engine, turbu_engines, logs,
    turbu_map_engine,
-   SDL, SDL_13, sdl_image;
-
-var
-   nameTable: TNameTable;
+   SDL, SDL_13, sdl_image, sg_defs;
 
 const
-   INDEX_SPRITE = 0;
-   INDEX_PORTRAIT = 1;
-   INDEX_ANIM = 2;
    MOVE_MATRIX: array[0..3, 0..3] of byte = ((0, 1, 2, 1), (3, 4, 5, 4), (6, 7, 8, 7), (9, 10, 11, 10));
-
-function convertSprite(name: string; id: integer): boolean; forward;
-function convertPortrait(name: string): boolean; forward;
-function convertAnim(name: string): boolean; forward;
 
 { T2k2Database }
 
-procedure T2k2Database.buildNameLists(base: TLcfDatabase; ConversionReport: IConversionReport);
+procedure T2k2Database.buildNameLists(base: TLcfDatabase; ConversionReport: IConversionReport;
+                          spriteList, portList, animList, battleSpriteList: TStringList);
 var
-   counter: integer;
-   dummy: string;
-   i, j: integer;
-
-   function scanMapSprite(name: ansiString; index: byte): boolean;
-   begin
-      result := true;
-      dummy := 'mapsprite\' + unicodeString(name) + ' ' + intToStr(index);
-      if (name <> '') and (nameTable.indexOf(dummy, INDEX_SPRITE) = -1) then
-      begin
-         nameTable.add(dummy, counter);
-         result := convertSprite(unicodeString(name), index);
-         inc(counter);
-      end;
-   end;
-
-   function scanPortrait(name: ansiString): boolean;
-   begin
-      result := true;
-      dummy := 'portrait\' + unicodeString(name);
-      if (name <> '') and (nameTable.indexOf(dummy, INDEX_PORTRAIT) = -1) then
-      begin
-         nameTable.add(dummy, counter);
-         result := convertPortrait(unicodeString(name));
-         inc(counter);
-      end;
-   end;
-
-   function scanAnim(name: ansiString): boolean;
-   begin
-      result := true;
-      dummy := 'animations\' + unicodeString(name);
-      if (name <> '') and (nameTable.indexOf(dummy, INDEX_ANIM) = -1) then
-      begin
-         nameTable.add(dummy, counter);
-         result := convertAnim(unicodeString(name));
-         inc(counter);
-      end;
-   end;
-
-   function saveList(name: string; appendZero: boolean = false): TStringList;
-   begin
-      j := -1;
-      result := TStringList.Create;
-      while (i < nameTable.len) and (nameTable[i].id > j) do
-      begin
-         assert(nameTable[i].id = j + 1);
-         dummy := nameTable[i].name;
-         if appendZero then
-            dummy := dummy + '* 0';
-         result.add(dummy);
-         inc(i);
-         inc(j);
-      end;
-   end;
-
+   i: integer;
 begin
-   { Set up name table }
-   ConversionReport.newStep('Preparing name tables.');
-   ConversionReport.newStep('Hero sprites.');
-   nameTable.newDivision;
-   counter := 0;
    for i := 1 to base.heroes do
-      if not scanMapSprite(base.hero[i].sprite, base.hero[i].spriteIndex) then
-         base.hero[i].sprite := '';
+      spriteList.add(string(base.hero[i].sprite));
 
-   ConversionReport.newStep('Hero portraits.');
-   nameTable.newDivision;
-   counter := 0;
    for i := 1 to base.heroes do
-      if not scanPortrait(base.hero[i].portrait) then
-         base.hero[i].portrait := '';
+      portList.Add(string(base.hero[i].portrait));
 
-   ConversionReport.newStep('Battle animations.');
-   nameTable.newDivision;
-   counter := 0;
    for i := 1 to base.anims do
-      if not scanAnim(base.anim[i].filename) then
-         base.anim[i].filename := '';
+      animList.Add(string(base.anim[i].filename));
 
    { worry about battlesprites later }
-
-   i := 0;
-
-   self.spriteList := saveList('spritelist', true);
-   self.portraitList := saveList('portraitlist');
-   self.animlist := saveList('animlist');
 end;
 
 function setup2kCommand(value: integer): TBattleCommand;
@@ -176,7 +93,8 @@ begin
 end;
 
 constructor T2k2Database.convert(base: TLcfDatabase; tree: TFullTree;
-   dic: TUnitDictionary; legacy: TLegacySections; ConversionReport: IConversionReport);
+   dic: TUnitDictionary; legacy: TLegacySections; ConversionReport: IConversionReport;
+   spriteList, portList, animList, battleSpriteList: TStringList);
 var
    i, j: integer;
    counter, classes: integer;
@@ -225,12 +143,10 @@ begin
    // create conversion tables
    classTable := TConversionTable.Create;
    heroClassTable := TConversionTable.Create;
-   nameTable.free;
-   nameTable := TNameTable.Create;
    self.statSet := TStatSet.Create;
 
    try
-      buildNameLists(base, ConversionReport);
+      buildNameLists(base, ConversionReport, spriteList, portList, animList, battleSpriteList);
 
       ConversionReport.newStep('Converting heroes');
       // COMMANDS
@@ -271,7 +187,7 @@ begin
                inc(counter);
          end;
          counter := base.charClasses;
-         classes := classTable.len;
+         classes := classTable.count;
       end
       else begin
          counter := 0;
@@ -355,160 +271,6 @@ begin
       classTable.free;
       heroClassTable.free;
    end;
-end;
-
-function T2k2Database.lookupMapSprite(name: ansiString; index: byte): integer;
-begin
-   assert(assigned(nameTable));
-   assert(index in [0..7]);
-   result := nameTable.indexOf(format('mapsprite\%s %d', [name, index]), INDEX_SPRITE);
-   if result < 0 then
-      raise EConversionTableError.CreateFmt('Sprite name "%s" not found in conversion table!', [name]);
-end;
-
-function T2k2Database.lookupPortrait(name: ansiString; index: byte): integer;
-begin
-   assert(assigned(nameTable));
-   assert(index in [0..15]);
-   result := (nameTable.indexOf('portrait\' + unicodeString(name), INDEX_PORTRAIT) * 16) + index;
-   if result < 0 then
-      raise EConversionTableError.CreateFmt('Portrait name "%s" not found in conversion table!', [name]);
-end;
-
-{ Classless }
-
-function convertImage(image: PSdlSurface; id: integer; frame, sprite, sheet: TPoint; name, style: string): boolean;
-var
-   blitSurface: PSdlSurface;
-   framesPerSprite: integer;
-   startingPoint: TPoint;
-   i: integer;
-   srcrect, dstrect: TSDLRect;
-   convertedImage: TStream;
-   writename: string;
-begin
-   framesPerSprite := sprite.X * sprite.Y;
-   blitSurface := TSdlSurface.Create(frame.X, frame.Y * framesPerSprite, 8, 0, 0, 0, 0);
-   try
-      if not blitSurface.SetPalette(image.format.palette.colors, 0, image.format.palette.count) then
-         raise EInvalidImage.CreateFmt('Unable to convert sprite %s due to colorkey failure!', [name]);
-      blitSurface.ColorKey := image.ColorKey;
-
-      if id = -1 then
-         startingPoint := point(0, 0)
-      else
-         startingPoint := point((id mod sheet.X) * frame.X * sprite.X, (id div sheet.X) * frame.Y * sprite.Y);
-      blitSurface.Fill(nil, blitSurface.ColorKey);
-      for i := 0 to framesPerSprite - 1 do
-      begin
-         srcrect := rect(point(frame.X * (i mod sprite.X), frame.Y * (i div sprite.X)), frame);
-         inc(srcrect.left, startingPoint.X);
-         inc(srcrect.top, startingPoint.Y);
-         dstrect := rect(point(0, i * frame.Y), frame);
-         SDL_BlitSurface(image, @srcrect, blitSurface, @dstrect);
-      end;
-      convertedImage := saveToTBI(blitSurface);
-      convertedImage.Seek(0, soFromBeginning);
-      try
-         writename := style + '\' + name;
-         if id <> -1 then
-            writename := writename + ' ' + intToStr(id);
-         writename := writename + '.tbi';
-         archiveInterface.GArchives[IMAGE_ARCHIVE].writeFile(writename, convertedImage);
-      finally
-         convertedImage.free;
-      end;
-   finally
-      blitSurface.free;
-   end;
-   result := true;
-end;
-
-function convertSprite(name: string; id: integer): boolean;
-const
-   FRAME: TPoint = (X: 24; Y: 32);
-   SPRITE: TPoint = (X: 3; Y: 4);
-   SHEET: TPoint = (X: 4; Y: 2);
-var
-   oname: string;
-   image: PSdlSurface;
-begin
-   result := false;
-   oname := name;
-   findGraphic(name, 'charset');
-   if name = '' then
-   begin
-      logs.logText(format('Unable to locate charset image %s for conversion', [oname]));
-      Exit;
-   end;
-   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(name))));
-   try
-      result := convertImage(image, id, FRAME, SPRITE, SHEET, oname, 'mapsprite');
-   finally
-      image.free;
-   end;
-end;
-
-function convertPortrait(name: string): boolean;
-const
-   FRAME: TPoint = (X: 48; Y: 48);
-   SPRITE: TPoint = (X: 4; Y: 4);
-   SHEET: TPoint = (X: 1; Y: 1);
-var
-   oname: string;
-   image: PSdlSurface;
-begin
-   result := false;
-   oname := name;
-   findGraphic(name, 'faceset');
-   if name = '' then
-   begin
-      logs.logText(format('Unable to locate portrait image %s for conversion', [oname]));
-      Exit;
-   end;
-   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(name))));
-   try
-      result := convertImage(image, -1, FRAME, SPRITE, SHEET, oname, 'portrait');
-   finally
-      image.free;
-   end;
-end;
-
-function convertAnim(name: string): boolean;
-const
-   FRAME: TPoint = (X: 96; Y: 96);
-   SHEET: TPoint = (X: 1; Y: 1);
-var
-   oname: string;
-   image: PSdlSurface;
-   sprite: TPoint;
-
-begin
-   result := false;
-   oname := name;
-   findGraphic(name, 'battle');
-   if name = '' then
-   begin
-      logs.logText(format('Unable to locate battle anim image %s for conversion', [oname]));
-      Exit;
-   end;
-   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(name))));
-   sprite := point(5, image.width div 96);
-   try
-      result := convertImage(image, -1, FRAME, sprite, SHEET, oname, 'animation');
-   finally
-      image.free;
-   end;
-end;
-
-initialization
-begin
-   nameTable := nil;
-end;
-
-finalization
-begin
-   nameTable.free;
 end;
 
 end.
