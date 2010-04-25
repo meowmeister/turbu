@@ -109,8 +109,10 @@ type
    {$M-}
 
    TColorShift = packed record
+   private type
+      TColorArray = array[TColorSet] of single;
    private
-      FColorset: array[TColorSet] of single;
+      FColorset: TColorArray;
       FHue: shortint;
 
       function getColor(x: TColorSet): single;

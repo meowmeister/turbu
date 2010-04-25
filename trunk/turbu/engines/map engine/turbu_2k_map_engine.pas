@@ -59,6 +59,7 @@ type
       procedure OnTimer(Sender: TObject);
    protected
       procedure cleanup; override;
+      procedure AfterPaint; virtual;
    public
       constructor Create; override;
       destructor Destroy; override;
@@ -95,6 +96,11 @@ end;
 { T2kMapEngine }
 
 const TILE_SIZE = 16;
+
+procedure T2kMapEngine.AfterPaint;
+begin
+   //this virtual method intentionally left blank
+end;
 
 procedure T2kMapEngine.cleanup;
 var i: integer;
@@ -250,6 +256,7 @@ begin
    SDL_SetRenderDrawColor(0, 0, 0, 255);
    FCanvas.Clear;
    FCurrentMap.Draw;
+   self.AfterPaint;
    FCanvas.Flip;
 end;
 

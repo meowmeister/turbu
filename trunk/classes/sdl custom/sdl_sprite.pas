@@ -80,6 +80,7 @@ type
       function GetPatternHeight: Integer; inline;
       function GetPatternCount: Integer; inline;
       function GetBoundsRect: TRect; inline;
+    procedure SetParent(const Value: TParentSprite);
    protected
       FEngine: TSpriteEngine;
       FParent: TParentSprite;
@@ -89,7 +90,7 @@ type
       procedure DoDraw; virtual;
       procedure DoMove(const MoveCount: Single); virtual;
       procedure SetImageName(const Value: string); virtual;
-      procedure SetZ(const Value: Cardinal); virtual;
+      procedure SetZ(const Value: Cardinal);
       procedure SetPatternIndex(const Value: Integer); virtual;
       function InVisibleRect: boolean; virtual;
    public
@@ -101,6 +102,7 @@ type
       procedure SetPos(X, Y: Single; Z: Integer); overload;
       procedure Draw; virtual;
       procedure Dead; virtual;
+      procedure DrawTo(const dest: TRect);
 
       property Visible: Boolean read FVisible write FVisible;
       property X: Single read FX write FX;
@@ -117,7 +119,7 @@ type
       property Name: string read FName write FName;
       property Moves: Boolean read FMoves write FMoves;
       property Engine: TSpriteEngine read FEngine write FEngine;
-      property Parent: TParentSprite read FParent;
+      property Parent: TParentSprite read FParent write SetParent;
       property Tag: Integer read FTag write FTag;
       property Red: Byte read FRed write FRed;
       property Green: Byte read FGreen write FGreen;
@@ -159,6 +161,7 @@ type
       property Items[Index: Integer]: TSprite read GetItem; default;
       property Count: Integer read GetCount;
       property SpriteList: TFastSpriteList read FSpriteList;
+      property List: TSpriteList read FList;
    end;
 
    TAnimatedSprite = class(TParentSprite)
@@ -251,6 +254,7 @@ type
       FVisibleHeight: Integer;
       FImages: TSdlImages;
       FCanvas: TSdlCanvas;
+      FDestroying: boolean;
 
    public
       constructor Create(const AParent: TSpriteEngine; const ACanvas: TSdlCanvas); reintroduce;
@@ -344,6 +348,15 @@ begin
    end;
 end;
 
+procedure TSprite.DrawTo(const dest: TRect);
+begin
+   case FImageType of
+      itSingleImage: FImage.DrawTo(dest);
+      itSpriteSheet: FImage.DrawSpriteTo(dest, FPatternIndex);
+      itRectSet: FImage.DrawRectTo(dest, Self.DrawRect);
+   end;
+end;
+
 function TSprite.GetPatternWidth: Integer;
 begin
    if assigned(FImage) then
@@ -400,6 +413,20 @@ procedure TSprite.SetPos(X, Y: Single);
 begin
    FX := X;
    FY := Y;
+end;
+
+procedure TSprite.SetParent(const Value: TParentSprite);
+begin
+   if FParent = value then
+      Exit;
+
+   if assigned(FParent) then
+   begin
+      FParent.UnDraw(self);
+      FParent.FList.Extract(self);
+   end;
+   FParent := Value;
+   Value.Add(self);
 end;
 
 procedure TSprite.SetPatternIndex(const Value: Integer);
@@ -487,6 +514,9 @@ end;
 
 procedure TParentSprite.Add(Sprite: TSprite);
 begin
+   if FEngine.FDestroying then
+      raise ESpriteError.Create('Can''t add sprites while the engine is being destroyed.');
+
    if FList = nil then
       FList := TSpriteList.Create(false);
    FList.Add(Sprite);
@@ -526,19 +556,15 @@ begin
 end;
 
 procedure TParentSprite.Clear;
-var
-   i: integer;
 begin
-   i := count;
-   while i > 0 do
-   begin
-      dec(i);
-      Items[i].Free;
-      i := count;
-//      FList.Delete(i);
-   end;
    if assigned(FSpriteList) then
       FSpriteList.Clear;
+   if assigned(FList) then
+   begin
+      FList.OwnsObjects := true;
+      FList.Clear;
+      Flist.OwnsObjects := false;
+   end;
 end;
 
 procedure TParentSprite.ClearSpriteList;
@@ -749,11 +775,13 @@ begin
    FVisibleWidth := 800;
    FVisibleHeight := 600;
    FCanvas := ACanvas;
+   FEngine := self;
 end;
 
 destructor TSpriteEngine.Destroy;
 begin
    FDeadList.Free;
+   FDestroying := true;
    inherited Destroy;
 end;
 

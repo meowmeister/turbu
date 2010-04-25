@@ -33,7 +33,8 @@ implementation
 uses
    classes, SysUtils, Generics.Collections,
    locate_files, archiveInterface, turbu_constants, turbu_database,
-   sdl, sdl_13, sdl_image, sdlstreams, sdl_sprite;
+   turbu_tbi_lib,
+   sdl, sdl_13, sdl_image, sdlstreams, sg_defs, sdl_sprite;
 
 { T2k2TileSet }
 
@@ -83,11 +84,14 @@ const
                  'border12', 'lowtile1', 'lowtile2', 'lowtile3', 'hitile1',
                  'hitile2', 'hitile3');
 
-   KEYNAME = '%s-%s';
+   MINI_SIZE = [0..2, 4..15];
 
-{  TTileType = set of (tsBordered, tsAnimated);
-   TTileAttribute = (taUp, taDown, taLeft, taRight, taCeiling, taOverhang, taCountertop);
-   TTileAttributes = set of TTileAttribute; }
+   TILE_SIZE: array[boolean] of TSgPoint = (
+   (x: 16; y: 16),
+   (x: 8; y: 8)
+   );
+
+   KEYNAME = '%s-%s';
 
 function convertAttributes(value: integer): TTileAttributes;
 const
@@ -116,6 +120,30 @@ begin
       include(result, taCountertop);
 end;
 
+procedure CreateNewGroup(const lFilename, oFilename: string; i: integer);
+var
+   newGroup: TTileGroup;
+begin
+   newGroup := TTileGroup.Create;
+   newGroup.name := lFilename;
+   newGroup.filename := lFilename;
+   if i = 1 then
+   begin
+      newGroup.linkedFilename := format(KEYNAME, [oFilename, TILESET_NAME[0]]);
+      newGroup.ocean := true;
+   end
+   else if i in [0, 2] then
+      newGroup.linkedFilename := format(KEYNAME, [oFilename, TILESET_NAME[1]]);
+   case i of
+      0..2: newGroup.tileType := [tsBordered, tsAnimated];
+      3: newGroup.tileType := [tsAnimated];
+      4..15: newGroup.tileType := [tsBordered];
+      else newGroup.tileType := [];
+   end;
+   newGroup.dimensions := TILE_SIZE[(i in MINI_SIZE)];
+   GDatabase.tileGroup.Add(lFilename, newGroup);
+end;
+
 function convertGroup(filename: string): boolean;
 var
    surface: PSdlSurface;
@@ -124,8 +152,6 @@ var
    i: integer;
    oFilename, lFilename: string;
    outfile: TStream;
-   rw: PSdl_RWops;
-   newGroup: TTileGroup;
 begin
    oFilename := filename;
    outFile := nil;
@@ -144,33 +170,10 @@ begin
       try
          subsurface.CopyPaletteFrom(surface);
          SDL_BlitSurface(surface, @currentRect, subSurface, nil);
-         outFile := TMemoryStream.Create;
-         rw := SDLStreamSetup(outFile);
-         IMG_SavePNG_RW(pointer(subSurface), rw);
-         SDL_FreeRW(rw);
-         outFile.Seek(0, soFromBeginning);
+         outfile := saveToTBI(subsurface, TILE_SIZE[i in MINI_SIZE], pos(rtpLocation, filename) > 0);
          lFilename := format(KEYNAME, [oFilename, TILESET_NAME[i]]);
-         GArchives[turbu_constants.IMAGE_ARCHIVE].writeFile(format('tileset\%s.png', [lFilename]), outfile);
-         newGroup := TTileGroup.Create;
-         newGroup.name := lFilename;
-         newGroup.filename := lFilename;
-         if i = 1 then
-         begin
-            newGroup.linkedFilename := format(KEYNAME, [oFilename, TILESET_NAME[0]]);
-            newGroup.ocean := true;
-         end
-         else if i in [0, 2] then
-            newGroup.linkedFilename := format(KEYNAME, [oFilename, TILESET_NAME[1]]);
-         case i of
-            0..2: newGroup.tileType := [tsBordered, tsAnimated];
-            3: newGroup.tileType := [tsAnimated];
-            4..15: newGroup.tileType := [tsBordered];
-            else newGroup.tileType := [];
-         end;
-         if not (tsBordered in newGroup.tileType) then
-            newGroup.dimensions := point(16, 16)
-         else newGroup.dimensions := point(8, 8);
-         GDatabase.tileGroup.Add(lFilename, newGroup);
+         GArchives[IMAGE_ARCHIVE].writeFile(format('tileset\%s.png', [lFilename]), outfile);
+         CreateNewGroup(lFilename, oFilename, i);
       finally
          freeAndNil(outFile);
          subSurface.Free;

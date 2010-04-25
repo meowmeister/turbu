@@ -18,6 +18,8 @@ type
    end;
 
    T2k2RpgEventConditions = class helper for TRpgEventConditions
+   private
+      function convertConditionals(base: events.TPageConditions): TPageConditionSet;
    public
       constructor Convert(base: TEventConditions);
    end;
@@ -34,7 +36,7 @@ type
 implementation
 uses
    SysUtils,
-   rm2_turbu_maps;
+   turbu_defs, rm2_turbu_maps;
 
 { T2k2RpgMapObject }
 
@@ -109,12 +111,10 @@ var
 begin
    dec := decode(tile + 10000);
    self.whichTile := dec.baseTile;
-   FName := '*' + intToStr(dec.group); //* character can't be used in filenames
+   FName := '*' + intToStr(dec.group + 9); //* character can't be used in filenames
 end;
 
 constructor T2k2RpgEventPage.Convert(base: TEventPage; id: integer; parent: TRpgMapObject);
-var
-   movebase: string;
 begin
    FId := id;
    self.FConditions := TRpgEventConditions.Convert(base.conditionBlock);
@@ -138,13 +138,38 @@ end;
 
 constructor T2k2RpgEventConditions.Convert(base: TEventConditions);
 begin
+
+   self.conditions := convertConditionals(base.conditions);
    self.switch1Set := base.switch1Set;
    self.switch2Set := base.switch2Set;
    self.variable1Set := base.variableSet;
    self.variable1Value := base.variableValue;
+   self.variable1Op := TComparisonOp(base.varOperator);
    self.itemNeeded := base.itemNeeded;
    self.heroNeeded := base.heroNeeded;
    self.timeRemaining := base.timeRemaining;
+   self.timeRemaining2 := base.clock2;
+   self.timer1Op := co_ltE;
+   self.timer2Op := co_ltE;
+end;
+
+function T2k2RpgEventConditions.convertConditionals(base: events.TPageConditions): TPageConditionSet;
+begin
+   result := [];
+   if base[switch1] then
+      include(result, pc_switch1);
+   if base[switch2] then
+      include(result, pc_switch2);
+   if base[variable1] then
+      include(result, pc_var1);
+   if base[item] then
+      include(result, pc_item);
+   if base[hero] then
+      include(result, pc_hero);
+   if base[timer] then
+      include(result, pc_timer1);
+   if base[timer2] then
+      include(result, pc_timer2);
 end;
 
 end.

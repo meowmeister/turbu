@@ -62,10 +62,21 @@ type
       conditions: TClientDataSet;
       scriptRange: TClientDataSet;
       metadata: TClientDataSet;
+      animations_timingSec: TClientDataSet;
+      animations_frameSec: TClientDataSet;
+      tilesets: TClientDataSet;
+      heroes: TClientDataSet;
+      heroes_Conditions: TClientDataSet;
+      heroes_Resists: TClientDataSet;
+      heroes_skillset: TClientDataSet;
+      Floats: TClientDataSet;
+      Strings: TClientDataSet;
+      Switches: TClientDataSet;
+      Variables: TClientDataSet;
 
       dsCharClasses: TDataSource;
       charClassesid: TIntegerField;
-      charClassesName: TStringField;
+      charClassesName: TWideStringField;
       charClassesmodified: TBooleanField;
       items_scriptusableByHero: TBytesField;
       items_scriptscript: TMemoField;
@@ -74,16 +85,14 @@ type
       metadataBgmState: TByteField;
       metadataMapEngine: TShortintField;
       charClassesSp: TLargeintField;
-      animations_timingSec: TClientDataSet;
-      animations_frameSec: TClientDataSet;
-      tilesets: TClientDataSet;
+      heroesportraitShiftFColorSet1: TSingleField;
 
       procedure DataModuleCreate(Sender: TObject);
       procedure restoreClone(DataSet: TDataSet);
       procedure charClasses_skillsetCalcFields(DataSet: TDataSet);
       procedure DataModuleDestroy(Sender: TObject);
       procedure classFilter(DataSet: TDataSet; var Accept: Boolean);
-      procedure scriptRecordsBeforeInsert(DataSet: TDataSet);
+      procedure SwitchesVarsCalcFields(DataSet: TDataSet);
    private
       { Private declarations }
 
@@ -213,9 +222,16 @@ begin
    end;
 end;
 
-procedure TdmDatabase.scriptRecordsBeforeInsert(DataSet: TDataSet);
+procedure TdmDatabase.SwitchesVarsCalcFields(DataSet: TDataSet);
+const
+   DISPLAY_NAME = '%.4d: %s';
+var
+   idField: TIntegerField;
+   nameField: TWideStringField;
 begin
-   asm int 3 end;
+   idField := dataset.FieldByName('id') as TIntegerField;
+   nameField := dataset.FieldByName('name') as TWideStringField;
+   dataset.FieldByName('DisplayName').AsString := format(DISPLAY_NAME, [idField.Value, nameField.Value]);
 end;
 
 function TdmDatabase.usableByFilter(field: TBytesField; master: TDataset): boolean;

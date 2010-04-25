@@ -20,12 +20,13 @@ unit turbu_main;
 interface
 
 uses
-   Controls, Classes, Forms, Menus, Graphics, ExtCtrls, StdCtrls, ComCtrls,
+   Controls, Classes, Forms, Menus, ExtCtrls, StdCtrls, ComCtrls,
    Generics.Collections, Dialogs, ImgList, ToolWin,
    JvComponentBase, JvPluginManager,
    design_script_engine, turbu_plugin_interface, turbu_engines, turbu_map_engine,
    turbu_map_interface, turbu_map_metadata,
-   sdl_frame, sdl, sdl_13, sg_defs;
+   sdl_frame, sdl, sdl_13, sg_defs, ActnList, PlatformDefaultStyleActnCtrls,
+  ActnMan;
 
 type
    TfrmTurbuMain = class(TForm)
@@ -69,7 +70,17 @@ type
       mnuTestbugreps: TMenuItem;
       ToolButton2: TToolButton;
       btnRun: TToolButton;
-    btnPause: TToolButton;
+      btnPause: TToolButton;
+      btnMapObj: TToolButton;
+    Layer11: TMenuItem;
+    ActionManager: TActionManager;
+    actLayer1: TAction;
+    actLayer2: TAction;
+    actMapObjects: TAction;
+    Layer21: TMenuItem;
+    MapObjects1: TMenuItem;
+    N1: TMenuItem;
+    ToolButton4: TToolButton;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -107,6 +118,8 @@ type
       procedure mnuTestbugrepsClick(Sender: TObject);
       procedure btnRunClick(Sender: TObject);
       procedure btnPauseClick(Sender: TObject);
+      procedure btnMapObjClick(Sender: TObject);
+      procedure imgLogoDblClick(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentMap: IRpgMap;
@@ -161,9 +174,6 @@ const
 procedure TfrmTurbuMain.displayPalette(height: integer);
 
    procedure DrawPaletteCursor(const aRect: TRect);
-   const
-      SDL_BLACK: sdl_13.TSDL_Color = ();
-      SDL_WHITE: sdl_13.TSDL_Color = (r: $FF; g: $FF; b:$FF);
    begin
       imgPalette.DrawRect(aRect, SDL_BLACK);
       imgPalette.DrawRect(constrictRect(aRect, 1), SDL_WHITE);
@@ -240,10 +250,8 @@ begin
 end;
 
 procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);
-var
-   dummy: TSdlTexture;
 begin
-   FPaletteTexture := imgPalette.AddTexture(surface, dummy);
+   FPaletteTexture := imgPalette.AddTexture(surface);
    surface.Free;
    bindPaletteCursor;
    resizePalette;
@@ -336,7 +344,7 @@ var
    convert1, convert2: PSdlSurface;
    rw: PSDL_RWops;
    stream: TResourceStream;
-   texture: TSdlTexture;
+   index: integer;
 begin
    stream := TResourceStream.Create(HInstance, 'logo', RT_RCDATA);
    rw := SDLStreamSetup(stream);
@@ -345,14 +353,19 @@ begin
    convert1 := TSdlSurface.Create(1, 1, 32);
    convert2 := TSdlSurface.Convert(surface, convert1.Format);
 
-   SDL_SelectRenderer(imgLogo.SdlWindow);
-   texture := tsdlTexture.Create(0, convert2);
+   index := imgLogo.AddTexture(convert2);
    SDLStreamCloseRWops(rw);
    stream.Free;
    surface.Free;
    convert1.Free;
 
-   imgLogo.DrawTexture(texture);
+   imgLogo.DrawTexture(index);
+end;
+
+procedure TfrmTurbuMain.imgLogoDblClick(Sender: TObject);
+begin
+   RequireMapEngine;
+   FMapEngine.doubleClick;
 end;
 
 procedure TfrmTurbuMain.imgLogoMouseDown(Sender: TObject; Button: TMouseButton;
@@ -586,16 +599,21 @@ end;
 procedure TfrmTurbuMain.setLayer(const value: integer);
 begin
    RequireMapEngine;
-   if not FPaletteImages.ContainsKey(value) then
+   if value >= 0 then
    begin
-      assignPaletteImage(FMapEngine.tilesetImage[value]);
-      FPaletteImages.add(value, FPaletteTexture);
+      imgPalette.Enabled := true;
+      if not FPaletteImages.ContainsKey(value) then
+      begin
+         assignPaletteImage(FMapEngine.tilesetImage[value]);
+         FPaletteImages.add(value, FPaletteTexture);
+      end
+      else begin
+         FPaletteTexture := FPaletteImages[value];
+         bindPaletteCursor;
+         resizePalette;
+      end;
    end
-   else begin
-      FPaletteTexture := FPaletteImages[value];
-      bindPaletteCursor;
-      resizePalette;
-   end;
+   else imgPalette.Enabled := false;
    FMapEngine.SetCurrentLayer(value);
 end;
 
@@ -638,6 +656,11 @@ end;
 procedure TfrmTurbuMain.splSidebarMoved(Sender: TObject);
 begin
    resizePalette;
+end;
+
+procedure TfrmTurbuMain.btnMapObjClick(Sender: TObject);
+begin
+   setLayer(-1);
 end;
 
 procedure TfrmTurbuMain.btnLayer1Click(Sender: TObject);

@@ -57,31 +57,11 @@ type
       dsMapid: TIntegerField;
       dsMapname: TStringField;
       dsMapmodified: TBooleanField;
-      dsMaptileset: TIntegerField;
-      dsMapsizex: TIntegerField;
-      dsMapsizey: TIntegerField;
       dsMapdepth: TByteField;
-      dsMapwraparound: TByteField;
       dsMaptileMap: TBlobField;
-      dsMaphasBG: TBooleanField;
-      dsMapbgName: TStringField;
-      dsMapvscroll: TByteField;
-      dsMaphscroll: TByteField;
-      dsMapscrollSpeedx: TIntegerField;
-      dsMapscrollSpeedy: TIntegerField;
-      dsMapscriptFormat: TByteField;
-      dsMapscriptFile: TStringField;
-      dsMapencounterScript: TStringField;
-      dsMapencounters1: TIntegerField;
-      dsMapencounters2: TIntegerField;
-      dsMapencounters3: TIntegerField;
-      dsMapencounters4: TIntegerField;
       srcTileset: TDataSource;
       srcScript: TDataSource;
       StaticText1: TStaticText;
-    StaticText2: TStaticText;
-    StaticText3: TStaticText;
-    StaticText4: TStaticText;
       procedure FormShow(Sender: TObject);
       procedure btnApplyClick(Sender: TObject);
       procedure FormCreate(Sender: TObject);
@@ -133,8 +113,7 @@ begin
             metadata.upload(ds);
          map.upload(frmMapProperties.dsMap);
          dimensions := map.size;
-         if dmDatabase.tilesets.RecordCount = 0 then
-            GDatabase.copyTypeToDB(dmDatabase, rd_tileset);
+         GDatabase.copyTypeToDB(dmDatabase, rd_tileset);
       finally
          ds.EnableControls;
       end;

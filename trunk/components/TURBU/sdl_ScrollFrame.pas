@@ -48,8 +48,7 @@ type
       constructor Create(AOwner: TComponent); override;
       procedure Clear;
       procedure FillColor(color: SDL_Color; alpha: byte);
-      procedure assignImage(image: PSdlSurface); deprecated;
-      function AddTexture(surface: PSdlSurface; out texture: TSdlTexture): integer;
+      function AddTexture(surface: PSdlSurface): integer;
       procedure DrawTexture(texture: TSdlTexture; src: PSdlRect = nil; dst: PSdlRect = nil);
       procedure Flip;
 
@@ -141,15 +140,9 @@ begin
    FVScroll.OnScroll := self.ScrollBarScroll;
 end;
 
-function TSdlScrollFrame.AddTexture(surface: PSdlSurface;
-  out texture: TSdlTexture): integer;
+function TSdlScrollFrame.AddTexture(surface: PSdlSurface): integer;
 begin
-   result := FSdlFrame.AddTexture(surface, texture);
-end;
-
-procedure TSdlScrollFrame.assignImage(image: PSdlSurface);
-begin
-   FSdlFrame.assignImage(image);
+   result := FSdlFrame.AddTexture(surface);
 end;
 
 procedure TSdlScrollFrame.Clear;

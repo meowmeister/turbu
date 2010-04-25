@@ -33,7 +33,7 @@ type
    TTile = class abstract(TParentSprite)
    protected
    class var
-      FHeartbeat: byte;
+      FHeartbeat: integer;
       FBroadcastList: TList<TBroadcastProc>;
       class constructor Create;
       class destructor Destroy;

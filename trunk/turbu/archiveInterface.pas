@@ -50,6 +50,15 @@ type
 var
    GArchives: TArchiveList;
 
+const
+   //archive constants
+   BASE_ARCHIVE      = 0;
+   DATABASE_ARCHIVE  = 1;
+   MAP_ARCHIVE       = 2;
+   IMAGE_ARCHIVE     = 3;
+   SCRIPT_ARCHIVE    = 4;
+   MUSIC_ARCHIVE     = 5;
+
 implementation
 
 { TArchiveList }

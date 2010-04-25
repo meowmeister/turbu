@@ -40,6 +40,7 @@ type
       procedure incTransparencyFactor;
       procedure decTransparencyFactor;
       function getAnimFix: boolean;
+    function GetTile(x: byte): TTile;
 
       property dirLocked: boolean read isDirLocked write FDirLocked;
    protected
@@ -107,13 +108,14 @@ type
       property canSkip: boolean read getCanSkip write FCanSkip;
       property character: IRpgCharacter read FCharacter write FCharacter;
       property translucency: byte read FTransparencyFactor write setTranslucency;
+      property tiles[x: byte]: TTile read GetTile;
    end;
 
    TEventSprite = class(TMapSprite)
    protected
       procedure setLocation(data: TSgPoint); override;
    public
-      constructor create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); override;
+      constructor Create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); override;
       procedure updatePage(data: TRpgEventPage); override;
       procedure update(filename: string; index: byte; transparent: boolean); override;
    end;
@@ -132,7 +134,7 @@ type
       procedure setTranslucency(const value: byte); override;
       procedure activateEvents(where: TMapTile);
    public
-      constructor create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); override;
+      constructor Create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); override;
       procedure reload(const imageName: string; const index: byte);
       procedure assign(data: TCharSprite); reintroduce;
       procedure place; override;
@@ -723,6 +725,11 @@ end;
 function TMapSprite.getCanSkip: boolean;
 begin
    result := FCanSkip;
+end;
+
+function TMapSprite.GetTile(x: byte): TTile;
+begin
+   result := FTiles[x];
 end;
 
 function TMapSprite.hasPage: boolean;

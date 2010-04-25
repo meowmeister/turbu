@@ -100,7 +100,14 @@ uses
   turbu_map_objects in '..\turbu format\maps\turbu_map_objects.pas',
   turbu_map_sprites in '..\engines\map engine\turbu_map_sprites.pas',
   turbu_pathing in '..\turbu format\turbu_pathing.pas',
-  conversion_output in '..\turbu format\converters\conversion_output.pas' {frmConversionOutput};
+  conversion_output in '..\turbu format\converters\conversion_output.pas' {frmConversionOutput},
+  mapobject_container in '..\engines\map engine\design\mapobject_container.pas',
+  DBIndexComboBox in '..\..\components\TURBU\DBIndexComboBox.pas',
+  MapObject_Editor in '..\engines\map engine\design\MapObject_Editor.pas' {frmObjectEditor},
+  frame_conditions in '..\engines\map engine\design\frame_conditions.pas' {frameConditions: TFrame},
+  dataset_viewer in '..\engines\map engine\design\dataset_viewer.pas' {frmDatasetViewer},
+  array_editor in '..\engines\map engine\design\array_editor.pas' {frmArrayEdit},
+  extensible_cds in '..\..\components\TURBU\extensible_cds.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

@@ -55,6 +55,7 @@ type
       property maxLayer: integer read GetMaxLayer;
       property mapObj: TRpgMap read FMap;
       property blank: boolean read FBlank write FBlank;
+      property mapObjects: TMapSpriteList read FMapObjects;
    end;
 
 implementation

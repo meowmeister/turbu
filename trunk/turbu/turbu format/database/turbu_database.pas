@@ -19,7 +19,7 @@ unit turbu_database;
 
 interface
 uses
-   classes, Generics.Collections,
+   classes, Generics.Collections, DB,
 //   events,
    dm_database, turbu_database_interface,
    turbu_characters, turbu_items, turbu_skills, turbu_classes, turbu_resists,
@@ -108,6 +108,9 @@ type
 
       procedure saveTileGroups(savefile: TStream);
       procedure saveTilesets(savefile: TStream);
+      procedure uploadStringList(dataset: TDataset; list: TStringList);
+   private
+      FUploadedTypes: TRpgDataTypeSet;
    protected
       FLegacyCruft: TLegacySections;
       class function keyChar: ansiChar; override;
@@ -173,6 +176,7 @@ type
 
       property units: TUnitDictionary read FUnits write setUnits;
       property projectName: string read getProjectName;
+      property uploadedTypes: TRpgDataTypeSet read FUploadedTypes;
    end;
 
 var
@@ -181,14 +185,15 @@ var
 
 implementation
 uses
-   sysUtils, zlib, math, DB, TypInfo,
+windows,
+   sysUtils, zlib, math, TypInfo,
    archiveInterface, commons,
    turbu_constants, turbu_engines, turbu_versioning, turbu_plugin_interface,
    turbu_functional;
 
 const
-   MIN_DBVERSION = 32;
-   DBVERSION = 32;
+   MIN_DBVERSION = 33;
+   DBVERSION = 33;
 
 { TRpgDatabase }
 
@@ -902,12 +907,42 @@ begin
    end;
 end;
 
+procedure TRpgDatabase.uploadStringList(dataset: TDataset; list: TStringList);
+var
+   i: integer;
+   nameField: TWideStringField;
+   idField: TIntegerField;
+begin
+   idField := dataset.FieldByName('id') as TIntegerField;
+   nameField := dataset.FieldByName('name') as TWideStringField;
+   dataset.DisableControls;
+   try
+      dataset.Append;
+      idFIeld.Value := 0;
+      nameField.Value := 'Local';
+      dataset.Post;
+
+      for I := 0 to List.Count - 1 do
+      begin
+         dataset.Append;
+         idFIeld.Value := i + 1;
+         nameField.Value := list[i];
+         dataset.Post;
+      end;
+   finally
+      dataset.EnableControls;
+   end;
+end;
+
 procedure TRpgDatabase.copyTypeToDB(db: TdmDatabase; value: TRpgDataTypes);
 var
    i: integer;
    enumerator: TRpgDatafile;
    dummy: TDataSet;
 begin
+   if value in FUploadedTypes then
+      Exit;
+
    case value of
       rd_class:
       begin
@@ -916,7 +951,13 @@ begin
                enumerator.upload(db.charClasses);
          db.charClasses.postSafe;
       end;
-      rd_hero: ;
+      rd_hero:
+      begin
+         for enumerator in FHero do
+            if enumerator.id > 0 then
+               enumerator.upload(db.heroes);
+         db.heroes.postSafe;
+      end;
       rd_command:
       begin
          for enumerator in FCommand do
@@ -970,14 +1011,11 @@ begin
             FTileset[i].upload(db.tilesets);
          db.tilesets.postSafe;
       end;
-      rd_switch: ;
-      rd_int: ;
-      rd_float: ;
-      rd_string: ;
-      rd_script:
-      begin
-         (GScriptEngine as IDesignScriptEngine).upload(db);
-      end;
+      rd_switch: uploadStringList(db.Switches, FSwitches);
+      rd_int: uploadStringList(db.Variables, FVariables);
+      rd_float: uploadStringList(db.Floats, FFloats);
+      rd_string: uploadStringList(db.Strings, FStrings);
+      rd_script: (GScriptEngine as IDesignScriptEngine).upload(db);
       rd_metadata:
       begin
          for enumerator in FMapTree do
@@ -988,6 +1026,7 @@ begin
    end;
    for dummy in db.datasets do
       dummy.First;
+   include(FUploadedTypes, value);
 end;
 
 procedure TRpgDatabase.loadFromDB(value: TdmDatabase);

@@ -21,12 +21,14 @@ interface
 uses
    sysUtils, db, rtti,
    turbu_classes, turbu_containers, turbu_defs, turbu_serialization,
+   turbu_decl_utils,
+   uPSCompiler,
    sg_defs;
 
 type
    EScriptError = class(Exception);
 
-   TUploadRangeAttribute = class(TDBUploadAttribute)
+   UploadRangeAttribute = class(TDBUploadAttribute)
       procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
       procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
    end;
@@ -34,15 +36,18 @@ type
    TScriptRange = class(TRpgDatafile)
    private
       FDesignName: string;
-      [TUploadRange]
+      [UploadRange]
       FRange: TSgPoint;
       FUnit: string;
+      FSignature: TScriptSignature;
    public
       constructor Create(name, designName: string; point: TSgPoint);
+      procedure SetSignature(compiler: TPSPascalCompiler);
 
       property scriptUnitName: string read FUnit write FUnit;
       property range: TSgPoint read FRange write FRange;
       property designName: string read FDesignName;
+      property signature: TScriptSignature read FSignature write FSignature;
    end;
 
    TScriptList = class(TRpgObjectList<TScriptRange>)
@@ -68,6 +73,15 @@ begin
    Self.name := GetNextToken(name, ' ', index);
    FRange := point;
    FDesignName := designName;
+   FSignature := ssNone;
+end;
+
+procedure TScriptRange.SetSignature(compiler: TPSPascalCompiler);
+var
+   procIndex: cardinal;
+begin
+   procIndex := compiler.FindProc(ansiString(self.name));
+   asm int 3 end;
 end;
 
 { TScriptList }
@@ -82,7 +96,7 @@ end;
 
 { TUploadRangeAttribute }
 
-procedure TUploadRangeAttribute.download(db: TDataset; field: TRttiField;
+procedure UploadRangeAttribute.download(db: TDataset; field: TRttiField;
   instance: TObject);
 var
    range: TScriptRange absolute instance;
@@ -92,7 +106,7 @@ begin
    range.FRange.y := db.FieldByName('end').AsInteger;
 end;
 
-procedure TUploadRangeAttribute.upload(db: TDataset; field: TRttiField;
+procedure UploadRangeAttribute.upload(db: TDataset; field: TRttiField;
   instance: TObject);
 var
    range: TScriptRange absolute instance;

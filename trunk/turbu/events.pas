@@ -28,7 +28,7 @@ type
    TMoveType = (still, randomMove, cycle_ud, cycle_lr, chase_hero, flee_hero, by_route);
    TStartCondition = (by_key, by_touch, by_collision, automatic, parallel, on_call);
    TAnimType = (at_sentry, at_jogger, at_fixedDir, at_fixedJog, at_statue, at_spinRight);
-   TPageConditionSet = (switch1, switch2, variable1, item, hero, timer);
+   TPageConditionSet = (switch1, switch2, variable1, item, hero, timer, timer2);
    TCancelHandler = (cancelIgnore, cancel1, cancel2, cancel3, cancel4, cancelElse);
    TUsesList = (uses_messages, uses_party, uses_system, uses_sound, uses_graphics, uses_menu, uses_maps);
 
@@ -80,6 +80,8 @@ type
       property itemNeeded: word read FItem write FItem;
       property heroNeeded: byte read FHero write FHero;
       property timeRemaining: word read fclock write FClock;
+      property clock2: word read FClock2 write FClock2;
+      property varOperator: byte read FVarOperator;
    end;
    TEvent = class;
    TEventBlock = class;
@@ -853,6 +855,7 @@ begin
       FConditions[item] := (dummy and 8 = 8);
       FConditions[hero] := (dummy and $10 = $10);
       FConditions[timer] := (dummy and $20 = $20);
+      FConditions[timer2] := (dummy and $40 = $40);
    end;
    FSwitch1 := getNumSec(2, input, fillInEConInt);
    FSwitch2 := getNumSec(3, input, fillInEConInt);

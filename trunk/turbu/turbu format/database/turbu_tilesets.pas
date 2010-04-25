@@ -84,10 +84,10 @@ type
 
    TTileSet = class(TRpgDatafile)
    private
-      [TNoUpload]
+      [NoUpload]
       FRecords: TTileGroupList;
       FHiSpeed: boolean;
-      [TNoUpload]
+      [NoUpload]
       FGroupMap: array [0..7] of TList<byte>;
       function TileCount(value: TTileGroupRecord): byte;
    protected

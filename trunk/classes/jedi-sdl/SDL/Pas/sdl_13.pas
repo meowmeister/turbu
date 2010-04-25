@@ -111,6 +111,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
                       sdlrAccelerated, sdlrForce32 = 31);
   TSdlRendererFlags = set of TSdlRendererFlag;
 
+{$MINENUMSIZE 4}
 (*{
     SDL_TEXTUREACCESS_STATIC,    /**< Changes rarely, not lockable */
     SDL_TEXTUREACCESS_STREAMING  /**< Changes frequently, lockable */
@@ -119,6 +120,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
   TSdlTextureAccess = (sdltaStatic, sdltaStreaming, sdltaRenderTarget);
   SDL_TextureAccess = TSdlTextureAccess;
   {$EXTERNALSYM SDL_TextureAccess}
+{$MINENUMSIZE 1}
 
 (*{
     SDL_TEXTUREMODULATE_NONE = 0x00000000,     /**< No modulation */
@@ -288,6 +290,8 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     function GetMustLock: boolean;
     function GetColorKey: TSdlColor32;
     procedure SetColorKey(const color: TSdlColor32);
+    function GetBlendMode: TSdlBlendModes;
+    procedure SetBlendMode(const Value: TSdlBlendModes);
   public
     class function Create(width, height, depth: Integer; RMask: UInt32 = 0;
                    GMask: UInt32 = 0; BMask: UInt32 = 0; AMask: UInt32 = 0): PSdlSurface; static;
@@ -313,6 +317,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     property LockData: pointer read FLockData;
     property ClipRect: TSdlRect read FClipRect write SetClipRect;
     property ColorKey: TSdlColor32 read GetColorKey write SetColorKey;
+    property BlendMode: TSdlBlendModes read GetBlendMode write SetBlendMode;
     property Refcount: integer read FRefcount;
     property MustLock: boolean read GetMustLock;
   end;
@@ -460,8 +465,10 @@ function SDL_SelectRenderer(windowID: TSdlWindowID): integer; cdecl; external SD
  *
  * Returns 0 on success, or -1 if there is no rendering context current
  }
-function SDL_SetRenderDrawColor(r, g, b, a: byte): integer; cdecl; external SDLLibName;
+function SDL_SetRenderDrawColor(r, g, b, a: byte): integer; cdecl; overload; external SDLLibName;
 {$EXTERNALSYM SDL_SetRenderDrawColor}
+
+function SDL_SetRenderDrawColor(color: TSDL_Color): integer; overload;
 
 {*
  * SDL_GetRenderDrawColor
@@ -473,11 +480,14 @@ function SDL_SetRenderDrawColor(r, g, b, a: byte): integer; cdecl; external SDLL
 function SDL_GetRenderDrawColor(var r, g, b, a: byte): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetRenderDrawColor}
 
-function SDL_RenderRect(const rect: PSdlRect): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_RenderRect}
+function SDL_RenderDrawRect(const rect: PSdlRect): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderDrawRect}
 
-function SDL_RenderLine(x1, y1, x2, y2: integer): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_RenderLine}
+function SDL_RenderDrawLine(x1, y1, x2, y2: integer): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderDrawLine}
+
+function SDL_RenderFillRect(const rect: PSdlRect): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderFillRect}
 
 { Copy a portion of the texture to the current rendering target.
   textureID: The source texture.
@@ -562,6 +572,14 @@ function SDL_LowerBlit(src: PSdlSurface; srcrect: PSdlRect; dst: PSdlSurface; ds
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_LowerBlit'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_LowerBlit}
 
+function SDL_SetSurfaceBlendMode(surface: PSdlSurface; blendMode: TSdlBlendModes): integer;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetSurfaceBlendMode'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_SetSurfaceBlendMode}
+
+function SDL_GetSurfaceBlendMode(surface: PSdlSurface; var blendMode: TSdlBlendModes): integer;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_GetSurfaceBlendMode'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_GetSurfaceBlendMode}
+
 function SDL_SetPaletteColors(palette: PSdlPalette;  colors: PSdlColorArray; firstcolor, ncolors: integer): integer;
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetPaletteColors'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_SetPaletteColors}
@@ -578,6 +596,9 @@ procedure SDL_DestroyTexture(textureID: TSDLTextureID); cdecl; external SDLLibNa
 function SDL_QueryTexture(textureID: TSdlTextureID; format: PCardinal;
                           access: PSdlTextureAccess; w, h: PInteger): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_QueryTexture}
+
+function SDL_SetTargetTexture(textureID: TSDLTextureID): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_SetTargetTexture}
 
 (**
  * SDL_SetTexturePalette
@@ -634,6 +655,18 @@ external SDLLibName;
 function SDL_GetTextureAlphaMod(textureID: TSdlTextureID; var alpha: byte): integer; cdecl;
 external SDLLibName;
 {$EXTERNALSYM SDL_GetTextureAlphaMod}
+
+(**
+ * SDL_Free
+ *
+ * Frees memory allocated within SDL's private heap.
+ *
+ * mem: The pointer to free
+ *)
+procedure SDL_free(mem: pointer); cdecl;
+external SDLLibName;
+{$EXTERNALSYM SDL_Free}
+
 {------------------------------------------------------------------------------}
 { error-handling }
 {------------------------------------------------------------------------------}
@@ -695,6 +728,11 @@ begin
    SDL_FreeSurface(@self);
 end;
 
+function TSdlSurface.GetBlendMode: TSdlBlendModes;
+begin
+   SDL_GetSurfaceBlendMode(@self, result);
+end;
+
 function TSdlSurface.GetColorKey: TSdlColor32;
 begin
   result := FBlitMap.info.colorkey;
@@ -715,6 +753,11 @@ begin
   SDL_UnlockSurface(@self);
 end;
 
+procedure TSdlSurface.SetBlendMode(const Value: TSdlBlendModes);
+begin
+   SDL_SetSurfaceBlendMode(@self, value);
+end;
+
 procedure TSdlSurface.SetClipRect(const Value: TSdlRect);
 begin
   SDL_SetClipRect(@self, @value);
@@ -723,6 +766,7 @@ end;
 procedure TSdlSurface.SetColorKey(const color: TSdlColor32);
 begin
   SDL_SetColorKey(@self, true, color);
+  self.BlendMode := [sdlbBlend];
 end;
 
 function TSdlSurface.SetPalette(colors: PSdlColorArray; start,
@@ -751,6 +795,8 @@ end;
 constructor TSdlTexture.Create(format: Uint32; access: TSdlTextureAccess; w, h: integer);
 begin
   FId := SDL_CreateTexture(format, access, w, h);
+  if FId = 0 then
+    raise EBadHandle.Create(string(SDL_GetError));
 end;
 
 constructor TSdlTexture.Create(format: Uint32; surface: PSdlSurface);
@@ -827,6 +873,12 @@ begin
   result := -1;
 end;
 
+function SDL_SetRenderDrawColor(color: TSDL_Color): integer;
+begin
+   result := SDL_SetRenderDrawColor(color.r, color.g, color.b, color.unused);
+end;
+
 initialization
 sdl_getError; //do not smartlink this out!
+
 end.

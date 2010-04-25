@@ -51,13 +51,14 @@ type
    ['{B68B1D70-D95E-4CEB-B009-2197D7EC7642}']
       function GetTilesetImage(const index: byte): PSdlSurface;
       property tilesetImage[const index: byte]: PSdlSurface read GetTilesetImage;
-      procedure SetCurrentLayer(const value: byte);
+      procedure SetCurrentLayer(const value: shortint);
       function mapSize: TSgPoint;
       function mapPosition: TSgPoint;
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TList<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
+      procedure doubleClick;
       function getAutosaveMaps: boolean;
       procedure setAutosaveMaps(const value: boolean);
       property autosaveMaps: boolean read getAutosaveMaps write setAutosaveMaps;
