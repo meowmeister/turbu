@@ -20,40 +20,56 @@ unit turbu_sdl_image;
 interface
 uses
    types,
-   SDL_ImageManager,
-   SDL_13;
+   SDL_ImageManager, SDL, SDL_13;
 
 type
    TRpgSdlImage = class(TSdlImage)
    private
       FOrigSurface: PSdlSurface;
+
    protected
       procedure processImage(image: PSdlSurface); override;
    public
+      constructor CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages); overload;
+      constructor CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages); overload;
       destructor Destroy; override;
       property Texture: TSdlTexture read FSurface;
       property surface: PSdlSurface read FOrigSurface;
    end;
 
 implementation
+uses
+   turbu_tbi_lib;
+
+function GetTBIInfo(surface: PSdlSurface): TTbiInfo;
+begin
+   result := TObject(surface.Tag) as TTbiInfo;
+   if not assigned(result) then
+      raise ETbiError.Create('TBI info not found');
+end;
 
 { TRpgSdlImage }
 
+constructor TRpgSdlImage.CreateSprite(surface: PSdlSurface; imagename: string;
+  container: TSdlImages);
+begin
+   inherited CreateSprite(surface, imagename, container, GetTBIInfo(surface).size);
+end;
+
+constructor TRpgSdlImage.CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages);
+begin
+   inherited CreateSprite(rw, extension, imagename, container, GetTBIInfo(surface).size);
+end;
+
 destructor TRpgSdlImage.Destroy;
 begin
+   FreeAndNil(FOrigSurface.tag);
    FOrigSurface.Free;
    inherited;
 end;
 
 procedure TRpgSdlImage.processImage(image: PSdlSurface);
-var
-   colorkey: TSDL_Color;
 begin
-   if assigned(image.format.palette) then
-   begin
-      colorkey := image.format.palette.colors^[0];
-      image.ColorKey := SDL_MapRGB(image.format, colorkey.r, colorkey.g, colorkey.b)
-   end;
    FOrigSurface := image;
    FOrigSurface.AcquireReference;
 end;

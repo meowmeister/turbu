@@ -175,7 +175,6 @@ type
 
    THeroTemplate = class(TClassTemplate)
    private
-      FCharName: string;
       FTitle: string;
       FClass: integer;
       FPortraitShift: TColorShift;
@@ -185,12 +184,12 @@ type
       FMaxLevel: word;
       FGuest: boolean;
    protected
+      class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream);
       procedure save(savefile: TStream); override;
 
-      property charName: string read FCharName write FCharName;
       property title: string read FTitle write FTitle;
       property charClass: integer read FClass write FClass;
       property portraitShift: TColorShift read FPortraitShift write FPortraitShift;
@@ -532,6 +531,11 @@ end;
 
 { THeroTemplate }
 
+class function THeroTemplate.getDatasetName: string;
+begin
+   result := 'heroes';
+end;
+
 class function THeroTemplate.keyChar: ansiChar;
 begin
    result := 'h';
@@ -540,7 +544,6 @@ end;
 constructor THeroTemplate.Load(savefile: TStream);
 begin
    inherited Load(savefile);
-   FCharName := savefile.readString;
    FTitle := savefile.readString;
    FClass := savefile.readInt;
    savefile.ReadBuffer(FPortraitShift, sizeof(TColorShift));
@@ -555,7 +558,6 @@ end;
 procedure THeroTemplate.save(savefile: TStream);
 begin
    inherited save(savefile);
-   savefile.writeString(FCharName);
    savefile.writeString(FTitle);
    savefile.writeInt(FClass);
    savefile.WriteBuffer(FPortraitShift, sizeof(TColorShift));

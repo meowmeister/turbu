@@ -68,6 +68,7 @@ type
       FTextureSize: TSgPoint;
       FTexturesPerRow: integer;
       FTextureRows: integer;
+      FColorkey: TSDL_Color;
 
       function getSpriteRect(index: integer): TRect;
       procedure setup(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint; lSurface: PSdlSurface); virtual;
@@ -130,6 +131,10 @@ type
       procedure DrawRect(dest: TSgPoint; source: TRect);
       procedure DrawSprite(dest: TSgPoint; index: integer);
 
+      procedure DrawTo(dest: TRect);
+      procedure DrawRectTo(dest: TRect; source: TRect);
+      procedure DrawSpriteTo(dest: TRect; index: integer);
+
       property name: string read FName write FName;
       property surface: TSdlTexture read FSurface;
       property textureSize: TSgPoint read FTextureSize write SetTextureSize;
@@ -137,6 +142,7 @@ type
       property texRows: integer read FTextureRows;
       property count: integer read GetCount;
       property spriteRect[index: integer]: TRect read getSpriteRect;
+      property Colorkey: TSDL_Color read FColorkey;
    end;
 
    {***************************************************************************
@@ -615,7 +621,7 @@ end;
 constructor TSdlImage.CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TSgPoint);
 begin
    inherited Create;
-   FSurface := TSdlTexture.Create(0, surface);
+//   FSurface := TSdlTexture.Create(0, surface);
    setup('', imagename, container, spriteSize, surface);
 end;
 
@@ -647,14 +653,13 @@ end;
 //---------------------------------------------------------------------------
 procedure TSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint; lSurface: PSdlSurface);
 var
-   colorkey: TSDL_Color;
    dummy: integer;
    loader: TImgLoadMethod;
    loadStream: TStream;
    intFilename: PAnsiChar; //internal version of the filename
 begin
    FName := imagename;
-   if FSurface.ID = 0 then
+   if (lSurface = nil) and (FSurface.ID = 0) then
    begin
       if filename <> '' then
       begin
@@ -702,8 +707,8 @@ begin
       raise ESdlImageException.Create(string(IMG_GetError));
    if assigned(LSurface.format.palette) then
    begin
-      colorkey := LSurface.format.palette.colors^[0];
-      LSurface.ColorKey := SDL_MapRGB(LSurface.format, colorkey.r, colorkey.g, colorkey.b)
+      FColorkey := LSurface.format.palette.colors^[0];
+      LSurface.colorkey := SDL_MapRGB(LSurface.format, FColorkey.r, FColorkey.g, FColorkey.b)
    end;
    //Allow descendant classes to fix up the image, if desired.
    processImage(LSurface);
@@ -731,9 +736,21 @@ begin
 end;
 
 //---------------------------------------------------------------------------
+procedure TSdlImage.DrawTo(dest: TRect);
+begin
+   currentRenderTarget.parent.drawTo(self, dest);
+end;
+
+//---------------------------------------------------------------------------
 procedure TSdlImage.drawRect(dest: TSgPoint; source: TRect);
 begin
    currentRenderTarget.parent.drawRect(self, dest, source);
+end;
+
+//---------------------------------------------------------------------------
+procedure TSdlImage.DrawRectTo(dest, source: TRect);
+begin
+   currentRenderTarget.parent.drawRectTo(self, dest, source);
 end;
 
 //---------------------------------------------------------------------------
@@ -743,6 +760,15 @@ begin
       Exit;
 
    currentRenderTarget.parent.drawRect(self, dest, self.spriteRect[index]);
+end;
+
+//---------------------------------------------------------------------------
+procedure TSdlImage.DrawSpriteTo(dest: TRect; index: integer);
+begin
+   if index >= count then
+      Exit;
+
+   currentRenderTarget.parent.drawRectTo(self, dest, self.spriteRect[index]);
 end;
 
 //---------------------------------------------------------------------------

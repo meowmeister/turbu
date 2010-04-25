@@ -240,7 +240,7 @@ end;
 constructor T2k2Hero.convert(base: THeroRecord; classTable: TConversionTable; baseDB: TLcfDataBase; statSet: TStatSet);
 begin
    inherited convert(base, baseDB, statSet);
-   self.charName := unicodeString(base.name);
+   self.name := unicodeString(base.name);
    self.title := unicodeString(base.charClass);
    self.minLevel := base.startLevel;
    self.maxLevel := base.maxLevel;

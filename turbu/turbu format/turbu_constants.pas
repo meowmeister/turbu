@@ -43,14 +43,6 @@ const
    PHYSICAL_SIZE: TSgPoint    = (X: 640; Y: 480);
    TILE_SIZE: TSgPoint        = (X: 16; Y: 16);
 
-   //archive constants
-   BASE_ARCHIVE      = 0;
-   DATABASE_ARCHIVE  = 1;
-   MAP_ARCHIVE       = 2;
-   IMAGE_ARCHIVE     = 3;
-   SCRIPT_ARCHIVE    = 4;
-   MUSIC_ARCHIVE     = 5;
-
    //variable types
    vt_none: integer  = -1;
    vt_U8             = 0;

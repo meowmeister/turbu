@@ -91,9 +91,6 @@ type
       navDel: TDBNavigator;
       RpgListGrid1: TRpgListGrid;
       cbxExpAlgorithm: TDBLookupComboBox;
-      dsEventName: TClientDataSet;
-      dsEventNamebaseMethod: TIntegerField;
-      dsEventNamemethodName: TStringField;
       imgMapSprite: TSdlFrame;
 
       procedure tabGraphicsChange(Sender: TObject);
@@ -194,8 +191,6 @@ begin
       radWeaponStyle.Values.Add(intToStr(i));
    tshAttributes.Tag := integer(dsResist);
    tshConditions.Tag := integer(dsCondition);
-   dsEventName.CreateDataset;
-   dsEventName.AppendRecord([0]);
    FOldWeaponScroll := dmDatabase.weapons.AfterScroll;
    dmDatabase.weapons.AfterScroll := self.weaponsAfterScroll;
 end;
@@ -286,15 +281,6 @@ begin
             item.Data := FTemplate.signature[eventName];
          end
          else item := lstScripts.Items[i];
-
-         if assigned(events.Objects[i]) then
-         begin
-            //use lookup dataset to look up the individual event handlers
-            dsEventName.Edit;
-            dsEventName.FieldByName('baseMethod').AsInteger := integer(events.Objects[i]);
-            dsEventName.Post;
-            item.SubItems.Add(dsEventName.FieldByName('methodName').AsString);
-         end;
       end;
    finally
       events.Free;
@@ -317,7 +303,6 @@ end;
 procedure TframeClass.loadPortrait(name: string; id: integer);
 var
    filename: string;
-   dummy: integer;
    fileStream: TStream;
    image: TRpgSdlImage;
    spriteRect: TRect;
@@ -342,7 +327,7 @@ begin
         try
            fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
            try
-              image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, FImageList, PORTRAIT_SIZE);
+              image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, FImageList);
            finally
               fileStream.Free;
            end;
@@ -403,7 +388,6 @@ end;
 procedure TframeClass.loadMapSprite(name: string; id: integer; frame: byte);
 var
    filename: string;
-   dummy: integer;
    image: TRpgSdlImage;
    fileStream: TStream;
    spriteRect, destRect: TRect;
@@ -414,7 +398,6 @@ begin
       FNameList := TStringList.Create;
    end;
 
-   dummy := id;
    FSpriteData.name := name;
    FSpriteData.moveMatrix := id;
    filename := format('mapsprite\%s.png', [FSpriteData.name]);
@@ -423,7 +406,7 @@ begin
       try
          fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
          try
-            image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, FImageList, SPRITE_SIZE);
+            image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, FImageList, SPRITE_SIZE * SgPoint(1, 2));
          finally
             fileStream.Free;
          end;
@@ -499,7 +482,7 @@ begin
    matrix := GDatabase.moveMatrix[FSpriteData.moveMatrix];
    case tabGraphics.TabIndex of
       1: loadMapSprite(dsCharClass.DataSet.FieldByName('mapSprite').AsString,
-                       max(0, (dsCharClass.DataSet.FieldByName('moveMatrix').AsInteger)),
+                       max(0, (dsCharClass.DataSet.FieldByName('actionMatrix').AsInteger)),
                        nextPosition(matrix, FMatrixPosition));
       2: {fix this later};
       else assert(false);

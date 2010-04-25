@@ -133,7 +133,7 @@ begin
    try
       if data[length(data)] <> ';' then
          data := data + ';';
-      parser.SetText(data);
+      parser.SetText(AnsiString(data));
       while parser.CurrTokenID <> CSTI_EOF do
          FOpcodes.Add(parseStep(parser))
    finally

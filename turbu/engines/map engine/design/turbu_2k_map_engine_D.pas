@@ -23,6 +23,7 @@ uses
    Generics.Collections,
    turbu_map_engine, turbu_2k_map_engine, turbu_database_interface,
    turbu_map_interface, turbu_tilesets, turbu_maps, turbu_2k_sprite_engine,
+   mapobject_container,
    sdl_13, SG_defs;
 
 type
@@ -32,12 +33,18 @@ type
       FTileSize: TSgPoint;
       FDrawFrom: TSgPoint;
       FPaletteList: TList<integer>;
-      FCurrentLayer: byte;
+      FCurrentLayer: shortint;
       FAutosaveMaps: boolean;
+      FObjectContainers: TMapObjectContainerList;
+      FCursorPosition: TSgPoint;
 
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
       procedure saveMap(value: TRpgMap);
       procedure saveAndClearMapCache;
+      procedure DrawGrid;
+      procedure DrawCursor;
+      procedure PrepareContainers;
+      procedure ClearContainers;
    private //IBreakable
       procedure BreakSomething;
    private //IDesignMapEngine
@@ -51,7 +58,8 @@ type
       procedure setPaletteList(value: TList<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
-      procedure SetCurrentLayer(const value: byte);
+      procedure doubleClick;
+      procedure SetCurrentLayer(const value: shortint);
       function getAutosaveMaps: boolean;
       procedure setAutosaveMaps(const value: boolean);
       procedure saveCurrent;
@@ -68,6 +76,7 @@ type
       function IDesignMapEngine.loadMap = DesignLoadMap;
    protected
       procedure cleanup; override;
+      procedure AfterPaint; override;
    public
       function IsDesign: boolean; override;
    end;
@@ -76,8 +85,9 @@ implementation
 uses
    sysUtils, types, classes, commons, math,
    turbu_map_metadata, archiveInterface, turbu_constants, turbu_sdl_image,
-   turbu_functional, turbu_plugin_interface, turbu_containers,
-   eval,
+   turbu_functional, turbu_plugin_interface, turbu_containers, turbu_map_sprites,
+   turbu_map_objects,
+   eval, MapObject_Editor,
    sdl, sg_utils, sdlstreams;
 
 const
@@ -93,7 +103,17 @@ end;
 procedure T2kMapEngineD.initializeDesigner(window: TSdlWindowId; database: IRpgDatabase);
 begin
    self.initialize(window, database);
+   FObjectContainers := TMapObjectContainerList.Create(false);
    //do more
+end;
+
+procedure T2kMapEngineD.AfterPaint;
+begin
+  if (FCurrentLayer < 0) and (not FTimer.Enabled) then
+  begin
+     DrawGrid;
+     DrawCursor;
+  end;
 end;
 
 procedure T2kMapEngineD.BreakSomething;
@@ -103,9 +123,23 @@ end;
 
 procedure T2kMapEngineD.cleanup;
 begin
+   //FObjectContainers needs to be cleaned up before the sprite engine is
+   //destroyed in the call to inherited
+   self.ClearContainers;
    inherited cleanup;
+   FreeAndNil(FObjectContainers);
    FreeAndNil(FPaletteList);
    FreeAndNil(FTilesetListD);
+end;
+
+procedure T2kMapEngineD.ClearContainers;
+begin
+   FObjectContainers.OwnsObjects := true;
+   try
+      FObjectContainers.Clear;
+   finally
+      FObjectContainers.OwnsObjects := false;
+   end;
 end;
 
 procedure T2kMapEngineD.Reset;
@@ -204,20 +238,23 @@ begin
       self.saveAndClearMapCache;
 end;
 
-procedure T2kMapEngineD.SetCurrentLayer(const value: byte);
+procedure T2kMapEngineD.SetCurrentLayer(const value: shortint);
 var
    enumerator: TTileGroupRecord;
    image: TRpgSdlImage;
    texture: TSdlTexture;
 begin
+   if (value < 0) and (FCurrentLayer >= 0) then
+      PrepareContainers
+   else if (value >= 0) and (FCurrentLayer < 0) then
+      ClearContainers;
    FCurrentLayer := value;
    for enumerator in FCurrentMap.tileset.Records do
    begin
       image := retrieveImage('tileset', enumerator.group.filename);
-      if not assigned(image) then
-         asm int 3 end;
+      assert(assigned(image));
       texture := image.Texture;
-      if value in enumerator.layers then
+      if (value < 0) or (value in enumerator.layers) then
          texture.alpha := $FF
       else texture.alpha := $A0;
    end;
@@ -244,36 +281,69 @@ var
    i, j, counter: integer;
    offset: TSgPoint;
 begin
-   drawRect.TopLeft := position;
-   drawRect.Right := drawRect.Left + FPaletteList[0] - 1;
-   drawRect.Bottom := drawRect.Top + ((FPaletteList.Count - 1) div FPaletteList[0]) - 1;
-
-   //calculate where to start drawing
-   if new then
+   if FCurrentLayer >= 0 then
    begin
-      offset := sgPoint(0, 0);
-      FDrawFrom := position;
-   end
-   else
-      offset := position - FDrawFrom;
-   counter := (offset.y * FPaletteList[0]) + offset.x;
-   counter := safeMod(counter, FPaletteList.Count - 1) + 1;
+      drawRect.TopLeft := position;
+      drawRect.Right := drawRect.Left + FPaletteList[0] - 1;
+      drawRect.Bottom := drawRect.Top + ((FPaletteList.Count - 1) div FPaletteList[0]) - 1;
 
-   for j := drawRect.Top to drawRect.Bottom do
-      for I := drawRect.Left to drawRect.Right do
+      //calculate where to start drawing
+      if new then
       begin
-         tile := FCurrentMap.tileset.Tile(FPaletteList[counter], FCurrentLayer);
-         FCurrentMap.assignTile(i, j, FCurrentLayer, tile);
-         inc(counter);
-         if counter = FPaletteList.Count then
-            counter := 1;
-      end;
-   drawRect := sg_utils.expandRect(drawRect, 1);
-   for j := drawRect.Top to drawRect.Bottom do
-      for I := drawRect.Left to drawRect.Right do
-         FCurrentMap.updateBorders(i, j, FCurrentLayer);
-   FCurrentMap.Dead;
+         offset := sgPoint(0, 0);
+         FDrawFrom := position;
+      end
+      else
+         offset := position - FDrawFrom;
+      counter := (offset.y * FPaletteList[0]) + offset.x;
+      counter := safeMod(counter, FPaletteList.Count - 1) + 1;
+
+      for j := drawRect.Top to drawRect.Bottom do
+         for I := drawRect.Left to drawRect.Right do
+         begin
+            tile := FCurrentMap.tileset.Tile(FPaletteList[counter], FCurrentLayer);
+            FCurrentMap.assignTile(i, j, FCurrentLayer, tile);
+            inc(counter);
+            if counter = FPaletteList.Count then
+               counter := 1;
+         end;
+      drawRect := sg_utils.expandRect(drawRect, 1);
+      for j := drawRect.Top to drawRect.Bottom do
+         for I := drawRect.Left to drawRect.Right do
+            FCurrentMap.updateBorders(i, j, FCurrentLayer);
+      FCurrentMap.Dead;
+   end
+   else FCursorPosition := position;
    self.repaint;
+end;
+
+procedure T2kMapEngineD.DrawCursor;
+var
+   drawRect: TRect;
+begin
+   drawRect.TopLeft := FCursorPosition;
+   drawRect.Right := drawRect.Left + 1;
+   drawRect.Bottom := drawRect.Top + 1;
+   FCanvas.DrawBox(constrictRect(multiplyRect(drawRect, TILE_SIZE.x), 1), SDL_WHITE);
+end;
+
+procedure T2kMapEngineD.DrawGrid;
+var
+   x, y: integer;
+begin
+   x := trunc(FCurrentMap.WorldX) mod TILE_SIZE.x;
+   y := trunc(FCurrentMap.WorldY) mod TILE_SIZE.y;
+   SDL_SetRenderDrawColor(SDL_BLACK);
+   while x < FCanvas.Width do
+   begin
+      SDL_RenderDrawLine(x, 0, x, FCanvas.Height);
+      inc(x, TILE_SIZE.x);
+   end;
+   while y < FCanvas.Height do
+   begin
+      SDL_RenderDrawLine(0, y, FCanvas.Width, y);
+      inc(y, TILE_SIZE.y);
+   end;
 end;
 
 function T2kMapEngineD.addNewMap(parentID: integer): IMapMetadata;
@@ -358,6 +428,22 @@ begin
    FCurrentMap.mapObj.modified := true;
 end;
 
+procedure T2kMapEngineD.doubleClick;
+var
+   mapObj: TRpgMapObject;
+begin
+   if FCurrentLayer >= 0 then
+      Exit;
+
+   mapObj := FCurrentMap.mapObj.mapObjects.firstWhere(
+      function(obj: TRpgMapObject): boolean
+      begin
+         result := obj.location = FCursorPosition;
+      end);
+   if assigned(mapObj) then
+      TfrmObjectEditor.EditMapObject(mapObj, FCurrentMap.tileset.name);
+end;
+
 function T2kMapEngineD.GetTilesetImageSize(const index: byte): TSgPoint;
 var
    tileCount: integer;
@@ -421,7 +507,6 @@ var
 begin
    assert(assigned(FTilesetListD));
    surfaceSize := GetTilesetImageSize(index);
-   FCurrentLayer := index;
 
    result := TSdlSurface.Create(surfaceSize.x, surfaceSize.y, 8);
    result.Fill(nil, 0);
@@ -500,6 +585,14 @@ end;
 procedure T2kMapEngineD.Pause;
 begin
    FTimer.Enabled := false;
+end;
+
+procedure T2kMapEngineD.PrepareContainers;
+var
+   obj: TMapSprite;
+begin
+   for obj in FCurrentMap.mapobjects do
+      FObjectContainers.Add(TMapObjectContainer.Create(obj, FCanvas));
 end;
 
 procedure T2kMapEngineD.scrollMap(const newPosition: TSgPoint);

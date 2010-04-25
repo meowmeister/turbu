@@ -15,7 +15,7 @@ interface
 
 uses
    Classes, Types, Controls, ExtCtrls, Messages, SysUtils,
-   SDL_13 {$IF CompilerVersion >= 20}, Generics.Collections{$IFEND};
+   SDL_13, {$IF CompilerVersion >= 20} Generics.Collections {$ELSE} inifiles {$IFEND};
 
 type
    TTextureList = {$IF CompilerVersion >= 20} TList<TSdlTexture>; {$ELSE} class(TList)
@@ -25,6 +25,19 @@ type
    public
       function Add(Item: TSdlTexture): Integer; inline;
       property Items [Index: Integer]: TSdlTexture read Get write Put; default;
+   end;
+   {$IFEND}
+
+   TTextureHash = {$IF CompilerVersion >= 20} TDictionary<string, TSdlTexture>;
+                  {$ELSE} class(THashedStringList)
+  private
+      function GetItem(const name: string): TSdlTexture;
+      procedure PutItem(const name: string; const Value: TSdlTexture);
+   public
+      function Add(const name: string; Item: TSdlTexture): Integer; inline;
+      function ContainsKey(const name: string): boolean; inline;
+
+      property Items [const name : string]: TSdlTexture read GetItem write PutItem; default;
    end;
    {$IFEND}
 
@@ -38,12 +51,13 @@ type
       FFramerate: word;
       FActive: boolean;
       FRenderer: boolean;
+      FRendererType: TRendererType;
 
-      FBuffer: TSdlTexture;
       FTextureList: TTextureList;
+      FTextureHash: TTextureHash;
+
       FOnTimer: TNotifyEvent;
       FOnAvailable: TNotifyEvent;
-      FRendererType: TRendererType;
 
       function CreateWindow: boolean;
       function CreateRenderer: boolean;
@@ -63,10 +77,14 @@ type
       procedure FillColor(color: SDL_Color; alpha: byte);
       procedure DrawRect(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
       procedure DrawBox(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
-      procedure assignImage(image: PSdlSurface); deprecated;
-      function AddTexture(surface: PSdlSurface; out texture: TSdlTexture): integer;
-      procedure DrawTexture(texture: TSdlTexture; src: PSdlRect = nil; dst: PSdlRect = nil);
+      function AddTexture(surface: PSdlSurface): integer; overload;
+      procedure AddTexture(surface: PSdlSurface; const name: string); overload;
+      procedure DrawTexture(texture: TSdlTexture; src: PSdlRect = nil; dst: PSdlRect = nil); overload;
+      procedure DrawTexture(const name: string; src: PSdlRect = nil; dst: PSdlRect = nil); overload;
+      procedure DrawTexture(index: integer; src: PSdlRect = nil; dst: PSdlRect = nil); overload;
       procedure Flip;
+      function ContainsName(const name: string): boolean;
+      function IndexOfName(const name: string): integer;
 
       property Available: boolean read FRenderer;
       property SdlWindow: TSdlWindowId read FWindowID;
@@ -109,6 +127,7 @@ begin
    FTimer := TTimer.Create(self);
    FTimer.Interval := 100;
    FTextureList := TTextureList.Create;
+   FTextureHash := TTextureHash.Create;
    FTimer.OnTimer := Self.InternalOnTimer;
    FRendererType := rtOpenGL;
    self.ControlStyle := [csCaptureMouse,csClickEvents,csOpaque,csDoubleClicks];
@@ -120,6 +139,7 @@ end;
 destructor TSdlFrame.Destroy;
 begin
    FTimer.Free;
+   FTextureHash.Free;
    FTextureList.Free;
    inherited;
 end;
@@ -134,7 +154,6 @@ end;
 
 procedure TSdlFrame.DestroyWnd;
 begin
-   FBuffer.Free;
    FTimer.OnTimer := nil;
    SDL_DestroyRenderer(FWindowID);
    SDL_DestroyWindow(FWindowID);
@@ -150,7 +169,7 @@ begin
    if CreateRenderer then
    begin
       assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
-      assert(SDL_RenderRect(@region) = 0);
+      assert(SDL_RenderDrawRect(@region) = 0);
    end;
 end;
 
@@ -160,11 +179,21 @@ begin
    if CreateRenderer then
    begin
       assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
-      assert(SDL_RenderLine(region.Left, region.Top, region.Right, region.Top) = 0);
-      assert(SDL_RenderLine(region.right, region.Top, region.Right, region.bottom) = 0);
-      assert(SDL_RenderLine(region.right, region.bottom, region.left, region.bottom) = 0);
-      assert(SDL_RenderLine(region.Left, region.bottom, region.left, region.Top) = 0);
+      assert(SDL_RenderDrawLine(region.Left, region.Top, region.Right, region.Top) = 0);
+      assert(SDL_RenderDrawLine(region.right, region.Top, region.Right, region.bottom) = 0);
+      assert(SDL_RenderDrawLine(region.right, region.bottom, region.left, region.bottom) = 0);
+      assert(SDL_RenderDrawLine(region.Left, region.bottom, region.left, region.Top) = 0);
    end;
+end;
+
+procedure TSdlFrame.DrawTexture(index: integer; src, dst: PSdlRect);
+begin
+   drawTexture(FTextureList[index], src, dst);
+end;
+
+procedure TSdlFrame.DrawTexture(const name: string; src, dst: PSdlRect);
+begin
+   drawTexture(fTextureHash[name], src, dst);
 end;
 
 procedure TSdlFrame.DrawTexture(texture: TSdlTexture; src, dst: PSdlRect);
@@ -181,7 +210,7 @@ begin
    if CreateRenderer then
    begin
       assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
-      assert(SDL_RenderRect(nil) = 0);
+      assert(SDL_RenderFillRect(nil) = 0);
    end;
 end;
 
@@ -218,7 +247,8 @@ const
 
    RENDERERS: array[TRendererType] of AnsiString = ('software', 'gdi', 'opengl', 'd3d');
 var
-  pFormat: integer;
+   pFormat: integer;
+   info: TSDL_RendererInfo;
 begin
    if (SDL_SelectRenderer(FWindowID) = 0) then
    begin
@@ -237,8 +267,9 @@ begin
    begin
       SDL_ShowWindow(FWindowID);
       assert(SDL_SetRenderDrawColor(0, 0, 0, 255) = 0);
+      SDL_RenderFillRect(nil);
       FFlags := SDL_GetWindowFlags(FWindowID);
-      FBuffer := TSdlTexture.Create(0, sdltaStreaming, self.Width, self.Height);
+      SDL_GetRendererInfo(info);
       FRenderer := true;
       if assigned(FOnAvailable) then
          FOnAvailable(self);
@@ -247,12 +278,22 @@ begin
    result := SDL_SelectRenderer(FWindowID) = 0;
 end;
 
+function TSdlFrame.IndexOfName(const name: string): integer;
+begin
+   result := FTextureList.IndexOf(FTextureHash[name]);
+end;
+
 procedure TSdlFrame.InternalOnTimer(Sender: TObject);
 begin
    if csDestroying in self.ComponentState then
       FTimer.Enabled := false
    else if assigned(FOnTimer) then
       FOnTimer(self);
+end;
+
+function TSdlFrame.ContainsName(const name: string): boolean;
+begin
+   result := FTextureHash.ContainsKey(name);
 end;
 
 procedure TSdlFrame.SetActive(const Value: boolean);
@@ -270,7 +311,9 @@ begin
    else FTimer.Interval := round(1000 / value);
 end;
 
-function TSdlFrame.AddTexture(surface: PSdlSurface; out texture: TSdlTexture): integer;
+function TSdlFrame.AddTexture(surface: PSdlSurface): integer;
+var
+   texture: TSdlTexture;
 begin
    if not assigned(surface) then
       Exit(-1);
@@ -280,18 +323,16 @@ begin
    result := FTextureList.Add(texture);
 end;
 
-procedure TSdlFrame.assignImage(image: PSdlSurface);
+procedure TSdlFrame.AddTexture(surface: PSdlSurface; const name: string);
+var
+   index: integer;
 begin
-   if not assigned(image) then
-      Exit;
-
-   FBuffer.Free;
-   FBuffer.Create(0, image);
-   if SDL_SelectRenderer(FWindowID) = 0 then
-   begin
-      SDL_RenderCopy(FBuffer, nil, nil);
-      SDL_RenderPresent;
-   end;
+   if FTextureHash.ContainsKey(name) then
+      raise EListError.CreateFmt('Texture "%s" already exists', [name]);
+   index := self.AddTexture(surface);
+   if index = -1 then
+      raise EInvalidArgument.Create('Invalid surface');
+   FTextureHash.Add(name, FTextureList[index]);
 end;
 
 procedure TSdlFrame.BeforeDestruction;
@@ -309,7 +350,7 @@ begin
       for I := 1 to 3 do
       begin
          assert(SDL_SetRenderDrawColor(0, 0, 0, 255) = 0);
-         assert(SDL_RenderRect(nil) = 0);
+         assert(SDL_RenderFillRect(nil) = 0);
          SDL_RenderPresent;
       end;
 end;
@@ -330,6 +371,28 @@ end;
 procedure TTextureList.Put(Index: Integer; Item: TSdlTexture);
 begin
    inherited Put(index, pointer(item.ID));
+end;
+
+{ TTextureHash }
+
+function TTextureHash.Add(const name: string; Item: TSdlTexture): Integer;
+begin
+   result := self.AddObject(name, pointer(item));
+end;
+
+function TTextureHash.GetItem(const name: string): TSdlTexture;
+begin
+   result := self.Objects[self.IndexOf(name)];
+end;
+
+procedure TTextureHash.PutItem(const name: string; const Value: TSdlTexture);
+begin
+   self.Objects[self.IndexOf(name)] := pointer(value);
+end;
+
+function TTextureHash.ContainsKey(const name: string): boolean;
+begin
+   result := self.IndexOf(name) <> -1;
 end;
 {$IFEND}
 

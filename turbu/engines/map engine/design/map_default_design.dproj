@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>..\..\..\dcus\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DcuOutput>..\..\..\dcus\</DCC_DcuOutput>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_WriteableConstants>true</DCC_WriteableConstants>
@@ -73,6 +74,18 @@
 			<DCCReference Include="eval.pas">
 				<Form>frmMapProperties</Form>
 			</DCCReference>
+			<DCCReference Include="mapobject_container.pas"/>
+			<DCCReference Include="frame_conditions.pas">
+				<Form>frameConditions</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="MapObject_Editor.pas">
+				<Form>frmObjectEditor</Form>
+			</DCCReference>
+			<DCCReference Include="dataset_viewer.pas">
+				<Form>frmDatasetViewer</Form>
+			</DCCReference>
+			<DCCReference Include="array_editor.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

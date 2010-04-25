@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<DCC_DcuOutput>..\..\dcus\</DCC_DcuOutput>
 			<DCC_BplOutput>..\..\bin\</DCC_BplOutput>
 			<DCC_DcpOutput>..\..\dcus\</DCC_DcpOutput>
@@ -31,7 +32,6 @@
 			<DCC_Platform>x86</DCC_Platform>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DCC_S>false</DCC_S>
-			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<GenDll>true</GenDll>
 			<DCC_N>false</DCC_N>
 			<DCC_E>false</DCC_E>
@@ -60,6 +60,7 @@
 			<DCCReference Include="..\..\..\components\TURBU\sdl_ScrollFrame.pas"/>
 			<DCCReference Include="..\..\..\components\TURBU\sdl_frame.pas"/>
 			<DCCReference Include="..\..\..\components\TURBU\DBIndexComboBox.pas"/>
+			<DCCReference Include="..\..\..\components\TURBU\extensible_cds.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

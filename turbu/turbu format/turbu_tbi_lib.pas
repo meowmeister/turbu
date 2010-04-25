@@ -19,7 +19,7 @@ unit turbu_tbi_lib;
 
 interface
 uses
-   classes,
+   sysUtils, classes,
    sdl, SDL_13, sg_defs;
 
 type
@@ -34,20 +34,29 @@ type
    constructor Create(size: TSgPoint; dirty: boolean);
    end;
 
+   TTbiInfo = class
+   private
+    FDirty: boolean;
+    FSize: TSgPoint;
+   public
+      constructor Create(header: PTbiHeader);
+      property dirty: boolean read FDirty;
+      property size: TSgPoint read FSize;
+   end;
+
+   ETbiError = class(Exception);
+
 function saveToTBI(image: PSdlSurface; size: TSgPoint; dirty: boolean): TMemoryStream;
 function loadFromTBI(stream: TStream): PSdlSurface;
 
 implementation
 uses
-   sysUtils,
-   turbu_constants,
    sdl_image, sdlstreams;
 
-type
-   ETbiError = class(Exception);
 
 const
    TBI_VERSION = 1;
+   TBINAME = 'RPG';
 
 function saveToTBI(image: PSdlSurface; size: TSgPoint; dirty: boolean): TMemoryStream;
 var
@@ -66,22 +75,45 @@ end;
 function loadFromTBI(stream: TStream): PSdlSurface;
 var
    rw: PSdl_RWops;
+   header: PTbiHeader;
+   info: TTbiInfo;
 begin
    rw := SDLStreamSetup(stream);
    pointer(result) := sdl_image.IMG_LoadPNG_RW(rw);
    SDL_FreeRW(rw);
+
+   if assigned(result.Tag) then
+   begin
+      header := PTbiHeader(result.tag);
+      if (PAnsiChar(@header^.name) = TBINAME) and (header.version >= TBI_VERSION) then
+      begin
+         info := TTbiInfo.Create(header);
+         SDL_Free(header);
+         result.Tag := info;
+      end
+      else raise ETbiError.Create('Invalid tag');
+   end;
+
 end;
 
 { TTbiHeader }
 
 constructor TTbiHeader.Create(size: TSgPoint; dirty: boolean);
 begin
-   name := 'RPG'#0;
+   name := TBINAME;
    self.size := sizeof(TTbiHeader);
    version := TBI_VERSION;
    width := size.x;
    height := size.y;
    self.dirty := dirty;
+end;
+
+{ TTbiInfo }
+
+constructor TTbiInfo.Create(header: PTbiHeader);
+begin
+   FDirty := header.dirty;
+   FSize := sgPoint(header.width, header.height);
 end;
 
 end.

@@ -28,7 +28,7 @@ uses
    turbu_classes, turbu_heroes, turbu_defs;
 
 type
-   TScriptSignature = (ssNone = -1, ssScriptEvent, ssDamageCalcEvent,
+   TScriptSignature = (ssNone, ssScriptEvent, ssDamageCalcEvent,
                        ssToHitEvent, ssCondOnTurnEvent, ssExpCalc,
                        ssSkillCheck);
 {   TScriptEvent = procedure(character, party: TObject) of object;
@@ -169,6 +169,7 @@ constructor TScriptRecord.Create(decl: TRpgDecl; script: TMethod);
 var
    i: integer;
 begin
+   //TODO: Why do I have both this and turbu_script_basis.TScriptRange ?
    FName := decl.name;
    FDesignName := decl.designName;
    FMethod := script;

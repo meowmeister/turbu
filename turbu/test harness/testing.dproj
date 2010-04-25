@@ -206,6 +206,22 @@
 			<DCCReference Include="..\turbu format\converters\conversion_output.pas">
 				<Form>frmConversionOutput</Form>
 			</DCCReference>
+			<DCCReference Include="..\engines\map engine\design\mapobject_container.pas"/>
+			<DCCReference Include="..\..\components\TURBU\DBIndexComboBox.pas"/>
+			<DCCReference Include="..\engines\map engine\design\MapObject_Editor.pas">
+				<Form>frmObjectEditor</Form>
+			</DCCReference>
+			<DCCReference Include="..\engines\map engine\design\frame_conditions.pas">
+				<Form>frameConditions</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\engines\map engine\design\dataset_viewer.pas">
+				<Form>frmDatasetViewer</Form>
+			</DCCReference>
+			<DCCReference Include="..\engines\map engine\design\array_editor.pas">
+				<Form>frmArrayEdit</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\components\TURBU\extensible_cds.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

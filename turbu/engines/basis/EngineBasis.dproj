@@ -87,6 +87,7 @@
 			<DCCReference Include="ps_pointer.pas"/>
 			<DCCReference Include="..\..\archiveInterface.pas"/>
 			<DCCReference Include="..\..\..\classes\Asphyre\AsphyreTimer.pas"/>
+			<DCCReference Include="..\..\turbu format\turbu_tbi_lib.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

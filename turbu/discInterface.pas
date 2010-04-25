@@ -206,8 +206,6 @@ begin
 end;
 
 function TDiscArchive.FileExists(key: string): boolean;
-var
-   filename: string;
 begin
    key := adjustFilename(key);
    result := sysUtils.FileExists(key);

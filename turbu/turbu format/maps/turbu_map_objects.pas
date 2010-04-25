@@ -2,21 +2,40 @@ unit turbu_map_objects;
 
 interface
 uses
-   classes,
+   Classes, DB, RTTI,
    turbu_defs, turbu_classes, turbu_containers, charset_data, turbu_pathing,
+   turbu_serialization,
    SG_defs;
+
+type
+   UploadConditionsAttribute = class(TDBUploadAttribute)
+   protected
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
+   UploadTimerAttribute = class(TDBUploadAttribute)
+   private
+      FIndex: integer;
+   protected
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   public
+      constructor Create(index: integer);
+   end;
 
 type
    TMoveType = (mt_still, mt_randomMove, mt_cycleUD, mt_cycleLR, mt_chaseHero, mt_fleeHero, mt_byRoute);
    TStartCondition = (by_key, by_touch, by_collision, automatic, parallel, on_call);
    TAnimType = (at_sentry, at_jogger, at_fixedDir, at_fixedJog, at_statue, at_spinRight);
-   TPageConditions = (pc_switch1, pc_switch2, pc_var1, pc_var2, pc_item, pc_hero, pc_timer, pc_script);
+   TPageConditions = (pc_switch1, pc_switch2, pc_var1, pc_var2, pc_item, pc_hero, pc_timer1, pc_timer2);
    TPageConditionSet = set of TPageConditions;
 
    TRpgMapObject = class;
 
    TRpgEventConditions = class(TObject)
    private
+      [UploadConditions]
       FConditions: TPageConditionSet;
       FSwitch1: integer;
       FSwitch2: integer;
@@ -28,11 +47,14 @@ type
       FVarValue2: integer;
       FItem: integer;
       FHero: integer;
-      FClock: integer;
+      [UploadTimer(1)]
+      FClock1: integer;
+      [UploadTimer(2)]
+      FClock2: integer;
+      FClock1Op: TComparisonOp;
+      FClock2Op: TComparisonOp;
       FScript: string;
-//      FScriptCompiled: boolean;
 //      function evaluate: boolean;
-//      procedure compileScript;
    public
       constructor Load(savefile: TStream);
       procedure Save(savefile: TStream);
@@ -43,11 +65,16 @@ type
       property switch2Set: integer read FSwitch2 write FSwitch2;
       property variable1Set: integer read FVariable1 write FVariable1;
       property variable1Value: integer read FVarValue1 write FVarValue1;
+      property variable1Op: TComparisonOp read FVar1Op write FVar1Op;
       property variable2Set: integer read FVariable2 write FVariable2;
       property variable2Value: integer read FVarValue2 write FVarValue2;
+      property variable2Op: TComparisonOp read FVar2Op write FVar2Op;
       property itemNeeded: integer read FItem write FItem;
       property heroNeeded: integer read FHero write FHero;
-      property timeRemaining: integer read FClock write FClock;
+      property timeRemaining: integer read FClock1 write FClock1;
+      property timeRemaining2: integer read FClock2 write FClock2;
+      property timer1Op: TComparisonOp read FClock1Op write FClock1Op;
+      property timer2Op: TComparisonOp read FClock2Op write FClock2Op;
       property script: string read FScript write FScript;
    end;
 
@@ -63,6 +90,7 @@ type
       FNoOverlap: boolean;
       FAnimType: TAnimType;
       FMoveSpeed: byte;
+      [NoUpload]
       FPath: TPath;
       FMoveIgnore: boolean;
 {      FEventScript: ansiString;
@@ -80,7 +108,9 @@ type
       function getLength: word; }
       function GetTileGroup: integer;
    protected
+      [NoUpload]
       FConditions: TRpgEventConditions;
+      [NoUpload]
       FParent: TRpgMapObject;
 
       class function keyChar: AnsiChar; override;
@@ -234,8 +264,12 @@ begin
    savefile.ReadBuffer(FVar2Op, sizeof(TComparisonOp));
    FVarValue1 := savefile.readInt;
    FVarValue2 := savefile.readInt;
+   FItem := savefile.readInt;
    FHero := savefile.readInt;
-   FClock := savefile.readInt;
+   FClock1 := savefile.readInt;
+   FClock2 := savefile.readInt;
+   savefile.ReadBuffer(FClock1Op, sizeof(TComparisonOp));
+   savefile.ReadBuffer(FClock2Op, sizeof(TComparisonOp));
    FScript := savefile.readString;
 end;
 
@@ -250,8 +284,12 @@ begin
    savefile.WriteBuffer(FVar2Op, sizeof(TComparisonOp));
    savefile.writeInt(FVarValue1);
    savefile.writeInt(FVarValue2);
+   savefile.writeInt(FItem);
    savefile.writeInt(FHero);
-   savefile.writeInt(FClock);
+   savefile.writeInt(FClock1);
+   savefile.writeInt(FClock2);
+   savefile.WriteBuffer(FClock1Op, sizeof(TComparisonOp));
+   savefile.WriteBuffer(FClock2Op, sizeof(TComparisonOp));
    savefile.writeString(FScript);
 end;
 
@@ -324,6 +362,76 @@ begin
    if FName[1] <> '*' then
       Exit(-1);
    result := StrToInt(Copy(FName, 2, MAXINT));
+end;
+
+{ UploadConditionsAttribute }
+
+procedure UploadConditionsAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   conditions: TPageConditionSet;
+
+   procedure setCondition(field: boolean; value: TPageConditions);
+   begin
+      if field then
+         include(conditions, value)
+      else exclude(conditions, value);
+   end;
+
+begin
+   conditions := [];
+   setCondition(db.FieldByName('bSwitch1').AsBoolean, pc_switch1);
+   setCondition(db.FieldByName('bSwitch2').AsBoolean, pc_switch2);
+   setCondition(db.FieldByName('BVar1').AsBoolean, pc_var1);
+   setCondition(db.FieldByName('bVar2').AsBoolean, pc_var2);
+   setCondition(db.FieldByName('bItem').AsBoolean, pc_item);
+   setCondition(db.FieldByName('bHero').AsBoolean, pc_hero);
+   setCondition(db.FieldByName('bTimer1').AsBoolean, pc_timer1);
+   setCondition(db.FieldByName('bTimer2').AsBoolean, pc_timer2);
+   field.SetValue(instance, TValue.From(conditions));
+end;
+
+procedure UploadConditionsAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   conditions: TPageConditionSet;
+begin
+   conditions := field.GetValue(instance).AsType<TPageConditionSet>;
+   db.FieldByName('bSwitch1').AsBoolean := (pc_switch1 in conditions);
+   db.FieldByName('bSwitch2').AsBoolean := (pc_switch2 in conditions);
+   db.FieldByName('BVar1').AsBoolean := (pc_var1 in conditions);
+   db.FieldByName('bVar2').AsBoolean := (pc_var2 in conditions);
+   db.FieldByName('bItem').AsBoolean := (pc_item in conditions);
+   db.FieldByName('bHero').AsBoolean := (pc_hero in conditions);
+   db.FieldByName('bTimer1').AsBoolean := (pc_timer1 in conditions);
+   db.FieldByName('bTimer2').AsBoolean := (pc_timer2 in conditions);
+end;
+
+{ UploadTimerAttribute }
+
+constructor UploadTimerAttribute.Create(index: integer);
+begin
+   FIndex := index;
+end;
+
+procedure UploadTimerAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   time: integer;
+begin
+   time := (db.FieldByName(format('Clock%dMins', [FIndex])).AsInteger * 60) +
+   db.FieldByName(format('Clock%dSecs', [FIndex])).AsInteger;
+   field.SetValue(instance, time);
+end;
+
+procedure UploadTimerAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   time: integer;
+begin
+   time := field.GetValue(instance).AsInteger;
+   db.FieldByName(format('Clock%dMins', [FIndex])).AsInteger := time div 60;
+   db.FieldByName(format('Clock%dSecs', [FIndex])).AsInteger := time mod 60;
 end;
 
 end.

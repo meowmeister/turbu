@@ -37,7 +37,6 @@ uses
   generic_algorithm_editor in 'generic_algorithm_editor.pas' {frmAlgorithmEditor},
   rm2_turbu_database in '..\turbu format\converters\rm2_turbu_database.pas',
   conversion_table in '..\turbu format\converters\conversion_table.pas',
-  turbu_tbi_lib in '..\turbu format\turbu_tbi_lib.pas',
   frame_commands in 'frame_commands.pas' {frameHeroCommands: TFrame},
   frame_class in 'frame_class.pas' {frameClass: TFrame},
   rm2_turbu_items in '..\turbu format\converters\rm2_turbu_items.pas',

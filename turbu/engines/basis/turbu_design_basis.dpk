@@ -34,6 +34,7 @@ contains
   turbu_listGrid in '..\..\..\components\TURBU\turbu_listGrid.pas',
   sdl_ScrollFrame in '..\..\..\components\TURBU\sdl_ScrollFrame.pas',
   sdl_frame in '..\..\..\components\TURBU\sdl_frame.pas',
-  DBIndexComboBox in '..\..\..\components\TURBU\DBIndexComboBox.pas';
+  DBIndexComboBox in '..\..\..\components\TURBU\DBIndexComboBox.pas',
+  extensible_cds in '..\..\..\components\TURBU\extensible_cds.pas';
 
 end.

@@ -43,6 +43,11 @@ type
       mnuEditMapProperties: TMenuItem;
       mnuTestMapResizing: TMenuItem;
       mnuDebugMapResizing: TMenuItem;
+    N2: TMenuItem;
+    estRenderTargets1: TMenuItem;
+    mnuEventEditor: TMenuItem;
+    mnuMaps: TMenuItem;
+    mnuTestMapObjectContainers: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -59,12 +64,16 @@ type
       procedure mnuEditMapPropertiesClick(Sender: TObject);
       procedure mnuTestMapResizingClick(Sender: TObject);
       procedure mnuDebugMapResizingClick(Sender: TObject);
+    procedure estRenderTargets1Click(Sender: TObject);
+    procedure mnuEventEditorClick(Sender: TObject);
+    procedure mnuTestMapObjectContainersClick(Sender: TObject);
    private
       { Private declarations }
       FEngine: IDesignMapEngine;
       folder, outFolder: string;
       FCurrentMap: IRpgMap;
       procedure setupConversionPaths;
+    procedure renderTest(Sender: TObject);
    public
       { Public declarations }
    end;
@@ -87,6 +96,7 @@ uses
    turbu_2k3_battle_engine, turbu_2k_battle_engine, turbu_sprites,
    turbu_maps, turbu_classes, turbu_2k_map_engine_D,
    turbu_tbi_lib, turbu_sdl_image,
+   MapObject_Editor,
    sdl_canvas, sdl_13, SG_defs,
    strtok, test_map_size;
 
@@ -109,7 +119,7 @@ end;
 procedure TfrmTestConsole.mnuCreateSdlWindowClick(Sender: TObject);
 begin
    if not assigned(lCanvas) then
-      lCanvas := TSdlCanvas.Create('TURBU testing canvas', rect(400, 400, 320, 240), [{sdlwOpenGl,} sdlwShown]);
+      lCanvas := TSdlCanvas.Create('TURBU testing canvas', rect(400, 400, 320, 240), [sdlwOpenGl, sdlwShown]);
    if (sender = mnuCreateSdlWindow) and (assigned(lCanvas)) then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;
@@ -176,6 +186,17 @@ begin
 
    FEngine.editMapProperties(1);
    if sender = mnuEditMapProperties then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
+procedure TfrmTestConsole.mnuEventEditorClick(Sender: TObject);
+begin
+   if FCurrentMap = nil then
+      mnuTestMapLoadingClick(sender);
+
+   TfrmObjectEditor.EditMapObject(TRpgMap(FCurrentMap).mapObjects[1],
+                                  GDatabase.tileset[TRpgMap(FCurrentMap).tileset].name);
+   if sender = mnuEventEditor then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;
 
@@ -407,31 +428,75 @@ begin
 end;
 
 procedure TfrmTestConsole.mnuTestSDLClick(Sender: TObject);
-var
-   filename: string;
-   spriteData: TSpriteData;
-   filestream: TStream;
-   image: TRpgSdlImage;
 begin
    if not assigned(GDatabase) then
       mnuTestLoadingClick(Sender);
    if not assigned(lCanvas) then
       mnuCreateSdlWindowClick(Sender);
 
-   filename := GDatabase.charClass[1].portrait;
-   spriteData := extractSpriteData(filename);
-   filename := spriteData.name + '.tbi';
+   renderTest(sender);
+   SDL_RenderPresent;
+   if sender = mnuTestSdl then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
+procedure TfrmTestConsole.renderTest(Sender: TObject);
+const
+   FULL_FILENAME = 'mapsprite\%s.png';
+var
+   filename: string;
+   filestream: TStream;
+   image: TRpgSdlImage;
+   lrect: TRect;
+begin
+   filename := format(FULL_FILENAME, [GDatabase.charClass[1].mapSprite]);
    fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
    try
-      image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, nil, SPRITE_TILE_SIZE);
+      image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, nil);
    finally
       fileStream.Free;
    end;
+
+   SDL_SetRenderDrawColor($ff, $ff, $ff, $ff);
+   lrect := rect(0, 0, 320, 240 );
+   SDL_RenderFillRect(@lrect);
    lCanvas.Draw(image, sgPoint(0, 0));
-   SDL_RenderPresent;
    image.Free;
-   if sender = mnuTestSdl then
+end;
+
+procedure TfrmTestConsole.mnuTestMapObjectContainersClick(Sender: TObject);
+begin
+   if not assigned(FCurrentMap) then
+      mnuTestMapLoadingClick(sender);
+
+   FEngine.SetCurrentLayer(-1);
+   FCurrentMap := nil;
+   FEngine := nil;
+   if sender = mnuTestMapObjectContainers then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
+procedure TfrmTestConsole.estRenderTargets1Click(Sender: TObject);
+var
+   targets: TSdlRenderTargets;
+begin
+   if not assigned(GDatabase) then
+      mnuTestLoadingClick(Sender);
+   if not assigned(lCanvas) then
+      mnuCreateSdlWindowClick(Sender);
+
+   targets := TSdlRenderTargets.Create;
+   try
+      targets.add(TSdlRenderTarget.Create(lcanvas.size));
+      targets.RenderOn(0, self.renderTest, 0, true);
+      lCanvas.SetRenderer;
+      assert(SDL_RenderCopy(targets[0].handle, nil, nil) = 0);
+      SDL_RenderPresent;
+      if sender = mnuTestSdl then
+         Application.MessageBox('Test concluded successfully!', 'Finished.')
+   finally
+      targets.free;
+   end;
 end;
 
 initialization

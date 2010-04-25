@@ -2,7 +2,8 @@ unit SG_defs;
 
 interface
 uses
-   types;
+   types,
+   sdl_13;
 
 type
    TSgPoint = record //TPoint with equality tests and
@@ -20,12 +21,12 @@ type
       class operator Implicit(a: TSgPoint): TPoint; inline; static;
    end;
 
-   TSgFloatPoint = record //TPoint with equality tests and
-      x, y: single; //basic vector math operators defined
+   TSgFloatPoint = record //floating-point TPoint with equality tests and
+      x, y: single;       //basic vector math operators defined
       class operator Equal(a, b: TSgFloatPoint): boolean; inline; static;
       class operator NotEqual(a, b: TSgFloatPoint): boolean; inline; static;
-      class operator Multiply(a: TSgFloatPoint; b: single): TSgFloatPoint; inline; static;
-      class operator Divide(a: TSgFloatPoint; b: single): TSgFloatPoint; inline; static;
+      class operator Multiply(a: TSgFloatPoint; b: double): TSgFloatPoint; inline; static;
+      class operator Divide(a: TSgFloatPoint; b: double): TSgFloatPoint; inline; static;
       class operator Add(a, b: TSgFloatPoint): TSgFloatPoint; inline; static;
       class operator Subtract(a, b: TSgFloatPoint): TSgFloatPoint; inline; static;
       class operator Implicit(a: TPoint): TSgFloatPoint; inline; static;
@@ -41,7 +42,9 @@ type
    end;
 
 function sgPoint(x, y: integer): TSgPoint;
-function sgPointF(x, y: single): TSgFloatPoint;
+function sgPointF(x, y: double): TSgFloatPoint;
+
+function TRectToSdlRect(const input: TRect): TRect;
 
 const
 //AsphyreDefs backwards compatibility. Replace this when possible
@@ -58,6 +61,11 @@ const
  fxMin         = $00030101;
 
  fxOneColor    = $7FFFFFF6;
+
+const
+   SDL_BLACK: sdl_13.TSDL_Color = (unused: $FF);
+   SDL_WHITE: sdl_13.TSDL_Color = (r: $FF; g: $FF; b:$FF; unused: $FF);
+   SDL_GREEN: sdl_13.TSDL_Color = (r: $00; g: $90; b:$35; unused: $FF);
 
 type
    TDrawFX = integer;
@@ -148,13 +156,13 @@ begin
    result.y := a.y - b.y;
 end;
 
-class operator TSgFloatPoint.Multiply(a: TSgFloatPoint; b: single): TSgFloatPoint;
+class operator TSgFloatPoint.Multiply(a: TSgFloatPoint; b: double): TSgFloatPoint;
 begin
    result.x := a.x * b;
    result.y := a.y * b;
 end;
 
-class operator TSgFloatPoint.Divide(a: TSgFloatPoint; b: single): TSgFloatPoint;
+class operator TSgFloatPoint.Divide(a: TSgFloatPoint; b: double): TSgFloatPoint;
 begin
    result.x := a.x / b;
    result.y := a.y / b;
@@ -182,7 +190,7 @@ begin
    result := not (a = b);
 end;
 
-function sgPointF(x, y: single): TSgFloatPoint;
+function sgPointF(x, y: double): TSgFloatPoint;
 begin
    result.x := x;
    result.y := y;
@@ -198,6 +206,15 @@ end;
 class operator TSgColor.Implicit(a: TSgcolor): Cardinal;
 begin
    result := a.color;
+end;
+
+{ Classless }
+
+function TRectToSdlRect(const input: TRect): TRect;
+begin
+   result.TopLeft := input.TopLeft;
+   result.Right := input.Right - input.Left;
+   result.Bottom := input.Bottom - input.Top;
 end;
 
 end.

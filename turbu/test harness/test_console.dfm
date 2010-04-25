@@ -45,14 +45,6 @@ object frmTestConsole: TfrmTestConsole
         Caption = '&Test SDL window'
         OnClick = mnuTestSDLClick
       end
-      object mnuTestMapLoading: TMenuItem
-        Caption = 'Test &Map Loading'
-        OnClick = mnuTestMapLoadingClick
-      end
-      object mnuEditMapProperties: TMenuItem
-        Caption = '&Edit Map Properties'
-        OnClick = mnuEditMapPropertiesClick
-      end
       object N1: TMenuItem
         Caption = '-'
       end
@@ -63,6 +55,28 @@ object frmTestConsole: TfrmTestConsole
       object mnuDebugMapResizing: TMenuItem
         Caption = '&Debug Map Resizing Code'
         OnClick = mnuDebugMapResizingClick
+      end
+      object N2: TMenuItem
+        Caption = '-'
+      end
+      object estRenderTargets1: TMenuItem
+        Caption = 'Test Render Targets'
+        OnClick = estRenderTargets1Click
+      end
+    end
+    object mnuMaps: TMenuItem
+      Caption = '&Maps'
+      object mnuTestMapLoading: TMenuItem
+        Caption = 'Test &Map Loading'
+        OnClick = mnuTestMapLoadingClick
+      end
+      object mnuEditMapProperties: TMenuItem
+        Caption = '&Edit Map Properties'
+        OnClick = mnuEditMapPropertiesClick
+      end
+      object mnuTestMapObjectContainers: TMenuItem
+        Caption = 'Test Map Object Containers'
+        OnClick = mnuTestMapObjectContainersClick
       end
     end
     object mnuDatabase: TMenuItem
@@ -78,6 +92,10 @@ object frmTestConsole: TfrmTestConsole
       object mnuTestDatabasewindow1: TMenuItem
         Caption = 'Test D&atabase window'
         OnClick = mnuTestDatabasewindow1Click
+      end
+      object mnuEventEditor: TMenuItem
+        Caption = 'Test &Event Editor'
+        OnClick = mnuEventEditorClick
       end
     end
     object mnuTree: TMenuItem

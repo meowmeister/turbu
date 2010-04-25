@@ -38,6 +38,7 @@ type
       function GetID: UInt32; virtual; abstract;
    public
       procedure Clear;
+      procedure SetRenderer; virtual; abstract;
 
       property Width: Integer read FSize.X;
       property Height: Integer read FSize.Y;
@@ -54,6 +55,7 @@ type
       function GetID: UInt32; override;
    public
       constructor Create(size: TSgPoint); overload;
+      procedure SetRenderer; override;
       property handle: TSdlTexture read FHandle;
    end;
 
@@ -99,12 +101,19 @@ type
       * represents the position of the top-left corner.
       ************************************************************************}
       procedure Draw(image: TSdlImage; dest: TSgPoint);
+      procedure DrawTo(image: TSdlImage; dest: TRect);
 
       {************************************************************************
       * Like Draw, but only draws a portion of the image, as defined by the
       * source parameter.
       ************************************************************************}
       procedure DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect);
+      procedure DrawRectTo(image: TSdlImage; dest, source: TRect);
+
+      {************************************************************************
+      * Draws a box on screen
+      ************************************************************************}
+      procedure DrawBox(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
 
       {************************************************************************
       * Flips the buffer, rendering the canvas to the screen.
@@ -114,7 +123,7 @@ type
       {************************************************************************
       * Sets the canvas as the current rendering device.
       ************************************************************************}
-      procedure SetRenderer;
+      procedure SetRenderer; override;
 
       {************************************************************************
       * Pushes the current render target to the render target stack, or loads a
@@ -146,24 +155,30 @@ var
 procedure TSdlRenderSurface.Clear;
 begin
    assert(lCurrentRenderTarget = self);
-   SDL_RenderRect(nil);
+   SDL_RenderFillRect(nil);
 end;
 
 constructor TSdlRenderTarget.Create(size: TSgPoint);
 var
-   window: TSdlCanvas;
+   info: TSDL_RendererInfo;
 begin
    inherited Create;
    assert(assigned(lCurrentRenderTarget));
-   window := lCurrentRenderTarget.parent;
+   SDL_GetRendererInfo(info);
 
-   FHandle := TSdlTexture.Create(0, sdltaRenderTarget, window.Width, window.Height);
+   FHandle := TSdlTexture.Create(info.texture_formats[0], sdltaRenderTarget, size.x, size.y);
    FSize := FHandle.size;
 end;
 
 function TSdlRenderTarget.GetID: UInt32;
 begin
    result := FHandle.ID;
+end;
+
+procedure TSdlRenderTarget.SetRenderer;
+begin
+   SDL_SetTargetTexture(FHandle.ID);
+   lCurrentRenderTarget := self;
 end;
 
 {function TSdlRenderSurface.GetBitDepth: byte;
@@ -188,6 +203,7 @@ begin
       SDL_InitSubSystem(SDL_INIT_VIDEO);
 
    FWindow := SDL_CreateWindow(PAnsiChar(title), size.Left, size.Top, size.Right, size.Bottom, flags);
+   SDL_GetWindowSize(FWindow, FSize.x, FSize.y);
    if SDL_CreateRenderer(FWindow, -1, [sdlrPresentFlip3]) <> 0 then
       raise EBadHandle.Create(string(SDL_GetError));
    SDL_SelectRenderer(FWindow);
@@ -222,7 +238,22 @@ var
 begin
    dummy.TopLeft := dest;
    dummy.BottomRight := image.surface.size;
-   SDL_RenderCopy(image.surface, nil, @dummy);
+   assert(SDL_RenderCopy(image.surface, nil, @dummy) = 0);
+end;
+
+procedure TSdlCanvas.DrawTo(image: TSdlImage; dest: TRect);
+begin
+   SDL_RenderCopy(image.surface, nil, @dest);
+end;
+
+procedure TSdlCanvas.DrawBox(const region: TRect; const color: SDL_Color;
+  const alpha: byte);
+begin
+   assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
+   assert(SDL_RenderDrawLine(region.Left, region.Top, region.Right, region.Top) = 0);
+   assert(SDL_RenderDrawLine(region.right, region.Top, region.Right, region.bottom) = 0);
+   assert(SDL_RenderDrawLine(region.right, region.bottom, region.left, region.bottom) = 0);
+   assert(SDL_RenderDrawLine(region.Left, region.bottom, region.left, region.Top) = 0);
 end;
 
 procedure TSdlCanvas.DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect);
@@ -232,6 +263,11 @@ begin
    dummy.TopLeft := dest;
    dummy.BottomRight := source.BottomRight;
    SDL_RenderCopy(image.surface, @source, @dummy);
+end;
+
+procedure TSdlCanvas.DrawRectTo(image: TSdlImage; dest, source: TRect);
+begin
+   SDL_RenderCopy(image.surface, @source, @dest);
 end;
 
 procedure TSdlCanvas.Flip;
@@ -297,6 +333,7 @@ begin
       Exit;
 
    Target := self[Index];
+   target.SetRenderer;
    if (FillBk) then
    begin
       target.SetBgColor(TSgColor(bkgrnd));

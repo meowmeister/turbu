@@ -41,7 +41,7 @@ object frameClass: TframeClass
         Left = 8
         Top = 16
         Width = 169
-        Height = 21
+        Height = 24
         DataField = 'name'
         DataSource = dsCharClass
         TabOrder = 0
@@ -181,7 +181,7 @@ object frameClass: TframeClass
         Left = 8
         Top = 56
         Width = 73
-        Height = 21
+        Height = 24
         ButtonKind = bkClassic
         TabOrder = 2
         DataField = 'expVars[1]'
@@ -191,7 +191,7 @@ object frameClass: TframeClass
         Left = 96
         Top = 56
         Width = 73
-        Height = 21
+        Height = 24
         ButtonKind = bkClassic
         TabOrder = 3
         DataField = 'expVars[2]'
@@ -201,7 +201,7 @@ object frameClass: TframeClass
         Left = 8
         Top = 96
         Width = 73
-        Height = 21
+        Height = 24
         ButtonKind = bkClassic
         TabOrder = 4
         DataField = 'expVars[3]'
@@ -211,7 +211,7 @@ object frameClass: TframeClass
         Left = 96
         Top = 96
         Width = 73
-        Height = 21
+        Height = 24
         ButtonKind = bkClassic
         TabOrder = 5
         DataField = 'expVars[4]'
@@ -379,10 +379,6 @@ object frameClass: TframeClass
         object tshSkills: TTabSheet
           Caption = 'Commands'
           ImageIndex = 1
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           inline frameHeroCommands: TframeHeroCommands
             Left = 0
             Top = 0
@@ -404,10 +400,6 @@ object frameClass: TframeClass
         object tshRepertoire: TTabSheet
           Caption = 'Skills'
           ImageIndex = 2
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object lstSkills: TRpgListGrid
             Left = 4
             Top = 4
@@ -501,10 +493,6 @@ object frameClass: TframeClass
         object tshAttributes: TTabSheet
           Caption = 'Attributes'
           OnShow = linkNav
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object lstAttributes: TRpgListGrid
             Left = 3
             Top = 3
@@ -661,35 +649,5 @@ object frameClass: TframeClass
     DataSet = dmDatabase.charClasses_Conditions
     Left = 304
     Top = 456
-  end
-  object dsEventName: TClientDataSet
-    Active = True
-    Aggregates = <>
-    FieldDefs = <
-      item
-        Name = 'baseMethod'
-        DataType = ftInteger
-      end>
-    IndexDefs = <>
-    Params = <>
-    StoreDefs = True
-    Left = 376
-    Top = 456
-    Data = {
-      2D0000009619E0BD0100000018000000010000000000030000002D000A626173
-      654D6574686F6404000100000000000000}
-    object dsEventNamebaseMethod: TIntegerField
-      FieldName = 'baseMethod'
-    end
-    object dsEventNamemethodName: TStringField
-      FieldKind = fkLookup
-      FieldName = 'methodName'
-      LookupDataSet = dmDatabase.scriptRecords
-      LookupKeyFields = 'baseMethod'
-      LookupResultField = 'name'
-      KeyFields = 'baseMethod'
-      Size = 32
-      Lookup = True
-    end
   end
 end

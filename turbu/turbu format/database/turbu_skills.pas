@@ -33,7 +33,7 @@ type
    TSkillGainInfo = class(TRpgDatafile)
    private
       FStyle: TSkillFuncStyle;
-      [TNoUpload]
+      [NoUpload]
       FPointer: TScriptRecord;
       FSkill: integer;
       FNums: T4IntArray;

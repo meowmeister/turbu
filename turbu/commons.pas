@@ -24,7 +24,7 @@ unit.}
 interface
 
 uses
-   types, classes, Forms, sysUtils, Registry, math, windows, contnrs; //system libraries
+   types, classes, controls, Forms, sysUtils, Registry, math, windows, contnrs; //system libraries
 
 const
    KEY_READ = $000F0019;
@@ -82,6 +82,7 @@ type
    function round(value: real): integer; inline;
    function pointInRect(const thePoint: types.TPoint; theRect: TRect): boolean;
    procedure clamp(var value: single; low, high: single); inline;
+   procedure EnableControls(const controls: array of TControl; enabled: boolean);
 
    //modulus function that doesn't "mirror" for negative numbers
    function safeMod(big, small: integer): integer; inline;
@@ -245,6 +246,14 @@ begin
    if value >= 0 then
       result := trunc(value + 0.5)
    else result := trunc(value - 0.5)
+end;
+
+procedure EnableControls(const controls: array of TControl; enabled: boolean);
+var
+   control: TControl;
+begin
+   for control in controls do
+      control.Enabled := enabled;
 end;
 
 { TRpgStack }
