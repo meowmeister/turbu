@@ -40,8 +40,6 @@ object frmTurbuMain: TfrmTurbuMain
     Color = clBlack
     ParentColor = False
     TabOrder = 0
-    ExplicitTop = 25
-    ExplicitHeight = 851
     object imgLogo: TSdlFrame
       Left = 0
       Top = 0
@@ -59,7 +57,6 @@ object frmTurbuMain: TfrmTurbuMain
       OnMouseDown = imgLogoMouseDown
       OnMouseMove = imgLogoMouseMove
       OnMouseUp = imgLogoMouseUp
-      ExplicitHeight = 825
     end
     object pnlHorizScroll: TPanel
       Left = 0
@@ -73,7 +70,6 @@ object frmTurbuMain: TfrmTurbuMain
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitTop = 825
       object sbHoriz: TScrollBar
         Left = 0
         Top = 0
@@ -114,7 +110,6 @@ object frmTurbuMain: TfrmTurbuMain
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitHeight = 825
       object sbVert: TScrollBar
         Left = 0
         Top = 0
@@ -129,7 +124,6 @@ object frmTurbuMain: TfrmTurbuMain
         PageSize = 100
         TabOrder = 0
         OnScroll = OnScrollMap
-        ExplicitHeight = 825
       end
     end
   end
@@ -145,8 +139,6 @@ object frmTurbuMain: TfrmTurbuMain
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitTop = 25
-    ExplicitHeight = 851
     object splSidebar: TSplitter
       Left = 0
       Top = 500
@@ -230,7 +222,6 @@ object frmTurbuMain: TfrmTurbuMain
       TabOrder = 1
       OnChange = trvMapTreeChange
       OnContextPopup = trvMapTreeContextPopup
-      ExplicitHeight = 347
     end
   end
   object ToolBar2: TToolBar
@@ -242,7 +233,6 @@ object frmTurbuMain: TfrmTurbuMain
     Caption = 'ToolBar2'
     Images = ilToolbarIcons
     TabOrder = 2
-    ExplicitTop = -5
     object btnLayer1: TToolButton
       Left = 0
       Top = 0
@@ -312,14 +302,6 @@ object frmTurbuMain: TfrmTurbuMain
       Enabled = False
       ImageIndex = 5
       OnClick = btnPauseClick
-    end
-    object ToolButton4: TToolButton
-      Left = 177
-      Top = 0
-      Width = 8
-      Caption = 'ToolButton4'
-      ImageIndex = 8
-      Style = tbsSeparator
     end
   end
   object mnuMain: TMainMenu
@@ -404,7 +386,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C01010800C800C00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010800C800C40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

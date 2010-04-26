@@ -80,7 +80,6 @@ type
     Layer21: TMenuItem;
     MapObjects1: TMenuItem;
     N1: TMenuItem;
-    ToolButton4: TToolButton;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
