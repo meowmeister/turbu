@@ -69,13 +69,14 @@ type
 
 procedure TfrmConversionReport.fatal(errorMessage: string);
 begin
-   logs.logText('Fatal error: ' + errorMessage);
-   FFatal := true;
+   Application.MessageBox(PChar(errorMessage), 'Fatal error');
+   self.ModalResult := mrAbort;
+   self.Close;
 end;
 
 procedure TfrmConversionReport.fatal(error: Exception);
 begin
-   Fatal(format('unhandled conversion exception %s.  "%s"', [error.ClassName, error.Message]));
+   Fatal(format('Unhandled conversion exception %s:'#13#10'"%s"', [error.ClassName, error.Message]));
    ReleaseExceptionObject;
 end;
 
