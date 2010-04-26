@@ -122,30 +122,25 @@ object frmConversionReport: TfrmConversionReport
         Left = 6
         Top = 6
         Width = 35
-        Height = 25
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
         Align = alLeft
         Caption = 'Hints:'
-        ExplicitLeft = 7
-        ExplicitTop = 7
-        ExplicitHeight = 17
       end
       object lblHintCount: TLabel
         Left = 81
         Top = 6
         Width = 8
-        Height = 25
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
         Align = alRight
         Caption = '0'
-        ExplicitTop = 7
-        ExplicitHeight = 17
       end
     end
     object pnlWarnings: TPanel
@@ -166,30 +161,25 @@ object frmConversionReport: TfrmConversionReport
         Left = 6
         Top = 6
         Width = 40
-        Height = 25
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
         Align = alLeft
         Caption = 'Notes:'
-        ExplicitLeft = 7
-        ExplicitTop = 7
-        ExplicitHeight = 17
       end
       object lblWarningCount: TLabel
         Left = 92
         Top = 6
         Width = 8
-        Height = 25
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
         Align = alRight
         Caption = '0'
-        ExplicitTop = 7
-        ExplicitHeight = 17
       end
     end
     object pnlErrors: TPanel
@@ -210,30 +200,25 @@ object frmConversionReport: TfrmConversionReport
         Left = 6
         Top = 6
         Width = 37
-        Height = 26
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
         Align = alLeft
         Caption = 'Errors'
-        ExplicitLeft = 7
-        ExplicitTop = 7
-        ExplicitHeight = 17
       end
       object lblErrorCount: TLabel
         Left = 92
         Top = 6
         Width = 8
-        Height = 26
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
         Align = alRight
         Caption = '0'
-        ExplicitTop = 7
-        ExplicitHeight = 17
       end
     end
   end
