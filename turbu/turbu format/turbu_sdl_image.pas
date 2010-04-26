@@ -63,7 +63,7 @@ end;
 
 destructor TRpgSdlImage.Destroy;
 begin
-   FreeAndNil(FOrigSurface.tag);
+   GetTBIInfo(FOrigSurface).Free;
    FOrigSurface.Free;
    inherited;
 end;
