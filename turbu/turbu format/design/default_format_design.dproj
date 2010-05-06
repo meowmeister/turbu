@@ -1,7 +1,7 @@
 ﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
-			<ProjectGuid>{92EC8F42-BA0C-400A-8937-153F735C2D82}</ProjectGuid>
-			<MainSource>turbu_design_basis.dpk</MainSource>
+			<ProjectGuid>{8054F96A-2CF4-4EBE-8443-89059CDE5E80}</ProjectGuid>
+			<MainSource>default_format_design.dpk</MainSource>
 			<ProjectVersion>12.0</ProjectVersion>
 			<Config Condition="'$(Config)'==''">Debug</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
@@ -20,19 +20,16 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_DcuOutput>..\..\dcus\</DCC_DcuOutput>
-			<DCC_BplOutput>..\..\bin\</DCC_BplOutput>
-			<DCC_DcpOutput>..\..\dcus\</DCC_DcpOutput>
+			<DCC_DependencyCheckOutputName>..\..\..\..\..\..\..\..\Public\Documents\RAD Studio\7.0\Bpl\default_format_design.bpl</DCC_DependencyCheckOutputName>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
-			<GenPackage>true</GenPackage>
-			<DCC_DependencyCheckOutputName>..\..\bin\turbu_design_basis.bpl</DCC_DependencyCheckOutputName>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_Platform>x86</DCC_Platform>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+			<GenPackage>true</GenPackage>
+			<DCC_N>false</DCC_N>
 			<DCC_S>false</DCC_S>
 			<GenDll>true</GenDll>
-			<DCC_N>false</DCC_N>
 			<DCC_E>false</DCC_E>
 			<DCC_F>false</DCC_F>
 			<DCC_K>false</DCC_K>
@@ -44,22 +41,17 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_Optimize>false</DCC_Optimize>
-			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<ItemGroup>
-			<DelphiCompile Include="turbu_design_basis.dpk">
+			<DelphiCompile Include="default_format_design.dpk">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="EngineBasis.dcp"/>
-			<DCCReference Include="dbrtl.dcp"/>
-			<DCCReference Include="vcldb.dcp"/>
-			<DCCReference Include="..\..\..\components\TURBU\turbu_listGrid.pas"/>
-			<DCCReference Include="..\..\..\components\TURBU\sdl_ScrollFrame.pas"/>
-			<DCCReference Include="..\..\..\components\TURBU\sdl_frame.pas"/>
-			<DCCReference Include="..\..\..\components\TURBU\DBIndexComboBox.pas"/>
-			<DCCReference Include="..\..\..\components\TURBU\extensible_cds.pas"/>
+			<DCCReference Include="default_format.dcp"/>
+			<DCCReference Include="turbu_design_basis.dcp"/>
+			<DCCReference Include="sprite_selector.pas">
+				<Form>frmSpriteSelector</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -79,7 +71,7 @@
 			<BorlandProject>
 				<Delphi.Personality>
 					<Source>
-						<Source Name="MainSource">turbu_design_basis.dpk</Source>
+						<Source Name="MainSource">default_format_design.dpk</Source>
 					</Source>
 					<Parameters>
 						<Parameters Name="UseLauncher">False</Parameters>

@@ -48,6 +48,7 @@ type
 
 function saveToTBI(image: PSdlSurface; size: TSgPoint; dirty: boolean): TMemoryStream;
 function loadFromTBI(stream: TStream): PSdlSurface;
+procedure TBI_prepare(surface: PSdlSurface);
 
 implementation
 uses
@@ -75,25 +76,30 @@ end;
 function loadFromTBI(stream: TStream): PSdlSurface;
 var
    rw: PSdl_RWops;
-   header: PTbiHeader;
-   info: TTbiInfo;
 begin
    rw := SDLStreamSetup(stream);
    pointer(result) := sdl_image.IMG_LoadPNG_RW(rw);
    SDL_FreeRW(rw);
+   TBI_prepare(result);
+end;
 
-   if assigned(result.Tag) then
+procedure TBI_prepare(surface: PSdlSurface);
+var
+   header: PTbiHeader;
+   info: TTbiInfo;
+begin
+   if assigned(surface.Tag) then
    begin
-      header := PTbiHeader(result.tag);
+      header := PTbiHeader(surface.tag);
       if (PAnsiChar(@header^.name) = TBINAME) and (header.version >= TBI_VERSION) then
       begin
          info := TTbiInfo.Create(header);
          SDL_Free(header);
-         result.Tag := info;
+         surface.Tag := info;
       end
-      else raise ETbiError.Create('Invalid tag');
+      else if not (TObject(surface.tag) is TTbiInfo) then
+         raise ETbiError.Create('Invalid tag');
    end;
-
 end;
 
 { TTbiHeader }

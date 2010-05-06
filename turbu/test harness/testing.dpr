@@ -107,7 +107,8 @@ uses
   frame_conditions in '..\engines\map engine\design\frame_conditions.pas' {frameConditions: TFrame},
   dataset_viewer in '..\engines\map engine\design\dataset_viewer.pas' {frmDatasetViewer},
   array_editor in '..\engines\map engine\design\array_editor.pas' {frmArrayEdit},
-  extensible_cds in '..\..\components\TURBU\extensible_cds.pas';
+  extensible_cds in '..\..\components\TURBU\extensible_cds.pas',
+  sprite_selector in '..\turbu format\design\sprite_selector.pas' {frmSpriteSelector};
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -128,5 +129,6 @@ begin
   Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
   Application.CreateForm(TfrmConversionReport, frmConversionReport);
   Application.CreateForm(TfrmTestMapSize, frmTestMapSize);
+  Application.CreateForm(TfrmSpriteSelector, frmSpriteSelector);
   Application.Run;
 end.

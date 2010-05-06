@@ -43,6 +43,7 @@ uses
 
 function GetTBIInfo(surface: PSdlSurface): TTbiInfo;
 begin
+   TBI_prepare(surface);
    result := TObject(surface.Tag) as TTbiInfo;
    if not assigned(result) then
       raise ETbiError.Create('TBI info not found');
@@ -58,7 +59,8 @@ end;
 
 constructor TRpgSdlImage.CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages);
 begin
-   inherited CreateSprite(rw, extension, imagename, container, GetTBIInfo(surface).size);
+   inherited CreateSprite(rw, extension, imagename, container, EMPTY);
+   self.TextureSize := GetTBIInfo(surface).size;
 end;
 
 destructor TRpgSdlImage.Destroy;
