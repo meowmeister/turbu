@@ -14,33 +14,11 @@ unit sdl_frame;
 interface
 
 uses
-   Classes, Types, Controls, ExtCtrls, Messages, SysUtils,
-   SDL_13, {$IF CompilerVersion >= 20} Generics.Collections {$ELSE} inifiles {$IFEND};
+   Classes, Types, Controls, ExtCtrls, Messages, SysUtils, Generics.Collections,
+   SDL_13, SDL_ImageManager;
 
 type
-   TTextureList = {$IF CompilerVersion >= 20} TList<TSdlTexture>; {$ELSE} class(TList)
-   protected
-      function Get(Index: Integer): TSdlTexture; inline;
-      procedure Put(Index: Integer; Item: TSdlTexture); inline;
-   public
-      function Add(Item: TSdlTexture): Integer; inline;
-      property Items [Index: Integer]: TSdlTexture read Get write Put; default;
-   end;
-   {$IFEND}
-
-   TTextureHash = {$IF CompilerVersion >= 20} TDictionary<string, TSdlTexture>;
-                  {$ELSE} class(THashedStringList)
-  private
-      function GetItem(const name: string): TSdlTexture;
-      procedure PutItem(const name: string; const Value: TSdlTexture);
-   public
-      function Add(const name: string; Item: TSdlTexture): Integer; inline;
-      function ContainsKey(const name: string): boolean; inline;
-
-      property Items [const name : string]: TSdlTexture read GetItem write PutItem; default;
-   end;
-   {$IFEND}
-
+   TTextureHash = class(TDictionary<string, TSdlTexture>);
    TRendererType = (rtSoftware, rtGDI, rtOpenGL, rtD3D);
 
    TSdlFrame = class(TCustomControl)
@@ -53,8 +31,8 @@ type
       FRenderer: boolean;
       FRendererType: TRendererType;
 
-      FTextureList: TTextureList;
       FTextureHash: TTextureHash;
+      FImageManager: TSdlImages;
 
       FOnTimer: TNotifyEvent;
       FOnAvailable: TNotifyEvent;
@@ -64,6 +42,8 @@ type
       procedure InternalOnTimer(Sender: TObject);
       procedure SetFramerate(Value: word);
       procedure SetActive(const Value: boolean);
+      function GetTextureByName(name: string): TSdlTexture;
+      procedure SetTextureByName(name: string; const Value: TSdlTexture);
    protected
       procedure CreateWnd; override;
       procedure DestroyWnd; override;
@@ -89,7 +69,7 @@ type
       property Available: boolean read FRenderer;
       property SdlWindow: TSdlWindowId read FWindowID;
       property Flags: TSdlWindowFlags read FFlags;
-      property Textures: TTextureList read FTextureList;
+      property TextureByName[name: string]: TSdlTexture read GetTextureByName write SetTextureByName;
    published
       property Framerate: word read FFramerate write SetFramerate;
       property Active: boolean read FActive write SetActive;
@@ -126,7 +106,6 @@ begin
    inherited;
    FTimer := TTimer.Create(self);
    FTimer.Interval := 100;
-   FTextureList := TTextureList.Create;
    FTextureHash := TTextureHash.Create;
    FTimer.OnTimer := Self.InternalOnTimer;
    FRendererType := rtOpenGL;
@@ -134,13 +113,14 @@ begin
    {$IF CompilerVersion >= 21}
    self.ControlStyle := self.ControlStyle + [csGestures];
    {$IFEND}
+   FImageManager := TSdlImages.Create;
 end;
 
 destructor TSdlFrame.Destroy;
 begin
+   FImageManager.Free;
    FTimer.Free;
    FTextureHash.Free;
-   FTextureList.Free;
    inherited;
 end;
 
@@ -219,6 +199,11 @@ begin
    if not (SDL_SelectRenderer(FWindowID) = 0) then
       raise EBadHandle.Create(string(SDL_GetError));
    SDL_RenderPresent;
+end;
+
+function TSdlFrame.GetTextureByName(name: string): TSdlTexture;
+begin
+   result := FTextureHash[name];
 end;
 
 procedure TSdlFrame.Paint;
@@ -311,6 +296,11 @@ begin
    else FTimer.Interval := round(1000 / value);
 end;
 
+procedure TSdlFrame.SetTextureByName(name: string; const Value: TSdlTexture);
+begin
+
+end;
+
 function TSdlFrame.AddTexture(surface: PSdlSurface): integer;
 var
    texture: TSdlTexture;
@@ -354,47 +344,6 @@ begin
          SDL_RenderPresent;
       end;
 end;
-
-{$IF CompilerVersion < 20}
-{ TTextureList }
-
-function TTextureList.Add(Item: TSdlTexture): Integer;
-begin
-   inherited Add(pointer(item.ID));
-end;
-
-function TTextureList.Get(Index: Integer): TSdlTexture;
-begin
-   result.id := TSdlTextureID(inherited Get(index));
-end;
-
-procedure TTextureList.Put(Index: Integer; Item: TSdlTexture);
-begin
-   inherited Put(index, pointer(item.ID));
-end;
-
-{ TTextureHash }
-
-function TTextureHash.Add(const name: string; Item: TSdlTexture): Integer;
-begin
-   result := self.AddObject(name, pointer(item));
-end;
-
-function TTextureHash.GetItem(const name: string): TSdlTexture;
-begin
-   result := self.Objects[self.IndexOf(name)];
-end;
-
-procedure TTextureHash.PutItem(const name: string; const Value: TSdlTexture);
-begin
-   self.Objects[self.IndexOf(name)] := pointer(value);
-end;
-
-function TTextureHash.ContainsKey(const name: string): boolean;
-begin
-   result := self.IndexOf(name) <> -1;
-end;
-{$IFEND}
 
 initialization
 finalization

@@ -19,6 +19,7 @@ unit turbu_constants;
 
 interface
 uses
+   Messages,
    sg_defs;
 
 {$J+}
@@ -70,6 +71,9 @@ const
    ('byte', 'word', 'cardinal', 'UInt64', 'shortint', 'smallint', 'integer', 'Int64',
     'boolean', 'float', 'string', 'char', 'TObject', 'TRpgHero', 'TRpgCharacter',
     'TRpgParty', 'TRpgVehicle', 'TRpgMapObject');
+
+    //custom message types
+    WM_RENDER = WM_USER + 1;
 
 resourcestring
    DESIGN_DB = 'design';

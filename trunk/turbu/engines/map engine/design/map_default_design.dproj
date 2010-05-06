@@ -65,6 +65,7 @@
 			<DCCReference Include="JvStdCtrls.dcp"/>
 			<DCCReference Include="JvDB.dcp"/>
 			<DCCReference Include="turbu_design_basis.dcp"/>
+			<DCCReference Include="default_format_design.dcp"/>
 			<DCCReference Include="SimpleShareMem_MapDefaultDesign.pas"/>
 			<DCCReference Include="map_default_design_plugin.pas">
 				<Form>RpgBasicMapDesignPlugin</Form>

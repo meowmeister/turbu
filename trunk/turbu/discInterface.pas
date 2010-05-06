@@ -165,7 +165,9 @@ end;
 
 procedure TDiscArchive.setCurrentFolder(const value: string);
 begin
-   FCollection.pureSetPath(IncludeTrailingPathDelimiter(value));
+   if value <> '' then
+      FCollection.pureSetPath(IncludeTrailingPathDelimiter(value))
+   else FCollection.pureSetPath('');
 end;
 
 function TDiscArchive.getCurrentFolder: string;

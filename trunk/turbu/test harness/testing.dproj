@@ -222,6 +222,9 @@
 				<Form>frmArrayEdit</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\components\TURBU\extensible_cds.pas"/>
+			<DCCReference Include="..\turbu format\design\sprite_selector.pas">
+				<Form>frmSpriteSelector</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

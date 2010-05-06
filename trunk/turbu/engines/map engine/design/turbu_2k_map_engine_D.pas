@@ -557,8 +557,7 @@ begin
          begin
             rw := sdlstreams.SDLStreamSetup(GArchives[IMAGE_ARCHIVE].getFile(filename));
             {result} newItem := TTileGroupPair.Create(input,
-              TRpgSdlImage.CreateSprite(rw, '.png', input.group.filename, FImages,
-              input.group.dimensions).surface);
+              TRpgSdlImage.CreateSprite(rw, '.png', input.group.filename, FImages).surface);
             TStream(rw.unknown).Free;
             SDLStreamCloseRWops(rw);
          end

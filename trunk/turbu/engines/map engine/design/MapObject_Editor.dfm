@@ -205,8 +205,8 @@ object frmObjectEditor: TfrmObjectEditor
             Margins.Right = 4
             Margins.Bottom = 4
             Caption = '&Set...'
-            Enabled = False
             TabOrder = 1
+            OnClick = btnSetImageClick
           end
         end
         object gbxEventTrigger: TGroupBox

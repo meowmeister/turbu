@@ -5,7 +5,7 @@ interface
 uses
    Windows, SysUtils, Classes, Controls, Forms, DB, DBClient, StdCtrls, ExtCtrls,
    ComCtrls, DBCtrls, Messages, DBIndexComboBox, sdl_frame,
-   turbu_tilesets, turbu_map_objects, turbu_serialization,
+   turbu_tilesets, turbu_map_objects, turbu_serialization, turbu_constants,
    frame_conditions, dataset_viewer, SDL_ImageManager, Mask;
 
 type
@@ -60,8 +60,8 @@ type
     procedure imgEventSpriteAvailable(Sender: TObject);
     procedure btnApplyClick(Sender: TObject);
     procedure SetDirty(DataSet: TDataSet);
+    procedure btnSetImageClick(Sender: TObject);
   private
-    const WM_RENDER = WM_USER + 1;
     procedure WMRender(var message: TMessage); message WM_RENDER;
   private
     { Private declarations }
@@ -83,7 +83,8 @@ type
 implementation
 uses
    commons, turbu_tbi_lib, sdl_13,
-   dm_database, turbu_database, turbu_constants, archiveInterface, turbu_sdl_image,
+   sprite_selector,
+   dm_database, turbu_database, archiveInterface, turbu_sdl_image,
    sg_defs;
 
 {$R *.dfm}
@@ -94,6 +95,20 @@ procedure TfrmObjectEditor.btnApplyClick(Sender: TObject);
 begin
    DownloadMapObject(FMapObject);
    btnApply.Enabled := false;
+end;
+
+procedure TfrmObjectEditor.btnSetImageClick(Sender: TObject);
+var
+   filename: string;
+   frame: integer;
+begin
+   filename := dsPagesName.Value;
+   frame := dsPagesFrame.Value;
+   TfrmSpriteSelector.SelectSprite(FTileset, filename, frame);
+   dsPages.Edit;
+   dsPagesName.Value := filename;
+   dsPagesFrame.Value := frame;
+   dsPages.Post;
 end;
 
 procedure TfrmObjectEditor.Button1Click(Sender: TObject);
@@ -195,11 +210,9 @@ begin
 end;
 
 procedure TfrmObjectEditor.tabEventPagesChange(Sender: TObject);
-var
-   index: integer;
 begin
    dsPages.Locate('id', tabEventPages.TabIndex, []);
-   index := GetSpriteIndex(dsPagesName.Value);
+   GetSpriteIndex(dsPagesName.Value);
 end;
 
 procedure TfrmObjectEditor.UploadMapObject(obj: TRpgMapObject);

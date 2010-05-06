@@ -24,7 +24,7 @@ type
   SDL_WindowID = TSdlWindowId;
   {$EXTERNALSYM SDL_WindowID}
 
-   TSdlColor32 = type UInt32;
+  TSdlColor32 = type UInt32;
 
 const
   SDL_WINDOWPOS_UNDEFINED = $7FFFFFF;

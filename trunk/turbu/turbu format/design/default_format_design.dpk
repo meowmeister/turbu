@@ -1,4 +1,4 @@
-package turbu_design_basis;
+package default_format_design;
 
 {$R *.res}
 {$ALIGN 8}
@@ -26,15 +26,10 @@ package turbu_design_basis;
 {$IMPLICITBUILD ON}
 
 requires
-  EngineBasis,
-  dbrtl,
-  vcldb;
+  default_format,
+  turbu_design_basis;
 
 contains
-  turbu_listGrid in '..\..\..\components\TURBU\turbu_listGrid.pas',
-  sdl_ScrollFrame in '..\..\..\components\TURBU\sdl_ScrollFrame.pas',
-  sdl_frame in '..\..\..\components\TURBU\sdl_frame.pas',
-  DBIndexComboBox in '..\..\..\components\TURBU\DBIndexComboBox.pas',
-  extensible_cds in '..\..\..\components\TURBU\extensible_cds.pas';
+  sprite_selector in 'sprite_selector.pas' {frmSpriteSelector};
 
 end.

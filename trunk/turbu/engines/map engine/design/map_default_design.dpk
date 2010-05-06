@@ -30,7 +30,8 @@ requires
   map_default,
   JvStdCtrls,
   JvDB,
-  turbu_design_basis;
+  turbu_design_basis,
+  default_format_design;
 
 contains
   SimpleShareMem_MapDefaultDesign in 'SimpleShareMem_MapDefaultDesign.pas',
