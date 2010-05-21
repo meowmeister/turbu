@@ -121,7 +121,7 @@ object frameConditions: TframeConditions
       Left = 111
       Top = 89
       Width = 226
-      Height = 24
+      Height = 26
       DataField = 'Variable1Name'
       DataSource = srcConditions
       TabOrder = 26
@@ -130,7 +130,7 @@ object frameConditions: TframeConditions
       Left = 112
       Top = 24
       Width = 226
-      Height = 24
+      Height = 26
       DataField = 'Switch1Name'
       DataSource = srcConditions
       TabOrder = 22
@@ -496,7 +496,7 @@ object frameConditions: TframeConditions
       Left = 112
       Top = 54
       Width = 226
-      Height = 24
+      Height = 26
       DataField = 'Switch2Name'
       DataSource = srcConditions
       TabOrder = 24
@@ -681,6 +681,7 @@ object frameConditions: TframeConditions
         DataType = ftBoolean
       end>
     IndexDefs = <>
+    IndexFieldNames = 'Master'
     Params = <>
     StoreDefs = True
     Left = 24

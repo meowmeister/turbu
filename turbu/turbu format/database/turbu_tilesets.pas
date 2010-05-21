@@ -47,7 +47,7 @@ type
    protected
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
       procedure download(db: TDataset); override;
 
@@ -68,7 +68,7 @@ type
    protected
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
       procedure download(db: TDataset); override;
@@ -94,7 +94,7 @@ type
       class function keyChar: ansiChar; override;
    public
       constructor Create;
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
       procedure download(db: TDataset); override;
@@ -106,6 +106,7 @@ type
    end;
 
 procedure SetDatabase(value: TRpgDatafile);
+function UpperLayerFilter(value: TTileGroupRecord): boolean;
 
 implementation
 uses
@@ -117,6 +118,11 @@ var
 procedure SetDatabase(value: TRpgDatafile);
 begin
    GDatabase := value as TRpgDatabase;
+end;
+
+function UpperLayerFilter(value: TTileGroupRecord): boolean;
+begin
+   result := value.layers - [0] <> [];
 end;
 
 { TTileGroup }

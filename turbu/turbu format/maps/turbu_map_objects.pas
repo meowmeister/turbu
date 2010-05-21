@@ -115,7 +115,9 @@ type
 
       class function keyChar: AnsiChar; override;
    public
-      constructor Load(savefile: TStream; parent: TRpgMapObject);
+      constructor Create(parent: TRpgMapObject; id: smallint);
+      constructor Load(savefile: TStream); overload; override;
+      constructor Load(savefile: TStream; parent: TRpgMapObject); reintroduce; overload;
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
 
@@ -159,8 +161,9 @@ type
    public //no idea why, but marking this protected generates a bad VMT.
       class function keyChar: ansiChar; override;
    public
-      constructor Create;
-      constructor Load(savefile: TStream);
+      constructor Create; overload;
+      constructor Create(id: smallint); overload;
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
       destructor Destroy; override;
 
@@ -217,6 +220,15 @@ begin
    for page in FPages do
       page.save(savefile);
    writeEnd(savefile);
+end;
+
+constructor TRpgMapObject.Create(id: smallint);
+begin
+   inherited Create;
+   FId := id;
+   FPages := TPageList.Create;
+   AddPage(TRpgEventPage.Create(self, 0));
+   FCurrentPage := FPages[0];
 end;
 
 constructor TRpgMapObject.Create;
@@ -295,6 +307,14 @@ end;
 
 { TRpgEventPage }
 
+constructor TRpgEventPage.Create(parent: TRpgMapObject; id: smallint);
+begin
+   FParent := parent;
+   FId := id;
+   FPath := TPath.Create;
+   FConditions := TRpgEventConditions.Create;
+end;
+
 destructor TRpgEventPage.Destroy;
 begin
    FPath.Free;
@@ -316,6 +336,11 @@ end;
 class function TRpgEventPage.keyChar: AnsiChar;
 begin
    result := 'e';
+end;
+
+constructor TRpgEventPage.Load(savefile: TStream);
+begin
+   self.Load(savefile, nil);
 end;
 
 constructor TRpgEventPage.Load(savefile: TStream; parent: TRpgMapObject);

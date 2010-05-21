@@ -1161,7 +1161,7 @@ begin
    end;
    self.ImageIndex := FEvent.currentPage.whichTile;
    if FEvent.currentPage.TileGroup <> -1 then
-      name := engine.tileset.Records[FEvent.currentPage.TileGroup].name
+      name := engine.tileset.Records[FEvent.currentPage.TileGroup].group.name
    else name := FEvent.CurrentPage.Name;
    engine.EnsureImage(name);
    self.ImageName := name;

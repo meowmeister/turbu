@@ -116,7 +116,7 @@ type
       class function keyChar: ansiChar; override;
    public
       constructor Create;
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
       procedure copyToDB(db: TdmDatabase; typeSet: TRpgDataTypeSet = []);
@@ -192,8 +192,8 @@ windows,
    turbu_functional;
 
 const
-   MIN_DBVERSION = 33;
-   DBVERSION = 33;
+   MIN_DBVERSION = 34;
+   DBVERSION = 34;
 
 { TRpgDatabase }
 

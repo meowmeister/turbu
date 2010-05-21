@@ -61,33 +61,51 @@ type
     procedure btnApplyClick(Sender: TObject);
     procedure SetDirty(DataSet: TDataSet);
     procedure btnSetImageClick(Sender: TObject);
+    procedure imgEventSpriteKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure btnNewClick(Sender: TObject);
+    procedure btnDeleteClick(Sender: TObject);
+    procedure btnCopyClick(Sender: TObject);
+    procedure btnPasteClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     procedure WMRender(var message: TMessage); message WM_RENDER;
+    procedure OnClipboardChange(Sender: TObject);
   private
     { Private declarations }
     FViewer: TfrmDatasetViewer;
     FSerializer: TDatasetSerializer;
     FTileset: TTileset;
-    FImageList: TSdlImages;
     FMapObject: TRpgMapObject;
 
     procedure UploadMapObject(obj: TRpgMapObject);
     procedure DownloadMapObject(obj: TRpgMapObject);
     procedure ClearViewer(sender: TObject);
     function GetSpriteIndex(name: string): integer;
+    function DoEdit(obj: TRpgMapObject; const tilesetName: string): integer;
+    procedure DisableDatasets;
+    procedure EnableDatasets;
+    procedure AdjustRemainingEntries(incIDs: boolean);
+    procedure CheckDeleteEnabled;
+    procedure InsertPage(page: TRpgEventPage);
   public
     { Public declarations }
     class procedure EditMapObject(obj: TRpgMapObject; const tilesetName: string);
+    class function NewMapObject(id: integer; const tilesetName: string): TRpgMapObject;
   end;
 
 implementation
 uses
+   clipbrd,
    commons, turbu_tbi_lib, sdl_13,
-   sprite_selector,
+   sprite_selector, ClipboardWatcher,
    dm_database, turbu_database, archiveInterface, turbu_sdl_image,
    sg_defs;
 
 {$R *.dfm}
+
+var
+   eventClipFormat: cardinal;
 
 { TfrmObjectEditor }
 
@@ -97,18 +115,129 @@ begin
    btnApply.Enabled := false;
 end;
 
+procedure TfrmObjectEditor.btnCopyClick(Sender: TObject);
+var
+   page: TRpgEventPage;
+begin
+   page := TRpgEventPage.Create(nil, 0);
+   try
+      FSerializer.download(page, dsPages);
+      FSerializer.download(page.conditionBlock, frameConditions.dsConditions);
+      page.CopyToClipboard;
+   finally
+      page.Free;
+   end;
+end;
+
+procedure TfrmObjectEditor.btnPasteClick(Sender: TObject);
+begin
+   InsertPage(TRpgEventPage.PasteFromClipboard);
+end;
+
+procedure TfrmObjectEditor.DisableDatasets;
+begin
+   dsPages.DisableControls;
+   frameConditions.dsConditions.DisableControls;
+   frameConditions.dsConditions.MasterSource := nil;
+end;
+
+procedure TfrmObjectEditor.EnableDatasets;
+begin
+   dsPages.EnableControls;
+   frameConditions.dsConditions.EnableControls;
+   frameConditions.dsConditions.MasterSource := srcPages;
+end;
+
+procedure TfrmObjectEditor.AdjustRemainingEntries(incIDs: boolean);
+begin
+   while not dsPages.Eof do
+   begin
+      assert(frameConditions.dsConditions.Locate('Master', dsPagesID.Value, []));
+      frameConditions.dsConditions.Edit;
+      if incIDs then
+         frameConditions.dsConditionsMaster.Value := frameConditions.dsConditionsMaster.Value + 1
+      else frameConditions.dsConditionsMaster.Value := frameConditions.dsConditionsMaster.Value - 1;
+      frameConditions.dsConditions.Post;
+      dsPages.Edit;
+      if incIDs then
+         dsPagesID.Value := dsPagesID.Value + 1
+      else dsPagesID.Value := dsPagesID.Value - 1;
+      dsPages.Next;
+   end;
+end;
+
+procedure TfrmObjectEditor.btnDeleteClick(Sender: TObject);
+begin
+   assert(tabEventPages.Tabs.Count > 1);
+   DisableDatasets;
+   try
+      dsPages.Delete;
+      frameConditions.dsConditions.Delete;
+      AdjustRemainingEntries(false);
+   finally
+      EnableDatasets;
+   end;
+   tabEventPages.Tabs.Delete(tabEventPages.Tabs.Count - 1);
+   CheckDeleteEnabled;
+   btnApply.Enabled := true;
+end;
+
+procedure TfrmObjectEditor.InsertPage(page: TRpgEventPage);
+var
+   id: integer;
+begin
+   DisableDatasets;
+   try
+      id := dsPagesId.Value + 1;
+      page.id := id;
+      dsPages.Next;
+      AdjustRemainingEntries(true);
+      FSerializer.upload(page, dsPages);
+      FSerializer.upload(page.conditionBlock, frameConditions.dsConditions);
+      frameConditions.dsConditions.Edit;
+      frameConditions.dsConditionsMaster.Value := id;
+      frameConditions.dsConditions.Post;
+      tabEventPages.Tabs.Add(intToStr(FMapObject.pages.Count));
+      tabEventPages.TabIndex := id;
+      tabEventPagesChange(self);
+   finally
+      EnableDatasets;
+      page.Free;
+   end;
+   CheckDeleteEnabled;
+   btnApply.Enabled := true;
+end;
+
+procedure TfrmObjectEditor.btnNewClick(Sender: TObject);
+var
+   id: integer;
+   page, newpage: TRpgEventPage;
+begin
+   id := dsPagesId.Value;
+   page := FMapObject.pages[id];
+   newpage := TRpgEventPage.Create(nil, 0);
+   newpage.name := page.name;
+   newpage.direction := page.direction;
+   newpage.whichTile := page.whichTile;
+   InsertPage(newpage);
+end;
+
 procedure TfrmObjectEditor.btnSetImageClick(Sender: TObject);
 var
    filename: string;
    frame: integer;
 begin
+   if dsPagesName.Value = '' then
+      GetSpriteIndex('');
    filename := dsPagesName.Value;
    frame := dsPagesFrame.Value;
    TfrmSpriteSelector.SelectSprite(FTileset, filename, frame);
+   SDL_SelectRenderer(imgEventSprite.SdlWindow);
    dsPages.Edit;
    dsPagesName.Value := filename;
    dsPagesFrame.Value := frame;
    dsPages.Post;
+   GetSpriteIndex(filename);
 end;
 
 procedure TfrmObjectEditor.Button1Click(Sender: TObject);
@@ -129,37 +258,22 @@ begin
    FViewer := nil;
 end;
 
-class procedure TfrmObjectEditor.EditMapObject(obj: TRpgMapObject; const tilesetName: string);
-var
-   form: TfrmObjectEditor;
-begin
-   form := TfrmObjectEditor.Create(nil);
-   try
-      form.UploadMapObject(obj);
-      form.FTileset := GDatabase.tileset.firstWhere(
-         function(arg1: TTileset): boolean
-         begin
-            result := arg1.name = tilesetName;
-         end);
-
-      if form.ShowModal = mrOK then
-         form.DownloadMapObject(obj);
-   finally
-      form.Free;
-   end;
-end;
-
 procedure TfrmObjectEditor.FormCreate(Sender: TObject);
 begin
    FSerializer := TDatasetSerializer.Create;
-   FImageList := TSdlImages.Create;
    Button1.Visible := DebugHook <> 0;
+   ClipboardWatcher.RegisterClipboardViewer(self.OnClipboardChange);
 end;
 
 procedure TfrmObjectEditor.FormDestroy(Sender: TObject);
 begin
+   ClipboardWatcher.UnregisterClipboardViewer(self.OnClipboardChange);
    FSerializer.Free;
-   FImageList.Free;
+end;
+
+procedure TfrmObjectEditor.FormShow(Sender: TObject);
+begin
+   Self.OnClipboardChange(self);
 end;
 
 function TfrmObjectEditor.GetSpriteIndex(name: string): integer;
@@ -171,6 +285,13 @@ var
    size: TSgPoint;
    spriteRect, destRect: TRect;
 begin
+   if name = '' then
+   begin
+      name := '*' + intToStr(FTileset.Records.firstIndexWhere(turbu_tilesets.upperLayerFilter));
+      dsPages.Edit;
+      dsPagesName.Value := name;
+      dsPages.Post;
+   end;
    if name[1] = '*' then
    begin
       name := FTileset.Records[strToInt(copy(name, 2, 3))].group.filename;
@@ -185,14 +306,13 @@ begin
    begin
       stream := GArchives[IMAGE_ARCHIVE].getFile(name);
       try
-         image := TRpgSdlImage.CreateSprite(loadFromTBI(stream), name, FImageList);
+         image := TRpgSdlImage.CreateSprite(loadFromTBI(stream), name, imgEventSprite.Images);
          assert(image.Texture.ID > 0);
-         imgEventSprite.AddTexture(image.surface, name);
       finally
          stream.Free;
       end;
    end
-   else image := FImageList.Image[name] as TRpgSdlImage;
+   else image := imgEventSprite.Images.Image[name] as TRpgSdlImage;
    result := imgEventSprite.IndexOfName(name);
 
    spriteRect := image.spriteRect[dsPagesframe.Value];
@@ -204,9 +324,20 @@ begin
    imgEventSprite.Flip;
 end;
 
+procedure TfrmObjectEditor.CheckDeleteEnabled;
+begin
+   btnDelete.Enabled := tabEventPages.Tabs.Count > 1;
+end;
+
 procedure TfrmObjectEditor.imgEventSpriteAvailable(Sender: TObject);
 begin
    PostMessage(self.Handle, WM_RENDER, 0, 0);
+end;
+
+procedure TfrmObjectEditor.imgEventSpriteKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+   outputDebugString(PChar(format('Key pressed: %d', [key])));
 end;
 
 procedure TfrmObjectEditor.tabEventPagesChange(Sender: TObject);
@@ -236,26 +367,37 @@ begin
       frameConditions.dsConditions.EnableControls;
    end;
    btnApply.Enabled := false;
+   CheckDeleteEnabled;
 end;
 
 procedure TfrmObjectEditor.DownloadMapObject(obj: TRpgMapObject);
 var
    page: TRpgEventPage;
+   last: integer;
 begin
-   dsPages.DisableControls;
-   frameConditions.dsConditions.DisableControls;
+   DisableDatasets;
+   last := 0;
    try
       dsPages.First;
+      frameConditions.dsConditions.First;
       while not dsPages.Eof do
       begin
-         page := obj.pages[dsPagesId.Value];
+         assert(frameConditions.dsConditions.Locate('Master', dsPagesID.Value, []));
+         last := dsPagesID.Value;
+         if last >= obj.pages.Count then
+            obj.AddPage(TRpgEventPage.Create(obj, last));
+         page := obj.pages[last];
          FSerializer.download(page, dsPages);
          FSerializer.download(page.conditionBlock, frameConditions.dsConditions);
+         dsPages.Next;
+         frameConditions.dsConditions.Next;
       end;
       obj.name := txtName.Text;
+      inc(last);
+      if last < obj.pages.Count then
+         obj.pages.DeleteRange(last, obj.pages.Count - last);
    finally
-      dsPages.EnableControls;
-      frameConditions.dsConditions.EnableControls;
+      EnableDatasets;
    end;
 end;
 
@@ -269,5 +411,57 @@ begin
    dsPages.First;
    tabEventPagesChange(self);
 end;
+
+function TfrmObjectEditor.DoEdit(obj: TRpgMapObject; const tilesetName: string): integer;
+begin
+   UploadMapObject(obj);
+   FTileset := GDatabase.tileset.firstWhere(
+      function(arg1: TTileset): boolean
+      begin
+         result := arg1.name = tilesetName;
+      end);
+
+   result := self.ShowModal;
+   if result = mrOK then
+      DownloadMapObject(obj);
+end;
+
+class procedure TfrmObjectEditor.EditMapObject(obj: TRpgMapObject; const tilesetName: string);
+var
+   form: TfrmObjectEditor;
+begin
+   form := TfrmObjectEditor.Create(nil);
+   try
+      form.DoEdit(obj, tilesetName);
+   finally
+      form.Free;
+   end;
+end;
+
+class function TfrmObjectEditor.NewMapObject(id: integer;
+  const tilesetName: string): TRpgMapObject;
+var
+   form: TfrmObjectEditor;
+begin
+   form := TfrmObjectEditor.Create(nil);
+   result := TRpgMapObject.Create(id);
+   result.name := format('Map%.4d', [id]);
+   try
+      if form.DoEdit(result, tilesetName) <> mrOK then
+         FreeAndNil(result);
+   finally
+      form.Free;
+   end;
+end;
+
+procedure TfrmObjectEditor.OnClipboardChange(Sender: TObject);
+begin
+   btnPaste.Enabled := clipboard.HasFormat(eventClipFormat);
+end;
+
+initialization
+   eventClipFormat := RegisterClipboardFormat('CF_TRpgEventPage');
+   if eventClipFormat = 0 then
+      RaiseLastOSError;
 
 end.

@@ -14,11 +14,10 @@ unit sdl_frame;
 interface
 
 uses
-   Classes, Types, Controls, ExtCtrls, Messages, SysUtils, Generics.Collections,
+   Types, Classes, Controls, ExtCtrls, Messages, SysUtils, Generics.Collections,
    SDL_13, SDL_ImageManager;
 
 type
-   TTextureHash = class(TDictionary<string, TSdlTexture>);
    TRendererType = (rtSoftware, rtGDI, rtOpenGL, rtD3D);
 
    TSdlFrame = class(TCustomControl)
@@ -31,11 +30,13 @@ type
       FRenderer: boolean;
       FRendererType: TRendererType;
 
-      FTextureHash: TTextureHash;
       FImageManager: TSdlImages;
 
       FOnTimer: TNotifyEvent;
       FOnAvailable: TNotifyEvent;
+
+      FLogicalWidth: integer;
+      FLogicalHeight: integer;
 
       function CreateWindow: boolean;
       function CreateRenderer: boolean;
@@ -43,37 +44,50 @@ type
       procedure SetFramerate(Value: word);
       procedure SetActive(const Value: boolean);
       function GetTextureByName(name: string): TSdlTexture;
-      procedure SetTextureByName(name: string; const Value: TSdlTexture);
+      procedure SetLogicalWidth(const Value: integer);
+      procedure SetLogicalHeight(const Value: integer);
+      function GetAspectRatio: double;
    protected
       procedure CreateWnd; override;
       procedure DestroyWnd; override;
       procedure Paint; override;
+      procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
+         X, Y: Integer); override;
+      procedure WMGetDlgCode(var msg: TMessage); message WM_GETDLGCODE;
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
       procedure BeforeDestruction; override;
 
+      procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
+      procedure ResetLogicalSize;
       procedure Clear;
       procedure FillColor(color: SDL_Color; alpha: byte);
       procedure DrawRect(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
       procedure DrawBox(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
       function AddTexture(surface: PSdlSurface): integer; overload;
       procedure AddTexture(surface: PSdlSurface; const name: string); overload;
+      function AddImage(image: TSdlImage): integer; inline;
       procedure DrawTexture(texture: TSdlTexture; src: PSdlRect = nil; dst: PSdlRect = nil); overload;
       procedure DrawTexture(const name: string; src: PSdlRect = nil; dst: PSdlRect = nil); overload;
       procedure DrawTexture(index: integer; src: PSdlRect = nil; dst: PSdlRect = nil); overload;
       procedure Flip;
       function ContainsName(const name: string): boolean;
       function IndexOfName(const name: string): integer;
+      function LogicalCoordinates(x, y: integer): TPoint;
 
       property Available: boolean read FRenderer;
       property SdlWindow: TSdlWindowId read FWindowID;
       property Flags: TSdlWindowFlags read FFlags;
-      property TextureByName[name: string]: TSdlTexture read GetTextureByName write SetTextureByName;
+      property TextureByName[name: string]: TSdlTexture read GetTextureByName {write SetTextureByName};
+      property Images: TSdlImages read FImageManager;
+      property AspectRatio: double read GetAspectRatio;
    published
       property Framerate: word read FFramerate write SetFramerate;
       property Active: boolean read FActive write SetActive;
       property RendererType: TRendererType read FRendererType write FRendererType default rtOpenGL;
+      property LogicalWidth: integer read FLogicalWidth write SetLogicalWidth;
+      property LogicalHeight: integer read FLogicalHeight write SetLogicalHeight;
       property OnTimer: TNotifyEvent read FOnTimer write FOnTimer;
       property OnAvailable: TNotifyEvent read FOnAvailable write FOnAvailable;
    published
@@ -84,6 +98,9 @@ type
       property OnMouseDown;
       property OnMouseMove;
       property OnMouseUp;
+      property OnKeyDown;
+      property OnKeyPress;
+      property OnKeyUp;
    end;
 
 procedure Register;
@@ -106,29 +123,30 @@ begin
    inherited;
    FTimer := TTimer.Create(self);
    FTimer.Interval := 100;
-   FTextureHash := TTextureHash.Create;
    FTimer.OnTimer := Self.InternalOnTimer;
    FRendererType := rtOpenGL;
    self.ControlStyle := [csCaptureMouse,csClickEvents,csOpaque,csDoubleClicks];
    {$IF CompilerVersion >= 21}
    self.ControlStyle := self.ControlStyle + [csGestures];
    {$IFEND}
+   self.TabStop := true;
    FImageManager := TSdlImages.Create;
+   FLogicalWidth := 1;
+   FLogicalHeight := 1;
+   if SDL_WasInit(SDL_INIT_VIDEO) <> SDL_INIT_VIDEO then
+      SDL_InitSubSystem(SDL_INIT_VIDEO);
 end;
 
 destructor TSdlFrame.Destroy;
 begin
    FImageManager.Free;
    FTimer.Free;
-   FTextureHash.Free;
    inherited;
 end;
 
 procedure TSdlFrame.CreateWnd;
 begin
    inherited;
-   if SDL_WasInit(SDL_INIT_VIDEO) <> SDL_INIT_VIDEO then
-      SDL_InitSubSystem(SDL_INIT_VIDEO);
    self.CreateWindow;
 end;
 
@@ -168,12 +186,12 @@ end;
 
 procedure TSdlFrame.DrawTexture(index: integer; src, dst: PSdlRect);
 begin
-   drawTexture(FTextureList[index], src, dst);
+   drawTexture(FImageManager[index].surface, src, dst);
 end;
 
 procedure TSdlFrame.DrawTexture(const name: string; src, dst: PSdlRect);
 begin
-   drawTexture(fTextureHash[name], src, dst);
+   drawTexture(FImageManager.Image[name].surface, src, dst);
 end;
 
 procedure TSdlFrame.DrawTexture(texture: TSdlTexture; src, dst: PSdlRect);
@@ -201,16 +219,21 @@ begin
    SDL_RenderPresent;
 end;
 
+function TSdlFrame.GetAspectRatio: double;
+begin
+   result := self.Width / self.Height;
+end;
+
 function TSdlFrame.GetTextureByName(name: string): TSdlTexture;
 begin
-   result := FTextureHash[name];
+   result := FImageManager.Image[name].surface;
 end;
 
 procedure TSdlFrame.Paint;
 begin
    if SDL_SelectRenderer(FWindowID) = -1 then
       CreateRenderer;
-   SDL_RenderPresent;
+   self.Flip;
 end;
 
 {******************************************************************************}
@@ -233,7 +256,6 @@ const
    RENDERERS: array[TRendererType] of AnsiString = ('software', 'gdi', 'opengl', 'd3d');
 var
    pFormat: integer;
-   info: TSDL_RendererInfo;
 begin
    if (SDL_SelectRenderer(FWindowID) = 0) then
    begin
@@ -254,7 +276,6 @@ begin
       assert(SDL_SetRenderDrawColor(0, 0, 0, 255) = 0);
       SDL_RenderFillRect(nil);
       FFlags := SDL_GetWindowFlags(FWindowID);
-      SDL_GetRendererInfo(info);
       FRenderer := true;
       if assigned(FOnAvailable) then
          FOnAvailable(self);
@@ -265,7 +286,7 @@ end;
 
 function TSdlFrame.IndexOfName(const name: string): integer;
 begin
-   result := FTextureList.IndexOf(FTextureHash[name]);
+   result := FImageManager.IndexOf(name);
 end;
 
 procedure TSdlFrame.InternalOnTimer(Sender: TObject);
@@ -276,15 +297,52 @@ begin
       FOnTimer(self);
 end;
 
+function TSdlFrame.LogicalCoordinates(x, y: integer): TPoint;
+begin
+   result.X := trunc(x * self.LogicalWidth / self.Width);
+   result.Y := trunc(y * self.LogicalHeight / self.Height);
+end;
+
+procedure TSdlFrame.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+   if self.CanFocus then
+      Windows.SetFocus(Handle);
+   inherited;
+end;
+
 function TSdlFrame.ContainsName(const name: string): boolean;
 begin
-   result := FTextureHash.ContainsKey(name);
+   result := FImageManager.Contains(name);
 end;
 
 procedure TSdlFrame.SetActive(const Value: boolean);
 begin
    FActive := Value;
    FTimer.Enabled := Value;
+end;
+
+procedure TSdlFrame.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
+var
+   size: TPoint;
+   ratioX, ratioY: double;
+begin
+   if (AWidth <> self.Width) or (AHeight <> self.Height) then
+   begin
+      if not FRenderer then
+      begin
+         FLogicalWidth := aWidth;
+         FLogicalHeight := aHeight;
+      end
+      else begin
+         SDL_GetWindowLogicalSize(FWindowID, size.X, size.Y);
+         ratioX := size.X / self.Width;
+         ratioY := size.Y / self.Height;
+         self.LogicalWidth := round(AWidth * ratioX);
+         self.LogicalHeight := round(AHeight * ratioY);
+      end;
+   end;
+   inherited SetBounds(ALeft, ATop, AWidth, AHeight);
 end;
 
 procedure TSdlFrame.SetFramerate(Value: word);
@@ -296,33 +354,61 @@ begin
    else FTimer.Interval := round(1000 / value);
 end;
 
-procedure TSdlFrame.SetTextureByName(name: string; const Value: TSdlTexture);
+procedure TSdlFrame.SetLogicalHeight(const Value: integer);
 begin
+   if FLogicalHeight = Value then
+      Exit;
 
+   FLogicalHeight := Value;
+   SDL_SetWindowLogicalSize(FWindowID, FLogicalWidth, FLogicalHeight);
+   if FRenderer then
+      self.Flip;
+end;
+
+procedure TSdlFrame.SetLogicalWidth(const Value: integer);
+begin
+   FLogicalWidth := Value;
+   SDL_SetWindowLogicalSize(FWindowID, FLogicalWidth, FLogicalHeight);
+   if FRenderer then
+      self.Flip;
+end;
+
+procedure TSdlFrame.WMGetDlgCode(var msg: TMessage);
+begin
+   msg.Result := msg.Result or DLGC_WANTCHARS or DLGC_WANTARROWS or DLGC_WANTTAB or DLGC_WANTALLKEYS;
+end;
+
+procedure TSdlFrame.ResetLogicalSize;
+begin
+   FLogicalWidth := self.Width;
+   FLogicalHeight := self.Height;
+   SDL_SetWindowLogicalSize(FWindowID, FLogicalWidth, FLogicalHeight);
+   self.Flip;
 end;
 
 function TSdlFrame.AddTexture(surface: PSdlSurface): integer;
-var
-   texture: TSdlTexture;
 begin
    if not assigned(surface) then
       Exit(-1);
 
    SDL_SelectRenderer(FWindowID);
-   texture := TSdlTexture.Create(0, surface);
-   result := FTextureList.Add(texture);
+   result := FImageManager.Add(TSdlImage.Create(surface, '', nil));
+end;
+
+function TSdlFrame.AddImage(image: TSdlImage): integer;
+begin
+  result := FImageManager.Add(image);
 end;
 
 procedure TSdlFrame.AddTexture(surface: PSdlSurface; const name: string);
 var
    index: integer;
 begin
-   if FTextureHash.ContainsKey(name) then
+   if self.ContainsName(name) then
       raise EListError.CreateFmt('Texture "%s" already exists', [name]);
-   index := self.AddTexture(surface);
+   index := FIMageManager.Add(TSdlImage.Create(surface, name, nil));
    if index = -1 then
       raise EInvalidArgument.Create('Invalid surface');
-   FTextureHash.Add(name, FTextureList[index]);
 end;
 
 procedure TSdlFrame.BeforeDestruction;

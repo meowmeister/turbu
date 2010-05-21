@@ -225,6 +225,7 @@
 			<DCCReference Include="..\turbu format\design\sprite_selector.pas">
 				<Form>frmSpriteSelector</Form>
 			</DCCReference>
+			<DCCReference Include="..\engines\basis\ClipboardWatcher.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

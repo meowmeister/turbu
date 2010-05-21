@@ -14,6 +14,7 @@ object frmObjectEditor: TfrmObjectEditor
   OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   PixelsPerInch = 120
   TextHeight = 16
   object pnlBackground: TPanel
@@ -60,8 +61,8 @@ object frmObjectEditor: TfrmObjectEditor
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = '&New Page'
-      Enabled = False
       TabOrder = 1
+      OnClick = btnNewClick
     end
     object btnCopy: TButton
       Left = 416
@@ -73,8 +74,8 @@ object frmObjectEditor: TfrmObjectEditor
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = '&Copy Page'
-      Enabled = False
       TabOrder = 2
+      OnClick = btnCopyClick
     end
     object btnPaste: TButton
       Left = 615
@@ -88,6 +89,7 @@ object frmObjectEditor: TfrmObjectEditor
       Caption = '&Paste Page'
       Enabled = False
       TabOrder = 3
+      OnClick = btnPasteClick
     end
     object btnDelete: TButton
       Left = 813
@@ -101,6 +103,7 @@ object frmObjectEditor: TfrmObjectEditor
       Caption = '&Delete Page'
       Enabled = False
       TabOrder = 4
+      OnClick = btnDeleteClick
     end
     object tabEventPages: TTabControl
       Left = 10
@@ -177,7 +180,10 @@ object frmObjectEditor: TfrmObjectEditor
             Margins.Bottom = 4
             Framerate = 0
             Active = False
+            LogicalWidth = 69
+            LogicalHeight = 77
             OnAvailable = imgEventSpriteAvailable
+            OnKeyDown = imgEventSpriteKeyDown
           end
           object chkTransparent: TDBCheckBox
             Left = 90
@@ -442,42 +448,12 @@ object frmObjectEditor: TfrmObjectEditor
           inherited lblMinutes2: TLabel
             Transparent = True
           end
-          inherited txtVar1: TDBEdit
-            Height = 26
-            ExplicitHeight = 26
-          end
-          inherited txtSwitch1: TDBEdit
-            Height = 26
-            ExplicitHeight = 26
-          end
-          inherited txtSwitch2: TDBEdit
-            Height = 26
-            ExplicitHeight = 26
-          end
         end
         inherited dsConditions: TClientDataSet
-          Active = True
-          IndexFieldNames = 'Master'
           MasterFields = 'Id'
           MasterSource = srcPages
           PacketRecords = 0
           AfterPost = SetDirty
-          Data = {
-            CC0100009619E0BD01000000180000001A000000000003000000CC01064D6173
-            7465720400010000000000077377697463683104000100000000000773776974
-            6368320400010000000000097661726961626C65310400010000000000097661
-            726961626C6532040001000000000006566172314F7001000200000000000656
-            6172324F7001000200000000000956617256616C756531040001000000000009
-            56617256616C7565320400010000000000044974656D04000100000000000448
-            65726F04000100000000000A436C6F636B314D696E7304000100000000000A43
-            6C6F636B3153656373040001000000000008436C6F636B314F70010002000000
-            00000A436C6F636B324D696E7304000100000000000A436C6F636B3253656373
-            040001000000000008436C6F636B324F70010002000000000006536372697074
-            02004A000000010005574944544802000200FE01086253776974636831020003
-            0000000000086253776974636832020003000000000005625661723102000300
-            00000000056256617232020003000000000005624974656D0200030000000000
-            05624865726F0200030000000000076254696D65723102000300000000000762
-            54696D65723202000300000000000000}
         end
       end
     end
@@ -607,7 +583,14 @@ object frmObjectEditor: TfrmObjectEditor
         Name = 'MoveIgnore'
         DataType = ftBoolean
       end>
-    IndexDefs = <>
+    IndexDefs = <
+      item
+        Name = 'DEFAULT_ORDER'
+      end
+      item
+        Name = 'CHANGEINDEX'
+      end>
+    IndexFieldNames = 'Id'
     Params = <>
     StoreDefs = True
     AfterPost = SetDirty

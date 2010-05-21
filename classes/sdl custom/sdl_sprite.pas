@@ -335,7 +335,7 @@ end;
 
 procedure TSprite.Draw;
 begin
-   if FVisible then
+   if FVisible and not FDead then
    begin
       if FEngine <> nil then
       begin

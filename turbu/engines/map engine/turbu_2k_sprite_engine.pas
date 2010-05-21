@@ -44,6 +44,7 @@ type
       function GetTile(x, y, layer: integer): TTile;
       function GetTopTile(x, y: integer): TTile;
       procedure RecreateTileMatrix;
+      function AddMapObject(obj: TRpgMapObject): TMapSprite;
 
       procedure EnsureImage(const filename: string);
 
@@ -146,6 +147,17 @@ begin
    end;
 end;
 
+function T2kSpriteEngine.AddMapObject(obj: TRpgMapObject): TMapSprite;
+begin
+   if obj.id = 0 then
+      Exit(nil);
+   if obj.isTile then
+      result := TEventSprite.Create(obj, self, nil)
+   else
+      result := TCharSprite.Create(obj, self, nil);
+   FMapObjects.Add(result);
+end;
+
 constructor T2kSpriteEngine.Create(map: TRpgMap; const viewport: TRect;
             canvas: TSdlCanvas; tileset: TTileset; images: TSdlImages);
 var
@@ -179,14 +191,7 @@ begin
    //populate events
    FMapObjects := TMapSpriteList.Create;
    for mapObj in map.mapObjects do
-   begin
-      if mapObj.id = 0 then
-         Continue;
-      if mapObj.isTile then
-         FMapObjects.Add(TEventSprite.Create(mapObj, self, nil))
-      else
-         FMapObjects.Add(TCharSprite.Create(mapObj, self, nil));
-   end;
+      addMapObject(mapObj);
 end;
 
 destructor T2kSpriteEngine.Destroy;

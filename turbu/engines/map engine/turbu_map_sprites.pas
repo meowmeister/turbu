@@ -706,10 +706,10 @@ end;
 
 procedure TMapSprite.flash(r, g, b, power: byte; time: cardinal);
 begin
-   if assigned(FTiles[2]) then
-      (FTiles[2] as TTile).flash(r, g, b, power, time);
    if assigned(FTiles[1]) then
-      (FTiles[1] as TTile).flash(r, g, b, power, time);
+      FTiles[1].flash(r, g, b, power, time);
+   if assigned(FTiles[2]) then
+      FTiles[2].flash(r, g, b, power, time);
 end;
 
 function TMapSprite.getAnimFix: boolean;
@@ -969,7 +969,8 @@ begin
    self.facing := data.direction;
    FUnderConstruction := false;
    update(data.name, index, translucency >= 3);
-   FTiles[2].ImageIndex := ord(data.direction) * 6 + ord(data.whichTile);
+   FTiles[2].ImageIndex := data.whichTile * 2;
+//   FTiles[2].ImageIndex := ord(data.direction) * 6 + ord(data.whichTile);
    FTiles[1].ImageIndex := TEventTile(FTiles[2]).ImageIndex + 3;
 end;
 

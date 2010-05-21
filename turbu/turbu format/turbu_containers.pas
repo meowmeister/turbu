@@ -17,6 +17,7 @@ type
       function reduce<U>(work: TReducer<T, U>): U;
       function where(filter: TPredicate<T>): TRpgObjectList<T>;
       function firstWhere(filter: TPredicate<T>): T;
+      function firstIndexWhere(filter: TPredicate<T>): integer;
       function countWhere(filter: TPredicate<T>): integer;
       property High: integer read getHigh;
    end;
@@ -104,6 +105,16 @@ begin
             inc(output);
       end);
    result := output;
+end;
+
+function TRpgObjectList<T>.firstIndexWhere(filter: TPredicate<T>): integer;
+var
+   index: integer;
+begin
+   for index := 0 to self.high do
+      if filter(self[index]) then
+         Exit(index);
+   result := -1;
 end;
 
 function TRpgObjectList<T>.firstWhere(filter: TPredicate<T>): T;

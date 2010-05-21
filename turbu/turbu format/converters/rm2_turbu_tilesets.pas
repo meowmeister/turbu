@@ -197,6 +197,7 @@ begin
    for i := low(TILESET_MAP) to high(TILESET_MAP) do
    begin
       newRecord := TTileGroupRecord.Create;
+      newRecord.id := i;
       newRecord.group := GDatabase.tileGroup[format(KEYNAME, [filename, TILESET_NAME[i]])];
       if i <= 18 then
          newRecord.layers := [0]

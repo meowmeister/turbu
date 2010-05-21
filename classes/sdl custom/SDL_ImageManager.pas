@@ -245,17 +245,18 @@ type
    * To set up routines to load images not covered by SDL_Image.  For advanced
    * users only!
    ***************************************************************************}
-   TImgLoadMethod = function(inFile: TStream): PSdlSurface;
+   TImgLoadMethod = reference to function(inFile: TStream): PSdlSurface;
 
    procedure registerImageLoader(extension: string; loader: TImgLoadMethod);
 
 implementation
 uses
+   Generics.Collections,
    SDL_rwStream, sdl_canvas,
    sdl_image;
 
 var
-   loaders: TStringList;
+   loaders: TDictionary<string, TImgLoadMethod>;
    rwMutex: PSDL_Mutex;
 
 { TSdlImages }
@@ -653,7 +654,6 @@ end;
 //---------------------------------------------------------------------------
 procedure TSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint; lSurface: PSdlSurface);
 var
-   dummy: integer;
    loader: TImgLoadMethod;
    loadStream: TStream;
    intFilename: PAnsiChar; //internal version of the filename
@@ -663,7 +663,8 @@ begin
    begin
       if filename <> '' then
       begin
-         dummy := loaders.IndexOf(ExtractFileExt(filename));
+         if not loaders.TryGetValue(ExtractFileExt(filename), loader) then
+            loader := nil;
          if FRw = nil then
          begin
             {$IFDEF UNICODE}
@@ -671,10 +672,9 @@ begin
             {$ELSE}
             intFilename := PChar(filename);
             {$ENDIF}
-            if dummy = -1 then
+            if not assigned(loader) then
                LSurface := PSdlSurface(IMG_Load(intFilename))
             else begin
-               loader := TImgLoadMethod(loaders.Objects[dummy]);
                loadStream := TFileStream.Create(filename, fmOpenRead);
                try
                   LSurface := loader(loadStream);
@@ -684,12 +684,11 @@ begin
             end;
          end
          else begin
-            if dummy = -1 then
+            if not assigned(loader) then
             begin
                LSurface := PSdlSurface(IMG_LoadTyped_RW(FRw, 0, PAnsiChar(ansiString(filename))));
             end
             else begin
-               loader := TImgLoadMethod(loaders.Objects[dummy]);
                loadStream := TRWStream.Create(FRw, false);
                try
                   LSurface := loader(loadStream);
@@ -714,11 +713,12 @@ begin
    processImage(LSurface);
    if FSurface.ID = 0 then
       FSurface := TSdlTexture.Create(0, LSurface);
+   FSurface.scaleMode := sdltsBest;
 
-   LSurface.Free;
    if (spriteSize.X = EMPTY.X) and (spriteSize.Y = EMPTY.Y) then
       self.textureSize := point(LSurface.width, LSurface.height)
    else self.textureSize := spriteSize;
+   LSurface.Free;
    if assigned(container) then
       container.add(self);
 end;
@@ -812,15 +812,12 @@ procedure registerImageLoader(extension: string; loader: TImgLoadMethod);
 begin
    if extension[1] <> '.' then
       extension := '.' + extension;
-   loaders.AddObject(extension, TObject(@loader));
+   loaders.Add(extension, loader);
 end;
 
 initialization
 begin
-   loaders := TStringList.Create;
-   loaders.Sorted := true;
-   loaders.Duplicates := dupError;
-   loaders.CaseSensitive := false;
+   loaders := TDictionary<string, TImgLoadMethod>.Create;
    rwMutex := SDL_CreateMutex;
    assert(IMG_Init([imgPng]) = [imgPng]);
 end;
@@ -831,4 +828,5 @@ begin
    loaders.Free;
    SDL_DestroyMutex(rwMutex);
 end;
+
 end.

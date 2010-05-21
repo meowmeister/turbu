@@ -34,6 +34,7 @@ type
     DBLookupComboBox5: TDBLookupComboBox;
 
     dsConditions: TClientDataSet;
+    dsConditionsMaster: TIntegerField;
     dsConditionsSwitch1: TIntegerField;
     dsConditionsSwitch2: TIntegerField;
     dsConditionsVariable1: TIntegerField;

@@ -30,7 +30,6 @@ type
       function IsAvailable: boolean;
       function GetSdlWindow: TSdlWindowId;
       function GetFlags: TSdlWindowFlags;
-      function GetTextures: TTextureList;
       procedure SetScrollBars(const Value: TScrollBarSet);
       function GetFramerate: word;
       procedure SetFramerate(const Value: word);
@@ -55,7 +54,6 @@ type
       property Available: boolean read IsAvailable;
       property SdlWindow: TSdlWindowId read GetSdlWindow;
       property Flags: TSdlWindowFlags read GetFlags;
-      property Textures: TTextureList read GetTextures;
    published
       property Framerate: word read GetFramerate write SetFramerate;
       property Active: boolean read GetActive write SetActive;
@@ -173,11 +171,6 @@ end;
 function TSdlScrollFrame.GetSdlWindow: TSdlWindowId;
 begin
    result := FSdlFrame.SdlWindow;
-end;
-
-function TSdlScrollFrame.GetTextures: TTextureList;
-begin
-   result := FSdlFrame.Textures;
 end;
 
 function TSdlScrollFrame.IsAvailable: boolean;
