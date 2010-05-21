@@ -19,7 +19,7 @@ unit turbu_2k_map_engine;
 
 interface
 uses
-   types, syncObjs, Generics.Collections,
+   types, syncObjs, Generics.Collections, classes,
    turbu_map_engine, turbu_versioning,
    turbu_database_interface, turbu_map_interface, turbu_sdl_image,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine,
@@ -66,11 +66,14 @@ type
       procedure initialize(window: TSdlWindowId; database: IRpgDatabase); override;
       function loadMap(map: IMapMetadata): IRpgMap; override;
       procedure Play; override;
+      function Playing: boolean; override;
+      procedure KeyDown(key: word; Shift: TShiftState); override;
+      procedure KeyUp(key: word; Shift: TShiftState); override;
    end;
 
 implementation
 uses
-   sysUtils, classes, math,
+   sysUtils, math,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
    turbu_constants, turbu_map_metadata, turbu_functional, turbu_classes,
    turbu_map_objects,
@@ -196,6 +199,16 @@ begin
    FInitialized := true;
 end;
 
+procedure T2kMapEngine.KeyDown(key: word; Shift: TShiftState);
+begin
+   //TODO: Handle input here
+end;
+
+procedure T2kMapEngine.KeyUp(key: word; Shift: TShiftState);
+begin
+   //TODO: Handle input ending here
+end;
+
 function T2kMapEngine.loadMap(map: IMapMetadata): IRpgMap;
 var
    viewport: TRect;
@@ -220,9 +233,13 @@ var
    page: TRpgEventPage;
 begin
    for mapObj in map.mapObjects do
+   begin
+      if mapObj.id = 0 then
+         Continue;
       for page in mapObj.pages do
          if not page.isTile then
             loadSprite(page.name);
+   end;
 end;
 
 procedure T2kMapEngine.prepareMap(const data: IMapMetadata);
@@ -332,6 +349,11 @@ begin
    FTimer.Enabled := true;
    FTimer.OnTimer := self.OnTimer;
    FTimer.OnProcess := FCurrentMap.Process;
+end;
+
+function T2kMapEngine.Playing: boolean;
+begin
+   result := FTimer.Enabled;
 end;
 
 end.

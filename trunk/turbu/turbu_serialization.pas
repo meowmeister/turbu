@@ -514,7 +514,7 @@ begin
    FInstances.Push(TInstancePair.Create(value, value.ClassInfo));
    try
       if FUploadPrefix = '' then
-         db.Append;
+         db.Insert;
 
       for field in FContext.GetType(value.ClassType).GetFields do
       begin

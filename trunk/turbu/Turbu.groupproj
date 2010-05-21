@@ -28,7 +28,7 @@
 				<Dependencies/>
 			</Projects>
 			<Projects Include="editor\Turbu.dproj">
-				<Dependencies>engines\basis\EngineBasis.dproj;engines\basis\turbu_design_basis.dproj;engines\map engine\map_default.dproj;engines\map engine\design\map_default_design.dproj</Dependencies>
+				<Dependencies>engines\basis\EngineBasis.dproj;turbu format\default_format.dproj;engines\basis\turbu_design_basis.dproj;turbu format\design\default_format_design.dproj;engines\map engine\map_default.dproj;engines\map engine\design\map_default_design.dproj</Dependencies>
 			</Projects>
 			<Projects Include="test harness\testing.dproj">
 				<Dependencies/>
@@ -115,13 +115,13 @@
 		<Target Name="mapshow:Make">
 			<MSBuild Targets="Make" Projects="mapview\mapshow.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis;turbu_design_basis;map_default;map_default_design" Name="Turbu">
+		<Target DependsOnTargets="EngineBasis;default_format;turbu_design_basis;default_format_design;map_default;map_default_design" Name="Turbu">
 			<MSBuild Projects="editor\Turbu.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis:Clean;turbu_design_basis:Clean;map_default:Clean;map_default_design:Clean" Name="Turbu:Clean">
+		<Target DependsOnTargets="EngineBasis:Clean;default_format:Clean;turbu_design_basis:Clean;default_format_design:Clean;map_default:Clean;map_default_design:Clean" Name="Turbu:Clean">
 			<MSBuild Targets="Clean" Projects="editor\Turbu.dproj"/>
 		</Target>
-		<Target DependsOnTargets="EngineBasis:Make;turbu_design_basis:Make;map_default:Make;map_default_design:Make" Name="Turbu:Make">
+		<Target DependsOnTargets="EngineBasis:Make;default_format:Make;turbu_design_basis:Make;default_format_design:Make;map_default:Make;map_default_design:Make" Name="Turbu:Make">
 			<MSBuild Targets="Make" Projects="editor\Turbu.dproj"/>
 		</Target>
 		<Target Name="testing">

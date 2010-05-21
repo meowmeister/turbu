@@ -36,7 +36,7 @@ type
    protected
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream); virtual;
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
       property desc: string read FDesc write FDesc;

@@ -108,7 +108,8 @@ uses
   dataset_viewer in '..\engines\map engine\design\dataset_viewer.pas' {frmDatasetViewer},
   array_editor in '..\engines\map engine\design\array_editor.pas' {frmArrayEdit},
   extensible_cds in '..\..\components\TURBU\extensible_cds.pas',
-  sprite_selector in '..\turbu format\design\sprite_selector.pas' {frmSpriteSelector};
+  sprite_selector in '..\turbu format\design\sprite_selector.pas' {frmSpriteSelector},
+  ClipboardWatcher in '..\engines\basis\ClipboardWatcher.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

@@ -90,10 +90,12 @@ type
       function GetID: integer;
       function GetName: string;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); virtual;
       procedure save(savefile: TStream); virtual;
       procedure upload(db: TDataSet);
       procedure download(db: TDataset); virtual;
+      procedure CopyToClipboard;
+      constructor PasteFromClipboard;
       function GetAllEvents: TStringList;
 
       {property }function datasetName: string; {read getDatasetName;} //hope they fix this...
@@ -234,7 +236,7 @@ type
 implementation
 uses
 windows,
-   Generics.Defaults, TypInfo, Math,
+   Generics.Defaults, TypInfo, Math, Clipbrd,
    commons, turbu_decl_utils, turbu_functional,
    ps_pointer, rttiHelper;
 
@@ -268,6 +270,56 @@ begin
 end;
 
 { TRpgDatafile }
+
+procedure TRpgDatafile.CopyToClipboard;
+var
+   format: cardinal;
+   stream: TMemoryStream;
+   block: THandle;
+   ptr: pointer;
+begin
+   format := windows.RegisterClipboardFormat(PChar('CF_' + self.ClassName));
+   stream := TMemoryStream.Create;
+   clipboard.Open;
+   try
+      self.save(stream);
+      EmptyClipboard;
+      block := GlobalAlloc(GMEM_DDESHARE or GMEM_MOVEABLE, stream.Size);
+      ptr := GlobalLock(block);
+      stream.rewind;
+      stream.Read(ptr^, stream.size);
+      GlobalUnLock(block);
+      SetClipboardData(format, block);
+   finally
+      clipboard.Close;
+      stream.Free;
+   end;
+end;
+
+constructor TRpgDatafile.PasteFromClipboard;
+var
+   format: cardinal;
+   stream: TMemoryStream;
+   block: THandle;
+   ptr: pointer;
+begin
+   format := windows.RegisterClipboardFormat(PChar('CF_' + self.ClassName));
+   if not clipboard.HasFormat(format) then
+      raise EClipboardException.CreateFmt('Clipboard does not contain data for a %s object.', [self.ClassName]);
+   stream := TMemoryStream.Create;
+   clipboard.Open;
+   try
+      block := GetClipboardData(format);
+      ptr := GlobalLock(block);
+      stream.Write(ptr^, GlobalSize(block));
+      GlobalUnLock(block);
+      stream.rewind;
+      self.Load(stream);
+   finally
+      clipboard.Close;
+      stream.Free;
+   end;
+end;
 
 function TRpgDatafile.datasetName: string;
 begin

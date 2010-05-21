@@ -36,7 +36,7 @@ type
 implementation
 uses
    SysUtils,
-   turbu_defs, rm2_turbu_maps;
+   charset_data, turbu_defs, rm2_turbu_maps;
 
 { T2k2RpgMapObject }
 
@@ -115,12 +115,17 @@ begin
 end;
 
 constructor T2k2RpgEventPage.Convert(base: TEventPage; id: integer; parent: TRpgMapObject);
+const
+   FRAMES: array[TFacing] of word = (1, 4, 7, 10);
 begin
    FId := id;
    self.FConditions := TRpgEventConditions.Convert(base.conditionBlock);
    if base.filename = '' then
       CalculateTileID(base.whichChip)
-   else FName := format('%s %d', [string(base.filename), base.whichChip]);
+   else begin
+      FName := format('%s %d', [string(base.filename), base.whichChip]);
+      self.whichTile := FRAMES[base.direction];
+   end;
    self.direction := base.direction;
    self.transparent := base.transparent;
    self.path := TPath.Convert(base.moveBlock);

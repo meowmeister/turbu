@@ -60,6 +60,7 @@
 			<DCCReference Include="..\..\..\components\TURBU\sdl_frame.pas"/>
 			<DCCReference Include="..\..\..\components\TURBU\DBIndexComboBox.pas"/>
 			<DCCReference Include="..\..\..\components\TURBU\extensible_cds.pas"/>
+			<DCCReference Include="ClipboardWatcher.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

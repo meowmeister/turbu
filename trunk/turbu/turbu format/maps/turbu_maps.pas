@@ -30,7 +30,7 @@ type
       FEncounters: T4IntArray;
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
       procedure download(db: TDataset); override;
 
@@ -106,7 +106,7 @@ type
       class function keyChar: ansiChar; override;
    public
       constructor Create(meta: TMapMetadata); overload;
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
       destructor Destroy; override;
 

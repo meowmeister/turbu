@@ -37,7 +37,7 @@ type
    protected
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
       property style: TCommandStyle read FStyle write FStyle;
@@ -94,7 +94,7 @@ type
    protected
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
       function add(var newBlock: TStatBlock): integer;
@@ -142,7 +142,7 @@ type
       class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       constructor Create;
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
@@ -187,7 +187,7 @@ type
       class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
       property title: string read FTitle write FTitle;

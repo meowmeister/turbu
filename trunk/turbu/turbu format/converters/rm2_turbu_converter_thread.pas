@@ -454,7 +454,7 @@ begin
       blitSurface.ColorKey := image.ColorKey;
 
       if id = -1 then
-         startingPoint := SgPoint(0, 0)
+         startingPoint := ORIGIN
       else
          startingPoint := SgPoint((id mod sheet.X) * frame.X * sprite.X, (id div sheet.X) * frame.Y * sprite.Y);
       blitSurface.Fill(nil, blitSurface.ColorKey);

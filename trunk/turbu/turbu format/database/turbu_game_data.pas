@@ -16,7 +16,7 @@ type
    protected
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
       property width: integer read FWidth write FWidth;

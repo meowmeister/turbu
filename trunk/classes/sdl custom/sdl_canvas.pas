@@ -177,7 +177,7 @@ end;
 
 procedure TSdlRenderTarget.SetRenderer;
 begin
-   SDL_SetTargetTexture(FHandle.ID);
+   SDL_SetTargetTexture(FHandle);
    lCurrentRenderTarget := self;
 end;
 
@@ -250,10 +250,7 @@ procedure TSdlCanvas.DrawBox(const region: TRect; const color: SDL_Color;
   const alpha: byte);
 begin
    assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
-   assert(SDL_RenderDrawLine(region.Left, region.Top, region.Right, region.Top) = 0);
-   assert(SDL_RenderDrawLine(region.right, region.Top, region.Right, region.bottom) = 0);
-   assert(SDL_RenderDrawLine(region.right, region.bottom, region.left, region.bottom) = 0);
-   assert(SDL_RenderDrawLine(region.Left, region.bottom, region.left, region.Top) = 0);
+   SDL_RenderDrawRect(@region);
 end;
 
 procedure TSdlCanvas.DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect);

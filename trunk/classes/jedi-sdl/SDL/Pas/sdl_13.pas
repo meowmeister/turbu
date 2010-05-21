@@ -166,6 +166,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     texture_formats: array[0..19] of cardinal; // The available texture formats
     max_texture_width: integer;         // The maximimum texture width */
     max_texture_height: integer;        // The maximimum texture height */
+    logical_size: boolean;
   end;
 
   SDL_RendererInfo = TSDL_RendererInfo;
@@ -336,6 +337,8 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     function GetColor(index: byte): TSDL_Color;
     function GetAlpha: byte;
     procedure SetAlpha(const Value: byte);
+    function GetScaleMode: TSdlTextureScaleMode;
+    procedure SetScaleMode(const Value: TSdlTextureScaleMode);
   public
     constructor Create(format: Uint32; access: TSdlTextureAccess; w, h: integer); overload;
     constructor Create(format: Uint32; surface: PSdlSurface); overload;
@@ -345,6 +348,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     property size: TPoint read GetSize;
     property color[index: byte]: TSDL_Color read GetColor;
     property alpha: byte read GetAlpha write SetAlpha;
+    property scaleMode: TSdlTextureScaleMode read GetScaleMode write SetScaleMode;
   end;
 
   // SDL_error.h types
@@ -430,6 +434,25 @@ procedure SDL_SetWindowSize(windowID: TSdlWindowID; w, h: integer); cdecl; exter
 procedure SDL_GetWindowSize(windowID: TSdlWindowID; var w, h: integer); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetWindowSize}
 
+(**
+ * SDL_SetWindowSize
+ *
+ * Sets the size of the window's client area.
+ *
+ * NOTE: You can't change the size of a fullscreen window, it automatically
+ * matches the size of the display mode.
+ *)
+function SDL_SetWindowLogicalSize(windowID: TSdlWindowID; w, h: integer): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_SetWindowLogicalSize}
+
+(**
+ * \SDL_GetWindowSize
+ *
+ * Gets the size of the window's client area.
+ *)
+procedure SDL_GetWindowLogicalSize(windowID: TSdlWindowID; var w, h: integer); cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetWindowLogicalSize}
+
 function SDL_GetNumRenderDrivers(): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetNumRenderDrivers}
 
@@ -469,6 +492,31 @@ function SDL_SetRenderDrawColor(r, g, b, a: byte): integer; cdecl; overload; ext
 {$EXTERNALSYM SDL_SetRenderDrawColor}
 
 function SDL_SetRenderDrawColor(color: TSDL_Color): integer; overload;
+
+(**
+ *  SDL_SetRenderDrawBlendMode
+ *
+ *  Sets the blend mode used for drawing operations (Fill and Line).
+ *
+ *  blendMode: Mode to use for blending.
+ *
+ *  Returns 0 on success, or -1 if there is no rendering context current.
+ *
+ *  Note: If the blend mode is not supported, the closest supported mode is
+ *        chosen.
+ *)
+function SDL_SetRenderDrawBlendMode(blendMode: TSdlBlendModes): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_SetRenderDrawBlendMode}
+
+(**
+ *  Gets the blend mode used for drawing operations.
+ *
+ *  blendMode: Used to return the current blend mode.
+ *
+ *  Returns 0 on success, or -1 if there is no rendering context current.
+ *)
+function SDL_GetRenderDrawBlendMode(var blendMode: TSdlBlendModes): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetRenderDrawBlendMode}
 
 {*
  * SDL_GetRenderDrawColor
@@ -597,7 +645,7 @@ function SDL_QueryTexture(textureID: TSdlTextureID; format: PCardinal;
                           access: PSdlTextureAccess; w, h: PInteger): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_QueryTexture}
 
-function SDL_SetTargetTexture(textureID: TSDLTextureID): integer; cdecl; external SDLLibName;
+function SDL_SetTargetTexture(texture: TSDLTexture): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_SetTargetTexture}
 
 (**
@@ -655,6 +703,32 @@ external SDLLibName;
 function SDL_GetTextureAlphaMod(textureID: TSdlTextureID; var alpha: byte): integer; cdecl;
 external SDLLibName;
 {$EXTERNALSYM SDL_GetTextureAlphaMod}
+
+(**
+ * SDL_SetTextureScaleMode
+ *
+ * Sets the scale mode used for texture copy operations.
+ *
+ * texture: The texture to update
+ * scaleMode TSdlTextureScaleModes to use for texture scaling.
+ * returns 0 on success, or -1 if the texture is not valid or alpha modulation is not supported
+ *)
+function SDL_SetTextureScaleMode(textureID: TSdlTextureID; scale: TSdlTextureScaleModes): integer; cdecl;
+external SDLLibName;
+{$EXTERNALSYM SDL_SetTextureScaleMode}
+
+(**
+ * SDL_GetTextureScaleMode
+ *
+ * Gets the scale mode used for texture copy operations.
+ *
+ * texture: The texture to query
+ * scaleMode: Returns the current scale mode.
+ * returns 0 on success, or -1 if the texture is not valid
+ *)
+function SDL_GetTextureScaleMode(textureID: TSdlTextureID; var scale: TSdlTextureScaleModes): integer; cdecl;
+external SDLLibName;
+{$EXTERNALSYM SDL_GetTextureScaleMode}
 
 (**
  * SDL_Free
@@ -840,6 +914,24 @@ begin
    if SDL_SetTextureAlphaMod(FId, Value) <> 0 then
       raise EBadHandle.Create('Alpha not supported for this texture.');
 end;
+
+procedure TSdlTexture.SetScaleMode(const Value: TSdlTextureScaleMode);
+begin
+   SDL_SetTextureScaleMode(FID, [Value]);
+end;
+
+{$WARN NO_RETVAL OFF}
+function TSdlTexture.GetScaleMode: TSdlTextureScaleMode;
+var
+   modes: TSdlTextureScaleModes;
+   mode: TSdlTextureScaleMode;
+begin
+   SDL_GetTextureScaleMode(FID, modes);
+   assert(modes <> []);
+   for mode in modes do
+      Exit(mode);
+end;
+{$WARN NO_RETVAL ON}
 
 procedure SDL_OutOfMemory;
 begin

@@ -32,6 +32,7 @@ contains
   sdl_frame in 'sdl_frame.pas',
   sdl in '..\..\classes\jedi-sdl\SDL\Pas\sdl.pas',
   sdl_13 in '..\..\classes\jedi-sdl\SDL\Pas\sdl_13.pas',
-  sdl_ScrollFrame in 'sdl_ScrollFrame.pas';
+  sdl_ScrollFrame in 'sdl_ScrollFrame.pas',
+  sdl_canvas in '..\..\classes\sdl custom\sdl_canvas.pas';
 
 end.

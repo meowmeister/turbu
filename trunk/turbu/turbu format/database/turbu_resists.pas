@@ -35,7 +35,7 @@ type
    protected
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
       property outOfBattle: boolean read FOutOfBattle write FOutOfBattle;
@@ -52,7 +52,7 @@ type
    protected
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
       property requiredForSkills: boolean read FRequiredForSkills write FRequiredForSkills;

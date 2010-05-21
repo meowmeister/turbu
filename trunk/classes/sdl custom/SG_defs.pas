@@ -41,25 +41,15 @@ type
       true: (rgba: packed array[1..4] of byte);
    end;
 
+const ORIGIN: TSgPoint = (x: 0; y: 0);
+
 function sgPoint(x, y: integer): TSgPoint;
 function sgPointF(x, y: double): TSgFloatPoint;
 
 function TRectToSdlRect(const input: TRect): TRect;
 
 const
-//AsphyreDefs backwards compatibility. Replace this when possible
- fxNone        = $00000001;
- fxAdd         = $00000104;
- fxBlend       = $00000504;
- fxShadow      = $00000500;
- fxMultiply    = $00000200;
- fxInvMultiply = $00000300;
- fxBlendNA     = $00000302;
- fxSub         = $00010104;
- fxRevSub      = $00020104;
- fxMax         = $00040101;
- fxMin         = $00030101;
-
+//TODO: AsphyreDefs backwards compatibility. Replace this when possible
  fxOneColor    = $7FFFFFF6;
 
 const

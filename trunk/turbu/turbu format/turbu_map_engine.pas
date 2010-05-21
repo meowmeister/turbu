@@ -19,7 +19,7 @@ unit turbu_map_engine;
 
 interface
 uses
-   Generics.Collections, types,
+   Generics.Collections, Types, Classes,
    turbu_plugin_interface, turbu_versioning, turbu_battle_engine,
    turbu_database_interface, turbu_map_interface,
    sg_defs,
@@ -42,6 +42,9 @@ type
       function setDefaultBattleEngine(name: string): boolean;
       function loadMap(map: IMapMetadata): IRpgMap;
       procedure Play;
+      function Playing: boolean;
+      procedure KeyDown(key: word; Shift: TShiftState);
+      procedure KeyUp(key: word; Shift: TShiftState);
 
       function getData: TMapEngineData;
       property data: TMapEngineData read getData;
@@ -52,6 +55,8 @@ type
       function GetTilesetImage(const index: byte): PSdlSurface;
       property tilesetImage[const index: byte]: PSdlSurface read GetTilesetImage;
       procedure SetCurrentLayer(const value: shortint);
+      function GetCurrentLayer: shortint;
+      property CurrentLayer: shortint read GetCurrentLayer write SetCurrentLayer;
       function mapSize: TSgPoint;
       function mapPosition: TSgPoint;
       procedure scrollMap(const newPosition: TSgPoint);
@@ -90,6 +95,9 @@ type
       function setDefaultBattleEngine(name: string): boolean;
       function loadMap(map: IMapMetadata): IRpgMap; virtual; abstract;
       procedure Play; virtual; abstract;
+      function Playing: boolean; virtual; abstract;
+      procedure KeyDown(key: word; Shift: TShiftState); virtual; abstract;
+      procedure KeyUp(key: word; Shift: TShiftState); virtual; abstract;
 
       property data: TMapEngineData read GetData write FData;
    end;

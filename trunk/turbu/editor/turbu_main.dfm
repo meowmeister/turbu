@@ -51,12 +51,16 @@ object frmTurbuMain: TfrmTurbuMain
       Margins.Bottom = 4
       Framerate = 0
       Active = False
+      LogicalWidth = 888
+      LogicalHeight = 824
       OnAvailable = imgLogoAvailable
       Align = alClient
       OnDblClick = imgLogoDblClick
       OnMouseDown = imgLogoMouseDown
       OnMouseMove = imgLogoMouseMove
       OnMouseUp = imgLogoMouseUp
+      OnKeyDown = imgLogoKeyDown
+      OnKeyUp = imgLogoKeyUp
     end
     object pnlHorizScroll: TPanel
       Left = 0
@@ -143,7 +147,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 500
       Width = 218
-      Height = 4
+      Height = 3
       Cursor = crVSplit
       Margins.Left = 4
       Margins.Top = 4
@@ -151,8 +155,6 @@ object frmTurbuMain: TfrmTurbuMain
       Margins.Bottom = 4
       Align = alTop
       OnMoved = splSidebarMoved
-      ExplicitTop = 502
-      ExplicitWidth = 279
     end
     object sbxPallette: TScrollBox
       Left = 0
@@ -186,6 +188,8 @@ object frmTurbuMain: TfrmTurbuMain
         Margins.Bottom = 4
         Framerate = 0
         Active = False
+        LogicalWidth = 192
+        LogicalHeight = 496
         Align = alClient
         OnMouseDown = imgPaletteMouseDown
         OnMouseMove = imgPaletteMouseMove
@@ -208,9 +212,9 @@ object frmTurbuMain: TfrmTurbuMain
     end
     object trvMapTree: TTreeView
       Left = 0
-      Top = 504
+      Top = 503
       Width = 218
-      Height = 346
+      Height = 347
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -386,7 +390,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C01010800C800C40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010800C800CC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

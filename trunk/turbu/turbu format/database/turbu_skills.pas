@@ -43,7 +43,7 @@ type
       class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream);
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
       property style: TSkillFuncStyle read FStyle write FStyle;
@@ -69,7 +69,7 @@ type
    protected
       class function keyChar: ansiChar; override;
    public
-      constructor Load(savefile: TStream); virtual;
+      constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
       property cost: integer read FCost write FCost;

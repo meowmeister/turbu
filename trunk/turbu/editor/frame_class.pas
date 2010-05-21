@@ -25,7 +25,7 @@ uses
    JvDBSpinEdit, JvListBox, JvExStdCtrls, JvExMask, JvSpin,
    sdl_frame, turbu_listGrid,
    commons, frame_commands, turbu_sprites, turbu_characters, turbu_defs,
-   SDL_ImageManager, sg_defs;
+   sg_defs;
 
 type
    TframeClass = class(TFrame)
@@ -108,8 +108,6 @@ type
    private
       FLoading: boolean;
       FLoaded: boolean;
-      FImageList: TSdlImages;
-      FNameList: TStringList;
       FId: integer;
       FTemplate: TClassTemplate;
       FSpriteData: TSpriteData;
@@ -196,18 +194,8 @@ begin
 end;
 
 destructor TframeClass.Destroy;
-var
-   i: integer;
 begin
    dmDatabase.weapons.AfterScroll := FOldWeaponScroll;
-   FImageList.Free;
-   if assigned(FNameList) then
-   begin
-      for I := 0 to FNameList.Count - 1 do
-         FNameList.Objects[i].Free;
-      FNameList.Free;
-   end;
-
    pnlClass.Parent := self;
    DestroyComponents;
    inherited Destroy;
@@ -313,32 +301,25 @@ begin
       FSpriteToLoad := name;
       exit;
    end;
-   if not assigned(FImageList) then
-   begin
-      FImageList := TSdlImages.Create;
-      FNameList := TStringList.Create;
-   end;
 
    if name <> '' then
    begin
      filename := format('portrait\%s.png', [name]);
-     if FImageList.IndexOf(filename) = -1 then
+     if imgMapSprite.IndexOfName(filename) = -1 then
      begin
         try
            fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
            try
-              image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, FImageList);
+              image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, imgMapSprite.Images);
            finally
               fileStream.Free;
            end;
         except
            on EArchiveError do
-              image := TRpgSdlImage.CreateBlankSprite(filename, FImageList, SPRITE_SIZE, 18);
+              image := TRpgSdlImage.CreateBlankSprite(filename, imgMapSprite.Images, SPRITE_SIZE, 18);
         end;
      end
-     else image := FImageList.image[filename] as TRpgSdlImage;
-     assert(image.Texture.ID > 0);
-     imgMapSprite.Textures.Add(image.Texture);
+     else image := imgMapSprite.Images.image[filename] as TRpgSdlImage;
 
      spriteRect := image.spriteRect[id];
      imgMapSprite.DrawTexture(image.Texture, @spriteRect);
@@ -392,33 +373,25 @@ var
    fileStream: TStream;
    spriteRect, destRect: TRect;
 begin
-   if not assigned(FImageList) then
-   begin
-      FImageList := TSdlImages.Create;
-      FNameList := TStringList.Create;
-   end;
-
    FSpriteData.name := name;
    FSpriteData.moveMatrix := id;
    filename := format('mapsprite\%s.png', [FSpriteData.name]);
-   if FImageList.IndexOf(filename) = -1 then
+   if imgMapSprite.IndexOfName(filename) = -1 then
    begin
       try
          fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
          try
-            image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, FImageList, SPRITE_SIZE * SgPoint(1, 2));
+            image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, imgMapSprite.Images, SPRITE_SIZE * SgPoint(1, 2));
          finally
             fileStream.Free;
          end;
       except
          on EArchiveError do
-            image := TRpgSdlImage.CreateBlankSprite(filename, FImageList, SPRITE_SIZE, 12);
+            image := TRpgSdlImage.CreateBlankSprite(filename, imgMapSprite.Images, SPRITE_SIZE, 12);
       end;
       assert(frame in [0..image.count]);
    end
-   else image := FImageList.image[filename] as TRpgSdlImage;
-   assert(image.Texture.ID > 0);
-   imgMapSprite.Textures.Add(image.Texture);
+   else image := imgMapSprite.Images.image[filename] as TRpgSdlImage;
    FCurrentTexture := image.texture.ID;
 
    spriteRect := image.spriteRect[frame];

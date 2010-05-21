@@ -119,15 +119,20 @@ type
       procedure btnPauseClick(Sender: TObject);
       procedure btnMapObjClick(Sender: TObject);
       procedure imgLogoDblClick(Sender: TObject);
+      procedure imgLogoKeyDown(Sender: TObject; var Key: Word;
+        Shift: TShiftState);
+      procedure imgLogoKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentMap: IRpgMap;
+      FCurrentLayer: integer;
       FPaletteTexture: integer;
       FPaletteSelection: TRect;
       FPaletteSelectionTiles: TRect;
       FLastPalettePos: integer;
       FCurrPalettePos: integer;
       FPaletteImages: TDictionary<integer, integer>;
+      FIgnoreMouseDown: boolean;
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
       procedure openProject(location: string);
@@ -187,7 +192,7 @@ begin
    if FPaletteTexture = -1 then
       Exit;
 
-   texture := imgPalette.textures[FPaletteTexture];
+   texture := imgPalette.images[FPaletteTexture].surface;
    height := min(height, texture.size.Y - sbPalette.pageSize);
    displayRect := rect(0, height, imgPalette.width div 2, imgPalette.height div 2);
    imgPalette.drawTexture(texture, @displayRect, nil);
@@ -212,7 +217,7 @@ procedure TfrmTurbuMain.resizePalette;
 var
    texture: TSdlTexture;
 begin
-   texture := imgPalette.textures[FPaletteTexture];
+   texture := imgPalette.images[FPaletteTexture].surface;
    sbPalette.Max := texture.size.y;
    sbPalette.PageSize := imgPalette.height div 2;
    sbPalette.LargeChange := sbPalette.PageSize - TILE_SIZE;
@@ -251,7 +256,6 @@ end;
 procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);
 begin
    FPaletteTexture := imgPalette.AddTexture(surface);
-   surface.Free;
    bindPaletteCursor;
    resizePalette;
 end;
@@ -365,14 +369,35 @@ procedure TfrmTurbuMain.imgLogoDblClick(Sender: TObject);
 begin
    RequireMapEngine;
    FMapEngine.doubleClick;
+
+   //Needed because of the order of Windows messages: the Double Click message
+   //posts first, then the MouseDown after it, and this can do strange
+   //things to the engine.
+   FIgnoreMouseDown := true;
+end;
+
+procedure TfrmTurbuMain.imgLogoKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+   RequireMapEngine;
+   FMapEngine.KeyDown(key, shift);
+end;
+
+procedure TfrmTurbuMain.imgLogoKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+   RequireMapEngine;
+   FMapEngine.KeyUp(key, shift);
 end;
 
 procedure TfrmTurbuMain.imgLogoMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
    RequireMapEngine;
-   FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position,
-                                  sbVert.Position, 1), true);
+   if FIgnoreMouseDown then
+      FIgnoreMouseDown := false
+   else FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16),
+                                       sbHoriz.Position, sbVert.Position, 1), true);
 end;
 
 procedure TfrmTurbuMain.imgLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -448,16 +473,7 @@ begin
    FCurrentMap := FMapEngine.loadMap(value);
    self.configureScrollBars(FMapEngine.mapSize, FMapEngine.mapPosition);
    fMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
-
-   // I don't know why this is necessary, but without the next two lines,
-   // nothing will ever actually show in imgPalette;
-   // ...
-   // 10-31-09: For some reason this is no longer causing trouble
-{   imgPalette.fillColor(SDL_BLACK, 255);
-   imgPalette.Flip;}
-
-   if FPaletteTexture = -1 then
-      setLayer(0);
+   setLayer(FCurrentLayer);
 end;
 
 procedure TfrmTurbuMain.loadMap(const value: word);
@@ -598,6 +614,7 @@ end;
 procedure TfrmTurbuMain.setLayer(const value: integer);
 begin
    RequireMapEngine;
+   FCurrentLayer := value;
    if value >= 0 then
    begin
       imgPalette.Enabled := true;

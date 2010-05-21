@@ -460,7 +460,7 @@ begin
    SDL_SetRenderDrawColor($ff, $ff, $ff, $ff);
    lrect := rect(0, 0, 320, 240 );
    SDL_RenderFillRect(@lrect);
-   lCanvas.Draw(image, sgPoint(0, 0));
+   lCanvas.Draw(image, ORIGIN);
    image.Free;
 end;
 
