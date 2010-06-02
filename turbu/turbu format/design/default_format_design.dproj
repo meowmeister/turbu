@@ -55,6 +55,7 @@
 			<DCCReference Include="sprite_selector.pas">
 				<Form>frmSpriteSelector</Form>
 			</DCCReference>
+			<DCCReference Include="EBListView.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

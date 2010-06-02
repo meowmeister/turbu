@@ -56,11 +56,11 @@ type
    PByteArray = ^TPByteArray;
    PPointArray = ^TPointArray;
 
-   TVarOps = (vo_add, vo_sub, vo_mult, vo_div, vo_equals);
    TVarSets = (vs_switch, vs_integer, vs_float, vs_string);
    TUsableWhere = (us_none, us_field, us_battle, us_both);
    TColorSet = (cs_red, cs_green, cs_blue, cs_sat);
    TComparisonOp = (co_equals, co_gtE, co_ltE, co_gt, co_lt, co_notEquals);
+   TBinaryOp = (bo_add, bo_sub, bo_mult, bo_div, bo_mod, bo_equals);
 
    TScriptStyle = (sc_exp, sc_skill);
 

@@ -199,7 +199,7 @@ begin
    assert(base.skillType = sk_switch);
    self.which := base.switch;
    self.style := vs_switch;
-   self.operation := vo_add;
+   self.operation := bo_add;
    if base.field and base.battle then
       self.usableWhere := us_both
    else if base.field then

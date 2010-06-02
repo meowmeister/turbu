@@ -738,7 +738,7 @@ end;
 
 function TLcfDataBase.getAnim(x: word): TBattleAnim;
 begin
-   if between(x, 1, high(FBattleAnim)) = x then
+   if IsBetween(x, 1, high(FBattleAnim)) then
       result := FBattleAnim[x]
    else result := nil;
 end;

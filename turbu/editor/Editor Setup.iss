@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TURBU"
-#define MyAppVerName "TURBU Editor 0.7.6"
+#define MyAppVerName "TURBU Editor 0.7.7"
 #define MyAppPublisher "Dragon Slayers, Inc."
 #define MyAppURL "http://www.turbu-rpg.com/"
 #define MyAppExeName "Turbu.exe"
@@ -18,7 +18,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\setup
-OutputBaseFilename=TURBU_Editor_0.7.6
+OutputBaseFilename=TURBU_Editor_0.7.7
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -30,13 +30,14 @@ Name: english; MessagesFile: compiler:Default.isl
 Name: desktopicon; Description: {cm:CreateDesktopIcon}; GroupDescription: {cm:AdditionalIcons}; Flags: unchecked
 
 [Files]
-Source: ..\bin\Turbu.exe; DestDir: {app}; Flags: ignoreversion
-Source: ..\bin\battle_default.tep; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\EngineBasis.bpl; DestDir: {app}; Flags: ignoreversion
+Source: ..\bin\default_format.bpl; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\turbu_design_basis.bpl; DestDir: {app}; Flags: ignoreversion
+Source: ..\bin\default_format_design.bpl; DestDir: {app}; Flags: ignoreversion
+Source: ..\bin\battle_default.tep; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\map_default.tep; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\map_default_design.tep; DestDir: {app}; Flags: ignoreversion
-Source: ..\bin\default_format.bpl; DestDir: {app}; Flags: ignoreversion
+Source: ..\bin\Turbu.exe; DestDir: {app}; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 Source: ..\..\dlls\libogg-0.dll; DestDir: {sys}
 Source: ..\..\dlls\libpng12-0.dll; DestDir: {sys}
@@ -91,6 +92,7 @@ Name: {app}\design
 Name: {app}\design\scripts
 Name: {app}\design\scripts\general
 Name: {app}\design\scripts\menu
+
 
 
 

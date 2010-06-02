@@ -67,7 +67,8 @@ uses
   map_tree_controller in 'map_tree_controller.pas',
   delete_map in 'delete_map.pas' {dlgDeleteMap},
   rm2_turbu_map_objects in '..\turbu format\converters\rm2_turbu_map_objects.pas',
-  conversion_output in '..\turbu format\converters\conversion_output.pas' {frmConversionOutput};
+  conversion_output in '..\turbu format\converters\conversion_output.pas' {frmConversionOutput},
+  rm2_turbu_event_builder in '..\turbu format\converters\rm2_turbu_event_builder.pas';
 
 {$R *.res}
 

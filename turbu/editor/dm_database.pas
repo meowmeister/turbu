@@ -20,14 +20,18 @@ unit dm_database;
 interface
 
 uses
-   SysUtils, Classes, DBClient, DB, Generics.Collections, RTTI;
+   SysUtils, Classes, DBClient, DB, Generics.Collections, RTTI,
+   turbu_database_interface;
 
 type
-   TDatasetList = class(TList<TClientDataSet>);
+   TDatasetList = class(TList<TClientDataSet>)
+   public
+      function FindByName(const name: string): TClientDataset;
+   end;
 
    TRelationAttribute = class(TCustomAttribute);
 
-   TdmDatabase = class(TDataModule)
+   TdmDatabase = class(TDataModule, IRpgDatastore)
       charClasses: TClientDataset;
       [TRelation]
       charClasses_skillset: TClientDataset;
@@ -103,7 +107,7 @@ type
       { Public declarations }
       procedure beginUpload;
       procedure endUpload;
-
+      function NameLookup(const name: string; id: integer): string;
       property datasets: TDatasetList read FDatasetList write FDatasetList;
       property views: TDatasetList read FViewList write FViewList;
    end;
@@ -114,9 +118,15 @@ var
 implementation
 
 uses
+   Variants, Generics.Defaults,
    turbu_skills, turbu_defs, turbu_classes, rttiHelper;
 
 {$R *.dfm}
+
+function CDSComparer(const Left, Right: TClientDataset): Integer;
+begin
+   result := StrIComp(PChar(left.name), PChar(right.name));
+end;
 
 procedure TdmDatabase.DataModuleCreate(Sender: TObject);
 var
@@ -128,13 +138,14 @@ begin
    context := TRttiContext.Create;
    instance := context.GetType(TdmDatabase) as TRttiInstanceType;
 
-   FDatasetList := TDatasetList.Create;
+   FDatasetList := TDatasetList.Create(TComparer<TClientDataset>.Construct(CDSComparer));
    for field in instance.GetDeclaredFields do
       if (field.FieldType as TRttiInstanceType).metaclassType = TClientDataset then
       begin
          if not assigned(field.GetAttribute(TRelationAttribute)) then
             FDatasetList.Add(field.GetValue(self).AsObject as TClientDataset);
       end;
+   FDatasetList.Sort;
 
    FViewList := TDatasetList.Create;
    FViewList.AddRange([shields, armors, helmets, accessories, weapons, offhands]);
@@ -178,6 +189,21 @@ begin
       ds.AutoCalcFields := true;
       ds.LogChanges := true;
       ds.EnableControls;
+   end;
+end;
+
+function TdmDatabase.NameLookup(const name: string; id: integer): string;
+var
+   dataset: TClientDataset;
+   lResult: variant;
+begin
+   dataset := FDatasetList.FindByName(name);
+   if assigned(dataset) then
+   begin
+      lResult := dataset.Lookup('id', id, 'name');
+      if lResult = Null then
+         result := ''
+      else result := lResult;
    end;
 end;
 
@@ -237,6 +263,31 @@ end;
 function TdmDatabase.usableByFilter(field: TBytesField; master: TDataset): boolean;
 begin
    result := master.FieldByName('id').AsInteger in field.asSet;
+end;
+
+{ TDatasetList }
+
+function TDatasetList.FindByName(const name: string): TClientDataset;
+var
+  L, H: Integer;
+  mid, cmp: Integer;
+begin
+  Result := nil;
+  L := 0;
+  H := Count - 1;
+  while L <= H do
+  begin
+    mid := L + (H - L) shr 1;
+    cmp := StrIComp(PChar(self[mid].name), PChar(name));
+    if cmp < 0 then
+      L := mid + 1
+    else
+    begin
+      H := mid - 1;
+      if cmp = 0 then
+        Exit(self[mid])
+    end;
+  end;
 end;
 
 end.

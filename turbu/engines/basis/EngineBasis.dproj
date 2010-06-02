@@ -88,6 +88,11 @@
 			<DCCReference Include="..\..\archiveInterface.pas"/>
 			<DCCReference Include="..\..\..\classes\Asphyre\AsphyreTimer.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_tbi_lib.pas"/>
+			<DCCReference Include="..\..\turbu format\EventBuilder.pas"/>
+			<DCCReference Include="..\..\turbu_serialization.pas"/>
+			<DCCReference Include="..\..\rttiHelper.pas"/>
+			<DCCReference Include="..\..\turbu format\turbu_containers.pas"/>
+			<DCCReference Include="..\..\turbu_functional.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

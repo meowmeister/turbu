@@ -74,7 +74,6 @@ uses
   frame_params in '..\editor\frame_params.pas' {frameParams: TFrame},
   generic_algorithm_editor in '..\editor\generic_algorithm_editor.pas' {frmAlgorithmEditor},
   skill_settings in '..\editor\skill_settings.pas' {frmSkillLearning},
-  turbu_containers in '..\turbu format\turbu_containers.pas',
   turbu_heroes in '..\engines\map engine\turbu_heroes.pas',
   function_header in '..\editor\function_header.pas' {frmFuncHeader},
   rm2_turbu_map_metadata in '..\turbu format\converters\rm2_turbu_map_metadata.pas',
@@ -109,7 +108,16 @@ uses
   array_editor in '..\engines\map engine\design\array_editor.pas' {frmArrayEdit},
   extensible_cds in '..\..\components\TURBU\extensible_cds.pas',
   sprite_selector in '..\turbu format\design\sprite_selector.pas' {frmSpriteSelector},
-  ClipboardWatcher in '..\engines\basis\ClipboardWatcher.pas';
+  ClipboardWatcher in '..\engines\basis\ClipboardWatcher.pas',
+  rm2_turbu_event_builder in '..\turbu format\converters\rm2_turbu_event_builder.pas',
+  EB_RpgScript in '..\turbu format\script\EB_RpgScript.pas',
+  EventBuilder in '..\turbu format\EventBuilder.pas',
+  EB_Messages in '..\turbu format\script\EB_Messages.pas',
+  turbu_containers in '..\turbu format\turbu_containers.pas',
+  EBListView in '..\turbu format\design\EBListView.pas',
+  rm2_turbu_map_objects in '..\turbu format\converters\rm2_turbu_map_objects.pas',
+  EB_Expressions in '..\turbu format\script\EB_Expressions.pas',
+  EB_System in '..\turbu format\script\EB_System.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -121,15 +129,15 @@ begin
    Application.Initialize;
    Application.MainFormOnTaskbar := True;
    Application.CreateForm(TdmDatabase, dmDatabase);
-  Application.CreateForm(TfrmTestConsole, frmTestConsole);
-  Application.CreateForm(TfrmDatabase, frmDatabase);
-  Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
-  Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
-  Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
-  Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
-  Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
-  Application.CreateForm(TfrmConversionReport, frmConversionReport);
-  Application.CreateForm(TfrmTestMapSize, frmTestMapSize);
-  Application.CreateForm(TfrmSpriteSelector, frmSpriteSelector);
-  Application.Run;
+   Application.CreateForm(TfrmTestConsole, frmTestConsole);
+   Application.CreateForm(TfrmDatabase, frmDatabase);
+   Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
+   Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
+   Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
+   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
+   Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
+   Application.CreateForm(TfrmConversionReport, frmConversionReport);
+   Application.CreateForm(TfrmTestMapSize, frmTestMapSize);
+   Application.CreateForm(TfrmSpriteSelector, frmSpriteSelector);
+   Application.Run;
 end.

@@ -43,7 +43,6 @@ contains
   turbu_sprites in 'turbu_sprites.pas',
   turbu_unit_dictionary in 'turbu_unit_dictionary.pas',
   turbu_defs in 'turbu_defs.pas',
-  turbu_containers in 'turbu_containers.pas',
   turbu_decl_utils in 'turbu_decl_utils.pas',
   turbu_vartypes in 'turbu_vartypes.pas',
   turbu_constants in 'turbu_constants.pas',
@@ -51,14 +50,14 @@ contains
   turbu_map_metadata in 'database\turbu_map_metadata.pas',
   turbu_maps in 'maps\turbu_maps.pas',
   turbu_tilesets in 'database\turbu_tilesets.pas',
-  turbu_functional in '..\turbu_functional.pas',
   timing in '..\mapview\libs\timing.pas',
   turbu_script_interface in 'turbu_script_interface.pas',
   commons in '..\commons.pas',
-  turbu_serialization in '..\turbu_serialization.pas',
-  rttiHelper in '..\rttiHelper.pas',
   turbu_map_objects in 'maps\turbu_map_objects.pas',
   charset_data in '..\charset_data.pas',
-  turbu_pathing in 'turbu_pathing.pas';
+  turbu_pathing in 'turbu_pathing.pas',
+  EB_RpgScript in 'script\EB_RpgScript.pas',
+  EB_Messages in 'script\EB_Messages.pas',
+  EB_Expressions in 'script\EB_Expressions.pas';
 
 end.

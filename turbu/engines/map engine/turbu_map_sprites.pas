@@ -759,7 +759,7 @@ end;
 
 procedure TMapSprite.setTranslucency(const value: byte);
 begin
-   FTransparencyFactor := between(value, 0, MAX_TRANSPARENCY);
+   FTransparencyFactor := clamp(value, 0, MAX_TRANSPARENCY);
    FTiles[1].alpha := (8 - FTransparencyFactor) * TRANSPARENCY_STEP;
 end;
 

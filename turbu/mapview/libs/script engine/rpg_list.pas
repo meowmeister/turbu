@@ -160,7 +160,7 @@ var
   I: Integer;
   dummy: TRpgItem;
 begin
-   if between(id, 1, GDatabase.items) <> id then
+   if not IsBetween(id, 1, GDatabase.items) then
       Exit;
 
    dummy := nil;
@@ -218,7 +218,7 @@ var
   I: Integer;
 begin
    result := -1;
-   if between(id, 1, GDatabase.items) <> id then
+   if not IsBetween(id, 1, GDatabase.items) then
       Exit;
 
    for I := 0 to self.count - 1 do

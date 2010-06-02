@@ -127,28 +127,14 @@ object frmObjectEditor: TfrmObjectEditor
         Margins.Bottom = 4
         Caption = 'Event Text'
         TabOrder = 0
-        object ListView1: TListView
+        object trvEvents: TEBTreeView
           Left = 2
           Top = 18
           Width = 548
           Height = 645
           Align = alClient
-          Columns = <>
+          Indent = 19
           TabOrder = 0
-        end
-        object StaticText1: TStaticText
-          Left = 88
-          Top = 216
-          Width = 256
-          Height = 32
-          Caption = 'Not Implemented Yet'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -23
-          Font.Name = 'Tahoma'
-          Font.Style = [fsBold]
-          ParentFont = False
-          TabOrder = 1
         end
       end
       object Panel1: TPanel
@@ -450,10 +436,27 @@ object frmObjectEditor: TfrmObjectEditor
           end
         end
         inherited dsConditions: TClientDataSet
+          Active = True
           MasterFields = 'Id'
           MasterSource = srcPages
           PacketRecords = 0
           AfterPost = SetDirty
+          Data = {
+            CC0100009619E0BD01000000180000001A000000000003000000CC01064D6173
+            7465720400010000000000077377697463683104000100000000000773776974
+            6368320400010000000000097661726961626C65310400010000000000097661
+            726961626C6532040001000000000006566172314F7001000200000000000656
+            6172324F7001000200000000000956617256616C756531040001000000000009
+            56617256616C7565320400010000000000044974656D04000100000000000448
+            65726F04000100000000000A436C6F636B314D696E7304000100000000000A43
+            6C6F636B3153656373040001000000000008436C6F636B314F70010002000000
+            00000A436C6F636B324D696E7304000100000000000A436C6F636B3253656373
+            040001000000000008436C6F636B324F70010002000000000006536372697074
+            02004A000000010005574944544802000200FE01086253776974636831020003
+            0000000000086253776974636832020003000000000005625661723102000300
+            00000000056256617232020003000000000005624974656D0200030000000000
+            05624865726F0200030000000000076254696D65723102000300000000000762
+            54696D65723202000300000000000000}
         end
       end
     end
@@ -522,6 +525,15 @@ object frmObjectEditor: TfrmObjectEditor
     TabOrder = 5
     OnClick = Button1Click
   end
+  object btnScript: TButton
+    Left = 383
+    Top = 831
+    Width = 90
+    Height = 25
+    Caption = 'View Script'
+    TabOrder = 6
+    OnClick = btnScriptClick
+  end
   object dsPages: TClientDataSet
     Active = True
     Aggregates = <>
@@ -582,6 +594,10 @@ object frmObjectEditor: TfrmObjectEditor
       item
         Name = 'MoveIgnore'
         DataType = ftBoolean
+      end
+      item
+        Name = 'EventText'
+        DataType = ftWideMemo
       end>
     IndexDefs = <
       item
@@ -597,7 +613,7 @@ object frmObjectEditor: TfrmObjectEditor
     Left = 32
     Top = 816
     Data = {
-      1D0100009619E0BD01000000180000000E0000000000030000001D0102496404
+      5C0100009619E0BD01000000180000000F0000000000030000005C0102496404
       00010000000000044E616D6502004A000000010005574944544802000200FE01
       084D6F6469666965640200030000000000056672616D6502000200000000000B
       5472616E73706172656E74020003000000000009446972656374696F6E010002
@@ -605,8 +621,9 @@ object frmObjectEditor: TfrmObjectEditor
       656E637901000200000000000E5374617274436F6E646974696F6E0100020000
       0000000B4576656E744865696768740100020000000000094E6F4F7665726C61
       70020003000000000008416E696D547970650100020000000000094D6F766553
-      7065656401000200000000000A4D6F766549676E6F7265020003000000000000
-      00}
+      7065656401000200000000000A4D6F766549676E6F7265020003000000000009
+      4576656E745465787404004B0000000100075355425459504502004900090057
+      696465546578740001000D44454641554C545F4F524445520200820000000000}
     object dsPagesId: TIntegerField
       FieldName = 'Id'
     end
@@ -649,6 +666,10 @@ object frmObjectEditor: TfrmObjectEditor
     end
     object dsPagesMoveIgnore: TBooleanField
       FieldName = 'MoveIgnore'
+    end
+    object dsPagesEventText: TWideMemoField
+      FieldName = 'EventText'
+      BlobType = ftWideMemo
     end
   end
   object srcPages: TDataSource

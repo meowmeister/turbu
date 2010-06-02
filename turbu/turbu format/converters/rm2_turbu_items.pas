@@ -262,6 +262,7 @@ end;
 
 constructor T2k2MedicineTemplate.Convert(base: TItem);
 begin
+   inherited Convert(base);
    self.stat[1] := base.hpHeal;
    self.stat[2] := base.mpHeal;
    self.hpPercent := base.hpPercent;
@@ -292,6 +293,7 @@ end;
 
 constructor T2k2StatItemTemplate.Convert(base: TItem);
 begin
+   inherited Convert(base);
    self.stat[1] := base.permHP;
    self.stat[2] := base.permMP;
    self.stat[3] := base.permAttack;
@@ -307,7 +309,7 @@ begin
    inherited Convert(base);
    self.which := base.switch;
    self.style := vs_switch;
-   self.operation := vo_add;
+   self.operation := bo_add;
 end;
 
 { TAttributeHelper }

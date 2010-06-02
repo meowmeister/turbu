@@ -6,7 +6,7 @@ uses
    Windows, SysUtils, Classes, Controls, Forms, DB, DBClient, StdCtrls, ExtCtrls,
    ComCtrls, DBCtrls, Messages, DBIndexComboBox, sdl_frame,
    turbu_tilesets, turbu_map_objects, turbu_serialization, turbu_constants,
-   frame_conditions, dataset_viewer, SDL_ImageManager, Mask;
+   frame_conditions, dataset_viewer, SDL_ImageManager, Mask, EBListView;
 
 type
   TfrmObjectEditor = class(TForm)
@@ -50,9 +50,10 @@ type
     dsPagesModified: TBooleanField;
     dsPagesframe: TWordField;
     dsPagesDirection: TByteField;
-    ListView1: TListView;
-    StaticText1: TStaticText;
+    trvEvents: TEBTreeView;
     Button1: TButton;
+    dsPagesEventText: TWideMemoField;
+    btnScript: TButton;
     procedure tabEventPagesChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -68,6 +69,7 @@ type
     procedure btnCopyClick(Sender: TObject);
     procedure btnPasteClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure btnScriptClick(Sender: TObject);
   private
     procedure WMRender(var message: TMessage); message WM_RENDER;
     procedure OnClipboardChange(Sender: TObject);
@@ -99,7 +101,7 @@ uses
    clipbrd,
    commons, turbu_tbi_lib, sdl_13,
    sprite_selector, ClipboardWatcher,
-   dm_database, turbu_database, archiveInterface, turbu_sdl_image,
+   dm_database, turbu_database, archiveInterface, turbu_sdl_image, EB_RpgScript,
    sg_defs;
 
 {$R *.dfm}
@@ -222,6 +224,11 @@ begin
    InsertPage(newpage);
 end;
 
+procedure TfrmObjectEditor.btnScriptClick(Sender: TObject);
+begin
+   Application.MessageBox(PChar(self.trvEvents.proc.GetScript(0)), 'Script');
+end;
+
 procedure TfrmObjectEditor.btnSetImageClick(Sender: TObject);
 var
    filename: string;
@@ -248,6 +255,8 @@ begin
       FViewer.OnDestroy := self.ClearViewer;
       FViewer.DBGrid1.DataSource := srcPages;
       FViewer.DBGrid2.DataSource := frameConditions.srcConditions;
+      FViewer.DBMemo1.DataSource := srcPages;
+      FViewer.DBMemo1.DataField := 'EventText';
       FViewer.DBNavigator1.DataSource := srcPages;
       FViewer.Show;
    end;
@@ -344,6 +353,8 @@ procedure TfrmObjectEditor.tabEventPagesChange(Sender: TObject);
 begin
    dsPages.Locate('id', tabEventPages.TabIndex, []);
    GetSpriteIndex(dsPagesName.Value);
+   if dsPagesEventText.BlobSize > 0 then
+      trvEvents.proc := TEBProcedure.Load(dsPagesEventText.Value) as TEBProcedure;
 end;
 
 procedure TfrmObjectEditor.UploadMapObject(obj: TRpgMapObject);

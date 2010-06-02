@@ -57,7 +57,12 @@ contains
   midaslib,
   crtl,
   AsphyreTimer in '..\..\..\classes\Asphyre\AsphyreTimer.pas',
-  turbu_tbi_lib in '..\..\turbu format\turbu_tbi_lib.pas';
+  turbu_tbi_lib in '..\..\turbu format\turbu_tbi_lib.pas',
+  EventBuilder in '..\..\turbu format\EventBuilder.pas',
+  turbu_serialization in '..\..\turbu_serialization.pas',
+  rttiHelper in '..\..\rttiHelper.pas',
+  turbu_containers in '..\..\turbu format\turbu_containers.pas',
+  turbu_functional in '..\..\turbu_functional.pas';
 
 end.
 

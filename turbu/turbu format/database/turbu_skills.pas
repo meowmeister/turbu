@@ -144,7 +144,7 @@ type
       FWhich: word;
       FMagnitude: smallint;
       FStyle: TVarSets;
-      FOperation: TVarOps;
+      FOperation: TBinaryOp;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
@@ -152,7 +152,7 @@ type
       property which: word read FWhich write FWhich;
       property magnitude: smallint read FMagnitude write FMagnitude;
       property style: TVarSets read FStyle write FStyle;
-      property operation: TVarOps read FOperation write FOperation;
+      property operation: TBinaryOp read FOperation write FOperation;
    end;
 
    TScriptSkillTemplate = class(TSkillTemplate)
@@ -393,7 +393,7 @@ begin
    FWhich := savefile.readWord;
    FMagnitude := savefile.readWord;
    savefile.readBuffer(FStyle, sizeof(TVarSets));
-   savefile.readBuffer(FOperation, sizeof(TVarOps));
+   savefile.readBuffer(FOperation, sizeof(TBinaryOp));
    lassert(savefile.readChar = 'v');
 end;
 
@@ -404,7 +404,7 @@ begin
    savefile.writeWord(FWhich);
    savefile.writeWord(FMagnitude);
    savefile.WriteBuffer(FStyle, sizeof(TVarSets));
-   savefile.WriteBuffer(FOperation, sizeof(TVarOps));
+   savefile.WriteBuffer(FOperation, sizeof(TBinaryOp));
    savefile.writeChar('v');
 end;
 

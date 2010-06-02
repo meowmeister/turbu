@@ -1584,6 +1584,20 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
+        Name = 'usableWhere'
+        DataType = ftInteger
+      end
+      item
+        Name = 'usableByHero'
+        DataType = ftBytes
+        Size = 32
+      end
+      item
+        Name = 'usableByClass'
+        DataType = ftBytes
+        Size = 32
+      end
+      item
         Name = 'stat[1]'
         DataType = ftInteger
       end
@@ -1620,26 +1634,8 @@ object dmDatabase: TdmDatabase
         DataType = ftInteger
       end
       item
-        Name = 'deadOnly'
+        Name = 'deadHeroesOnly'
         DataType = ftBoolean
-      end
-      item
-        Name = 'skill'
-        DataType = ftInteger
-      end
-      item
-        Name = 'usableByClass'
-        DataType = ftBytes
-        Size = 32
-      end
-      item
-        Name = 'usableByHero'
-        DataType = ftBytes
-        Size = 32
-      end
-      item
-        Name = 'usableWhere'
-        DataType = ftInteger
       end>
     IndexDefs = <>
     Params = <>
@@ -1648,20 +1644,20 @@ object dmDatabase: TdmDatabase
     Left = 184
     Top = 224
     Data = {
-      B90100009619E0BD010000001800000018000000000003000000B90102696404
+      B10100009619E0BD010000001800000017000000000003000000B10102696404
       00010000000000046E616D6501004A0000000100055749445448020002004000
       086D6F6469666965640200030000000000046465736301004A00000001000557
       4944544802000200640004636F73740400010000000000067461675B315D0400
       010000000000067461675B325D0400010000000000067461675B335D04000100
       00000000067461675B345D040001000000000008757365734C65667404000100
-      0000000007737461745B315D040001000000000007737461745B325D04000100
-      0000000007737461745B335D040001000000000007737461745B345D04000100
-      0000000007737461745B355D040001000000000007737461745B365D04000100
-      000000000C617265614D65646963696E65020003000000000009687050657263
-      656E740400010000000000096D7050657263656E740400010000000000086465
-      61644F6E6C79020003000000000005736B696C6C04000100000000000D757361
-      626C654279436C61737320000B00000000000C757361626C6542794865726F20
-      000B00000000000B757361626C65576865726504000100000000000000}
+      000000000B757361626C65576865726504000100000000000C757361626C6542
+      794865726F20000B00000000000D757361626C654279436C61737320000B0000
+      00000007737461745B315D040001000000000007737461745B325D0400010000
+      00000007737461745B335D040001000000000007737461745B345D0400010000
+      00000007737461745B355D040001000000000007737461745B365D0400010000
+      0000000C617265614D65646963696E6502000300000000000968705065726365
+      6E740400010000000000096D7050657263656E7404000100000000000E646561
+      644865726F65734F6E6C7902000300000000000000}
     object items_medicineid: TIntegerField
       FieldName = 'id'
     end
@@ -1733,7 +1729,7 @@ object dmDatabase: TdmDatabase
       FieldName = 'mpPercent'
     end
     object items_medicinedeadOnly: TBooleanField
-      FieldName = 'deadOnly'
+      FieldName = 'deadHeroesOnly'
     end
   end
   object items_book: TClientDataSet
@@ -4015,30 +4011,6 @@ object dmDatabase: TdmDatabase
         Size = 32
       end
       item
-        Name = 'stat[1]'
-        DataType = ftInteger
-      end
-      item
-        Name = 'stat[2]'
-        DataType = ftInteger
-      end
-      item
-        Name = 'stat[3]'
-        DataType = ftInteger
-      end
-      item
-        Name = 'stat[4]'
-        DataType = ftInteger
-      end
-      item
-        Name = 'stat[5]'
-        DataType = ftInteger
-      end
-      item
-        Name = 'stat[6]'
-        DataType = ftInteger
-      end
-      item
         Name = 'evasion'
         DataType = ftBoolean
       end
@@ -4155,18 +4127,47 @@ object dmDatabase: TdmDatabase
       item
         Name = 'script'
         DataType = ftMemo
+      end
+      item
+        Name = 'stat[1]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[2]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[3]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[4]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[5]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'stat[6]'
+        DataType = ftInteger
+      end
+      item
+        Name = 'deadHeroesOnly'
+        DataType = ftBoolean
       end>
     IndexDefs = <
       item
         Name = 'itemsIndex1'
         Fields = 'id'
       end>
+    IndexFieldNames = 'id'
     Params = <>
     StoreDefs = True
     Left = 184
     Top = 8
     Data = {
-      930300009619E0BD010000001800000031000000000003000000930302696404
+      AA0300009619E0BD010000001800000032000000000003000000AA0302696404
       00010000000000046E616D6501004A0000000100055749445448020002004000
       086D6F6469666965640200030000000000086974656D54797065040001000000
       0000046465736301004A000000010005574944544802000200640004636F7374
@@ -4174,10 +4175,7 @@ object dmDatabase: TdmDatabase
       010000000000067461675B335D0400010000000000067461675B345D04000100
       0000000008757365734C65667404000100000000000B757361626C6557686572
       6504000100000000000C757361626C6542794865726F20000B00000000000D75
-      7361626C654279436C61737320000B000000000007737461745B315D04000100
-      0000000007737461745B325D040001000000000007737461745B335D04000100
-      0000000007737461745B345D040001000000000007737461745B355D04000100
-      0000000007737461745B365D04000100000000000765766173696F6E02000300
+      7361626C654279436C61737320000B00000000000765766173696F6E02000300
       0000000005746F48697404000100000000000A637269744368616E6365040001
       00000000000B6372697450726576656E7404000100000000000A707265656D70
       7469766504000100000000000B6D70526564756374696F6E0400010000000000
@@ -4194,7 +4192,11 @@ object dmDatabase: TdmDatabase
       00010000000000096D61676E69747564650400010000000000057374796C6504
       00010000000000096F7065726174696F6E0400010000000000056576656E7401
       004A00000001000557494454480200020040000673637269707404004B000000
-      0100075355425459504502004900050054657874000000}
+      01000753554254595045020049000500546578740007737461745B315D040001
+      000000000007737461745B325D040001000000000007737461745B335D040001
+      000000000007737461745B345D040001000000000007737461745B355D040001
+      000000000007737461745B365D04000100000000000E646561644865726F6573
+      4F6E6C7902000300000000000000}
     object IntegerField30: TIntegerField
       FieldName = 'id'
     end
@@ -4302,8 +4304,8 @@ object dmDatabase: TdmDatabase
     object itemsmpPercent: TIntegerField
       FieldName = 'mpPercent'
     end
-    object itemsdeadOnly: TBooleanField
-      FieldName = 'deadOnly'
+    object itemsdeadHeroesOnly: TBooleanField
+      FieldName = 'deadHeroesOnly'
     end
     object itemsskill: TIntegerField
       FieldName = 'skill'

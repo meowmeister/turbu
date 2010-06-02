@@ -7,7 +7,7 @@
 				<Dependencies/>
 			</Projects>
 			<Projects Include="turbu format\default_format.dproj">
-				<Dependencies/>
+				<Dependencies>engines\basis\EngineBasis.dproj</Dependencies>
 			</Projects>
 			<Projects Include="engines\basis\turbu_design_basis.dproj">
 				<Dependencies>engines\basis\EngineBasis.dproj</Dependencies>
@@ -52,13 +52,13 @@
 		<Target Name="EngineBasis:Make">
 			<MSBuild Targets="Make" Projects="engines\basis\EngineBasis.dproj"/>
 		</Target>
-		<Target Name="default_format">
+		<Target DependsOnTargets="EngineBasis" Name="default_format">
 			<MSBuild Projects="turbu format\default_format.dproj"/>
 		</Target>
-		<Target Name="default_format:Clean">
+		<Target DependsOnTargets="EngineBasis:Clean" Name="default_format:Clean">
 			<MSBuild Targets="Clean" Projects="turbu format\default_format.dproj"/>
 		</Target>
-		<Target Name="default_format:Make">
+		<Target DependsOnTargets="EngineBasis:Make" Name="default_format:Make">
 			<MSBuild Targets="Make" Projects="turbu format\default_format.dproj"/>
 		</Target>
 		<Target DependsOnTargets="EngineBasis" Name="turbu_design_basis">
