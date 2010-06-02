@@ -2,34 +2,42 @@ object frmDatabase: TfrmDatabase
   Left = 0
   Top = 0
   Caption = 'Database Viewer'
-  ClientHeight = 558
-  ClientWidth = 800
+  ClientHeight = 730
+  ClientWidth = 1046
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
+  Font.Height = -14
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnClose = FormClose
   OnShow = FormShow
-  PixelsPerInch = 96
-  TextHeight = 13
+  PixelsPerInch = 120
+  TextHeight = 17
   object btnOK: TButton
-    Left = 393
-    Top = 500
-    Width = 84
-    Height = 30
+    Left = 514
+    Top = 654
+    Width = 110
+    Height = 39
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Caption = '&OK'
     Default = True
     ModalResult = 1
     TabOrder = 0
   end
   object btnCancel: TButton
-    Left = 483
-    Top = 500
-    Width = 81
-    Height = 30
+    Left = 632
+    Top = 654
+    Width = 106
+    Height = 39
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
@@ -37,143 +45,1047 @@ object frmDatabase: TfrmDatabase
     OnClick = btnCancelClick
   end
   object btnApply: TButton
-    Left = 570
-    Top = 500
-    Width = 79
-    Height = 30
+    Left = 745
+    Top = 654
+    Width = 104
+    Height = 39
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Caption = '&Apply'
     Enabled = False
     TabOrder = 2
     OnClick = applyChanges
   end
   object btnHelp: TButton
-    Left = 686
-    Top = 500
-    Width = 80
-    Height = 30
+    Left = 897
+    Top = 654
+    Width = 105
+    Height = 39
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     Caption = '&Help'
     Enabled = False
     TabOrder = 3
   end
   object tabPages: TPageControl
-    Left = 8
-    Top = 7
-    Width = 793
-    Height = 487
+    Left = 10
+    Top = 9
+    Width = 1037
+    Height = 637
+    Margins.Left = 4
+    Margins.Top = 4
+    Margins.Right = 4
+    Margins.Bottom = 4
     ActivePage = tshClass
     TabOrder = 4
     object tshClass: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = '&Class'
       OnShow = tshClassShow
+      ExplicitTop = 24
+      ExplicitWidth = 785
+      ExplicitHeight = 459
       inline frmClass: TframeClass
         Left = 0
         Top = 0
-        Width = 785
-        Height = 459
+        Width = 1027
+        Height = 600
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 0
         TabStop = True
-        ExplicitHeight = 459
+        ExplicitWidth = 1027
+        ExplicitHeight = 600
+        inherited lblClasses: TLabel
+          Left = 21
+          Top = 4
+          Width = 179
+          Height = 37
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
+          Font.Height = -28
+          ExplicitLeft = 21
+          ExplicitTop = 4
+          ExplicitWidth = 179
+          ExplicitHeight = 37
+        end
+        inherited pnlClass: TPanel
+          Left = 208
+          Top = 21
+          Width = 798
+          Height = 556
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
+          ExplicitLeft = 208
+          ExplicitTop = 21
+          ExplicitWidth = 798
+          ExplicitHeight = 556
+          inherited grpClassName: TGroupBox
+            Left = 10
+            Top = 10
+            Width = 242
+            Height = 54
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 10
+            ExplicitTop = 10
+            ExplicitWidth = 242
+            ExplicitHeight = 54
+            inherited dbTxtName: TDBEdit
+              Left = 10
+              Top = 21
+              Width = 221
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 21
+              ExplicitWidth = 221
+            end
+          end
+          inherited grpClassStats: TGroupBox
+            Left = 260
+            Top = 10
+            Width = 242
+            Height = 167
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 260
+            ExplicitTop = 10
+            ExplicitWidth = 242
+            ExplicitHeight = 167
+            inherited imgStats: TImage
+              Left = 10
+              Top = 18
+              Width = 220
+              Height = 105
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 18
+              ExplicitWidth = 220
+              ExplicitHeight = 105
+            end
+            inherited cbxBaseStats: TComboBox
+              Left = 10
+              Top = 131
+              Width = 220
+              Height = 25
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 131
+              ExplicitWidth = 220
+              ExplicitHeight = 25
+            end
+          end
+          inherited grpClassOptions: TGroupBox
+            Left = 260
+            Top = 184
+            Width = 242
+            Height = 189
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 260
+            ExplicitTop = 184
+            ExplicitWidth = 242
+            ExplicitHeight = 189
+            inherited radWeaponStyle: TDBRadioGroup
+              Left = 10
+              Top = 18
+              Width = 221
+              Height = 110
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 18
+              ExplicitWidth = 221
+              ExplicitHeight = 110
+            end
+            inherited chkEqLocked: TDBCheckBox
+              Left = 10
+              Top = 133
+              Width = 159
+              Height = 23
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 133
+              ExplicitWidth = 159
+              ExplicitHeight = 23
+            end
+            inherited chkStrongDef: TDBCheckBox
+              Left = 10
+              Top = 158
+              Width = 127
+              Height = 22
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 158
+              ExplicitWidth = 127
+              ExplicitHeight = 22
+            end
+          end
+          inherited grpClassExp: TGroupBox
+            Left = 10
+            Top = 341
+            Width = 242
+            Height = 204
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 10
+            ExplicitTop = 341
+            ExplicitWidth = 242
+            ExplicitHeight = 204
+            inherited lblExpVal1: TLabel
+              Left = 10
+              Top = 52
+              Width = 52
+              Height = 17
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 52
+              ExplicitWidth = 52
+              ExplicitHeight = 17
+            end
+            inherited lblExpVal2: TLabel
+              Left = 126
+              Top = 52
+              Width = 63
+              Height = 17
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 126
+              ExplicitTop = 52
+              ExplicitWidth = 63
+              ExplicitHeight = 17
+            end
+            inherited lblExpVal3: TLabel
+              Left = 10
+              Top = 105
+              Width = 76
+              Height = 17
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 105
+              ExplicitWidth = 76
+              ExplicitHeight = 17
+            end
+            inherited lblExpVal4: TLabel
+              Left = 132
+              Top = 105
+              Width = 27
+              Height = 17
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 132
+              ExplicitTop = 105
+              ExplicitWidth = 27
+              ExplicitHeight = 17
+            end
+            inherited btnExpCurveEditor: TButton
+              Left = 41
+              Top = 161
+              Width = 138
+              Height = 33
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 41
+              ExplicitTop = 161
+              ExplicitWidth = 138
+              ExplicitHeight = 33
+            end
+            inherited spnExpVal1: TJvDBSpinEdit
+              Left = 10
+              Top = 73
+              Width = 96
+              Height = 25
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 73
+              ExplicitWidth = 96
+              ExplicitHeight = 25
+            end
+            inherited spnExpVal2: TJvDBSpinEdit
+              Left = 126
+              Top = 73
+              Width = 95
+              Height = 25
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 126
+              ExplicitTop = 73
+              ExplicitWidth = 95
+              ExplicitHeight = 25
+            end
+            inherited spnExpVal3: TJvDBSpinEdit
+              Left = 10
+              Top = 126
+              Width = 96
+              Height = 25
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 126
+              ExplicitWidth = 96
+              ExplicitHeight = 25
+            end
+            inherited spnExpVal4: TJvDBSpinEdit
+              Left = 126
+              Top = 126
+              Width = 95
+              Height = 25
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 126
+              ExplicitTop = 126
+              ExplicitWidth = 95
+              ExplicitHeight = 25
+            end
+            inherited cbxExpAlgorithm: TDBLookupComboBox
+              Left = 10
+              Top = 18
+              Width = 211
+              Height = 25
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 18
+              ExplicitWidth = 211
+              ExplicitHeight = 25
+            end
+          end
+          inherited grpGraphics: TGroupBox
+            Left = 10
+            Top = 72
+            Width = 242
+            Height = 254
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 10
+            ExplicitTop = 72
+            ExplicitWidth = 242
+            ExplicitHeight = 254
+            inherited tabGraphics: TTabControl
+              Left = 10
+              Top = 33
+              Width = 227
+              Height = 210
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 33
+              ExplicitWidth = 227
+              ExplicitHeight = 210
+              inherited btnSetGfx: TButton
+                Left = 21
+                Top = 165
+                Width = 98
+                Height = 32
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 21
+                ExplicitTop = 165
+                ExplicitWidth = 98
+                ExplicitHeight = 32
+              end
+              inherited imgMapSprite: TSdlFrame
+                Left = 10
+                Top = 31
+                Width = 126
+                Height = 126
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                LogicalWidth = 126
+                LogicalHeight = 126
+                ExplicitLeft = 10
+                ExplicitTop = 31
+                ExplicitWidth = 126
+                ExplicitHeight = 126
+              end
+            end
+          end
+          inherited grpRepertoire: TGroupBox
+            Left = 510
+            Top = 72
+            Width = 276
+            Height = 272
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 510
+            ExplicitTop = 72
+            ExplicitWidth = 276
+            ExplicitHeight = 272
+            inherited pageRepertoire: TPageControl
+              Left = 10
+              Top = 21
+              Width = 257
+              Height = 243
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 21
+              ExplicitWidth = 257
+              ExplicitHeight = 243
+              inherited tshEquipment: TTabSheet
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 4
+                ExplicitTop = 24
+                ExplicitWidth = 188
+                ExplicitHeight = 158
+                inherited lblEquip1: TLabel
+                  Left = 10
+                  Top = 10
+                  Width = 57
+                  Height = 17
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 10
+                  ExplicitTop = 10
+                  ExplicitWidth = 57
+                  ExplicitHeight = 17
+                end
+                inherited lblEquip2: TLabel
+                  Left = 10
+                  Top = 50
+                  Height = 17
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 10
+                  ExplicitTop = 50
+                  ExplicitHeight = 17
+                end
+                inherited lblEquip3: TLabel
+                  Left = 10
+                  Top = 84
+                  Width = 43
+                  Height = 17
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 10
+                  ExplicitTop = 84
+                  ExplicitWidth = 43
+                  ExplicitHeight = 17
+                end
+                inherited lblEquip4: TLabel
+                  Left = 10
+                  Top = 120
+                  Width = 47
+                  Height = 17
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 10
+                  ExplicitTop = 120
+                  ExplicitWidth = 47
+                  ExplicitHeight = 17
+                end
+                inherited lblEquip5: TLabel
+                  Left = 10
+                  Top = 160
+                  Width = 67
+                  Height = 17
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 10
+                  ExplicitTop = 160
+                  ExplicitWidth = 67
+                  ExplicitHeight = 17
+                end
+                inherited cbxEquip1: TDBLookupComboBox
+                  Left = 84
+                  Top = 7
+                  Width = 158
+                  Height = 25
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 84
+                  ExplicitTop = 7
+                  ExplicitWidth = 158
+                  ExplicitHeight = 25
+                end
+                inherited cbxEquip4: TDBLookupComboBox
+                  Left = 84
+                  Top = 116
+                  Width = 158
+                  Height = 25
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 84
+                  ExplicitTop = 116
+                  ExplicitWidth = 158
+                  ExplicitHeight = 25
+                end
+                inherited cbxEquip3: TDBLookupComboBox
+                  Left = 84
+                  Top = 81
+                  Width = 158
+                  Height = 25
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 84
+                  ExplicitTop = 81
+                  ExplicitWidth = 158
+                  ExplicitHeight = 25
+                end
+                inherited cbxEquip5: TDBLookupComboBox
+                  Left = 84
+                  Top = 160
+                  Width = 158
+                  Height = 25
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 84
+                  ExplicitTop = 160
+                  ExplicitWidth = 158
+                  ExplicitHeight = 25
+                end
+                inherited cbxEquip2: TDBLookupComboBox
+                  Left = 84
+                  Top = 46
+                  Width = 158
+                  Height = 25
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 84
+                  ExplicitTop = 46
+                  ExplicitWidth = 158
+                  ExplicitHeight = 25
+                end
+              end
+              inherited tshSkills: TTabSheet
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                ExplicitLeft = 4
+                ExplicitTop = 24
+                ExplicitWidth = 188
+                ExplicitHeight = 158
+                inherited frameHeroCommands: TframeHeroCommands
+                  Width = 242
+                  Height = 204
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitWidth = 242
+                  ExplicitHeight = 204
+                  inherited lblNumber: TLabel
+                    Left = 144
+                    Top = 4
+                    Width = 54
+                    Height = 17
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    ExplicitLeft = 144
+                    ExplicitTop = 4
+                    ExplicitWidth = 54
+                    ExplicitHeight = 17
+                  end
+                  inherited spnCount: TJvSpinEdit
+                    Left = 144
+                    Top = 29
+                    Width = 53
+                    Height = 25
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    ExplicitLeft = 144
+                    ExplicitTop = 29
+                    ExplicitWidth = 53
+                    ExplicitHeight = 25
+                  end
+                  inherited cbxCommand1: TDBLookupComboBox
+                    Left = 10
+                    Top = 8
+                    Width = 126
+                    Height = 25
+                    Margins.Left = 4
+                    Margins.Top = 4
+                    Margins.Right = 4
+                    Margins.Bottom = 4
+                    ExplicitLeft = 10
+                    ExplicitTop = 8
+                    ExplicitWidth = 126
+                    ExplicitHeight = 25
+                  end
+                end
+              end
+              inherited tshRepertoire: TTabSheet
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                inherited lstSkills: TRpgListGrid
+                  Left = 5
+                  Top = 5
+                  Width = 237
+                  Height = 198
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  TitleFont.Height = -14
+                end
+              end
+            end
+          end
+          inherited grpScriptEvents: TGroupBox
+            Left = 260
+            Top = 381
+            Width = 242
+            Height = 164
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 260
+            ExplicitTop = 381
+            ExplicitWidth = 242
+            ExplicitHeight = 164
+            inherited lstScripts: TListView
+              Left = 10
+              Top = 21
+              Width = 215
+              Height = 131
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              Columns = <
+                item
+                  Caption = 'Event'
+                  Width = 92
+                end
+                item
+                  Caption = 'Script'
+                  Width = 95
+                end>
+              ExplicitLeft = 10
+              ExplicitTop = 21
+              ExplicitWidth = 215
+              ExplicitHeight = 131
+            end
+          end
+          inherited grpUnarmed: TGroupBox
+            Left = 510
+            Top = 10
+            Width = 276
+            Height = 54
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 510
+            ExplicitTop = 10
+            ExplicitWidth = 276
+            ExplicitHeight = 54
+            inherited cbxUnarmedAnim: TDBLookupComboBox
+              Left = 10
+              Top = 21
+              Width = 253
+              Height = 25
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 21
+              ExplicitWidth = 253
+              ExplicitHeight = 25
+            end
+          end
+          inherited grpResistVuln: TGroupBox
+            Left = 510
+            Top = 352
+            Width = 276
+            Height = 193
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 510
+            ExplicitTop = 352
+            ExplicitWidth = 276
+            ExplicitHeight = 193
+            inherited pageResists: TPageControl
+              Left = 10
+              Top = 21
+              Width = 257
+              Height = 165
+              Margins.Left = 4
+              Margins.Top = 4
+              Margins.Right = 4
+              Margins.Bottom = 4
+              ExplicitLeft = 10
+              ExplicitTop = 21
+              ExplicitWidth = 257
+              ExplicitHeight = 165
+              inherited tshAttributes: TTabSheet
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                inherited lstAttributes: TRpgListGrid
+                  Left = 4
+                  Top = 4
+                  Width = 186
+                  Height = 118
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  TitleFont.Height = -14
+                end
+                inherited btnEditAttributes: TButton
+                  Left = 197
+                  Top = 88
+                  Width = 45
+                  Height = 32
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  ExplicitLeft = 197
+                  ExplicitTop = 88
+                  ExplicitWidth = 45
+                  ExplicitHeight = 32
+                end
+              end
+              inherited tshConditions: TTabSheet
+                Margins.Left = 4
+                Margins.Top = 4
+                Margins.Right = 4
+                Margins.Bottom = 4
+                inherited RpgListGrid1: TRpgListGrid
+                  Left = 4
+                  Top = 4
+                  Width = 186
+                  Height = 118
+                  Margins.Left = 4
+                  Margins.Top = 4
+                  Margins.Right = 4
+                  Margins.Bottom = 4
+                  TitleFont.Height = -14
+                end
+              end
+            end
+          end
+        end
+        inherited grdClasses: TRpgListGrid
+          Left = 21
+          Top = 48
+          Width = 179
+          Height = 529
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
+          TitleFont.Height = -14
+        end
         inherited navAdd: TDBNavigator
+          Left = 931
+          Top = 432
+          Width = 45
+          Height = 32
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Hints.Strings = ()
+          ExplicitLeft = 931
+          ExplicitTop = 432
+          ExplicitWidth = 45
+          ExplicitHeight = 32
         end
         inherited navDel: TDBNavigator
+          Left = 931
+          Top = 472
+          Width = 45
+          Height = 33
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Hints.Strings = ()
+          ExplicitLeft = 931
+          ExplicitTop = 472
+          ExplicitWidth = 45
+          ExplicitHeight = 33
         end
       end
     end
     object tshHero: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = '&Hero'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tshItems: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = 'Raw &Data Viewer'
       ImageIndex = 3
+      ExplicitWidth = 785
+      ExplicitHeight = 455
       inline frameItems1: TframeItems
-        Left = -3
+        Left = -4
         Top = 0
-        Width = 785
-        Height = 538
+        Width = 1027
+        Height = 704
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         TabOrder = 0
-        ExplicitLeft = -3
+        ExplicitLeft = -4
+        ExplicitWidth = 1027
+        ExplicitHeight = 704
         inherited pnlItems: TPanel
-          Left = -3
-          ExplicitLeft = -3
+          Left = -4
+          Width = 1027
+          Height = 600
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
+          ExplicitLeft = -4
+          ExplicitWidth = 1027
+          ExplicitHeight = 600
           inherited DBGrid1: TDBGrid
-            Left = 7
-            Top = 3
-            Height = 417
+            Left = 9
+            Top = 4
+            Width = 985
+            Height = 545
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            TitleFont.Height = -14
+          end
+          inherited cboDatasets: TComboBox
+            Left = 366
+            Top = 543
+            Width = 190
+            Height = 25
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
+            ExplicitLeft = 366
+            ExplicitTop = 543
+            ExplicitWidth = 190
+            ExplicitHeight = 25
           end
         end
         inherited dsWeapons: TDataSource
-          DataSet = dmDatabase.skillGainRecords
+          DataSet = nil
         end
       end
     end
     object tshGlobalEvents: TTabSheet
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
       Caption = '&Global Events'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblGlobalEvents: TLabel
-        Left = 16
-        Top = 16
-        Width = 191
-        Height = 28
+        Left = 21
+        Top = 21
+        Width = 250
+        Height = 37
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         Alignment = taCenter
         AutoSize = False
         Caption = 'GLOBAL EVENTS'
         Color = clBlack
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWhite
-        Font.Height = -21
+        Font.Height = -28
         Font.Name = 'Tahoma'
         Font.Style = []
         ParentColor = False
         ParentFont = False
       end
       object lstEvents: TListBox
-        Left = 16
-        Top = 39
-        Width = 191
-        Height = 409
+        Left = 21
+        Top = 51
+        Width = 250
+        Height = 535
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         ExtendedSelect = False
-        ItemHeight = 13
+        ItemHeight = 17
         TabOrder = 0
         OnClick = lstEventsClick
       end
       object pnlEvents: TPanel
-        Left = 232
+        Left = 303
         Top = 0
-        Width = 553
-        Height = 457
+        Width = 724
+        Height = 598
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
         BevelInner = bvLowered
         BevelOuter = bvLowered
         TabOrder = 1
         object grpName: TGroupBox
-          Left = 16
-          Top = 8
-          Width = 169
-          Height = 41
+          Left = 21
+          Top = 10
+          Width = 221
+          Height = 54
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = 'Name'
           TabOrder = 0
           object txtName: TEdit
-            Left = 8
-            Top = 13
-            Width = 153
+            Left = 10
+            Top = 17
+            Width = 201
             Height = 21
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             TabOrder = 0
           end
         end
         object grpStartCondition: TGroupBox
-          Left = 191
-          Top = 8
-          Width = 185
-          Height = 41
+          Left = 250
+          Top = 10
+          Width = 242
+          Height = 54
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = 'Event Start Condition'
           TabOrder = 1
           object cbxStartCondition: TComboBox
-            Left = 8
-            Top = 13
-            Width = 169
-            Height = 21
+            Left = 10
+            Top = 17
+            Width = 221
+            Height = 25
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Style = csDropDownList
             TabOrder = 0
             Items.Strings = (
@@ -183,39 +1095,55 @@ object frmDatabase: TfrmDatabase
           end
         end
         object grpConditionSwitch: TGroupBox
-          Left = 382
-          Top = 8
-          Width = 171
-          Height = 41
+          Left = 500
+          Top = 10
+          Width = 223
+          Height = 54
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = 'Condition Switch'
           TabOrder = 2
           object chkHasSwitch: TCheckBox
-            Left = 3
-            Top = 15
-            Width = 22
-            Height = 17
+            Left = 4
+            Top = 20
+            Width = 29
+            Height = 22
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             TabOrder = 0
             OnClick = chkHasSwitchClick
           end
           object txtCondSwitch: TEdit
-            Left = 24
-            Top = 14
-            Width = 140
+            Left = 31
+            Top = 18
+            Width = 183
             Height = 21
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Enabled = False
             ReadOnly = True
             TabOrder = 1
           end
           object btnCondSwitch: TButton
-            Left = 146
-            Top = 16
-            Width = 17
-            Height = 17
+            Left = 191
+            Top = 21
+            Width = 22
+            Height = 22
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Caption = '...'
             Enabled = False
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
-            Font.Height = -12
+            Font.Height = -15
             Font.Name = 'Tahoma'
             Font.Style = [fsBold]
             ParentFont = False
@@ -223,20 +1151,28 @@ object frmDatabase: TfrmDatabase
           end
         end
         object grpEventCommands: TGroupBox
-          Left = 16
-          Top = 55
-          Width = 537
-          Height = 362
+          Left = 21
+          Top = 72
+          Width = 702
+          Height = 473
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = 'Event Commands'
           TabOrder = 3
           DesignSize = (
-            537
-            362)
+            702
+            473)
           object txtEventScript: TMemo
-            Left = 8
-            Top = 16
-            Width = 521
-            Height = 337
+            Left = 10
+            Top = 21
+            Width = 682
+            Height = 441
+            Margins.Left = 4
+            Margins.Top = 4
+            Margins.Right = 4
+            Margins.Bottom = 4
             Anchors = [akLeft, akTop, akRight, akBottom]
             ReadOnly = True
             ScrollBars = ssVertical
@@ -244,10 +1180,14 @@ object frmDatabase: TfrmDatabase
           end
         end
         object btnCodeView: TButton
-          Left = 24
-          Top = 423
-          Width = 98
-          Height = 29
+          Left = 31
+          Top = 553
+          Width = 129
+          Height = 38
+          Margins.Left = 4
+          Margins.Top = 4
+          Margins.Right = 4
+          Margins.Bottom = 4
           Caption = '&Switch Code View'
           TabOrder = 4
           OnClick = btnCodeViewClick

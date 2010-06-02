@@ -91,12 +91,11 @@ type
    private
    class var
       FCorrection: byte;
-    function getData(x: word): integer;
    var
       FOpcode: integer;
       FDepth: byte;
       FName: ansiString;
-      FData: array of integer;
+      FData: TArray<integer>;
       FParent: TEventPage;
       function getNextCommand: TEventCommand;
       function getScript: ansiString;
@@ -118,7 +117,8 @@ type
       property parent: TEventPage read FParent;
       property opcode: integer read FOpcode;
       property name: ansiString read FName;
-      property data[x: word]: integer read getData;
+      property data: TArray<integer> read FData;
+      property indent: byte read FDepth;
    end;
 
    TEventMoveBlock = class(TObject)
@@ -177,7 +177,6 @@ type
 
       procedure stripLastSem(var data: ansiString);
       procedure use(value: TUsesList);
-      function getOpcode(x: word): TEventCommand;
       function getLength: word;
       function getGraphicFile: ansiString; inline;
       function getGraphic: word; inline;
@@ -208,7 +207,7 @@ type
       property compiledScript: tbtString read getCompiledScript;
       property hasScript: boolean read hasScriptFunction;
       property parseStack: TStack read FParseStack write FParseStack;
-      property opcode[x: word]: TEventCommand read getOpcode;
+      property opcode: TRpgObjectList<TEventCommand> read FCommands;
       property len: word read getLength;
       property commands: TRpgObjectList<TEventCommand> read FCommands;
 {$IFDEF ENGINE}
@@ -787,13 +786,6 @@ begin
    result := FCommands.high;
 end;
 
-function TEventPage.getOpcode(x: word): TEventCommand;
-begin
-   if x in [0..FCommands.high] then
-      result := FCommands[x]
-   else result := nil;
-end;
-
 function TEventPage.getTransparent: boolean;
 begin
    if not FOverrideSprite then
@@ -977,13 +969,6 @@ begin
    end;
 end;
 {$ENDIF}
-
-function TEventCommand.getData(x: word): integer;
-begin
-   if x in [0..high(FData)] then
-      result := FData[x]
-   else result := 0;
-end;
 
 function TEventCommand.getNextCommand: TEventCommand;
 var

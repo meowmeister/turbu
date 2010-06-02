@@ -1403,7 +1403,7 @@ begin
 
    self.base.moveOrder := GGameEngine.currentMap.routes[route];}
    self.base.canSkip := skip;
-   self.base.moveFreq := between(frequency, 1, 8);
+   self.base.moveFreq := clamp(frequency, 1, 8);
 end;
 
 procedure TRpgCharacter.setTranslucency(const Value: byte);

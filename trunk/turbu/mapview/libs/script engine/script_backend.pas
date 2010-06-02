@@ -234,7 +234,7 @@ var
    theItem: TRpgItem;
    dummy: TItemType;
 begin
-   if between(id, 0, GDatabase.items) <> id then
+   if not IsBetween(id, 0, GDatabase.items) then
       Exit;
 
    theItem := TRpgItem.newItem(id, 1);

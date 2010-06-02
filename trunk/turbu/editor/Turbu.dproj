@@ -7,7 +7,7 @@
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<DCC_DependencyCheckOutputName>Turbu.exe</DCC_DependencyCheckOutputName>
 			<ProjectVersion>12.0</ProjectVersion>
-			<Config Condition="'$(Config)'==''">Debug</Config>
+			<Config Condition="'$(Config)'==''">Alpha release</Config>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
 			<Base>true</Base>
@@ -168,6 +168,7 @@
 			<DCCReference Include="..\turbu format\converters\conversion_output.pas">
 				<Form>frmConversionOutput</Form>
 			</DCCReference>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_event_builder.pas"/>
 			<RcCompile Include="..\turbures.rc">
 				<ContainerId>RC</ContainerId>
 				<Form>turbures.res</Form>
@@ -211,7 +212,7 @@
 						<VersionInfo Name="MajorVer">0</VersionInfo>
 						<VersionInfo Name="MinorVer">7</VersionInfo>
 						<VersionInfo Name="Release">5</VersionInfo>
-						<VersionInfo Name="Build">1283</VersionInfo>
+						<VersionInfo Name="Build">1284</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -223,7 +224,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc,</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">TURBU Editor</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">0.7.5.1283</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.7.5.1284</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">TURBU Editor</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

@@ -13,6 +13,7 @@ type
    T2k2RpgEventPage = class helper for TRpgEventPage
    private
       procedure CalculateTileID(tile: word);
+      procedure CreateEventScript(base: TEventPage);
    public
       constructor Convert(base: TEventPage; id: integer; parent: TRpgMapObject);
    end;
@@ -35,8 +36,9 @@ type
 
 implementation
 uses
-   SysUtils,
-   charset_data, turbu_defs, rm2_turbu_maps;
+   SysUtils, Generics.Collections, Classes,
+   charset_data, turbu_defs, rm2_turbu_maps, rm2_turbu_event_builder,
+   EventBuilder, EB_RpgScript;
 
 { T2k2RpgMapObject }
 
@@ -137,6 +139,53 @@ begin
    self.animType := TAnimType(base.animType);
    self.moveSpeed := base.moveSpeed;
    self.FParent := parent;
+   if base.opcode.count > 0 then
+      CreateEventScript(base);
+end;
+
+procedure T2k2RpgEventPage.CreateEventScript(base: TEventPage);
+const
+   PROCNAME = '%s_page%d';
+var
+   proc: TEBProcedure;
+   command: TEventCommand;
+   last: TEBObject;
+   stack: TStack<TEBObject>;
+   fudgeFactor: integer;
+begin
+   fudgeFactor := 0;
+   stack := TStack<TEBObject>.Create;
+   proc := TEBProcedure.Create(nil);
+   proc.name := format(PROCNAME, [self.parent.name, self.id]);
+   try
+   try
+      last := proc;
+      for command in base.opcode do
+      begin
+         if (command.opcode = 20141) or (command.opcode = 20713) then
+            dec(fudgeFactor);
+         if command.indent + fudgeFactor >= stack.Count then
+            stack.Push(last)
+         else if command.indent + fudgeFactor < stack.Count - 1 then
+            stack.Pop;
+         if (command.opcode = 20110) then
+            ConvertOpcode(command, last)
+         else last := ConvertOpcode(command, stack.Peek);
+         if (command.opcode = 10140) or
+            ((command.opcode = 10710) and ((command.data[3] <> 0) or (command.data[4] <> 0))) then
+            inc(fudgeFactor);
+      end;
+      assert(stack.Count = 1);
+      assert(fudgeFactor = 0);
+      self.FEventText := proc.serialize;
+   except
+      proc.SaveScript;
+      raise;
+   end;
+   finally
+      stack.Free;
+      proc.Free;
+   end;
 end;
 
 { T2k2RpgEventConditions }

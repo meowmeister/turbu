@@ -2,7 +2,7 @@ object frmDatasetViewer: TfrmDatasetViewer
   Left = 0
   Top = 0
   Caption = 'frmDatasetViewer'
-  ClientHeight = 328
+  ClientHeight = 483
   ClientWidth = 633
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -28,7 +28,7 @@ object frmDatasetViewer: TfrmDatasetViewer
   end
   object DBGrid2: TDBGrid
     Left = 0
-    Top = 160
+    Top = 315
     Width = 633
     Height = 168
     Align = alBottom
@@ -45,5 +45,13 @@ object frmDatasetViewer: TfrmDatasetViewer
     Width = 240
     Height = 18
     TabOrder = 2
+  end
+  object DBMemo1: TDBMemo
+    Left = 0
+    Top = 176
+    Width = 633
+    Height = 133
+    ScrollBars = ssVertical
+    TabOrder = 3
   end
 end

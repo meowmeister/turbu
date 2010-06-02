@@ -94,7 +94,6 @@ type
       FPath: TPath;
       FMoveIgnore: boolean;
 {      FEventScript: ansiString;
-      FEventText: ansiString;
       FScriptText: ansiString;
       FCompiledScript: ansiString; }
 //      FCommands: TRpgObjectList<TEventCommand>;
@@ -112,7 +111,7 @@ type
       FConditions: TRpgEventConditions;
       [NoUpload]
       FParent: TRpgMapObject;
-
+      FEventText: string;
       class function keyChar: AnsiChar; override;
    public
       constructor Create(parent: TRpgMapObject; id: smallint);
@@ -360,6 +359,7 @@ begin
    FMoveSpeed := savefile.readByte;
    FPath := TPath.Load(savefile);
    FMoveIgnore := savefile.readBool;
+   FEventText := savefile.readString;
    self.readEnd(savefile);
 end;
 
@@ -379,6 +379,7 @@ begin
    savefile.writeByte(FMoveSpeed);
    FPath.Save(savefile);
    savefile.writeBool(FMoveIgnore);
+   savefile.writeString(FEventText);
    self.writeEnd(savefile);
 end;
 

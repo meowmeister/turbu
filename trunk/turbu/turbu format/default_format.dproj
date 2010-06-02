@@ -76,7 +76,6 @@
 			<DCCReference Include="turbu_sprites.pas"/>
 			<DCCReference Include="turbu_unit_dictionary.pas"/>
 			<DCCReference Include="turbu_defs.pas"/>
-			<DCCReference Include="turbu_containers.pas"/>
 			<DCCReference Include="turbu_decl_utils.pas"/>
 			<DCCReference Include="turbu_vartypes.pas"/>
 			<DCCReference Include="turbu_constants.pas"/>
@@ -84,15 +83,15 @@
 			<DCCReference Include="database\turbu_map_metadata.pas"/>
 			<DCCReference Include="maps\turbu_maps.pas"/>
 			<DCCReference Include="database\turbu_tilesets.pas"/>
-			<DCCReference Include="..\turbu_functional.pas"/>
 			<DCCReference Include="..\mapview\libs\timing.pas"/>
 			<DCCReference Include="turbu_script_interface.pas"/>
 			<DCCReference Include="..\commons.pas"/>
-			<DCCReference Include="..\turbu_serialization.pas"/>
-			<DCCReference Include="..\rttiHelper.pas"/>
 			<DCCReference Include="maps\turbu_map_objects.pas"/>
 			<DCCReference Include="..\charset_data.pas"/>
 			<DCCReference Include="turbu_pathing.pas"/>
+			<DCCReference Include="script\EB_RpgScript.pas"/>
+			<DCCReference Include="script\EB_Messages.pas"/>
+			<DCCReference Include="script\EB_Expressions.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

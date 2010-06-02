@@ -30,6 +30,7 @@ requires
   turbu_design_basis;
 
 contains
-  sprite_selector in 'sprite_selector.pas' {frmSpriteSelector};
+  sprite_selector in 'sprite_selector.pas' {frmSpriteSelector},
+  EBListView in 'EBListView.pas';
 
 end.

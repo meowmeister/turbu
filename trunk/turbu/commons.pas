@@ -78,10 +78,11 @@ type
    function getPersonalFolder: string;
    function getProjectFolder: string;
    procedure createProjectFolder;
-   function between(number, low, high: integer): integer; inline;
+   function IsBetween(number, low, high: integer): boolean; inline;
    function round(value: real): integer; inline;
    function pointInRect(const thePoint: types.TPoint; theRect: TRect): boolean;
-   procedure clamp(var value: single; low, high: single); inline;
+   procedure clamp(var value: single; low, high: single); inline; overload;
+   function clamp(number, low, high: integer): integer; inline; overload;
    procedure EnableControls(const controls: array of TControl; enabled: boolean);
 
    //modulus function that doesn't "mirror" for negative numbers
@@ -231,13 +232,18 @@ end;
 
 function pointInRect(const thePoint: types.TPoint; theRect: TRect): boolean;
 begin
-   result := (between(thePoint.x, theRect.Left, theRect.Right) = thePoint.x) and
-      (between(thePoint.y, theRect.top, theRect.Bottom) = thePoint.y);
+   result := IsBetween(thePoint.x, theRect.Left, theRect.Right) and
+      IsBetween(thePoint.y, theRect.top, theRect.Bottom);
 end;
 
-function between(number, low, high: integer): integer;
+function clamp(number, low, high: integer): integer;
 begin
    result := min(max(number, low), high);
+end;
+
+function IsBetween(number, low, high: integer): boolean;
+begin
+   result := (number >= low) and (number <= high);
 end;
 
 //Replacement for Delphi's "banker's rounding" function

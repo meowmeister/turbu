@@ -63,7 +63,7 @@ var
 implementation
 uses
    SysUtils, StrUtils,
-   fileIO, discInterface, logs, locate_files,
+   fileIO, discInterface, logs, locate_files, rm2_turbu_event_builder,
    turbu_constants, turbu_database, turbu_unit_dictionary, turbu_engines,
    turbu_functional, turbu_maps, turbu_classes, turbu_pathing, turbu_tbi_lib,
    rm2_turbu_database, rm2_turbu_maps, rm2_turbu_map_metadata, rm2_turbu_map_objects,
@@ -245,6 +245,8 @@ var
    fromFolder, toFolder: IArchive;
    legacy: TLegacySections;
    key: byte;
+   list: TStringList;
+   op: string;
 begin
    legacy := nil; //to silence a compiler warning
    try
@@ -329,6 +331,14 @@ begin
                FReport.newStep(filename);
                ConvertMap(filename, FLdb, FLmt, GDatabase.mapTree, fromFolder, toFolder);
             end);
+
+         if DebugHook <> 0 then
+         begin
+            list := rm2_turbu_event_builder.UnknownOpcodeList;
+            for op in list do
+               FReport.MakeHint(op);
+            list.free;
+         end;
 
          FReport.setCurrentTask('Copying Resources', 3);
          if locate_files.rtpLocation = '' then
@@ -430,8 +440,12 @@ end;
 procedure TConverterThread.VerifyFormat(datafile: TStream);
 begin
    GProjectFormat := scanRmFormat(datafile);
-   if GProjectFormat <> FFormat then
-      FFormat := GProjectFormat;
+   FFormat := GProjectFormat;
+   case FFormat of
+      pf_2k: rtpLocation := GetRegistryValue('\Software\ASCII\RPG2000', 'RuntimePackagePath');
+      pf_2k3: rtpLocation := GetRegistryValue('\Software\Enterbrain\RPG2003', 'RUNTIMEPACKAGEPATH');
+      else assert(false);
+   end;
 end;
 
 { Classless }

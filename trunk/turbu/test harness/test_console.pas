@@ -43,11 +43,11 @@ type
       mnuEditMapProperties: TMenuItem;
       mnuTestMapResizing: TMenuItem;
       mnuDebugMapResizing: TMenuItem;
-    N2: TMenuItem;
-    estRenderTargets1: TMenuItem;
-    mnuEventEditor: TMenuItem;
-    mnuMaps: TMenuItem;
-    mnuTestMapObjectContainers: TMenuItem;
+      N2: TMenuItem;
+      estRenderTargets1: TMenuItem;
+      mnuEventEditor: TMenuItem;
+      mnuMaps: TMenuItem;
+      mnuTestMapObjectContainers: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -64,16 +64,16 @@ type
       procedure mnuEditMapPropertiesClick(Sender: TObject);
       procedure mnuTestMapResizingClick(Sender: TObject);
       procedure mnuDebugMapResizingClick(Sender: TObject);
-    procedure estRenderTargets1Click(Sender: TObject);
-    procedure mnuEventEditorClick(Sender: TObject);
-    procedure mnuTestMapObjectContainersClick(Sender: TObject);
+      procedure estRenderTargets1Click(Sender: TObject);
+      procedure mnuEventEditorClick(Sender: TObject);
+      procedure mnuTestMapObjectContainersClick(Sender: TObject);
    private
       { Private declarations }
       FEngine: IDesignMapEngine;
       folder, outFolder: string;
       FCurrentMap: IRpgMap;
       procedure setupConversionPaths;
-    procedure renderTest(Sender: TObject);
+      procedure renderTest(Sender: TObject);
    public
       { Public declarations }
    end;
@@ -95,7 +95,7 @@ uses
    turbu_engines, turbu_plugin_interface, turbu_battle_engine,
    turbu_2k3_battle_engine, turbu_2k_battle_engine, turbu_sprites,
    turbu_maps, turbu_classes, turbu_2k_map_engine_D,
-   turbu_tbi_lib, turbu_sdl_image,
+   turbu_tbi_lib, turbu_sdl_image, EB_Expressions,
    MapObject_Editor,
    sdl_canvas, sdl_13, SG_defs,
    strtok, test_map_size;
@@ -154,7 +154,6 @@ begin
 
    GCurrentFolder := folder;
    GProjectFolder := outFolder;
-   rtpLocation := GetRegistryValue('\Software\ASCII\RPG2000', 'RuntimePackagePath');
 
    turbu_characters.SetScriptEngine(GDScriptEngine);
    frmConversionReport := TfrmConversionReport.Create(Application);
@@ -323,10 +322,12 @@ procedure TfrmTestConsole.FormCreate(Sender: TObject);
 begin
    if getProjectFolder = '\' then
       createProjectFolder;
+   TEBExpression.Datastore := dmDatabase;
 end;
 
 procedure TfrmTestConsole.FormDestroy(Sender: TObject);
 begin
+   TEBExpression.Datastore := nil;
    lCanvas.Free;
    FCurrentMap := nil;
    FEngine := nil;

@@ -35,7 +35,6 @@ type
 
    THierarchyTreeNode<T: class> = class
    private type
-
       TEnumerator = class(TEnumerator<T>)
       private
          FTopNode: THierarchyTreeNode<T>;
@@ -51,9 +50,8 @@ type
          function MoveNext: boolean;
          property Current: T read GetCurrent;
       end;
-
+   protected type
       TNodeList = THierarchyTreeList<T>;
-
    private
       FData: T;
       FRight: TNodeList;
@@ -64,7 +62,7 @@ type
    public
       constructor Create(value: T);
       destructor Destroy; override;
-      procedure Add(node: THierarchyTreeNode<T>); overload;
+      procedure Add(node: THierarchyTreeNode<T>); overload; virtual;
       procedure Add(value: T); overload;
       function GetEnumerator: TEnumerator;
 

@@ -167,7 +167,6 @@
 			<DCCReference Include="..\editor\skill_settings.pas">
 				<Form>frmSkillLearning</Form>
 			</DCCReference>
-			<DCCReference Include="..\turbu format\turbu_containers.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
 			<DCCReference Include="..\editor\function_header.pas">
 				<Form>frmFuncHeader</Form>
@@ -226,6 +225,15 @@
 				<Form>frmSpriteSelector</Form>
 			</DCCReference>
 			<DCCReference Include="..\engines\basis\ClipboardWatcher.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_event_builder.pas"/>
+			<DCCReference Include="..\turbu format\script\EB_RpgScript.pas"/>
+			<DCCReference Include="..\turbu format\EventBuilder.pas"/>
+			<DCCReference Include="..\turbu format\script\EB_Messages.pas"/>
+			<DCCReference Include="..\turbu format\turbu_containers.pas"/>
+			<DCCReference Include="..\turbu format\design\EBListView.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_map_objects.pas"/>
+			<DCCReference Include="..\turbu format\script\EB_Expressions.pas"/>
+			<DCCReference Include="..\turbu format\script\EB_System.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
