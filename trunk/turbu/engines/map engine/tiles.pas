@@ -200,7 +200,7 @@ implementation
 
 uses
    SysUtils, Math,
-   turbu_constants, turbu_2k_sprite_engine,
+   turbu_constants, turbu_2k_sprite_engine, turbu_defs, turbu_map_sprites,
    SDL_ImageManager;
 
 constructor TTile.Create(const AParent: TSpriteEngine; tileset: string);
@@ -1170,27 +1170,23 @@ end;
 { TMapTile }
 
 procedure TMapTile.bump(character: TObject);
-{var
-//   bumper, dummy: TAdditionSprite;
-   I: Integer; }
+var
+   bumper, dummy: TMapSprite;
+   I: Integer;
 begin
 {$MESSAGE WARN 'Commented-out code in live unit'}
-{   bumper := character as TAdditionSprite;
-   if bumper is THeroSprite then
+   bumper := character as TMapSprite;
+   if bumper is TCharSprite then
       for I := 0 to FOccupied.Count - 1 do
       begin
-         dummy := FOccupied[i] as TAdditionSprite;
-         if dummy.hasPage and (dummy.event.lastCurrentPage.startCondition in [by_touch, by_collision]) then
-            GScriptEngine.executeEvent(dummy.event, dummy);
-         //end if
+         dummy := FOccupied[i] as TMapSprite;
+         if dummy.hasPage and (dummy.event.currentPage.startCondition in [by_touch, by_collision]) then
+{            GScriptEngine.executeEvent(dummy.event, dummy); };
       end
-   else if bumper.hasPage and (bumper.event.lastCurrentPage.startCondition = by_collision) then
+   else if bumper.hasPage and (bumper.event.currentPage.startCondition = by_collision) then
       for I := 0 to FOccupied.Count - 1 do
-         if FOccupied[i] = GGameEngine.currentParty then
-            GScriptEngine.executeEvent(bumper.event, bumper);
-         //end if
-      //end for
-   //end if  }
+ {        if FOccupied[i] = GGameEngine.currentParty then
+            GScriptEngine.executeEvent(bumper.event, bumper); };
 end;
 
 constructor TMapTile.Create(const AParent: TSpriteEngine; tileset: string);

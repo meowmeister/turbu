@@ -9,7 +9,7 @@ type
    T2k2RpgMap = class helper for TRpgMap
    public
       constructor Convert(base: TMapUnit; metadata: TMapTreeData; db: TLcfDataBase; id: smallint);
-      procedure saveScript(const script: ansiString);
+      procedure saveScript(const script: utf8string);
    end;
 
    T2k2MapRegion = class helper for TMapRegion
@@ -29,7 +29,7 @@ implementation
 uses
    types, sysUtils, classes,
    turbu_tilesets, archiveInterface, turbu_constants, turbu_classes,
-   turbu_map_objects, rm2_turbu_map_objects;
+   turbu_map_objects, rm2_turbu_map_objects, EB_RpgScript;
 
 type
    ETileError = class(Exception);
@@ -44,6 +44,7 @@ const
 constructor T2k2RpgMap.Convert(base: TMapUnit; metadata: TMapTreeData; db: TLcfDataBase; id: smallint);
 var
    i: integer;
+   scriptBlock: TEBMap;
 begin
    self.Create;
    self.name := string(metadata.name);
@@ -76,21 +77,31 @@ begin
    FEncounters[1] := metadata.encounterRate;
    self.FRegions := TRegionList.Create;
    self.FMapObjects := TMapObjectList.Create;
-   for I := 0 to base.eventCount - 1 do
-      FMapObjects.Add(TRpgMapObject.Convert(base.events[i]));
-   self.saveScript(base.eventData);
+   scriptBlock := TEBMap.Create(nil);
+   try
+      scriptBlock.name := validIdent(metadata.name);
+      for I := 0 to base.eventCount - 1 do
+         FMapObjects.Add(TRpgMapObject.Convert(base.events[i],
+                           procedure(script: TEBProcedure)
+                           begin
+                              scriptBlock.add(script);
+                           end));
+      self.saveScript(utf8String(scriptBlock.serialize));
+   finally
+      scriptBlock.Free;
+   end;
 end;
 
-procedure T2k2RpgMap.saveScript(const script: ansiString);
+procedure T2k2RpgMap.saveScript(const script: utf8String);
 var
    stream: TMemoryStream;
    filename: TFilenameData;
 begin
-   self.scriptFormat := sfLegacy;
+   self.scriptFormat := sfEvents;
    stream := TMemoryStream.Create;
    try
-      stream.WriteAString(script);
-      filename := GArchives[SCRIPT_ARCHIVE].MakeValidFilename(format('%s.trs', [self.name]));
+      stream.WriteBuffer(script[1], length(script));
+      filename := GArchives[SCRIPT_ARCHIVE].MakeValidFilename(self.name + '.trs');
       GArchives[SCRIPT_ARCHIVE].writeFile(filename.name, stream);
       self.scriptFile := filename.name;
    finally

@@ -111,8 +111,11 @@ begin
          raise EParseMessage.createFmt('%s is corrupt!', [filename]);
       id := GetIdFromFilename;
 	  //in case we have, for whatever reason, a map that's not in the map tree
-      if (id = -1) or (id > mapTree.GetMax) then
+      if (id = -1) or (not metadata.Containsmap(id)) then
+      begin
+         FReport.makeError(format('No entry for map %s exists in the map tree.', [filename]));
          Exit;
+      end;
       map := TMapUnit.Create(mapFile, database, mapTree, id);
       cMap := TRpgMap.Convert(map, mapTree.getMapData(id), database, id);
       outFile := TMemoryStream.Create;
@@ -149,12 +152,16 @@ var
       filename: string;
       lFilename: string;
    begin
+      if terminated then
+         Exit;
       if fileList.Find('', index) then
          filelist.Delete(index);
       rtpInput.currentFolder := folderName;
       FReport.newStep(stepname);
       for filename in input.allFiles(folderName) do
       begin
+         if terminated then
+            Exit;
 //         lFilename := extractFilename(leftStr(filename, length(filename) - extLength(filename)));
          if processor(input, outFolderName, filename, false) then
          begin
@@ -165,6 +172,8 @@ var
       end;
       for filename in fileList do
       begin
+         if terminated then
+            Exit;
          lFilename := ExtractFilename(locate_files.findGraphicF(filename, folderName));
          if processor(rtpInput, outFolderName, format('%s\%s', [folderName, lFilename]), true) then
             FReport.makeNotice(format('Copied RTP resource %s.', ['Panorama\'+ filename]))
@@ -324,6 +333,8 @@ begin
             end;
          end;
 
+         if terminated then
+            Exit;
          FReport.setCurrentTask('Converting maps', fromFolder.countFiles('*.lmu'));
          TFunctional.Map<string>(fromFolder.allFiles,
             procedure(const filename: string)
@@ -340,11 +351,15 @@ begin
             list.free;
          end;
 
+         if terminated then
+            Exit;
          FReport.setCurrentTask('Copying Resources', 3);
          if locate_files.rtpLocation = '' then
             FReport.makeNotice('RTP not found.  RTP resources will not be copied.')
          else self.copyResources(fromFolder, toFolder);
 
+         if terminated then
+            Exit;
          savefile := TMemoryStream.Create;
          try
             GDatabase.save(savefile);

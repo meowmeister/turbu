@@ -21,7 +21,7 @@ interface
 uses
    types, classes, //system libraries
    chipset, hero_data, item_data, skill_data, rm_sound, condition_data,
-   charset_data, battle_anims; //modules
+   charset_data, battle_anims, turbu_defs; //modules
 
 const
    SHOP_STYLES = 3;
@@ -33,8 +33,6 @@ type
    TSfxTypes = (sfxCursor, sfxAccept, sfxCancel, sfxBuzzer, sfxBattleStart,
                 sfxEscape, sfxEnemyAttack, sfxEnemyDamage, sfxAllyDamage,
                 sfxEvade, sfxEnemyDies, sfxItemUsed, sfxNil);
-   TTransitionTypes = (trnMapEnter, trnMapExit, trnBattleStartFOut, trnBattleStartFIn,
-                trnBattleEndFOut, trnBattleEndFIn);
    TVocabSet = (ownedItems, equippedItems, moneyUnit, normalStatus, expShort,
                 lvShort, hpShort, mpShort, mpCost, attack, defense, mind, speed,
                 weapon, shield, armor, helmet, relic);
@@ -955,7 +953,7 @@ begin
    FBgm[bgmGameOver] := TRmMusic.Create($26, input);
    for i := 0 to ord(sfxItemUsed) do
       FSfx[TSfxTypes(i)] := TRmSound.Create($29 + i, input);
-   for i := 0 to ord(trnBattleEndFIn) do
+   for i := 0 to ord(trn_BattleEndFIn) do
    begin
       {$IFDEF EDITOR}
       FTransition[TTransitionTypes(i)] := getNumSec($3D + i, input, fillInZeroInt);

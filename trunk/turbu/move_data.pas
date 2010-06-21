@@ -19,7 +19,7 @@ unit move_data;
 
 interface
 uses
-   charset_data;
+   turbu_defs;
 
 type
    TMoveRecord = record
@@ -140,26 +140,27 @@ begin
                            //in the debugger
          numStream.Read(dummy.opcode, 1);
          assert(dummy.opcode in [0..$29]);
-         if not (dummy.opcode in [$20..$23]) then
-            Continue;
-         if dummy.opcode in [$20, $21] then
+         if dummy.opcode in [$20..$23] then
          begin
-            converter := TBerConverter.Create(numStream);
-            dummy.data[1] := converter.getData;
-         end
-         else if dummy.opcode = $22 then
-         begin
-            dummy.name := string(getString(numStream));
-            converter := TBerConverter.Create(numStream);
-            dummy.data[1] := converter.getData;
-         end
-         else if dummy.opcode = $23 then
-         begin
-            dummy.name := string(getString(numStream));
-            for i := 1 to 3 do
+            if dummy.opcode in [$20, $21] then
             begin
                converter := TBerConverter.Create(numStream);
-               dummy.data[i] := converter.getData;
+               dummy.data[1] := converter.getData;
+            end
+            else if dummy.opcode = $22 then
+            begin
+               dummy.name := string(getString(numStream));
+               converter := TBerConverter.Create(numStream);
+               dummy.data[1] := converter.getData;
+            end
+            else if dummy.opcode = $23 then
+            begin
+               dummy.name := string(getString(numStream));
+               for i := 1 to 3 do
+               begin
+                  converter := TBerConverter.Create(numStream);
+                  dummy.data[i] := converter.getData;
+               end;
             end;
          end;
          addOpcode(dummy);

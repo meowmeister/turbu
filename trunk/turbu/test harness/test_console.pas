@@ -95,7 +95,7 @@ uses
    turbu_engines, turbu_plugin_interface, turbu_battle_engine,
    turbu_2k3_battle_engine, turbu_2k_battle_engine, turbu_sprites,
    turbu_maps, turbu_classes, turbu_2k_map_engine_D,
-   turbu_tbi_lib, turbu_sdl_image, EB_Expressions,
+   turbu_tbi_lib, turbu_sdl_image, EventBuilder,
    MapObject_Editor,
    sdl_canvas, sdl_13, SG_defs,
    strtok, test_map_size;
@@ -192,6 +192,7 @@ procedure TfrmTestConsole.mnuEventEditorClick(Sender: TObject);
 begin
    if FCurrentMap = nil then
       mnuTestMapLoadingClick(sender);
+   GDatabase.copyToDB(dmDatabase, []);
 
    TfrmObjectEditor.EditMapObject(TRpgMap(FCurrentMap).mapObjects[1],
                                   GDatabase.tileset[TRpgMap(FCurrentMap).tileset].name);
@@ -322,12 +323,12 @@ procedure TfrmTestConsole.FormCreate(Sender: TObject);
 begin
    if getProjectFolder = '\' then
       createProjectFolder;
-   TEBExpression.Datastore := dmDatabase;
+   TEBObject.Datastore := dmDatabase;
 end;
 
 procedure TfrmTestConsole.FormDestroy(Sender: TObject);
 begin
-   TEBExpression.Datastore := nil;
+   TEBObject.Datastore := nil;
    lCanvas.Free;
    FCurrentMap := nil;
    FEngine := nil;

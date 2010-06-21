@@ -19,12 +19,11 @@ unit charset_data;
 
 interface
 
-uses sg_defs;
+uses sg_defs, turbu_defs;
 
 type
    TAnimFrame = (left, center, right);
    TCharTiles = (bottom, top);
-   TFacing = (facing_up, facing_right, facing_down, facing_left);
    TVehicleSet = (vh_boat, vh_ship, vh_airship);
 
 const

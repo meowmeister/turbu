@@ -106,6 +106,7 @@ type
       FCursed: boolean;
       FUsableByClass: array of boolean;
       FAnimData: array of TItemAnimData;
+      FInvokeSkill: boolean;
 
       function getStat(which: byte): word;
       function getCondition(x: word): boolean;
@@ -297,7 +298,7 @@ begin
                stringStream.free;
             end;
          end;
-
+         FInvokeSkill := getChboxSec($47, theLDB, fillInZeroInt);
          incompleteSection := getNumSec($48, theLDB, fillInZeroInt) < TLcfDataBase(parent).charClasses;
          setLength(FUsableByClass, TLcfDataBase(parent).charClasses + 1);
          dummy := getArraySec($49, theLDB, FUsableByClass[0]);

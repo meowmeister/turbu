@@ -3,7 +3,7 @@ unit turbu_map_sprites;
 interface
 uses
    tiles, charset_data, timing,
-   turbu_pathing, turbu_sprites, turbu_map_objects,
+   turbu_pathing, turbu_sprites, turbu_map_objects, turbu_defs,
    sg_defs, sdl_sprite;
 
 type

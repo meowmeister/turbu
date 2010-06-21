@@ -12,6 +12,7 @@ object frmConversionOutput: TfrmConversionOutput
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  PopupMode = pmAuto
   PixelsPerInch = 120
   TextHeight = 16
   object ListBox1: TListBox
@@ -22,6 +23,5 @@ object frmConversionOutput: TfrmConversionOutput
     Align = alClient
     MultiSelect = True
     TabOrder = 0
-    ExplicitHeight = 145
   end
 end

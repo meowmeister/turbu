@@ -20,13 +20,13 @@ type
 
    TEBMessageOptions = class(TEBMessageObject)
    public
-      function GetScript(indent: integer): string; override;
+      function GetScriptText: string; override;
       function GetNodeText: string; override;
    end;
 
    TEBPortrait = class(TEBMessageObject)
    public
-      function GetScript(indent: integer): string; override;
+      function GetScriptText: string; override;
       function GetNodeText: string; override;
    end;
 
@@ -39,7 +39,31 @@ type
 
    TEBInputNumber = class(TEBMessageObject)
    public
-      function GetScript(indent: integer): string; override;
+      function GetScriptText: string; override;
+      function GetNodeText: string; override;
+   end;
+
+   TEBInputHeroName = class(TEBMessageObject)
+   public
+      function GetScriptText: string; override;
+      function GetNodeText: string; override;
+   end;
+
+   TEBSave = class(TEBMessageObject)
+   public
+      function GetScriptText: string; override;
+      function GetNodeText: string; override;
+   end;
+
+   TEBMenu = class(TEBMessageObject)
+   public
+      function GetScriptText: string; override;
+      function GetNodeText: string; override;
+   end;
+
+   TEBMenuEnable = class(TEBMessageObject)
+   public
+      function GetScriptText: string; override;
       function GetNodeText: string; override;
    end;
 
@@ -75,8 +99,12 @@ end;
 function TEBShowMessage.MultilineText(indent, overhang: integer): string;
 var
    wrap: string;
+   child: TEBObject;
 begin
-   wrap := QuotedStr('+ CRLF +' + #13#10) + self.IndentString(indent) + StringOfChar(' ', overhang);
+   result := self.Text;
+   for child in self do
+      result := result + #13#10 + child.Text;
+   wrap := QuotedStr('+ CRLF +' + #13#10) + IndentString(indent) + StringOfChar(' ', overhang);
    result := QuotedStr(StringReplace(self.Text, #13#10, wrap, [rfReplaceAll]));
 end;
 
@@ -104,7 +132,7 @@ begin
    end;
 end;
 
-function TEBMessageOptions.GetScript(indent: integer): string;
+function TEBMessageOptions.GetScriptText: string;
 const
    CALL = 'messageOptions(%s, %s, %s, %s);';
    MBOX: array[1..3] of string = ('mb_top', 'mb_middle', 'mb_bottom');
@@ -132,7 +160,7 @@ begin
    end; //end else
 end;
 
-function TEBPortrait.GetScript(indent: integer): string;
+function TEBPortrait.GetScriptText: string;
 const
    CALL = 'setPortrait(%s, %d, %s, %s);';
 begin
@@ -152,11 +180,11 @@ begin
    result := format(LINE, [Values[0], Values[1]]);
 end;
 
-function TEBInputNumber.GetScript(indent: integer): string;
+function TEBInputNumber.GetScriptText: string;
 const
    LINE = 'variable[%d] := inputNumber(%d);';
 begin
-   result := IndentString(indent) + format(LINE, [Values[1], Values[0]]);
+   result := format(LINE, [Values[1], Values[0]]);
 end;
 
 { TEBChoiceMessage }
@@ -176,7 +204,64 @@ begin
    result := 'Show Choice: ' + self.Text;
 end;
 
+{ TEBInputHeroName }
+
+function TEBInputHeroName.GetNodeText: string;
+begin
+   result := 'Enter Hero Name: ' + HeroName(Values[0]);
+end;
+
+function TEBInputHeroName.GetScriptText: string;
+const LINE = '%s := inputText(%s, %d);';
+var
+   heroname: string;
+begin
+   heroname := format('hero[%d].name', [values[0]]);
+   if boolean(values[2]) then
+      result := format(LINE, [heroname, heroname, values[0]])
+   else result := format(LINE, [heroname, QuotedStr(''), values[0]]);
+end;
+
+{ TEBSave }
+
+function TEBSave.GetNodeText: string;
+begin
+   result := 'Call Save Menu';
+end;
+
+function TEBSave.GetScriptText: string;
+begin
+   result := 'SaveMenu;';
+end;
+
+{ TEBMenu }
+
+function TEBMenu.GetNodeText: string;
+begin
+   result := 'Open Menu';
+end;
+
+function TEBMenu.GetScriptText: string;
+begin
+   result := 'OpenMenu;';
+end;
+
+{ TEBMenuEnable }
+
+function TEBMenuEnable.GetNodeText: string;
+begin
+   if boolean(Values[0]) then
+      result := 'Enable Menu'
+   else result := 'Disable Menu';
+end;
+
+function TEBMenuEnable.GetScriptText: string;
+const LINE = 'MenuEnabled := %s;';
+begin
+   result := format(LINE, [BOOL_STR[Values[0]]]);
+end;
+
 initialization
    RegisterClasses([TEBShowMessage, TEBMessageOptions, TEBPortrait, TEBChoiceMessage,
-                    TEBInputNumber]);
+                    TEBInputNumber, TEBInputHeroName, TEBSave, TEBMenu, TEBMenuEnable]);
 end.

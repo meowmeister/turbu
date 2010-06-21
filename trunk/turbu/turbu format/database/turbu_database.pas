@@ -25,7 +25,7 @@ uses
    turbu_characters, turbu_items, turbu_skills, turbu_classes, turbu_resists,
    turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations,
    turbu_unit_dictionary, turbu_containers, turbu_script_interface, turbu_game_data,
-   turbu_map_metadata, turbu_tilesets, turbu_decl_utils;
+   turbu_map_metadata, turbu_tilesets, turbu_decl_utils, turbu_maps;
 
 type
    TCharClassList = TRpgObjectList<TClassTemplate>;
@@ -72,7 +72,7 @@ type
       //and a battle layout section
       //and whatever $20 is in 2003
 
-//      FGlobalEvents: TEventBlock;
+      FGlobalEvents: TMapObjectList;
       FLayout: TGameLayout;
       FSwitches: TStringList;
       FVariables: TStringList;
@@ -111,6 +111,9 @@ type
       procedure uploadStringList(dataset: TDataset; list: TStringList);
    private
       FUploadedTypes: TRpgDataTypeSet;
+      FScriptFormat: TScriptFormat;
+      FScriptFile: string;
+      procedure SetScriptFormat(const Value: TScriptFormat);
    protected
       FLegacyCruft: TLegacySections;
       class function keyChar: ansiChar; override;
@@ -162,7 +165,7 @@ type
       property command: TBattleCommandList read FCommand write FCommand;
       property commands: integer read getCommandCount write setCommandCount;
       property tileset: TTilesetList read FTileset write FTileset;
-//      property globalEventBlock: TEventBlock read FGlobalEvents;
+      property globalEvents: TMapObjectList read FGlobalEvents;
       property layout: TGameLayout read FLayout write FLayout;
       property variable: TStringList read FVariables write FVariables;
       property switch: TStringList read FSwitches write FSwitches;
@@ -173,6 +176,8 @@ type
       property statSet: TStatSet read FStatSet write FStatSet;
       property tileGroup: TTileDictionary read FTileGroup write FTileGroup;
       property scripts: TScriptList read FScripts write FScripts;
+      property scriptFormat: TScriptFormat read FScriptFormat write SetScriptFormat;
+      property scriptFile: string read FScriptFile write FScriptFile;
 
       property units: TUnitDictionary read FUnits write setUnits;
       property projectName: string read getProjectName;
@@ -862,6 +867,7 @@ destructor TRpgDatabase.Destroy;
 var
    i: integer;
 begin
+   FGlobalEvents.Free;
    FScripts.Free;
    FLegacyCruft.Free;
    FSwitches.Free;
@@ -1133,6 +1139,12 @@ begin
       FHero.DeleteRange(value + 1, i);
 end;
 
+procedure TRpgDatabase.SetScriptFormat(const Value: TScriptFormat);
+begin
+   FScriptFormat := Value;
+   // do more here
+end;
+
 procedure TRpgDatabase.setUnits(const Value: TUnitDictionary);
 begin
    FUnits := Value;
@@ -1280,6 +1292,7 @@ begin
    addTileset;
    FLegacyCruft := TLegacySections.Create;
    FScripts := TScriptList.Create;
+   FGlobalEvents := TMapObjectList.Create;
 end;
 
 { TBattleCommandList }

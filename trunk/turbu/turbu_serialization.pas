@@ -650,7 +650,7 @@ begin
       uploadObjectEnum
    else uploadNonObjectEnum;
 
-   if db.Active then
+   if db.Active and (db.state in [dsEdit, dsInsert]) then
       db.post;
 end;
 

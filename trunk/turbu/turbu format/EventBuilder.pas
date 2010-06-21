@@ -3,7 +3,7 @@ unit EventBuilder;
 interface
 uses
    Classes, Generics.Collections,
-   turbu_containers;
+   turbu_containers, turbu_database_interface;
 
 type
    UsesUnitAttribute = class(TCustomAttribute)
@@ -59,6 +59,8 @@ type
       function GetArgList: string;
       procedure SetArgList(const Value: string);
       function GetUnit: string;
+      function GetChildText(index: integer): string;
+      function GetChildNode(index: integer): string;
    protected
       type TVarDesc = record
          name: string;
@@ -66,18 +68,24 @@ type
          write: boolean;
       end;
 
+      class var FDatastore: IRpgDatastore;
       procedure DefineProperties(Filer: TFiler); override;
-      property ArgList: string read GetArgList write SetArgList;
-      function IndentString(level: integer): string;
       function GetChildOwner: TComponent; override;
       procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
+
+      class function GetLookup(id: integer; const name: string): string;
+      function IndentString(level: integer): string;
+      property ChildScript[index: integer]: string read GetChildText;
+      property ChildNode[index: integer]: string read GetChildNode;
+      property ArgList: string read GetArgList write SetArgList;
    public
       constructor Create(AParent: TComponent); override;
       class function Load(const Value: string): TEBObject;
       destructor Destroy; override;
-      function GetScript(indent: integer): string; virtual; abstract;
+      function GetScriptText: string; virtual; abstract;
       function GetNodeText: string; virtual; abstract;
       function GetNode: TEBNode; virtual;
+      function GetScript(indent: integer): string; virtual;
       function GetEnumerator: TEBEnumerator;
       function Serialize: string;
       procedure Add(aObject: TEBObject); virtual;
@@ -85,6 +93,7 @@ type
 
       property Values: TList<integer> read FValues write FValues;
       property InUnit: string read GetUnit;
+      class property Datastore: IRpgDatastore read FDatastore write FDatastore;
    published
       property Text: string read FText write FText stored HasText;
    end;
@@ -108,13 +117,10 @@ end;
 
 constructor TEBObject.Create(AParent: TComponent);
 begin
-   inherited Create(AParent);
+   inherited Create(nil);
    include(FComponentStyle, csSubComponent);
    if assigned(AParent) then
-   begin
-      assert(AParent is TEBObject);
-      AParent.InsertComponent(self);
-   end;
+      (AParent as TEBObject).Add(self);
    FValues := TList<integer>.Create;
 end;
 
@@ -242,14 +248,38 @@ begin
       proc(enumerator);
 end;
 
+function TEBObject.GetChildNode(index: integer): string;
+begin
+   result := (Components[index] as TEBObject).GetNodeText;
+end;
+
+function TEBObject.GetChildText(index: integer): string;
+begin
+   result := (Components[index] as TEBObject).GetScriptText;
+end;
+
 function TEBObject.GetEnumerator: TEBEnumerator;
 begin
    result := TEBEnumerator.Create(self);
 end;
 
+class function TEBObject.GetLookup(id: integer; const name: string): string;
+begin
+   if assigned(FDatastore) then
+      result := FDatastore.NameLookup(name, id)
+   else result := '';
+   if result = '' then
+      result := format('??%s #%d??', [name, id]);
+end;
+
 function TEBObject.GetNode: TEBNode;
 begin
    result := TEBNode.Create(self, GetNodeText);
+end;
+
+function TEBObject.GetScript(indent: integer): string;
+begin
+   result := IndentString(indent) + GetScriptText;
 end;
 
 function TEBObject.GetUnit: string;
@@ -321,6 +351,7 @@ var
    ebNode: TEBNode absolute subnode;
    obj: TEBObject;
    index: integer;
+   mustcheck: boolean;
 begin
    obj := node.Data.obj;
    broken := nil;
@@ -332,11 +363,17 @@ begin
       end;
    if broken <> nil then
    begin
-      index := node.Right.IndexOf(broken);
+      mustcheck := false;
+      index := node.Right.IndexOf(broken) + 1;
       assert(broken.Parent = node);
       while index < node.Right.Count do
-         node.Right[index].Parent := broken;
-      if assigned(broken.Right) then
+         if node.Right[index].Parent <> broken then //prevent infinite recursion
+         begin
+            mustcheck := true;
+            node.Right[index].Parent := broken;
+         end
+         else inc(index); //prevent infinite loop caused by preventing infinite recursion
+      if assigned(broken.Right) and mustcheck then
          CheckTree(broken as TEBNode);
    end;
 end;

@@ -32,6 +32,7 @@ requires
 
 contains
   turbu_listGrid in 'turbu_listGrid.pas',
-  DBIndexComboBox in 'DBIndexComboBox.pas';
+  DBIndexComboBox in 'DBIndexComboBox.pas',
+  EBListView in '..\..\turbu\turbu format\design\EBListView.pas';
 
 end.

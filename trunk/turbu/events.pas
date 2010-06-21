@@ -20,8 +20,9 @@ unit events;
 {$D+} {$hints off}
 interface
 
-uses math, types, classes, Contnrs, turbu_containers, //system libs
+uses math, types, classes, Contnrs, //system libs
      charset_data, LDB, LMT, move_data, //turbu libs
+     turbu_containers, turbu_defs,
      uPSCompiler, upsUtils; //PascalScript lib
 
 type
@@ -478,6 +479,7 @@ begin
    FParent := parent;
    FName := getStrSec(1, input, fillInBlankStr);
    setLength(FPages, 1);
+   FLength := 1;
    FPages[0] := TEventPage.createGlobal(input, self);
    FPages[0].FGlobal := true;
    FCurrentPage := self[0];
