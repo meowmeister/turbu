@@ -18,9 +18,10 @@ unit transitions;
 *****************************************************************************}
 
 interface
+uses
+   turbu_defs;
 type
    TBlockStyle = (ss_random, ss_fromTop, ss_fromBottom);
-   TTransitions = (trnDefault, trnFadeout, trnBlocks, trnBlockUp, trnBlockDn, trnBlinds, trnStripeHiLo, trnStripeLR, trnOutIn, trnInOut, trnScrollUp, trnScrollDn, trnScrollLeft, trnScrollRight, trnDivHiLow, trnDivLR, trnDivQuarters, trnZoom, trnTwist, trnRipple, trnNone);
 
    procedure init;
    procedure erase(which: TTransitions);

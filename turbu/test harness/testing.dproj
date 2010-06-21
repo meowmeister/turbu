@@ -33,6 +33,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
 			<DCC_WriteableConstants>true</DCC_WriteableConstants>
 			<DCC_ExeOutput>..\bin</DCC_ExeOutput>
 			<DCC_DcuOutput>..\dcus</DCC_DcuOutput>
@@ -234,6 +235,7 @@
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_map_objects.pas"/>
 			<DCCReference Include="..\turbu format\script\EB_Expressions.pas"/>
 			<DCCReference Include="..\turbu format\script\EB_System.pas"/>
+			<DCCReference Include="..\turbu format\script\EB_Maps.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

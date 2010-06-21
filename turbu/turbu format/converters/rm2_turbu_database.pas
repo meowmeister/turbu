@@ -21,7 +21,7 @@ interface
 
 uses
    classes,
-   LDB, LMT, turbu_database, turbu_unit_dictionary, conversion_report;
+   LDB, LMT, turbu_database, events, turbu_unit_dictionary, conversion_report;
 
 type
 
@@ -29,6 +29,8 @@ type
    private
       procedure buildNameLists(base: TLcfDatabase; ConversionReport: IConversionReport;
                           spriteList, portList, animList, battleSpriteList: TStringList);
+      procedure convertEvents(block: TEventBlock);
+      procedure SaveScript(const script: utf8String);
    public
       constructor convert(base: TLcfDatabase; tree: TFullTree; dic: TUnitDictionary;
                           legacy: TLegacySections; ConversionReport: IConversionReport;
@@ -40,16 +42,16 @@ var
 
 implementation
 uses
-   sysUtils, zlib,
+   sysUtils,
    turbu_characters, turbu_items, turbu_skills, turbu_animations, conversion_table,
    turbu_resists, turbu_map_metadata,
    rm2_turbu_items, rm2_turbu_characters, rm2_turbu_skills, rm2_turbu_animations,
    rm2_turbu_resists, rm2_turbu_map_metadata, rm2_turbu_tilesets, turbu_sprites,
    turbu_versioning, turbu_plugin_interface, turbu_constants, turbu_sdl_image,
-   turbu_tbi_lib, turbu_tilesets,
-   hero_data, locate_files,
+   turbu_tbi_lib, turbu_tilesets, rm2_turbu_map_objects, turbu_map_objects,
+   hero_data, locate_files, turbu_maps,
    archiveInterface, formats, commons, turbu_battle_engine, turbu_engines, logs,
-   turbu_map_engine,
+   turbu_map_engine, EB_RpgScript,
    SDL, SDL_13, sdl_image, sg_defs;
 
 const
@@ -111,6 +113,7 @@ begin
    self.units := dic;
    FLegacyCruft.Free;
    FLegacyCruft := legacy;
+   self.ConvertEvents(GlobalEventBlock as TEventBlock);
    self.scriptBuild;
    self.parseMeta;
    assert(SDL_WasInit(SDL_INIT_VIDEO) = SDL_INIT_VIDEO);
@@ -270,6 +273,43 @@ begin
    finally
       classTable.free;
       heroClassTable.free;
+   end;
+end;
+
+procedure T2k2Database.convertEvents(block: TEventBlock);
+var
+   globals: TEBUnit;
+   i: integer;
+begin
+   globals := TEBUnit.Create(nil);
+   try
+      globals.name := 'GlobalEvents';
+      for I := 0 to block.len - 1  do
+         GlobalEvents.Add(TRpgMapObject.Convert(block.events[i],
+                           procedure(script: TEBProcedure)
+                           begin
+                              globals.add(script);
+                           end));
+      self.saveScript(utf8String(globals.serialize));
+   finally
+      globals.Free;
+   end;
+end;
+
+procedure T2k2Database.SaveScript(const script: utf8String);
+var
+   stream: TMemoryStream;
+   filename: TFilenameData;
+begin
+   self.scriptFormat := sfEvents;
+   stream := TMemoryStream.Create;
+   try
+      stream.WriteBuffer(script[1], length(script));
+      filename := GArchives[SCRIPT_ARCHIVE].MakeValidFilename('globalevents.trs');
+      GArchives[SCRIPT_ARCHIVE].writeFile(filename.name, stream);
+      self.scriptFile := filename.name;
+   finally
+      stream.Free;
    end;
 end;
 

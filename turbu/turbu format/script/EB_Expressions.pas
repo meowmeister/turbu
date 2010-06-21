@@ -2,17 +2,17 @@ unit EB_Expressions;
 
 interface
 uses
-   EventBuilder, turbu_defs, turbu_database_interface;
+   EventBuilder, turbu_defs;
 
 type
    TEBExpression = class(TEBObject)
-   protected
-      class var FDatastore: IRpgDatastore;
-      class function GetLookup(id: integer; const name: string): string;
+   private
+      FSilent: boolean;
    public
-      function GetScript(indent: integer): string; override;
+      function GetScriptText: string; override;
       function GetNode: TEBNode; override;
-      class property Datastore: IRpgDatastore read FDatastore write FDatastore;
+   published
+      property Silent: boolean read FSilent write FSilent stored FSilent;
    end;
 
    TEBVariableValue = class(TEBExpression)
@@ -21,6 +21,11 @@ type
       constructor Create(name: string; subscript: integer); reintroduce; overload;
       constructor Create(name: string; subscript: TEBExpression); reintroduce; overload;
       function GetNodeText: string; override;
+   end;
+
+   TEBNilValue = class(TEBVariableValue)
+   public
+      constructor Create(parent: TEBObject);
    end;
 
    TEBSwitchesValue = class(TEBVariableValue)
@@ -57,6 +62,7 @@ type
    public
       constructor Create(value: string); reintroduce;
       function GetNodeText: string; override;
+      function GetScriptText: string; override;
    end;
 
    TEBLookupValue = class(TEBIntegerValue)
@@ -73,19 +79,21 @@ type
    public
       constructor Create(left, right: TEBExpression; comparison: TComparisonOp); reintroduce;
       function GetNodeText: string; override;
+      function GetScriptText: string; override;
    end;
 
    TEBChainable = class(TEBExpression)
    private
       FHint: integer;
-      function GetChain: TEBChainable;
-      procedure SetChain(const Value: TEBChainable);
    protected
+      function GetChain: TEBChainable; virtual;
+      procedure SetChain(const Value: TEBChainable); virtual;
       function GetLink: string; virtual;
    public
       constructor Create(value: string; next: TEBChainable = nil); reintroduce;
       function GetNodeText: string; override;
       property chain: TEBChainable read GetChain write SetChain;
+      function GetScriptText: string; override;
    published
       property hint: integer read FHint write FHint;
    end;
@@ -93,16 +101,22 @@ type
    TEBObjExpr = class(TEBChainable);
 
    TEBObjArrayValue = class(TEBObjExpr)
+   protected
+      function GetChain: TEBChainable; override;
+      procedure SetChain(const Value: TEBChainable); override;
+      function GetLink: string; override;
    public
-      constructor Create(value: string; subscript: integer; next: TEBChainable = nil);
+      constructor Create(value: string; subscript: integer; next: TEBChainable = nil); overload;
+      constructor Create(value: string; subscript: TEBExpression; next: TEBChainable = nil); overload;
    end;
 
    TEBLookupObjExpr = class(TEBObjArrayValue)
    private
       FLookup: string;
    public
-      constructor Create(value: string; subscript: integer; name: string; next: TEBChainable = nil);
-      function GetNodeText: string; override;
+      constructor Create(value: string; subscript: integer; name: string; next: TEBChainable = nil); overload;
+      constructor Create(value: string; subscript: TEBExpression; name: string; next: TEBChainable = nil); overload;
+      function GetLink: string; override;
    published
       property lookup: string read FLookup write FLookup;
    end;
@@ -111,8 +125,11 @@ type
    end;
 
    TEBCall = class(TEBChainable)
+   protected
+      function GetChain: TEBChainable; override;
    public
       function GetNodeText: string; override;
+      function GetScriptText: string; override;
    end;
 
    TEBBinaryOp = class(TEBExpression)
@@ -125,20 +142,30 @@ type
       property op: TBinaryOp read FOp write FOp;
    end;
 
+   TEBIntArray = class(TEBExpression)
+   private
+      FLookup: string;
+   published
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+      property lookup: string read FLookup write FLookup;
+   end;
+
 const
    COMPARISONS: array[TComparisonOp] of string = ('=', '>=', '<=', '>', '<', '<>');
+   HINTS: array[0..3] of string = ('', '''s', ' is', ' has');
 
-{ HINTS:
-   1: 's
-   2: is
-   3: has
-}
 implementation
 uses
-   SysUtils, Classes, DB, Variants,
+   SysUtils, Classes, Variants, Math,
    EB_RPGScript;
 
 { TEBExpression }
+
+function TEBExpression.GetScriptText: string;
+begin
+   result := GetNodeText;
+end;
 
 function TEBExpression.GetNode: TEBNode;
 begin
@@ -174,25 +201,6 @@ begin
    else result := self.Text;
 end;
 
-{ TEBExpression }
-
-function TEBExpression .GetScript(indent: integer): string;
-begin
-   result := GetNodeText;
-end;
-
-class function TEBExpression.GetLookup(id: integer; const name: string): string;
-var
-   dataset: TDataset;
-   lResult: variant;
-begin
-   if assigned(FDatastore) then
-      result := FDatastore.NameLookup(name, id)
-   else result := '';
-   if result = '' then
-      result := format('??%s #%d??', [name, id]);
-end;
-
 { TEBComparison }
 
 constructor TEBComparison.Create(left, right: TEBExpression;
@@ -213,6 +221,16 @@ begin
    result := format(LINE, [(components[0] as TEBExpression).GetNodeText,
                            COMPARISONS[TComparisonOp(Values[0])],
                            (components[1] as TEBExpression).GetNodeText]);
+end;
+
+function TEBComparison.GetScriptText: string;
+const
+   LINE = '%s %s %s';
+begin
+   assert(self.ComponentCount = 2);
+   assert(self.Values.Count = 1);
+   result := format(LINE, [ChildScript[0], COMPARISONS[TComparisonOp(Values[0])],
+                           ChildScript[1]]);
 end;
 
 { TEBBooleanValue }
@@ -277,14 +295,25 @@ end;
 
 function TEBChainable.GetChain: TEBChainable;
 begin
-   result := self.Components[0] as TEBChainable;
+   if ComponentCount > 0 then
+      result := self.Components[0] as TEBChainable
+   else result := nil;
 end;
 
 function TEBChainable.GetNodeText: string;
+const LINE = '%s%s %s';
 begin
    result := GetLink;
    if assigned(self.chain) then
-      result := result + '.' + chain.GetLink;
+      result := format(LINE, [result, HINTS[chain.hint], chain.GetNodeText]);
+end;
+
+function TEBChainable.GetScriptText: string;
+const LINE = '%s.%s';
+begin
+   result := GetLink;
+   if assigned(self.chain) then
+      result := format(LINE, [result, chain.GetScript(0)]);
 end;
 
 function TEBChainable.GetLink: string;
@@ -320,9 +349,18 @@ begin
    FLookup := name;
 end;
 
-function TEBLookupObjExpr.GetNodeText: string;
+constructor TEBLookupObjExpr.Create(value: string; subscript: TEBExpression;
+  name: string; next: TEBChainable);
 begin
-   result := GetLookup(values[0], FLookup);
+   inherited Create(value, subscript, next);
+   FLookup := name;
+end;
+
+function TEBLookupObjExpr.GetLink: string;
+begin
+   if Values.Count > 0 then
+      result := GetLookup(values[0], FLookup)
+   else result := inherited GetLink;
 end;
 
 { TEBStringValue }
@@ -348,7 +386,12 @@ end;
 
 function TEBEnumValue.GetNodeText: string;
 begin
-   result := self.text;
+   result := CleanEnum(Text);
+end;
+
+function TEBEnumValue.GetScriptText: string;
+begin
+   result := text;
 end;
 
 { TEBObjArrayValue }
@@ -360,7 +403,57 @@ begin
    Values.Add(subscript);
 end;
 
+constructor TEBObjArrayValue.Create(value: string; subscript: TEBExpression;
+  next: TEBChainable);
+begin
+   inherited Create(value, next);
+   Add(subscript);
+end;
+
+function TEBObjArrayValue.GetChain: TEBChainable;
+begin
+   if (ComponentCount > 0) and (Components[0] is TEBChainable) then
+      result := inherited GetChain
+   else result := nil;
+end;
+
+function TEBObjArrayValue.GetLink: string;
+var
+   subscript: TEBExpression;
+begin
+   if Values.Count > 0 then
+      result := format('%s[%d]', [Text, Values[0]])
+   else begin
+      if Components[0] is TEBChainable then
+         subscript := components[1] as TEBExpression
+      else subscript := components[0] as TEBExpression;
+      result := format('%s[%s]', [Text, subscript.GetNodeText]);
+   end;
+end;
+
+procedure TEBObjArrayValue.SetChain(const Value: TEBChainable);
+var
+   subscript: TEBExpression;
+begin
+   if ComponentCount > 0 then
+   begin
+      subscript := Components[0] as TEBExpression;
+      RemoveComponent(subscript);
+   end
+   else subscript := nil;
+   inherited SetChain(value);
+   if assigned(subscript) then
+      Add(Subscript);
+end;
+
 { TEBCall }
+
+function TEBCall.GetChain: TEBChainable;
+begin
+   if (self.ComponentCount > 0) and (Components[0] is TEBChainable) then
+      result := TEBChainable(Components[0])
+   else result := nil;
+end;
 
 function TEBCall.GetNodeText: string;
 const
@@ -370,8 +463,9 @@ var
    child: TEBObject;
    expr: TEBExpression;
 begin
+   result := self.CleanEnum(self.Text);
    if self.ComponentCount = 0 then
-      Exit(self.Text);
+      Exit;
 
    list := TStringList.Create;
    try
@@ -379,9 +473,36 @@ begin
       for child in self do
       begin
          expr := child as TEBExpression;
-         list.add(' ' + expr.GetNodeText);
+         if not expr.Silent then
+            list.add(' ' + expr.GetNodeText);
       end;
-      result := format(LINE, [self.Text, TrimLeft(list.commaText)]);
+      result := format(LINE, [result, TrimLeft(list.commaList)]);
+   finally
+      list.free;
+   end;
+end;
+
+function TEBCall.GetScriptText: string;
+const
+   LINE = '%s(%s)';
+var
+   list: TStringList;
+   child: TEBObject;
+   expr: TEBExpression;
+begin
+   result := self.Text;
+   if self.ComponentCount = 0 then
+      Exit;
+
+   list := TStringList.Create;
+   try
+      list.StrictDelimiter := true;
+      for child in self do
+      begin
+         expr := child as TEBExpression;
+         list.add(' ' + expr.GetScriptText);
+      end;
+      result := format(LINE, [result, TrimLeft(list.commaList)]);
    finally
       list.free;
    end;
@@ -405,9 +526,52 @@ begin
    result := format(LINE, [(Components[0] as TEBExpression).GetNodeText, OPS[FOp], (Components[1] as TEBExpression).GetNodeText]);
 end;
 
+{ TEBIntArray }
+
+function TEBIntArray.GetNodeText: string;
+var
+   list: TStringList;
+   val: integer;
+begin
+   list := TStringList.Create;
+   list.StrictDelimiter := true;
+   try
+      for val in values do
+         list.add(GetLookup(val, FLookup));
+      result := StringReplace(list.CommaList, ',', ', ', [rfReplaceAll]);
+      result := format('[%s]', [result]);
+   finally
+      list.free;
+   end;
+end;
+
+function TEBIntArray.GetScriptText: string;
+var
+   list: TStringList;
+   val: integer;
+begin
+   list := TStringList.Create;
+   try
+      for val in values do
+         list.add(intToStr(val));
+      result := format('[%s]', [list.CommaList]);
+   finally
+      list.free;
+   end;
+end;
+
+{ TEBNilValue }
+
+constructor TEBNilValue.Create(parent: TEBObject);
+begin
+   inherited Create(parent);
+   self.Text := 'nil';
+end;
+
 initialization
    RegisterClasses([TEBVariableValue, TEBSwitchesValue, TEBIntsValue,
                     TEBBooleanValue, TEBIntegerValue, TEBStringValue, TEBEnumValue,
                     TEBLookupValue, TEBComparison, TEBObjExpr, TEBObjArrayValue,
-                    TEBLookupObjExpr, TEBPropExpr, TEBCall, TEBBinaryOp]);
+                    TEBLookupObjExpr, TEBPropExpr, TEBCall, TEBBinaryOp,
+                    TEBIntArray, TEBNilValue]);
 end.

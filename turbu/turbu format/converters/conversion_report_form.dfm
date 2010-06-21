@@ -12,6 +12,7 @@ object frmConversionReport: TfrmConversionReport
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  PopupMode = pmAuto
   OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 120
@@ -234,5 +235,6 @@ object frmConversionReport: TfrmConversionReport
     Caption = '&Cancel'
     ModalResult = 2
     TabOrder = 1
+    OnClick = btnDoneClick
   end
 end

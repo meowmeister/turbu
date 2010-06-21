@@ -3,7 +3,7 @@ unit turbu_pathing;
 interface
 uses
    Generics.Collections, Classes,
-   charset_data;
+   turbu_defs;
 
 type
    TMoveStep = record
@@ -46,7 +46,7 @@ type
 
 const MOVE_CODES: array[0..$29] of string =
 ('Up', 'Right', 'Down', 'Left', 'UpRight', 'DownRight', 'DownLeft', 'UpLeft',
-'RandomStep', 'TowardsHero', 'AwayFromHero', 'Forward', 'FaceUp', 'FaceRight',
+'RandomStep', 'TowardsHero', 'AwayFromHero', 'MoveForward', 'FaceUp', 'FaceRight',
 'FaceDown', 'FaceLeft', 'TurnRight', 'TurnLeft', 'Turn180', 'Turn90',
 'FaceRandom', 'FaceHero', 'FaceAwayFromHero', 'Pause', 'StartJump', 'EndJump',
 'FacingFixed', 'FacingFree', 'SpeedUp', 'SpeedDown', 'FreqUp', 'FreqDown',

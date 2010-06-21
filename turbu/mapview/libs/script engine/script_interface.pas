@@ -866,7 +866,7 @@ begin
          FSystemBgmTrack[which] := TSDLMusic.Create(FSystemBgmRecord[which].filename);
       FSystemBgmTrack[which].play(1);
       case which of
-         bgmInn: ;
+         bgm_Inn: ;
          else ;
       end;
    end;

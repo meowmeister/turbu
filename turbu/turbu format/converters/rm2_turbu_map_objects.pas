@@ -2,20 +2,23 @@ unit rm2_turbu_map_objects;
 
 interface
 uses
-   events, turbu_map_objects, move_data, turbu_pathing;
+   events, turbu_map_objects, move_data, turbu_pathing, EB_RpgScript;
 
 type
+   TScriptCallback = reference to procedure(script: TEBProcedure);
+
    T2k2RpgMapObject = class helper for TRpgMapObject
    public
-      constructor Convert(base: TEvent);
+      constructor Convert(base: TEvent; saveScript: TScriptCallback);
    end;
 
    T2k2RpgEventPage = class helper for TRpgEventPage
    private
       procedure CalculateTileID(tile: word);
-      procedure CreateEventScript(base: TEventPage);
+      procedure CreateEventScript(base: TEventPage; saveScript: TScriptCallback);
    public
-      constructor Convert(base: TEventPage; id: integer; parent: TRpgMapObject);
+      constructor Convert(base: TEventPage; id: integer; parent: TRpgMapObject;
+        saveScript: TScriptCallback);
    end;
 
    T2k2RpgEventConditions = class helper for TRpgEventConditions
@@ -27,34 +30,37 @@ type
 
    T2k2Path = class helper for TPath
    private
-      function CalculateParamList(const rec: TMoveRecord): string;
-      function CalculateMoveCommand(const rec: TMoveRecord): string;
-      function CalculateMoveBaseString(base: TMoveOrder): string;
+      class function CalculateParamList(const rec: TMoveRecord): string;
+      class function CalculateMoveCommand(const rec: TMoveRecord): string;
    public
+      class function CalculateMoveBaseString(base: TMoveOrder): string;
       constructor Convert(base: TEventMoveBlock);
    end;
+
+   function ConvertEventScript(base: TEventPage; name: string): TEBProcedure;
+   function ValidIdent(name: AnsiString): string;
 
 implementation
 uses
    SysUtils, Generics.Collections, Classes,
    charset_data, turbu_defs, rm2_turbu_maps, rm2_turbu_event_builder,
-   EventBuilder, EB_RpgScript;
+   EventBuilder;
 
 { T2k2RpgMapObject }
 
-constructor T2k2RpgMapObject.Convert(base: TEvent);
+constructor T2k2RpgMapObject.Convert(base: TEvent; saveScript: TScriptCallback);
 var
   I: Integer;
 begin
    inherited Create;
    FId := base.id;
-   FName := string(base.name);
+   FName := ValidIdent(base.name);
    location := base.location;
    for I := 1 to base.len do
-      AddPage(TRpgEventPage.Convert(base.page[i - 1], i - 1, self));
+      AddPage(TRpgEventPage.Convert(base.page[i - 1], i - 1, self, saveScript));
 end;
 
-function T2k2Path.CalculateMoveBaseString(base: TMoveOrder): string;
+class function T2k2Path.CalculateMoveBaseString(base: TMoveOrder): string;
 const
    SEM = '; ';
 var
@@ -67,7 +73,7 @@ begin
       delete(result, length(result), 1);
 end;
 
-function T2k2Path.CalculateMoveCommand(const rec: TMoveRecord): string;
+class function T2k2Path.CalculateMoveCommand(const rec: TMoveRecord): string;
 const
    PARAM_CODE = '%s(%s)';
 begin
@@ -76,7 +82,7 @@ begin
       result := format(PARAM_CODE, [result, CalculateParamList(rec)]);
 end;
 
-function T2k2Path.CalculateParamList(const rec: TMoveRecord): string;
+class function T2k2Path.CalculateParamList(const rec: TMoveRecord): string;
 const
    ADD_INT = '%s, %d';
 var
@@ -105,6 +111,19 @@ begin
    else self.Create;
 end;
 
+function ValidIdent(name: AnsiString): string;
+var
+   i: integer;
+begin
+   setLength(result, length(name));
+   for i := 1 to length(name) do
+      if name[i] in ['A'..'Z', 'a'..'z', '_', '0'..'9'] then
+         result[i] := Char(name[i])
+      else result[i] := '_';
+   if (result = '') or (not (name[1] in ['A'..'Z', 'a'..'z'])) then
+      result := 'O' + result;
+end;
+
 { T2k2RpgEventPage }
 
 procedure T2k2RpgEventPage.CalculateTileID(tile: word);
@@ -116,7 +135,8 @@ begin
    FName := '*' + intToStr(dec.group + 9); //* character can't be used in filenames
 end;
 
-constructor T2k2RpgEventPage.Convert(base: TEventPage; id: integer; parent: TRpgMapObject);
+constructor T2k2RpgEventPage.Convert(base: TEventPage; id: integer;
+  parent: TRpgMapObject; saveScript: TScriptCallback);
 const
    FRAMES: array[TFacing] of word = (1, 4, 7, 10);
 begin
@@ -140,52 +160,18 @@ begin
    self.moveSpeed := base.moveSpeed;
    self.FParent := parent;
    if base.opcode.count > 0 then
-      CreateEventScript(base);
+      CreateEventScript(base, saveScript);
 end;
 
-procedure T2k2RpgEventPage.CreateEventScript(base: TEventPage);
+procedure T2k2RpgEventPage.CreateEventScript(base: TEventPage; saveScript: TScriptCallback);
 const
    PROCNAME = '%s_page%d';
 var
-   proc: TEBProcedure;
-   command: TEventCommand;
-   last: TEBObject;
-   stack: TStack<TEBObject>;
-   fudgeFactor: integer;
+   scriptname: string;
 begin
-   fudgeFactor := 0;
-   stack := TStack<TEBObject>.Create;
-   proc := TEBProcedure.Create(nil);
-   proc.name := format(PROCNAME, [self.parent.name, self.id]);
-   try
-   try
-      last := proc;
-      for command in base.opcode do
-      begin
-         if (command.opcode = 20141) or (command.opcode = 20713) then
-            dec(fudgeFactor);
-         if command.indent + fudgeFactor >= stack.Count then
-            stack.Push(last)
-         else if command.indent + fudgeFactor < stack.Count - 1 then
-            stack.Pop;
-         if (command.opcode = 20110) then
-            ConvertOpcode(command, last)
-         else last := ConvertOpcode(command, stack.Peek);
-         if (command.opcode = 10140) or
-            ((command.opcode = 10710) and ((command.data[3] <> 0) or (command.data[4] <> 0))) then
-            inc(fudgeFactor);
-      end;
-      assert(stack.Count = 1);
-      assert(fudgeFactor = 0);
-      self.FEventText := proc.serialize;
-   except
-      proc.SaveScript;
-      raise;
-   end;
-   finally
-      stack.Free;
-      proc.Free;
-   end;
+   scriptname := format(PROCNAME, [self.parent.name, self.id + 1]);
+   FEventText := scriptname;
+   saveScript(ConvertEventScript(base, scriptname));
 end;
 
 { T2k2RpgEventConditions }
@@ -224,6 +210,55 @@ begin
       include(result, pc_timer1);
    if base[timer2] then
       include(result, pc_timer2);
+end;
+
+function ConvertEventScript(base: TEventPage; name: string): TEBProcedure;
+const
+   REMFUDGE: array[1..5] of integer = (20141, 20151, 20713, 20722, 20732);
+var
+   command: TEventCommand;
+   new, last: TEBObject;
+   stack: TStack<TEBObject>;
+   fudgeFactor, idx: integer;
+begin
+   fudgeFactor := 0;
+   stack := TStack<TEBObject>.Create;
+   result := TEBProcedure.Create(nil);
+   result.name := name;
+   try
+   try
+      last := result;
+      for command in base.opcode do
+      begin
+         if TArray.BinarySearch<integer>(REMFUDGE, command.opcode, idx) then
+            dec(fudgeFactor);
+         if command.indent + fudgeFactor >= stack.Count then
+            stack.Push(last)
+         else if command.indent + fudgeFactor < stack.Count - 1 then
+            stack.Pop;
+         if (command.opcode = 20110) or (command.opcode = 22410) then //additional message line
+            ConvertOpcode(command, last)
+         else begin
+            new := ConvertOpcode(command, stack.Peek);
+            if assigned(new) then
+               last := new
+            else last := stack.peek;
+         end;
+         if (command.opcode = 10140) or
+            ((command.opcode = 10710) and ((command.data[3] <> 0) or (command.data[4] <> 0))) or
+            (((command.opcode = 10720) or (command.opcode = 10730)) and (command.data[2] <> 0)) then
+            inc(fudgeFactor);
+      end;
+      assert(stack.Count = 1);
+      assert(fudgeFactor = 0);
+   except
+      result.SaveScript;
+      result.free;
+      raise;
+   end;
+   finally
+      stack.Free;
+   end;
 end;
 
 end.

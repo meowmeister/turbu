@@ -204,7 +204,8 @@ begin
       if lResult = Null then
          result := ''
       else result := lResult;
-   end;
+   end
+   else result := '';
 end;
 
 procedure TdmDatabase.charClasses_skillsetCalcFields(DataSet: TDataSet);

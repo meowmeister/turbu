@@ -117,7 +117,8 @@ uses
   EBListView in '..\turbu format\design\EBListView.pas',
   rm2_turbu_map_objects in '..\turbu format\converters\rm2_turbu_map_objects.pas',
   EB_Expressions in '..\turbu format\script\EB_Expressions.pas',
-  EB_System in '..\turbu format\script\EB_System.pas';
+  EB_System in '..\turbu format\script\EB_System.pas',
+  EB_Maps in '..\turbu format\script\EB_Maps.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

@@ -53,8 +53,7 @@ type
       typeVar: integer;
    end;
 
-   PByteArray = ^TPByteArray;
-   PPointArray = ^TPointArray;
+   PPointArray = ^TPointArray; //TODO: Do some refactoring and remove this
 
    TVarSets = (vs_switch, vs_integer, vs_float, vs_string);
    TUsableWhere = (us_none, us_field, us_battle, us_both);
@@ -68,8 +67,25 @@ type
                 sfxEscape, sfxEnemyAttack, sfxEnemyDamage, sfxAllyDamage,
                 sfxEvade, sfxEnemyDies, sfxItemUsed, sfxNil);
 
-   TBgmTypes = (bgmTitle, bgmBattle, bgmBossBattle, bgmVictory, bgmInn,
-                bgmBoat, bgmShip, bgmAirship, bgmGameOver);
+   TBgmTypes = (bgm_Battle, bgm_Victory, bgm_Inn, bgm_Boat, bgm_Ship,
+                bgm_Airship, bgm_GameOver, bgm_Title, bgm_BossBattle);
+
+   TTransitionTypes = (trn_MapEnter, trn_MapExit, trn_BattleStartFOut, trn_BattleStartFIn,
+                trn_BattleEndFOut, trn_BattleEndFIn);
+
+   TTransitions = (trn_Default, trn_FadeOut, trn_Blocks, trn_BlockUp, trn_BlockDn,
+                   trn_Blinds, trn_StripeHiLo, trn_StripeLR, trn_OutIn, trn_InOut,
+                   trn_ScrollUp, trn_ScrollDn, trn_ScrollLeft, trn_ScrollRight,
+                   trn_DivHiLow, trn_DivLR, trn_DivQuarters, trn_Zoom, trn_Twist,
+                   trn_Ripple, trn_None);
+
+   TShopTypes = (st_BuyAndSell, st_Buy, st_Sell);
+
+   TFacing = (facing_up, facing_right, facing_down, facing_left);
+
+   TWeatherEffects = (we_none, we_rain, we_snow, we_fog, we_sand);
+
+   TImageEffects = (ie_none, ie_rotate, ie_wave);
 
 implementation
 

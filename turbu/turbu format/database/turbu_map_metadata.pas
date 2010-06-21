@@ -119,6 +119,7 @@ type
 
       procedure Add(value: TMapMetadata);
       procedure Remove(value: TMapMetadata);
+      function ContainsMap(id: integer): boolean;
 
       function ChildrenOf(id: smallint): TList<TMapMetadata>;
       function AddNewMetadata(parent: smallint): TMapMetadata;
@@ -370,6 +371,11 @@ begin
       for node in list do
          result.Add(node.Data);
    end;
+end;
+
+function TMapTree.ContainsMap(id: integer): boolean;
+begin
+   result := FTranslationTable.ContainsKey(id);
 end;
 
 function TMapTree.AddLookup(value: TMapMetadata): TMapNode;

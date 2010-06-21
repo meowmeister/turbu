@@ -28,6 +28,7 @@ type
       btnDone: TButton;
       procedure FormShow(Sender: TObject);
       procedure FormCreate(Sender: TObject);
+      procedure btnDoneClick(Sender: TObject);
    private
       { Private declarations }
       FRunning: boolean;
@@ -35,6 +36,7 @@ type
       FThread: TThread;
       FFatal: boolean;
       FOutput: TfrmConversionOutput;
+      FFinished: boolean;
 
       procedure setTasks(const value: integer);
       procedure setCurrentTask(const name: string; const steps: integer); overload;
@@ -72,6 +74,12 @@ begin
    Application.MessageBox(PChar(errorMessage), 'Fatal error');
    self.ModalResult := mrAbort;
    self.Close;
+end;
+
+procedure TfrmConversionReport.btnDoneClick(Sender: TObject);
+begin
+   if assigned(FThread) and not FFinished then
+      FThread.Terminate;
 end;
 
 procedure TfrmConversionReport.fatal(error: Exception);
@@ -142,6 +150,7 @@ begin
       btnDone.ModalResult := mrOk;
       btnDone.Caption := '&OK';
       self.FocusControl(btnDone);
+      FFinished := true;
    end;
    runThreadsafe(closure);
 end;

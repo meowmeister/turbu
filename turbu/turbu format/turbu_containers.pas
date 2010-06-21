@@ -279,7 +279,7 @@ begin
       if looping then
          tail := tail.append(TListNode<T>.Create(enumerator.data))
       else looping := true;
-      if assigned(enumerator.FRight) then
+      if assigned(enumerator.FRight) and (enumerator.FRight.Count > 0) then
       begin
          tail.append(enumerator.FRight.ToLinkedList(newtail));
          tail := newtail;

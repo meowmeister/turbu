@@ -50,6 +50,7 @@
 			<DCCReference Include="vcldb.dcp"/>
 			<DCCReference Include="turbu_listGrid.pas"/>
 			<DCCReference Include="DBIndexComboBox.pas"/>
+			<DCCReference Include="..\..\turbu\turbu format\design\EBListView.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

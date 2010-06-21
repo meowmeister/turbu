@@ -3,8 +3,8 @@ unit turbu_2k_sprite_engine;
 interface
 uses
    types, Generics.Collections,
-   charset_data, turbu_maps, turbu_map_engine, tiles, turbu_tilesets,
-   turbu_map_objects, turbu_containers, turbu_map_sprites,
+   turbu_maps, turbu_map_engine, tiles, turbu_tilesets,
+   turbu_map_objects, turbu_containers, turbu_map_sprites, turbu_defs,
    sdl_sprite, sdl_canvas, SDL_ImageManager;
 
 type
