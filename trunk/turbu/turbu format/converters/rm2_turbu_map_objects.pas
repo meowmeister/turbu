@@ -150,7 +150,8 @@ begin
    end;
    self.direction := base.direction;
    self.transparent := base.transparent;
-   self.path := TPath.Convert(base.moveBlock);
+   if assigned(base.moveBlock) then
+      self.path := TPath.Convert(base.moveBlock);
    self.moveType := TMoveType(base.moveType);
    self.moveFrequency := base.moveFrequency;
    self.startCondition := TStartCondition(base.startCondition);
@@ -245,7 +246,7 @@ begin
             else last := stack.peek;
          end;
          if (command.opcode = 10140) or
-            ((command.opcode = 10710) and ((command.data[3] <> 0) or (command.data[4] <> 0))) or
+            ((command.opcode = 10710) and ((command.data[3] = 2) or (command.data[4] <> 0))) or
             (((command.opcode = 10720) or (command.opcode = 10730)) and (command.data[2] <> 0)) then
             inc(fudgeFactor);
       end;
