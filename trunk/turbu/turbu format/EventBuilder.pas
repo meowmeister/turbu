@@ -72,6 +72,8 @@ type
       procedure DefineProperties(Filer: TFiler); override;
       function GetChildOwner: TComponent; override;
       procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
+      procedure Notification(AComponent: TComponent;
+        Operation: TOperation); override;
 
       class function GetLookup(id: integer; const name: string): string;
       function IndentString(level: integer): string;
@@ -81,8 +83,9 @@ type
    public
       constructor Create(AParent: TComponent); override;
       class function Load(const Value: string): TEBObject;
+      class function LoadFromStream(stream: TStream): TEBObject;
       destructor Destroy; override;
-      function GetScriptText: string; virtual; abstract;
+      function GetScriptText: string; virtual;
       function GetNodeText: string; virtual; abstract;
       function GetNode: TEBNode; virtual;
       function GetScript(indent: integer): string; virtual;
@@ -146,6 +149,19 @@ begin
    result := StringOfChar(' ', level * INDENT_SIZE);
 end;
 
+class function TEBObject.LoadFromStream(stream: TStream): TEBObject;
+var
+   list: TStringList;
+begin
+   list := TStringList.Create;
+   try
+      list.LoadFromStream(stream);
+      result := Load(list.text);
+   finally
+      list.Free;
+   end;
+end;
+
 class function TEBObject.Load(const Value: string): TEBObject;
 var
    StrStream:TStringStream;
@@ -168,6 +184,11 @@ begin
       StrStream.Free;
    end;
 //   assert(result.Serialize = value);
+end;
+
+procedure TEBObject.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+   //suppress this, because it's very slow and not needed for Event Builder
 end;
 
 procedure TEBObject.SaveScript;
@@ -280,6 +301,11 @@ end;
 function TEBObject.GetScript(indent: integer): string;
 begin
    result := IndentString(indent) + GetScriptText;
+end;
+
+function TEBObject.GetScriptText: string;
+begin
+   AbstractErrorProc; //for some reason this doesn't link right as an abstract
 end;
 
 function TEBObject.GetUnit: string;
