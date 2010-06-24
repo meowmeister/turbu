@@ -517,7 +517,7 @@ begin
    FHookedObject := nil;
    if assigned(sprite) then
    begin
-      TfrmObjectEditor.EditMapObject(sprite.event, FCurrentMap.tileset.name);
+      TfrmObjectEditor.EditMapObject(sprite.event, FCurrentMap.MapObj, FCurrentMap.tileset.name);
       sprite.updatePage(sprite.event.currentPage);
       self.repaint;
    end

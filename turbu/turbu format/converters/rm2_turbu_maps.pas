@@ -95,15 +95,15 @@ end;
 procedure T2k2RpgMap.saveScript(const script: utf8String);
 var
    stream: TMemoryStream;
-   filename: TFilenameData;
+   filename: string;
 begin
    self.scriptFormat := sfEvents;
    stream := TMemoryStream.Create;
    try
       stream.WriteBuffer(script[1], length(script));
-      filename := GArchives[SCRIPT_ARCHIVE].MakeValidFilename(self.name + '.trs');
-      GArchives[SCRIPT_ARCHIVE].writeFile(filename.name, stream);
-      self.scriptFile := filename.name;
+      filename := self.ScriptFilename;
+      GArchives[SCRIPT_ARCHIVE].writeFile(filename, stream);
+      self.scriptFile := filename;
    finally
       stream.Free;
    end;

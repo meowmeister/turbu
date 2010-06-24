@@ -4,9 +4,9 @@ interface
 
 uses
    Windows, SysUtils, Classes, Controls, Forms, DB, DBClient, StdCtrls, ExtCtrls,
-   ComCtrls, DBCtrls, Messages, DBIndexComboBox, sdl_frame,
+   ComCtrls, DBCtrls, Messages, DBIndexComboBox, sdl_frame, Mask, EBListView,
    turbu_tilesets, turbu_map_objects, turbu_serialization, turbu_constants,
-   frame_conditions, dataset_viewer, SDL_ImageManager, Mask, EBListView;
+   turbu_maps, frame_conditions, dataset_viewer, SDL_ImageManager;
 
 type
   TfrmObjectEditor = class(TForm)
@@ -79,6 +79,7 @@ type
     FSerializer: TDatasetSerializer;
     FTileset: TTileset;
     FMapObject: TRpgMapObject;
+    FMap: TRpgMap;
 
     procedure UploadMapObject(obj: TRpgMapObject);
     procedure DownloadMapObject(obj: TRpgMapObject);
@@ -92,17 +93,17 @@ type
     procedure InsertPage(page: TRpgEventPage);
   public
     { Public declarations }
-    class procedure EditMapObject(obj: TRpgMapObject; const tilesetName: string);
+    class procedure EditMapObject(obj: TRpgMapObject; map: TRpgMap; const tilesetName: string);
     class function NewMapObject(id: integer; const tilesetName: string): TRpgMapObject;
   end;
 
 implementation
 uses
    clipbrd,
-   commons, turbu_tbi_lib, sdl_13,
    sprite_selector, ClipboardWatcher,
+   commons, turbu_tbi_lib,
    dm_database, turbu_database, archiveInterface, turbu_sdl_image, EB_RpgScript,
-   sg_defs;
+   sdl_13, sg_defs;
 
 {$R *.dfm}
 
@@ -354,7 +355,7 @@ begin
    dsPages.Locate('id', tabEventPages.TabIndex, []);
    GetSpriteIndex(dsPagesName.Value);
    if dsPagesEventText.BlobSize > 0 then
-      trvEvents.proc := TEBProcedure.Load(dsPagesEventText.Value) as TEBProcedure;
+      trvEvents.proc := FMap.ScriptObject.FindComponent(dsPagesEventText.Value) as TEBProcedure;
 end;
 
 procedure TfrmObjectEditor.UploadMapObject(obj: TRpgMapObject);
@@ -437,12 +438,13 @@ begin
       DownloadMapObject(obj);
 end;
 
-class procedure TfrmObjectEditor.EditMapObject(obj: TRpgMapObject; const tilesetName: string);
+class procedure TfrmObjectEditor.EditMapObject(obj: TRpgMapObject; map: TRpgMap; const tilesetName: string);
 var
    form: TfrmObjectEditor;
 begin
    form := TfrmObjectEditor.Create(nil);
    try
+      form.FMap := map;
       form.DoEdit(obj, tilesetName);
    finally
       form.Free;

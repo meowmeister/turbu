@@ -162,7 +162,7 @@ var
       begin
          if terminated then
             Exit;
-//         lFilename := extractFilename(leftStr(filename, length(filename) - extLength(filename)));
+         lFilename := extractFilename(leftStr(filename, length(filename) - extLength(filename)));
          if processor(input, outFolderName, filename, false) then
          begin
             if fileList.Find(lFilename, index) then
@@ -176,7 +176,7 @@ var
             Exit;
          lFilename := ExtractFilename(locate_files.findGraphicF(filename, folderName));
          if processor(rtpInput, outFolderName, format('%s\%s', [folderName, lFilename]), true) then
-            FReport.makeNotice(format('Copied RTP resource %s.', ['Panorama\'+ filename]))
+            FReport.makeNotice(format('Copied RTP resource %s\%s.', [folderName, filename]))
          else FReport.makeError(format(NOT_FOUND, [filename, folderName]));
       end;
    end;

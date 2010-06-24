@@ -194,7 +194,7 @@ begin
       mnuTestMapLoadingClick(sender);
    GDatabase.copyToDB(dmDatabase, []);
 
-   TfrmObjectEditor.EditMapObject(TRpgMap(FCurrentMap).mapObjects[1],
+   TfrmObjectEditor.EditMapObject(TRpgMap(FCurrentMap).mapObjects[1], TRpgMap(FCurrentMap),
                                   GDatabase.tileset[TRpgMap(FCurrentMap).tileset].name);
    if sender = mnuEventEditor then
       Application.MessageBox('Test concluded successfully!', 'Finished.')

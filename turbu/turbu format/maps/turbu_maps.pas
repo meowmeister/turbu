@@ -3,8 +3,9 @@ unit turbu_maps;
 interface
 uses
    types, classes, generics.collections, DB, RTTI,
-   turbu_defs, turbu_classes, turbu_map_interface, turbu_tilesets,
-   turbu_serialization, turbu_map_metadata, turbu_containers, turbu_map_objects,
+   turbu_defs, turbu_classes, turbu_map_interface, turbu_tilesets, EventBuilder,
+   EB_RpgScript, turbu_serialization, turbu_map_metadata, turbu_containers,
+   turbu_map_objects,
    SG_defs;
 
 type
@@ -102,8 +103,10 @@ type
       FBattles: TPWordArray;
       FRegions: TRegionList;
       FMapObjects: TMapObjectList;
+      FScriptObject: TEBMap;
 
       class function keyChar: ansiChar; override;
+      function ScriptFilename: string;
    public
       constructor Create(meta: TMapMetadata); overload;
       constructor Load(savefile: TStream); override;
@@ -134,12 +137,13 @@ type
       property encounterParams: T4IntArray read FEncounters write FEncounters;
       property regions: TRegionList read FRegions;
       property mapObjects: TMapObjectList read FMapObjects;
+      property ScriptObject: TEBMap read FScriptObject;
    end;
 
 implementation
 uses
    math,
-   commons, turbu_constants;
+   commons, turbu_constants, ArchiveInterface;
 
 { TRpgMap }
 
@@ -162,6 +166,7 @@ var
    i: integer;
    len: integer;
    size: TSgPoint;
+   scriptStream: TStream;
 begin
    inherited Load(savefile);
    FTileset := savefile.readInt;
@@ -177,7 +182,14 @@ begin
    savefile.ReadBuffer(FVScroll, sizeof(TMapScrollType));
    savefile.ReadBuffer(FScrollSpeed, sizeof(TSgPoint));
    savefile.ReadBuffer(FScriptFormat, sizeof(TScriptFormat));
+   assert(FScriptFormat = sfEvents); //TODO: Fix this later.
    scriptFile := savefile.readString;
+   scriptStream := GArchives[SCRIPT_ARCHIVE].GetFile(scriptFile);
+   try
+      FScriptObject := TEBObject.LoadFromStream(scriptStream) as TEBMap;
+   finally
+      ScriptStream.Free;
+   end;
    battleCount := savefile.ReadInt;
    if battleCount > 0 then
       savefile.ReadBuffer(FBattles[0], length(FBattles) * sizeof(word));
@@ -395,6 +407,7 @@ end;
 
 destructor TRpgMap.Destroy;
 begin
+   FScriptObject.Free;
    FRegions.Free;
    FMapObjects.Free;
    inherited Destroy;
@@ -413,6 +426,11 @@ end;
 class function TRpgMap.keyChar: ansiChar;
 begin
    result := 'm';
+end;
+
+function TRpgMap.ScriptFilename: string;
+begin
+   result := GArchives[SCRIPT_ARCHIVE].MakeValidFilename(self.name + '.trs').name;
 end;
 
 procedure TRpgMap.SetBattleCount(const Value: integer);

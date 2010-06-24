@@ -91,7 +91,11 @@ type
       FStatSet: TStatSet;
       FTileGroup: TTileDictionary;
       FTileset: TTilesetList;
+      FUploadedTypes: TRpgDataTypeSet;
+      FScriptFormat: TScriptFormat;
+      FScriptFile: string;
 
+      procedure SetScriptFormat(const Value: TScriptFormat);
       function getClassCount: integer;
       procedure setClassCount(const Value: integer);
       procedure parseMeta;
@@ -109,11 +113,6 @@ type
       procedure saveTileGroups(savefile: TStream);
       procedure saveTilesets(savefile: TStream);
       procedure uploadStringList(dataset: TDataset; list: TStringList);
-   private
-      FUploadedTypes: TRpgDataTypeSet;
-      FScriptFormat: TScriptFormat;
-      FScriptFile: string;
-      procedure SetScriptFormat(const Value: TScriptFormat);
    protected
       FLegacyCruft: TLegacySections;
       class function keyChar: ansiChar; override;
@@ -197,8 +196,8 @@ windows,
    turbu_functional;
 
 const
-   MIN_DBVERSION = 34;
-   DBVERSION = 34;
+   MIN_DBVERSION = 35;
+   DBVERSION = 35;
 
 { TRpgDatabase }
 
@@ -321,6 +320,8 @@ begin
    lassert(savefile.readInt = FSkillAlgs.Count);
    lassert(savefile.readInt = FStatAlgs.Count);
 
+   savefile.ReadBuffer(FScriptFormat, sizeof(FScriptFormat));
+   FScriptFile := savefile.readString;
    k := savefile.readInt;
    FUnits := TUnitDictionary.Create(k * 2);
    for filename in GArchives[DATABASE_ARCHIVE].allFiles('scripts') do
@@ -608,6 +609,8 @@ begin
       substream.free;
    end;
 
+   savefile.WriteBuffer(FScriptFormat, sizeof(FScriptFormat));
+   savefile.writeString(FScriptFile);
    savefile.writeInt(FUnits.Count);
    for filename in FUnits.Keys do
    begin

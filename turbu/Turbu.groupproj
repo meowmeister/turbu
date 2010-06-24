@@ -33,6 +33,9 @@
 			<Projects Include="test harness\testing.dproj">
 				<Dependencies/>
 			</Projects>
+			<Projects Include="..\build utils\TepRename.dproj">
+				<Dependencies/>
+			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -133,14 +136,23 @@
 		<Target Name="testing:Make">
 			<MSBuild Targets="Make" Projects="test harness\testing.dproj"/>
 		</Target>
+		<Target Name="TepRename">
+			<MSBuild Projects="..\build utils\TepRename.dproj"/>
+		</Target>
+		<Target Name="TepRename:Clean">
+			<MSBuild Targets="Clean" Projects="..\build utils\TepRename.dproj"/>
+		</Target>
+		<Target Name="TepRename:Make">
+			<MSBuild Targets="Make" Projects="..\build utils\TepRename.dproj"/>
+		</Target>
 		<Target Name="Build">
-			<CallTarget Targets="EngineBasis;default_format;turbu_design_basis;default_format_design;battle_default;map_default;map_default_design;mapshow;Turbu;testing"/>
+			<CallTarget Targets="EngineBasis;default_format;turbu_design_basis;default_format_design;battle_default;map_default;map_default_design;mapshow;Turbu;testing;TepRename"/>
 		</Target>
 		<Target Name="Clean">
-			<CallTarget Targets="EngineBasis:Clean;default_format:Clean;turbu_design_basis:Clean;default_format_design:Clean;battle_default:Clean;map_default:Clean;map_default_design:Clean;mapshow:Clean;Turbu:Clean;testing:Clean"/>
+			<CallTarget Targets="EngineBasis:Clean;default_format:Clean;turbu_design_basis:Clean;default_format_design:Clean;battle_default:Clean;map_default:Clean;map_default_design:Clean;mapshow:Clean;Turbu:Clean;testing:Clean;TepRename:Clean"/>
 		</Target>
 		<Target Name="Make">
-			<CallTarget Targets="EngineBasis:Make;default_format:Make;turbu_design_basis:Make;default_format_design:Make;battle_default:Make;map_default:Make;map_default_design:Make;mapshow:Make;Turbu:Make;testing:Make"/>
+			<CallTarget Targets="EngineBasis:Make;default_format:Make;turbu_design_basis:Make;default_format_design:Make;battle_default:Make;map_default:Make;map_default_design:Make;mapshow:Make;Turbu:Make;testing:Make;TepRename:Make"/>
 		</Target>
 		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 	</Project>
