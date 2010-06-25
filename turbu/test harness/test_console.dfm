@@ -93,6 +93,10 @@ object frmTestConsole: TfrmTestConsole
         Caption = 'Test D&atabase window'
         OnClick = mnuTestDatabasewindow1Click
       end
+      object mnuTestDatabaseUpload: TMenuItem
+        Caption = 'Test Database &Upload'
+        OnClick = mnuTestDatabaseUploadClick
+      end
       object mnuEventEditor: TMenuItem
         Caption = 'Test &Event Editor'
         OnClick = mnuEventEditorClick

@@ -3,11 +3,12 @@ unit turbu_map_sprites;
 interface
 uses
    tiles, charset_data, timing,
-   turbu_pathing, turbu_sprites, turbu_map_objects, turbu_defs,
+   turbu_pathing, turbu_sprites, turbu_map_objects, turbu_defs, turbu_containers,
    sg_defs, sdl_sprite;
 
 type
    TMapSprite = class;
+   TMapSpriteList = class(TRpgObjectList<TMapSprite>);
 
    IRpgCharacter = interface
       procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite);
@@ -40,7 +41,7 @@ type
       procedure incTransparencyFactor;
       procedure decTransparencyFactor;
       function getAnimFix: boolean;
-    function GetTile(x: byte): TTile;
+      function GetTile(x: byte): TTile;
 
       property dirLocked: boolean read isDirLocked write FDirLocked;
    protected
@@ -132,7 +133,7 @@ type
       procedure updateTiles;
       procedure setLocation(data: TSgPoint); override;
       procedure setTranslucency(const value: byte); override;
-      procedure activateEvents(where: TMapTile);
+      procedure activateEvents(where: TTile);
    public
       constructor Create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); override;
       procedure reload(const imageName: string; const index: byte);
@@ -156,10 +157,10 @@ const
 
 implementation
 uses
-classes, contnrs,
    SysUtils, Math, types,
    commons,
-   turbu_sounds, turbu_constants, turbu_2k_sprite_engine;
+   turbu_2k_map_tiles,
+   turbu_sounds, turbu_constants, turbu_2k_sprite_engine, turbu_2k_map_locks;
 
 const OP_CLEAR = $C0; //arbitrary value
 
@@ -224,17 +225,15 @@ end;
 
 procedure TMapSprite.leaveTile;
 var
-   list: TList;
+   list: TMapSpriteList;
 begin
-{$MESSAGE WARN 'Commented-out code in live unit'}
-//   GEventLock.enter;
+   GEventLock.enter;
    try
-      list := TMapTile(T2kSpriteEngine(FEngine).GetTile(location.x, location.y, 0)).event;
+      list := T2kSpriteEngine(FEngine).GetTile(location.x, location.y, 0).event;
       while list.indexOf(self) <> -1 do
          list.Remove(self);
-      list.Pack;
    finally
-//      GEventLock.leave;
+      GEventLock.leave;
    end;
 end;
 
@@ -669,13 +668,12 @@ end;
 procedure TMapSprite.nuke(removeself: boolean = false);
 var
    dummy: integer;
-   eventList: TList;
+   eventList: TMapSpriteList;
 begin
    eventList := TMapTile(T2kSpriteEngine(FEngine).GetTile(FLocation.x, FLocation.y, 0)).event;
    dummy := eventList.IndexOf(self);
    assert(dummy <> -1);
    eventList.Delete(dummy);
-   eventList.Pack;
 {$MESSAGE WARN 'Commented-out code in live unit'}
 {   if removeSelf then
       GGameEngine.currentMap.deleteEvent(self);}
@@ -820,14 +818,14 @@ end;
 
 { TCharSprite }
 
-procedure TCharSprite.activateEvents(where: TMapTile);
+procedure TCharSprite.activateEvents(where: TTile);
 var
-   eventList: TObjectList;
+   eventList: TMapSpriteList;
    i: integer;
    eventPtr: TRpgMapObject;
 begin
 {$MESSAGE WARN 'Commented out code in live unit'}
-   eventList := where.event;
+   eventList := (where as TMapTile).event;
    for i := 0 to eventlist.Count - 1 do
    begin
 {      eventPtr := (eventList[i] as TMapSprite).event;

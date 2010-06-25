@@ -20,7 +20,7 @@ unit turbu_2k_map_engine;
 interface
 uses
    types, syncObjs, Generics.Collections, classes,
-   turbu_map_engine, turbu_versioning,
+   turbu_map_engine, turbu_versioning, turbu_map_sprites, turbu_heroes,
    turbu_database_interface, turbu_map_interface, turbu_sdl_image,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine,
    AsphyreTimer,
@@ -42,6 +42,8 @@ type
       FMaps: array of T2kSpriteEngine;
       FScrollPosition: TSgPoint;
       FTimer: TAsphyreTimer;
+      FPartySprite: TCharSprite;
+      FParty: TRpgParty;
 
       function retrieveImage(const folder, filename: string): TRpgSdlImage;
 
@@ -52,6 +54,7 @@ type
       procedure LoadMapSprites(map: TRpgMap);
       function doneLoadingMap: boolean;
       procedure prepareMap(const data: IMapMetadata);
+      procedure initializeParty;
    private //timing and animation
       FFrame: integer;
       FHeartbeat: integer;
@@ -69,6 +72,7 @@ type
       function Playing: boolean; override;
       procedure KeyDown(key: word; Shift: TShiftState); override;
       procedure KeyUp(key: word; Shift: TShiftState); override;
+      property PartySprite: TCharSprite read FPartySprite;
    end;
 
 implementation
@@ -199,6 +203,11 @@ begin
    FInitialized := true;
 end;
 
+procedure T2kMapEngine.initializeParty;
+begin
+
+end;
+
 procedure T2kMapEngine.KeyDown(key: word; Shift: TShiftState);
 begin
    //TODO: Handle input here
@@ -254,6 +263,8 @@ begin
    if not assigned(map) then
       raise ERpgPlugin.Create('Incompatible metadata object.');
 
+   if map.id > high(FMaps) then
+      setLength(FMaps, map.id + 1);
    if not assigned(FMaps[map.id]) then
    begin
       mapStream := GArchives[MAP_ARCHIVE].getFile(map.internalFilename.name);

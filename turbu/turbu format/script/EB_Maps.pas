@@ -923,5 +923,5 @@ initialization
                     TEBImageEffect, TEBImageMove, TEBImageErase, TEBShowAnim, TEBFlashObj,
                     TEBMoveMapObj, TEBWaitMove, TEBStopMove, TEBChangeTileset,
                     TEBChangeBG, TEBEncounterRate, TEBTileSub, TEBTeleLoc, TEBTeleEnable,
-                    TEBEscapeLoc, TEBEscapeEnable, TEBSaveEnable]);
+                    TEBEscapeLoc, TEBEscapeEnable, TEBSaveEnable, TEBTeleportMapObj]);
 end.
