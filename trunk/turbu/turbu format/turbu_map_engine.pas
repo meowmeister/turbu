@@ -64,6 +64,7 @@ type
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
       procedure doubleClick;
+      procedure rightClick(const position: TSgPoint);
       function getAutosaveMaps: boolean;
       procedure setAutosaveMaps(const value: boolean);
       property autosaveMaps: boolean read getAutosaveMaps write setAutosaveMaps;

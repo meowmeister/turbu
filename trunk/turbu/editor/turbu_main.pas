@@ -717,7 +717,8 @@ end;
 
 procedure TfrmTurbuMain.trvMapTreeChange(Sender: TObject; Node: TTreeNode);
 begin
-   loadMap(IInterface(node.Data) as IMapMetadata);
+   if not node.IsFirstNode then
+      loadMap(IInterface(node.Data) as IMapMetadata);
 end;
 
 procedure TfrmTurbuMain.trvMapTreeContextPopup(Sender: TObject;

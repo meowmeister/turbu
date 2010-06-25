@@ -14,7 +14,7 @@ type
       function MultilineText(indent, overhang: integer): string;
    public
       function GetScript(indent: integer): string; override;
-      function GetLine: string;
+      function GetNodeText: string; override;
       function GetNode: TEBNode; override;
    end;
 
@@ -74,7 +74,7 @@ uses
 
 { TEBShowMessage }
 
-function TEBShowMessage.GetLine: string;
+function TEBShowMessage.GetNodeText: string;
 begin
    result := 'Message: ' + self.Text;
 end;
@@ -101,11 +101,10 @@ var
    wrap: string;
    child: TEBObject;
 begin
-   result := self.Text;
+   result := QuotedStr(self.Text);
+   wrap := ' + CRLF +' + CRLF + IndentString(indent) + StringOfChar(' ', overhang);
    for child in self do
-      result := result + #13#10 + child.Text;
-   wrap := QuotedStr('+ CRLF +' + #13#10) + IndentString(indent) + StringOfChar(' ', overhang);
-   result := QuotedStr(StringReplace(self.Text, #13#10, wrap, [rfReplaceAll]));
+      result := result + wrap + QuotedStr(child.Text);
 end;
 
 { TEBMessageOptions }

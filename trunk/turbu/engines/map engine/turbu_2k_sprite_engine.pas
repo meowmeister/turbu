@@ -3,14 +3,13 @@ unit turbu_2k_sprite_engine;
 interface
 uses
    types, Generics.Collections,
-   turbu_maps, turbu_map_engine, tiles, turbu_tilesets,
-   turbu_map_objects, turbu_containers, turbu_map_sprites, turbu_defs,
+   turbu_maps, turbu_map_engine, turbu_2k_map_tiles, turbu_tilesets,
+   turbu_map_objects, turbu_map_sprites, turbu_defs,
    sdl_sprite, sdl_canvas, SDL_ImageManager;
 
 type
-   TTileMatrix = TMatrix<TTile>;
+   TTileMatrix = TMatrix<TMapTile>;
    TTileMatrixList = class(TObjectList<TTileMatrix>);
-   TMapSpriteList = class(TRpgObjectList<TMapSprite>);
 
    TFacingSet = set of TFacing;
 
@@ -26,11 +25,12 @@ type
       FCurrentLayer: integer;
       FBlank: boolean;
       FMapObjects: TMapSpriteList;
+      FCurrentParty: TCharSprite;
 
       procedure SetViewport(const viewport: TRect);
       procedure loadTileMatrix(const value: TTileList; index: integer; const viewport: TRect);
-      function CreateNewTile(value: TTileRef): TTile;
-      function FullCreateNewTile(x, y, layer: integer): TTile;
+      function CreateNewTile(value: TTileRef): TMapTile;
+      function FullCreateNewTile(x, y, layer: integer): TMapTile;
       function GetMaxLayer: integer; inline;
    public
       constructor Create(map: TRpgMap; const viewport: TRect;
@@ -41,10 +41,12 @@ type
       procedure updateBorders(x, y, layer: integer);
       procedure Process(Sender: TObject);
       procedure AdvanceFrame;
-      function GetTile(x, y, layer: integer): TTile;
-      function GetTopTile(x, y: integer): TTile;
+      function GetTile(x, y, layer: integer): TMapTile;
+      function GetTopTile(x, y: integer): TMapTile;
       procedure RecreateTileMatrix;
       function AddMapObject(obj: TRpgMapObject): TMapSprite;
+      function Passable(x, y: integer; direction: TFacing): boolean; overload;
+      function Passable(x, y: integer): boolean; overload;
 
       procedure EnsureImage(const filename: string);
 
@@ -57,12 +59,13 @@ type
       property mapObj: TRpgMap read FMap;
       property blank: boolean read FBlank write FBlank;
       property mapObjects: TMapSpriteList read FMapObjects;
+      property CurrentParty: TCharSprite read FCurrentParty;
    end;
 
 implementation
 uses
    SysUtils,
-   commons, turbu_constants, archiveInterface,
+   commons, turbu_constants, archiveInterface, tiles,
    SG_defs;
 
 { T2kSpriteEngine }
@@ -75,7 +78,7 @@ end;
 procedure T2kSpriteEngine.assignTile(const x, y, layer: integer;
   const tile: TTileRef);
 var
-   newTile: TTile;
+   newTile: TMapTile;
 begin
    if (x >= FMap.size.X) or (y >= FMap.size.Y) then
       Exit;
@@ -117,7 +120,7 @@ var
 
 var
    tileRef: TTileRef;
-   newTile: TTile;
+   newTile: TMapTile;
 begin
    if not normalizePoint(x, y) then
       Exit;
@@ -208,7 +211,7 @@ begin
       self.Images.AddSpriteFromArchive(format('mapsprite\%s.png', [filename]), filename, SPRITE_SIZE);
 end;
 
-function T2kSpriteEngine.FullCreateNewTile(x, y, layer: integer): TTile;
+function T2kSpriteEngine.FullCreateNewTile(x, y, layer: integer): TMapTile;
 var
    tile: TTileRef;
 begin
@@ -223,7 +226,7 @@ begin
    result := FTiles.Count - 1;
 end;
 
-function T2kSpriteEngine.GetTile(x, y, layer: integer): TTile;
+function T2kSpriteEngine.GetTile(x, y, layer: integer): TMapTile;
 var
    i: integer;
 begin
@@ -233,7 +236,7 @@ begin
    result := FTiles[layer][x, y];
 end;
 
-function T2kSpriteEngine.GetTopTile(x, y: integer): TTile;
+function T2kSpriteEngine.GetTopTile(x, y: integer): TMapTile;
 var
    i: integer;
 begin
@@ -249,10 +252,10 @@ begin
    assert(false); //should not reach this point
 end;
 
-function T2kSpriteEngine.CreateNewTile(value: TTileRef): TTile;
+function T2kSpriteEngine.CreateNewTile(value: TTileRef): TMapTile;
 var
    tileType: TTileType;
-   tileClass: TTileClass;
+   tileClass: TMapTileClass;
    filename: string;
    tileGroup: TTileGroup;
 begin
@@ -276,7 +279,7 @@ begin
       else tileClass := TShoreTile;
    end
    else raise ESpriteError.Create('Unknown tile type.');
-   result := tileClass.Create(Self, filename)
+   result := tileClass.Create(Self, filename);
 end;
 
 {$Q+R+}
@@ -301,7 +304,7 @@ var
 var
    x, y: integer;
    equivX, equivY: integer;
-   newTile: TTile;
+   newTile: TMapTile;
    tileRef: TTileRef;
    //Yay for b0rked bounds checking in packages!
    newindex: integer;
@@ -325,6 +328,29 @@ begin
          if assigned(newTile) then
             newTile.place(equivX, equivY, index, tileRef, FTileset);
       end;
+end;
+
+function T2kSpriteEngine.Passable(x, y: integer; direction: TFacing): boolean;
+const TRANSLATE: array[TFacing] of TTileAttribute = (taUp, taRight, taDown, taLeft);
+var
+   tile: TTile;
+   i: integer;
+begin
+   result := true;
+   for I := 0 to MaxLayer do
+   begin
+      tile := GetTile(x, y, i);
+      result := result and (TRANSLATE[direction] in tile.attributes);
+   end;
+end;
+
+function T2kSpriteEngine.Passable(x, y: integer): boolean;
+var
+   dir: TFacing;
+begin
+   result := false;
+   for dir := low(TFacing) to high(TFacing) do
+      result := result or Passable(x, y, dir);
 end;
 
 procedure T2kSpriteEngine.Process(Sender: TObject);

@@ -279,13 +279,16 @@ end;
 procedure T2k2Database.convertEvents(block: TEventBlock);
 var
    globals: TEBUnit;
+   nameList: TStringList;
    i: integer;
 begin
    globals := TEBUnit.Create(nil);
+   nameList := TStringList.Create;
    try
+      nameList.Sorted := true;
       globals.name := 'GlobalEvents';
       for I := 0 to block.len - 1  do
-         GlobalEvents.Add(TRpgMapObject.Convert(block.events[i],
+         GlobalEvents.Add(TRpgMapObject.Convert(block.events[i], nameList,
                            procedure(script: TEBProcedure)
                            begin
                               globals.add(script);
@@ -293,6 +296,7 @@ begin
       self.saveScript(utf8String(globals.serialize));
    finally
       globals.Free;
+      nameList.Free;
    end;
 end;
 

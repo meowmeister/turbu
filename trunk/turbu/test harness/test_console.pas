@@ -48,6 +48,7 @@ type
       mnuEventEditor: TMenuItem;
       mnuMaps: TMenuItem;
       mnuTestMapObjectContainers: TMenuItem;
+    mnuTestDatabaseUpload: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -67,6 +68,7 @@ type
       procedure estRenderTargets1Click(Sender: TObject);
       procedure mnuEventEditorClick(Sender: TObject);
       procedure mnuTestMapObjectContainersClick(Sender: TObject);
+    procedure mnuTestDatabaseUploadClick(Sender: TObject);
    private
       { Private declarations }
       FEngine: IDesignMapEngine;
@@ -105,6 +107,16 @@ uses
 var
    freeList: TObjectList;
    lCanvas: TSdlCanvas;
+
+procedure TfrmTestConsole.mnuTestDatabaseUploadClick(Sender: TObject);
+begin
+   if FCurrentMap = nil then
+      mnuTestMapLoadingClick(sender);
+   GDatabase.copyToDB(dmDatabase, []);
+
+   if sender = mnuTestDatabaseUpload then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
 
 procedure TfrmTestConsole.mnuTestDatabasewindow1Click(Sender: TObject);
 begin
@@ -190,9 +202,7 @@ end;
 
 procedure TfrmTestConsole.mnuEventEditorClick(Sender: TObject);
 begin
-   if FCurrentMap = nil then
-      mnuTestMapLoadingClick(sender);
-   GDatabase.copyToDB(dmDatabase, []);
+   mnuTestDatabaseUploadClick(sender);
 
    TfrmObjectEditor.EditMapObject(TRpgMap(FCurrentMap).mapObjects[1], TRpgMap(FCurrentMap),
                                   GDatabase.tileset[TRpgMap(FCurrentMap).tileset].name);

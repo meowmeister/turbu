@@ -64,6 +64,7 @@ type
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
       procedure doubleClick;
+      procedure rightClick(const position: TSgPoint);
       procedure SetCurrentLayer(const value: shortint);
       function GetCurrentLayer: shortint;
       function getAutosaveMaps: boolean;
@@ -187,6 +188,20 @@ begin
    self.FImages := nil;
    self.FDefaultBattleEngine := nil;
    self.FInitialized := false;
+end;
+
+procedure T2kMapEngineD.rightClick(const position: TSgPoint);
+begin
+   if not FTimer.Enabled then
+      Exit;
+
+   if FCurrentMap.passable(position.x, position.y) then
+   begin
+{      if currentParty = nil then
+         initializeHero
+      else currentParty.leaveTile;
+      FCurrentMap.currentParty.location := whichtile; }
+   end;
 end;
 
 function T2kMapEngineD.DesignLoadMap(map: IMapMetadata): IRpgMap;

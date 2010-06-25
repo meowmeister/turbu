@@ -813,5 +813,6 @@ initialization
    RegisterClasses([TEBUntranslated, TEBBlock, TEBProcedure, TEBExtension,
                     TEBCase, TEBCaseBlock, TEBElseBlock, TEBEndCase, TEBIf,
                     TEBCodeBlock, TEBEnumCaseBlock, TEBForLoop, TEBLabel, TEBGoto,
-                    TEBWhileLoop, TEBBreak, TEBComment, TEBProgram, TEBMap]);
+                    TEBWhileLoop, TEBBreak, TEBComment, TEBProgram, TEBMap,
+                    TEBFunctionCall, TEBUnit, TEBExit]);
 end.

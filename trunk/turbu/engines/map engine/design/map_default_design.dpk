@@ -34,7 +34,6 @@ requires
   default_format_design;
 
 contains
-  SimpleShareMem_MapDefaultDesign in 'SimpleShareMem_MapDefaultDesign.pas',
   map_default_design_plugin in 'map_default_design_plugin.pas' {RpgBasicMapDesignPlugin: TJvPlugIn},
   turbu_2k_map_engine_D in 'turbu_2k_map_engine_D.pas',
   eval in 'eval.pas' {frmMapProperties},

@@ -7,7 +7,7 @@
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<DCC_DependencyCheckOutputName>Turbu.exe</DCC_DependencyCheckOutputName>
 			<ProjectVersion>12.0</ProjectVersion>
-			<Config Condition="'$(Config)'==''">Alpha release</Config>
+			<Config Condition="'$(Config)'==''">Release</Config>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
 			<Base>true</Base>
@@ -34,17 +34,16 @@
 			<DCC_ExeOutput>..\bin</DCC_ExeOutput>
 			<DCC_DcuOutput>..\dcus\</DCC_DcuOutput>
 			<DCC_DcpOutput>..\dcus\</DCC_DcpOutput>
-			<DCC_Define>JCLINSTALL;PS_USESSUPPORT;NOPARSE_EVENTS;$(DCC_Define)</DCC_Define>
+			<DCC_Define>JCLINSTALL;PS_USESSUPPORT;$(DCC_Define)</DCC_Define>
 			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\classes\sdl custom;..\bin;..\dcus;..\..\classes\FastMM4;..\..\components\TURBU;..\..\components\PascalScript;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_UsePackage>default_format;EngineBasis;JvPluginSystem</DCC_UsePackage>
 			<DCC_DependencyCheckOutputName>..\bin\Turbu.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_DcuOutput>..\dcus</DCC_DcuOutput>
 			<DCC_DcpOutput>..\dcus</DCC_DcpOutput>
 			<Version>7.0</Version>
-			<DCC_DebugInformation>False</DCC_DebugInformation>
-			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
 			<DCC_Optimize>true</DCC_Optimize>
 			<DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
 			<DCC_RangeChecking>True</DCC_RangeChecking>
@@ -53,7 +52,7 @@
 			<DCC_ResourcePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Radio;C:\Program Files\Borland\BDS\4.0\source\Win32\Samples\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Pascal Script\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\asphyre\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\converters;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Radio;C:\Program Files\Borland\BDS\4.0\source\Win32\Samples\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Pascal Script\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\asphyre\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\converters;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Radio;C:\Program Files\Borland\BDS\4.0\source\Win32\Samples\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Pascal Script\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\asphyre\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\converters;$(DCC_IncludePath)</DCC_IncludePath>
-			<DCC_Define>EDITOR;RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_Define>EDITOR;RELEASE;madExcept;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_MapFile>3</DCC_MapFile>
@@ -212,7 +211,7 @@
 						<VersionInfo Name="MajorVer">0</VersionInfo>
 						<VersionInfo Name="MinorVer">7</VersionInfo>
 						<VersionInfo Name="Release">5</VersionInfo>
-						<VersionInfo Name="Build">1284</VersionInfo>
+						<VersionInfo Name="Build">1295</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -224,7 +223,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc,</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">TURBU Editor</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">0.7.5.1284</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.7.5.1295</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">TURBU Editor</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

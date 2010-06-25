@@ -66,7 +66,6 @@
 			<DCCReference Include="JvDB.dcp"/>
 			<DCCReference Include="turbu_design_basis.dcp"/>
 			<DCCReference Include="default_format_design.dcp"/>
-			<DCCReference Include="SimpleShareMem_MapDefaultDesign.pas"/>
 			<DCCReference Include="map_default_design_plugin.pas">
 				<Form>RpgBasicMapDesignPlugin</Form>
 				<DesignClass>TJvPlugIn</DesignClass>
@@ -101,7 +100,8 @@
 		</ItemGroup>
 		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
 		<PropertyGroup>
-			<PostBuildEvent><![CDATA[copy "$(OUTPUTPATH)" "$(OUTPUTDIR)$(OUTPUTNAME).tep" /Y]]></PostBuildEvent>
+			<PostBuildEvent><![CDATA[copy "$(OUTPUTPATH)" "$(OUTPUTDIR)$(OUTPUTNAME).tep" /Y
+"$(OUTPUTDIR)TepRename.exe"]]></PostBuildEvent>
 		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>

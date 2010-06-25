@@ -30,7 +30,6 @@ requires
   dsnap;
 
 contains
-  SimpleShareMem_EngineBasis in 'SimpleShareMem_EngineBasis.pas',
   upsCompiler in '..\..\..\components\PascalScript\upsCompiler.pas',
   uPSRuntime in '..\..\..\components\PascalScript\uPSRuntime.pas',
   uPSUtils in '..\..\..\components\PascalScript\uPSUtils.pas',

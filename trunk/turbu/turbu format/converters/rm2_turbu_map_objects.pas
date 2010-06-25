@@ -2,6 +2,7 @@ unit rm2_turbu_map_objects;
 
 interface
 uses
+   Classes,
    events, turbu_map_objects, move_data, turbu_pathing, EB_RpgScript;
 
 type
@@ -9,7 +10,7 @@ type
 
    T2k2RpgMapObject = class helper for TRpgMapObject
    public
-      constructor Convert(base: TEvent; saveScript: TScriptCallback);
+      constructor Convert(base: TEvent; list: TStringList; saveScript: TScriptCallback);
    end;
 
    T2k2RpgEventPage = class helper for TRpgEventPage
@@ -42,19 +43,30 @@ type
 
 implementation
 uses
-   SysUtils, Generics.Collections, Classes,
+   SysUtils, Generics.Collections,
    charset_data, turbu_defs, rm2_turbu_maps, rm2_turbu_event_builder,
    EventBuilder;
 
 { T2k2RpgMapObject }
 
-constructor T2k2RpgMapObject.Convert(base: TEvent; saveScript: TScriptCallback);
+constructor T2k2RpgMapObject.Convert(base: TEvent; list: TStringList; saveScript: TScriptCallback);
 var
   I: Integer;
+  lName: string;
 begin
    inherited Create;
    FId := base.id;
-   FName := ValidIdent(base.name);
+   //ensure that each map object has a unique name across this map.  This keeps
+   //EB procedure object names unique
+   lName := ValidIdent(base.name);
+   FName := lName;
+   i := 0;
+   while list.indexOf(FName) <> -1 do
+   begin
+      inc(i);
+      FName := lName + intToStr(i);
+   end;
+   list.add(FName);
    location := base.location;
    for I := 1 to base.len do
       AddPage(TRpgEventPage.Convert(base.page[i - 1], i - 1, self, saveScript));
