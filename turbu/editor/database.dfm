@@ -89,6 +89,7 @@ object frmDatabase: TfrmDatabase
       Margins.Bottom = 4
       Caption = '&Class'
       OnShow = tshClassShow
+      ExplicitLeft = 0
       ExplicitTop = 24
       ExplicitWidth = 785
       ExplicitHeight = 459
@@ -928,8 +929,6 @@ object frmDatabase: TfrmDatabase
       Margins.Bottom = 4
       Caption = 'Raw &Data Viewer'
       ImageIndex = 3
-      ExplicitWidth = 785
-      ExplicitHeight = 455
       inline frameItems1: TframeItems
         Left = -4
         Top = 0

@@ -28,7 +28,6 @@ type
    TStatCalcFunc = function(a, b, c: smallint; d: shortint): integer of object;
 
    TCommandStyle = (cs_weapon, cs_skill, cs_defend, cs_item, cs_flee, cs_skillgroup, cs_special, cs_script);
-   TWeaponStyle = (ws_single, ws_shield, ws_dual, ws_all);
 
    TBattleCommand = class(TRpgDatafile)
    private
@@ -109,6 +108,7 @@ type
    TClassTemplate = class(TRpgDatafile)
    private
       FMapSprite: string;
+      FTranslucent: boolean;
       FActionMatrix: integer;
       FBattleSprite: integer;
       FBattleMatrix: integer;
@@ -155,9 +155,9 @@ type
       property expVars[x: byte]: integer read getExpVar write setExpVar;
       property eq[x: byte]: smallint read getEq write setEq;
       property skillset: TSkillsetList read FSkillset write FSkillset;
-   published
       property clsName: string read FName write FName;
       property mapSprite: string read FMapSprite write FMapSprite;
+      property translucent: boolean read FTranslucent write FTranslucent;
       property battleSprite: integer read FBattleSprite write FBattleSprite;
       property portrait: string read FPortrait write FPortrait;
       property portraitIndex: integer read FPortraitIndex write FPortraitIndex;
@@ -169,7 +169,7 @@ type
       property staticEq: boolean read FStaticEq write FStaticEq;
       property strongDef: boolean read FStrongDef write FStrongDef;
       property unarmedAnim: integer read FUnarmedAnim write FUnarmedAnim;
-
+   published
       property OnJoin: TPartyEvent read FOnJoin write FOnJoin;
    end;
 
@@ -183,6 +183,8 @@ type
       FMinLevel: word;
       FMaxLevel: word;
       FGuest: boolean;
+      FCanCrit: boolean;
+      FCritRate: integer;
    protected
       class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
@@ -198,6 +200,8 @@ type
       property minLevel: word read FMinLevel write FMinLevel;
       property maxLevel: word read FMaxLevel write FMaxLevel;
       property guest: boolean read FGuest write FGuest;
+      property canCrit: boolean read FCanCrit write FCanCrit;
+      property critRate: integer read FCritRate write FCritRate;
    end;
 
 procedure SetScriptEngine(value: IScriptEngine);
@@ -390,6 +394,7 @@ begin
    FSkillSet.add(TSkillGainInfo.Create);
 
    FMapSprite := savefile.readString;
+   FTranslucent := savefile.readBool;
    FActionMatrix := savefile.readInt;
    FBattleSprite := savefile.readInt;
    FBattleMatrix := savefile.readInt;
@@ -428,6 +433,7 @@ var
 begin
    inherited save(savefile);
    savefile.writeString(FMapSprite);
+   savefile.writeBool(FTranslucent);
    savefile.writeInt(FActionMatrix);
    savefile.writeInt(FBattleSprite);
    savefile.writeInt(FBattleMatrix);

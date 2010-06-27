@@ -32,12 +32,14 @@ type
    public
       constructor Create(subscript: integer); overload;
       constructor Create(subscript: TEBExpression); overload;
+      function GetNodeText: string; override;
    end;
 
    TEBIntsValue = class(TEBVariableValue)
    public
       constructor Create(subscript: integer); overload;
       constructor Create(subscript: TEBExpression); overload;
+      function GetNodeText: string; override;
    end;
 
    TEBBooleanValue = class(TEBExpression)
@@ -258,6 +260,13 @@ begin
    inherited Create('Switch', subscript);
 end;
 
+function TEBSwitchesValue.GetNodeText: string;
+begin
+   if values.count > 0 then
+      result := format('Switches[%s]', [SwitchName(values[0])])
+   else result := inherited GetNodeText;
+end;
+
 { TEBIntsValue }
 
 constructor TEBIntsValue.Create(subscript: integer);
@@ -268,6 +277,13 @@ end;
 constructor TEBIntsValue.Create(subscript: TEBExpression);
 begin
    inherited Create('Ints', subscript);
+end;
+
+function TEBIntsValue.GetNodeText: string;
+begin
+   if values.count > 0 then
+      result := format('Ints[%s]', [IntName(values[0])])
+   else result := inherited GetNodeText;
 end;
 
 { TEBIntegerValue }

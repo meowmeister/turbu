@@ -58,6 +58,8 @@ contains
   turbu_pathing in 'turbu_pathing.pas',
   EB_RpgScript in 'script\EB_RpgScript.pas',
   EB_Messages in 'script\EB_Messages.pas',
-  EB_Expressions in 'script\EB_Expressions.pas';
+  EB_Expressions in 'script\EB_Expressions.pas',
+  EB_Maps in 'script\EB_Maps.pas',
+  EB_System in 'script\EB_System.pas';
 
 end.

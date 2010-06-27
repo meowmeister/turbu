@@ -262,6 +262,8 @@ object frameClass: TframeClass
           Height = 96
           Framerate = 16
           Active = False
+          LogicalWidth = 96
+          LogicalHeight = 96
           OnAvailable = imgMapSpriteAvailable
         end
       end
@@ -379,6 +381,10 @@ object frameClass: TframeClass
         object tshSkills: TTabSheet
           Caption = 'Commands'
           ImageIndex = 1
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           inline frameHeroCommands: TframeHeroCommands
             Left = 0
             Top = 0
@@ -400,6 +406,10 @@ object frameClass: TframeClass
         object tshRepertoire: TTabSheet
           Caption = 'Skills'
           ImageIndex = 2
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object lstSkills: TRpgListGrid
             Left = 4
             Top = 4
@@ -493,6 +503,10 @@ object frameClass: TframeClass
         object tshAttributes: TTabSheet
           Caption = 'Attributes'
           OnShow = linkNav
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           object lstAttributes: TRpgListGrid
             Left = 3
             Top = 3

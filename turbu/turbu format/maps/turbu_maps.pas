@@ -99,10 +99,13 @@ type
       function calcGridDelta(const size: TSgPoint; position: byte): TRect;
    protected
       FEncounters: T4IntArray;
-      [UploadTiles]
+      [NoUpload]
       FBattles: TPWordArray;
+      [NoUpload]
       FRegions: TRegionList;
+      [NoUpload]
       FMapObjects: TMapObjectList;
+      [NoUpload]
       FScriptObject: TEBMap;
 
       class function keyChar: ansiChar; override;

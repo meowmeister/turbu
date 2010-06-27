@@ -179,14 +179,25 @@ object dmDatabase: TdmDatabase
       item
         Name = 'equip[5]'
         DataType = ftInteger
+      end
+      item
+        Name = 'translucent'
+        DataType = ftBoolean
       end>
-    IndexDefs = <>
+    IndexDefs = <
+      item
+        Name = 'DEFAULT_ORDER'
+      end
+      item
+        Name = 'CHANGEINDEX'
+      end>
+    IndexFieldNames = 'id'
     Params = <>
     StoreDefs = True
     Left = 8
     Top = 8
     Data = {
-      3E0300009619E0BD01000000180000002A0000000000030000003E0302696404
+      520300009619E0BD01000000180000002B000000000003000000520302696404
       00010000000000046E616D6501004A0000000100055749445448020002002800
       086D6F6469666965640200030000000000096D617053707269746502004A0000
       00010005574944544802000200FE010C616374696F6E4D617472697804000100
@@ -212,7 +223,7 @@ object dmDatabase: TdmDatabase
       6E696D04000100000000000865717569705B315D040001000000000008657175
       69705B325D04000100000000000865717569705B335D04000100000000000865
       717569705B345D04000100000000000865717569705B355D0400010000000000
-      0000}
+      0B7472616E736C7563656E7402000300000000000000}
     object charClassesid: TIntegerField
       FieldName = 'id'
     end
@@ -433,6 +444,9 @@ object dmDatabase: TdmDatabase
       KeyFields = 'expFunc'
       Size = 50
       Lookup = True
+    end
+    object charClassesTranslucent: TBooleanField
+      FieldName = 'translucent'
     end
   end
   object charClasses_skillset: TClientDataSet
@@ -5660,6 +5674,18 @@ object dmDatabase: TdmDatabase
       item
         Name = 'BattleSpriteShift.FHue'
         DataType = ftShortint
+      end
+      item
+        Name = 'canCrit'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'critRate'
+        DataType = ftInteger
+      end
+      item
+        Name = 'translucent'
+        DataType = ftBoolean
       end>
     IndexDefs = <>
     Params = <>
@@ -5667,7 +5693,7 @@ object dmDatabase: TdmDatabase
     Left = 103
     Top = 30
     Data = {
-      950500009619E0BD02000000180000003E000000000003000000950502696404
+      CA0500009619E0BD020000001800000041000000000003000000CA0502696404
       00010000000000046E616D6501004A0000000100055749445448020002002800
       086D6F6469666965640200030000000000096D617053707269746502004A0000
       00010005574944544802000200FE010C616374696F6E4D617472697804000100
@@ -5711,7 +5737,9 @@ object dmDatabase: TdmDatabase
       325D04001B00000000001E426174746C6553707269746553686966742E46436F
       6C6F725365745B335D04001B00000000001E426174746C655370726974655368
       6966742E46436F6C6F725365745B345D04001B000000000016426174746C6553
-      707269746553686966742E4648756501000100000000000000}
+      707269746553686966742E4648756501000100000000000763616E4372697402
+      0003000000000008637269745261746504000100000000000B7472616E736C75
+      63656E7402000300000000000000}
     object heroesid: TIntegerField
       FieldName = 'id'
     end
@@ -5993,6 +6021,15 @@ object dmDatabase: TdmDatabase
     end
     object heroesBattleSpriteShiftFHue: TShortintField
       FieldName = 'BattleSpriteShift.FHue'
+    end
+    object heroescanCrit: TBooleanField
+      FieldName = 'canCrit'
+    end
+    object heroescritRate: TIntegerField
+      FieldName = 'critRate'
+    end
+    object heroesTranslucent: TBooleanField
+      FieldName = 'translucent'
     end
   end
   object heroes_Conditions: TClientDataSet

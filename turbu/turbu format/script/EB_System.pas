@@ -254,7 +254,7 @@ function GetIntScript(decider, value: integer): string;
 begin
    if boolean(decider) then
       result := intToStr(Value)
-   else result := format('Ints[%d]', [value]);
+   else result := format('Ints[%s]', [TEBObject.IntName(value)]);
 end;
 
 { TEBWait }
@@ -346,7 +346,7 @@ begin
    else result := 'Timer ';
    case Values[0] of
       0: if boolean(Values[1]) then
-            result := format('%s Set: Ints[%d]', [result, Values[2]])
+            result := format('%s Set: Ints[%s]', [result, IntName(Values[2])])
          else result := format('%s Set: %d:%.2d', [result, Values[2] div 60, Values[2] mod 60]);
       1: result := result + 'Start';
       2: result := result + 'Stop';
@@ -430,7 +430,7 @@ begin
    case Values[0] of
       0: result := result + '[All Members]';
       1: result := result + HeroName(Values[1]);
-      2: result := result + format('Ints[%d]', [Values[1]]);
+      2: result := result + format('Ints[%s]', [IntName(Values[1])]);
    end;
    if boolean(Values[2]) then
       result := result + 'Subtract '
@@ -464,7 +464,7 @@ begin
    case Values[0] of
       0: result := result + '[All Members]';
       1: result := result + HeroName(Values[1]);
-      2: result := result + format('Ints[%d]', [Values[1]]);
+      2: result := result + format('Ints[%s]', [IntName(Values[1])]);
    end;
    if boolean(Values[2]) then
       result := result + 'Subtract '
@@ -650,11 +650,11 @@ begin
    case Values[0] of
       0: subject := 'Whole Party';
       1: subject := self.HeroName(Values[1]);
-      2: subject := format('Hero[Ints[%d]]', [Values[1]]);
+      2: subject := format('Hero[Ints[%s]]', [IntName(Values[1])]);
    end;
    result := format(LINE, [subject, values[2], values[3], values[4], values[5]]);
    if boolean(Values[6]) then
-      result := format('%s, Store in Ints[%d]', [result, Values[7]]);
+      result := format('%s, Store in Ints[%s]', [result, IntName(Values[7])]);
 end;
 
 function TEBTakeDamage.GetScriptText: string;
@@ -865,7 +865,10 @@ function TEBPlayMovie.GetNodeText: string;
 const LINE = 'Play Movie: %s, Position: (%.3d, %.3d), Size: (%dx%d)';
 begin
    if boolean(Values[0]) then
-      result := StringReplace(LINE, '%.3d', 'Ints[%d]', [rfReplaceAll])
+   begin
+      result := StringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
+      result := format(result, [Text, IntName(Values[1]), IntName(Values[2]), Values[3], Values[4]]);
+   end
    else result := LINE;
    result := format(result, [Text, Values[1], Values[2], Values[3], Values[4]]);
 end;
@@ -883,7 +886,7 @@ end;
 
 function TEBInput.GetNodeText: string;
 begin
-   result := format('Key Input: Ints[%d]', [Values[0]]);
+   result := format('Key Input: Ints[%s]', [IntName(Values[0])]);
    if boolean(Values[1]) then
       result := result + ' (Wait)';
 end;
@@ -951,7 +954,7 @@ begin
          else
             result := format('This Event, Page %d', [Values[2]]);
       end;
-      2: result := format('#Ints[%d], Page Ints[%d]', [Values[1], Values[2]]);
+      2: result := format('#Ints[%s], Page Ints[%s]', [IntName(Values[1]), IntName(Values[2])]);
    end;
 end;
 
@@ -1028,9 +1031,9 @@ end;
 
 function TEBBattleCommand.GetScriptText: string;
 const
-   LINE = 'hero[%d].%sBattleCommand(%d)';
+   LINE = 'hero[%d].%sBattleCommand(%d);';
 begin
-   result := format(LINE, [Values[0], ADDREM[Values[2], Values[1]]]);
+   result := format(LINE, [Values[0], ADDREM[Values[2]], Values[1]]);
 end;
 
 initialization

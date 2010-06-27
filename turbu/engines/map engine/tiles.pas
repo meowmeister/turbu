@@ -330,6 +330,7 @@ begin
    tileGroup := chip_data.Records[tiledata.group];
    imageName := tileGroup.group.filename;
    result := tileGroup.attributes[tileData.tile];
+   fAttributes := result;
    z := decodeZOrder(result) + layer;
 end;
 

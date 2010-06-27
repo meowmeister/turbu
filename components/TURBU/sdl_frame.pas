@@ -75,6 +75,7 @@ type
       function ContainsName(const name: string): boolean;
       function IndexOfName(const name: string): integer;
       function LogicalCoordinates(x, y: integer): TPoint;
+      procedure ClearTextures;
 
       property Available: boolean read FRenderer;
       property SdlWindow: TSdlWindowId read FWindowID;
@@ -429,6 +430,11 @@ begin
          assert(SDL_RenderFillRect(nil) = 0);
          SDL_RenderPresent;
       end;
+end;
+
+procedure TSdlFrame.ClearTextures;
+begin
+   FImageManager.Clear;
 end;
 
 initialization

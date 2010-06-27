@@ -90,6 +90,10 @@ type
       metadataMapEngine: TShortintField;
       charClassesSp: TLargeintField;
       heroesportraitShiftFColorSet1: TSingleField;
+      heroescanCrit: TBooleanField;
+      heroescritRate: TIntegerField;
+      heroesTranslucent: TBooleanField;
+      charClassesTranslucent: TBooleanField;
 
       procedure DataModuleCreate(Sender: TObject);
       procedure restoreClone(DataSet: TDataSet);
@@ -119,7 +123,7 @@ implementation
 
 uses
    Variants, Generics.Defaults,
-   turbu_skills, turbu_defs, turbu_classes, rttiHelper;
+   turbu_skills, turbu_defs, turbu_classes, rttiHelper, EventBuilder;
 
 {$R *.dfm}
 
@@ -164,6 +168,7 @@ end;
 
 procedure TdmDatabase.DataModuleDestroy(Sender: TObject);
 begin
+   TEBObject.Datastore := nil;
    FDatasetList.Free;
    FViewList.Free;
 end;
@@ -247,6 +252,7 @@ begin
       (dataSet as TClientDataSet).CloneCursor(TClientDataset(dataset.Tag), false, true);
       DataSet.AfterOpen := self.restoreClone;
    end;
+   TEBObject.Datastore := self;
 end;
 
 procedure TdmDatabase.SwitchesVarsCalcFields(DataSet: TDataSet);

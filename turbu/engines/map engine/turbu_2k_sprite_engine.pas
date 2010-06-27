@@ -340,7 +340,8 @@ begin
    for I := 0 to MaxLayer do
    begin
       tile := GetTile(x, y, i);
-      result := result and (TRANSLATE[direction] in tile.attributes);
+      if assigned(tile) then
+         result := result and (TRANSLATE[direction] in tile.attributes);
    end;
 end;
 

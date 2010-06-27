@@ -636,15 +636,17 @@ var
 var
    parentType: TRttiType;
    datafileType: TRttiType;
+   newdb: TDataset;
 begin
    datafileType := enum.EnumType;
    isUploadable := TIsUploadableAttribute(datafileType.GetAttribute(TIsUploadableAttribute));
    parentType := FContext.GetType(GetTypeInfo);
    relationKey := TDBRelationKeyAttribute(parentType.GetAttribute(TDBRelationKeyAttribute));
 
-   db := db.Owner.FindComponent(format('%s_%s', [db.Name, fieldname])) as TDataset;
-   if not assigned(db) then
-      asm int 3 end;
+   newdb := db.Owner.FindComponent(format('%s_%s', [db.Name, fieldname])) as TDataset;
+   if not assigned(newdb) then
+      asm int 3 end
+   else db := newdb;
 
    if parentType.TypeKind = tkClass then
       uploadObjectEnum

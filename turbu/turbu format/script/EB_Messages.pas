@@ -134,7 +134,7 @@ end;
 function TEBMessageOptions.GetScriptText: string;
 const
    CALL = 'messageOptions(%s, %s, %s, %s);';
-   MBOX: array[1..3] of string = ('mb_top', 'mb_middle', 'mb_bottom');
+   MBOX: array[0..2] of string = ('mb_top', 'mb_middle', 'mb_bottom');
 begin
    result := format(CALL, [BOOL_STR[Values[0]], MBOX[values[1]],
                            BOOL_STR[values[2]], BOOL_STR[Values[3]]]);

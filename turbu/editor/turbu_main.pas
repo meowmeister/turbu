@@ -392,12 +392,20 @@ end;
 
 procedure TfrmTurbuMain.imgLogoMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
+var
+   point: TSgPoint;
 begin
    RequireMapEngine;
    if FIgnoreMouseDown then
       FIgnoreMouseDown := false
-   else FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16),
-                                       sbHoriz.Position, sbVert.Position, 1), true);
+   else begin
+      point := pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, 1);
+      case button of
+         mbLeft: FMapEngine.draw(point, true);
+         mbRight: FMapEngine.RightClick(point);
+         else ;
+      end;
+   end;
 end;
 
 procedure TfrmTurbuMain.imgLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -472,7 +480,9 @@ begin
    FCurrentMap := nil; //The map engine can free this, so we can't hold a reference
    FCurrentMap := FMapEngine.loadMap(value);
    self.configureScrollBars(FMapEngine.mapSize, FMapEngine.mapPosition);
-   fMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
+   FMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
+   imgPalette.ClearTextures;
+   FPaletteImages.Clear;
    setLayer(FCurrentLayer);
 end;
 
@@ -671,6 +681,7 @@ end;
 
 procedure TfrmTurbuMain.splSidebarMoved(Sender: TObject);
 begin
+   RequireMapEngine;
    resizePalette;
 end;
 

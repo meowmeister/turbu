@@ -181,6 +181,8 @@ type
       function HeroName(id: integer): string;
       function CleanEnum(const name: string): string;
       function SecondFraction(count: integer): string;
+      class function IntName(id: integer): string;
+      function SwitchName(id: integer): string;
    end;
 
    TStringsHelper = class helper for TStrings
@@ -499,7 +501,7 @@ end;
 
 function TEBIf.GetNodeText: string;
 begin
-   result := 'IF ' + (self.Components[0] as TEBComparison).GetNodeText;
+   result := 'IF ' + ChildNode[0];
 end;
 
 function TEBIf.GetScript(indent: integer): string;
@@ -673,9 +675,19 @@ begin
    result := self.GetLookup(id, 'heroes');
 end;
 
+class function TEBObjectHelper.IntName(id: integer): string;
+begin
+   result := format('%d: %s', [id, GetLookup(id, 'Variables')]);
+end;
+
 function TEBObjectHelper.SecondFraction(count: integer): string;
 begin
    result := formatFloat('###.#', count / 10) + ' sec';
+end;
+
+function TEBObjectHelper.SwitchName(id: integer): string;
+begin
+   result := format('%d: %s', [id, GetLookup(id, 'Switches')]);
 end;
 
 { TStringsHelper }

@@ -92,6 +92,8 @@
 			<DCCReference Include="script\EB_RpgScript.pas"/>
 			<DCCReference Include="script\EB_Messages.pas"/>
 			<DCCReference Include="script\EB_Expressions.pas"/>
+			<DCCReference Include="script\EB_Maps.pas"/>
+			<DCCReference Include="script\EB_System.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
