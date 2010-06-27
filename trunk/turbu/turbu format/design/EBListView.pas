@@ -12,7 +12,6 @@ type
       procedure SetProc(const Value: TEBProcedure);
       procedure EndLoading;
    public
-      destructor Destroy; override;
       property proc: TEBProcedure read FProc write SetProc;
    end;
 
@@ -28,12 +27,6 @@ begin
 end;
 
 { TEBTreeView }
-
-destructor TEBTreeView.Destroy;
-begin
-   FProc.Free;
-   inherited;
-end;
 
 procedure TEBTreeView.EndLoading;
 var
@@ -52,7 +45,6 @@ var
    stack: TStack<TEBNodeData>;
    dict: TDictionary<TEBNodeData, TTreeNode>;
 begin
-   FProc.Free;
    Items.Clear;
    FProc := Value;
    tree := FProc.GetNode;

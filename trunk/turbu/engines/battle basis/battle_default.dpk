@@ -32,7 +32,6 @@ requires
 contains
   battle_default_plugin in 'battle_default_plugin.pas' {RpgBasicBattlePlugin},
   turbu_2k3_battle_engine in '..\turbu_2k3_battle_engine.pas',
-  turbu_2k_battle_engine in '..\turbu_2k_battle_engine.pas',
-  SimpleShareMem_BattleDefault in 'SimpleShareMem_BattleDefault.pas';
+  turbu_2k_battle_engine in '..\turbu_2k_battle_engine.pas';
 
 end.

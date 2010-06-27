@@ -163,6 +163,7 @@ begin
       self.clsName := unicodeString(base.charClass)
    else self.clsName := unicodeString(base.name) + ' Class';
    self.mapSprite := format('%s %d', [string(base.sprite), base.spriteIndex]);
+   self.translucent := base.transparent;
    self.battleSprite := base.battleSprite;
    if base.portrait <> '' then
    begin
@@ -247,6 +248,8 @@ begin
    self.guest := base.computerControlled;
    if base.classNum = 0 then
       self.charClass := classTable[base.id];
+   self.canCrit := base.canCrit;
+   self.critRate := base.critRate;
 end;
 
 { T2k2BattleCommand }

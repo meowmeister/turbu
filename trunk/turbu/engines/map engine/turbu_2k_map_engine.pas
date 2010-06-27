@@ -20,7 +20,7 @@ unit turbu_2k_map_engine;
 interface
 uses
    types, syncObjs, Generics.Collections, classes,
-   turbu_map_engine, turbu_versioning, turbu_map_sprites, turbu_heroes,
+   turbu_map_engine, turbu_versioning, turbu_map_sprites, turbu_classes, turbu_heroes,
    turbu_database_interface, turbu_map_interface, turbu_sdl_image,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine,
    AsphyreTimer,
@@ -79,7 +79,7 @@ implementation
 uses
    sysUtils, math,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
-   turbu_constants, turbu_map_metadata, turbu_functional, turbu_classes,
+   turbu_constants, turbu_map_metadata, turbu_functional,
    turbu_map_objects,
    SDL, sdlstreams, sdl_sprite, sg_utils;
 
@@ -113,9 +113,10 @@ procedure T2kMapEngine.cleanup;
 var i: integer;
 begin
    assert(FInitialized);
-   FCanvas.Free;
-   FImages.Free;
-   FSignal.Free;
+   FreeAndNil(FParty);
+   FreeAndNil(FCanvas);
+   FreeAndNil(FImages);
+   FreeAndNil(FSignal);
    for I := 0 to high(FMaps) do
       FMaps[i].Free;
    setLength(FMaps, 0);
@@ -205,7 +206,8 @@ end;
 
 procedure T2kMapEngine.initializeParty;
 begin
-
+   FParty := TRpgParty.Create;
+   FParty.Add(TRpgHero.Create(GDatabase.hero[1]));
 end;
 
 procedure T2kMapEngine.KeyDown(key: word; Shift: TShiftState);

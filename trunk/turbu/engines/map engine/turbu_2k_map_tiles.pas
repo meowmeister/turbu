@@ -402,6 +402,13 @@ var
       changed[index] := false;
    end;
 
+   procedure UnchangeAll;
+   var i: integer;
+   begin
+      for I := 1 to 4 do
+         changed[i] := false;
+   end;
+
 begin
    minis[1] := 0;
    minis[2] := minis[1] + 1;
@@ -428,50 +435,48 @@ begin
    //otherwise:
    //first: case 46: one-tile island
       if neighbors * [n, e, w, s] = [n, e, w, s] then
-      begin
-         for i := 1 to 4 do
-            changed[i] := false;
-      end
+         unchangeAll
       else
    //3 wall cases
    //42:
       if neighbors * [n, e, w] = [n, e, w] then
       begin
-         inc(minis[3], 36);
-         inc(minis[4], 36);
+         inc(minis[3], 12);
+         inc(minis[4], 12);
+         UnchangeAll;
       end else
    //43:
       if neighbors * [n, e, s] = [n, e, s] then
       begin
-         inc(minis[2], 36);
-         inc(minis[4], 36);
-//         changeAll;
+         inc(minis[1], 24);
+         inc(minis[3], 24);
+         UnchangeAll;
       end else
    //44:
       if neighbors * [e, w, s] = [e, w, s] then
       begin
-         inc(minis[1], 36);
-         inc(minis[2], 36);
-//         changeAll;
+         inc(minis[1], 12);
+         inc(minis[2], 12);
+         UnchangeAll;
       end else
    //45:
       if neighbors * [n, w, s] = [n, w, s] then
       begin
-         inc(minis[2], 36);
-         inc(minis[3], 36);
-//         changeAll;
+         inc(minis[2], 24);
+         inc(minis[4], 24);
+         UnchangeAll;
       end else
    //full-corner cases
    //34:
       if neighbors * [n, w] = [n, w] then
       begin
-         inc(minis[1], 24);
-         inc(minis[2], 12);
+         inc(minis[2], 24);
+         inc(minis[3], 12);
          for i := 1 to 3 do
             changed[i] := false;
          if se in neighbors then
          begin
-            inc(minis[4], 30);
+            inc(minis[4], 36);
             changed[4] := false;
          end;
       end else
@@ -485,7 +490,7 @@ begin
          changed[4] := false;
          if sw in neighbors then
          begin
-            inc(minis[3], 30);
+            inc(minis[3], 36);
             changed[3] := false;
          end;
       end else
@@ -499,7 +504,7 @@ begin
          changed[4] := false;
          if nw in neighbors then
          begin
-            inc(minis[1], 30);
+            inc(minis[1], 36);
             changed[1] := false;
          end;
       end else
@@ -513,8 +518,8 @@ begin
          changed[4] := false;
          if ne in neighbors then
          begin
-            inc(minis[3], 30);
-            changed[3] := false;
+            inc(minis[2], 36);
+            changed[2] := false;
          end;
       end else
    //miscellaneous cases, which can be handled individually
@@ -623,33 +628,29 @@ begin
    //42:
       if neighbors * [n, e, w] = [n, e, w] then
       begin
-         inc(minis[3], 6);
-         inc(minis[4], 6);
-         for i := 1 to 4 do
-         begin
-            miniTiles[i].ImageName := self.ImageName;
-            changed[i] := true;
-         end
+         inc(minis[3], 12);
+         inc(minis[4], 12);
+         ChangeAll;
       end else
    //43:
       if neighbors * [n, e, s] = [n, e, s] then
       begin
-         inc(minis[2], 6);
-         inc(minis[4], 6);
+         inc(minis[1], 24);
+         inc(minis[3], 24);
          changeAll;
       end else
    //44:
       if neighbors * [s, e, w] = [s, e, w] then
       begin
-         inc(minis[1], 6);
-         inc(minis[3], 6);
+         inc(minis[1], 12);
+         inc(minis[2], 12);
          changeAll;
       end else
    //45:
       if neighbors * [n, s, w] = [n, s, w] then
       begin
-         inc(minis[1], 6);
-         inc(minis[3], 6);
+         inc(minis[2], 24);
+         inc(minis[4], 24);
          changeAll;
       end else
    //full-corner cases

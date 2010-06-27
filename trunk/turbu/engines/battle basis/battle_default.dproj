@@ -72,7 +72,6 @@
 			</DCCReference>
 			<DCCReference Include="..\turbu_2k3_battle_engine.pas"/>
 			<DCCReference Include="..\turbu_2k_battle_engine.pas"/>
-			<DCCReference Include="SimpleShareMem_BattleDefault.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

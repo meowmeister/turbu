@@ -192,14 +192,14 @@ end;
 
 procedure T2kMapEngineD.rightClick(const position: TSgPoint);
 begin
-   if not FTimer.Enabled then
-      Exit;
+{   if not FTimer.Enabled then
+      Exit; }
 
    if FCurrentMap.passable(position.x, position.y) then
    begin
-{      if currentParty = nil then
-         initializeHero
-      else currentParty.leaveTile;
+      if FParty = nil then
+         initializeParty;
+{      currentParty.leaveTile;
       FCurrentMap.currentParty.location := whichtile; }
    end;
 end;

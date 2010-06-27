@@ -10,6 +10,7 @@ type
    protected
       function MapName(id: integer): string;
       function TransitionName(id: integer): string;
+      function TransitionTypeName(id: integer): string;
       function RGB32(value: integer): integer;
       function FacingName(id: integer): string;
    end;
@@ -270,6 +271,11 @@ end;
 
 function TEBMapObject.TransitionName(id: integer): string;
 begin
+   result := GetEnumName(TypeInfo(TTransitions), id);
+end;
+
+function TEBMapObject.TransitionTypeName(id: integer): string;
+begin
    result := GetEnumName(TypeInfo(TTransitionTypes), id);
 end;
 
@@ -278,7 +284,7 @@ end;
 function TEBTransition.GetNodeText: string;
 const LINE = 'Change Transition %s: %s';
 begin
-   result := format(LINE, [CleanEnum(TransitionName(Values[0])),
+   result := format(LINE, [CleanEnum(TransitionTypeName(Values[0])),
                            CleanEnum(TransitionName(Values[1]))]);
 
 end;
@@ -286,7 +292,7 @@ end;
 function TEBTransition.GetScriptText: string;
 const LINE = 'SetTransition(%s, %s);';
 begin
-   result := format(LINE, [TransitionName(Values[0]),
+   result := format(LINE, [TransitionTypeName(Values[0]),
                            TransitionName(Values[1])]);
 end;
 
@@ -306,9 +312,9 @@ end;
 { TEBMemorizeLocation }
 
 function TEBMemorizeLocation.GetNodeText: string;
-const LINE = 'Memorize Location: Ints[%d], Ints[%d], Ints[%d]';
+const LINE = 'Memorize Location: Ints[%s], Ints[%s], Ints[%s]';
 begin
-   result := format(LINE, [Values[0], Values[1], Values[2]]);
+   result := format(LINE, [IntName(Values[0]), IntName(Values[1]), IntName(Values[2])]);
 end;
 
 function TEBMemorizeLocation.GetScriptText: string;
@@ -320,9 +326,9 @@ end;
 { TEBMemoTeleport }
 
 function TEBMemoTeleport.GetNodeText: string;
-const LINE = 'Teleport to memorized location: Ints[%d], (Ints[%d], Ints[%d])';
+const LINE = 'Teleport to memorized location: Ints[%s], (Ints[%s], Ints[%s])';
 begin
-   result := format(LINE, [Values[0], Values[1], Values[2]]);
+   result := format(LINE, [IntName(Values[0]), IntName(Values[1]), IntName(Values[2])]);
 end;
 
 function TEBMemoTeleport.GetScriptText: string;
@@ -348,16 +354,21 @@ function TEBTeleportVehicle.GetNodeText: string;
 const LINE = 'Teleport Vehicle %s: %s, (%.3d,%.3d));';
 begin
    if boolean(Values[0]) then
-      result := stringReplace(LINE, '%.3d', 'Ints[%d]', [rfReplaceAll])
-   else result := LINE;
-   result := format(LINE, [ChildNode[0], MapName(Values[1]), Values[2], Values[3]]);
+   begin
+      result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
+      result := format(LINE, [ChildNode[0], MapName(Values[1]), IntName(Values[2]), IntName(Values[3])]);
+   end
+   else begin
+      result := LINE;
+      result := format(LINE, [ChildNode[0], MapName(Values[1]), Values[2], Values[3]]);
+   end;
 end;
 
 function TEBTeleportVehicle.GetScriptText: string;
 const LINE = 'TeleportVehicle(%s, %d, %d, %d);';
 begin
    if boolean(Values[0]) then
-      result := stringReplace(LINE, '%d', 'Ints[%d]', [rfReplaceAll])
+      result := stringReplace(LINE, '%d', 'Ints[%s]', [rfReplaceAll])
    else result := LINE;
    result := format(result, [ChildScript[0], Values[1], Values[2], Values[3]]);
 end;
@@ -365,12 +376,17 @@ end;
 { TEBTeleportMapObj }
 
 function TEBTeleportMapObj.GetNodeText: string;
-const LINE = 'Teleport Map Object %s: %s, (%.3d,%.3d));';
+const LINE = 'Teleport Map Object %s: (%.3d,%.3d)';
 begin
    if boolean(Values[0]) then
-      result := stringReplace(LINE, '%.3d', 'Ints[%d]', [rfReplaceAll])
-   else result := LINE;
-   result := format(LINE, [ChildNode[0], MapName(Values[1]), Values[2], Values[3]]);
+   begin
+      result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
+      result := format(LINE, [ChildNode[0], IntName(Values[1]), IntName(Values[2])]);
+   end
+   else begin
+      result := LINE;
+      result := format(LINE, [ChildNode[0], Values[1], Values[2]]);
+   end;
 end;
 
 function TEBTeleportMapObj.GetScriptText: string;
@@ -402,10 +418,15 @@ function TEBTerrainID.GetNodeText: string;
 const LINE = 'Get Terrain ID: (%.3d,%.3d)';
 begin
    if boolean(Values[0]) then
-      result := stringReplace(LINE, '%.3d', 'Ints[%d]', [rfReplaceAll])
-   else result := LINE;
-   result := format(result, [Values[0], Values[1]]);
-   result := format('%s, Ints[%d]', [result, Values[3]]);
+   begin
+      result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
+      result := format(result, [IntName(Values[0]), IntName(Values[1])]);
+   end
+   else begin
+      result := LINE;
+      result := format(result, [Values[0], Values[1]]);
+   end;
+   result := format('%s, Ints[%s]', [result, IntName(Values[3])]);
 end;
 
 function TEBTerrainID.GetScriptText: string;
@@ -424,9 +445,14 @@ function TEBMapObjID.GetNodeText: string;
 const LINE = 'Get Map Object ID At: (%.3d,%.3d)';
 begin
    if boolean(Values[0]) then
-      result := stringReplace(LINE, '%.3d', 'Ints[%d]', [rfReplaceAll])
-   else result := LINE;
-   result := format(result, [Values[0], Values[1]]);
+   begin
+      result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
+      result := format(result, [IntName(Values[0]), IntName(Values[1])]);
+   end
+   else begin
+      result := LINE;
+      result := format(result, [Values[0], Values[1]]);
+   end;
    result := format('%s, Ints[%d]', [result, Values[3]]);
 end;
 
@@ -535,14 +561,14 @@ end;
 
 function TEBPanScreen.GetScriptText: string;
 const
-   PANLINE = 'PanScreen(%s, %d, %s);';
-   RETLINE = 'ReturnScreen(%s);';
+   PANLINE = 'PanScreen(%s, %d, %d, %s);';
+   RETLINE = 'ReturnScreen(%d, %s);';
 begin
    case Values[0] of
       0: result := 'LockScreen;';
       1: result := 'UnlockScreen;';
-      2: result := format(PANLINE, [FacingName(Values[1]), Values[2], BOOL_STR[Values[3]]]);
-      3: result := format(RETLINE, [BOOL_STR[Values[3]]]);
+      2: result := format(PANLINE, [FacingName(Values[1]), Values[2], Values[3], BOOL_STR[Values[4]]]);
+      3: result := format(RETLINE, [Values[3], BOOL_STR[Values[4]]]);
    end; //end of CASE block
 end;
 
@@ -591,9 +617,14 @@ function TEBNewImage.GetNodeText: string;
 const LINE = 'New Image: #%d, %s, (%.3d,%.3d)';
 begin
    if boolean(Values[1]) then
-      result := stringReplace(LINE, '%.3d', 'Ints[%d]', [rfReplaceAll])
-   else result := LINE;
-   result := format(result, [Values[0], Text, Values[2], Values[3]]);
+   begin
+      result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
+      result := format(result, [Values[0], Text, IntName(Values[2]), IntName(Values[3])]);
+   end
+   else begin
+      result := LINE;
+      result := format(result, [Values[0], Text, Values[2], Values[3]]);
+   end;
 end;
 
 function TEBNewImage.GetScriptText: string;
@@ -647,9 +678,14 @@ function TEBImageMove.GetNodeText: string;
 const LINE = 'Move Image: #%d, (%.3d,%.3d), %s';
 begin
    if boolean(Values[1]) then
-      result := stringReplace(LINE, '%.3d', 'Ints[%d]', [rfReplaceAll])
-   else result := LINE;
-   result := format(result, [Values[0], Values[2], Values[3], SecondFraction(Values[6])]);
+   begin
+      result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
+      result := format(result, [Values[0], IntName(Values[2]), IntName(Values[3]), SecondFraction(Values[6])]);
+   end
+   else begin
+      result := LINE;
+      result := format(result, [Values[0], Values[2], Values[3], SecondFraction(Values[6])]);
+   end;
    if boolean(values[7]) then
       result := result + ' (Wait)';
 end;
@@ -666,7 +702,7 @@ const LINE = 'image[%d].MoveTo(%d,  %d,  %d, %d, %d);';
 begin
    result := LINE;
    if boolean(Values[1]) then //replace only the first two
-      result := StringReplace(result, '%d,  ', ' Ints[%d], ', [rfReplaceAll]);
+      result := StringReplace(result, '%d,  ', 'Ints[%d], ', [rfReplaceAll]);
    result := format(result, [Values[0], Values[2], Values[3], Values[4], Values[5], Values[6]]);
 end;
 

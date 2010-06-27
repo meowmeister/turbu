@@ -108,8 +108,8 @@ begin
 {   case FViewingCode of
       false: txtEventScript.Text := FEventPage.eventText;
       true: txtEventScript.Text := FEventPage.eventScript;
-   end;}
-  txtEventScript.Text := unicodeString(FEventPage.eventScript);
+   end;
+  txtEventScript.Text := unicodeString(FEventPage.eventScript);}
 end;
 
 procedure TfrmDatabase.chkHasSwitchClick(Sender: TObject);

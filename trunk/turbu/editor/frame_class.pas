@@ -375,6 +375,12 @@ var
 begin
    FSpriteData.name := name;
    FSpriteData.moveMatrix := id;
+   if name = '' then
+   begin
+      imgMapSprite.Clear;
+      Exit;
+   end;
+
    filename := format('mapsprite\%s.png', [FSpriteData.name]);
    if imgMapSprite.IndexOfName(filename) = -1 then
    begin
