@@ -89,6 +89,8 @@ type
 
    TImageEffects = (ie_none, ie_rotate, ie_wave);
 
+   TButtonCode = (btn_enter, btn_cancel, btn_up, btn_down, btn_left, btn_right);
+
 implementation
 
 end.

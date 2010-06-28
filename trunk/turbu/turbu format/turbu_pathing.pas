@@ -21,7 +21,7 @@ type
       FCursor: integer;
       FLoop: boolean;
       FLooped: boolean;
-    function GetLast: integer;
+      function GetLast: integer;
 
    public
       constructor Create; overload;
@@ -33,6 +33,7 @@ type
       destructor Destroy; override;
 
       function nextCommand: TMoveStep;
+      procedure setDirection(direction: TFacing);
 
       property last: integer read GetLast;
       property base: string read FBase;
@@ -160,6 +161,17 @@ procedure TPath.Save(savefile: TStream);
 begin
    savefile.writeString(FBase);
    savefile.writeBool(FLoop);
+end;
+
+procedure TPath.setDirection(direction: TFacing);
+var
+   newStep: TMoveStep;
+begin
+   FLoop := false;
+   FOpcodes.Clear;
+   newStep.opcode := Ord(direction);
+   FOpcodes.Add(newStep);
+   FCursor := 0;
 end;
 
 function lookupMoveCode(const opcode: string): integer;

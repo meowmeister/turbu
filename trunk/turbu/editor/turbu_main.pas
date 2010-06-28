@@ -44,11 +44,11 @@ type
       pluginManager: TJvPluginManager;
       pnlSidebar: TPanel;
       sbxPallette: TScrollBox;
+      sbxMain: TScrollBox;
       splSidebar: TSplitter;
       imgPalette: TSdlFrame;
       trvMapTree: TTreeView;
       sbPalette: TScrollBar;
-      imgLogo: TSdlFrame;
       pnlHorizScroll: TPanel;
       sbHoriz: TScrollBar;
       pnlCorner: TPanel;
@@ -72,14 +72,18 @@ type
       btnRun: TToolButton;
       btnPause: TToolButton;
       btnMapObj: TToolButton;
-    Layer11: TMenuItem;
-    ActionManager: TActionManager;
-    actLayer1: TAction;
-    actLayer2: TAction;
-    actMapObjects: TAction;
-    Layer21: TMenuItem;
-    MapObjects1: TMenuItem;
-    N1: TMenuItem;
+      Layer11: TMenuItem;
+      ActionManager: TActionManager;
+      actLayer1: TAction;
+      actLayer2: TAction;
+      actMapObjects: TAction;
+      Layer21: TMenuItem;
+      MapObjects1: TMenuItem;
+      N1: TMenuItem;
+    imgLogo: TSdlFrame;
+    imgBackground: TImage;
+    actRun: TAction;
+    actPause: TAction;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -122,9 +126,9 @@ type
       procedure imgLogoKeyDown(Sender: TObject; var Key: Word;
         Shift: TShiftState);
       procedure imgLogoKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure imgBackgroundClick(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
-      FCurrentMap: IRpgMap;
       FCurrentLayer: integer;
       FPaletteTexture: integer;
       FPaletteSelection: TRect;
@@ -153,6 +157,7 @@ type
       procedure configureScrollBars(const size, position: TSgPoint);
       procedure RequireMapEngine;
       procedure enableRunButtons(running: boolean);
+      function SetMapSize(const size: TSgPoint): TSgPoint;
    public
       { Public declarations }
    end;
@@ -163,7 +168,7 @@ var
 implementation
 
 uses
-   SysUtils, Types, Math,
+   SysUtils, Types, Math, Graphics, Windows,
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
    turbu_classes, turbu_versioning, turbu_tilesets, turbu_defs,
@@ -207,9 +212,9 @@ end;
 
 procedure TfrmTurbuMain.enableRunButtons(running: boolean);
 begin
-   btnRun.Enabled := not running;
+   actRun.Enabled := not running;
    trvMapTree.Enabled := not running;
-   btnPause.Enabled := running;
+   actPause.Enabled := running;
 //   btnStop.Enabled := running;
 end;
 
@@ -228,7 +233,6 @@ procedure TfrmTurbuMain.mnuEditMapPropertiesClick(Sender: TObject);
 begin
    RequireMapEngine;
    fMapEngine.EditMapProperties(trvMapTree.currentMapID);
-   configureScrollBars(fMapEngine.mapSize, FMapEngine.mapPosition);
 end;
 
 procedure TfrmTurbuMain.mnuAddNewMapClick(Sender: TObject);
@@ -263,7 +267,6 @@ end;
 procedure TfrmTurbuMain.closeProject;
 begin
    //check for modifications first
-   FCurrentMap := nil;
    if assigned(FMapEngine) then
       FMapEngine.Reset;
    FreeAndNil(GDatabase);
@@ -298,7 +301,6 @@ end;
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
 begin
    cleanupEngines;
-   FCurrentMap := nil;
    FMapEngine := nil;
    GScriptEngine := nil;
    FPaletteImages.Free;
@@ -339,6 +341,11 @@ begin
       engines.free;
    end;
    focusControl(trvMapTree);
+end;
+
+procedure TfrmTurbuMain.imgBackgroundClick(Sender: TObject);
+begin
+   FocusControl(imgLogo);
 end;
 
 procedure TfrmTurbuMain.imgLogoAvailable(Sender: TObject);
@@ -476,10 +483,9 @@ begin
    FMapEngine := retrieveEngine(et_map, value.mapEngine,
                  TVersion.Create(0, 0, 0)) as IDesignMapEngine;
    FMapEngine.initialize(imgLogo.sdlWindow, GDatabase);
+   FMapEngine.SetMapResizeEvent(self.SetMapSize);
    FMapEngine.autosaveMaps := mnuAutosaveMaps.checked;
-   FCurrentMap := nil; //The map engine can free this, so we can't hold a reference
-   FCurrentMap := FMapEngine.loadMap(value);
-   self.configureScrollBars(FMapEngine.mapSize, FMapEngine.mapPosition);
+   FMapEngine.loadMap(value);
    FMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
    imgPalette.ClearTextures;
    FPaletteImages.Clear;
@@ -641,6 +647,35 @@ begin
    end
    else imgPalette.Enabled := false;
    FMapEngine.SetCurrentLayer(value);
+end;
+
+function TfrmTurbuMain.SetMapSize(const size: TSgPoint): TSgPoint;
+
+   procedure AddCrosshatch(bg, fg: TColor);
+   begin
+      imgBackground.canvas.brush.Style := bsDiagCross;
+      imgBackground.canvas.brush.color := fg;
+      Windows.SetBkColor(imgBackground.Canvas.Handle, ColorToRgb(bg));
+      imgBackground.canvas.FillRect(imgBackground.ClientRect);
+   end;
+
+begin
+   if (size.x >= sbxMain.ClientWidth) and (size.y >= sbxMain.ClientHeight) then
+   begin
+      imgLogo.Align := alClient;
+      result := size;
+   end
+   else begin
+      imgLogo.Align := alNone;
+      imgLogo.Width := min(sbxMain.ClientWidth, size.x);
+      imgLogo.Height := min(sbxMain.ClientHeight, size.y);
+      imgLogo.Left := (sbxMain.ClientWidth - imgLogo.width) div 2;
+      imgLogo.Top := (sbxMain.ClientHeight - imgLogo.height) div 2;
+      imgBackground.Invalidate;
+      AddCrosshatch(clGray, clWhite);
+      result := sgPoint(imgLogo.width, imgLogo.height);
+   end;
+   configureScrollBars(size, FMapEngine.mapPosition);
 end;
 
 procedure TfrmTurbuMain.bindPaletteCursor;

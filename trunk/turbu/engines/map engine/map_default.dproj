@@ -71,6 +71,9 @@
 			<DCCReference Include="tiles.pas"/>
 			<DCCReference Include="turbu_map_sprites.pas"/>
 			<DCCReference Include="turbu_2k_map_locks.pas"/>
+			<DCCReference Include="turbu_heroes.pas"/>
+			<DCCReference Include="..\..\turbu format\turbu_mapchars.pas"/>
+			<DCCReference Include="turbu_2k_char_sprites.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

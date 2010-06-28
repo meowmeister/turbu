@@ -141,6 +141,8 @@ type
       property regions: TRegionList read FRegions;
       property mapObjects: TMapObjectList read FMapObjects;
       property ScriptObject: TEBMap read FScriptObject;
+      property width: integer read FSize.X;
+      property height: integer read FSize.y;
    end;
 
 implementation

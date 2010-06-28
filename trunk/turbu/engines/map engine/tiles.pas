@@ -104,11 +104,13 @@ type
    private
       FScroll: TScrollData;
       FSavedOrigin: TSgFloatPoint;
+      function InVisibleRect: boolean; override;
    public
       constructor Create(parent: TSpriteEngine; input: TRpgMap); reintroduce; overload;
       constructor Create(parent: TSpriteEngine; x, y: shortint; autoX, autoY: boolean); reintroduce; overload;
       destructor Destroy; override;
       procedure scroll;
+      procedure Draw; override;
 
       property scrollData: TScrollData read FScroll write FScroll;
    end;
@@ -373,10 +375,13 @@ end;
 constructor TEventTile.Create(baseEvent: TRpgMapObject; const AParent: TSpriteEngine);
 begin
    inherited Create(AParent, '');
-   self.X := baseEvent.location.X * TILE_SIZE.X;
-   self.Y := baseEvent.location.Y * TILE_SIZE.Y;
-   FEvent := baseEvent;
-   update(baseEvent.currentPage);
+   if assigned(baseEvent) then
+   begin
+      self.X := baseEvent.location.X * TILE_SIZE.X;
+      self.Y := baseEvent.location.Y * TILE_SIZE.Y;
+      FEvent := baseEvent;
+      update(baseEvent.currentPage);
+   end;
 end;
 
 procedure TEventTile.Draw;
@@ -433,6 +438,16 @@ destructor TBackgroundSprite.Destroy;
 begin
    FScroll.Free;
    inherited;
+end;
+
+procedure TBackgroundSprite.Draw;
+begin
+  inherited Draw;
+end;
+
+function TBackgroundSprite.InVisibleRect: boolean;
+begin
+   result := true;
 end;
 
 procedure TBackgroundSprite.scroll;

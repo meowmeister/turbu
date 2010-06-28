@@ -21,7 +21,7 @@ interface
 uses
    types, syncObjs, Generics.Collections, classes,
    turbu_map_engine, turbu_versioning, turbu_map_sprites, turbu_classes, turbu_heroes,
-   turbu_database_interface, turbu_map_interface, turbu_sdl_image,
+   turbu_database_interface, turbu_map_interface, turbu_sdl_image, turbu_2k_char_sprites,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine,
    AsphyreTimer,
    SG_defs, SDL_ImageManager, sdl_canvas, sdl_13;
@@ -113,7 +113,8 @@ procedure T2kMapEngine.cleanup;
 var i: integer;
 begin
    assert(FInitialized);
-   FreeAndNil(FParty);
+   FParty := nil; //owned by FPartySprite
+   FreeAndNil(FPartySprite);
    FreeAndNil(FCanvas);
    FreeAndNil(FImages);
    FreeAndNil(FSignal);
@@ -207,7 +208,8 @@ end;
 procedure T2kMapEngine.initializeParty;
 begin
    FParty := TRpgParty.Create;
-   FParty.Add(TRpgHero.Create(GDatabase.hero[1]));
+   FParty.hero[1] := TRpgHero.Create(GDatabase.hero[1]);
+   FPartySprite := THeroSprite.create(FCurrentMap, FParty.hero[1], FParty);
 end;
 
 procedure T2kMapEngine.KeyDown(key: word; Shift: TShiftState);
@@ -340,6 +342,7 @@ begin
    else begin
       GRenderTargets.RenderOn(2, standardRender, 0, true);
    end; }
+   FCanvas.Clear;
    FCurrentMap.Draw;
 
 //   dummy := device.Render(0, true);

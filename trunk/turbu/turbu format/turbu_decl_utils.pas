@@ -25,7 +25,7 @@ unit turbu_decl_utils;
 interface
 uses
    types, TypInfo, DB,
-   turbu_classes, turbu_heroes, turbu_defs;
+   turbu_classes, turbu_defs;
 
 type
    TScriptSignature = (ssNone, ssScriptEvent, ssDamageCalcEvent,
@@ -37,17 +37,13 @@ type
    TCondOnTurnEvent = procedure(character, condition: TObject; var1, var2, var3, var4: integer) of object;
    TExpCalcEvent = function(level, var1, var2, var3, var4: integer): integer;}
 
-   TSkillBoolFunc = function(Character: TRpgHero; Level, unused2, unused3, unused4: integer): boolean of object;
-   TSkillNumFunc = function(character: TRpgHero; int1, int2, int3, int4: integer): integer of object;
-   TSkillDualNumFunc = function(character: TRpgHero; int1, int2, int3, int4: integer): TPoint of object;
-
    TScriptRecord = class(TObject)
    private
       FName: string;
       FDesignName: string;
       FStrings: T4StrArray;
       FMethod: TMethod;
-      FSignature: TScriptSignature;
+      FSignature: string;
       function getMethod: TMethod;
       procedure setName(const Value: string);
    public
@@ -60,25 +56,17 @@ type
       property baseMethod: TMethod read getMethod;
    end;
 
-   function signatureMatch(func: TRpgDecl): TScriptSignature; overload;
-   function GetSignature(Event: PTypeInfo): TRpgDecl;
+   function signatureMatch(func: TRpgDecl): string;
+   function GetSignature(const Event: string): TRpgDecl;
 
 implementation
 uses
    Generics.Collections,
-   turbu_vartypes, turbu_containers;
+   turbu_vartypes, turbu_containers;//, turbu_heroes;
 
 type
 
-   {This has to use a PTypeInfo record instead of the function type itself,
-   since the function type doesn't really exist as an independent entity. The
-   TypeInfo routine is compiler magic, not a real function}
-   TSignatureDictionary = class(TObjectDictionary<PTypeInfo, TRpgDecl>)
-   private
-      function GetItem(const Key: PTypeInfo): TRpgDecl;
-   public
-      property Item[const Key: PTypeInfo]: TRpgDecl read GetItem; default;
-   end;
+   TSignatureDictionary = class(TObjectDictionary<string, TRpgDecl>);
 
 var
    sigDict: TSignatureDictionary;
@@ -126,41 +114,20 @@ begin
 end;
 {$T+}
 
-function signatureMatch(func: TRpgDecl; signature: TScriptSignature): boolean; overload;
-begin
-   case signature of
-      ssExpCalc: result := func.equals(sigDict[TypeInfo(TExpCalcEvent)]);
-      ssSkillCheck: result := func.equals(sigDict[TypeInfo(TSkillBoolFunc)]) or
-                              func.equals(sigDict[TypeInfo(TSkillNumFunc)]) or
-                              func.equals(sigDict[TypeInfo(TSkillDualNumFunc)]);
-      else result := false;
-   end;
-end;
-
-function signatureMatch(func: TRpgDecl): TScriptSignature; overload;
+function signatureMatch(func: TRpgDecl): string;
 var
-   iterator: TScriptSignature;
+   iterator: TPair<string, TRpgDecl>;
 begin
-   result := ssNone;
-   for iterator := high(TScriptSignature) downto low(TScriptSignature) do
-      if (ord(iterator) >= 0) and (signatureMatch(func, iterator)) then
-         Exit(iterator);
+   for iterator in sigDict do
+      if func.equals(iterator.Value) then
+         Exit(iterator.Key);
+   result := '';
 end;
 
-function GetSignature(Event: PTypeInfo): TRpgDecl;
+function GetSignature(const Event: string): TRpgDecl;
 begin
-   result := sigDict[Event];
-end;
-
-{ TSignatureDictionary }
-
-function TSignatureDictionary.GetItem(const Key: PTypeInfo): TRpgDecl;
-begin
-   if not self.TryGetValue(key, result) then
-   begin
-      result := GetMethodSignature(key);
-      self.Add(key, result);
-   end;
+   if not sigDict.TryGetValue(event, result) then
+      result := nil;
 end;
 
 { TScriptRecord }

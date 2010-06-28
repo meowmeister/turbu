@@ -81,6 +81,7 @@ type
       function GetPatternCount: Integer; inline;
       function GetBoundsRect: TRect; inline;
     procedure SetParent(const Value: TParentSprite);
+    procedure SetImage(const Value: TSdlImage);
    protected
       FEngine: TSpriteEngine;
       FParent: TParentSprite;
@@ -109,7 +110,7 @@ type
       property Y: Single read FY write FY;
       property Z: Cardinal read FZ write SetZ;
       property ImageName: string read FImageName write SetImageName;
-      property Image: TSdlImage read FImage write FImage;
+      property Image: TSdlImage read FImage write SetImage;
       property ImageIndex : Integer read FPatternIndex write SetPatternIndex;
       property PatternWidth: Integer read GetPatternWidth;
       property PatternHeight: Integer read GetPatternHeight;
@@ -439,6 +440,14 @@ begin
    FX := X;
    FY := Y;
    FZ := Z;
+end;
+
+procedure TSprite.SetImage(const Value: TSdlImage);
+begin
+   FImage := Value;
+   FImageName := FImage.name;
+   FWidth := FImage.textureSize.X;
+   FHeight := FImage.textureSize.y;
 end;
 
 procedure TSprite.SetImageName(const Value: string);

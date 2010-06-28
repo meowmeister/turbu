@@ -72,7 +72,6 @@
 				<Form>dmDatabase</Form>
 				<DesignClass>TDataModule</DesignClass>
 			</DCCReference>
-			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
 			<DCCReference Include="turbu_sprites.pas"/>
 			<DCCReference Include="turbu_unit_dictionary.pas"/>
 			<DCCReference Include="turbu_defs.pas"/>

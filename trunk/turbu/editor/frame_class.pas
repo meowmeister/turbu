@@ -255,6 +255,7 @@ begin
 
    for I := 0 to lstScripts.Items.Count - 1 do
       lstScripts.Items[i].SubItems.Clear;
+   lstScripts.Clear;
 
    events := FTemplate.GetAllEvents;
    try

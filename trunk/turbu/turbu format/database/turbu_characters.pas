@@ -21,7 +21,7 @@ interface
 uses
    types, classes, DB, Generics.Collections, rtti,
    turbu_constants, turbu_defs, turbu_classes, turbu_skills, turbu_containers,
-   turbu_heroes, turbu_script_interface, turbu_serialization;
+   turbu_script_interface, turbu_serialization;
 
 type
    TExpCalcFunc = function(int1, int2, int3, int4, int5: integer): integer of object;
@@ -128,7 +128,7 @@ type
       FStaticEq: boolean;
       FStrongDef : boolean;
       FUnarmedAnim: integer;
-      FOnJoin: TPartyEvent;
+      FOnJoin: TScriptEvent;
 
       function getCommand(x: byte): smallint; inline;
       procedure setCommand(x: byte; const Value: smallint); inline;
@@ -170,7 +170,8 @@ type
       property strongDef: boolean read FStrongDef write FStrongDef;
       property unarmedAnim: integer read FUnarmedAnim write FUnarmedAnim;
    published
-      property OnJoin: TPartyEvent read FOnJoin write FOnJoin;
+      [EventType('TPartyEvent')]
+      property OnJoin: TScriptEvent read FOnJoin write FOnJoin;
    end;
 
    THeroTemplate = class(TClassTemplate)

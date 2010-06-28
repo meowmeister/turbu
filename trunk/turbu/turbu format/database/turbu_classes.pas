@@ -101,11 +101,10 @@ type
 
       {property }function datasetName: string; {read getDatasetName;} //hope they fix this...
       property signature[methodname: string]: TRpgDecl read getSignature;
-   published
       property name: string read FName write FName;
       property id: smallint read FId write FId;
       property modified: boolean read FModified write FModified;
-
+   published
       property OnCreate: TScriptEvent read FOnCreate write FOnCreate;
       property OnDestroy: TScriptEvent read FOnDestroy write FOnDestroy;
    end;
@@ -228,6 +227,14 @@ type
    public
       procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
       procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
+   EventTypeAttribute = class(TCustomAttribute)
+   private
+    FName: string;
+   public
+      constructor Create(const name: string);
+      property name: string read FName;
    end;
 
    ERpgLoadError = class(Exception);
@@ -415,12 +422,18 @@ end;
 
 function TRpgDatafile.getSignature(methodname: string): TRpgDecl;
 var
-   info: PPropInfo;
+   name: string;
+   typename: EventTypeAttribute;
+   prop: TRttiProperty;
 begin
-   info := GetPropInfo(Self, methodname, [tkMethod]);
-   if not assigned(info) then
+   prop := TRttiContext.Create.GetType(self.classtype).GetProperty(methodname);
+   if not assigned(prop) then
       raise EPropertyError.CreateFmt('Event %s does not exist in class %s.', [methodname, self.ClassName]);
-   result := turbu_decl_utils.GetSignature(info.PropType^);
+   typename := prop.GetAttribute(EventTypeAttribute) as EventTypeAttribute;
+   if assigned(typename) then
+      name := typename.name
+   else name := prop.PropertyType.Name;
+   result := turbu_decl_utils.GetSignature(name);
 end;
 
 class procedure TRpgDatafile.writeEnd(savefile: TStream);
@@ -872,6 +885,13 @@ var
 begin
    datafile := instance.AsType<TRpgDatafile>;
    db.FieldByName('master').AsInteger := datafile.id;
+end;
+
+{ EventTypeAttribute }
+
+constructor EventTypeAttribute.Create(const name: string);
+begin
+   FName := name;
 end;
 
 end.

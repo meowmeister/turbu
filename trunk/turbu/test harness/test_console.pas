@@ -49,6 +49,7 @@ type
       mnuMaps: TMenuItem;
       mnuTestMapObjectContainers: TMenuItem;
     mnuTestDatabaseUpload: TMenuItem;
+    estPartySetup1: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);

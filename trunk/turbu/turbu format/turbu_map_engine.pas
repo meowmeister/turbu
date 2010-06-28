@@ -30,6 +30,8 @@ type
 
    TDeleteMapMode = (dmTree, dmSibling, dmTop, dmNone);
 
+   TMapResizeEvent = function(const size: TSgPoint): TSgPoint of object;
+
    IBreakable = interface
    ['{70501C2F-5A15-4033-B3FF-17946D27A0E1}']
       procedure BreakSomething;
@@ -57,8 +59,8 @@ type
       procedure SetCurrentLayer(const value: shortint);
       function GetCurrentLayer: shortint;
       property CurrentLayer: shortint read GetCurrentLayer write SetCurrentLayer;
-      function mapSize: TSgPoint;
       function mapPosition: TSgPoint;
+      procedure SetMapResizeEvent(const value: TMapResizeEvent);
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TList<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
