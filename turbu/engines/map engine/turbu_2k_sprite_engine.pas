@@ -4,7 +4,7 @@ interface
 uses
    types, Generics.Collections,
    turbu_maps, turbu_map_engine, turbu_2k_map_tiles, turbu_tilesets,
-   turbu_map_objects, turbu_map_sprites, turbu_defs,
+   turbu_map_objects, turbu_map_sprites, turbu_defs, tiles,
    sdl_sprite, sdl_canvas, SDL_ImageManager;
 
 type
@@ -16,7 +16,7 @@ type
    T2kSpriteEngine = class(TSpriteEngine)
    private
       FMap: TRpgMap;
-      FBgImage: TSdlImage;
+      FBgImage: TBackgroundSprite;
       FTiles: TTileMatrixList;
       FTileset: TTileset;
       FOverlapping: TFacingSet;
@@ -32,6 +32,8 @@ type
       function CreateNewTile(value: TTileRef): TMapTile;
       function FullCreateNewTile(x, y, layer: integer): TMapTile;
       function GetMaxLayer: integer; inline;
+      function GetDefTile(layer, x, y: integer): TMapTile; inline;
+      procedure DrawBG;
    public
       constructor Create(map: TRpgMap; const viewport: TRect;
                          canvas: TSdlCanvas; tileset: TTileset; images: TSdlImages);
@@ -47,8 +49,9 @@ type
       function AddMapObject(obj: TRpgMapObject): TMapSprite;
       function Passable(x, y: integer; direction: TFacing): boolean; overload;
       function Passable(x, y: integer): boolean; overload;
-
+      function edgeCheck(const x, y: integer; const direction: TFacing): boolean;
       procedure EnsureImage(const filename: string);
+      procedure Draw; override;
 
       property overlapping: TFacingSet read FOverlapping;
       property viewport: TRect read FViewport write SetViewport;
@@ -59,13 +62,14 @@ type
       property mapObj: TRpgMap read FMap;
       property blank: boolean read FBlank write FBlank;
       property mapObjects: TMapSpriteList read FMapObjects;
-      property CurrentParty: TCharSprite read FCurrentParty;
+      property CurrentParty: TCharSprite read FCurrentParty write FCurrentParty;
+      property Tile[layer, x, y: integer]: TMapTile read GetDefTile; default;
    end;
 
 implementation
 uses
    SysUtils,
-   commons, turbu_constants, archiveInterface, tiles,
+   commons, turbu_constants, archiveInterface,
    SG_defs;
 
 { T2kSpriteEngine }
@@ -187,9 +191,11 @@ begin
    self.SetViewport(viewport);
 
    //load background
-//   GArchives[IMAGE_ARCHIVE].
    if map.bgName <> '' then
-      {FBgImage := TSdlImage.Create(map.bgName, map.bgName, images)}; //needs a real filename
+   begin
+      FBgImage := TBackgroundSprite.Create(self, map);
+      FBgImage.Image := images.EnsureImage('Backgrounds/' + map.bgName + '.png', map.bgName);
+   end;
 
    //populate events
    FMapObjects := TMapSpriteList.Create;
@@ -203,6 +209,37 @@ begin
    FTiles.Free;
    FMap.Free;
    inherited;
+end;
+
+procedure T2kSpriteEngine.Draw;
+begin
+   if assigned(FBgImage) then
+      DrawBG;
+   inherited;
+end;
+
+procedure T2kSpriteEngine.DrawBG;
+begin
+   FBgImage.scroll;
+   FBgImage.X := WorldX;
+   repeat
+      FBgImage.Y := WorldY;
+      repeat
+         FBgImage.Draw;
+         FBgImage.Y := FBgImage.Y + FBgImage.PatternHeight;
+      until FBgImage.y + FBgImage.OffsetY > WorldY + Canvas.Height;
+      FBgImage.X := FBgImage.X + FBgImage.PatternWidth;
+   until FBgImage.X + FBgImage.OffsetX > WorldX + Canvas.Width;
+end;
+
+function T2kSpriteEngine.edgeCheck(const x, y: integer; const direction: TFacing): boolean;
+begin
+   case direction of
+      facing_up: result := (y > 0) or (wrVertical in FMap.wraparound);
+      facing_right: result := (x < FMap.width) or (wrHorizontal in FMap.wraparound);
+      facing_down: result := (y < FMap.height) or (wrVertical in FMap.wraparound);
+      facing_left: result := (x > 0) or (wrHorizontal in FMap.wraparound);
+   end;
 end;
 
 procedure T2kSpriteEngine.EnsureImage(const filename: string);
@@ -219,6 +256,11 @@ begin
    result := CreateNewTile(tile);
    if assigned(result) then
       result.place(x, y, layer, tile, FTileset);
+end;
+
+function T2kSpriteEngine.GetDefTile(layer, x, y: integer): TMapTile;
+begin
+   result := GetTile(x, y, layer);
 end;
 
 function T2kSpriteEngine.GetMaxLayer: integer;

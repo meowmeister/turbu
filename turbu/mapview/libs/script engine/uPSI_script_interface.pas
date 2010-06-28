@@ -65,7 +65,7 @@ implementation
 
 
 uses
-   rpg_list, script_interface, script_backend, charset_data {, rpg_image};
+   rpg_list, script_interface, charset_data, turbu_heroes, turbu_mapchars {, rpg_image};
 
 (* === compile-time registration functions === *)
 (*----------------------------------------------------------------------------*)
@@ -599,13 +599,13 @@ begin Self.hero[t1] := T; end;
 procedure TRpgPartyhero_R(Self: TRpgParty; var T: TRpgHero; const t1: byte);
 begin T := Self.hero[t1]; end;
 
-(*----------------------------------------------------------------------------*)
+{(*----------------------------------------------------------------------------*)
 procedure TRpgPartyinventory_W(Self: TRpgParty; const T: TRpgInventory);
 begin Self.inventory := T; end;
 
 (*----------------------------------------------------------------------------*)
 procedure TRpgPartyinventory_R(Self: TRpgParty; var T: TRpgInventory);
-begin T := Self.inventory; end;
+begin T := Self.inventory; end; }
 
 (*----------------------------------------------------------------------------*)
 procedure TRpgPartymoney_W(Self: TRpgParty; const T: integer);
@@ -904,7 +904,7 @@ begin
     RegisterPropertyHelper(@TRpgPartyMap_R,nil,'map');
     RegisterPropertyHelper(@TRpgPartymoney_R,@TRpgPartymoney_W,'money');
     RegisterPropertyHelper(@TRpgPartyFacing_R,@TRpgPartyFacing_W,'facing');
-    RegisterPropertyHelper(@TRpgPartyinventory_R,@TRpgPartyinventory_W,'inventory');
+//    RegisterPropertyHelper(@TRpgPartyinventory_R,@TRpgPartyinventory_W,'inventory');
     RegisterPropertyHelper(@TRpgPartyhero_R,@TRpgPartyhero_W,'hero');
     RegisterPropertyHelper(@TRpgPartylevelNotify_R,@TRpgPartylevelNotify_W,'levelNotify');
   end;

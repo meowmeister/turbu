@@ -77,7 +77,7 @@ type
       procedure setTranslucency(const value: byte); virtual;
 
       property animFix: boolean read getAnimFix write FAnimFix;
-      property moveQueue: TPath read FMoveQueue;
+      property moveQueue: TPath read FMoveQueue write FMoveQueue;
       property moveAssign: TPath read FMoveAssignment;
    public
       constructor Create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); virtual;
@@ -93,7 +93,7 @@ type
       function hasPage: boolean; inline;
       procedure flash(r, g, b, power: byte; time: cardinal);
       procedure moveTick;
-      procedure update(filename: string; index: byte; transparent: boolean); virtual; abstract;
+      procedure update(filename: string; transparent: boolean); virtual; abstract;
       procedure pause;
       procedure resume;
       procedure stop;
@@ -118,7 +118,7 @@ type
    public
       constructor Create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); override;
       procedure updatePage(data: TRpgEventPage); override;
-      procedure update(filename: string; index: byte; transparent: boolean); override;
+      procedure update(filename: string; transparent: boolean); override;
    end;
 
    TCharSprite = class(TMapSprite)
@@ -127,6 +127,7 @@ type
 
       procedure setAnimFrame(data: TAnimFrame);
       function workOutAnimFrame: TAnimFrame;
+      procedure loadCharset(filename: string);
    protected
       FMoved: boolean;
       procedure setFacing(data: TFacing); override;
@@ -139,9 +140,9 @@ type
       procedure reload(const imageName: string; const index: byte);
       procedure assign(data: TCharSprite); reintroduce;
       procedure place; override;
-      procedure update(filename: string; index: byte; transparent: boolean); override;
+      procedure update(filename: string; transparent: boolean); override;
       procedure updatePage(data: TRpgEventPage); override;
-//      procedure action(const button: TButtonCode = btn_enter); virtual; abstract;
+      procedure action(const button: TButtonCode = btn_enter); virtual; abstract;
 
       property frame: smallint read FWhichFrame;
       property animFrame: TAnimFrame read FAnimFrame write setAnimFrame;
@@ -158,8 +159,7 @@ const
 implementation
 uses
    SysUtils, Math, types,
-   commons,
-   turbu_2k_map_tiles,
+   commons, turbu_2k_map_tiles, ArchiveInterface,
    turbu_sounds, turbu_constants, turbu_2k_sprite_engine, turbu_2k_map_locks;
 
 const OP_CLEAR = $C0; //arbitrary value
@@ -400,14 +400,10 @@ begin
       self.leaveTile;
       target := SgPoint(FLocation.X, FLocation.Y);
       case FMoveDir of
-         facing_up:
-            dec(target.Y);
-         facing_right:
-            inc(target.X);
-         facing_down:
-            inc(target.Y);
-         facing_left:
-            dec(target.X);
+         facing_up: dec(target.Y);
+         facing_right: inc(target.X);
+         facing_down: inc(target.Y);
+         facing_left: dec(target.X);
       end;
       startMoveTo(target);
       result := true;
@@ -465,8 +461,6 @@ begin
          FPause.pause
       else if assigned(FMoveTime) then
          FMoveTime.pause;
-      //end if
-   //end if
 end;
 
 procedure TMapSprite.resume;
@@ -800,12 +794,12 @@ begin
    FTiles[1].Y := location.Y * TILE_SIZE.y;
 end;
 
-procedure TEventSprite.update(filename: string; index: byte; transparent: boolean);
+procedure TEventSprite.update(filename: string; transparent: boolean);
 //var orphan: TRpgEvent;
 begin
 {$MESSAGE WARN 'Commented out code in live unit'}
-{   self.translucency := 3 * ord(transparent);
-   FMapObj.currentPage.overrideSprite(filename, index, transparent);
+   self.translucency := 3 * ord(transparent);
+{   FMapObj.currentPage.overrideSprite(filename, index, transparent);
    orphan := FCharacter as TRpgEvent;
    orphan.switchType;
    orphan.changeSprite(filename, index);}
@@ -865,6 +859,11 @@ begin
    FUnderConstruction := false;
 end;
 
+procedure TCharSprite.loadCharset(filename: string);
+begin
+   FEngine.Images.EnsureImage('mapsprite\' + filename + '.png', filename);
+end;
+
 procedure TCharSprite.place;
 begin
    FMoved := (FMoving > 0) and (FWhichFrame = FMoveRate - 1);
@@ -876,7 +875,6 @@ end;
 
 procedure TCharSprite.updateTiles;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
    FTiles[2].ImageIndex := ord(self.facing) * 6 + ord(FAnimFrame);
    FTiles[1].ImageIndex := TEventTile(FTiles[2]).ImageIndex + 3;
 end;
@@ -945,18 +943,15 @@ begin
    FTiles[2].Alpha := FTiles[1].Alpha;
 end;
 
-procedure TCharSprite.update(filename: string; index: byte; transparent: boolean);
+procedure TCharSprite.update(filename: string; transparent: boolean);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   loadCharset(filename);
-   FTiles[2].ImageName := 'Charset ' + filename;
-   FTiles[1].ImageName := 'Charset ' + filename;
-   TMapTile(FTiles[2]).whichChar := index;
-   TMapTile(FTiles[1]).whichChar := index;
+   loadCharset(filename);
+   FTiles[2].ImageName := filename;
+   FTiles[1].ImageName := filename;
    if transparent then
       self.translucency := 3
    else self.translucency := 0;
-   updateTiles;}
+   updateTiles;
 end;
 
 procedure TCharSprite.updatePage(data: TRpgEventPage);
@@ -966,9 +961,8 @@ begin
    FUnderConstruction := true;
    self.facing := data.direction;
    FUnderConstruction := false;
-   update(data.name, index, translucency >= 3);
+   update(data.name, translucency >= 3);
    FTiles[2].ImageIndex := data.whichTile * 2;
-//   FTiles[2].ImageIndex := ord(data.direction) * 6 + ord(data.whichTile);
    FTiles[1].ImageIndex := TEventTile(FTiles[2]).ImageIndex + 3;
 end;
 

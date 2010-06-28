@@ -38,6 +38,7 @@ type
       FObjectContainers: TMapObjectContainerList;
       FCursorPosition: TSgPoint;
       FHookedObject: TMapSprite;
+      FOnResize: TMapResizeEvent;
 
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
       procedure saveMap(value: TRpgMap);
@@ -50,6 +51,8 @@ type
       function NewMapObjectID(engine: T2kSpriteEngine): integer;
       function GetCurrentMapObject: TMapSprite;
       procedure DoDelete;
+      function mapSize: TSgPoint;
+      procedure DoResize;
    private //IBreakable
       procedure BreakSomething;
    private //IDesignMapEngine
@@ -57,8 +60,8 @@ type
       function GetTilesetImageSize(const index: byte): TSgPoint;
       function GetTilesetImage(const index: byte): PSdlSurface;
       function DesignLoadMap(map: IMapMetadata): IRpgMap;
-      function mapSize: TSgPoint;
       function mapPosition: TSgPoint;
+      procedure SetMapResizeEvent(const value: TMapResizeEvent);
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TList<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
@@ -75,7 +78,6 @@ type
       procedure editMapProperties(mapID: integer);
       procedure DeleteMap(mapID: integer; deleteMode: TDeleteMapMode);
       procedure Reset;
-
       procedure Pause;
       procedure Stop;
 
@@ -192,15 +194,17 @@ end;
 
 procedure T2kMapEngineD.rightClick(const position: TSgPoint);
 begin
-{   if not FTimer.Enabled then
-      Exit; }
+   if not FTimer.Enabled then
+      Exit;
 
    if FCurrentMap.passable(position.x, position.y) then
    begin
       if FParty = nil then
          initializeParty;
-{      currentParty.leaveTile;
-      FCurrentMap.currentParty.location := whichtile; }
+      FPartySprite.leaveTile;
+      if not assigned(FCurrentMap.CurrentParty) then
+         FCurrentMap.CurrentParty := FPartySprite;
+      FPartySprite.location := position;
    end;
 end;
 
@@ -234,6 +238,7 @@ begin
    if doneLoadingMap then
       result := FCurrentMap.mapObj
    else result := nil;
+   DoResize;
 end;
 
 procedure T2kMapEngineD.DoDelete;
@@ -332,6 +337,11 @@ begin
       else texture.alpha := $A0;
    end;
    self.repaint;
+end;
+
+procedure T2kMapEngineD.SetMapResizeEvent(const value: TMapResizeEvent);
+begin
+   FOnResize := value;
 end;
 
 procedure T2kMapEngineD.setPaletteList(value: TList<integer>);
@@ -457,7 +467,10 @@ begin
    if eval.TfrmMapProperties.EditMap(FDatabase.mapTree[mapID], map.mapObj) then
    begin
       if oldsize <> map.mapObj.size then
+      begin
          map.RecreateTileMatrix;
+         DoResize;
+      end;
       self.repaint;
    end;
 end;
@@ -518,6 +531,12 @@ begin
       FHookedObject := nil;
       self.repaint;
    end;
+end;
+
+procedure T2kMapEngineD.DoResize;
+begin
+   if assigned(FOnResize) then
+      FCurrentMap.viewport := rect(point(0, 0), FOnResize(MapSize));
 end;
 
 procedure T2kMapEngineD.doubleClick;

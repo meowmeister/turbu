@@ -40,27 +40,15 @@ object frmTurbuMain: TfrmTurbuMain
     Color = clBlack
     ParentColor = False
     TabOrder = 0
-    object imgLogo: TSdlFrame
+    object imgBackground: TImage
       Left = 0
       Top = 0
       Width = 888
       Height = 824
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Framerate = 0
-      Active = False
-      LogicalWidth = 888
-      LogicalHeight = 824
-      OnAvailable = imgLogoAvailable
       Align = alClient
-      OnDblClick = imgLogoDblClick
-      OnMouseDown = imgLogoMouseDown
-      OnMouseMove = imgLogoMouseMove
-      OnMouseUp = imgLogoMouseUp
-      OnKeyDown = imgLogoKeyDown
-      OnKeyUp = imgLogoKeyUp
+      OnClick = imgBackgroundClick
+      ExplicitLeft = 8
+      ExplicitTop = 8
     end
     object pnlHorizScroll: TPanel
       Left = 0
@@ -73,7 +61,7 @@ object frmTurbuMain: TfrmTurbuMain
       Margins.Bottom = 4
       Align = alBottom
       BevelOuter = bvNone
-      TabOrder = 1
+      TabOrder = 0
       object sbHoriz: TScrollBar
         Left = 0
         Top = 0
@@ -113,7 +101,7 @@ object frmTurbuMain: TfrmTurbuMain
       Margins.Bottom = 4
       Align = alRight
       BevelOuter = bvNone
-      TabOrder = 2
+      TabOrder = 1
       object sbVert: TScrollBar
         Left = 0
         Top = 0
@@ -129,6 +117,28 @@ object frmTurbuMain: TfrmTurbuMain
         TabOrder = 0
         OnScroll = OnScrollMap
       end
+    end
+    object imgLogo: TSdlFrame
+      Left = 0
+      Top = 0
+      Width = 888
+      Height = 824
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Framerate = 0
+      Active = False
+      LogicalWidth = 888
+      LogicalHeight = 824
+      OnAvailable = imgLogoAvailable
+      Align = alClient
+      OnDblClick = imgLogoDblClick
+      OnMouseDown = imgLogoMouseDown
+      OnMouseMove = imgLogoMouseMove
+      OnMouseUp = imgLogoMouseUp
+      OnKeyDown = imgLogoKeyDown
+      OnKeyUp = imgLogoKeyUp
     end
   end
   object pnlSidebar: TPanel
@@ -293,19 +303,12 @@ object frmTurbuMain: TfrmTurbuMain
     object btnRun: TToolButton
       Left = 131
       Top = 0
-      Hint = 'Play'
-      Caption = 'btnRun'
-      ImageIndex = 4
-      OnClick = btnRunClick
+      Action = actRun
     end
     object btnPause: TToolButton
       Left = 154
       Top = 0
-      Hint = 'Pause'
-      Caption = 'btnPause'
-      Enabled = False
-      ImageIndex = 5
-      OnClick = btnPauseClick
+      Action = actPause
     end
   end
   object mnuMain: TMainMenu
@@ -389,7 +392,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C01010800C800D00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010800C800DC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -837,6 +840,19 @@ object frmTurbuMain: TfrmTurbuMain
       ImageIndex = 6
       ShortCut = 118
       OnExecute = btnMapObjClick
+    end
+    object actRun: TAction
+      Caption = 'Run'
+      ImageIndex = 4
+      ShortCut = 120
+      OnExecute = btnRunClick
+    end
+    object actPause: TAction
+      Caption = 'Pause'
+      Enabled = False
+      ImageIndex = 5
+      ShortCut = 16504
+      OnExecute = btnPauseClick
     end
   end
 end

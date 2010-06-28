@@ -39,7 +39,6 @@ contains
   turbu_skills in 'database\turbu_skills.pas',
   turbu_sounds in 'database\turbu_sounds.pas',
   dm_database in '..\editor\dm_database.pas' {dmDatabase: TDataModule},
-  turbu_heroes in '..\engines\map engine\turbu_heroes.pas',
   turbu_sprites in 'turbu_sprites.pas',
   turbu_unit_dictionary in 'turbu_unit_dictionary.pas',
   turbu_defs in 'turbu_defs.pas',

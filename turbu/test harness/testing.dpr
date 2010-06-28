@@ -118,7 +118,8 @@ uses
   rm2_turbu_map_objects in '..\turbu format\converters\rm2_turbu_map_objects.pas',
   EB_Expressions in '..\turbu format\script\EB_Expressions.pas',
   EB_System in '..\turbu format\script\EB_System.pas',
-  EB_Maps in '..\turbu format\script\EB_Maps.pas';
+  EB_Maps in '..\turbu format\script\EB_Maps.pas',
+  turbu_mapchars in '..\turbu format\turbu_mapchars.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -130,15 +131,15 @@ begin
    Application.Initialize;
    Application.MainFormOnTaskbar := True;
    Application.CreateForm(TdmDatabase, dmDatabase);
-   Application.CreateForm(TfrmTestConsole, frmTestConsole);
-   Application.CreateForm(TfrmDatabase, frmDatabase);
-   Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
-   Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
-   Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
-   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
-   Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
-   Application.CreateForm(TfrmConversionReport, frmConversionReport);
-   Application.CreateForm(TfrmTestMapSize, frmTestMapSize);
-   Application.CreateForm(TfrmSpriteSelector, frmSpriteSelector);
-   Application.Run;
+  Application.CreateForm(TfrmTestConsole, frmTestConsole);
+  Application.CreateForm(TfrmDatabase, frmDatabase);
+  Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
+  Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
+  Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
+  Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
+  Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
+  Application.CreateForm(TfrmConversionReport, frmConversionReport);
+  Application.CreateForm(TfrmTestMapSize, frmTestMapSize);
+  Application.CreateForm(TfrmSpriteSelector, frmSpriteSelector);
+  Application.Run;
 end.

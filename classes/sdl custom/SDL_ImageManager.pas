@@ -33,7 +33,7 @@ uses
    SG_Defs,
    SDL, sdl_13;
 
-const EMPTY: TPoint = (X: 0; Y: 0);
+const EMPTY: TSgPoint = (X: 0; Y: 0);
 
 type
    TDrawMode = (dmFull, dmSprite);
@@ -209,6 +209,7 @@ type
       ************************************************************************}
       function AddFromArchive(filename, imagename: string; loader: TArchiveLoader = nil): integer;
       function AddSpriteFromArchive(filename, imagename: string; spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
+      function EnsureImage(filename, imagename: string): TSdlImage;
 
       {************************************************************************
       * Frees the TSdlImage at the current index and removes it from the list.
@@ -489,6 +490,21 @@ begin
 end;
 
 //---------------------------------------------------------------------------
+function TSdlImages.EnsureImage(filename, imagename: string): TSdlImage;
+var
+   index: integer;
+begin
+   if self.Contains(imagename) then
+      result := GetImage(imagename)
+   else begin
+      if FileExists(filename) then
+         index := AddFromFile(filename, imagename)
+      else index := AddFromArchive(filename, imagename);
+      result := Self[index];
+   end;
+end;
+
+//---------------------------------------------------------------------------
 function TSdlImages.Extract(Num: integer): TSdlImage;
 begin
    SDL_LockMutex(FUpdateMutex);
@@ -667,11 +683,7 @@ begin
             loader := nil;
          if FRw = nil then
          begin
-            {$IFDEF UNICODE}
             intFilename := PAnsiChar(UTF8String(filename));
-            {$ELSE}
-            intFilename := PChar(filename);
-            {$ENDIF}
             if not assigned(loader) then
                LSurface := PSdlSurface(IMG_Load(intFilename))
             else begin

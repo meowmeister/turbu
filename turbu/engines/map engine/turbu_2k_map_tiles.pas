@@ -12,6 +12,7 @@ type
       FOccupied: TMapSpriteList;
 
       function isOccupied: boolean;
+      function IsCountertop: boolean; inline;
    protected
       FNeighbors: TNeighborSet;
    public
@@ -22,6 +23,7 @@ type
 
       property occupied: boolean read isOccupied;
       property event: TMapSpriteList read FOccupied write FOccupied;
+      property countertop: boolean read IsCountertop;
    end;
 
    TAnimTile = class(TMapTile)
@@ -125,6 +127,11 @@ begin
    FOccupied.Clear;
    FOccupied.Free;
    inherited;
+end;
+
+function TMapTile.IsCountertop: boolean;
+begin
+   result := taCountertop in self.attributes;
 end;
 
 function TMapTile.isOccupied: boolean;
