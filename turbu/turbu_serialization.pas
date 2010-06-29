@@ -2,7 +2,7 @@ unit turbu_serialization;
 
 interface
 uses
-   TypInfo, RTTI, DB, Contnrs, Generics.Collections,
+   TypInfo, RTTI, DB, Generics.Collections,
    RttiHelper;
 
 type
@@ -514,7 +514,7 @@ begin
    FInstances.Push(TInstancePair.Create(value, value.ClassInfo));
    try
       if FUploadPrefix = '' then
-         db.Insert;
+         db.Append;
 
       for field in FContext.GetType(value.ClassType).GetFields do
       begin
