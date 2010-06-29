@@ -209,7 +209,8 @@ type
       ************************************************************************}
       function AddFromArchive(filename, imagename: string; loader: TArchiveLoader = nil): integer;
       function AddSpriteFromArchive(filename, imagename: string; spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
-      function EnsureImage(filename, imagename: string): TSdlImage;
+      function EnsureImage(filename, imagename: string): TSdlImage; overload;
+      function EnsureImage(filename, imagename: string; spritesize: TSgPoint): TSdlImage; overload;
 
       {************************************************************************
       * Frees the TSdlImage at the current index and removes it from the list.
@@ -491,6 +492,13 @@ end;
 
 //---------------------------------------------------------------------------
 function TSdlImages.EnsureImage(filename, imagename: string): TSdlImage;
+begin
+   result := EnsureImage(filename, imagename, EMPTY);
+end;
+
+//---------------------------------------------------------------------------
+function TSdlImages.EnsureImage(filename, imagename: string;
+  spritesize: TSgPoint): TSdlImage;
 var
    index: integer;
 begin
@@ -499,12 +507,11 @@ begin
    else begin
       if FileExists(filename) then
          index := AddFromFile(filename, imagename)
-      else index := AddFromArchive(filename, imagename);
+      else index := AddSpriteFromArchive(filename, imagename, spritesize);
       result := Self[index];
    end;
 end;
 
-//---------------------------------------------------------------------------
 function TSdlImages.Extract(Num: integer): TSdlImage;
 begin
    SDL_LockMutex(FUpdateMutex);

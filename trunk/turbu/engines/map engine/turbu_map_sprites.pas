@@ -861,7 +861,7 @@ end;
 
 procedure TCharSprite.loadCharset(filename: string);
 begin
-   FEngine.Images.EnsureImage('mapsprite\' + filename + '.png', filename);
+   FEngine.Images.EnsureImage('mapsprite\' + filename + '.png', filename, SPRITE_SIZE);
 end;
 
 procedure TCharSprite.place;
