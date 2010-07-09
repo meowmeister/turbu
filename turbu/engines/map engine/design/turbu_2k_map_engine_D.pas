@@ -68,6 +68,8 @@ type
       procedure doneDrawing;
       procedure doubleClick;
       procedure rightClick(const position: TSgPoint);
+      procedure KeyDown(key: word; Shift: TShiftState);
+      procedure KeyUp(key: word; Shift: TShiftState);
       procedure SetCurrentLayer(const value: shortint);
       function GetCurrentLayer: shortint;
       function getAutosaveMaps: boolean;
@@ -88,7 +90,6 @@ type
       procedure AfterPaint; override;
    public
       function IsDesign: boolean; override;
-      procedure KeyDown(key: word; Shift: TShiftState); override;
    end;
 
 implementation
@@ -111,18 +112,18 @@ end;
 
 procedure T2kMapEngineD.KeyDown(key: word; Shift: TShiftState);
 begin
-   if FTimer.Enabled then
-   begin
-      inherited KeyDown(key, shift);
-      Exit;
-   end;
-   if FCurrentLayer >= 0 then
+   if FTimer.Enabled or (FCurrentLayer >= 0) then
       Exit;
    case key of
       VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT: ArrowKey(key);
       VK_RETURN: DoubleClick;
       VK_BACK, VK_DELETE: DoDelete;
    end;
+end;
+
+procedure T2kMapEngineD.KeyUp(key: word; Shift: TShiftState);
+begin
+   //not doing anything here
 end;
 
 procedure T2kMapEngineD.ArrowKey(key: word);
@@ -536,7 +537,7 @@ end;
 procedure T2kMapEngineD.DoResize;
 begin
    if assigned(FOnResize) then
-      FCurrentMap.viewport := rect(point(0, 0), FOnResize(MapSize));
+      FCurrentMap.viewport := rect(point(0, 0), FOnResize(MapSize) / TILE_SIZE);
 end;
 
 procedure T2kMapEngineD.doubleClick;
@@ -691,7 +692,7 @@ begin
          rw: PSDL_RWops;}
       begin
          filename := 'tileset\' + input.group.filename + '.png';
-         if not FImages.contains(filename) then
+         if not FImages.contains(input.group.filename) then
          begin
             rw := sdlstreams.SDLStreamSetup(GArchives[IMAGE_ARCHIVE].getFile(filename));
             {result} newItem := TTileGroupPair.Create(input,
@@ -702,7 +703,7 @@ begin
          else
          begin
             {result} newItem := TTileGroupPair.Create(input,
-              (FImages.Image[filename] as TRpgSdlImage).surface);
+              (FImages.Image[input.group.filename] as TRpgSdlImage).surface);
          end;
 {      end);}
          result.Add(newItem);

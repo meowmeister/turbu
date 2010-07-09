@@ -45,8 +45,6 @@ type
       function loadMap(map: IMapMetadata): IRpgMap;
       procedure Play;
       function Playing: boolean;
-      procedure KeyDown(key: word; Shift: TShiftState);
-      procedure KeyUp(key: word; Shift: TShiftState);
 
       function getData: TMapEngineData;
       property data: TMapEngineData read getData;
@@ -67,6 +65,8 @@ type
       procedure doneDrawing;
       procedure doubleClick;
       procedure rightClick(const position: TSgPoint);
+      procedure KeyDown(key: word; Shift: TShiftState);
+      procedure KeyUp(key: word; Shift: TShiftState);
       function getAutosaveMaps: boolean;
       procedure setAutosaveMaps(const value: boolean);
       property autosaveMaps: boolean read getAutosaveMaps write setAutosaveMaps;
@@ -99,8 +99,6 @@ type
       function loadMap(map: IMapMetadata): IRpgMap; virtual; abstract;
       procedure Play; virtual; abstract;
       function Playing: boolean; virtual; abstract;
-      procedure KeyDown(key: word; Shift: TShiftState); virtual; abstract;
-      procedure KeyUp(key: word; Shift: TShiftState); virtual; abstract;
 
       property data: TMapEngineData read GetData write FData;
    end;

@@ -205,7 +205,6 @@ type
       property critRate: integer read FCritRate write FCritRate;
    end;
 
-procedure SetScriptEngine(value: IScriptEngine);
 procedure SetDatabase(value: TRpgDatafile);
 
 implementation
@@ -215,13 +214,7 @@ uses
    turbu_database;
 
 var
-   GScriptEngine: IScriptEngine;
    GDatabase: TRpgDatabase;
-
-procedure SetScriptEngine(value: IScriptEngine);
-begin
-   GScriptEngine := value;
-end;
 
 procedure SetDatabase(value: TRpgDatafile);
 begin

@@ -237,6 +237,7 @@
 			<DCCReference Include="..\turbu format\script\EB_System.pas"/>
 			<DCCReference Include="..\turbu format\script\EB_Maps.pas"/>
 			<DCCReference Include="..\turbu format\turbu_mapchars.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_2k_environment.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

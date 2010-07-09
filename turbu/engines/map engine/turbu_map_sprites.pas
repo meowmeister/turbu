@@ -8,7 +8,6 @@ uses
 
 type
    TMapSprite = class;
-   TMapSpriteList = class(TRpgObjectList<TMapSprite>);
 
    IRpgCharacter = interface
       procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite);
@@ -28,6 +27,7 @@ type
       FJumpTarget: TSgPoint;
       FTransparencyFactor: byte;
       FPaused: boolean;
+      FInitialized: boolean;
 
       function tryMove(where: TFacing): boolean; inline;
       function tryMoveDiagonal(one, two: TFacing): boolean; inline;
@@ -64,14 +64,16 @@ type
       FMoveTime: TRpgTimestamp;
       FCanSkip: boolean;
       FUnderConstruction: boolean;
+      FActionMatrix: TMoveMatrix;
+      FAction: integer;
 
+      procedure EnterTile;
       procedure setFacing(data: TFacing); virtual;
       procedure setVisible(const Value: boolean);
       function getBaseTile: TSprite; inline;
       procedure setLocation(data: TSgPoint); virtual;
       function canMoveForward: boolean; virtual;
       function canMoveDiagonal(one, two: TFacing; out destination: TSgPoint): boolean;
-      function onMap: boolean; inline;
       function doMove(which: TPath): boolean; virtual;
       function getCanSkip: boolean; virtual;
       procedure setTranslucency(const value: byte); virtual;
@@ -92,7 +94,7 @@ type
       function inFrontTile: TTile; inline;
       function hasPage: boolean; inline;
       procedure flash(r, g, b, power: byte; time: cardinal);
-      procedure moveTick;
+      procedure moveTick; virtual;
       procedure update(filename: string; transparent: boolean); virtual; abstract;
       procedure pause;
       procedure resume;
@@ -123,9 +125,6 @@ type
 
    TCharSprite = class(TMapSprite)
    private
-      FAnimFrame: TAnimFrame;
-
-      procedure setAnimFrame(data: TAnimFrame);
       function workOutAnimFrame: TAnimFrame;
       procedure loadCharset(filename: string);
    protected
@@ -143,9 +142,9 @@ type
       procedure update(filename: string; transparent: boolean); override;
       procedure updatePage(data: TRpgEventPage); override;
       procedure action(const button: TButtonCode = btn_enter); virtual; abstract;
+      procedure MoveTick; override;
 
       property frame: smallint read FWhichFrame;
-      property animFrame: TAnimFrame read FAnimFrame write setAnimFrame;
    end;
 
 const
@@ -160,9 +159,16 @@ implementation
 uses
    SysUtils, Math, types,
    commons, turbu_2k_map_tiles, ArchiveInterface,
-   turbu_sounds, turbu_constants, turbu_2k_sprite_engine, turbu_2k_map_locks;
+   turbu_sounds, turbu_constants, turbu_2k_sprite_engine, turbu_2k_map_locks,
+   turbu_database, turbu_2k_environment;
 
 const OP_CLEAR = $C0; //arbitrary value
+
+type
+   TMapSpriteHelper = class helper for TMapSprite
+   public
+      function currentTile: TMapTile;
+   end;
 
 { TMapSprite }
 
@@ -193,7 +199,9 @@ begin
          end;
          else assert(false);
       end;
-   end;
+      FActionMatrix := GDatabase.moveMatrix[FMapObj.CurrentPage.ActionMatrix];
+   end
+   else FActionMatrix := GDatabase.moveMatrix[0];
 end;
 
 procedure TMapSprite.decTransparencyFactor;
@@ -224,14 +232,20 @@ begin
 end;
 
 procedure TMapSprite.leaveTile;
-var
-   list: TMapSpriteList;
 begin
    GEventLock.enter;
    try
-      list := T2kSpriteEngine(FEngine).GetTile(location.x, location.y, 0).event;
-      while list.indexOf(self) <> -1 do
-         list.Remove(self);
+      GSpriteEngine.LeaveLocation(currentTile.Location, self);
+   finally
+      GEventLock.leave;
+   end;
+end;
+
+procedure TMapSprite.EnterTile;
+begin
+   GEventLock.enter;
+   try
+      GSpriteEngine.AddLocation(currentTile.Location, self);
    finally
       GEventLock.leave;
    end;
@@ -262,7 +276,7 @@ begin
       self.facing := towards(FLocation, FJumpTarget);
    FLocation := FJumpTarget;
    assert(not assigned(FMoveTime));
-   TMapTile(T2kSpriteEngine(FEngine).GetTile(location.x, location.y, 0)).event.Add(self);
+   GSpriteEngine.Addlocation(currentTile.location, self);
    FMoveTime := TRpgTimestamp.Create(commons.round(MOVE_DELAY[FMoveRate] / 2.5));
 end;
 
@@ -340,7 +354,7 @@ begin
       inc(i);
    end;
    if (i <= which.last) and (pointInRect(target, rect(0, 0, FEngine.width, FEngine.height)))
-      and TMapTile(T2kSpriteEngine(FEngine).GetTile(location.x, location.y, 0)).canEnter then
+      and currentTile.canEnter then
    begin
       result := true;
       FJumpTarget := target;
@@ -355,12 +369,11 @@ begin
    assert((ord(one) mod 2 = 0) and (ord(two) mod 2 = 1));
    temp := FFacing;
    FFacing := one;
-{$MESSAGE WARN 'Commented-out code in live unit'}
-//   result := T2kSpriteEngine(FEngine).canExit(FLocation.x, FLocation.y, one, self);
+   result := T2kSpriteEngine(FEngine).canExit(FLocation.x, FLocation.y, one, self);
    if not result then
    begin
       FFacing := two;
-//      result := T2kSpriteEngine(FEngine).canExit(FLocation.x, FLocation.y, two, self);
+      result := T2kSpriteEngine(FEngine).canExit(FLocation.x, FLocation.y, two, self);
    end;
    FFacing := temp;
    if not result then
@@ -374,13 +387,12 @@ begin
       dec(destination.x)
    else inc(destination.x);
    result := ((pointInRect(destination, rect(0, 0, FEngine.width, FEngine.height))))
-             and (TMapTile(T2kSpriteEngine(FEngine).GetTile(destination.x, destination.y, 0)).open(self));
+             and currentTile.open(self);
 end;
 
 function TMapSprite.canMoveForward: boolean;
 begin
-{$MESSAGE WARN 'Commented-out code in live unit'}
-//   result := T2kSpriteEngine(FEngine).canExit(FLocation.x, FLocation.y, FMoveDir, self);
+   result := T2kSpriteEngine(FEngine).canExit(FLocation.x, FLocation.y, FMoveDir, self);
 end;
 
 function TMapSprite.move(whichDir: TFacing): boolean;
@@ -406,6 +418,7 @@ begin
          facing_left: dec(target.X);
       end;
       startMoveTo(target);
+      FMoving := 0;
       result := true;
    end;
 end;
@@ -431,13 +444,27 @@ begin
 end;
 
 procedure TMapSprite.startMoveTo(target: TSgPoint);
+var
+   lTarget: TSgPoint;
 begin
    FLocation := target;
-   FTarget := target * TILE_SIZE;
+   lTarget := target;
+   GSpriteEngine.normalizePoint(lTarget.x, lTarget.y);
+   FTarget := lTarget * TILE_SIZE;
+   if lTarget <> target then
+   begin
+      case FMoveDir of
+         facing_up: dec(lTarget.y);
+         facing_right: dec(lTarget.x);
+         facing_down: inc(lTarget.y);
+         facing_left: inc(lTarget.x);
+      end;
+      SetLocation(lTarget);
+   end;
    dec(FTarget.x, WIDTH_BIAS);
    assert(not assigned(FMoveTime));
    FMoveTime := TRpgTimestamp.Create(MOVE_DELAY[FMoveRate]);
-   TMapTile(T2kSpriteEngine(FEngine).GetTile(FLocation.x, FLocation.y, 0)).event.Add(self);
+   EnterTile;
 end;
 
 procedure TMapSprite.stop;
@@ -479,7 +506,10 @@ var
    dummy: single;
    frequency: integer;
 begin
-   if not self.onMap then
+   if FInitialized and not assigned(FMoveTime) then
+      Exit;
+   if FInitialized and (not assigned(self.FMoveQueue)) and assigned(FMapObj) and
+     (FMapObj.currentPage.moveType = mt_still) then
       Exit;
 
    if not (FJumpAnimateOverride or self.animFix) then
@@ -488,7 +518,7 @@ begin
       if FWhichFrame = FOOTSTEP_CONSTANT[FMoveRate] then
       begin
          FWhichFrame := 0;
-         FMoving := ((FMoving) + 3) mod 4;
+         FMoving :=  (FMoving + 1) mod length(FActionMatrix[FAction]);
       end;
    end;
    if assigned(FMoveTime) then
@@ -500,8 +530,7 @@ begin
       dummy := FTiles[1].y;
       moveTowards(timeRemaining, dummy, FTarget.y);
       FTiles[1].y := dummy;
-{$MESSAGE WARN 'Commented-out code in live unit'}
-{      if timeRemaining <= GFrameLength then
+      if timeRemaining <= TRpgTimeStamp.FrameLength then
       begin
          freeAndNil(FMoveTime);
          if FJumping then
@@ -515,14 +544,14 @@ begin
             end;
             FJumpAnimateOverride := false;
          end;
-         TMapTile(GGameEngine[lower, self.location.x, self.location.y]).bump(self);
+         currentTile.bump(self);
       end;
    end;
 
    if not FInitialized then
    begin
-      TMapTile(TGameMap(FEngine)[lower, FLocation.x, FLocation.y]).event.Add(self);
-      FInitialized := true;}
+      EnterTile;
+      FInitialized := true;
    end;
 end;
 
@@ -546,9 +575,8 @@ begin
       6: unchanged := not tryMoveDiagonal(facing_down, facing_left);
       7: unchanged := not tryMoveDiagonal(facing_up, facing_left);
       8: unchanged := not tryMove(TFacing(system.random(4)));
-{$MESSAGE WARN 'Commented-out code in live unit'}
-{      9: unchanged := not ((self = GParty.base) or (tryMove(towardsHero)));
-      $A: unchanged := not ((self = GParty.base) or (tryMove(opposite_facing(towardsHero))));}
+      9: unchanged := not ((self = GSpriteEngine.CurrentParty) or (tryMove(towardsHero)));
+      $A: unchanged := not ((self = GSpriteEngine.CurrentParty) or (tryMove(opposite_facing(towardsHero))));
       $B: unchanged := not tryMove(FFacing);
       $C: self.facing := facing_up;
       $D: self.facing := facing_right;
@@ -577,6 +605,7 @@ begin
          if canJump(which) then
             beginJump;
       end;
+{$MESSAGE WARN 'Commented-out code in live unit'}
       $19: {errLog('Hit an incorrect end of jump!');}; //They seem to move at 1.5X a sprite's base speed
       $1A: self.dirLocked := true;
       $1B: self.dirLocked := false;
@@ -584,21 +613,20 @@ begin
       $1D: FMoveRate := max(0, FMoveRate - 1);
       $1E: FMoveFreq := min(8, FMoveFreq + 1);
       $1F: FMoveFreq := min(0, FMoveFreq - 1);
-{$MESSAGE WARN 'Commented-out code in live unit'}
-{      $20:
+      $20:
       begin
-         if between(FOrder.data[1], 0, high(GSwitches)) = FOrder.data[1] then
+         if clamp(FOrder.data[1], 0, system.high(GSwitches)) = FOrder.data[1] then
             GSwitches[FOrder.data[1]] := true;
       end;
       $21:
       begin
-         if between(FOrder.data[1], 0, high(GSwitches)) = FOrder.data[1] then
+         if clamp(FOrder.data[1], 0, high(GSwitches)) = FOrder.data[1] then
             GSwitches[FOrder.data[1]] := false;
       end;
-      $22: FCharacter.changeSprite(FOrder.name, FOrder.data[1]);
-      $23: GCurrentEngine.mediaPlayer.playAndFreeSfx(TRmSound.Create(FOrder.name, 0, FOrder.data[1],
-                                                                     FOrder.data[2], FOrder.data[3]));
-      }
+{$MESSAGE WARN 'Commented-out code in live unit'}
+      $22: {FCharacter.changeSprite(FOrder.name, FOrder.data[1])};
+      $23: {GCurrentEngine.mediaPlayer.playAndFreeSfx(TRmSound.Create(FOrder.name, 0, FOrder.data[1],
+                                                                     FOrder.data[2], FOrder.data[3]))};
       $24: FSlipThrough := true;
       $25: FSlipThrough := false;
       $26: self.animFix := true;
@@ -648,40 +676,25 @@ begin
             if FMoveReversed then
                FMoveOpen := self.move(facing_right)
             else FMoveOpen := self.move(facing_left);
-         mt_randomMove, mt_chaseHero, mt_fleeHero, mt_byRoute: ; //handled elsewhere
+         else ; //handled elsewhere
       end; //end case
-      if self.hasPage and (FMapObj.currentPage.moveType in [mt_cycleUD, mt_cycleLR]) and (not FMoveOpen) then
-      begin
-         FMoveReversed := not FMoveReversed;
-         if self.inFrontTile <> nil then
-            TMapTile(self.inFrontTile).bump(self);
-      end;
-   //end if
+   if self.hasPage and (FMapObj.currentPage.moveType in [mt_cycleUD, mt_cycleLR]) and (not FMoveOpen) then
+   begin
+      FMoveReversed := not FMoveReversed;
+      if self.inFrontTile <> nil then
+         TMapTile(self.inFrontTile).bump(self);
+   end;
 end;
 
 procedure TMapSprite.nuke(removeself: boolean = false);
-var
-   dummy: integer;
-   eventList: TMapSpriteList;
 begin
-   eventList := TMapTile(T2kSpriteEngine(FEngine).GetTile(FLocation.x, FLocation.y, 0)).event;
-   dummy := eventList.IndexOf(self);
-   assert(dummy <> -1);
-   eventList.Delete(dummy);
-{$MESSAGE WARN 'Commented-out code in live unit'}
-{   if removeSelf then
-      GGameEngine.currentMap.deleteEvent(self);}
+   GSpriteEngine.deleteMapObject(self);
 end;
 
 function TMapSprite.isDirLocked: boolean;
 begin
    result := (self.hasPage and (FMapObj.currentPage.animType in [at_fixedDir..at_statue]))
              or FDirLocked;
-end;
-
-function TMapSprite.onMap: boolean;
-begin
-   result := (FLocation.X >= 0) and (FLocation.Y >= 0);
 end;
 
 destructor TMapSprite.Destroy;
@@ -699,9 +712,9 @@ end;
 procedure TMapSprite.flash(r, g, b, power: byte; time: cardinal);
 begin
    if assigned(FTiles[1]) then
-      FTiles[1].flash(r, g, b, power, time);
+      (FTiles[1] as TEventTile).flash(r, g, b, power, time);
    if assigned(FTiles[2]) then
-      FTiles[2].flash(r, g, b, power, time);
+      (FTiles[2] as TEventTile).flash(r, g, b, power, time);
 end;
 
 function TMapSprite.getAnimFix: boolean;
@@ -765,13 +778,13 @@ begin
 end;
 
 function TMapSprite.towardsHero: TFacing;
-//var dummy: TSgPoint;
+var
+   heroLoc: TSgPoint;
 begin
-{$MESSAGE WARN 'Commented-out code in live unit'}
-{   if assigned(GGameEngine.currentParty) then
-      dummy := SgPoint(trunc(GGameEngine.currentParty.baseTile.x), trunc(GGameEngine.currentParty.baseTile.y))
-   else dummy := SgPoint(0, 100);
-   result := towards(SgPoint(trunc(baseTile.x), trunc(baseTile.y)), dummy);}
+   if assigned(GSpriteEngine.currentParty) then
+      heroLoc := GSpriteEngine.currentParty.location
+   else heroLoc := SgPoint(0, 1000);
+   result := towards(self.location, heroLoc);
 end;
 
 { TEventSprite }
@@ -814,19 +827,18 @@ end;
 
 procedure TCharSprite.activateEvents(where: TTile);
 var
-   eventList: TMapSpriteList;
+   eventList: TArray<TMapSprite>;
    i: integer;
    eventPtr: TRpgMapObject;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
    eventList := (where as TMapTile).event;
-   for i := 0 to eventlist.Count - 1 do
+   for i := 0 to high(eventlist) do
    begin
-{      eventPtr := (eventList[i] as TMapSprite).event;
-      if (eventList[i] <> self) and assigned(eventPtr.currentPage) and (eventPtr.currentPage.hasScript)
+      eventPtr := (eventList[i] as TMapSprite).event;
+{$MESSAGE WARN 'Commented out code in live unit'}
+{      if (eventList[i] <> self) and assigned(eventPtr.currentPage) and (eventPtr.currentPage.hasScript)
          and (eventPtr.currentPage.startCondition = by_key) then
-         GScriptEngine.executeEvent(eventPtr, eventList[i] as TMapSprite);
-      //end if }
+         GScriptEngine.executeEvent(eventPtr, eventList[i] as TMapSprite); }
    end;
 end;
 
@@ -834,7 +846,6 @@ procedure TCharSprite.assign(data: TCharSprite);
 begin
    begin
       self.facing := data.facing;
-      FAnimFrame := data.animFrame;
       FLocation := data.location;
    end;
 end;
@@ -864,19 +875,27 @@ begin
    FEngine.Images.EnsureImage('mapsprite\' + filename + '.png', filename, SPRITE_SIZE);
 end;
 
+procedure TCharSprite.MoveTick;
+begin
+   inherited MoveTick;
+   UpdateTiles;
+end;
+
 procedure TCharSprite.place;
 begin
    FMoved := (FMoving > 0) and (FWhichFrame = FMoveRate - 1);
    inherited place;
-   self.animFrame := self.workOutAnimFrame;
    FTiles[2].Y := FTiles[1].Y - TILE_SIZE.y;
    FTiles[2].X := FTiles[1].X;
 end;
 
 procedure TCharSprite.updateTiles;
+var
+   frame: integer;
 begin
-   FTiles[2].ImageIndex := ord(self.facing) * 6 + ord(FAnimFrame);
-   FTiles[1].ImageIndex := TEventTile(FTiles[2]).ImageIndex + 3;
+   frame := FActionMatrix[FAction, FMoving] * 2;
+   FTiles[2].ImageIndex := frame;
+   FTiles[1].ImageIndex := frame + 1;
 end;
 
 function TCharSprite.workOutAnimFrame: TAnimFrame;
@@ -913,18 +932,13 @@ begin
    FTiles[1].name := imagename + intToStr(index);
    FTiles[2].name := imagename + intToStr(index);
    self.facing := facing_down;
-   self.FAnimFrame := center;
-end;
-
-procedure TCharSprite.setAnimFrame(data: TAnimFrame);
-begin
-   FAnimFrame := data;
-   updateTiles;
+   FMoving := 0;
 end;
 
 procedure TCharSprite.setFacing(data: TFacing);
 begin
-   inherited;
+   inherited setFacing(data);
+   FAction := ord(facing);
    updateTiles;
 end;
 
@@ -955,15 +969,20 @@ begin
 end;
 
 procedure TCharSprite.updatePage(data: TRpgEventPage);
-var index: byte;
 begin
-   index := data.whichTile;
    FUnderConstruction := true;
    self.facing := data.direction;
    FUnderConstruction := false;
    update(data.name, translucency >= 3);
    FTiles[2].ImageIndex := data.whichTile * 2;
    FTiles[1].ImageIndex := TEventTile(FTiles[2]).ImageIndex + 3;
+end;
+
+{ TMapSpriteHelper }
+
+function TMapSpriteHelper.currentTile: TMapTile;
+begin
+   result := T2kSpriteEngine(FEngine)[0, self.location.x, self.location.y];
 end;
 
 end.

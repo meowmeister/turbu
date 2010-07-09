@@ -21,7 +21,7 @@ interface
 uses
    types,
    tiles, timing, events, charset_data, move_data, commons,
-   {asphyreSprite} SDL_sprite, SG_defs;
+   {asphyreSprite} turbu_defs, SDL_sprite, SG_defs;
 
 {$I ..\..\..\..\unfinished.inc}
 type

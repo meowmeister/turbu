@@ -49,7 +49,7 @@ type
       mnuMaps: TMenuItem;
       mnuTestMapObjectContainers: TMenuItem;
     mnuTestDatabaseUpload: TMenuItem;
-    estPartySetup1: TMenuItem;
+    mnuTestPartySetup: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -70,6 +70,7 @@ type
       procedure mnuEventEditorClick(Sender: TObject);
       procedure mnuTestMapObjectContainersClick(Sender: TObject);
     procedure mnuTestDatabaseUploadClick(Sender: TObject);
+    procedure mnuTestPartySetupClick(Sender: TObject);
    private
       { Private declarations }
       FEngine: IDesignMapEngine;
@@ -168,7 +169,6 @@ begin
    GCurrentFolder := folder;
    GProjectFolder := outFolder;
 
-   turbu_characters.SetScriptEngine(GDScriptEngine);
    frmConversionReport := TfrmConversionReport.Create(Application);
    ConversionReport := frmConversionReport;
    frmConversionReport.thread := TConverterThread.Create(conversionReport, folder, outFolder, pf_2k);
@@ -273,11 +273,24 @@ begin
    end;
 end;
 
+procedure TfrmTestConsole.mnuTestPartySetupClick(Sender: TObject);
+var
+   i, j: integer;
+begin
+   if not assigned(FEngine) then
+      mnuTestMapLoadingClick(Sender);
+   FEngine.Play;
+   for j := 0 to 14 do
+      for i := 0 to 19 do
+         FEngine.rightClick(SGPoint(i, j));
+   if sender = mnuTestPartySetup then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
 procedure TfrmTestConsole.setupConversionPaths;
 var
    dummy: string;
 begin
-  //   setupConversionPaths;
   folder := IncludeTrailingPathDelimiter(GetRegistryValue('\Software\TURBU', 'TURBU Test Project'));
   if folder <> '\' then
   begin
@@ -410,6 +423,7 @@ var
 
 var
    loadStream: TStream;
+   design: boolean;
 begin
    try
       location := IncludeTrailingPathDelimiter(GetRegistryValue('\Software\TURBU', 'TURBU Test Project Output'));
@@ -420,11 +434,10 @@ begin
       openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
       loadStream := TFileStream.Create(IncludeTrailingPathDelimiter(location) + DBNAME, fmOpenRead);
 
-      turbu_characters.SetScriptEngine(GDScriptEngine);
       try
          freeAndNil(GDatabase);
          try
-            GDatabase := TRpgDatabase.Load(loadStream);
+            GDatabase := TRpgDatabase.Load(loadStream, assigned(FCurrentMap));
          except
             GDatabase := nil;
             raise;

@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<DCC_DcuOutput>..\dcus\</DCC_DcuOutput>

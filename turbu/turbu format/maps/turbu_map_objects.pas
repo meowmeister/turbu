@@ -93,6 +93,7 @@ type
       [NoUpload]
       FPath: TPath;
       FMoveIgnore: boolean;
+      FMatrix: word;
 {      FEventScript: ansiString;
       FScriptText: ansiString;
       FCompiledScript: ansiString; }
@@ -135,6 +136,7 @@ type
       property isBarrier: boolean read FNoOverlap write FNoOverlap;
       property animType: TAnimType read FAnimType write FAnimType;
       property moveSpeed: byte read FMoveSpeed write FMoveSpeed;
+      property actionMatrix: word read FMatrix;
 //      property eventScript: ansiString read getEventScript;
       property parent: TRpgMapObject read FParent;
 {      property compiledScript: tbtString read getCompiledScript;
@@ -157,6 +159,7 @@ type
       FCurrentPage: TRpgEventPage;
       FPageChanged: boolean;
       FLocked: boolean;
+      function getCurrentPage: TRpgEventPage;
    public //no idea why, but marking this protected generates a bad VMT.
       class function keyChar: ansiChar; override;
    public
@@ -172,13 +175,8 @@ type
       property location: TSgPoint read FLocation write FLocation;
       property pages: TPageList read FPages;
       property page[x: integer]: TRpgEventPage read getPage; default;
-{      constructor createGlobal(input: TStream; expected: word; parent: TEventBlock);
-      constructor create(var input: TStringStream; parent: TEventBlock); overload;
-      constructor create(newScript: string); overload;
-      destructor Destroy; override;
-      property len: smallint read FLength write FLength;
-      property parent: TEventBlock read FParent;
       property newCurrentPage: TRpgEventPage read getCurrentPage;
+{     property parent: TEventBlock read FParent;
       property playing: boolean read isCurrentlyPlaying write setCurrentlyPlaying;
       property deleted: boolean read FDeleted write FDeleted;
 }
@@ -245,6 +243,30 @@ end;
 procedure TRpgMapObject.AddPage(value: TRpgEventPage);
 begin
    FPages.Add(value);
+end;
+
+function TRpgMapObject.getCurrentPage: TRpgEventPage;
+//var i: integer;
+begin
+{$MESSAGE WARN 'Commented out code in live unit'}
+{   if FPages[0].FGlobal then
+   begin
+      result := FPages[0];
+      Exit;
+   end;
+
+   result := nil;
+   I := high(FPages);
+   while (result = nil) and (i >= 0) do
+   begin
+      if FPages[i].valid then
+         result := FPages[i];
+      dec(i);
+   end;
+   FPageChanged := (FCurrentPage = result);
+   FCurrentPage := result;
+   if FPageChanged and assigned(FCurrentPage) then
+      FCurrentPage.FOverrideSprite := false;}
 end;
 
 function TRpgMapObject.getPage(x: integer): TRpgEventPage;
@@ -360,6 +382,7 @@ begin
    FPath := TPath.Load(savefile);
    FMoveIgnore := savefile.readBool;
    FEventText := savefile.readString;
+   FMatrix := savefile.readWord;
    self.readEnd(savefile);
 end;
 
@@ -380,6 +403,7 @@ begin
    FPath.Save(savefile);
    savefile.writeBool(FMoveIgnore);
    savefile.writeString(FEventText);
+   savefile.writeWord(FMatrix);
    self.writeEnd(savefile);
 end;
 

@@ -258,8 +258,12 @@ begin
 end;
 
 procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);
+var
+   texture: TSdlTexture;
 begin
    FPaletteTexture := imgPalette.AddTexture(surface);
+   texture := imgPalette.images[FPaletteTexture].surface;
+   texture.ScaleMode := sdltsFast;
    bindPaletteCursor;
    resizePalette;
 end;
@@ -592,7 +596,7 @@ begin
 
    try
       try
-         GDatabase := TRpgDatabase.Load(loadStream);
+         GDatabase := TRpgDatabase.Load(loadStream, true);
       except
          on ERpgLoadError do
          begin
@@ -660,21 +664,18 @@ function TfrmTurbuMain.SetMapSize(const size: TSgPoint): TSgPoint;
    end;
 
 begin
-   if (size.x >= sbxMain.ClientWidth) and (size.y >= sbxMain.ClientHeight) then
-   begin
-      imgLogo.Align := alClient;
-      result := size;
-   end
+   if (size.x >= imgBackground.ClientWidth) and (size.y >= imgBackground.ClientHeight) then
+      imgLogo.Align := alClient
    else begin
       imgLogo.Align := alNone;
-      imgLogo.Width := min(sbxMain.ClientWidth, size.x);
-      imgLogo.Height := min(sbxMain.ClientHeight, size.y);
-      imgLogo.Left := (sbxMain.ClientWidth - imgLogo.width) div 2;
-      imgLogo.Top := (sbxMain.ClientHeight - imgLogo.height) div 2;
+      imgLogo.Width := min(imgBackground.ClientWidth, size.x);
+      imgLogo.Height := min(imgBackground.ClientHeight, size.y);
+      imgLogo.Left := (imgBackground.ClientWidth - imgLogo.width) div 2;
+      imgLogo.Top := (imgBackground.ClientHeight - imgLogo.height) div 2;
       imgBackground.Invalidate;
       AddCrosshatch(clGray, clWhite);
-      result := sgPoint(imgLogo.width, imgLogo.height);
    end;
+   result := sgPoint(imgLogo.width, imgLogo.height);
    configureScrollBars(size, FMapEngine.mapPosition);
 end;
 

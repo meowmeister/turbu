@@ -113,12 +113,10 @@ type
       FSfx: array[TSfxTypes] of TRmSound;
       FStartingHeroes: word;
       FStartingHero: array[1..4] of word;
-      {$IFDEF EDITOR}
       FTransition: array[TTransitionTypes] of byte;
 
       function getTransition(which: TTransitionTypes): byte;
       procedure setTransition(which: TTransitionTypes; const Value: byte);
-      {$ENDIF}
       function getSfx(which: TSfxTypes): TRmSound;
       procedure setSfx(which: TSfxTypes; const Value: TRmSound);
       function getBgm(which: TBgmTypes): TRmMusic;
@@ -137,9 +135,7 @@ type
       property wallpaperStretch: boolean read FWallpaperStretch;
       property bgm[which: TBgmTypes]: TRmMusic read getBgm write setBgm;
       property sfx[which: TSfxTypes]: TRmSound read getSfx write setSfx;
-      {$IFDEF EDITOR}
       property transition[which: TTransitionTypes]: byte read getTransition write setTransition;
-      {$ENDIF}
       property startingHeroes: word read FStartingHeroes;
       property startingHero[which: word]: word read getStartingHero;
    end;
@@ -954,13 +950,7 @@ begin
    for i := 0 to ord(sfxItemUsed) do
       FSfx[TSfxTypes(i)] := TRmSound.Create($29 + i, input);
    for i := 0 to ord(trn_BattleEndFIn) do
-   begin
-      {$IFDEF EDITOR}
       FTransition[TTransitionTypes(i)] := getNumSec($3D + i, input, fillInZeroInt);
-      {$ELSE}
-      setTransition(TTransitionTypes(i), TTransitions(getNumSec($3D + i, input, fillInZeroInt) + 1));
-      {$ENDIF}
-   end;
    FWallpaperStretch := getChboxSec($47, input, fillInZeroInt);
    skipSec($47, input);
 

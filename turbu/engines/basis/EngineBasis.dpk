@@ -61,7 +61,23 @@ contains
   turbu_serialization in '..\..\turbu_serialization.pas',
   rttiHelper in '..\..\rttiHelper.pas',
   turbu_containers in '..\..\turbu format\turbu_containers.pas',
-  turbu_functional in '..\..\turbu_functional.pas';
+  turbu_functional in '..\..\turbu_functional.pas',
+  DeHL.Collections.Dictionary in '..\..\..\classes\DeHL\Collections\DeHL.Collections.Dictionary.pas',
+  DeHL.Collections.List in '..\..\..\classes\DeHL\Collections\DeHL.Collections.List.pas',
+  DeHL.Collections.Abstract in '..\..\..\classes\DeHL\Collections\DeHL.Collections.Abstract.pas',
+  DeHL.Collections.Base in '..\..\..\classes\DeHL\Collections\DeHL.Collections.Base.pas',
+  DeHL.Exceptions in '..\..\..\classes\DeHL\DeHL.Exceptions.pas',
+  DeHL.Types in '..\..\..\classes\DeHL\DeHL.Types.pas',
+  DeHL.Base in '..\..\..\classes\DeHL\DeHL.Base.pas',
+  DeHL.KeyValuePair in '..\..\..\classes\DeHL\Extensions\DeHL.KeyValuePair.pas',
+  DeHL.Arrays in '..\..\..\classes\DeHL\Extensions\DeHL.Arrays.pas',
+  DeHL.StrConsts in '..\..\..\classes\DeHL\DeHL.StrConsts.pas',
+  DeHL.Math.Primes in '..\..\..\classes\DeHL\Math\DeHL.Math.Primes.pas',
+  DeHL.Serialization in '..\..\..\classes\DeHL\Serialization\DeHL.Serialization.pas',
+  DeHL.Converter in '..\..\..\classes\DeHL\Extensions\DeHL.Converter.pas',
+  DeHL.Nullable in '..\..\..\classes\DeHL\Extensions\DeHL.Nullable.pas',
+  DeHL.Collections.HashSet in '..\..\..\classes\DeHL\Collections\DeHL.Collections.HashSet.pas',
+  DeHL.Collections.DistinctMultiMap in '..\..\..\classes\DeHL\Collections\DeHL.Collections.DistinctMultiMap.pas';
 
 end.
 

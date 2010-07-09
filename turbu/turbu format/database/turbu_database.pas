@@ -118,7 +118,7 @@ type
       class function keyChar: ansiChar; override;
    public
       constructor Create;
-      constructor Load(savefile: TStream); override;
+      constructor Load(savefile: TStream; design: boolean); reintroduce;
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
       procedure copyToDB(db: TdmDatabase; typeSet: TRpgDataTypeSet = []);
@@ -225,7 +225,7 @@ begin
    self.prepareBlanks;
 end;
 
-constructor TRpgDatabase.Load(savefile: TStream);
+constructor TRpgDatabase.Load(savefile: TStream; design: boolean);
 type
    TItemClass = class of TItemTemplate;
    TSkillClass = class of TSkillTemplate;
@@ -337,10 +337,12 @@ begin
       end;
    end;
    lassert(k = FUnits.Count);
-   GScriptEngine.units := FUnits;
-   turbu_characters.setScriptEngine(GScriptEngine);
-   self.scriptBuild;
-   self.parseMeta;
+   if design then
+   begin
+      GScriptEngine.units := FUnits;
+      self.scriptBuild;
+      self.parseMeta;
+   end;
 
    turbu_characters.setDatabase(self);
    turbu_skills.setDatabase(self);
