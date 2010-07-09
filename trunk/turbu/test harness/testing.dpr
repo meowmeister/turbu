@@ -119,7 +119,8 @@ uses
   EB_Expressions in '..\turbu format\script\EB_Expressions.pas',
   EB_System in '..\turbu format\script\EB_System.pas',
   EB_Maps in '..\turbu format\script\EB_Maps.pas',
-  turbu_mapchars in '..\turbu format\turbu_mapchars.pas';
+  turbu_mapchars in '..\turbu format\turbu_mapchars.pas',
+  turbu_2k_environment in '..\engines\map engine\turbu_2k_environment.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

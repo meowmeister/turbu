@@ -5,7 +5,6 @@ program Turbu;
 
 uses
   FastMM4,
-  SimpleShareMem,
   madExcept,
   madLinkDisAsm,
   madListHardware,

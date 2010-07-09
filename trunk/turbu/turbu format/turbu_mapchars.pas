@@ -4,7 +4,7 @@ interface
 uses
    sdl_sprite, sg_defs,
    charset_data,
-   turbu_map_sprites, turbu_map_objects;
+   turbu_map_sprites, turbu_map_objects, turbu_map_metadata;
 
 type
    TRpgCharacter = class(TInterfacedObject, IRpgCharacter)
@@ -75,7 +75,7 @@ type
       FX: word;
       FY: word;
       FGameSprite: TMapSprite;
-      FVehicleType: TVehicleSet;
+      FVehicleIndex: integer;
       FCarrying: TRpgCharacter;
 
       function getLocation: TSgPoint;
@@ -91,7 +91,7 @@ type
       function getBase: TMapSprite; override;
       procedure doFlash(r, g, b, power: byte; time: cardinal); override;
    public
-      constructor Create({mapTree: TFullTree;} which: TVehicleSet);
+      constructor Create(mapTree: TMapTree; which: integer);
       destructor Destroy; override;
       procedure setSprite(filename: string; index: byte);
       procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite); override;
@@ -105,14 +105,15 @@ type
       property location: TSgPoint read getLocation write setLocation;
       property facing: byte read getFacing write setFacing;
       property gamesprite: TMapSprite read FGameSprite write FGameSprite;
-      property vehicleType: TVehicleSet read FVehicleType;
+      property vehicleIndex: integer read FVehicleIndex;
       property carrying: TRpgCharacter read FCarrying write FCarrying;
    end;
 
 implementation
 uses
    types,
-   commons, turbu_defs, turbu_constants, tiles;
+   commons, turbu_defs, turbu_constants, tiles, turbu_2k_char_sprites,
+   turbu_2k_sprite_engine;
 
 { TRpgCharacter }
 
@@ -247,11 +248,10 @@ end;
 
 function TRpgEvent.getMap: word;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   if FBase is TVehicleSprite then
+   if FBase is TVehicleSprite then
       result := TVehicleSprite(FBase).template.Map
    else
-      result := GGameEngine.currentMap.mapID;}
+      result := GSpriteEngine.mapID;
 end;
 
 function TRpgEvent.getX: word;
@@ -295,14 +295,15 @@ end;
 {$WARN CONSTRUCTING_ABSTRACT ON}
 
 procedure TRpgEvent.update;
-//var newpage, oldpage: TEventPage;
+var
+   newpage, oldpage: TRpgEventPage;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
    if FEvent = nil then
       Exit;
    FEvent.locked := false;
-{   oldpage := FEvent.lastCurrentPage;
-   newpage := FEvent.newCurrentPage;
+   oldpage := FEvent.currentPage;
+{$MESSAGE WARN 'Commented out code in live unit'}
+   {newpage := FEvent.newCurrentPage;
    if assigned(newpage) and (newpage.hasScript) and (newpage.startCondition in [parallel, automatic]) and (not FEvent.playing) then
       GCurrentEngine.executeEvent(FEvent, FBase);
 
@@ -313,7 +314,7 @@ begin
       ((fevent.isTile = false) and (FBase is TEventSprite)) then
       switchType
    else
-      FBase.updatePage(fevent.lastCurrentPage);}
+      FBase.updatePage(fevent.currentPage);}
 end;
 
 { TRpgVehicle }
@@ -323,37 +324,35 @@ begin
    Self.setSprite(name, index);
 end;
 
-constructor TRpgVehicle.Create({mapTree: TFullTree;} which: TVehicleSet);
-{type
+constructor TRpgVehicle.Create(mapTree: TMapTree; which: integer);
+type
    TVhSpriteClass = class of TVehicleSprite;
 var
-   newSprite: TVhSpriteClass;}
+   loc: TLocation;
+   newSprite: TVhSpriteClass;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
    inherited Create;
-   FVehicleType := which;
-{   if assigned(mapTree) then
+   FVehicleIndex := which;
+   if assigned(mapTree) then
    begin
-      FMap := mapTree.vhStartMap[which];
-      FX := mapTree.vhStartX[which];
-      FY := mapTree.vhStartY[which];
+      loc := mapTree.Location[which];
+      FMap := loc.map;
+      FX := loc.x;
+      FY := loc.y;
    end;
-   setSprite(GDatabase.SystemData.vehicleGraphic[which], GDatabase.SystemData.vehicleIndex[which]);
+{$MESSAGE WARN 'Commented out code in live unit'}
+{   setSprite(GDatabase.SystemData.vehicleGraphic[which], GDatabase.SystemData.vehicleIndex[which]);
    case which of
-      vh_boat: newSprite := TBoatSprite;
-      vh_ship: newSprite := TShipSprite;
+      vh_boat, vh_ship: newSprite := TGroundVehicleSprite;
       vh_airship: newSprite := TAirshipSprite;
-      else begin
-         newSprite := nil;
-         assert(false, 'Bad vehicle type!');
-      end;
+      else raise ESpriteError.Create('Bad vehicle type');
    end;
-   FGameSprite := newSprite.Create(GCurrentEngine.parent, self, nil);
-   if FMap = GGameEngine.currentMap.mapID then
+   FGameSprite := newSprite.Create(GCurrentEngine.parent, self, nil); }
+   if FMap = GSpriteEngine.mapID then
       FGameSprite.location := point(FX, FY)
    else FGameSprite.location := point(0, -1);
    FGameSprite.facing := facing_left;
-   (FGameSprite as TVehicleSprite).update(FSprite, FSpriteIndex, false);}
+   (FGameSprite as TVehicleSprite).update(FSprite, false);
 end;
 
 destructor TRpgVehicle.Destroy;
@@ -364,10 +363,8 @@ end;
 
 procedure TRpgVehicle.doFlash(r, g, b, power: byte; time: cardinal);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   if map = GGameEngine.currentMap.mapID then
+   if map = GSpriteEngine.mapID then
       self.gamesprite.flash(r, g, b, power, time);
-   //end if}
 end;
 
 function TRpgVehicle.getBase: TMapSprite;
@@ -439,9 +436,8 @@ end;
 
 procedure TRpgVehicle.setMap(const Value: smallint);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
    FMap := Value;
-//   FGameSprite.visible := (map = GGameEngine.currentMap.mapID);
+   FGameSprite.visible := (map = GSpriteEngine.mapID);
 end;
 
 procedure TRpgVehicle.setSprite(filename: string; index: byte);

@@ -84,12 +84,15 @@ type
    TShopTypes = (st_BuyAndSell, st_Buy, st_Sell);
 
    TFacing = (facing_up, facing_right, facing_down, facing_left);
+   TFacingSet = set of TFacing;
 
    TWeatherEffects = (we_none, we_rain, we_snow, we_fog, we_sand);
 
    TImageEffects = (ie_none, ie_rotate, ie_wave);
 
    TButtonCode = (btn_enter, btn_cancel, btn_up, btn_down, btn_left, btn_right);
+
+   TGameState = (gs_map, gs_message, gs_menu, gs_battle, gs_sleeping, gs_fading, gs_minigame);
 
 implementation
 

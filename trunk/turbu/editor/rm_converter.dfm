@@ -33,8 +33,6 @@ object frmRmConverter: TfrmRmConverter
       Margins.Right = 4
       Margins.Bottom = 4
       Caption = 'Basic'
-      ExplicitLeft = 196
-      ExplicitTop = -68
       object lblLocation: TLabel
         Left = 222
         Top = 17
@@ -87,7 +85,6 @@ object frmRmConverter: TfrmRmConverter
         Margins.Bottom = 4
         DialogKind = dkWin32
         DirectInput = False
-        ButtonWidth = 27
         ParentShowHint = False
         ReadOnly = True
         ShowHint = True
@@ -119,6 +116,10 @@ object frmRmConverter: TfrmRmConverter
       Caption = 'Events'
       Enabled = False
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object grpEventFormat: TRadioGroup
         Left = 4
         Top = 4
@@ -144,6 +145,10 @@ object frmRmConverter: TfrmRmConverter
       Caption = 'Culling'
       Enabled = False
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblCullSelect: TLabel
         Left = 21
         Top = 131

@@ -80,8 +80,8 @@ type
       function GetPatternHeight: Integer; inline;
       function GetPatternCount: Integer; inline;
       function GetBoundsRect: TRect; inline;
-    procedure SetParent(const Value: TParentSprite);
-    procedure SetImage(const Value: TSdlImage);
+      procedure SetParent(const Value: TParentSprite);
+      procedure SetImage(const Value: TSdlImage);
    protected
       FEngine: TSpriteEngine;
       FParent: TParentSprite;
@@ -92,7 +92,6 @@ type
       procedure DoMove(const MoveCount: Single); virtual;
       procedure SetImageName(const Value: string); virtual;
       procedure SetZ(const Value: Cardinal);
-      procedure SetPatternIndex(const Value: Integer); virtual;
       function InVisibleRect: boolean; virtual;
    public
       constructor Create(const AParent: TParentSprite); virtual;
@@ -111,7 +110,7 @@ type
       property Z: Cardinal read FZ write SetZ;
       property ImageName: string read FImageName write SetImageName;
       property Image: TSdlImage read FImage write SetImage;
-      property ImageIndex : Integer read FPatternIndex write SetPatternIndex;
+      property ImageIndex : Integer read FPatternIndex write FPatternIndex;
       property PatternWidth: Integer read GetPatternWidth;
       property PatternHeight: Integer read GetPatternHeight;
       property Width: Integer read FWidth write FWidth;
@@ -249,7 +248,6 @@ type
    private
       FAllCount: Integer;
       FDeadList: TSpriteList;
-      FDrawCount: Integer;
       FWorldX, FWorldY: Single;
       FVisibleWidth: Integer;
       FVisibleHeight: Integer;
@@ -263,7 +261,6 @@ type
       procedure Draw; override;
       procedure Dead; reintroduce;
       property AllCount: Integer read FAllCount;
-      property DrawCount: Integer read FDrawCount;
       property VisibleWidth:Integer read FVisibleWidth write FVisibleWidth;
       property VisibleHeight: Integer read FVisibleHeight write FVisibleHeight;
       property WorldX: Single read FWorldX write FWorldX;
@@ -336,17 +333,8 @@ end;
 
 procedure TSprite.Draw;
 begin
-   if FVisible and not FDead then
-   begin
-      if FEngine <> nil then
-      begin
-         if self.InVisibleRect then
-         begin
-            DoDraw;
-            Inc(FEngine.FDrawCount);
-         end;
-      end;
-   end;
+   if FVisible and (not FDead) {and assigned(FEngine)} and self.InVisibleRect then
+      DoDraw;
 end;
 
 procedure TSprite.DrawTo(const dest: TRect);
@@ -430,11 +418,6 @@ begin
    Value.Add(self);
 end;
 
-procedure TSprite.SetPatternIndex(const Value: Integer);
-begin
-   FPatternIndex := Value;
-end;
-
 procedure TSprite.SetPos(X, Y: Single; Z: Integer);
 begin
    FX := X;
@@ -456,7 +439,7 @@ begin
    begin
       FImageName := Value;
       if assigned(FEngine) then
-         FImage := FEngine.FImages.Image[FImageName];
+         SetImage(FEngine.FImages.Image[FImageName]);
       if assigned(FImage) then
       begin
          if FImageType <> itRectSet then
@@ -809,7 +792,6 @@ var
    list: TSpriteList;
    i: integer;
 begin
-   FDrawCount := 0;
    for list in FSpriteList.FSprites do
       if assigned(list) then
          for I := 0 to List.Count - 1 do

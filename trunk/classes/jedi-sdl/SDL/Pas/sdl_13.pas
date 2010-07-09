@@ -61,10 +61,8 @@ type
   SDL_WindowEventID = TSdlWindowEventID;
   {$EXTERNALSYM SDL_WindowEventID}
 
-
-
-{The following enums are declared in SDL_Video.h, but never actually used as
-enumerated types.  They're just sets of constants that get OR'd together to make
+{The following enums are declared in SDL_Video.h, but never actually used as
+enumerated types.  They're just sets of constants that get OR'd together to make
 a bitfield.  Redefining them here since Delphi has a better way of making
 bitfields. Final values ensure that the set will be 32 bits in size.}
 
@@ -361,6 +359,238 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
 
   SDL_errorcode = TSDL_errorcode;
 {$EXTERNALSYM SDL_errorcode}
+
+{$I sdl_EventConsts.inc}
+
+type
+  TSdlScancode = 0..SDL_NUM_SCANCODES;
+  TSdlKey = integer;
+
+{*
+ *  \brief The SDL keysym structure, used in key events.
+ }
+  TSdlKeysym = packed record
+    scancode: TSdlScancode;
+    sym: TSdlKey;
+    mods: word;
+    unicode: cardinal;
+  end;
+
+{*
+ *  \brief Window state change event data (event.window.*)
+ }
+  TSdlWindowEvent = packed record
+    Type_: cardinal;
+    Window: cardinal;
+    Event: TSdlWindowEventID;
+    pad1: byte; pad2: word;
+    Data1: integer;
+    Data2: integer;
+  end;
+
+{*
+ *  \brief Keyboard button event structure (event.key.*)
+ *}
+  TSdlKeyboardEvent = packed record
+    Type_: cardinal;
+    Window: cardinal;
+    Which: byte;
+    State: byte;
+    pad: word;
+    KeySym: TSdlKeysym;
+  end;
+
+{*
+ *  \brief Keyboard text editing event structure (event.edit.*)
+ }
+  TSdlTextEditingEvent = packed record
+  private
+   const TEXT_SIZE = 32;
+   type TEditBuffer = array[0..TEXT_SIZE - 1] of AnsiChar;
+  public
+    Type_: cardinal;
+    Window: cardinal;
+    Which: byte;
+    Text: TEditBuffer;
+    Start: integer;
+    Length: integer;
+  end;
+
+  TSdlTextInputEvent = packed record
+  private
+   const TEXT_SIZE = 32;
+   type TEditBuffer = array[0..TEXT_SIZE - 1] of AnsiChar;
+  public
+    type_: cardinal;
+    window: cardinal;
+    which: byte;
+    pad1: byte; pad2: word;
+    text: TEditBuffer;
+  end;
+
+{*
+ *  \brief Mouse motion event structure (event.motion.*)
+ }
+  TSdlMouseMotionEvent = packed record
+    type_: cardinal;
+    window: cardinal;
+    which: byte;
+    state: byte;
+    pad: word;
+    x: integer;
+    y: integer;
+    z: integer;
+    pressure: integer;
+    pressure_min: integer;
+    pressure_max: integer;
+    rotation: integer;
+    tilt_x: integer;
+    tilt_y: integer;
+    cursor: integer;
+    xrel: integer;
+    yrel: integer;
+  end;
+
+{*
+ *  \brief Mouse button event structure (event.button.*)
+ }
+  TSdlMouseButtonEvent = packed record
+    type_: cardinal;
+    window: cardinal;
+    which: byte;
+    button: byte;
+    state: byte;
+    pad: byte;
+    x: integer;
+    y: integer;
+  end;
+
+{*
+ *  \brief Mouse wheel event structure (event.wheel.*)
+ }
+  TSdlMouseWheelEvent = packed record
+    type_: cardinal;
+    window: cardinal;
+    which: byte;
+    pad1: byte;
+    pad2: word;
+    x: integer;
+    y: integer;
+  end;
+
+{*
+ * \brief Tablet pen proximity event
+ }
+  TSdlProximityEvent = packed record
+    type_: cardinal;
+    window: cardinal;
+    which: byte;
+    pad1: byte;
+    pad2: word;
+    cursor: integer;
+    x: integer;
+    y: integer;
+  end;
+
+{*
+ *  \brief Joystick axis motion event structure (event.jaxis.*)
+ }
+  TSdlJoyAxisEvent = packed record
+    type_: cardinal;
+    which: byte;
+    axis: byte;
+    pad: word;
+    value: integer;
+  end;
+
+{*
+ *  \brief Joystick trackball motion event structure (event.jball.*)
+ }
+  TSdlJoyBallEvent = packed record
+    type_: cardinal;
+    which: byte;
+    ball: byte;
+    pad: word;
+    xrel: integer;
+    yrel: integer;
+  end;
+
+TSdlHatPosition = set of (sdlhUp, sdlhRight, sdlhDown, sdlhLeft);
+
+{*
+ *  \brief Joystick hat position change event structure (event.jhat.*)
+ }
+  TSdlJoyHatEvent = packed record
+    type_: cardinal;
+    which: byte;
+    hat: byte;
+    value: TSdlHatPosition;
+    pad: byte;
+  end;
+
+{*
+ *  \brief Joystick button event structure (event.jbutton.*)
+ }
+  TSdlJoyButtonEvent = packed record
+    type_: cardinal;
+    which: byte;
+    buton: byte;
+    stte: byte;
+    pad: byte;
+  end;
+
+{*
+ *  \brief The "quit requested" event
+ }
+  TSdlQuitEvent = packed record
+    type_: cardinal;
+  end;
+
+{*
+ *  \brief A user-defined event type (event.user.*)
+ }
+  TSdlUserEvent = packed record
+    type_: cardinal;
+    windowID: cardinal;
+    code: integer;
+    data1: pointer;
+    data2: pointer;
+  end;
+
+{*
+ *  \brief A video driver dependent system event (event.syswm.*)
+ }
+  TSdlSysWMEvent = packed record
+     type_: cardinal;
+     msg: pointer;
+  end;
+
+  TSdlEvent = record
+    case UInt32 of
+      SDL_FIRSTEVENT: (type_: cardinal);
+      SDL_QUITEV: (quit: TSdlQuitEvent );
+      SDL_WINDOWEVENT: (win: TSdlWindowEvent);
+      SDL_SYSWMEVENT: (syswin: TSdlSysWMEvent);
+      SDL_KEYDOWN, SDL_KEYUP: (key: TSdlKeyboardEvent);
+      SDL_TEXTEDITING: (edit: TSdlTextEditingEvent);
+      SDL_TEXTINPUT: (input: TSdlTextInputEvent);
+      SDL_MOUSEMOTION: (motion: TSdlMouseMotionEvent);
+      SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP: (button: TSDLMouseButtonEvent);
+      SDL_MOUSEWHEEL: (wheel: TSdlMouseWheelEvent);
+      SDL_PROXIMITYIN, SDL_PROXIMITYOUT: (prox: TSdlProximityEvent);
+      SDL_JOYAXISMOTION: (jaxis: TSdlJoyAxisEvent );
+      SDL_JOYBALLMOTION: (jball: TSdlJoyBallEvent );
+      SDL_JOYHATMOTION: (jhat: TSdlJoyHatEvent );
+      SDL_JOYBUTTONDOWN, SDL_JOYBUTTONUP: (jbutton: TSdlJoyButtonEvent );
+      SDL_USEREVENT : ( user : TSdlUserEvent );
+  end;
+  PSdlEvent = ^TSdlEvent;
+
+  TSdlEventAction = (SdlAddEvent, SdlPeekEvent, SdlGetEvent);
+
+  TSdlEventFilter = function (userdata: pointer; event: PSdlEvent): integer;
+
+  TSdlEventArray = array of TSdlEvent;
 
 function SDL_GetCurrentDisplayMode(var mode: TSdlDisplayMode): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetCurrentDisplayMode}
@@ -730,6 +960,166 @@ function SDL_GetTextureScaleMode(textureID: TSdlTextureID; var scale: TSdlTextur
 external SDLLibName;
 {$EXTERNALSYM SDL_GetTextureScaleMode}
 
+{*
+ *  Pumps the event loop, gathering events from the input devices.
+ *
+ *  This function updates the event queue and internal input device state.
+ *
+ *  This should only be run in the thread that sets the video mode.
+ }
+procedure SDL_PumpEvents; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_PumpEvents}
+
+{*
+ *  Checks the event queue for messages and optionally returns them.
+ *
+ *  If action is SdlAddEvent, up to (numevents) events will be added to
+ *  the back of the event queue.
+ *
+ *  If action is SdlPeekEvent, up to (numevents) events at the front
+ *  of the event queue, in the range defined by (minType) and (maxType), will be
+ *  returned and will not be removed from the queue.
+ *
+ *  If action is SdlGetEvent, up to (numevents) events at the front
+ *  of the event queue, matching (mask), will be returned and will be
+ *  removed from the queue.
+ *
+ *  Returns The number of events actually stored, or -1 if there was an error.
+ *
+ *  This function is thread-safe.
+ }
+function SDL_PeepEvents(events: PSdlEvent; numevents: integer; action: TSdlEventAction;
+                        minType, maxType: cardinal): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_PeepEvents}
+
+function SDL_GetEvents(minType: cardinal = 0; maxType: cardinal = SDL_LASTEVENT): TSdlEventArray;
+
+{*
+ *  Checks to see if certain event types are in the event queue.
+ }
+function SDL_HasEvent(type_: Cardinal): boolean; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_HasEvent}
+
+function SDL_HasEvents(minType, maxType: Cardinal): boolean; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_HasEvents}
+
+{*
+ *  This procedure clears events from the event queue
+ }
+procedure SDL_FlushEvent(type_: Cardinal); cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_FlushEvent}
+procedure SDL_FlushEvents(minType, maxType: Cardinal); cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_FlushEvents}
+
+{*
+ *  \brief Polls for currently pending events.
+ *
+ *  \return 1 if there are any pending events, or 0 if there are none available.
+ *
+ *  \param event If not NULL, the next event is removed from the queue and
+ *               stored in that area.
+ }
+function SDL_PollEvent(event: PSdlEvent): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_PollEvent}
+
+{*
+ *  \brief Waits indefinitely for the next available event.
+ *
+ *  \return 1, or 0 if there was an error while waiting for events.
+ *
+ *  \param event If not NULL, the next event is removed from the queue and
+ *               stored in that area.
+ }
+function SDL_WaitEvent(event: PSdlEvent): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_WaitEvent}
+
+{*
+ *  \brief Waits until the specified timeout (in milliseconds) for the next
+ *         available event.
+ *
+ *  \return 1, or 0 if there was an error while waiting for events.
+ *
+ *  \param event If not NULL, the next event is removed from the queue and
+ *               stored in that area.
+ }
+function SDL_WaitEventTimeout(event: PSdlEvent; timeout: integer): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_WaitEventTimeout}
+
+{*
+ *  \brief Add an event to the event queue.
+ *
+ *  \return 1 on success, 0 if the event was filtered, or -1 if the event queue
+ *          was full or there was some other error.
+ }
+function SDL_PushEvent(const event: TSdlEvent): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_PushEvent}
+
+{*
+ *  Sets up a filter to process all events before they change internal state and
+ *  are posted to the internal event queue.
+ *
+ *  The filter is protypted as:
+ *  \code
+ *      int SDL_EventFilter(void *userdata, SDL_Event * event);
+ *  \endcode
+ *
+ *  If the filter returns 1, then the event will be added to the internal queue.
+ *  If it returns 0, then the event will be dropped from the queue, but the
+ *  internal state will still be updated.  This allows selective filtering of
+ *  dynamically arriving events.
+ *
+ *  \warning  Be very careful of what you do in the event filter function, as
+ *            it may run in a different thread!
+ *
+ *  There is one caveat when dealing with the ::SDL_QUITEVENT event type.  The
+ *  event filter is only called when the window manager desires to close the
+ *  application window.  If the event filter returns 1, then the window will
+ *  be closed, otherwise the window will remain open if possible.
+ *
+ *  If the quit event is generated by an interrupt signal, it will bypass the
+ *  internal queue and be delivered to the application at the next event poll.
+ }
+procedure SDL_SetEventFilter(filter: TSdlEventFilter; userdata: pointer);
+cdecl; external SDLLibName; {$EXTERNALSYM SDL_SetEventFilter}
+
+{*
+ *  Return the current event filter - can be used to "chain" filters.
+ *  If there is no event filter set, this function returns SDL_FALSE.
+ }
+function SDL_GetEventFilter(out filter: TSdlEventFilter; out userdata: pointer): boolean;
+cdecl; external SDLLibName; {$EXTERNALSYM SDL_GetEventFilter}
+
+{*
+ *  Run the filter function on the current event queue, removing any
+ *  events for which the filter returns 0.
+ }
+procedure SDL_FilterEvents(filter: TSdlEventFilter; userdata: pointer); cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetEventFilter}
+
+{*
+ *  This function allows you to set the state of processing certain events.
+ *   - If (state) is set to SDL_IGNORE, that event will be automatically
+ *     dropped from the event queue and will not event be filtered.
+ *   - If (state) is set to SDL_ENABLE, that event will be processed
+ *     normally.
+ *   - If (state) is set to SDL_QUERY, SDL_EventState() will return the
+ *     current processing state of the specified event.
+ }
+function SDL_EventState(type_: cardinal; state: integer): byte; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_EventState}
+
+function SDL_GetEventState(type_:cardinal): byte; inline;
+
+{*
+ *  This function allocates a set of user-defined events, and returns
+ *  the beginning event number for that set of events.
+ *
+ *  If there aren't enough user-defined events left, this function
+ *  returns (Uint32)-1
+ }
+function SDL_RegisterEvents(numevents: integer): cardinal;  cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RegisterEvents}
+
 (**
  * SDL_Free
  *
@@ -737,8 +1127,7 @@ external SDLLibName;
  *
  * mem: The pointer to free
  *)
-procedure SDL_free(mem: pointer); cdecl;
-external SDLLibName;
+procedure SDL_free(mem: pointer); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_Free}
 
 {------------------------------------------------------------------------------}
@@ -968,6 +1357,17 @@ end;
 function SDL_SetRenderDrawColor(color: TSDL_Color): integer;
 begin
    result := SDL_SetRenderDrawColor(color.r, color.g, color.b, color.unused);
+end;
+
+function SDL_GetEvents(minType: cardinal = 0; maxType: cardinal = SDL_LASTEVENT): TSdlEventArray;
+begin
+   SetLength(result, 128);
+   SetLength(result, SDL_PeepEvents(@result[0], 128, SdlGetEvent, minType, maxType));
+end;
+
+function SDL_GetEventState(type_:cardinal): byte; inline;
+begin
+   result := SDL_EventState(type_, SDL_QUERY);
 end;
 
 initialization

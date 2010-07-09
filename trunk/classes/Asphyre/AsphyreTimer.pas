@@ -191,7 +191,7 @@ begin
  Result:= LatencyFP / FixedHigh;
 end;
 
-{$R-}
+{$R-}{$Q-}
 //---------------------------------------------------------------------------
 function TAsphyreTimer.RetreiveLatency(): Integer;
 var

@@ -124,7 +124,6 @@ begin
 {      if fileExists(logName) then
          deleteFile(PChar(logName));}
 
-      turbu_characters.SetScriptEngine(GDScriptEngine);
       frmConversionReport := TfrmConversionReport.Create(nil);
       try
          frmConversionReport.thread := TConverterThread.Create(frmConversionReport, dirProjectLocation.Text, dirOutput.Text, FFormat);

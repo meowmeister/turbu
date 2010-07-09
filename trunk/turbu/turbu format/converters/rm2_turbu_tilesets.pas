@@ -25,6 +25,7 @@ type
    T2k2TileSet = class helper for TTileSet
    private
       procedure convertTileGroups(filename: string; base: TChipSet);
+      procedure SwapTileGroupData(x, y: integer);
    public
       constructor Convert(base: TChipSet; id: Integer);
    end;
@@ -226,6 +227,38 @@ begin
          end;
       end;
       self.Records.Add(newRecord);
+   end;
+   SwapTileGroupData(1, 2);
+   SwapTileGroupData(5, 6);
+   SwapTileGroupData(9, 10);
+   SwapTileGroupData(13, 14);
+end;
+
+procedure T2k2TileSet.SwapTileGroupData(x, y: integer);
+var
+   att: TAttributeList;
+   terrain: TList<integer>;
+   rec1, rec2: TTileGroupRecord;
+begin
+   rec1 := self.records[x];
+   rec2 := self.records[y];
+   att := nil;
+   terrain := nil;
+   try
+      att := TAttributeList.Create(rec1.attributes);
+      terrain := TList<integer>.Create(rec1.Terrain);
+      rec1.attributes.clear;
+      rec1.attributes.AddRange(rec2.attributes);
+      rec1.terrain.clear;
+      rec1.terrain.AddRange(rec2.terrain);
+
+      rec2.attributes.clear;
+      rec2.attributes.AddRange(att);
+      rec2.terrain.clear;
+      rec2.terrain.AddRange(terrain);
+   finally
+      att.free;
+      terrain.free;
    end;
 end;
 

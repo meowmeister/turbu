@@ -78,8 +78,9 @@ object frmTestConsole: TfrmTestConsole
         Caption = 'Test Map Object Containers'
         OnClick = mnuTestMapObjectContainersClick
       end
-      object estPartySetup1: TMenuItem
+      object mnuTestPartySetup: TMenuItem
         Caption = 'Test &Party Setup'
+        OnClick = mnuTestPartySetupClick
       end
     end
     object mnuDatabase: TMenuItem

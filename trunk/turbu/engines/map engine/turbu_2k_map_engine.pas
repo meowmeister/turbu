@@ -22,9 +22,9 @@ uses
    types, syncObjs, Generics.Collections, classes,
    turbu_map_engine, turbu_versioning, turbu_map_sprites, turbu_classes, turbu_heroes,
    turbu_database_interface, turbu_map_interface, turbu_sdl_image, turbu_2k_char_sprites,
-   turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine,
-   AsphyreTimer,
-   SG_defs, SDL_ImageManager, sdl_canvas, sdl_13;
+   turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine, turbu_defs,
+   turbu_2k_environment,
+   AsphyreTimer, SG_defs, SDL_ImageManager, sdl_canvas, SDL, sdl_13;
 
 type
    TTileGroupPair = TPair<TTileGroupRecord, PSdlSurface>;
@@ -33,6 +33,8 @@ type
    private
       FStretchRatio: TSgFloatPoint;
       FSignal: TSimpleEvent;
+      FButtonState: set of TButtonCode;
+      FGameState: TGameState;
    protected
       FDatabase: TRpgDatabase;
       FCanvas: TSdlCanvas;
@@ -42,8 +44,9 @@ type
       FMaps: array of T2kSpriteEngine;
       FScrollPosition: TSgPoint;
       FTimer: TAsphyreTimer;
-      FPartySprite: TCharSprite;
+      FPartySprite: THeroSprite;
       FParty: TRpgParty;
+      FGameEnvironment: T2kEnvironment;
 
       function retrieveImage(const folder, filename: string): TRpgSdlImage;
 
@@ -58,8 +61,16 @@ type
    private //timing and animation
       FFrame: integer;
       FHeartbeat: integer;
-      FLatency: integer;
+      FEnterLock: boolean;
+      FDontLockEnter: boolean;
+      FCutscene: integer;
       procedure OnTimer(Sender: TObject);
+      procedure OnProcess(Sender: TObject);
+      procedure HandleEvent(event: TSdlEvent);
+      procedure KeyDown(key: TSdlKeySym);
+      procedure KeyUp(key: TSdlKeySym);
+      procedure PressButton(button: TButtonCode);
+      procedure PartyButton(button: TButtonCode);
    protected
       procedure cleanup; override;
       procedure AfterPaint; virtual;
@@ -70,9 +81,9 @@ type
       function loadMap(map: IMapMetadata): IRpgMap; override;
       procedure Play; override;
       function Playing: boolean; override;
-      procedure KeyDown(key: word; Shift: TShiftState); override;
-      procedure KeyUp(key: word; Shift: TShiftState); override;
-      property PartySprite: TCharSprite read FPartySprite;
+
+      property PartySprite: THeroSprite read FPartySprite;
+      property State: TGameState read FGameState;
    end;
 
 implementation
@@ -80,8 +91,8 @@ uses
    sysUtils, math,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
    turbu_constants, turbu_map_metadata, turbu_functional,
-   turbu_map_objects,
-   SDL, sdlstreams, sdl_sprite, sg_utils;
+   turbu_map_objects, turbu_2k_map_locks, timing,
+   sdlstreams, sdl_sprite, sg_utils;
 
 { Callbacks }
 
@@ -113,6 +124,7 @@ procedure T2kMapEngine.cleanup;
 var i: integer;
 begin
    assert(FInitialized);
+   FGameEnvironment.Free;
    FParty := nil; //owned by FPartySprite
    FreeAndNil(FPartySprite);
    FreeAndNil(FCanvas);
@@ -183,9 +195,6 @@ begin
                         layout.physWidth, layout.physHeight,
                         [sdlwOpenGl, sdlwShown {,sdlwResizable, sdlwInputGrabbed}]);
 
-      //TODO: add sdlwResizable if Sam's able to add in a "logical size" concept, or
-      //if I end up doing it on this end
-
       if window = 0 then
          raise ERpgPlugin.CreateFmt('Unable to initialize SDL window: %s%s', [LFCR, SDL_GetError]);
       if SDL_CreateRenderer(window, -1, [sdlrPresentFlip2, sdlrAccelerated]) <> 0 then
@@ -201,25 +210,59 @@ begin
    setLength(FMaps, FDatabase.mapTree.lookupCount);
    FSignal := TSimpleEvent.Create;
    FSignal.SetEvent;
+   FGameEnvironment := T2kEnvironment.Create(FDatabase);
 
    FInitialized := true;
 end;
 
 procedure T2kMapEngine.initializeParty;
+var
+   i: integer;
 begin
    FParty := TRpgParty.Create;
-   FParty.hero[1] := TRpgHero.Create(GDatabase.hero[1]);
+   for I := 0 to FGameEnvironment.Heroes.Count - 1 do
+   begin
+      FParty.hero[1] := FGameEnvironment.heroes[i];
+      if FGameEnvironment.heroes[i].sprite <> '' then
+         Break;
+   end;
    FPartySprite := THeroSprite.create(FCurrentMap, FParty.hero[1], FParty);
 end;
 
-procedure T2kMapEngine.KeyDown(key: word; Shift: TShiftState);
+procedure T2kMapEngine.KeyDown(key: TSdlKeySym);
+
+   procedure AddButton(code: TButtonCode);
+   begin
+      include(FButtonState, code);
+   end;
+
 begin
-   //TODO: Handle input here
+   case key.scancode of
+      SDL_SCANCODE_RIGHT: AddButton(btn_right);
+      SDL_SCANCODE_LEFT: AddButton(btn_left);
+      SDL_SCANCODE_DOWN: AddButton(btn_down);
+      SDL_SCANCODE_UP: AddButton(btn_up);
+      SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER: AddButton(btn_enter);
+      SDL_SCANCODE_ESCAPE, SDL_SCANCODE_INSERT: AddButton(btn_cancel);
+   end;
 end;
 
-procedure T2kMapEngine.KeyUp(key: word; Shift: TShiftState);
+procedure T2kMapEngine.KeyUp(key: TSdlKeySym);
+
+   procedure RemoveButton(code: TButtonCode);
+   begin
+      exclude(FButtonState, code);
+   end;
+
 begin
-   //TODO: Handle input ending here
+   case key.scancode of
+      SDL_SCANCODE_RIGHT: RemoveButton(btn_right);
+      SDL_SCANCODE_LEFT: RemoveButton(btn_left);
+      SDL_SCANCODE_DOWN: RemoveButton(btn_down);
+      SDL_SCANCODE_UP: RemoveButton(btn_up);
+      SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER: RemoveButton(btn_enter);
+      SDL_SCANCODE_ESCAPE, SDL_SCANCODE_INSERT: RemoveButton(btn_cancel);
+   end;
 end;
 
 function T2kMapEngine.loadMap(map: IMapMetadata): IRpgMap;
@@ -282,6 +325,57 @@ begin
    FScrollPosition := map.scrollPosition;
 end;
 
+procedure T2kMapEngine.PartyButton(button: TButtonCode);
+begin
+   if button in [btn_up, btn_right, btn_down, btn_left] then
+      GMoveLock.Enter;
+   case button of
+      btn_enter:
+      begin
+         if not FDontLockEnter then
+            FEnterLock := true;
+         GEventLock.enter;
+         try
+            FPartySprite.action;
+         finally
+            GEventLock.leave;
+         end;
+      end;
+      btn_up: FPartySprite.move(facing_up);
+      btn_down: FPartySprite.move(facing_down);
+      btn_left: FPartySprite.move(facing_left);
+      btn_right: FPartySprite.move(facing_right);
+   end;
+   if button in [btn_up, btn_right, btn_down, btn_left] then
+      GMoveLock.Leave;
+end;
+
+procedure T2kMapEngine.PressButton(button: TButtonCode);
+begin
+   if FEnterLock and (button in [btn_enter, btn_cancel]) then
+      Exit;
+   case State of
+      gs_map:
+         if FCutscene > 0 then
+            Exit
+         else if (button = btn_cancel) {and FMenuEnabled} then
+         begin
+{            if not FDontLockEnter then
+               FEnterLock := true;
+            frmConsole.newScript := TConsoleEventThread.Create(SCRIPT_HEADER + 'openMenu;' + SCRIPT_FOOTER);
+            FScriptEngine.registerConsoleThread(frmConsole.newScript);
+            FScriptEngine.mediaPlayer.playSystemSound(sfxAccept); }
+         end
+         else if assigned(FPartySprite) then
+            PartyButton(button);
+      gs_message: {FCurrentMBox.button(button)};
+      gs_menu: {FSystemMenu.button(button)};
+      gs_battle: ;
+      gs_fading: ;
+      gs_minigame: ;
+   end;
+end;
+
 procedure T2kMapEngine.repaint;
 begin
    FCanvas.SetRenderer;
@@ -302,10 +396,19 @@ end;
 function T2kMapEngine.doneLoadingMap: boolean;
 begin
    FCurrentMap := FMaps[FWaitingMap.id];
+   GSpriteEngine := FCurrentMap;
    LoadMapSprites(FCurrentMap.mapObj);
    result := FSignal.WaitFor(INFINITE) = wrSignaled;
    if result then
       self.repaint;
+end;
+
+procedure T2kMapEngine.HandleEvent(event: TSdlEvent);
+begin
+   case event.type_ of
+      SDL_KEYDOWN: KeyDown(event.key.KeySym);
+      SDL_KEYUP: KeyUp(event.key.KeySym)
+   end;
 end;
 
 procedure T2kMapEngine.loadTileset(const value: TTileSet);
@@ -334,7 +437,7 @@ procedure T2kMapEngine.OnTimer(Sender: TObject);
 begin
    //TODO: Remove commented-out code blocks when render targets, transitions and script events are implemented
    inc(FFrame);
-   FLatency := max(commons.round(FTimer.latency), 1);
+   TRpgTimeStamp.FrameLength := max(commons.round(FTimer.latency), 1);
 {   if assigned(mapEngine.transProc) then
       mapEngine.Draw
    else if mapEngine.blank then
@@ -359,12 +462,28 @@ begin
 end;
 {$R+}
 
+procedure T2kMapEngine.OnProcess(Sender: TObject);
+var
+   event: TSdlEvent;
+   button: TButtonCode;
+begin
+   SDL_PumpEvents;
+   for event in SDL_GetEvents do
+      HandleEvent(event);
+   for button in FButtonState do
+      pressButton(button);
+   FCurrentMap.Process(sender);
+end;
+
 procedure T2kMapEngine.Play;
 begin
    assert(assigned(FCurrentMap));
+   //clear the SDL event queue
+   SDL_PumpEvents;
+   SDL_FlushEvents(0, SDL_LASTEVENT);
    FTimer.Enabled := true;
    FTimer.OnTimer := self.OnTimer;
-   FTimer.OnProcess := FCurrentMap.Process;
+   FTimer.OnProcess := self.OnProcess;
 end;
 
 function T2kMapEngine.Playing: boolean;

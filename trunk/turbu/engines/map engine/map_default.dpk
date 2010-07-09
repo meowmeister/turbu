@@ -39,6 +39,8 @@ contains
   turbu_2k_map_locks in 'turbu_2k_map_locks.pas',
   turbu_heroes in 'turbu_heroes.pas',
   turbu_mapchars in '..\..\turbu format\turbu_mapchars.pas',
-  turbu_2k_char_sprites in 'turbu_2k_char_sprites.pas';
+  turbu_2k_char_sprites in 'turbu_2k_char_sprites.pas',
+  turbu_2k_sprite_list in 'turbu_2k_sprite_list.pas',
+  turbu_2k_environment in 'turbu_2k_environment.pas';
 
 end.

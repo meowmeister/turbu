@@ -3,15 +3,14 @@ unit turbu_2k_sprite_engine;
 interface
 uses
    types, Generics.Collections,
+   turbu_2k_sprite_list,
    turbu_maps, turbu_map_engine, turbu_2k_map_tiles, turbu_tilesets,
    turbu_map_objects, turbu_map_sprites, turbu_defs, tiles,
-   sdl_sprite, sdl_canvas, SDL_ImageManager;
+   sdl_sprite, sdl_canvas, SDL_ImageManager, SG_defs;
 
 type
    TTileMatrix = TMatrix<TMapTile>;
    TTileMatrixList = class(TObjectList<TTileMatrix>);
-
-   TFacingSet = set of TFacing;
 
    T2kSpriteEngine = class(TSpriteEngine)
    private
@@ -25,6 +24,7 @@ type
       FCurrentLayer: integer;
       FBlank: boolean;
       FMapObjects: TMapSpriteList;
+      FSpriteLocations: TSpriteLocations;
       FCurrentParty: TCharSprite;
 
       procedure SetViewport(const viewport: TRect);
@@ -34,6 +34,10 @@ type
       function GetMaxLayer: integer; inline;
       function GetDefTile(layer, x, y: integer): TMapTile; inline;
       procedure DrawBG;
+      function GetMapID: integer;
+      function outOfBounds(x, y: integer): boolean; inline;
+      function GetHeight: integer;
+      function GetWidth: integer;
    public
       constructor Create(map: TRpgMap; const viewport: TRect;
                          canvas: TSdlCanvas; tileset: TTileset; images: TSdlImages);
@@ -47,11 +51,19 @@ type
       function GetTopTile(x, y: integer): TMapTile;
       procedure RecreateTileMatrix;
       function AddMapObject(obj: TRpgMapObject): TMapSprite;
+      procedure DeleteMapObject(obj: TMapSprite);
       function Passable(x, y: integer; direction: TFacing): boolean; overload;
       function Passable(x, y: integer): boolean; overload;
+      function Passable(location: TSgPoint; direction: TFacing; character: TMapSprite): boolean; overload;
+      function Passable(location: TSgPoint; direction: TFacing): boolean; overload;
       function edgeCheck(const x, y: integer; const direction: TFacing): boolean;
       procedure EnsureImage(const filename: string);
       procedure Draw; override;
+      function canExit(const x, y: integer; direction: TFacing; character: TMapSprite): boolean;
+      function SpritesAt(location: TSgPoint): TArray<TMapSprite>;
+      procedure AddLocation(const position: TSgPoint; character: TMapSprite);
+      procedure LeaveLocation(const position: TSgPoint; character: TMapSprite);
+      function normalizePoint(var x, y: integer): boolean;
 
       property overlapping: TFacingSet read FOverlapping;
       property viewport: TRect read FViewport write SetViewport;
@@ -64,13 +76,19 @@ type
       property mapObjects: TMapSpriteList read FMapObjects;
       property CurrentParty: TCharSprite read FCurrentParty write FCurrentParty;
       property Tile[layer, x, y: integer]: TMapTile read GetDefTile; default;
+      property MapID: integer read GetMapID;
+      property height: integer read GetHeight;
+      property width: integer read GetWidth;
    end;
+
+var
+   GSpriteEngine: T2kSpriteEngine;
 
 implementation
 uses
    SysUtils,
-   commons, turbu_constants, archiveInterface,
-   SG_defs;
+   DeHL.Collections.Base,
+   commons, turbu_constants, archiveInterface, charset_data;
 
 { T2kSpriteEngine }
 
@@ -94,23 +112,43 @@ begin
    newTile.place(x, y, layer, tile, FTileset);
 end;
 
+function T2kSpriteEngine.canExit(const x, y: integer; direction: TFacing; character: TMapSprite): boolean;
+var
+   opposite: TFacing;
+begin
+   result := false;
+   opposite := opposite_facing(direction);
+
+//you have to be able to leave the tile you're on
+   if passable(x, y, direction) then
+   begin
+
+//check to see if you're moving off the edge of the map, and
+//that the tile you're moving into will let you enter from
+//that direction
+      if edgeCheck(x, y, direction) then
+         result := passable(character.inFront, opposite, character);
+      //end if
+   end;
+end;
+
+function T2kSpriteEngine.normalizePoint(var x, y: integer): boolean;
+var
+   newX, newY: integer;
+begin
+   result := true;
+   newX := safeMod(x, fTiles[0].width);
+   newY := safeMod(y, fTiles[0].height);
+   result := result and ((newX = x) or (wrHorizontal in FMap.wraparound));
+   result := result and ((newY = y) or (wrVertical in FMap.wraparound));
+   x := newX;
+   y := newY;
+end;
+
 procedure T2kSpriteEngine.updateBorders(x, y, layer: integer);
 var
    tile: TBorderTile;
    neighbors: TNeighborSet;
-
-   function normalizePoint(var x, y: integer): boolean;
-   var
-      newX, newY: integer;
-   begin
-      result := true;
-      newX := safeMod(x, fTiles[layer].width);
-      newY := safeMod(y, fTiles[layer].height);
-      result := result and ((newX = x) or (wrHorizontal in FMap.wraparound));
-      result := result and ((newY = y) or (wrVertical in FMap.wraparound));
-      x := newX;
-      y := newY;
-   end;
 
    procedure TestInclude(x, y: integer; neighbor: TDirs8);
    begin
@@ -154,6 +192,16 @@ begin
    end;
 end;
 
+procedure T2kSpriteEngine.AddLocation(const position: TSgPoint; character: TMapSprite);
+begin
+   FSpriteLocations.Add(position, character);
+end;
+
+procedure T2kSpriteEngine.LeaveLocation(const position: TSgPoint; character: TMapSprite);
+begin
+   FSpriteLocations.Remove(position, character);
+end;
+
 function T2kSpriteEngine.AddMapObject(obj: TRpgMapObject): TMapSprite;
 begin
    if obj.id = 0 then
@@ -163,6 +211,12 @@ begin
    else
       result := TCharSprite.Create(obj, self, nil);
    FMapObjects.Add(result);
+end;
+
+procedure T2kSpriteEngine.DeleteMapObject(obj: TMapSprite);
+begin
+   FSpriteLocations.Remove(obj.location, obj);
+   FMapObjects.Remove(obj);
 end;
 
 constructor T2kSpriteEngine.Create(map: TRpgMap; const viewport: TRect;
@@ -201,10 +255,13 @@ begin
    FMapObjects := TMapSpriteList.Create;
    for mapObj in map.mapObjects do
       addMapObject(mapObj);
+   FSpriteLocations := TSpriteLocations.Create(FMapObjects.count);
+   GSpriteEngine := self;
 end;
 
 destructor T2kSpriteEngine.Destroy;
 begin
+   FSpriteLocations.Free;
    FMapObjects.Free;
    FTiles.Free;
    FMap.Free;
@@ -239,6 +296,7 @@ begin
       facing_right: result := (x < FMap.width) or (wrHorizontal in FMap.wraparound);
       facing_down: result := (y < FMap.height) or (wrVertical in FMap.wraparound);
       facing_left: result := (x > 0) or (wrHorizontal in FMap.wraparound);
+      else raise ESpriteError.CreateFmt('Bad Direction value: %d is out of bounds for TFacing', [ord(direction)]);
    end;
 end;
 
@@ -263,6 +321,16 @@ begin
    result := GetTile(x, y, layer);
 end;
 
+function T2kSpriteEngine.GetHeight: integer;
+begin
+   result := MapObj.size.y;
+end;
+
+function T2kSpriteEngine.GetMapID: integer;
+begin
+   result := MapObj.ID;
+end;
+
 function T2kSpriteEngine.GetMaxLayer: integer;
 begin
    result := FTiles.Count - 1;
@@ -272,6 +340,9 @@ function T2kSpriteEngine.GetTile(x, y, layer: integer): TMapTile;
 var
    i: integer;
 begin
+   normalizePoint(x, y);
+   if outOfBounds(x, y) then
+      Exit(nil);
    if not assigned(FTiles.First[x, y]) then
       for I := 0 to FTiles.Count - 1 do
          FTiles[i][x, y] := FullCreateNewTile(x, y, i);
@@ -292,6 +363,11 @@ begin
          Exit;
    end;
    assert(false); //should not reach this point
+end;
+
+function T2kSpriteEngine.GetWidth: integer;
+begin
+   result := MapObj.size.x;
 end;
 
 function T2kSpriteEngine.CreateNewTile(value: TTileRef): TMapTile;
@@ -333,7 +409,10 @@ var
    var
       adjustedCoords: TSgPoint;
    begin
-      adjustedCoords := (sgPoint(x, y) + size) mod size;
+      adjustedCoords := sgPoint(x, y);
+      while (adjustedCoords.x < 0) or (adjustedCoords.y < 0) do
+         adjustedCoords := adjustedCoords + size;
+      adjustedCoords := adjustedCoords mod size;
       equivX := adjustedCoords.x;
       equivY := adjustedCoords.y;
    end;
@@ -372,6 +451,11 @@ begin
       end;
 end;
 
+function T2kSpriteEngine.outOfBounds(x, y: integer): boolean;
+begin
+   result := (x < 0) or (y < 0) or (x >= FMap.width) or (y >= FMap.height);
+end;
+
 function T2kSpriteEngine.Passable(x, y: integer; direction: TFacing): boolean;
 const TRANSLATE: array[TFacing] of TTileAttribute = (taUp, taRight, taDown, taLeft);
 var
@@ -396,10 +480,35 @@ begin
       result := result or Passable(x, y, dir);
 end;
 
+function T2kSpriteEngine.Passable(location: TSgPoint; direction: TFacing; character: TMapSprite): boolean;
+var
+   event: TArray<TMapSprite>;
+begin
+   event := self.SpritesAt(location);
+   result := passable(location, direction) and ((event = nil) or
+     ((length(event) = 1) and (event[0] = character)));
+end;
+
+function T2kSpriteEngine.Passable(location: TSgPoint; direction: TFacing): boolean;
+begin
+   result := passable(location.x, location.y, direction);
+end;
+
 procedure T2kSpriteEngine.Process(Sender: TObject);
+var
+   sprite: TMapSprite;
 begin
    self.Dead;
-//   FMap.PlaceAllChars;
+   for sprite in FMapObjects do
+   begin
+      sprite.place;
+      sprite.MoveTick;
+   end;
+   if assigned(FCurrentParty) then
+   begin
+      FCurrentParty.place;
+      FCurrentParty.MoveTick;
+   end;
 //TODO: calculate map shaking, fading, and overlay colors
 end;
 
@@ -433,6 +542,13 @@ begin
       include(FOverlapping, facing_up)
    else if viewport.Top > self.Height then
       include(FOverlapping, facing_down);
+end;
+
+function T2kSpriteEngine.SpritesAt(location: TSgPoint): TArray<TMapSprite>;
+begin
+   if not FSpriteLocations.ContainsKey(location) then
+      result := nil
+   else result := FSpriteLocations[location].ToArray;
 end;
 
 end.

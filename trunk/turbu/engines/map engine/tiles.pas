@@ -21,6 +21,7 @@ interface
 uses
    types, classes, Generics.Collections,
    commons, timing, charset_data, turbu_maps, turbu_tilesets, turbu_map_objects,
+   turbu_defs,
    SDL_sprite, SG_Defs;
 
 type
@@ -41,27 +42,18 @@ type
       FGridLoc: TSgPoint; //where this tile is located on the map
       FTerrainID: word;
       FAttributes: TTileAttributes;
-      FSavedFx: integer;
-      FSavedColor: TRpgColor;
-      FFlashColor: TRpgColor;
-      FFlashTimer: TRpgTimestamp;
-
-      procedure saveColor;
-      procedure restoreColor(which: TRpgColor);
    protected
       FTileID: word; // which tile from the overall x,y grid of the chipset
       function InVisibleRect: boolean; override;
       procedure DoDraw; override;
+      procedure AdjustOverlap(overlap: TFacingSet);
       procedure setEngine(newEngine: TSpriteEngine); virtual;
    public
       constructor Create(const AParent: TSpriteEngine; tileset: string); reintroduce; overload; virtual;
-      destructor Destroy; override;
-      procedure Draw; override;
       procedure Assign(const value: TTile); reintroduce;
       function place(const xCoord,yCoord, layer: word; const tileData: TTileRef;
                      chip_data: TTileSet): TTileAttributes; virtual;
       function open(exceptFor: TObject): boolean; virtual;
-      procedure flash(r, g, b, a: byte; time: cardinal);
       function canEnter: boolean;
 
       class procedure heartbeat;
@@ -75,10 +67,18 @@ type
    TEventTile = class(TTile)
    private
       FEvent: TRpgMapObject;
+      FSavedFx: integer;
+      FSavedColor: TRpgColor;
+      FFlashColor: TRpgColor;
+      FFlashTimer: TRpgTimestamp;
+      procedure saveColor;
+      procedure restoreColor(which: TRpgColor);
    public
       constructor Create(baseEvent: TRpgMapObject; const AParent: TSpriteEngine); reintroduce;
+      destructor Destroy; override;
       procedure assign(data: TEventTile); reintroduce;
       procedure update(newPage: TRpgEventPage);
+      procedure flash(r, g, b, a: byte; time: cardinal);
 
       procedure Draw; override;
       property event: TRpgMapObject read FEvent write FEvent;
@@ -123,7 +123,7 @@ implementation
 
 uses
    SysUtils, Math,
-   turbu_constants, turbu_2k_sprite_engine, turbu_defs,
+   turbu_constants, turbu_2k_sprite_engine,
    SDL_ImageManager;
 
 constructor TTile.Create(const AParent: TSpriteEngine; tileset: string);
@@ -131,12 +131,6 @@ begin
    assert(AParent is T2kSpriteEngine);
    inherited create(AParent);
    imageName := tileset;
-end;
-
-destructor TTile.Destroy;
-begin
-   FFlashTimer.Free;
-   inherited;
 end;
 
 procedure TTile.assign(const value: TTile);
@@ -173,41 +167,47 @@ begin
       FBroadcastList := TList<TBroadcastProc>.Create;
 end;
 
+procedure TTile.AdjustOverlap(overlap: TFacingSet);
+var
+   viewport: TRect;
+   mapSize: TSgFloatPoint;
+begin
+   viewport := T2kSpriteEngine(FEngine).viewport;
+   mapSize := TSgPoint(T2kSpriteEngine(FEngine).mapRect.BottomRight) * TILE_SIZE;
+   if facing_left in overlap then
+   begin
+      if FGridLoc.X > viewport.Right then
+         self.X := self.X - mapSize.x;
+   end
+   else if facing_right in overlap then
+   begin
+      if FGridLoc.X < viewport.Left then
+         self.X := self.X + mapSize.x;
+   end;
+   if facing_up in overlap then
+   begin
+      if FGridLoc.Y > viewport.Bottom then
+         self.Y := self.Y - mapSize.Y;
+   end
+   else if facing_down in overlap then
+   begin
+      if FGridLoc.Y < viewport.Top then
+         self.Y := self.Y + mapSize.Y;
+   end;
+end;
+
 {$WARN USE_BEFORE_DEF OFF}
 procedure TTile.DoDraw;
 var
    lX, lY: single;
    overlap: TFacingSet;
-   viewport: TRect;
-   mapSize: TSgFloatPoint;
 begin
    overlap := T2kSpriteEngine(FEngine).overlapping;
    if overlap <> [] then
    begin
-      viewport := T2kSpriteEngine(FEngine).viewport;
-      mapSize := TSgPoint(T2kSpriteEngine(FEngine).mapRect.BottomRight) * TILE_SIZE;
       lX := self.X;
       lY := self.Y;
-      if facing_left in overlap then
-      begin
-         if FGridLoc.X > viewport.Right then
-            self.X := lX - mapSize.x;
-      end
-      else if facing_right in overlap then
-      begin
-         if FGridLoc.X < viewport.Left then
-            self.X := lX + mapSize.x;
-      end;
-      if facing_up in overlap then
-      begin
-         if FGridLoc.Y > viewport.Bottom then
-            self.Y := lY - mapSize.Y;
-      end
-      else if facing_down in overlap then
-      begin
-         if FGridLoc.Y < viewport.Top then
-            self.Y := lY + mapSize.Y;
-      end;
+      adjustOverlap(overlap);
    end;
    inherited DoDraw;
    if overlap <> [] then
@@ -254,45 +254,6 @@ begin
    end;
 end;
 
-procedure TTile.Draw;
-var
-   i: byte;
-   timer: cardinal;
-begin
-   inherited Draw;
-   if assigned(FFlashTimer) then
-   begin
-      timer := FFlashTimer.timeRemaining;
-      if timer > 0 then
-      begin
-         saveColor;
-         FSavedFx := self.DrawFx;
-         restoreColor(FFlashColor);
-         self.DrawFx := fxOneColor;
-         inherited Draw;
-         for i := 1 to 4 do
-            moveTowards(timer, FFlashColor.rgba[i], 0);
-         restoreColor(FSavedColor);
-         self.DrawFx := FSavedFx;
-      end
-      else freeAndNil(FFlashTimer);
-   end;
-end;
-
-procedure TTile.flash(r, g, b, a: byte; time: cardinal);
-begin
-   with FFlashColor do
-   begin
-      rgba[1] := r;
-      rgba[2] := g;
-      rgba[3] := b;
-      rgba[4] := a;
-   end;
-   if Assigned(FFlashTimer) then
-      FFlashTimer.Free;
-   FFlashTimer := TRpgTimestamp.Create(time);
-end;
-
 class procedure TTile.heartbeat;
 var
    proc: TBroadcastProc;
@@ -336,30 +297,6 @@ begin
    z := decodeZOrder(result) + layer;
 end;
 
-procedure TTile.restoreColor(which: TRpgColor);
-begin
-   with which do
-   begin
-//fixme
-      Red := rgba[1];
-      Green := rgba[2];
-      Blue := rgba[3];
-      Alpha := rgba[4];
-   end;
-end;
-
-procedure TTile.saveColor;
-begin
-   with FSavedColor do
-   begin
-//fixme
-      rgba[1] := lo(Red);
-      rgba[2] := lo(Green);
-      rgba[3] := lo(Blue);
-      rgba[4] := lo(Alpha);
-   end;
-end;
-
 procedure TTile.setEngine(newEngine: TSpriteEngine);
 begin
    FEngine := newEngine;
@@ -384,9 +321,73 @@ begin
    end;
 end;
 
+destructor TEventTile.Destroy;
+begin
+   FFlashTimer.Free;
+   inherited Destroy;
+end;
+
+procedure TEventTile.saveColor;
+begin
+   with FSavedColor do
+   begin
+//fixme
+      rgba[1] := lo(Red);
+      rgba[2] := lo(Green);
+      rgba[3] := lo(Blue);
+      rgba[4] := lo(Alpha);
+   end;
+end;
+
+procedure TEventTile.restoreColor(which: TRpgColor);
+begin
+   with which do
+   begin
+//fixme
+      Red := rgba[1];
+      Green := rgba[2];
+      Blue := rgba[3];
+      Alpha := rgba[4];
+   end;
+end;
+
 procedure TEventTile.Draw;
+var
+   i: integer;
+   timer: cardinal;
 begin
   inherited Draw;
+   if assigned(FFlashTimer) then
+   begin
+      timer := FFlashTimer.timeRemaining;
+      if timer > 0 then
+      begin
+         saveColor;
+         FSavedFx := self.DrawFx;
+         restoreColor(FFlashColor);
+         self.DrawFx := fxOneColor;
+         inherited Draw;
+         for i := 1 to 4 do
+            moveTowards(timer, FFlashColor.rgba[i], 0);
+         restoreColor(FSavedColor);
+         self.DrawFx := FSavedFx;
+      end
+      else freeAndNil(FFlashTimer);
+   end;
+end;
+
+procedure TEventTile.flash(r, g, b, a: byte; time: cardinal);
+begin
+   with FFlashColor do
+   begin
+      rgba[1] := r;
+      rgba[2] := g;
+      rgba[3] := b;
+      rgba[4] := a;
+   end;
+   if Assigned(FFlashTimer) then
+      FFlashTimer.Free;
+   FFlashTimer := TRpgTimestamp.Create(time);
 end;
 
 procedure TEventTile.update(newPage: TRpgEventPage);

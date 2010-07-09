@@ -23,6 +23,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
 			<DCC_Define>PS_USESSUPPORT;$(DCC_Define)</DCC_Define>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
@@ -92,6 +93,23 @@
 			<DCCReference Include="..\..\rttiHelper.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_containers.pas"/>
 			<DCCReference Include="..\..\turbu_functional.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.Dictionary.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.List.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.Abstract.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.Base.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\DeHL.Exceptions.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\DeHL.Types.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\DeHL.Base.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Extensions\DeHL.KeyValuePair.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Extensions\DeHL.Arrays.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\DeHL.StrConsts.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Math\DeHL.Math.Primes.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Serialization\DeHL.Serialization.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Extensions\DeHL.Converter.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Extensions\DeHL.Nullable.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.HashSet.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.DistinctMultiMap.pas"/>
+			<None Include="..\..\..\classes\DeHL\DeHL.Defines.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

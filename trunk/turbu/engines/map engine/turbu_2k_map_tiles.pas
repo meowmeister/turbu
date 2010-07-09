@@ -3,26 +3,25 @@ unit turbu_2k_map_tiles;
 interface
 uses
    Generics.Collections,
-   tiles, turbu_tilesets, turbu_map_sprites,
+   tiles, turbu_tilesets, turbu_map_sprites, turbu_containers,
    SDL_sprite;
 
 type
+   TMapSpriteList = TRpgObjectList<TMapSprite>;
+
    TMapTile = class(TTile)
    private
-      FOccupied: TMapSpriteList;
-
       function isOccupied: boolean;
       function IsCountertop: boolean; inline;
+      function GetEvent: TArray<TMapSprite>;
    protected
       FNeighbors: TNeighborSet;
    public
-      constructor Create(const AParent: TSpriteEngine; tileset: string); override;
-      destructor Destroy; override;
       function open(exceptFor: TObject): boolean; override;
       procedure bump(character: TObject);
 
       property occupied: boolean read isOccupied;
-      property event: TMapSpriteList read FOccupied write FOccupied;
+      property event: TArray<TMapSprite> read GetEvent;
       property countertop: boolean read IsCountertop;
    end;
 
@@ -41,7 +40,7 @@ type
 
    TBorderTile = class;
 
-   TMiniTile = class(TTile)
+   TMiniTile = class(TSprite)
    public
       constructor Create(const AParent: TBorderTile; tileset: string);
    end;
@@ -51,11 +50,12 @@ type
       minitiles: array[1..4] of TMiniTile;
    protected
       procedure doPlace; virtual;
+      procedure setMinisPosition;
       procedure setEngine(newEngine: TSpriteEngine); override;
+      procedure DoDraw; override;
    public
       constructor Create(const AParent: TSpriteEngine; tileset: string); override;
       destructor Destroy; override;
-      procedure Draw; override;
       function place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
                     chip_data: TTileSet): TTileAttributes; override;
       function sharesBorder(neighbor: TTile): boolean; virtual;
@@ -71,10 +71,12 @@ type
       class procedure OnHeartbeat;
    private
       FLinkedFilename: string;
+      FMiniIndices: array[0..3, 1..4] of integer;
+      procedure DisplaceMinis;
+      procedure DoDraw; override;
    public
       function place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
                     chip_data: TTileSet): TTileAttributes; override;
-      procedure Draw; override;
       function sharesBorder(neighbor: TTile): boolean; override;
    end;
 
@@ -92,7 +94,8 @@ type
 
 implementation
 uses
-   turbu_constants, turbu_maps, turbu_map_objects;
+   turbu_constants, turbu_maps, turbu_map_objects, turbu_defs,
+   turbu_2k_sprite_engine;
 
 { TMapTile }
 
@@ -100,33 +103,26 @@ procedure TMapTile.bump(character: TObject);
 var
    bumper, dummy: TMapSprite;
    I: Integer;
+   lEvent: TArray<TMapSprite>;
 begin
 {$MESSAGE WARN 'Commented-out code in live unit'}
    bumper := character as TMapSprite;
+   lEvent := self.event;
    if bumper is TCharSprite then
-      for I := 0 to FOccupied.Count - 1 do
+      for dummy in lEvent do
       begin
-         dummy := FOccupied[i] as TMapSprite;
          if dummy.hasPage and (dummy.event.currentPage.startCondition in [by_touch, by_collision]) then
-{            GScriptEngine.executeEvent(dummy.event, dummy); };
+{            GScriptEngine.executeEvent(dummy.lEvent, dummy); };
       end
    else if bumper.hasPage and (bumper.event.currentPage.startCondition = by_collision) then
-      for I := 0 to FOccupied.Count - 1 do
- {        if FOccupied[i] = GGameEngine.currentParty then
+      for I := 0 to high(lEvent) do
+{         if FOccupied[i] = GGameEngine.currentParty then
             GScriptEngine.executeEvent(bumper.event, bumper); };
 end;
 
-constructor TMapTile.Create(const AParent: TSpriteEngine; tileset: string);
+function TMapTile.GetEvent: TArray<TMapSprite>;
 begin
-   inherited Create(AParent, tileset);
-   FOccupied := TMapSpriteList.Create;
-end;
-
-destructor TMapTile.Destroy;
-begin
-   FOccupied.Clear;
-   FOccupied.Free;
-   inherited;
+   result := GSpriteEngine.SpritesAt(self.location);
 end;
 
 function TMapTile.IsCountertop: boolean;
@@ -136,16 +132,18 @@ end;
 
 function TMapTile.isOccupied: boolean;
 begin
-   result := FOccupied.Count > 0;
+   result := length(Event) > 0;
 end;
 
 function TMapTile.open(exceptFor: TObject): boolean;
 var
    I: Integer;
+   lEvent: TArray<TMapSprite>;
 begin
+   lEvent := self.event;
    result := (inherited open(exceptFor));
-   for I := 0 to FOccupied.Count - 1 do
-      result := result and (FOccupied[i] = exceptFor);
+   for I := 0 to high(lEvent) do
+      result := result and (lEvent[i] = exceptFor);
 end;
 
 { TBorderTile }
@@ -168,6 +166,30 @@ begin
    for x := 1 to 4 do
          minitiles[x].free;
    inherited destroy;
+end;
+
+procedure TBorderTile.DoDraw;
+var
+   i: integer;
+   lX, lY: single;
+   overlap: TFacingSet;
+begin
+   overlap := T2kSpriteEngine(FEngine).overlapping;
+   if overlap <> [] then
+   begin
+      lX := self.X;
+      lY := self.Y;
+      adjustOverlap(overlap);
+      self.setMinisPosition;
+   end;
+   for i := 1 to 4 do
+      miniTiles[i].DoDraw;
+   if overlap <> [] then
+   begin
+      self.X := lX;
+      self.Y := lY;
+      self.setMinisPosition;
+   end;
 end;
 
 function TBorderTile.place(const xCoord, yCoord, layer: word; const tileData:
@@ -197,6 +219,18 @@ begin
              (neighbor.ImageName = self.ImageName);
 end;
 
+procedure TBorderTile.setMinisPosition;
+begin
+   miniTiles[1].X := self.X;
+   miniTiles[1].Y := self.Y;
+   miniTiles[2].X := self.X + (self.width div 2);
+   miniTiles[2].Y := self.Y;
+   miniTiles[3].X := self.X;
+   miniTiles[3].Y := self.Y + (self.height div 2);
+   miniTiles[4].X := self.X + (self.width div 2);
+   miniTiles[4].Y := self.Y + (self.height div 2);
+end;
+
 procedure TBorderTile.doPlace;
 var
    minis, base: array[1..4] of word;
@@ -206,19 +240,9 @@ begin
    minis[2] := minis[1] + 1;
    minis[3] := minis[1] + 6;
    minis[4] := minis[3] + 1;
-   miniTiles[1].X := self.X;
-   miniTiles[1].Y := self.Y;
-   miniTiles[2].X := self.X + 8;
-   miniTiles[2].Y := self.Y;
-   miniTiles[3].X := self.X;
-   miniTiles[3].Y := self.Y + 8;
-   miniTiles[4].X := self.X + 8;
-   miniTiles[4].Y := self.Y + 8;
+   self.setMinisPosition;
    for i := 1 to 4 do
-   begin
       miniTiles[i].ImageName := self.ImageName;
-      miniTiles[i].location := self.location;
-   end;
 //now comes the fun part
 //skip if there's nothing to change
    if neighbors <> [] then
@@ -343,13 +367,6 @@ begin
       miniTiles[i].ImageIndex := minis[i];
 end;
 
-procedure TBorderTile.Draw;
-var i: byte;
-begin
-   for I := 1 to 4 do
-      miniTiles[i].Draw;
-end;
-
 { TWaterTile }
 
 class constructor TWaterTile.Create;
@@ -358,10 +375,20 @@ begin
    FBroadcastList.Add(TWaterTile.OnHeartbeat);
 end;
 
-procedure TWaterTile.Draw;
+procedure TWaterTile.DisplaceMinis;
+var
+   i: integer;
+   displacement: integer;
 begin
-   doPlace;
-   inherited;
+   displacement := FDisplacement mod 4;
+   for i := 1 to 4 do
+      minitiles[i].ImageIndex := FMiniIndices[displacement, i];
+end;
+
+procedure TWaterTile.DoDraw;
+begin
+   DisplaceMinis;
+   inherited DoDraw;
 end;
 
 function TWaterTile.place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
@@ -421,17 +448,9 @@ begin
    minis[2] := minis[1] + 1;
    minis[3] := minis[1] + 6;
    minis[4] := minis[3] + 1;
-   miniTiles[1].X := self.X;
-   miniTiles[1].Y := self.Y;
-   miniTiles[2].X := self.X + 8;
-   miniTiles[2].Y := self.Y;
-   miniTiles[3].X := self.X;
-   miniTiles[3].Y := self.Y + 8;
-   miniTiles[4].X := self.X + 8;
-   miniTiles[4].Y := self.Y + 8;
+   self.setMinisPosition;
    for i := 1 to 4 do
    begin
-      miniTiles[i].location := self.location;
       miniTiles[i].ImageName := FLinkedFilename;
       changed[i] := true;
    end;
@@ -569,21 +588,13 @@ begin
       end; //end of misc block
    end; //end of skip
 
-   case FDisplacement mod 4 of
-   0:;
-   1, 3:
-      for i := 1 to 4 do
-         inc(minis[i], 2);
-      //end for
-   2:
-      for i := 1 to 4 do
-         inc(minis[i], 4);
-      //end for
-   end;
-
    for i := 1 to 4 do
    begin
-      miniTiles[i].ImageIndex := minis[i];
+      FMiniIndices[0, i] := minis[i];
+      FMiniIndices[1, i] := minis[i] + 2;
+      FMiniIndices[2, i] := minis[i] + 4;
+      FMiniIndices[3, i] := minis[i] + 2;
+      DisplaceMinis;
       if not changed[i] then
          miniTiles[i].ImageName := self.ImageName;
    end;
@@ -609,19 +620,9 @@ begin
    minis[2] := minis[1] + 1;
    minis[3] := minis[1] + 6;
    minis[4] := minis[3] + 1;
-   miniTiles[1].X := self.X;
-   miniTiles[1].Y := self.Y;
-   miniTiles[2].X := self.X + 8;
-   miniTiles[2].Y := self.Y;
-   miniTiles[3].X := self.X;
-   miniTiles[3].Y := self.Y + 8;
-   miniTiles[4].X := self.X + 8;
-   miniTiles[4].Y := self.Y + 8;
+   self.setMinisPosition;
    for i := 1 to 4 do
-   begin
-      miniTiles[i].location := self.location;
       changed[i] := false;
-   end;
 //now comes the fun part
 //skip if there's nothing to change
    if neighbors <> [] then
@@ -775,18 +776,6 @@ begin
       end; //end of misc block
    end; //end of skip
 
-   case FDisplacement mod 4 of
-   0:;
-   1, 3:
-      for i := 1 to 4 do
-         inc(minis[i], 2);
-      //end for
-   2:
-      for i := 1 to 4 do
-         inc(minis[i], 4);
-      //end for
-   end;
-
    for i := 1 to 4 do
    begin
       if not changed[i] then
@@ -795,7 +784,11 @@ begin
          miniTiles[i].ImageName := self.ImageName;
       end
       else miniTiles[i].ImageName := FLinkedFilename;
-      miniTiles[i].ImageIndex := minis[i];
+      FMiniIndices[0, i] := minis[i];
+      FMiniIndices[1, i] := minis[i] + 2;
+      FMiniIndices[2, i] := minis[i] + 4;
+      FMiniIndices[3, i] := minis[i] + 2;
+      DisplaceMinis;
    end;
 end;
 

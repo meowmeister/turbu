@@ -14,7 +14,7 @@ type
 
    TMapScrollType = (stNone, stScroll, stAutoscroll);
    TScriptFormat = (sfEvents, sfScripts, sfCompiled, sfLegacy);
-   TWraparound = set of (wrHorizontal, wrVertical);
+   TWraparound = set of (wrVertical, wrHorizontal);
 
    TDirs8 = (n, ne, e, se, s, sw, w, nw);
    TFuzzy = (no, yes, either);

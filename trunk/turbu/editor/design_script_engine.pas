@@ -121,7 +121,6 @@ end;
 
 destructor TTurbuScriptEngine.Destroy;
 begin
-   turbu_characters.SetScriptEngine(nil);
    FCompiler.free;
    FImporter.Free;
    FScriptEngine.Free;

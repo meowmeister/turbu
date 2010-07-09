@@ -109,7 +109,7 @@ type
 
 implementation
 uses
-   charset_data, turbu_2k_sprite_engine;
+   charset_data, turbu_2k_sprite_engine, timing;
 
 const
    AIRSHIP_OFFSET: TPoint = (x: 0; y: -16);
@@ -215,13 +215,14 @@ begin
 end;
 
 procedure TVehicleSprite.place;
-var kept: TAnimFrame;
+var kept: word;
 begin
-   kept := animFrame;
+   kept := FMoving;
    inherited place;
-   animFrame := kept;
+   FMoving := kept;
    inc(FAnimCounter);
-   if (FAnimated) and (FAnimCounter = VEHICLE_ANIM_RATE) then
+{$MESSAGE WARN 'Commented out code in live unit'}
+{   if (FAnimated) and (FAnimCounter = VEHICLE_ANIM_RATE) then
    begin
       if (FAnimDir = true) and (animFrame = high(TAnimFrame)) then //counting up
          FAnimDir := false
@@ -236,7 +237,7 @@ begin
    end;
    if FAnimCounter = VEHICLE_ANIM_RATE then
       FAnimCounter := 0;
-{   if (GGameEngine.currentParty = self) and (FMoved) and (not GGameEngine.screenLocked) then
+   if (GGameEngine.currentParty = self) and (FMoved) and (not GGameEngine.screenLocked) then
       T2kSpriteEngine(FEngine).moveTo(trunc(FTiles[1].X) + GGameEngine.displacement.x,
                                trunc(FTiles[1].Y) + GGameEngine.displacement.y);}
 end;
@@ -380,23 +381,18 @@ end;
 
 function TGroundVehicleSprite.canMoveForward: boolean;
 var
-  I: Integer;
-  events: TMapSpriteList;
-  sprite: TObject;
+  sprite: TMapSprite;
 begin
    result := inherited canMoveForward;
    if result then
    begin
-      events := (inFrontTile as TMapTile).event;
-      for I := 0 to events.count - 1 do
+      for sprite in (inFrontTile as TMapTile).event do
       begin
-         sprite := events.items[i];
          if ((sprite is TEventSprite) and
             (TEventSprite(sprite).baseTile.Z = 4)) then //second check
             result := false
          else if (sprite is TCharSprite) and not (sprite is TVehicleSprite) then
             result := false;
-         //end if
       end;
    end;
 end;
@@ -449,14 +445,12 @@ end;
 
 procedure THeroSprite.boardVehicle;
 var
-   i: integer;
-   eventList: TMapSpriteList;
+   eventList: TArray<TMapSprite>;
    theSprite: TMapSprite;
 begin
    eventList := TMapTile(T2kSpriteEngine(FEngine)[0, FLocation.x, FLocation.y]).event;
-   for i := 0 to eventlist.Count - 1 do
+   for theSprite in eventlist do
    begin
-      theSprite := eventList[i];
       if (theSprite is TVehicleSprite) and (TVehicleSprite(theSprite).state = vs_empty) then
       begin
          rideVehicle(TVehicleSprite(theSprite));
@@ -472,12 +466,10 @@ begin
    end;
 
    eventList := TMapTile(T2kSpriteEngine(FEngine)[0, inFront.x, inFront.y]).event;
-   for i := 0 to eventlist.Count - 1 do
+   for theSprite in eventlist do
    begin
-      theSprite := eventList[i] as TMapSprite;
       if (theSprite is TVehicleSprite) and (TVehicleSprite(theSprite).state = vs_empty) then
          rideVehicle(TVehicleSprite(theSprite));
-      //end if
    end;
 end;
 
@@ -486,7 +478,7 @@ const x = 1; y = 1;
 begin
    inherited create(nil, AParent, party);
    FTemplate := whichHero;
-   if assigned(FTemplate) then
+   if assigned(FTemplate) and (FTemplate.sprite <> '') then
       update(FTemplate.sprite, FTemplate.transparent);
    setLocation(point(x, y));
    FParty := party;
@@ -511,15 +503,15 @@ begin
    result := false;
    if assigned(FMoveTime) then
    begin
-{      if (moveFreq = 8) and (FMoveTime.timeRemaining <= GFrameLength) then
+      if (moveFreq = 8) and (FMoveTime.timeRemaining <= TRpgTimestamp.FrameLength) then
          queueMove(whichDir);
-      Exit;}
+      Exit;
    end;
    if assigned(FPause) then
    begin
-{      if FPause.timeRemaining <= GFrameLength then
+      if FPause.timeRemaining <= TRpgTimestamp.FrameLength then
          queueMove(whichDir);
-      Exit;}
+      Exit;
    end;
 
    if FMoveTick then

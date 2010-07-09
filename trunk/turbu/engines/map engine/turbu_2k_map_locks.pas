@@ -6,10 +6,14 @@ uses
 
 var
    GEventLock: TCriticalSection;
+   GMoveLock: TCriticalSection;
+
 implementation
 
 initialization
    GEventLock := TCriticalSection.Create;
+   GMoveLock := TCriticalSection.Create;
 finalization
    GEventLock.Free;
+   GMoveLock.Free;
 end.

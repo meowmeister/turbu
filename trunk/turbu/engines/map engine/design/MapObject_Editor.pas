@@ -54,6 +54,7 @@ type
     Button1: TButton;
     dsPagesEventText: TWideMemoField;
     btnScript: TButton;
+    dsPagesMatrix: TWordField;
     procedure tabEventPagesChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
