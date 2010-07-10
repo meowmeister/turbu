@@ -458,7 +458,8 @@ begin
    begin
       if assigned(FParent) then
       begin
-         FParent.UnDraw(Self);
+         if FZset then
+            FParent.UnDraw(Self);
          FZ := Value;
          FParent.AddDrawList(Self);
       end
