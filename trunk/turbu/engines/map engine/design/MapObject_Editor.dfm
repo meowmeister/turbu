@@ -134,6 +134,8 @@ object frmObjectEditor: TfrmObjectEditor
           Height = 645
           Align = alClient
           Indent = 19
+          ReadOnly = True
+          RowSelect = True
           TabOrder = 0
         end
       end

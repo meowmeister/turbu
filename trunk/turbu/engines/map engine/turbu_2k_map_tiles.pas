@@ -42,7 +42,7 @@ type
 
    TMiniTile = class(TSprite)
    public
-      constructor Create(const AParent: TBorderTile; tileset: string);
+      constructor Create(const AParent: TBorderTile; tileset: string); reintroduce;
    end;
 
    TBorderTile = class(TMapTile)
@@ -73,6 +73,7 @@ type
       FLinkedFilename: string;
       FMiniIndices: array[0..3, 1..4] of integer;
       procedure DisplaceMinis;
+   protected
       procedure DoDraw; override;
    public
       function place(const xCoord, yCoord, layer: word; const tileData: TTileRef;
@@ -168,6 +169,7 @@ begin
    inherited destroy;
 end;
 
+{$WARN USE_BEFORE_DEF OFF}
 procedure TBorderTile.DoDraw;
 var
    i: integer;
@@ -191,6 +193,7 @@ begin
       self.setMinisPosition;
    end;
 end;
+{$WARN USE_BEFORE_DEF ON}
 
 function TBorderTile.place(const xCoord, yCoord, layer: word; const tileData:
                     TTileRef; chip_data: TTileSet): TTileAttributes;

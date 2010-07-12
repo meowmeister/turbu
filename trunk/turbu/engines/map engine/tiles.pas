@@ -104,6 +104,7 @@ type
    private
       FScroll: TScrollData;
       FSavedOrigin: TSgFloatPoint;
+   protected
       function InVisibleRect: boolean; override;
    public
       constructor Create(parent: TSpriteEngine; input: TRpgMap); reintroduce; overload;

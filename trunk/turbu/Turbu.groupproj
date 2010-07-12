@@ -25,7 +25,7 @@
 				<Dependencies>engines\basis\EngineBasis.dproj;turbu format\default_format.dproj</Dependencies>
 			</Projects>
 			<Projects Include="engines\map engine\design\map_default_design.dproj">
-				<Dependencies>turbu format\default_format.dproj;engines\basis\EngineBasis.dproj;engines\basis\turbu_design_basis.dproj;engines\map engine\map_default.dproj</Dependencies>
+				<Dependencies>turbu format\design\default_format_design.dproj;engines\basis\EngineBasis.dproj;turbu format\default_format.dproj;engines\basis\turbu_design_basis.dproj;engines\map engine\map_default.dproj</Dependencies>
 			</Projects>
 			<Projects Include="mapview\mapshow.dproj">
 				<Dependencies/>
@@ -109,13 +109,13 @@
 		<Target DependsOnTargets="EngineBasis:Make;default_format:Make" Name="map_default:Make">
 			<MSBuild Targets="Make" Projects="engines\map engine\map_default.dproj"/>
 		</Target>
-		<Target DependsOnTargets="default_format;EngineBasis;turbu_design_basis;map_default" Name="map_default_design">
+		<Target DependsOnTargets="default_format_design;EngineBasis;default_format;turbu_design_basis;map_default" Name="map_default_design">
 			<MSBuild Projects="engines\map engine\design\map_default_design.dproj"/>
 		</Target>
-		<Target DependsOnTargets="default_format:Clean;EngineBasis:Clean;turbu_design_basis:Clean;map_default:Clean" Name="map_default_design:Clean">
+		<Target DependsOnTargets="default_format_design:Clean;EngineBasis:Clean;default_format:Clean;turbu_design_basis:Clean;map_default:Clean" Name="map_default_design:Clean">
 			<MSBuild Targets="Clean" Projects="engines\map engine\design\map_default_design.dproj"/>
 		</Target>
-		<Target DependsOnTargets="default_format:Make;EngineBasis:Make;turbu_design_basis:Make;map_default:Make" Name="map_default_design:Make">
+		<Target DependsOnTargets="default_format_design:Make;EngineBasis:Make;default_format:Make;turbu_design_basis:Make;map_default:Make" Name="map_default_design:Make">
 			<MSBuild Targets="Make" Projects="engines\map engine\design\map_default_design.dproj"/>
 		</Target>
 		<Target Name="mapshow">

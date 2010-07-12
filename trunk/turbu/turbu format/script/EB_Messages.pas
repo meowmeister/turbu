@@ -112,9 +112,10 @@ end;
 function TEBMessageOptions.GetNodeText: string;
 begin
    result := 'Set Message Options: ';
-   case boolean(Values[0]) of
-      false: result := result + 'Opaque, ';
-      true: result := result + 'Transparent, ';
+   case Values[0] of
+      0: result := result + 'Opaque, ';
+      1: result := result + 'Transparent, ';
+      2: result := result + 'Translucent, ';
    end;
    case Values[1] of
       0: result := result + 'Top, ';
@@ -144,7 +145,7 @@ end;
 
 function TEBPortrait.GetNodeText: string;
 begin
-   result := 'Set Message Face: ';
+   result := 'Set Message Portrait: ';
    if Text= '' then
       result := result + 'None'
    else
@@ -156,7 +157,7 @@ begin
       end;
       if Values[2] = 1 then
          result := result + ', Flipped';
-   end; //end else
+   end;
 end;
 
 function TEBPortrait.GetScriptText: string;

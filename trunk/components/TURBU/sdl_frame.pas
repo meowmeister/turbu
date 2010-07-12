@@ -368,6 +368,9 @@ end;
 
 procedure TSdlFrame.SetLogicalWidth(const Value: integer);
 begin
+   if FLogicalWidth = Value then
+      Exit;
+
    FLogicalWidth := Value;
    SDL_SetWindowLogicalSize(FWindowID, FLogicalWidth, FLogicalHeight);
    if FRenderer then

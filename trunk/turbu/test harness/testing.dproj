@@ -222,8 +222,8 @@
 				<Form>frmArrayEdit</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\components\TURBU\extensible_cds.pas"/>
-			<DCCReference Include="..\turbu format\design\sprite_selector.pas">
-				<Form>frmSpriteSelector</Form>
+			<DCCReference Include="..\turbu format\design\base_selector.pas">
+				<Form>frmBaseSelector</Form>
 			</DCCReference>
 			<DCCReference Include="..\engines\basis\ClipboardWatcher.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_event_builder.pas"/>
@@ -238,6 +238,27 @@
 			<DCCReference Include="..\turbu format\script\EB_Maps.pas"/>
 			<DCCReference Include="..\turbu format\turbu_mapchars.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_2k_environment.pas"/>
+			<DCCReference Include="..\engines\map engine\design\EB Editors\MessageEdit.pas">
+				<Form>frmMessageEdit</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\design\EB Editors\Messages\MessageOptions.pas">
+				<Form>frmMessageOptions</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\design\EB Editors\Messages\PortraitEdit.pas">
+				<Form>frmSelectPortrait</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\design\EB Editors\ebSelector.pas">
+				<Form>frmEBSelector</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\design\EB Editors\EbEdit.pas">
+				<Form>frmEbEditBase</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\design\sprite_selector.pas">
+				<Form>frmSpriteSelector</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\design\portrait_selector.pas">
+				<Form>frmPortraitSelector</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

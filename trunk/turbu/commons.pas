@@ -84,6 +84,7 @@ type
    procedure clamp(var value: single; low, high: single); inline; overload;
    function clamp(number, low, high: integer): integer; inline; overload;
    procedure EnableControls(const controls: array of TControl; enabled: boolean);
+   procedure swap(var x, y: integer); inline;
 
    //modulus function that doesn't "mirror" for negative numbers
    function safeMod(big, small: integer): integer; inline;
@@ -314,6 +315,15 @@ end;
 procedure clamp(var value: single; low, high: single);
 begin
    value := min(high, max(low, value));
+end;
+
+procedure swap(var x, y: integer);
+var
+   dummy: integer;
+begin
+   dummy := x;
+   x := y;
+   y := dummy;
 end;
 
 { TRpgColor }
