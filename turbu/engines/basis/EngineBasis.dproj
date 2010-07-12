@@ -109,6 +109,11 @@
 			<DCCReference Include="..\..\..\classes\DeHL\Extensions\DeHL.Nullable.pas"/>
 			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.HashSet.pas"/>
 			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.DistinctMultiMap.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedList.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedMultiMap.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.DoubleSortedMultiMap.pas"/>
+			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedDictionary.pas"/>
+			<DCCReference Include="finalizer_hack.pas"/>
 			<None Include="..\..\..\classes\DeHL\DeHL.Defines.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

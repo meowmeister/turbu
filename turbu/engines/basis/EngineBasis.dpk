@@ -77,7 +77,12 @@ contains
   DeHL.Converter in '..\..\..\classes\DeHL\Extensions\DeHL.Converter.pas',
   DeHL.Nullable in '..\..\..\classes\DeHL\Extensions\DeHL.Nullable.pas',
   DeHL.Collections.HashSet in '..\..\..\classes\DeHL\Collections\DeHL.Collections.HashSet.pas',
-  DeHL.Collections.DistinctMultiMap in '..\..\..\classes\DeHL\Collections\DeHL.Collections.DistinctMultiMap.pas';
+  DeHL.Collections.DistinctMultiMap in '..\..\..\classes\DeHL\Collections\DeHL.Collections.DistinctMultiMap.pas',
+  DeHL.Collections.SortedList in '..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedList.pas',
+  DeHL.Collections.SortedMultiMap in '..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedMultiMap.pas',
+  DeHL.Collections.DoubleSortedMultiMap in '..\..\..\classes\DeHL\Collections\DeHL.Collections.DoubleSortedMultiMap.pas',
+  DeHL.Collections.SortedDictionary in '..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedDictionary.pas',
+  finalizer_hack in 'finalizer_hack.pas';
 
 end.
 

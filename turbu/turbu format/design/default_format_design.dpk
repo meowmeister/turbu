@@ -30,7 +30,12 @@ requires
   turbu_design_basis;
 
 contains
+  base_selector in 'base_selector.pas' {frmBaseSelector},
+  EBListView in 'EBListView.pas',
+  ebSelector in 'EB Editors\ebSelector.pas' {frmEBSelector},
+  EbEdit in 'EB Editors\EbEdit.pas' {frmEBEditBase},
   sprite_selector in 'sprite_selector.pas' {frmSpriteSelector},
-  EBListView in 'EBListView.pas';
+  portrait_selector in 'portrait_selector.pas' {frmPortraitSelector},
+  sdl_frame_helper in 'sdl_frame_helper.pas';
 
 end.

@@ -6,7 +6,8 @@ uses
    Windows, SysUtils, Classes, Controls, Forms, DB, DBClient, StdCtrls, ExtCtrls,
    ComCtrls, DBCtrls, Messages, DBIndexComboBox, sdl_frame, Mask, EBListView,
    turbu_tilesets, turbu_map_objects, turbu_serialization, turbu_constants,
-   turbu_maps, frame_conditions, dataset_viewer, SDL_ImageManager;
+   turbu_maps, frame_conditions, dataset_viewer, sdl_frame_helper,
+   SDL_ImageManager;
 
 type
   TfrmObjectEditor = class(TForm)
@@ -81,17 +82,18 @@ type
     FTileset: TTileset;
     FMapObject: TRpgMapObject;
     FMap: TRpgMap;
+    FRenameProc: TRenameProc;
 
     procedure UploadMapObject(obj: TRpgMapObject);
     procedure DownloadMapObject(obj: TRpgMapObject);
     procedure ClearViewer(sender: TObject);
-    function GetSpriteIndex(name: string): integer;
     function DoEdit(obj: TRpgMapObject; const tilesetName: string): integer;
     procedure DisableDatasets;
     procedure EnableDatasets;
     procedure AdjustRemainingEntries(incIDs: boolean);
     procedure CheckDeleteEnabled;
     procedure InsertPage(page: TRpgEventPage);
+
   public
     { Public declarations }
     class procedure EditMapObject(obj: TRpgMapObject; map: TRpgMap; const tilesetName: string);
@@ -102,8 +104,8 @@ implementation
 uses
    clipbrd,
    sprite_selector, ClipboardWatcher,
-   commons, turbu_tbi_lib,
-   dm_database, turbu_database, archiveInterface, turbu_sdl_image, EB_RpgScript,
+   commons, turbu_tbi_lib, dm_database, turbu_database, archiveInterface,
+   turbu_sdl_image, EB_RpgScript,
    sdl_13, sg_defs;
 
 {$R *.dfm}
@@ -236,17 +238,13 @@ var
    filename: string;
    frame: integer;
 begin
-   if dsPagesName.Value = '' then
-      GetSpriteIndex('');
    filename := dsPagesName.Value;
    frame := dsPagesFrame.Value;
-   TfrmSpriteSelector.SelectSprite(FTileset, filename, frame);
-   SDL_SelectRenderer(imgEventSprite.SdlWindow);
+   TfrmSpriteSelector.SelectSpriteInto(imgEventSprite, filename, frame, FTileset, FRenameProc);
    dsPages.Edit;
    dsPagesName.Value := filename;
    dsPagesFrame.Value := frame;
    dsPages.Post;
-   GetSpriteIndex(filename);
 end;
 
 procedure TfrmObjectEditor.Button1Click(Sender: TObject);
@@ -274,6 +272,13 @@ begin
    FSerializer := TDatasetSerializer.Create;
    Button1.Visible := DebugHook <> 0;
    ClipboardWatcher.RegisterClipboardViewer(self.OnClipboardChange);
+   FRenameProc :=
+     procedure(const name: string)
+     begin
+        dsPages.Edit;
+        dsPagesName.Value := name;
+        dsPages.Post;
+     end;
 end;
 
 procedure TfrmObjectEditor.FormDestroy(Sender: TObject);
@@ -285,54 +290,6 @@ end;
 procedure TfrmObjectEditor.FormShow(Sender: TObject);
 begin
    Self.OnClipboardChange(self);
-end;
-
-function TfrmObjectEditor.GetSpriteIndex(name: string): integer;
-const
-   FILENAME_STRING = '%s\%s.png';
-var
-   stream: TStream;
-   image : TRpgSdlImage;
-   size: TSgPoint;
-   spriteRect, destRect: TRect;
-begin
-   if name = '' then
-   begin
-      name := '*' + intToStr(FTileset.Records.firstIndexWhere(turbu_tilesets.upperLayerFilter));
-      dsPages.Edit;
-      dsPagesName.Value := name;
-      dsPages.Post;
-   end;
-   if name[1] = '*' then
-   begin
-      name := FTileset.Records[strToInt(copy(name, 2, 3))].group.filename;
-      name := format(FILENAME_STRING, ['tileset', name]);
-      size := TILE_SIZE;
-   end
-   else begin
-      name := format(FILENAME_STRING, ['mapsprite', name]);
-      size := SPRITE_SIZE * sgPoint(1, 2);
-   end;
-   if not imgEventSprite.ContainsName(name) then
-   begin
-      stream := GArchives[IMAGE_ARCHIVE].getFile(name);
-      try
-         image := TRpgSdlImage.CreateSprite(loadFromTBI(stream), name, imgEventSprite.Images);
-         assert(image.Texture.ID > 0);
-      finally
-         stream.Free;
-      end;
-   end
-   else image := imgEventSprite.Images.Image[name] as TRpgSdlImage;
-   result := imgEventSprite.IndexOfName(name);
-
-   spriteRect := image.spriteRect[dsPagesframe.Value];
-   destRect.left := (imgEventSprite.Width div 2) - (spriteRect.right);
-   destRect.top := (imgEventSprite.height div 2) - (spriteRect.bottom);
-   destRect.BottomRight := TSgPoint(spriteRect.BottomRight) * 2;
-   imgEventSprite.fillColor(image.surface.Format.palette.colors[image.surface.ColorKey], 255);
-   imgEventSprite.DrawTexture(image.Texture, @spriteRect, @destRect);
-   imgEventSprite.Flip;
 end;
 
 procedure TfrmObjectEditor.CheckDeleteEnabled;
@@ -354,7 +311,7 @@ end;
 procedure TfrmObjectEditor.tabEventPagesChange(Sender: TObject);
 begin
    dsPages.Locate('id', tabEventPages.TabIndex, []);
-   GetSpriteIndex(dsPagesName.Value);
+   imgEventSprite.SetSprite(dsPagesName.Value, dsPagesFrame.Value, FTileset, FRenameProc);
    if dsPagesEventText.BlobSize > 0 then
       trvEvents.proc := FMap.ScriptObject.FindComponent(dsPagesEventText.Value) as TEBProcedure;
 end;
@@ -417,6 +374,48 @@ end;
 procedure TfrmObjectEditor.SetDirty(DataSet: TDataSet);
 begin
    btnApply.Enabled := true;
+end;
+
+procedure SetImage(sdlFrame: TSdlFrame; name: string; frame: integer; tileset: TTileset);
+const
+   FILENAME_STRING = '%s\%s.png';
+var
+   stream: TStream;
+   image : TRpgSdlImage;
+   size: TSgPoint;
+   spriteRect, destRect: TRect;
+begin
+   if name = '' then
+      name := '*' + intToStr(tileset.Records.firstIndexWhere(turbu_tilesets.upperLayerFilter));
+   if name[1] = '*' then
+   begin
+      name := tileset.Records[strToInt(copy(name, 2, 3))].group.filename;
+      name := format(FILENAME_STRING, ['tileset', name]);
+      size := TILE_SIZE;
+   end
+   else begin
+      name := format(FILENAME_STRING, ['mapsprite', name]);
+      size := SPRITE_SIZE * sgPoint(1, 2);
+   end;
+   if not sdlFrame.ContainsName(name) then
+   begin
+      stream := GArchives[IMAGE_ARCHIVE].getFile(name);
+      try
+         image := TRpgSdlImage.CreateSprite(loadFromTBI(stream), name, sdlFrame.Images);
+         assert(image.Texture.ID > 0);
+      finally
+         stream.Free;
+      end;
+   end
+   else image := sdlFrame.Images.Image[name] as TRpgSdlImage;
+
+   spriteRect := image.spriteRect[frame];
+   destRect.left := (sdlFrame.Width div 2) - (spriteRect.right);
+   destRect.top := (sdlFrame.height div 2) - (spriteRect.bottom);
+   destRect.BottomRight := TSgPoint(spriteRect.BottomRight) * 2;
+   sdlFrame.fillColor(image.surface.Format.palette.colors[image.surface.ColorKey], 255);
+   sdlFrame.DrawTexture(image.Texture, @spriteRect, @destRect);
+   sdlFrame.Flip;
 end;
 
 procedure TfrmObjectEditor.WMRender(var message: TMessage);

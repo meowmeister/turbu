@@ -122,7 +122,9 @@ begin
       statSet.add(newstat);
       self.statblock[i] := newstat;
    end;
-   self.expFunc := 'calcExp2k';
+   if GProjectFormat = pf_2k then
+      self.expFunc := 'calcExp2k'
+   else self.expFunc := 'calcExp2k3';
    self.expVars[1] := base.expStandard;
    self.expVars[2] := base.expAddition;
    self.expVars[3] := base.expCorrection;
@@ -194,7 +196,7 @@ begin
    end;
    if GProjectFormat = pf_2k then
       self.expFunc := 'calcExp2k'
-   else self.expFunc := 'calcExp2k';
+   else self.expFunc := 'calcExp2k3';
    self.expVars[1] := base.expStandard;
    self.expVars[2] := base.expAddition;
    self.expVars[3] := base.expCorrection;

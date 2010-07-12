@@ -423,7 +423,6 @@ var
 
 var
    loadStream: TStream;
-   design: boolean;
 begin
    try
       location := IncludeTrailingPathDelimiter(GetRegistryValue('\Software\TURBU', 'TURBU Test Project Output'));
@@ -437,7 +436,7 @@ begin
       try
          freeAndNil(GDatabase);
          try
-            GDatabase := TRpgDatabase.Load(loadStream, assigned(FCurrentMap));
+            GDatabase := TRpgDatabase.Load(loadStream, true);
          except
             GDatabase := nil;
             raise;

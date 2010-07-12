@@ -142,7 +142,7 @@ type
       procedure update(filename: string; transparent: boolean); override;
       procedure updatePage(data: TRpgEventPage); override;
       procedure action(const button: TButtonCode = btn_enter); virtual; abstract;
-      procedure MoveTick; override;
+      procedure moveTick; override;
 
       property frame: smallint read FWhichFrame;
    end;
@@ -875,9 +875,9 @@ begin
    FEngine.Images.EnsureImage('mapsprite\' + filename + '.png', filename, SPRITE_SIZE);
 end;
 
-procedure TCharSprite.MoveTick;
+procedure TCharSprite.moveTick;
 begin
-   inherited MoveTick;
+   inherited moveTick;
    UpdateTiles;
 end;
 

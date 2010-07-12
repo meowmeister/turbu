@@ -28,7 +28,7 @@ type
       FCurrentParty: TCharSprite;
 
       procedure SetViewport(const viewport: TRect);
-      procedure loadTileMatrix(const value: TTileList; index: integer; const viewport: TRect);
+      procedure loadTileMatrix(const value: TTileList; const index: integer; const viewport: TRect);
       function CreateNewTile(value: TTileRef): TMapTile;
       function FullCreateNewTile(x, y, layer: integer): TMapTile;
       function GetMaxLayer: integer; inline;
@@ -401,7 +401,7 @@ begin
 end;
 
 {$Q+R+}
-procedure T2kSpriteEngine.loadTileMatrix(const value: TTileList; index: integer; const viewport: TRect);
+procedure T2kSpriteEngine.loadTileMatrix(const value: TTileList; const index: integer; const viewport: TRect);
 var
    size: TSgPoint;
 
@@ -427,15 +427,17 @@ var
    equivX, equivY: integer;
    newTile: TMapTile;
    tileRef: TTileRef;
+   matrix: TTileMatrix;
    //Yay for b0rked bounds checking in packages!
    newindex: integer;
 begin
+   matrix := FTiles[index];
    size := FMap.size;
    for y := viewport.top - 1 to viewport.top + viewport.bottom + 1 do
       for x := viewport.left - 1 to viewport.left + viewport.Right + 1 do
       begin
          EquivalizeCoords(x, y, equivX, equivY);
-         if assigned(FTiles[index][equivX, equivY]) then
+         if assigned(matrix[equivX, equivY]) then
             Continue;
 
          //FIXME: Fix this when bounds checking gets fixed
@@ -445,7 +447,7 @@ begin
          tileRef := value[newIndex];
 {         tileRef := value[getIndex(equivX, equivY)];}
          newTile := CreateNewTile(tileRef);
-         FTiles[index][equivX, equivY] := newTile;
+         matrix[equivX, equivY] := newTile;
          if assigned(newTile) then
             newTile.place(equivX, equivY, index, tileRef, FTileset);
       end;

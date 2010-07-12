@@ -44,6 +44,11 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_StringChecks>off</DCC_StringChecks>
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<ItemGroup>
@@ -52,10 +57,23 @@
 			</DelphiCompile>
 			<DCCReference Include="default_format.dcp"/>
 			<DCCReference Include="turbu_design_basis.dcp"/>
+			<DCCReference Include="base_selector.pas">
+				<Form>frmBaseSelector</Form>
+			</DCCReference>
+			<DCCReference Include="EBListView.pas"/>
+			<DCCReference Include="EB Editors\ebSelector.pas">
+				<Form>frmEBSelector</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\EbEdit.pas">
+				<Form>frmEBEditBase</Form>
+			</DCCReference>
 			<DCCReference Include="sprite_selector.pas">
 				<Form>frmSpriteSelector</Form>
 			</DCCReference>
-			<DCCReference Include="EBListView.pas"/>
+			<DCCReference Include="portrait_selector.pas">
+				<Form>frmPortraitSelector</Form>
+			</DCCReference>
+			<DCCReference Include="sdl_frame_helper.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

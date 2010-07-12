@@ -107,7 +107,7 @@ uses
   dataset_viewer in '..\engines\map engine\design\dataset_viewer.pas' {frmDatasetViewer},
   array_editor in '..\engines\map engine\design\array_editor.pas' {frmArrayEdit},
   extensible_cds in '..\..\components\TURBU\extensible_cds.pas',
-  sprite_selector in '..\turbu format\design\sprite_selector.pas' {frmSpriteSelector},
+  base_selector in '..\turbu format\design\base_selector.pas' {frmBaseSelector},
   ClipboardWatcher in '..\engines\basis\ClipboardWatcher.pas',
   rm2_turbu_event_builder in '..\turbu format\converters\rm2_turbu_event_builder.pas',
   EB_RpgScript in '..\turbu format\script\EB_RpgScript.pas',
@@ -120,7 +120,14 @@ uses
   EB_System in '..\turbu format\script\EB_System.pas',
   EB_Maps in '..\turbu format\script\EB_Maps.pas',
   turbu_mapchars in '..\turbu format\turbu_mapchars.pas',
-  turbu_2k_environment in '..\engines\map engine\turbu_2k_environment.pas';
+  turbu_2k_environment in '..\engines\map engine\turbu_2k_environment.pas',
+  MessageEdit in '..\engines\map engine\design\EB Editors\MessageEdit.pas' {frmMessageEdit},
+  MessageOptions in '..\turbu format\design\EB Editors\Messages\MessageOptions.pas' {frmMessageOptions},
+  PortraitEdit in '..\turbu format\design\EB Editors\Messages\PortraitEdit.pas' {frmSelectPortrait},
+  ebSelector in '..\turbu format\design\EB Editors\ebSelector.pas' {frmEBSelector},
+  EbEdit in '..\turbu format\design\EB Editors\EbEdit.pas' {frmEbEditBase},
+  sprite_selector in '..\turbu format\design\sprite_selector.pas' {frmSpriteSelector},
+  portrait_selector in '..\turbu format\design\portrait_selector.pas' {frmPortraitSelector};
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -141,6 +148,5 @@ begin
   Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
   Application.CreateForm(TfrmConversionReport, frmConversionReport);
   Application.CreateForm(TfrmTestMapSize, frmTestMapSize);
-  Application.CreateForm(TfrmSpriteSelector, frmSpriteSelector);
   Application.Run;
 end.
