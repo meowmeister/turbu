@@ -121,13 +121,13 @@ uses
   EB_Maps in '..\turbu format\script\EB_Maps.pas',
   turbu_mapchars in '..\turbu format\turbu_mapchars.pas',
   turbu_2k_environment in '..\engines\map engine\turbu_2k_environment.pas',
-  MessageEdit in '..\engines\map engine\design\EB Editors\MessageEdit.pas' {frmMessageEdit},
   MessageOptions in '..\turbu format\design\EB Editors\Messages\MessageOptions.pas' {frmMessageOptions},
   PortraitEdit in '..\turbu format\design\EB Editors\Messages\PortraitEdit.pas' {frmSelectPortrait},
   ebSelector in '..\turbu format\design\EB Editors\ebSelector.pas' {frmEBSelector},
   EbEdit in '..\turbu format\design\EB Editors\EbEdit.pas' {frmEbEditBase},
   sprite_selector in '..\turbu format\design\sprite_selector.pas' {frmSpriteSelector},
-  portrait_selector in '..\turbu format\design\portrait_selector.pas' {frmPortraitSelector};
+  portrait_selector in '..\turbu format\design\portrait_selector.pas' {frmPortraitSelector},
+  MessageEdit in '..\turbu format\design\EB Editors\Messages\MessageEdit.pas' {frmMessageEdit};
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
