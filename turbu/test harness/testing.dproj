@@ -40,7 +40,7 @@
 			<DCC_DcpOutput>..\dcus</DCC_DcpOutput>
 			<DCC_UsePackage>vcl;rtl;vclx;vclactnband;dbrtl;vcldb;vcldbx;bdertl;dsnap;dsnapcon;TeeUI;TeeDB;Tee;adortl;vclib;ibxpress;IndyCore;IndySystem;IndyProtocols;xmlrtl;inet;intrawebdb_100_120;Intraweb_100_120;VclSmp;vclie;websnap;webdsnap;inetdbbde;inetdbxpress;soaprtl;DbxCommonDriver;DbxClientDriver;DBXInterBaseDriver;DBXMySQLDriver;dbexpress;dbxcds;Jcl;JclVcl;JvCoreD12R;JvSystemD12R;JvStdCtrlsD12R;JvAppFrmD12R;JvBandsD12R;JvDBD12R;JvDlgsD12R;JvBDED12R;JvCmpD12R;JvCryptD12R;JvCtrlsD12R;JvCustomD12R;JvDockingD12R;JvEDID12R;JvGlobusD12R;JvHMID12R;JvInterpreterD12R;JvJansD12R;JvManagedThreadsD12R;JvMMD12R;JvNetD12R;JvPageCompsD12R;JvPluginD12R;JvPrintPreviewD12R;JvRuntimeDesignD12R;JvTimeFrameworkD12R;JvValidatorsD12R;JvWizardD12R;JvXPCtrlsD12R;turbu_components;vclAbsDBd12</DCC_UsePackage>
 			<DCC_Define>EDITOR;PS_USESSUPPORT;SDL_13;$(DCC_Define)</DCC_Define>
-			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\classes\sdl custom;..\bin;..\dcus;..\..\classes\FastMM4;..\..\components\TURBU;..\..\components\PascalScript;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\classes\sdl custom;..\bin;..\dcus;..\..\classes\FastMM4;..\..\components\TURBU;..\..\components\PascalScript;..\..\classes\DeHL;..\..\classes\DeHL\Collections;..\..\classes\DeHL\Extensions;..\..\classes\DeHL\Serialization;..\..\classes\DeHL\Math;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DependencyCheckOutputName>..\bin\testing.exe</DCC_DependencyCheckOutputName>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
@@ -238,9 +238,6 @@
 			<DCCReference Include="..\turbu format\script\EB_Maps.pas"/>
 			<DCCReference Include="..\turbu format\turbu_mapchars.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_2k_environment.pas"/>
-			<DCCReference Include="..\engines\map engine\design\EB Editors\MessageEdit.pas">
-				<Form>frmMessageEdit</Form>
-			</DCCReference>
 			<DCCReference Include="..\turbu format\design\EB Editors\Messages\MessageOptions.pas">
 				<Form>frmMessageOptions</Form>
 			</DCCReference>
@@ -258,6 +255,9 @@
 			</DCCReference>
 			<DCCReference Include="..\turbu format\design\portrait_selector.pas">
 				<Form>frmPortraitSelector</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\design\EB Editors\Messages\MessageEdit.pas">
+				<Form>frmMessageEdit</Form>
 			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
