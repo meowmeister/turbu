@@ -54,21 +54,13 @@ begin
 end;
 
 procedure TfrmMessageEdit.DownloadObject(obj: TEbObject);
-var
-   list: TObjectList<TEbObject>;
-   sub: TEbObject;
 begin
-   list := TObjectList<TEbObject>.Create;
-   try
-      for sub in obj do
-         list.add(sub);
-      if Memo1.lines.count > 0 then
-      begin
-         obj.Text := Memo1.Lines[0];
-         AddExtensions(obj);
-      end;
-   finally
-      list.Free;
+   while obj.ComponentCount > 0 do
+      obj.RemoveComponent(obj.components[0]);
+   if Memo1.lines.count > 0 then
+   begin
+      obj.Text := Memo1.Lines[0];
+      AddExtensions(obj);
    end;
 end;
 

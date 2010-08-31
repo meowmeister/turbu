@@ -2,6 +2,7 @@ unit EB_System;
 
 interface
 uses
+   Classes,
    EventBuilder, EB_Expressions, turbu_defs;
 
 type
@@ -11,11 +12,25 @@ type
       function GetScriptText: string; override;
    end;
 
-   TEBGlobalSwitch = class(TEBObject)
+   TEBSwitch = class(TEbObject)
+   protected
+      function GetSwitchName: string; virtual; abstract;
    public
-      constructor Create(parent: TEBObject; switch: TEBExpression; op: integer); reintroduce;
       function GetNodeText: string; override;
       function GetScriptText: string; override;
+   end;
+
+   TEBGlobalSwitch = class(TEBSwitch)
+   protected
+      function GetSwitchName: string; override;
+      procedure NeededVariables(list: TStringList); override;
+   public
+      constructor Create(parent: TEBObject; switch: TEBExpression; op: integer); reintroduce;
+   end;
+
+   TEBLocalSwitch = class(TEBSwitch)
+   protected
+      function GetSwitchName: string; override;
    end;
 
    TEBGlobalInt = class(TEBObject)
@@ -247,7 +262,7 @@ type
 
 implementation
 uses
-   SysUtils, Classes, TypInfo,
+   SysUtils, TypInfo,
    EB_RpgScript;
 
 function GetIntScript(decider, value: integer): string;
@@ -271,6 +286,29 @@ begin
    result := format(LINE, [Values[0]]);
 end;
 
+{ TEBSwitch }
+
+function TEBSwitch.GetNodeText: string;
+const
+   OPS: array [0..2] of string = ('OFF', 'ON', 'TOGGLE');
+begin
+   result := GetSwitchName + ' ' + OPS[Values[0]];
+end;
+
+function TEBSwitch.GetScriptText: string;
+var
+   subval: string;
+begin
+   subval := GetSwitchName;
+   result := subval + ' := ';
+   case Values[0] of
+      0: result := result + 'false;';
+      1: result := result + 'true;';
+      2: result := result + format('not %s;', [subval]);
+      else raise ERPGScriptError.Create('Invalid switch op');
+   end;
+end;
+
 { TEBGlobalSwitch }
 
 constructor TEBGlobalSwitch.Create(parent: TEBObject; switch: TEBExpression; op: integer);
@@ -280,30 +318,29 @@ begin
    Values.add(op);
 end;
 
-function TEBGlobalSwitch.GetNodeText: string;
-const
-   LINE = 'Switch[%s] %s';
-   OPS: array [0..2] of string = ('OFF', 'ON', 'TOGGLE');
+function TEBGlobalSwitch.GetSwitchName: string;
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetNodeText, OPS[Values[0]]]);
+   result := format('Switch[%s]', [self.ChildScript[0]]);
 end;
 
-function TEBGlobalSwitch.GetScriptText: string;
-const
-   VAL = 'Switch[%s]';
+procedure TEBGlobalSwitch.NeededVariables(list: TStringList);
 var
-   switch: TEBExpression;
-   subval: string;
+   subscript: TEBVariableValue;
 begin
-   switch := self.components[0] as TEBExpression;
-   subval := format(VAL, [switch.GetScript(0)]);
-   result := subval + ' := ';
-   case Values[0] of
-      0: result := result + 'false;';
-      1: result := result + 'true;';
-      2: result := result + format('not %s;', [subval]);
-      else raise ERPGScriptError.Create('Invalid switch op');
+   if (Components[0] is TEBVariableValue) then
+   begin
+      subscript := TEbVariableValue(components[0]);
+      if not subscript.Global then
+         list.Values[subscript.Text] := 'integer';
    end;
+   inherited NeededVariables(list);
+end;
+
+{ TEBLocalSwitch }
+
+function TEBLocalSwitch.GetSwitchName: string;
+begin
+   result := self.Text;
 end;
 
 { TEBGlobalInt }
@@ -1045,5 +1082,5 @@ initialization
                     TEBSysSkin, TEBTranslucency, TEBPlayBGM, TEBFadeBGM, TEBMemBGM,
                     TEBPlayMemBGM, TEBPlaySFX, TEBPlayMovie, TEBInput, TEBDeleteObj,
                     TEBCallEvent, TEBGameOver, TEBTitleScreen, TEBClassChange,
-                    TEBBattleCommand]);
+                    TEBBattleCommand, TEBLocalSwitch]);
 end.

@@ -302,10 +302,10 @@ begin
       Exit;
    FEvent.locked := false;
    oldpage := FEvent.currentPage;
+   newpage := FEvent.newCurrentPage;
 {$MESSAGE WARN 'Commented out code in live unit'}
-   {newpage := FEvent.newCurrentPage;
-   if assigned(newpage) and (newpage.hasScript) and (newpage.startCondition in [parallel, automatic]) and (not FEvent.playing) then
-      GCurrentEngine.executeEvent(FEvent, FBase);
+   {if assigned(newpage) and (newpage.hasScript) and (newpage.startCondition in [parallel, automatic]) and (not FEvent.playing) then
+      GCurrentEngine.executeEvent(FEvent, FBase);}
 
    if oldpage = newpage then
       Exit;
@@ -314,7 +314,7 @@ begin
       ((fevent.isTile = false) and (FBase is TEventSprite)) then
       switchType
    else
-      FBase.updatePage(fevent.currentPage);}
+      FBase.updatePage(fevent.currentPage);
 end;
 
 { TRpgVehicle }

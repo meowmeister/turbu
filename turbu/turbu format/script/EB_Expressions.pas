@@ -5,22 +5,16 @@ uses
    EventBuilder, turbu_defs;
 
 type
-   TEBExpression = class(TEBObject)
-   private
-      FSilent: boolean;
-   public
-      function GetScriptText: string; override;
-      function GetNode: TEBNode; override;
-   published
-      property Silent: boolean read FSilent write FSilent stored FSilent;
-   end;
-
    TEBVariableValue = class(TEBExpression)
+   private
+      FIsGlobal: boolean;
    public
       constructor Create(name: string); reintroduce; overload;
       constructor Create(name: string; subscript: integer); reintroduce; overload;
       constructor Create(name: string; subscript: TEBExpression); reintroduce; overload;
       function GetNodeText: string; override;
+   published
+      property Global: boolean read FIsGlobal write FIsGlobal stored FIsGlobal;
    end;
 
    TEBNilValue = class(TEBVariableValue)
@@ -40,6 +34,7 @@ type
       constructor Create(subscript: integer); overload;
       constructor Create(subscript: TEBExpression); overload;
       function GetNodeText: string; override;
+      function GetScriptText: string; override;
    end;
 
    TEBBooleanValue = class(TEBExpression)
@@ -73,6 +68,7 @@ type
    public
       constructor Create(value: integer; name: string);
       function GetNodeText: string; override;
+      function GetScriptText: string; override;
    published
       property lookup: string read FLookup write FLookup;
    end;
@@ -153,6 +149,8 @@ type
       property lookup: string read FLookup write FLookup;
    end;
 
+function CreateSubscript(mode, data: integer): TEBExpression;
+
 const
    COMPARISONS: array[TComparisonOp] of string = ('=', '>=', '<=', '>', '<', '<>');
    HINTS: array[0..3] of string = ('', '''s', ' is', ' has');
@@ -162,16 +160,14 @@ uses
    SysUtils, Classes, Variants, Math,
    EB_RPGScript;
 
-{ TEBExpression }
-
-function TEBExpression.GetScriptText: string;
+function CreateSubscript(mode, data: integer): TEBExpression;
 begin
-   result := GetNodeText;
-end;
-
-function TEBExpression.GetNode: TEBNode;
-begin
-   raise ERPGScriptError.Create('Expressions don''t get their own tree nodes!');
+   case mode of
+      0: result := TEBIntegerValue.Create(data);
+      1: result := TEBVariableValue.Create('Num');
+      2: result := TEBIntsValue.Create(data);
+      else raise ERPGScriptError.CreateFmt('Unknown subscript mode value: %d!', [mode]);
+   end;
 end;
 
 { TEBVariableValue }
@@ -286,6 +282,11 @@ begin
    else result := inherited GetNodeText;
 end;
 
+function TEBIntsValue.GetScriptText: string;
+begin
+   result := format('Ints[%d]', [values[0]])
+end;
+
 { TEBIntegerValue }
 
 constructor TEBIntegerValue.Create(value: integer);
@@ -354,6 +355,11 @@ end;
 function TEBLookupValue.GetNodeText: string;
 begin
    result := GetLookup(values[0], FLookup);
+end;
+
+function TEBLookupValue.GetScriptText: string;
+begin
+   result := IntToStr(values[0]);
 end;
 
 { TEBLookupObjExpr }

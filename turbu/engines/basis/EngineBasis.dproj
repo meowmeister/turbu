@@ -114,6 +114,7 @@
 			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.DoubleSortedMultiMap.pas"/>
 			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedDictionary.pas"/>
 			<DCCReference Include="finalizer_hack.pas"/>
+			<DCCReference Include="..\..\..\..\ListCompare\StringListComp.pas"/>
 			<None Include="..\..\..\classes\DeHL\DeHL.Defines.inc"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

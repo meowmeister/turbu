@@ -184,7 +184,8 @@ type
    protected
       function DoGetEnumerator: TEnumerator<TNameType>; override;
    public
-      constructor Create(aName: string; aDesignName: string);
+      constructor Create(aName: string; aDesignName: string); overload;
+      constructor Create(original: TRpgDecl); overload;
       destructor Destroy; override;
 
       function equals(other: TRpgDecl): boolean; reintroduce;
@@ -706,6 +707,17 @@ begin
    FName := aName;
    FDesignName := aDesignName;
    FParams := TNameTypeList.Create;
+end;
+
+constructor TRpgDecl.Create(original: TRpgDecl);
+var
+   param: TNameType;
+begin
+   FName := original.FName;
+   FDesignName := original.FDesignName;
+   FParams := TNameTypeList.Create;
+   for param in original.FParams do
+     FParams.Add(param);
 end;
 
 destructor TRpgDecl.Destroy;

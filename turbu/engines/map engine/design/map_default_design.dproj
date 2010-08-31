@@ -85,7 +85,6 @@
 			<DCCReference Include="dataset_viewer.pas">
 				<Form>frmDatasetViewer</Form>
 			</DCCReference>
-			<DCCReference Include="array_editor.pas"/>
 			<DCCReference Include="..\..\..\turbu format\design\EB Editors\Messages\PortraitEdit.pas">
 				<Form>frmSelectPortrait</Form>
 			</DCCReference>
@@ -94,6 +93,18 @@
 			</DCCReference>
 			<DCCReference Include="..\..\..\turbu format\design\EB Editors\Messages\MessageOptions.pas">
 				<Form>frmMessageOptions</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\turbu format\design\EB Editors\Messages\ChoiceEdit.pas">
+				<Form>frmShowChoice</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\turbu format\design\EB Editors\Messages\InputNumber.pas">
+				<Form>frmInputNumber</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\turbu format\design\EB Editors\Basics\EditSwitch.pas">
+				<Form>frmEbSetSwitch</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\turbu format\design\EB Editors\Basics\EditInt.pas">
+				<Form>frmEBSetInteger</Form>
 			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

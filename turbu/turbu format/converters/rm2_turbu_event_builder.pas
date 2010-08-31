@@ -98,16 +98,6 @@ begin
    result.text := 'Num';
 end;
 
-function CreateSubscript(mode, data: integer): TEBExpression;
-begin
-   case mode of
-      0: result := TEBIntegerValue.Create(data);
-      1: result := TEBVariableValue.Create('Num');
-      2: result := TEBIntsValue.Create(data);
-      else raise ERPGScriptError.CreateFmt('Unknown subscript mode value: %d!', [mode]);
-   end;
-end;
-
 function SetupPartySubscript(mode, value, data: integer; work: TPartySubscript): TEBObject;
 var
    subscript: TEBChainable;
@@ -158,7 +148,7 @@ end;
 
 function ConvertCase(opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
-   result := TEBChoiceMessage.Create(parent, string(opcode.name), opcode.Data[0]);
+   result := objectFactory(TEBChoiceMessage, opcode, parent);
    blockStack.Push(0);
 end;
 

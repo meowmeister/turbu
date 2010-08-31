@@ -27,7 +27,12 @@ package default_format_design;
 
 requires
   default_format,
-  turbu_design_basis;
+  turbu_design_basis,
+  vclx,
+  vclimg,
+  Jcl,
+  JvCore,
+  JvStdCtrls;
 
 contains
   base_selector in 'base_selector.pas' {frmBaseSelector},
@@ -36,6 +41,8 @@ contains
   EbEdit in 'EB Editors\EbEdit.pas' {frmEBEditBase},
   sprite_selector in 'sprite_selector.pas' {frmSpriteSelector},
   portrait_selector in 'portrait_selector.pas' {frmPortraitSelector},
-  sdl_frame_helper in 'sdl_frame_helper.pas';
+  sdl_frame_helper in 'sdl_frame_helper.pas',
+  variable_selector in '..\..\..\components\TURBU\variable_selector.pas',
+  array_editor in '..\..\engines\map engine\design\array_editor.pas' {frmArrayEdit};
 
 end.

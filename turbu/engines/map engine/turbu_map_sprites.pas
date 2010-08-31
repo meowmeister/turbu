@@ -10,7 +10,7 @@ type
    TMapSprite = class;
 
    IRpgCharacter = interface
-      procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite);
+      procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite = nil);
    end;
 
    TMapSprite = class(TObject)
@@ -141,7 +141,7 @@ type
       procedure place; override;
       procedure update(filename: string; transparent: boolean); override;
       procedure updatePage(data: TRpgEventPage); override;
-      procedure action(const button: TButtonCode = btn_enter); virtual; abstract;
+      procedure action(const button: TButtonCode = btn_enter); virtual;
       procedure moveTick; override;
 
       property frame: smallint read FWhichFrame;
@@ -557,7 +557,6 @@ end;
 
 function TMapSprite.doMove(which: TPath): boolean;
 var
-   dummySound: TRpgSound;
    unchanged: boolean;
 begin
    result := true;
@@ -605,8 +604,7 @@ begin
          if canJump(which) then
             beginJump;
       end;
-{$MESSAGE WARN 'Commented-out code in live unit'}
-      $19: {errLog('Hit an incorrect end of jump!');}; //They seem to move at 1.5X a sprite's base speed
+      $19: assert(false, 'Hit an incorrect end of jump!'); //They seem to move at 1.5X a sprite's base speed
       $1A: self.dirLocked := true;
       $1B: self.dirLocked := false;
       $1C: FMoveRate := min(6, FMoveRate + 1);
@@ -623,8 +621,8 @@ begin
          if clamp(FOrder.data[1], 0, high(GSwitches)) = FOrder.data[1] then
             GSwitches[FOrder.data[1]] := false;
       end;
+      $22: FCharacter.changeSprite(FOrder.name, FOrder.data[1]);
 {$MESSAGE WARN 'Commented-out code in live unit'}
-      $22: {FCharacter.changeSprite(FOrder.name, FOrder.data[1])};
       $23: {GCurrentEngine.mediaPlayer.playAndFreeSfx(TRmSound.Create(FOrder.name, 0, FOrder.data[1],
                                                                      FOrder.data[2], FOrder.data[3]))};
       $24: FSlipThrough := true;
@@ -824,6 +822,11 @@ begin
 end;
 
 { TCharSprite }
+
+procedure TCharSprite.action(const button: TButtonCode);
+begin
+   raise ESpriteError.Create('Non-player sprites can''t receive an Action.');
+end;
 
 procedure TCharSprite.activateEvents(where: TTile);
 var

@@ -134,9 +134,8 @@ object frmObjectEditor: TfrmObjectEditor
           Height = 645
           Align = alClient
           Indent = 19
-          ReadOnly = True
-          RowSelect = True
           TabOrder = 0
+          Context = dsContext
         end
       end
       object Panel1: TPanel
@@ -684,7 +683,74 @@ object frmObjectEditor: TfrmObjectEditor
   end
   object srcPages: TDataSource
     DataSet = dsPages
-    Left = 104
+    Left = 88
     Top = 816
+  end
+  object dsContext: TClientDataSet
+    Active = True
+    Aggregates = <>
+    Filtered = True
+    FieldDefs = <
+      item
+        Name = 'name'
+        DataType = ftWideString
+        Size = 32
+      end
+      item
+        Name = 'DisplayName'
+        DataType = ftWideString
+        Size = 32
+      end
+      item
+        Name = 'type'
+        DataType = ftWideString
+        Size = 255
+      end
+      item
+        Name = 'id'
+        DataType = ftAutoInc
+      end>
+    IndexDefs = <
+      item
+        Name = 'idxFiltered'
+        CaseInsFields = 'name'
+        Fields = 'type;name'
+        Options = [ixCaseInsensitive]
+      end
+      item
+        Name = 'idxFull'
+        CaseInsFields = 'name'
+        Fields = 'name'
+        Options = [ixPrimary, ixCaseInsensitive]
+      end>
+    IndexName = 'idxFull'
+    ObjectView = False
+    Params = <>
+    StoreDefs = True
+    Left = 248
+    Top = 824
+    Data = {
+      A20000009619E0BD010000001800000004000000000003000000A200046E616D
+      6501004A00000001000557494454480200020040000B446973706C61794E616D
+      6501004A0000000100055749445448020002004000047479706502004A000000
+      010005574944544802000200FE01026964040001000000010007535542545950
+      450200490008004175746F696E630001000C4155544F494E4356414C55450400
+      010001000000}
+    object dsContextName: TWideStringField
+      FieldName = 'name'
+      Size = 32
+    end
+    object dsContextDisplayName: TWideStringField
+      FieldName = 'DisplayName'
+      Size = 32
+    end
+    object dsContextType: TWideStringField
+      DisplayWidth = 32
+      FieldName = 'type'
+      Size = 255
+    end
+    object dsContextid: TAutoIncField
+      FieldName = 'id'
+    end
   end
 end

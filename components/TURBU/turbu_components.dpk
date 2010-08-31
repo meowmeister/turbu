@@ -23,16 +23,21 @@ package turbu_components;
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$IMPLICITBUILD ON}
+{$DEFINE COMPONENT}
 
 requires
   rtl,
   vcl,
   dbrtl,
-  vcldb;
+  vcldb,
+  dsnap;
 
 contains
   turbu_listGrid in 'turbu_listGrid.pas',
   DBIndexComboBox in 'DBIndexComboBox.pas',
-  EBListView in '..\..\turbu\turbu format\design\EBListView.pas';
+  EBListView in '..\..\turbu\turbu format\design\EBListView.pas',
+  EventBuilder in '..\..\turbu\turbu format\EventBuilder.pas',
+  variable_selector in 'variable_selector.pas';
 
 end.
+

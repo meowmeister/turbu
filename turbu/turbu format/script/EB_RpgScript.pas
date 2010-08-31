@@ -3,7 +3,7 @@ unit EB_RpgScript;
 interface
 uses
    SysUtils, Classes,
-   turbu_defs,
+   turbu_defs, StringListComp,
    EventBuilder, EB_Expressions;
 
 type
@@ -19,19 +19,7 @@ type
       property opcode: integer read FOpcode write FOpcode;
    end;
 
-   TEBBlock = class(TEBObject)
-   private
-      function MustBlock: boolean;
-   protected
-      function AlwaysBlock: boolean; virtual;
-      function AlwaysEndBlock: boolean; virtual;
-   public
-      function GetScript(indent: integer): string; override;
-      function GetNode: TEBNode; override;
-      function GetNodeText: string; override;
-   end;
-
-   TEBProcedure = class(TEBBlock)
+   TEBProcedure = class(TEBRoutine)
    protected
       function ParamList: string;
       function varBlock: string;
@@ -42,6 +30,7 @@ type
    public
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
+      function GetVarBlock: TStringList; override;
    end;
 
    TEBProgram = class(TEBBlock)
@@ -64,14 +53,17 @@ type
       function GetNodeText: string; override;
    end;
 
+   TEBElseBlock = class;
+
    TEBCase = class(TEBBlock)
    protected
       function AlwaysEndBlock: boolean; override;
    public
-      constructor Create(parent: TEBObject; expr: TEBExpression); reintroduce;
+      constructor Create(parent: TEBObject; expr: TEBExpression); reintroduce; overload;
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
       function GetNodeText: string; override;
+      function GetElseBlock: TEbElseBlock;
    end;
 
    TEBCodeBlock = class(TEBBlock)
@@ -81,6 +73,7 @@ type
 
    TEBCaseBlock = class(TEBCodeBlock)
    public
+      function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
       function GetNodeText: string; override;
    end;
@@ -137,6 +130,12 @@ type
    end;
 
    TEBForLoop = class(TEBBlock)
+   private
+      FTempList: TStringList;
+      procedure MergeEqual(const value: string; const data1, data2: TObject);
+      procedure AddSingle(const value: string; const data: TObject);
+   protected
+      procedure NeededVariables(list: TStringList); override;
    public
       function GetScriptText: string; override;
       function GetNodeText: string; override;
@@ -173,8 +172,6 @@ type
       function GetNodeText: string; override;
       function GetScript(indent: integer): string; override;
    end;
-
-   ERPGScriptError = class(Exception);
 
    TEBObjectHelper = class helper for TEBObject
    public
@@ -233,59 +230,6 @@ begin
    result := '// ' + GetNodeText;
 end;
 
-{ TEBBlock }
-
-function TEBBlock.AlwaysBlock: boolean;
-begin
-   result := false;
-end;
-
-function TEBBlock.AlwaysEndBlock: boolean;
-begin
-   result := true;
-end;
-
-function TEBBlock.GetNodeText: string;
-begin
-   result := '';
-end;
-
-function TEBBlock.GetNode: TEBNode;
-var
-  child: TEBObject;
-begin
-   result := inherited GetNode;
-   for child in self do
-      if not (child is TEBExpression) then
-         result.Add(child.GetNode);
-   if AlwaysEndBlock then
-      result.Add(TEBNode.Create(self, '<>'))
-end;
-
-function TEBBlock.GetScript(indent: integer): string;
-var
-   list: TStringList;
-   element: TEBObject;
-begin
-   list := TStringList.Create;
-   try
-      if MustBlock then
-         list.add(indentString(indent) + 'begin');
-      for element in self do
-         list.Add(element.GetScript(indent + 1));
-      if MustBlock then
-         list.Add(indentString(indent) + 'end;');
-      result := TrimRight(list.Text);
-   finally
-      list.free;
-   end;
-end;
-
-function TEBBlock.MustBlock: boolean;
-begin
-   result := (self.ComponentCount > 1) or AlwaysBlock;
-end;
-
 { TEBProcedure }
 
 function TEBProcedure.GetScript(indent: integer): string;
@@ -298,6 +242,30 @@ function TEBProcedure.GetScriptText: string;
 const HEADER = 'procedure %s%s;' + CRLF;
 begin
    result := format(HEADER, [self.name, self.paramList]);
+end;
+
+function TEBProcedure.GetVarBlock: TStringList;
+var
+   header: TEBHeader;
+   comp: TComponent;
+   counter: integer;
+   inbuilt: TArray<TEBVariable>;
+   variable: TEBVariable;
+begin
+   header := EnsureHeader;
+   SetLength(inbuilt, header.ComponentCount);
+   counter := 0;
+   for comp in header do
+      if (comp is TEBVariable) and not (comp is TEBParam) then
+      begin
+         inbuilt[counter] := TEBVariable(comp);
+         inc(counter);
+      end;
+   result := RequiredVariables;
+   for variable in inbuilt do
+      if result.IndexOfName(variable.Text) <> -1 then
+         //remove inbuilt
+      else result.Values[variable.text] := variable.VarType;
 end;
 
 function TEBProcedure.ParamList: string;
@@ -369,14 +337,12 @@ begin
    try
       list.Add(IndentString(indent) + GetScriptText);
       for obj in self do
-      begin
-         if obj is TEBExpression then
+         if (obj is TEBExpression) then
             Continue
-         else if obj is TEBCodeBlock then
-            list.Add(obj.GetScript(indent))
-         else list.Add(obj.GetScript(indent + 1));
-      end;
-      result := list.Text;
+         else if obj is TEBBlock then
+            list.Add(obj.GetScript(indent + 1))
+         else list.Add(obj.GetScript(indent));
+      result := TrimRight(list.Text);
    finally
       list.Free;
    end;
@@ -386,6 +352,13 @@ function TEBCase.GetScriptText: string;
 const LINE = 'case %s of';
 begin
    result := format(LINE, [ChildScript[0]]);
+end;
+
+function TEBCase.GetElseBlock: TEbElseBlock;
+begin
+   if self.Components[self.ComponentCount - 1] is TEbElseBlock then
+      result := TEbElseBlock(self.Components[self.ComponentCount - 1])
+   else result := nil;
 end;
 
 { TEBElseBlock }
@@ -407,11 +380,25 @@ begin
    result := '[' + Text + '] Case';
 end;
 
+function TEBCaseBlock.GetScript(indent: integer): string;
+var
+   subscript: string;
+begin
+   subscript := inherited GetScript(indent);
+   result := IndentString(indent) + GetScriptText;
+   if subscript <> '' then
+   begin
+      if pos(CRLF, subscript) <> 0 then
+         subscript := CRLF + subscript
+      else subscript := ' ' + TrimLeft(subscript);
+      result := result + subscript;
+   end
+   else result := result + ';';
+end;
+
 function TEBCaseBlock.GetScriptText: string;
 begin
-   result := intToStr(values[0]) + ':' + inherited GetScriptText;
-   if pos(CRLF, result) <> 0 then
-      result := CRLF + result;
+   result := intToStr(values[0]) + ':';
 end;
 
 { TEBEnumCaseBlock }
@@ -603,6 +590,52 @@ begin
    if values[0] <= values[1] then
       result := format(LINE, [Text, Values[0], Values[1]])
    else format(DOWNLINE, [Text, Values[0], Values[1]]);
+end;
+
+procedure TEBForLoop.MergeEqual(const value: string; const data1, data2: TObject);
+var
+   index: integer;
+begin
+   if (data1 = nil) and (data2 <> nil) then
+   begin
+      index := FTempList.IndexOfName(copy(value, 1, pos('=', value) - 1));
+      assert(index >= 0);
+      assert (FTempList.Objects[index] = nil);
+      FTempList.Objects[index] := data2;
+   end;
+end;
+
+procedure TEBForLoop.AddSingle(const value: string; const data: TObject);
+begin
+   FTempList.AddObject(value, data);
+end;
+
+procedure TEBForLoop.NeededVariables(list: TStringList);
+var
+   sublist: TStringList;
+   index: integer;
+begin
+   sublist := TStringList.Create;
+   try
+      inherited NeededVariables(sublist);
+      index := sublist.IndexOfName(self.text);
+      if index = -1 then
+      begin
+         sublist.Values[self.Text] := 'integer';
+         index := sublist.IndexOfName(self.text);
+      end;
+
+      if sublist.Objects[index] <> nil then
+         raise ERPGScriptError.CreateFmt('Index variable %s cannot be used for nested loops', [self.text])
+      else sublist.Objects[index] := self;
+      if sublist.ValueFromIndex[index] <> 'integer' then
+         raise ERpgScriptError.CreateFmt('Type of index variable %s must be integer, not %s', [self.text, sublist.ValueFromIndex[index]]);
+      FTempList := list;
+      StringListCompare(list, sublist, self.MergeEqual, nil, AddSingle);
+      FTempList := nil;
+   finally
+      sublist.free;
+   end;
 end;
 
 { TEBObjectHelper }
@@ -822,7 +855,7 @@ begin
 end;
 
 initialization
-   RegisterClasses([TEBUntranslated, TEBBlock, TEBProcedure, TEBExtension,
+   RegisterClasses([TEBUntranslated, TEBProcedure, TEBExtension,
                     TEBCase, TEBCaseBlock, TEBElseBlock, TEBEndCase, TEBIf,
                     TEBCodeBlock, TEBEnumCaseBlock, TEBForLoop, TEBLabel, TEBGoto,
                     TEBWhileLoop, TEBBreak, TEBComment, TEBProgram, TEBMap,

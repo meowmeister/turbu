@@ -4,11 +4,21 @@ interface
 
 uses
    Controls, Forms, ComCtrls, StdCtrls, Classes, ExtCtrls,
-   DeHL.Collections.DoubleSortedMultiMap, DeHL.KeyValuePair, DeHL.Types,
+   DeHL.Collections.DoubleSortedMultiMap, DeHL.Types,
    EbEdit;
 
 type
-   TTreeData = TKeyValuePair<EditorCategoryAttribute, TEbEditorClass>;
+   TTreeData = record //because generic KV pairs are broken
+      key: EditorCategoryAttribute;
+      value: TEbEditorClass;
+      constructor Create(k: EditorCategoryAttribute; v: TEbEditorClass);
+   end;
+
+   TTreeDataType = class(TType<TTreeData>)
+   public
+      { Comparator }
+      function Compare(const AValue1, AValue2: TTreeData): Integer; override;
+   end;
 
    TfrmEBSelector = class(TfrmEbEditBase)
       trvList: TTreeView;
@@ -32,16 +42,10 @@ type
 implementation
 uses
    Math,
-   DeHL.Collections.Base,
+   DeHL.Collections.Base, DeHL.KeyValuePair,
    EventBuilder;
 
 {$R *.dfm}
-type
-   TTreeDataType = class(TType<TTreeData>)
-   public
-      { Comparator }
-      function Compare(const AValue1, AValue2: TTreeData): Integer; override;
-   end;
 
 { TfrmEBSelector }
 
@@ -57,19 +61,29 @@ begin
    begin
       cat := cls.Category;
       if assigned(cat) then
-         FMap.Add(cat.category, TTreeData.Create(cat, cls))
+      begin
+         if (not FMap.ContainsKey(cat.category)) or
+            (FMap[cat.category].Where(
+            function(data: TTreeData): boolean
+            begin
+               result := data.value = cls;
+            end).Count = 0) then
+            FMap.Add(cat.category, TTreeData.Create(cat, cls))
+      end;
    end;
    FMapCount := AllEditors.Count;
 end;
 
 class constructor TfrmEBSelector.Create;
 begin
+   TType<TTreeData>.Register(TTreeDataType);
    FMap := TTreeTemplate.Create(TStringType.Default, TTreeDataType.Default);
 end;
 
 class destructor TfrmEBSelector.Destroy;
 begin
    FMap.free;
+   TTreeDataType.UnRegister;
 end;
 
 procedure TfrmEBSelector.FormCreate(Sender: TObject);
@@ -105,6 +119,14 @@ end;
 function TTreeDataType.Compare(const AValue1, AValue2: TTreeData): Integer;
 begin
    result := AValue1.Key.order - AValue2.Key.order;
+end;
+
+{ TTreeData }
+
+constructor TTreeData.Create(k: EditorCategoryAttribute; v: TEbEditorClass);
+begin
+   key := k;
+   value := v;
 end;
 
 end.

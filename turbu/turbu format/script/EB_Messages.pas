@@ -33,8 +33,8 @@ type
    [UsesUnit('Messages')]
    TEBChoiceMessage = class(TEBCase)
    public
-      constructor Create(AParent: TEBObject; choiceString: string; cancelCase: integer);
       function GetNodeText: string; override;
+      function GetScriptText: string; override;
    end;
 
    TEBInputNumber = class(TEBMessageObject)
@@ -189,19 +189,15 @@ end;
 
 { TEBChoiceMessage }
 
-constructor TEBChoiceMessage.Create(AParent: TEBObject; choiceString: string; cancelCase: integer);
-var
-   choice: TEBCall;
-begin
-   choice := TEBCall.Create('ShowChoice');
-   choice.Add(TEBStringValue.Create(choiceString));
-   choice.Add(TEBIntegerValue.Create(cancelCase));
-   inherited Create(AParent, choice);
-end;
-
 function TEBChoiceMessage.GetNodeText: string;
 begin
    result := 'Show Choice: ' + self.Text;
+end;
+
+function TEBChoiceMessage.GetScriptText: string;
+const LINE = 'case ShowChoice(%s) of';
+begin
+   result := format(LINE, [QuotedStr(Text)]);
 end;
 
 { TEBInputHeroName }
