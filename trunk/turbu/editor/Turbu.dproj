@@ -212,7 +212,7 @@
 						<VersionInfo Name="MajorVer">0</VersionInfo>
 						<VersionInfo Name="MinorVer">8</VersionInfo>
 						<VersionInfo Name="Release">3</VersionInfo>
-						<VersionInfo Name="Build">1353</VersionInfo>
+						<VersionInfo Name="Build">1361</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -224,7 +224,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc,</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">TURBU Editor</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">0.8.3.1353</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.8.3.1361</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">TURBU Editor</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

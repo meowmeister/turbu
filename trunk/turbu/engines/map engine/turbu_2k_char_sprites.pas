@@ -97,7 +97,7 @@ type
       function getCanSkip: boolean; override;
    public
       constructor create(const AParent: TSpriteEngine; whichHero: TRpgHero; party: TRpgParty); reintroduce;
-      procedure action(const button: TButtonCode = btn_enter); override;
+      procedure action(const button: TButtonCode = btn_enter); override; final;
       procedure place; override;
       procedure boardVehicle;
       function move(whichDir: TFacing): boolean; override;

@@ -57,6 +57,8 @@ type
       function GetDeclarations: TDeclList;
       function GetUnits: TUnitDictionary;
       procedure SetUnits(const Value: TUnitDictionary);
+      function GetCompiler: TPSPascalCompiler;
+      function GetFunctions(ResultType: integer): TDeclList;
    protected
       FScriptEngine: TPSExec;
       FImporter: TPSRuntimeClassImporter;
@@ -73,7 +75,7 @@ type
       procedure upload(db: TdmDatabase);
 
       //properties
-      property compiler: TPSPascalCompiler read FCompiler;
+      property compiler: TPSPascalCompiler read GetCompiler;
       property script: ansiString write setDBScript;
       property exec: TPSExec read GetExec;
       property units: TUnitDictionary read GetUnits write SetUnits;
@@ -89,7 +91,6 @@ implementation
 uses
    math, TypInfo,
    logs, turbu_vartypes, turbu_constants, turbu_database,
-turbu_characters, //ugly hack
    uPSI_script_interface,
    strtok,
    uPSC_std, uPSR_std;
@@ -251,9 +252,14 @@ begin
    else result := dummy.range;
 end;
 
+function TTurbuScriptEngine.GetCompiler: TPSPascalCompiler;
+begin
+   result := FCompiler;
+end;
+
 function TTurbuScriptEngine.GetDeclarations: TDeclList;
 begin
-  result := FDeclarations;
+   result := FDeclarations;
 end;
 
 function TTurbuScriptEngine.GetExec: TPSExec;
@@ -271,9 +277,24 @@ begin
    else result := '';
 end;
 
+function TTurbuScriptEngine.GetFunctions(ResultType: integer): TDeclList;
+var
+   decl: TRpgDecl;
+begin
+   result := TDeclList.Create;
+   try
+     for decl in FDeclarations do
+        if decl.retval = ResultType then
+           result.Add(TRpgDecl.Create(decl));
+   except
+      result.free;
+      raise;
+   end;
+end;
+
 function TTurbuScriptEngine.GetUnits: TUnitDictionary;
 begin
-  Result := FUnits;
+   Result := FUnits;
 end;
 
 procedure TTurbuScriptEngine.SetPointerToData(const VarName: ansiString;

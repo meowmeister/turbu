@@ -1557,6 +1557,7 @@ type
 
 implementation
 uses
+  RTTI,
   DeHL.Collections.HashSet,
   DeHL.Collections.List,
   DeHL.Collections.Dictionary;

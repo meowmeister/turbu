@@ -3,8 +3,9 @@ unit MapObject_Editor;
 interface
 
 uses
-   Windows, SysUtils, Classes, Controls, Forms, DB, DBClient, StdCtrls, ExtCtrls,
-   ComCtrls, DBCtrls, Messages, DBIndexComboBox, sdl_frame, Mask, EBListView,
+   Classes, Forms, DB, DBClient, StdCtrls, ExtCtrls, ComCtrls, DBCtrls,
+   Messages, DBIndexComboBox, Mask, Controls,
+   sdl_frame, EBListView,
    turbu_tilesets, turbu_map_objects, turbu_serialization, turbu_constants,
    turbu_maps, frame_conditions, dataset_viewer, sdl_frame_helper,
    SDL_ImageManager;
@@ -56,6 +57,11 @@ type
     dsPagesEventText: TWideMemoField;
     btnScript: TButton;
     dsPagesMatrix: TWordField;
+    dsContext: TClientDataSet;
+    dsContextName: TWideStringField;
+    dsContextType: TWideStringField;
+    dsContextid: TAutoIncField;
+    dsContextDisplayName: TWideStringField;
     procedure tabEventPagesChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -102,7 +108,7 @@ type
 
 implementation
 uses
-   clipbrd,
+   Windows, Clipbrd, SysUtils,
    sprite_selector, ClipboardWatcher,
    commons, turbu_tbi_lib, dm_database, turbu_database, archiveInterface,
    turbu_sdl_image, EB_RpgScript,

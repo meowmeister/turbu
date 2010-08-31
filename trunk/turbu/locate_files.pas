@@ -28,8 +28,9 @@ var
    rtpLocation: string;
 
 implementation
-uses sysUtils,
-     commons, xyz_lib;
+uses
+   sysUtils,
+   commons, xyz_lib, ArchiveInterface;
 
 const
    AUDIO_EXTENSION: array[1..8] of string = ('.mid', '.wav', '.ogg', '.mp3', '.it', '.xm', '.s3m', '.mod');

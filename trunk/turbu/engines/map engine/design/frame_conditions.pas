@@ -3,9 +3,9 @@ unit frame_conditions;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, DB, DBClient, DBCtrls,
-  dm_database, DBIndexComboBox, Mask, JvExMask, JvSpin, JvDBSpinEdit;
+  Classes, Controls, Forms, Dialogs, StdCtrls, DB, DBClient, DBCtrls, Mask,
+  JvExMask, JvSpin, JvDBSpinEdit,
+  dm_database, DBIndexComboBox;
 
 type
   TframeConditions = class(TFrame)
@@ -83,13 +83,13 @@ uses
 
 function TframeConditions.EditSwitches(id: integer): integer;
 begin
-   TfrmArrayEdit.Edit('Switch', dmDatabase.Switches, id);
+   TfrmArrayEdit.Edit('Switch', 'boolean', dmDatabase.Switches, id);
    result := id;
 end;
 
 function TframeConditions.EditVars(id: integer): integer;
 begin
-   TfrmArrayEdit.Edit('Variable', dmDatabase.Variables, id);
+   TfrmArrayEdit.Edit('Variable', 'integer', dmDatabase.Variables, id);
    result := id;
 end;
 

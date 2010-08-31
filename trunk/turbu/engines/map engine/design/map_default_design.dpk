@@ -41,9 +41,12 @@ contains
   frame_conditions in 'frame_conditions.pas' {frameConditions: TFrame},
   MapObject_Editor in 'MapObject_Editor.pas' {frmObjectEditor},
   dataset_viewer in 'dataset_viewer.pas' {frmDatasetViewer},
-  array_editor in 'array_editor.pas',
   PortraitEdit in '..\..\..\turbu format\design\EB Editors\Messages\PortraitEdit.pas' {frmSelectPortrait},
   MessageEdit in '..\..\..\turbu format\design\EB Editors\Messages\MessageEdit.pas' {frmMessageEdit},
-  MessageOptions in '..\..\..\turbu format\design\EB Editors\Messages\MessageOptions.pas' {frmMessageOptions};
+  MessageOptions in '..\..\..\turbu format\design\EB Editors\Messages\MessageOptions.pas' {frmMessageOptions},
+  ChoiceEdit in '..\..\..\turbu format\design\EB Editors\Messages\ChoiceEdit.pas' {frmShowChoice},
+  InputNumber in '..\..\..\turbu format\design\EB Editors\Messages\InputNumber.pas' {frmInputNumber},
+  EditSwitch in '..\..\..\turbu format\design\EB Editors\Basics\EditSwitch.pas' {frmEbSetSwitch},
+  EditInt in '..\..\..\turbu format\design\EB Editors\Basics\EditInt.pas' {frmEBSetInteger};
 
 end.

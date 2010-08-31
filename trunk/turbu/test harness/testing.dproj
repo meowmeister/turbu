@@ -259,6 +259,13 @@
 			<DCCReference Include="..\turbu format\design\EB Editors\Messages\MessageEdit.pas">
 				<Form>frmMessageEdit</Form>
 			</DCCReference>
+			<DCCReference Include="..\turbu format\design\EB Editors\Basics\EditSwitch.pas">
+				<Form>frmEbSetSwitch</Form>
+			</DCCReference>
+			<DCCReference Include="..\engines\map engine\turbu_2k_sprite_list.pas"/>
+			<DCCReference Include="..\turbu format\design\EB Editors\Basics\EditInt.pas">
+				<Form>frmEBSetInteger</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

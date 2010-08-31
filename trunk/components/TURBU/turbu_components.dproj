@@ -20,6 +20,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_Define>COMPONENT;$(DCC_Define)</DCC_Define>
 			<DCC_DcuOutput>..\..\turbu\dcus\</DCC_DcuOutput>
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_DcpOutput>..\..\turbu\dcus\</DCC_DcpOutput>
@@ -48,9 +49,12 @@
 			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="dbrtl.dcp"/>
 			<DCCReference Include="vcldb.dcp"/>
+			<DCCReference Include="dsnap.dcp"/>
 			<DCCReference Include="turbu_listGrid.pas"/>
 			<DCCReference Include="DBIndexComboBox.pas"/>
 			<DCCReference Include="..\..\turbu\turbu format\design\EBListView.pas"/>
+			<DCCReference Include="..\..\turbu\turbu format\EventBuilder.pas"/>
+			<DCCReference Include="variable_selector.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -76,6 +80,7 @@
 						<Parameters Name="UseLauncher">False</Parameters>
 						<Parameters Name="LoadAllSymbols">True</Parameters>
 						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+						<Parameters Name="HostApplication">C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\bds.exe</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

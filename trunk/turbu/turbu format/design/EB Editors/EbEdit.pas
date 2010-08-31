@@ -4,6 +4,7 @@ interface
 
 uses
    SysUtils, Classes, Controls, Forms, StdCtrls, ExtCtrls, Generics.Collections,
+   DB,
    EventBuilder, finalizer_hack;
 
 type
@@ -25,6 +26,9 @@ type
       procedure UploadObject(obj: TEbObject); virtual; abstract;
       procedure DownloadObject(obj: TEbObject); virtual; abstract;
       function NewClassType: TEbClass; virtual; abstract;
+      function ValidateForm: boolean; dynamic;
+      procedure ValidateError(control: TWinControl; const reason: string);
+      function ContextLookup(const name: string): integer;
 
       class property AllEditors: TEditorDic read GetEditors;
    public
@@ -40,7 +44,7 @@ type
 implementation
 uses
    RTTI,
-   rttiHelper;
+   rttiHelper, array_editor;
 
 {$R *.dfm}
 
@@ -96,6 +100,11 @@ begin
    result := TRttiContext.Create.GetType(self).GetAttribute(EditorCategoryAttribute) as EditorCategoryAttribute;
 end;
 
+function TfrmEBEditBase.ContextLookup(const name: string): integer;
+begin
+   result := -TfrmArrayEdit.VariableContext.Lookup('name', name, 'id');
+end;
+
 function TfrmEBEditBase.EditObj(obj: TEbObject): boolean;
 begin
    UploadObject(obj);
@@ -122,6 +131,21 @@ begin
       end;
    end
    else result := nil;
+end;
+
+procedure TfrmEBEditBase.ValidateError(control: TWinControl; const reason: string);
+begin
+   assert(assigned(control));
+   assert(GetParentForm(control) = self);
+   assert(reason <> '');
+   Application.MessageBox(PChar(reason), PChar(self.Caption));
+   FocusControl(control);
+   Abort;
+end;
+
+function TfrmEBEditBase.ValidateForm: boolean;
+begin
+   result := true;
 end;
 
 initialization

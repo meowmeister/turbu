@@ -11,6 +11,8 @@ const
    MAXGOLD = 999999;
 
 type
+   TStatComponents = (stat_base, stat_bonus, stat_eq_mod);
+
    //stub declaration that will be filled in later.
    TRpgHero = class(TRpgObject)
    private
@@ -30,8 +32,8 @@ type
 
       FExpTable: array[1..50] of integer;
       FExpTotal: integer;
-{      FEquipment: array[1..5] of TRpgItem;
-      FStat: array[TStatComponents, 1..4] of smallint;}
+//      FEquipment: array[1..5] of TRpgItem;
+      FStat: array[TStatComponents, 1..4] of smallint;
       FConditionModifier: array of integer;
       FCondition: array of boolean;
       FDtypeModifiers: array of integer;
@@ -188,7 +190,6 @@ constructor TRpgHero.Create(base: TClassTemplate);
 var
   I: Integer;
   dummy: byte;
-  exec: TPSExec;
   calc: TExpCalcEvent;
   template: THeroTemplate absolute base;
 begin
@@ -202,7 +203,7 @@ begin
    FTransparent := template.translucent;
    FExpTable[1] := 0;
 
-   calc := TExpCalcEvent(GScriptEngine.Exec.GetProcAsMethodN(utf8string(template.expFunc)));
+   calc := TExpCalcEvent(GScriptEngine.Exec.GetProcAsMethodN(AnsiString(template.expFunc)));
    if assigned(calc) then
       for I := 2 to 50 do
          FExpTable[i] := calc(i, template.expVars[1], template.expVars[2], template.expVars[3], template.expVars[4]);
@@ -559,9 +560,9 @@ end;
 procedure TRpgHero.levelAdjustDown(before: byte);
 var i: word;
 begin
-{   for I := 1 to FTemplate.skills do
-      if (FTemplate.skill[i].level > FLevel) and (FTemplate.skill[i].level <= before) then
-         FSkill[FTemplate.skill[i].id] := false;
+{   for I := 1 to Template.skills do
+      if (Template.skill[i].level > FLevel) and (Template.skill[i].level <= before) then
+         FSkill[Template.skill[i].id] := false;
       //end if
    //end for
    levelStatAdjust;}
@@ -570,9 +571,9 @@ end;
 procedure TRpgHero.levelAdjustUp(before: byte);
 var i: word;
 begin
-{   for I := 1 to FTemplate.skills do
-      if (FTemplate.skill[i].level <= FLevel) and (FTemplate.skill[i].level > before) then
-         FSkill[FTemplate.skill[i].id] := true;
+{   for I := 1 to Template.skills do
+      if (Template.skill[i].level <= FLevel) and (Template.skill[i].level > before) then
+         FSkill[Template.skill[i].id] := true;
       //end if
    //end for
    levelStatAdjust;}
@@ -684,11 +685,8 @@ begin
 end;
 
 procedure TRpgHero.setStat(which: integer; value: smallint);
-var
-   dummy: integer;
 begin
-   dummy := self.stat[which] - value;
-//   inc(FStat[stat_bonus, which], dummy);
+   inc(FStat[stat_bonus, which], self.stat[which] - value);
 end;
 
 procedure TRpgHero.setTransparent(const Value: boolean);

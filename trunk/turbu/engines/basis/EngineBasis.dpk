@@ -82,7 +82,8 @@ contains
   DeHL.Collections.SortedMultiMap in '..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedMultiMap.pas',
   DeHL.Collections.DoubleSortedMultiMap in '..\..\..\classes\DeHL\Collections\DeHL.Collections.DoubleSortedMultiMap.pas',
   DeHL.Collections.SortedDictionary in '..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedDictionary.pas',
-  finalizer_hack in 'finalizer_hack.pas';
+  finalizer_hack in 'finalizer_hack.pas',
+  StringListComp in '..\..\..\..\ListCompare\StringListComp.pas';
 
 end.
 

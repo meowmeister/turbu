@@ -127,7 +127,10 @@ uses
   EbEdit in '..\turbu format\design\EB Editors\EbEdit.pas' {frmEbEditBase},
   sprite_selector in '..\turbu format\design\sprite_selector.pas' {frmSpriteSelector},
   portrait_selector in '..\turbu format\design\portrait_selector.pas' {frmPortraitSelector},
-  MessageEdit in '..\turbu format\design\EB Editors\Messages\MessageEdit.pas' {frmMessageEdit};
+  MessageEdit in '..\turbu format\design\EB Editors\Messages\MessageEdit.pas' {frmMessageEdit},
+  EditSwitch in '..\turbu format\design\EB Editors\Basics\EditSwitch.pas' {frmEbSetSwitch},
+  turbu_2k_sprite_list in '..\engines\map engine\turbu_2k_sprite_list.pas',
+  EditInt in '..\turbu format\design\EB Editors\Basics\EditInt.pas' {frmEBSetInteger};
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

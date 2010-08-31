@@ -2,13 +2,14 @@ inherited frmSelectPortrait: TfrmSelectPortrait
   Caption = 'Select Portrait'
   ClientHeight = 183
   ClientWidth = 314
-  ExplicitWidth = 320
   ExplicitHeight = 218
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Width = 314
     Height = 130
+    ExplicitWidth = 314
+    ExplicitHeight = 130
     object GroupBox1: TGroupBox
       Left = 8
       Top = 0
@@ -82,13 +83,19 @@ inherited frmSelectPortrait: TfrmSelectPortrait
   inherited btnOK: TButton
     Left = 31
     Top = 140
+    ExplicitLeft = 31
+    ExplicitTop = 140
   end
   inherited btnCancel: TButton
     Left = 125
     Top = 140
+    ExplicitLeft = 125
+    ExplicitTop = 140
   end
   inherited btnHelp: TButton
     Left = 218
     Top = 140
+    ExplicitLeft = 218
+    ExplicitTop = 140
   end
 end

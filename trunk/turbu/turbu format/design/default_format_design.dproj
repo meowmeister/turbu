@@ -57,6 +57,11 @@
 			</DelphiCompile>
 			<DCCReference Include="default_format.dcp"/>
 			<DCCReference Include="turbu_design_basis.dcp"/>
+			<DCCReference Include="vclx.dcp"/>
+			<DCCReference Include="vclimg.dcp"/>
+			<DCCReference Include="Jcl.dcp"/>
+			<DCCReference Include="JvCore.dcp"/>
+			<DCCReference Include="JvStdCtrls.dcp"/>
 			<DCCReference Include="base_selector.pas">
 				<Form>frmBaseSelector</Form>
 			</DCCReference>
@@ -74,6 +79,10 @@
 				<Form>frmPortraitSelector</Form>
 			</DCCReference>
 			<DCCReference Include="sdl_frame_helper.pas"/>
+			<DCCReference Include="..\..\..\components\TURBU\variable_selector.pas"/>
+			<DCCReference Include="..\..\engines\map engine\design\array_editor.pas">
+				<Form>frmArrayEdit</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

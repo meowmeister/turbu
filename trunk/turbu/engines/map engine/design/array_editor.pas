@@ -3,8 +3,7 @@ unit array_editor;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Mask, DBCtrls, DB, ExtCtrls, DbClient,
+  SysUtils, Classes, Controls, Forms, StdCtrls, Mask, DBCtrls, DB, ExtCtrls, DbClient,
   dm_database, Grids, DBGrids, turbu_listGrid;
 
 type
@@ -25,30 +24,35 @@ type
   private
     { Private declarations }
     FLocal: TClientDataset;
-    procedure setup(const name: string; dset: TClientDataset; id: integer);
+    class var FContext: TDataset;
+
+    procedure setup(const name, vartype: string; dset: TClientDataset; id: integer);
     procedure LocalBeforeOpen(DataSet: TDataSet);
     procedure LocalAfterScroll(DataSet: TDataSet);
   public
     { Public declarations }
-    class procedure Edit(const caption: string; dset: TClientDataset; var id: integer);
+    class property VariableContext: TDataset read FContext write FContext;
+    class procedure Edit(const caption, vartype: string; dset: TClientDataset; var id: integer);
   end;
 
 implementation
 uses
    Math,
-   extensible_cds;
+   extensible_cds, EBEdit;
 
 {$R *.dfm}
 
+const SUBLIST_SIZE = 50;
+
 { TfrmArrayEdit }
 
-class procedure TfrmArrayEdit.Edit(const caption: string; dset: TClientDataset; var id: integer);
+class procedure TfrmArrayEdit.Edit(const caption, vartype: string; dset: TClientDataset; var id: integer);
 var
    form: TfrmArrayEdit;
 begin
    form := TfrmArrayEdit.Create(nil);
    try
-      form.setup(caption, dset, id);
+      form.setup(caption, vartype, dset, id);
       if form.ShowModal = mrOK then
       begin
          form.FLocal.MergeChangeLog;
@@ -83,11 +87,16 @@ var
    index: nativeInt;
 begin
    index := nativeInt(lstGroups.items.Objects[lstGroups.ItemIndex]);
-   FLocal.Filter := format(FILTER, [index, index + 20]);
-   FLocal.First;
+   if index >= 0 then
+   begin
+      srcList.DataSet := FLocal;
+      FLocal.Filter := format(FILTER, [index, index + SUBLIST_SIZE]);
+      FLocal.First;
+   end
+   else srcList.Dataset := FContext;
 end;
 
-procedure TfrmArrayEdit.setup(const name: string; dset: TClientDataset; id: integer);
+procedure TfrmArrayEdit.setup(const name, vartype: string; dset: TClientDataset; id: integer);
 const
    NEW_NAME = '[%.4d - %.4d]';
 var
@@ -105,14 +114,22 @@ begin
    FLocal.Filtered := true;
    srcList.DataSet := FLocal;
    count := dset.RecordCount;
-   maxGroup := count div 20;
-   if count mod 20 <> 0 then
+   maxGroup := count div SUBLIST_SIZE;
+   if count mod SUBLIST_SIZE <> 0 then
       inc(maxGroup);
    lstGroups.Items.BeginUpdate;
+      //can't use -1; see TListBoxStrings.GetObject
+      lstGroups.AddItem('Local', pointer(-2));
       for i := 0 to maxGroup do
-         lstGroups.AddItem(format(NEW_NAME, [i * 20, min((i * 20) + 19, count)]), pointer(i * 20));
+         lstGroups.AddItem(format(NEW_NAME, [i * SUBLIST_SIZE,
+                                             min((i * SUBLIST_SIZE) + pred(SUBLIST_SIZE), count)]),
+                           pointer(i * SUBLIST_SIZE));
    lstGroups.Items.EndUpdate;
-   lstGroups.ItemIndex := id div 20;
+   if id >= 0 then
+      lstGroups.ItemIndex := (id div SUBLIST_SIZE) + 1
+   else lstGroups.ItemIndex := 0;
+   lstGroupsClick(self);
+//   FContext.filter := 'type = ' + QuotedStr(vartype);
    FLocal.Locate('id', id, []);
 end;
 

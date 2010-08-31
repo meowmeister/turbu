@@ -90,7 +90,7 @@ end;
 
 procedure TfrmConversionReport.FormCreate(Sender: TObject);
 begin
-   FOutput := TfrmConversionOutput.Create(self);
+   FOutput := TfrmConversionOutput.Create(Application);
    FOutput.Left := self.left;
    FOutput.Top := self.Top + self.Height + 20;
 end;
