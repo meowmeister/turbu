@@ -1,7 +1,7 @@
 program TepRename;
 
 uses
-  SysUtils, Classes, Windows;
+  SysUtils, Classes, Windows, IOUtils;
 
 function BlobMatch(input: PByte; key: AnsiString): boolean;
 var
@@ -52,23 +52,50 @@ begin
    end;
 end;
 
-procedure run;
+function Match(const path, pattern: string): TStringList;
 var
-   path: string;
-   filename: string;
+   item: string;
+begin
+   result := TStringList.Create;
+   for item in TDirectory.GetFiles(path, pattern) do
+      result.Add(item);
+end;
+
+procedure Patch(const filename: string; files: TStringList);
+var
    stream: TStream;
    data: RawByteString;
+   item: string;
+   itemBase: AnsiString;
 begin
-   path := ExtractFilePath(ParamStr(0));
-   filename := IncludeTrailingPathDelimiter(path) + 'map_default_design.tep';
    stream := TFileStream.Create(filename, fmOpenRead);
    setLength(data, stream.size);
    stream.Read(data[1], stream.size);
    stream.free;
-   data := blobReplace(data, 'map_default.bpl', 'map_default.tep');
+   for item in files do
+   begin
+      if item = filename then
+         Continue;
+      itemBase := AnsiString(ChangeFileExt(ExtractFileName(item), ''));
+      data := blobReplace(data, itemBase + '.bpl', itemBase + '.tep');
+   end;
    stream := TFileStream.Create(filename, fmOpenWrite);
    stream.write(data[1], length(data));
    stream.free;
+end;
+
+procedure run;
+var
+   path: string;
+   filename: string;
+   files: TStringList;
+begin
+   path := ExtractFilePath(ParamStr(0));
+   files := Match(path, '*.tep');
+   for filename in files do
+      Patch(filename, files);
+   Patch(IncludeTrailingPathDelimiter(path) + 'Turbu.exe', files);
+   files.free;
 end;
 
 begin

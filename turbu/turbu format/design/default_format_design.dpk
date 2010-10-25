@@ -43,6 +43,13 @@ contains
   portrait_selector in 'portrait_selector.pas' {frmPortraitSelector},
   sdl_frame_helper in 'sdl_frame_helper.pas',
   variable_selector in '..\..\..\components\TURBU\variable_selector.pas',
-  array_editor in '..\..\engines\map engine\design\array_editor.pas' {frmArrayEdit};
+  array_editor in '..\..\engines\map engine\design\array_editor.pas' {frmArrayEdit},
+  PortraitEdit in 'EB Editors\Messages\PortraitEdit.pas' {frmSelectPortrait},
+  MessageOptions in 'EB Editors\Messages\MessageOptions.pas' {frmMessageOptions},
+  MessageEdit in 'EB Editors\Messages\MessageEdit.pas' {frmMessageEdit},
+  InputNumber in 'EB Editors\Messages\InputNumber.pas' {frmInputNumber},
+  ChoiceEdit in 'EB Editors\Messages\ChoiceEdit.pas' {frmShowChoice},
+  EditInt in 'EB Editors\Basics\EditInt.pas' {frmEBSetInteger},
+  EditSwitch in 'EB Editors\Basics\EditSwitch.pas' {frmEbSetSwitch};
 
 end.

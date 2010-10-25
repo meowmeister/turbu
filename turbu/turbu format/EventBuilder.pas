@@ -2,7 +2,7 @@ unit EventBuilder;
 
 interface
 uses
-   Classes, Generics.Collections,
+   Classes, Generics.Collections, SysUtils,
    turbu_containers, turbu_database_interface;
 
 type
@@ -32,7 +32,7 @@ type
       FObject: TEBObject;
       FLine: string;
       FParent: TEBNodeData;
-    function GetParent: TEBNodeData;
+      function GetParent: TEBNodeData;
    public
       constructor Create(obj: TEBObject; line: string);
       property obj: TEBObject read FObject;
@@ -48,6 +48,8 @@ type
       constructor Create(obj: TEBObject; line: string);
       procedure Add(node: THierarchyTreeNode<TEBNodeData>); override;
    end;
+
+   TEBVariable = class;
 
    TEBObject = class(TComponent)
    private
@@ -77,6 +79,7 @@ type
 
       class function GetLookup(id: integer; const name: string): string;
       function IndentString(level: integer): string;
+      procedure NeededVariables(list: TStringList); virtual;
       property ChildScript[index: integer]: string read GetChildText;
       property ChildNode[index: integer]: string read GetChildNode;
       property ArgList: string read GetArgList write SetArgList;
@@ -93,6 +96,7 @@ type
       function Serialize: string;
       procedure Add(aObject: TEBObject); virtual;
       procedure SaveScript;
+      function RequiredVariables: TStringList;
 
       property Values: TList<integer> read FValues write FValues;
       property InUnit: string read GetUnit;
@@ -103,12 +107,62 @@ type
 
    TEBClass = class of TEBObject;
 
+   TEBBlock = class(TEBObject)
+   private
+      function MustBlock: boolean;
+   protected
+      function AlwaysBlock: boolean; virtual;
+      function AlwaysEndBlock: boolean; virtual;
+   public
+      function GetScript(indent: integer): string; override;
+      function GetNode: TEBNode; override;
+      function GetNodeText: string; override;
+   end;
+
+   TEBExpression = class(TEBObject)
+   private
+      FSilent: boolean;
+   public
+      function GetScriptText: string; override;
+      function GetNode: TEBNode; override;
+   published
+      property Silent: boolean read FSilent write FSilent stored FSilent;
+   end;
+
+   TEBVariable = class(TEBExpression)
+   private
+      FType: string;
+   published
+      property VarType: string read FType write FType;
+   end;
+
+   TEBParam = class(TEBVariable);
+
+   TEBHeader = class(TEBExpression)
+   public
+      function GetScriptText: string; override;
+   end;
+
+   TEBRoutine = class(TEBBlock)
+   private
+      procedure CreateHeader;
+      function GetParams: TArray<TEBParam>;
+   protected
+      function EnsureHeader: TEBHeader;
+   public
+      procedure RemoveParam(const name: string);
+      function GetVarBlock: TStringList; virtual; abstract;
+      property ParamList: TArray<TEBParam> read GetParams;
+   end;
+
+   ERPGScriptError = class(Exception);
+
 const
    CRLF = #13#10;
 
 implementation
 uses
-   SysUtils, RTTI,
+   RTTI,
    RTTIHelper;
 
 const INDENT_SIZE = 2;
@@ -184,6 +238,15 @@ begin
       StrStream.Free;
    end;
 //   assert(result.Serialize = value);
+end;
+
+procedure TEBObject.NeededVariables(list: TStringList);
+var
+   child: TEBObject;
+begin
+   for child in self do
+      if not (child is TEBExpression) then
+         child.NeededVariables(list);
 end;
 
 procedure TEBObject.Notification(AComponent: TComponent; Operation: TOperation);
@@ -328,6 +391,12 @@ begin
    self.ArgList := reader.ReadString;
 end;
 
+function TEBObject.RequiredVariables: TStringList;
+begin
+   result := TStringList.Create;
+   NeededVariables(result);
+end;
+
 { UsesUnitAttribute }
 
 constructor UsesUnitAttribute.Create(const name: string);
@@ -415,6 +484,127 @@ begin
    (node as TEBNode).Data.parent := self.Data;
    if assigned(node.Right) then
       CheckTree(node as TEBNode);
+end;
+
+{ TEBBlock }
+
+function TEBBlock.AlwaysBlock: boolean;
+begin
+   result := false;
+end;
+
+function TEBBlock.AlwaysEndBlock: boolean;
+begin
+   result := true;
+end;
+
+function TEBBlock.GetNodeText: string;
+begin
+   result := '';
+end;
+
+function TEBBlock.GetNode: TEBNode;
+var
+  child: TEBObject;
+begin
+   result := inherited GetNode;
+   for child in self do
+      if not (child is TEBExpression) then
+         result.Add(child.GetNode);
+   if AlwaysEndBlock then
+      result.Add(TEBNode.Create(self, '<>'))
+end;
+
+function TEBBlock.GetScript(indent: integer): string;
+var
+   list: TStringList;
+   element: TEBObject;
+begin
+   list := TStringList.Create;
+   try
+      if MustBlock then
+         list.add(indentString(indent) + 'begin');
+      for element in self do
+         if not (element is TEBExpression) then
+            list.Add(element.GetScript(indent + 1));
+      if MustBlock then
+         list.Add(indentString(indent) + 'end;');
+      result := TrimRight(list.Text);
+   finally
+      list.free;
+   end;
+end;
+
+function TEBBlock.MustBlock: boolean;
+begin
+   result := (self.ComponentCount > 1) or AlwaysBlock;
+end;
+
+{ TEBExpression }
+
+function TEBExpression.GetScriptText: string;
+begin
+   result := GetNodeText;
+end;
+
+function TEBExpression.GetNode: TEBNode;
+begin
+   raise ERPGScriptError.Create('Expressions don''t get their own tree nodes!');
+end;
+
+{ TEBRoutine }
+
+{$WARN CONSTRUCTING_ABSTRACT OFF}
+procedure TEBRoutine.CreateHeader;
+begin
+   TEBHeader.Create(self).ComponentIndex := 0;
+end;
+{$WARN CONSTRUCTING_ABSTRACT ON}
+
+function TEBRoutine.EnsureHeader: TEbHeader;
+begin
+   if (self.ComponentCount = 0) or not (self.Components[0] is TEBHeader) then
+      CreateHeader;
+   result := self.components[0] as TEBHeader;
+end;
+
+function TEBRoutine.GetParams: TArray<TEBParam>;
+var
+   header: TEBHeader;
+   comp: TComponent;
+   counter: integer;
+begin
+   header := EnsureHeader;
+   SetLength(result, header.ComponentCount);
+   counter := 0;
+   for comp in header do
+      if comp is TEBParam then
+      begin
+         result[counter] := TEBParam(comp);
+         inc(counter);
+      end;
+   SetLength(result, counter);
+end;
+
+procedure TEBRoutine.RemoveParam(const name: string);
+var
+   header: TEBHeader;
+   comp: TComponent;
+begin
+   header := EnsureHeader;
+   for comp in header do
+      if (comp is TEBParam) and (TEbObject(comp).text = name) then
+      begin
+         comp.free;
+         Break;
+      end;
+end;
+
+{ TEBHeader }
+
+function TEBHeader.GetScriptText: string;
+begin
+   result := ''; //implement this
 end;
 
 initialization

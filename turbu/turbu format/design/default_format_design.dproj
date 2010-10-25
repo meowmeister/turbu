@@ -83,6 +83,27 @@
 			<DCCReference Include="..\..\engines\map engine\design\array_editor.pas">
 				<Form>frmArrayEdit</Form>
 			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\PortraitEdit.pas">
+				<Form>frmSelectPortrait</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\MessageOptions.pas">
+				<Form>frmMessageOptions</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\MessageEdit.pas">
+				<Form>frmMessageEdit</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\InputNumber.pas">
+				<Form>frmInputNumber</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\ChoiceEdit.pas">
+				<Form>frmShowChoice</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Basics\EditInt.pas">
+				<Form>frmEBSetInteger</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Basics\EditSwitch.pas">
+				<Form>frmEbSetSwitch</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -96,6 +117,9 @@
 			</BuildConfiguration>
 		</ItemGroup>
 		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<PropertyGroup>
+			<PostBuildEvent><![CDATA[copy "$(OUTPUTPATH)" "$(OUTPUTDIR)$(OUTPUTNAME).tep" /Y]]></PostBuildEvent>
+		</PropertyGroup>
 		<ProjectExtensions>
 			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
 			<Borland.ProjectType>Package</Borland.ProjectType>

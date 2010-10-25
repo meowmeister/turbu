@@ -66,6 +66,6 @@ begin
       cbxFunctions.AddItem(decl.designName, decl);
 end;
 
-initialization
-   RegisterEbEditor(TEBGlobalInt, TfrmEbSetInteger);
+{initialization
+   RegisterEbEditor(TEBGlobalInt, TfrmEbSetInteger);}
 end.

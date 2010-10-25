@@ -385,6 +385,9 @@ object frmTurbuMain: TfrmTurbuMain
   object pluginManager: TJvPluginManager
     Extension = 'TEP'
     PluginKind = plgPackage
+    OnAfterLoad = pluginManagerAfterLoad
+    OnBeforeUnload = pluginManagerBeforeUnload
+    OnAfterUnload = pluginManagerAfterUnload
     Left = 264
     Top = 48
   end
@@ -392,7 +395,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C01010800C800DC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010800C800FC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
