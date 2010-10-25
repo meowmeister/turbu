@@ -127,6 +127,11 @@ type
         Shift: TShiftState);
       procedure imgLogoKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure imgBackgroundClick(Sender: TObject);
+    procedure pluginManagerAfterLoad(Sender: TObject; FileName: string;
+      const ALibHandle: {HMODULE} cardinal; var AllowLoad: Boolean);
+    procedure pluginManagerBeforeUnload(Sender: TObject; FileName: string;
+      const ALibHandle: Cardinal);
+    procedure pluginManagerAfterUnload(Sender: TObject; FileName: string);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
@@ -170,6 +175,7 @@ implementation
 uses
    SysUtils, Types, Math, Graphics, Windows,
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
+   PackageRegistry,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
    turbu_classes, turbu_versioning, turbu_tilesets, turbu_defs,
    dm_database, discInterface, formats, map_tree_controller, delete_map,
@@ -613,6 +619,24 @@ begin
       loadStream.free;
    end;
    loadProject;
+end;
+
+procedure TfrmTurbuMain.pluginManagerAfterLoad(Sender: TObject;
+  FileName: string; const ALibHandle: {HMODULE} cardinal; var AllowLoad: Boolean);
+begin
+   Packages.AddPackage(FileName, ALibHandle);
+end;
+
+procedure TfrmTurbuMain.pluginManagerAfterUnload(Sender: TObject;
+  FileName: string);
+begin
+   Packages.Verify;
+end;
+
+procedure TfrmTurbuMain.pluginManagerBeforeUnload(Sender: TObject;
+  FileName: string; const ALibHandle: Cardinal);
+begin
+   Packages.RemovePackage(FileName);
 end;
 
 procedure TfrmTurbuMain.RequireMapEngine;

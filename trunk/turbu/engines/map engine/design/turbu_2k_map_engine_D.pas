@@ -223,6 +223,7 @@ begin
          saveMap(FCurrentMap.mapObj);
          freeAndNil(FMaps[FCurrentMap.mapObj.id])
       end;
+      FImages.Clear;
    end;
 
    prepareMap(map);
