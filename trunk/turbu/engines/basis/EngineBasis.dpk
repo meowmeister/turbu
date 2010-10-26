@@ -27,7 +27,8 @@ package EngineBasis;
 {$DEFINE PS_USESSUPPORT}
 
 requires
-  dsnap;
+  dsnap,
+  vcl;
 
 contains
   upsCompiler in '..\..\..\components\PascalScript\upsCompiler.pas',

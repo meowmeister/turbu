@@ -130,6 +130,17 @@ type
       function GetScriptText: string; override;
    end;
 
+   TEBMethodCall = class(TEBCall)
+   public
+      function GetScriptText: string; override;
+   end;
+
+   TEBCast = class(TEBExpression)
+   public
+      constructor Create(value: string; base: TEBExpression); reintroduce;
+      function GetNodeText: string; override;
+   end;
+
    TEBBinaryOp = class(TEBExpression)
    private
       FOp: TBinaryOp;
@@ -147,6 +158,12 @@ type
       function GetNodeText: string; override;
       function GetScriptText: string; override;
       property lookup: string read FLookup write FLookup;
+   end;
+
+   TEBParenExpr = class(TEBExpression)
+   public
+      constructor Create(subExpr: TEBExpression);
+      function GetNodeText: string; override;
    end;
 
 function CreateSubscript(mode, data: integer): TEBExpression;
@@ -590,10 +607,67 @@ begin
    self.Text := 'nil';
 end;
 
+{ TEBMethodCall }
+
+function TEBMethodCall.GetScriptText: string;
+const
+   LINE = '%s.%s(%s)';
+var
+   list: TStringList;
+   child: TEBObject;
+   i: integer;
+   selfptr: string;
+begin
+   result := self.Text;
+   if self.ComponentCount = 0 then
+      Exit;
+
+   list := TStringList.Create;
+   try
+      list.StrictDelimiter := true;
+      selfptr := (Components[0] as TEBExpression).GetScriptText;
+      for i := 1 to self.ComponentCount - 1 do
+         list.add(' ' + (Components[i] as TEBExpression).GetScriptText);
+      result := format(LINE, [result, TrimLeft(list.commaList)]);
+      if AnsiSameText(selfptr, 'self') then
+         Delete(result, 1, 5);
+   finally
+      list.free;
+   end;
+end;
+
+{ TEBParenExpr }
+
+constructor TEBParenExpr.Create(subExpr: TEBExpression);
+begin
+   inherited Create(nil);
+   Add(subExpr);
+end;
+
+function TEBParenExpr.GetNodeText: string;
+begin
+   result := format('(%s)', [ChildNode[0]]);
+end;
+
+{ TEBCast }
+
+constructor TEBCast.Create(value: string; base: TEBExpression);
+begin
+   inherited Create(nil);
+   self.Text := value;
+   Add(base);
+end;
+
+function TEBCast.GetNodeText: string;
+const LINE = '%s(%s)';
+begin
+   result := format(LINE, [self.Text, self.ChildScript[0]]);
+end;
+
 initialization
    RegisterClasses([TEBVariableValue, TEBSwitchesValue, TEBIntsValue,
                     TEBBooleanValue, TEBIntegerValue, TEBStringValue, TEBEnumValue,
                     TEBLookupValue, TEBComparison, TEBObjExpr, TEBObjArrayValue,
                     TEBLookupObjExpr, TEBPropExpr, TEBCall, TEBBinaryOp,
-                    TEBIntArray, TEBNilValue]);
+                    TEBIntArray, TEBNilValue, TEBParenExpr]);
 end.

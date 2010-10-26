@@ -205,7 +205,7 @@ type
       property critRate: integer read FCritRate write FCritRate;
    end;
 
-procedure SetDatabase(value: TRpgDatafile);
+//procedure SetDatabase(value: TRpgDatafile);
 
 implementation
 
@@ -213,13 +213,13 @@ uses
    sysUtils,
    turbu_database;
 
-var
+{var
    GDatabase: TRpgDatabase;
 
 procedure SetDatabase(value: TRpgDatafile);
 begin
    GDatabase := value as TRpgDatabase;
-end;
+end; }
 
 resourcestring
    NOT_IN_BLOCK = 'Stat block not found in stat set!';

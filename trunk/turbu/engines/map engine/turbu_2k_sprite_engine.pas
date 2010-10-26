@@ -428,8 +428,6 @@ var
    newTile: TMapTile;
    tileRef: TTileRef;
    matrix: TTileMatrix;
-   //Yay for b0rked bounds checking in packages!
-   newindex: integer;
 begin
    matrix := FTiles[index];
    size := FMap.size;
@@ -440,12 +438,7 @@ begin
          if assigned(matrix[equivX, equivY]) then
             Continue;
 
-         //FIXME: Fix this when bounds checking gets fixed
-         newIndex := getIndex(equivX, equivY);
-         if (newIndex > high(value)) or (newIndex < low(value)) then
-            raise ERangeError.Create('Tile list bounds out of range');
-         tileRef := value[newIndex];
-{         tileRef := value[getIndex(equivX, equivY)];}
+         tileRef := value[getIndex(equivX, equivY)];
          newTile := CreateNewTile(tileRef);
          matrix[equivX, equivY] := newTile;
          if assigned(newTile) then

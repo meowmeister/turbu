@@ -11248,12 +11248,14 @@ function TPSRuntimeClassImporter.FindClass(const Name: tbtString): TPSRuntimeCla
 var
   h, i: Longint;
   p: TPSRuntimeClass;
+  uName: tbtString;
 begin
-  h := MakeHash(Name);
+  uName := FastUpperCase(name);
+  h := MakeHash(uName);
   for i := FClasses.Count -1 downto 0 do
   begin
     p := FClasses[i];
-    if (p.FClassNameHash = h) and (p.FClassName = Name) then
+    if (p.FClassNameHash = h) and (p.FClassName = uName) then
     begin
       Result := P;
       exit;

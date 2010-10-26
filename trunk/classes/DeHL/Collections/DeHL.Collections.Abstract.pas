@@ -1556,7 +1556,7 @@ begin
   Result := TPairEnumerator.Create(Self);
 end;
 
-function TAbstractDistinctMultiMap<TKey, TValue>.GetItemList(const Key: TKey): IEnexIndexedCollection<TValue>;
+function TAbstractDistinctMultiMap<TKey, TValue>.GetItemList(const Key: TKey): IEnexCollection<TValue>;
 var
   LSet: ISet<TValue>;
 begin

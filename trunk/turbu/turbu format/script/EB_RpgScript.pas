@@ -3,7 +3,7 @@ unit EB_RpgScript;
 interface
 uses
    SysUtils, Classes,
-   turbu_defs, StringListComp,
+   turbu_defs,
    EventBuilder, EB_Expressions;
 
 type
@@ -28,6 +28,7 @@ type
       function HasConst: boolean;
       function AlwaysBlock: boolean; override;
    public
+      function AddParam(const name, &type: string): TEBParam;
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
       function GetVarBlock: TStringList; override;
@@ -173,6 +174,12 @@ type
       function GetScript(indent: integer): string; override;
    end;
 
+   TEbAssignment = class(TEBObject)
+   public
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
    TEBObjectHelper = class helper for TEBObject
    public
       function HeroName(id: integer): string;
@@ -191,6 +198,8 @@ const
    BOOL_STR: array[0..1] of string = ('false', 'true');
 
 implementation
+uses
+   StringListComp;
 
 { TEBUntranslated }
 
@@ -269,8 +278,16 @@ begin
 end;
 
 function TEBProcedure.ParamList: string;
+var
+   header: TEBHeader;
+   child: TEBObject;
+   param: TEBParam;
+   list: TStringList;
 begin
-   result := ''; //TODO: implement this
+   header := self.EnsureHeader;
+   if header.ComponentCount = 0 then
+      Exit('');
+   result := header.GetScriptText;
 end;
 
 function TEBProcedure.HasVar: boolean;
@@ -286,6 +303,13 @@ end;
 function TEBProcedure.varBlock: string;
 begin
    result := '';
+end;
+
+function TEBProcedure.AddParam(const name, &type: string): TEBParam;
+begin
+   result := TEBParam.Create(Self.EnsureHeader);
+   result.Text := name;
+   result.VarType := &type;
 end;
 
 function TEBProcedure.AlwaysBlock: boolean;
@@ -852,6 +876,19 @@ end;
 function TEBUnit.GetScriptText: string;
 begin
    result := format('unit %s;', [self.name]);
+end;
+
+{ TEbAssignment }
+
+function TEbAssignment.GetNodeText: string;
+begin
+   raise ERPGScriptError.Create('Not Implemented');
+end;
+
+function TEbAssignment.GetScriptText: string;
+const LINE = '%s := %s;';
+begin
+   result := format(LINE, [ChildScript[0], ChildScript[1]]);
 end;
 
 initialization

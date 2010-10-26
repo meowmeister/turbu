@@ -2,7 +2,7 @@ unit EventBuilder;
 
 interface
 uses
-   Classes, Generics.Collections, SysUtils,
+   Classes, Generics.Collections, SysUtils, TypInfo,
    turbu_containers, turbu_database_interface;
 
 type
@@ -97,6 +97,7 @@ type
       procedure Add(aObject: TEBObject); virtual;
       procedure SaveScript;
       function RequiredVariables: TStringList;
+      function Clone: TEBObject;
 
       property Values: TList<integer> read FValues write FValues;
       property InUnit: string read GetUnit;
@@ -132,11 +133,20 @@ type
    TEBVariable = class(TEBExpression)
    private
       FType: string;
+   public
+      function GetNodeText: string; override;
    published
       property VarType: string read FType write FType;
    end;
 
-   TEBParam = class(TEBVariable);
+   TEBParam = class(TEBVariable)
+   private
+      FFlags: TParamFlags;
+      function HasFlags: Boolean;
+      function FlagsName: string;
+   published
+      property Flags: TParamFlags read FFlags write FFlags stored HasFlags;
+   end;
 
    TEBHeader = class(TEBExpression)
    public
@@ -170,6 +180,11 @@ const INDENT_SIZE = 2;
 procedure TEBObject.Add(aObject: TEBObject);
 begin
    self.InsertComponent(aObject);
+end;
+
+function TEBObject.Clone: TEBObject;
+begin
+   result := TEBObject.Load(self.Serialize);
 end;
 
 constructor TEBObject.Create(AParent: TComponent);
@@ -589,13 +604,13 @@ end;
 procedure TEBRoutine.RemoveParam(const name: string);
 var
    header: TEBHeader;
-   comp: TComponent;
+   obj: TEBObject;
 begin
    header := EnsureHeader;
-   for comp in header do
-      if (comp is TEBParam) and (TEbObject(comp).text = name) then
+   for obj in header do
+      if (obj is TEBParam) and (obj.text = name) then
       begin
-         comp.free;
+         obj.free;
          Break;
       end;
 end;
@@ -603,8 +618,69 @@ end;
 { TEBHeader }
 
 function TEBHeader.GetScriptText: string;
+var
+   child: TEBObject;
+   childParam: TEBParam absolute child;
+   lastType: string;
+   lastParams: TParamFlags;
+   fragment: TStringList;
+
+   procedure flush;
+   const PARAM = '%s %s: %s';
+   begin
+      if fragment.count = 0 then
+         Exit;
+      if result <> '' then
+         result := result + '; ';
+      result := result + TrimLeft(format(PARAM, [childParam.FlagsName, fragment.CommaText, childParam.VarType]));
+      fragment.Clear;
+   end;
+
+   procedure CheckFlush;
+   begin
+      if (childParam.FFlags <> lastParams) or (childParam.VarType <> lastType) then
+      begin
+         flush;
+         lastType := childParam.VarType;
+         lastParams := childParam.FFlags;
+      end;
+   end;
+
 begin
-   result := ''; //implement this
+   if self.ComponentCount = 0 then
+      Exit('');
+   fragment := TStringList.Create;
+   try
+      for child in self do
+      begin
+         CheckFlush;
+         assert(child is TEBParam);
+         fragment.Add(child.Text);
+      end;
+      Flush;
+   finally
+      fragment.Free;
+   end;
+   result := format('(%s)', [result]);
+end;
+
+{ TEBParam }
+
+function TEBParam.FlagsName: string;
+begin
+   result := TypInfo.SetToString(PTypeInfo(TypeInfo(TParamFlags)), byte(FFlags * [pfVar, pfConst, pfOut]));
+end;
+
+function TEBParam.HasFlags: Boolean;
+begin
+   result := FFlags <> [];
+end;
+
+{ TEBVariable }
+
+function TEBVariable.GetNodeText: string;
+begin
+   result := FText;
 end;
 
 initialization

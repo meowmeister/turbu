@@ -80,10 +80,10 @@ type
       Layer21: TMenuItem;
       MapObjects1: TMenuItem;
       N1: TMenuItem;
-    imgLogo: TSdlFrame;
-    imgBackground: TImage;
-    actRun: TAction;
-    actPause: TAction;
+      imgLogo: TSdlFrame;
+      imgBackground: TImage;
+      actRun: TAction;
+      actPause: TAction;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -126,12 +126,12 @@ type
       procedure imgLogoKeyDown(Sender: TObject; var Key: Word;
         Shift: TShiftState);
       procedure imgLogoKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure imgBackgroundClick(Sender: TObject);
-    procedure pluginManagerAfterLoad(Sender: TObject; FileName: string;
-      const ALibHandle: {HMODULE} cardinal; var AllowLoad: Boolean);
-    procedure pluginManagerBeforeUnload(Sender: TObject; FileName: string;
-      const ALibHandle: Cardinal);
-    procedure pluginManagerAfterUnload(Sender: TObject; FileName: string);
+      procedure imgBackgroundClick(Sender: TObject);
+      procedure pluginManagerAfterLoad(Sender: TObject; FileName: string;
+        const ALibHandle: {HMODULE} cardinal; var AllowLoad: Boolean);
+      procedure pluginManagerBeforeUnload(Sender: TObject; FileName: string;
+        const ALibHandle: Cardinal);
+      procedure pluginManagerAfterUnload(Sender: TObject; FileName: string);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
