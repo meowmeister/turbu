@@ -11,8 +11,7 @@ type
          FContext: TRttiContext;
          FDatalinkField: TRttiField;
       class constructor Create;
-   protected
-      class destructor Destroy; //FIXME: This shouldn't have to be protected
+      class destructor Destroy;
    private
       FDataLink: TFieldDataLink;
       procedure SetComboText(const Value: string);

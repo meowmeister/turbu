@@ -3,9 +3,9 @@ unit frame_conditions;
 interface
 
 uses
-  Classes, Controls, Forms, Dialogs, StdCtrls, DB, DBClient, DBCtrls, Mask,
-  JvExMask, JvSpin, JvDBSpinEdit,
-  dm_database, DBIndexComboBox;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, DB, DBClient, DBCtrls,
+  dm_database, DBIndexComboBox, Mask, JvExMask, JvSpin, JvDBSpinEdit;
 
 type
   TframeConditions = class(TFrame)

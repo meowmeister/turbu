@@ -91,6 +91,7 @@ type
       function GetID: integer;
       function GetName: string;
    public
+      constructor Create;
       constructor Load(savefile: TStream); virtual;
       procedure save(savefile: TStream); virtual;
       procedure upload(db: TDataSet);
@@ -328,6 +329,11 @@ begin
       clipboard.Close;
       stream.Free;
    end;
+end;
+
+constructor TRpgDatafile.Create;
+begin
+  inherited Create; //required by the generics system
 end;
 
 function TRpgDatafile.datasetName: string;
@@ -804,11 +810,11 @@ var
    i: integer;
 begin
    self.Create;
-   lassert(savefile.readChar = UpCase(T.keyChar));
+   lassert(savefile.readChar = T.keyChar);
    self.Capacity := savefile.readInt + 1;
    for I := 1 to self.Capacity - 1 do
       self.Add(T.load(savefile));
-   lassert(savefile.readChar = T.keyChar);
+   lassert(savefile.readChar = UpCase(T.keyChar));
 end;
 
 procedure TRpgDataList<T>.save(savefile: TStream);

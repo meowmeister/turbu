@@ -679,36 +679,36 @@ end;
 function T2kMapEngineD.loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
 var input: TTileGroupRecord;
 newItem: TTileGroupPair;
-var
+{var
 filename: string;
-rw: PSDL_RWops;
+rw: PSDL_RWops;}
 begin
-   result := TList<TTileGroupPair>.Create;
-   for input in value.Records do
+{   result := TList<TTileGroupPair>.Create;
+   for input in value.Records do}
 
-{   result := value.Records.mapFP<TTileGroupPair>(
+   result := value.Records.mapFP<TTileGroupPair>(
       function(const input: TTileGroupRecord): TTileGroupPair
       var
          filename: string;
-         rw: PSDL_RWops;}
+         rw: PSDL_RWops;
       begin
          filename := 'tileset\' + input.group.filename + '.png';
          if not FImages.contains(input.group.filename) then
          begin
             rw := sdlstreams.SDLStreamSetup(GArchives[IMAGE_ARCHIVE].getFile(filename));
-            {result} newItem := TTileGroupPair.Create(input,
+            result {newItem} := TTileGroupPair.Create(input,
               TRpgSdlImage.CreateSprite(rw, '.png', input.group.filename, FImages).surface);
             TStream(rw.unknown).Free;
             SDLStreamCloseRWops(rw);
          end
          else
          begin
-            {result} newItem := TTileGroupPair.Create(input,
+            result {newItem} := TTileGroupPair.Create(input,
               (FImages.Image[input.group.filename] as TRpgSdlImage).surface);
          end;
-{      end);}
-         result.Add(newItem);
-      end;
+      end);
+{         result.Add(newItem);
+      end;}
 end;
 
 function T2kMapEngineD.mapPosition: TSgPoint;

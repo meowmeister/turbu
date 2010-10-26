@@ -184,18 +184,13 @@ begin
    FHeight := size.y;
 end;
 
-{$Q-}{$R-}
 function TMatrix<T>.GetValue(X, Y: integer): T;
 begin
-   if (x < 0) or (y < 0) or (x >= FWidth) or (Y >= FHeight) then
-      raise ERangeError.Create('Matrix bounds out of range');
    result := FMatrix[X, Y];
 end;
 
 procedure TMatrix<T>.SetValue(X, Y: integer; const Value: T);
 begin
-   if (x < 0) or (y < 0) or (x >= FWidth) or (Y >= FHeight) then
-      raise ERangeError.Create('Matrix bounds out of range');
    FMatrix[X, Y] := Value;
 end;
 

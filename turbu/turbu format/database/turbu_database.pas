@@ -344,9 +344,9 @@ begin
       self.parseMeta;
    end;
 
-   turbu_characters.setDatabase(self);
+{   turbu_characters.setDatabase(self);
    turbu_skills.setDatabase(self);
-   turbu_tilesets.setDatabase(self);
+   turbu_tilesets.setDatabase(self); }
 
    GArchives[DATABASE_ARCHIVE].CurrentFolder := '';
    j := savefile.readInt;
@@ -1254,9 +1254,9 @@ end;
 procedure TRpgDatabase.AfterConstruction;
 begin
    inherited;
-   turbu_skills.setDatabase(self);
+{   turbu_skills.setDatabase(self);
    turbu_characters.SetDatabase(self);
-   turbu_tilesets.setDatabase(self);
+   turbu_tilesets.setDatabase(self);}
 end;
 
 function TRpgDatabase.countItems: cardinal;

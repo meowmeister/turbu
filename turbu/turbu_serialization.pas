@@ -15,8 +15,8 @@ type
       class constructor Create;
       function GetCurrentInstance: pointer;
       function GetTypeInfo: PTypeInfo;
+      class destructor Destroy;
    protected
-      class destructor Destroy; //FIXME: This shouldn't have to be protected
 
       class var
          FContext: TRttiContext;

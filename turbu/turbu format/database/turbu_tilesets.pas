@@ -105,20 +105,20 @@ type
       property HiSpeed: boolean read FHiSpeed write FHiSpeed;
    end;
 
-procedure SetDatabase(value: TRpgDatafile);
+//procedure SetDatabase(value: TRpgDatafile);
 function UpperLayerFilter(value: TTileGroupRecord): boolean;
 
 implementation
 uses
    turbu_database;
 
-var
+{var
    GDatabase: TRpgDatabase;
 
 procedure SetDatabase(value: TRpgDatafile);
 begin
    GDatabase := value as TRpgDatabase;
-end;
+end; }
 
 function UpperLayerFilter(value: TTileGroupRecord): boolean;
 begin
@@ -170,24 +170,10 @@ begin
    savefile.readBuffer(FAnimDir, sizeof(FAnimDir));
    FAttributes := TAttributeList.Create;
 
-   //QC 75119
-{   savefile.readList<TTileAttributes>(FAttributes);
+   savefile.readList<TTileAttributes>(FAttributes);
    FTerrain := TList<integer>.Create;
-   savefile.readList<integer>(FTerrain);}
+   savefile.readList<integer>(FTerrain);
 
-   i := savefile.readInt;
-   FAttributes.Capacity := i;
-   for I := 0 to i - 1 do
-   begin
-      savefile.read(dummy, sizeof(dummy));
-      FAttributes.add(dummy);
-   end;
-
-   FTerrain := TList<integer>.Create;
-   i := savefile.readInt;
-   FTerrain.Capacity := i;
-   for I := 0 to i - 1 do
-      FTerrain.add(savefile.readInt);
 end;
 
 procedure TTileGroupRecord.save(savefile: TStream);
@@ -200,17 +186,9 @@ begin
    savefile.writeString(FGroup.FFilename);
    savefile.writeBuffer(FAnimDir, sizeof(FAnimDir));
 
-   //QC 75119
-{   savefile.writeList<TTileAttributes>(FAttributes);
-   savefile.writeList<integer>(FTerrain);}
+   savefile.writeList<TTileAttributes>(FAttributes);
+   savefile.writeList<integer>(FTerrain);
 
-   savefile.writeInt(FAttributes.Count);
-   for attribute in FAttributes do
-      savefile.Write(attribute, sizeof(attribute));
-
-   savefile.writeInt(FTerrain.Count);
-   for i in FTerrain do
-      savefile.writeInt(i);
 end;
 
 destructor TTileGroupRecord.Destroy;

@@ -165,20 +165,20 @@ type
       property event: TScriptEvent read FEvent write FEvent;
    end;
 
-procedure SetDatabase(value: TRpgDatafile);
+//procedure SetDatabase(value: TRpgDatafile);
 
 implementation
 uses
    sysutils,
    turbu_database, turbu_script_interface;
 
-var
+{var
    GDatabase: TRpgDatabase;
 
 procedure SetDatabase(value: TRpgDatafile);
 begin
    GDatabase := value as TRpgDatabase;
-end;
+end;}
 
 { TSkillTemplate }
 

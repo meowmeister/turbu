@@ -29,7 +29,6 @@ requires
   EngineBasis;
 
 contains
-  SimpleShareMem_DefaultFormat in 'SimpleShareMem_DefaultFormat.pas',
   turbu_database in 'database\turbu_database.pas',
   turbu_characters in 'database\turbu_characters.pas',
   turbu_classes in 'database\turbu_classes.pas',
