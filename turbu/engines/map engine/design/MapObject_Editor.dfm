@@ -107,7 +107,7 @@ object frmObjectEditor: TfrmObjectEditor
     end
     object tabEventPages: TTabControl
       Left = 10
-      Top = 72
+      Top = 71
       Width = 994
       Height = 713
       Margins.Left = 4
@@ -116,6 +116,7 @@ object frmObjectEditor: TfrmObjectEditor
       Margins.Bottom = 4
       TabOrder = 5
       OnChange = tabEventPagesChange
+      OnChanging = tabEventPagesChanging
       object gbxEventText: TGroupBox
         Left = 431
         Top = 38
@@ -708,6 +709,7 @@ object frmObjectEditor: TfrmObjectEditor
       end
       item
         Name = 'id'
+        Attributes = [faReadonly]
         DataType = ftAutoInc
       end>
     IndexDefs = <
@@ -733,7 +735,7 @@ object frmObjectEditor: TfrmObjectEditor
       A20000009619E0BD010000001800000004000000000003000000A200046E616D
       6501004A00000001000557494454480200020040000B446973706C61794E616D
       6501004A0000000100055749445448020002004000047479706502004A000000
-      010005574944544802000200FE01026964040001000000010007535542545950
+      010005574944544802000200FE01026964040001000200010007535542545950
       450200490008004175746F696E630001000C4155544F494E4356414C55450400
       010001000000}
     object dsContextName: TWideStringField

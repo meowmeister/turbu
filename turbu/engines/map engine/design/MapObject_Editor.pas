@@ -78,6 +78,7 @@ type
     procedure btnPasteClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnScriptClick(Sender: TObject);
+    procedure tabEventPagesChanging(Sender: TObject; var AllowChange: Boolean);
   private
     procedure WMRender(var message: TMessage); message WM_RENDER;
     procedure OnClipboardChange(Sender: TObject);
@@ -99,7 +100,8 @@ type
     procedure AdjustRemainingEntries(incIDs: boolean);
     procedure CheckDeleteEnabled;
     procedure InsertPage(page: TRpgEventPage);
-
+    function Procname(id: integer): string;
+    procedure PostProc;
   public
     { Public declarations }
     class procedure EditMapObject(obj: TRpgMapObject; map: TRpgMap; const tilesetName: string);
@@ -111,7 +113,7 @@ uses
    Windows, Clipbrd, SysUtils,
    sprite_selector, ClipboardWatcher,
    commons, turbu_tbi_lib, dm_database, turbu_database, archiveInterface,
-   turbu_sdl_image, EB_RpgScript,
+   turbu_sdl_image, EB_RpgScript, EventBuilder,
    sdl_13, sg_defs;
 
 {$R *.dfm}
@@ -123,6 +125,7 @@ var
 
 procedure TfrmObjectEditor.btnApplyClick(Sender: TObject);
 begin
+   PostProc;
    DownloadMapObject(FMapObject);
    btnApply.Enabled := false;
 end;
@@ -135,6 +138,7 @@ begin
    try
       FSerializer.download(page, dsPages);
       FSerializer.download(page.conditionBlock, frameConditions.dsConditions);
+      page.scriptName := trvEvents.proc.Serialize;
       page.CopyToClipboard;
    finally
       page.Free;
@@ -142,8 +146,17 @@ begin
 end;
 
 procedure TfrmObjectEditor.btnPasteClick(Sender: TObject);
+var
+   page: TRpgEventPage;
+   script: string;
 begin
-   InsertPage(TRpgEventPage.PasteFromClipboard);
+   page := TRpgEventPage.PasteFromClipboard;
+   script := page.scriptName;
+   InsertPage(page);
+   dsPages.Edit;
+   dsPagesEventText.Value := script;
+   dsPages.Post;
+   tabEventPagesChange(self);
 end;
 
 procedure TfrmObjectEditor.DisableDatasets;
@@ -197,6 +210,7 @@ end;
 procedure TfrmObjectEditor.InsertPage(page: TRpgEventPage);
 var
    id: integer;
+   proc: TEBProcedure;
 begin
    DisableDatasets;
    try
@@ -206,10 +220,17 @@ begin
       AdjustRemainingEntries(true);
       FSerializer.upload(page, dsPages);
       FSerializer.upload(page.conditionBlock, frameConditions.dsConditions);
+
       frameConditions.dsConditions.Edit;
       frameConditions.dsConditionsMaster.Value := id;
       frameConditions.dsConditions.Post;
-      tabEventPages.Tabs.Add(intToStr(FMapObject.pages.Count));
+      dsPages.Edit;
+      proc := TEBProcedure.Create(nil);
+      dsPagesEventText.Value := proc.Serialize;
+      proc.Free;
+      dsPages.Post;
+
+      tabEventPages.Tabs.Add(IntToStr(tabEventPages.Tabs.Count + 1));
       tabEventPages.TabIndex := id;
       tabEventPagesChange(self);
    finally
@@ -291,6 +312,7 @@ procedure TfrmObjectEditor.FormDestroy(Sender: TObject);
 begin
    ClipboardWatcher.UnregisterClipboardViewer(self.OnClipboardChange);
    FSerializer.Free;
+   trvEvents.proc.Free;
 end;
 
 procedure TfrmObjectEditor.FormShow(Sender: TObject);
@@ -318,13 +340,20 @@ procedure TfrmObjectEditor.tabEventPagesChange(Sender: TObject);
 begin
    dsPages.Locate('id', tabEventPages.TabIndex, []);
    imgEventSprite.SetSprite(dsPagesName.Value, dsPagesFrame.Value, FTileset, FRenameProc);
-   if dsPagesEventText.BlobSize > 0 then
-      trvEvents.proc := FMap.ScriptObject.FindComponent(dsPagesEventText.Value) as TEBProcedure;
+   assert(dsPagesEventText.BlobSize > 0);
+   trvEvents.proc.Free;
+   trvEvents.proc := TEBObject.Load(dsPagesEventText.Value) as TEBProcedure;
+end;
+
+procedure TfrmObjectEditor.tabEventPagesChanging(Sender: TObject; var AllowChange: Boolean);
+begin
+   PostProc;
 end;
 
 procedure TfrmObjectEditor.UploadMapObject(obj: TRpgMapObject);
 var
    page: TRpgEventPage;
+   proc: TEBProcedure;
 begin
    FMapObject := obj;
    dsPages.DisableControls;
@@ -335,6 +364,16 @@ begin
       begin
          FSerializer.upload(page, dsPages);
          FSerializer.upload(page.conditionBlock, frameConditions.dsConditions);
+         proc := FMap.ScriptObject.FindComponent(page.scriptName) as TEBProcedure;
+         dsPages.Edit;
+         if assigned(proc) then
+            dsPagesEventText.Value := proc.Serialize
+         else begin
+            proc := TEBProcedure.Create(nil);
+            dsPagesEventText.Value := proc.Serialize;
+            proc.Free;
+         end;
+         dsPages.Post;
          tabEventPages.Tabs.Add(intToStr(tabEventPages.Tabs.Count + 1));
       end;
       txtName.Text := obj.name;
@@ -350,6 +389,7 @@ procedure TfrmObjectEditor.DownloadMapObject(obj: TRpgMapObject);
 var
    page: TRpgEventPage;
    last: integer;
+   proc: TEBProcedure;
 begin
    DisableDatasets;
    last := 0;
@@ -365,6 +405,18 @@ begin
          page := obj.pages[last];
          FSerializer.download(page, dsPages);
          FSerializer.download(page.conditionBlock, frameConditions.dsConditions);
+         FMap.ScriptObject.FindComponent(page.scriptName).Free;
+         proc := TEBObject.Load(dsPagesEventText.Value) as TEBProcedure;
+         if proc.ComponentCount > 0 then
+         begin
+            proc.Name := procname(page.id);
+            FMap.ScriptObject.Add(proc);
+            page.scriptName := proc.Name;
+         end
+         else begin
+            page.scriptName := '';
+            proc.Free;
+         end;
          dsPages.Next;
          frameConditions.dsConditions.Next;
       end;
@@ -476,6 +528,18 @@ end;
 procedure TfrmObjectEditor.OnClipboardChange(Sender: TObject);
 begin
    btnPaste.Enabled := clipboard.HasFormat(eventClipFormat);
+end;
+
+procedure TfrmObjectEditor.PostProc;
+begin
+   dsPages.Edit;
+   dsPagesEventText.Value := trvEvents.proc.Serialize;
+   dsPages.Post;
+end;
+
+function TfrmObjectEditor.Procname(id: integer): string;
+begin
+   result := format('%s_page%d', [txtName.Text, id]);
 end;
 
 initialization
