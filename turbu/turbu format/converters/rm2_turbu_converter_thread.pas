@@ -247,7 +247,6 @@ const
 var
    datafile: TStream;
    stream: TStream;
-   outFile: TFileStream;
    savefile: TMemoryStream;
    filename, uFilename: string;
    dic: TUnitDictionary;
@@ -260,7 +259,6 @@ begin
    legacy := nil; //to silence a compiler warning
    try
       inherited Execute;
-      outFile := nil;
       fromFolder := discInterface.openFolder(FFromLoc);
       try
          conversionArchive := GArchives.Add(fromFolder);
@@ -362,16 +360,11 @@ begin
             Exit;
          savefile := TMemoryStream.Create;
          try
-            GDatabase.save(savefile);
             FReport.setCurrentTask('Saving database');
-            filename := IncludeTrailingPathDelimiter(FToLoc) + DBNAME;
-            if FileExists(filename) then
-               deleteFile(PChar(filename));
-            outFile := TFileStream.Create(filename, fmCreate);
-            outfile.CopyFrom(savefile, 0);
+            GDatabase.save(savefile);
+            toFolder.writeFile(DBNAME, savefile);
          finally
             savefile.free;
-            outFile.Free;
          end;
       finally
          conversionArchive := -1

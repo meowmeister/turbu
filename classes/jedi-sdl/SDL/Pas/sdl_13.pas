@@ -161,7 +161,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     blend_modes: TSdlBlendModes;        // Supported blend modes
     scale_modes: TSdlTextureScaleModes; // Supported scale modes
     num_texture_formats: cardinal;      // The number of available texture formats
-    texture_formats: array[0..19] of cardinal; // The available texture formats
+    texture_formats: array[0..49] of cardinal; // The available texture formats
     max_texture_width: integer;         // The maximimum texture width */
     max_texture_height: integer;        // The maximimum texture height */
     logical_size: boolean;

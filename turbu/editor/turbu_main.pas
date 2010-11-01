@@ -132,6 +132,7 @@ type
       procedure pluginManagerBeforeUnload(Sender: TObject; FileName: string;
         const ALibHandle: Cardinal);
       procedure pluginManagerAfterUnload(Sender: TObject; FileName: string);
+      procedure imgLogoPaint(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
@@ -441,6 +442,13 @@ begin
    FMapEngine.doneDrawing;
 end;
 
+procedure TfrmTurbuMain.imgLogoPaint(Sender: TObject);
+begin
+   if assigned(FMapEngine) then
+      FMapEngine.Repaint
+   else SDL_RenderPresent;
+end;
+
 procedure TfrmTurbuMain.imgPaletteMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
@@ -497,6 +505,7 @@ begin
    FMapEngine.autosaveMaps := mnuAutosaveMaps.checked;
    FMapEngine.loadMap(value);
    FMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
+   imgPalette.Select;
    imgPalette.ClearTextures;
    FPaletteImages.Clear;
    setLayer(FCurrentLayer);
@@ -590,6 +599,7 @@ procedure TfrmTurbuMain.openProject(location: string);
 
 var
    loadStream: TStream;
+   filename: string;
 begin
    location := IncludeTrailingPathDelimiter(location);
    openArchive(PROJECT_DB, DATABASE_ARCHIVE);
@@ -597,7 +607,8 @@ begin
    openArchive(IMAGE_DB, IMAGE_ARCHIVE);
    openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
 
-   loadStream := TFileStream.Create(IncludeTrailingPathDelimiter(location) + DBNAME, fmOpenRead);
+   filename := IncludeTrailingPathDelimiter(location) + DBNAME;
+   loadStream := TFileStream.Create(filename, fmOpenRead);
    frmDatabase.reset;
 
    try
@@ -618,6 +629,7 @@ begin
    finally
       loadStream.free;
    end;
+   GDatabase.filename := filename;
    loadProject;
 end;
 
@@ -677,10 +689,40 @@ begin
    FMapEngine.SetCurrentLayer(value);
 end;
 
+procedure GetColorsForDate(var bg, fg: TColor);
+const clOrange = $0045C9;
+var
+   year, month, day: word;
+begin
+   DecodeDate(date, year, month, day);
+   if (month = 10) and (day = 31) then
+   begin
+      bg := clBlack;
+      fg := clOrange;
+   end
+   else if (month = 12) and (day = 25) then
+   begin
+      bg := clGreen;
+      fg := clRed;
+   end
+   else if (month = 7) and (day = 4) then
+   begin
+      bg := clRed;
+      fg := clBlue;
+   end
+   else begin
+      bg := clGray;
+      fg := clWhite;
+   end;
+end;
+
 function TfrmTurbuMain.SetMapSize(const size: TSgPoint): TSgPoint;
 
-   procedure AddCrosshatch(bg, fg: TColor);
+   procedure AddCrosshatch;
+   var
+      bg, fg: TColor;
    begin
+      GetColorsForDate(bg, fg);
       imgBackground.canvas.brush.Style := bsDiagCross;
       imgBackground.canvas.brush.color := fg;
       Windows.SetBkColor(imgBackground.Canvas.Handle, ColorToRgb(bg));
@@ -697,7 +739,7 @@ begin
       imgLogo.Left := (imgBackground.ClientWidth - imgLogo.width) div 2;
       imgLogo.Top := (imgBackground.ClientHeight - imgLogo.height) div 2;
       imgBackground.Invalidate;
-      AddCrosshatch(clGray, clWhite);
+      AddCrosshatch;
    end;
    result := sgPoint(imgLogo.width, imgLogo.height);
    configureScrollBars(size, FMapEngine.mapPosition);
@@ -741,8 +783,10 @@ end;
 
 procedure TfrmTurbuMain.splSidebarMoved(Sender: TObject);
 begin
-   RequireMapEngine;
-   resizePalette;
+//QC 89303: Can't call Abort inside a splitter's OnMoved event
+//   RequireMapEngine;
+   if assigned(FMapEngine) then
+      resizePalette;
 end;
 
 procedure TfrmTurbuMain.btnMapObjClick(Sender: TObject);

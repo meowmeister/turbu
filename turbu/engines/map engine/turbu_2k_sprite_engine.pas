@@ -248,7 +248,7 @@ begin
    if map.bgName <> '' then
    begin
       FBgImage := TBackgroundSprite.Create(self, map);
-      FBgImage.Image := images.EnsureImage('Backgrounds/' + map.bgName + '.png', map.bgName);
+      FBgImage.Image := images.EnsureBGImage('Backgrounds/' + map.bgName + '.png', map.bgName);
    end;
 
    //populate events

@@ -72,13 +72,7 @@ begin
 end;
 
 initialization
-begin
    GArchives := TArchiveList.Create;
-end;
-
 finalization
-begin
    FreeAndNil(GArchives);
-end;
-
 end.

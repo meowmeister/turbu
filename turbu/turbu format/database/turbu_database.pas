@@ -95,6 +95,7 @@ type
       FScriptFormat: TScriptFormat;
       FScriptFile: string;
 
+      FFilename: string;
       procedure SetScriptFormat(const Value: TScriptFormat);
       function getClassCount: integer;
       procedure setClassCount(const Value: integer);
@@ -120,7 +121,8 @@ type
       constructor Create;
       constructor Load(savefile: TStream; design: boolean); reintroduce;
       destructor Destroy; override;
-      procedure save(savefile: TStream); override;
+      procedure save(savefile: TStream); overload; override;
+      procedure save; reintroduce; overload;
       procedure copyToDB(db: TdmDatabase; typeSet: TRpgDataTypeSet = []);
       procedure copyTypeToDB(db: TdmDatabase; value: TRpgDataTypes);
       procedure loadFromDB(value: TdmDatabase);
@@ -181,6 +183,7 @@ type
       property units: TUnitDictionary read FUnits write setUnits;
       property projectName: string read getProjectName;
       property uploadedTypes: TRpgDataTypeSet read FUploadedTypes;
+      property Filename: string read FFilename write FFilename;
    end;
 
 var
@@ -804,6 +807,23 @@ begin
    savefile.writeChar('l');
 
    savefile.writeChar('d');
+end;
+
+procedure TRpgDatabase.save;
+var
+   stream, filestream: TStream;
+begin
+   filestream := nil;
+   stream := TMemoryStream.Create;
+   try
+      Save(stream);
+      filestream := TFileStream.Create(FFilename, fmCreate);
+      stream.Rewind;
+      filestream.CopyFrom(stream, stream.Size);
+   finally
+      filestream.Free;
+      stream.free;
+   end;
 end;
 
 procedure TRpgDatabase.saveTileGroups(savefile: TStream);

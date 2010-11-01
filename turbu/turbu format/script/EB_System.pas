@@ -1082,5 +1082,5 @@ initialization
                     TEBSysSkin, TEBTranslucency, TEBPlayBGM, TEBFadeBGM, TEBMemBGM,
                     TEBPlayMemBGM, TEBPlaySFX, TEBPlayMovie, TEBInput, TEBDeleteObj,
                     TEBCallEvent, TEBGameOver, TEBTitleScreen, TEBClassChange,
-                    TEBBattleCommand, TEBLocalSwitch]);
+                    TEBBattleCommand, TEBLocalSwitch, TEBChangeMP]);
 end.

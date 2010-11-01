@@ -29,7 +29,7 @@ unit SDL_ImageManager;
 
 interface
 uses
-   classes, sysUtils,
+   classes, sysUtils, Generics.Collections,
    SG_Defs,
    SDL, sdl_13;
 
@@ -145,6 +145,8 @@ type
       property Colorkey: TSDL_Color read FColorkey;
    end;
 
+   TSdlImageClass = class of TSdlImage;
+
    {***************************************************************************
    * Adaptation of TAsphyreImages for SDL images.  This class is a specialized
    * container class, much like a TList, for storing and easily accessing
@@ -153,19 +155,14 @@ type
    TSdlImages = class(TObject)
    private
       FData: array of TSdlImage;
-      FSearchObjects: array of Integer;
-      FSearchDirty: Boolean;
       FFreeOnClear: Boolean;
       FArchiveLoader: TArchiveLoader;
       FArchiveCallback: TArchiveCallback;
       FUpdateMutex: PSDL_Mutex;
+      FHash: TDictionary<string, TSdlImage>;
 
       function GetCount: Integer; inline;
       function GetItem(Num: Integer): TSdlImage;
-      function CountSearchObjects: Integer;
-      procedure FillSearchObjects(Amount: Integer);
-      procedure SortSearchObjects(Left, Right: Integer);
-      procedure PrepareSearchObjects;
       function GetImage(const Name: string): TSdlImage;
       function FindEmptySlot: Integer;
       function Insert(Element: TSdlImage): Integer;
@@ -192,7 +189,8 @@ type
       * Creates a TSdlImage from the file specified in filename with the name
       * given in imagename, adds it to the list, and returns its index position.
       ************************************************************************}
-      function AddFromFile(filename, imagename: string): integer;
+      function AddFromFile(filename, imagename: string): integer; overload;
+      function AddFromFile(filename, imagename: string; imgClass: TSdlImageClass): integer; overload;
 
       {************************************************************************
       * Like AddFromFile, but loads the image file specified in keyname from
@@ -208,9 +206,13 @@ type
       * AddFromArchive will automatically free the RWops.
       ************************************************************************}
       function AddFromArchive(filename, imagename: string; loader: TArchiveLoader = nil): integer;
-      function AddSpriteFromArchive(filename, imagename: string; spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
+      function AddSpriteFromArchive(filename, imagename: string; spritesize: TSgPoint;
+        imgClass: TSdlImageClass; loader: TArchiveLoader = nil): integer; overload;
+      function AddSpriteFromArchive(filename, imagename: string; spritesize: TSgPoint;
+        loader: TArchiveLoader = nil): integer; overload;
       function EnsureImage(filename, imagename: string): TSdlImage; overload;
       function EnsureImage(filename, imagename: string; spritesize: TSgPoint): TSdlImage; overload;
+      function EnsureBGImage(filename, imagename: string): TSdlImage;
 
       {************************************************************************
       * Frees the TSdlImage at the current index and removes it from the list.
@@ -243,6 +245,11 @@ type
       property ArchiveCallback: TArchiveCallback read FArchiveCallback write FArchiveCallback;
    end;
 
+   TSdlBackgroundImage = class(TSdlImage)
+   protected
+      procedure processImage(image: PSdlSurface); override;
+   end;
+
    {***************************************************************************
    * To set up routines to load images not covered by SDL_Image.  For advanced
    * users only!
@@ -253,7 +260,6 @@ type
 
 implementation
 uses
-   Generics.Collections,
    SDL_rwStream, sdl_canvas,
    sdl_image;
 
@@ -267,17 +273,18 @@ var
 constructor TSdlImages.Create(FreeOnClear: boolean = true; loader: TArchiveLoader = nil; callback: TArchiveCallback = nil);
 begin
    inherited Create;
-   FSearchDirty := False;
    FFreeOnClear := FreeOnClear;
    FArchiveLoader := loader;
    FArchiveCallback := callback;
    FUpdateMutex := SDL_CreateMutex;
+   FHash := TDictionary<string, TSdlImage>.Create;
 end;
 
 //---------------------------------------------------------------------------
 destructor TSdlImages.Destroy;
 begin
    self.Clear;
+   FHash.Free;
    SDL_DestroyMutex(FUpdateMutex);
    inherited Destroy;
 end;
@@ -324,99 +331,17 @@ end;
 //---------------------------------------------------------------------------
 function TSdlImages.IndexOf(const Name: string): Integer;
 var
-   Lo, Hi, Mid: Integer;
+   image: TSdlImage;
 begin
-   Result := -1;
-   if FSearchDirty then
-      PrepareSearchObjects;
-   Lo := 0;
-   Hi := Length(FSearchObjects) - 1;
-   while Lo <= Hi do
-   begin
-      Mid := (Lo + Hi) div 2;
-      if FData[FSearchObjects[Mid]].Name = Name then
-      begin
-         Result := FSearchObjects[Mid];
-         Break;
-      end;
-      if FData[FSearchObjects[Mid]].Name > Name then
-         Hi := Mid - 1
-      else Lo:= Mid + 1;
-   end;
+   if FHash.TryGetValue(name, image) then
+      result := IndexOf(image)
+   else result := -1;
 end;
 
 //---------------------------------------------------------------------------
 function TSdlImages.Contains(const name: string): boolean;
 begin
    result := self.IndexOf(name) <> -1;
-end;
-
-//---------------------------------------------------------------------------
-function TSdlImages.CountSearchObjects: Integer;
-var
-   i: Integer;
-begin
-   Result:= 0;
-   for i:= 0 to Length(FData) - 1 do
-      if FData[i] <> nil then
-         Inc(Result);
-end;
-
-//---------------------------------------------------------------------------
-procedure TSdlImages.FillSearchObjects(Amount: Integer);
-var
-   i, DestIndex: Integer;
-begin
-   SetLength(FSearchObjects, Amount);
-   DestIndex := 0;
-   for i := 0 to Length(FData) - 1 do
-   if FData[i] <> nil then
-   begin
-      FSearchObjects[DestIndex]:= i;
-      Inc(DestIndex);
-   end;
-end;
-
-//---------------------------------------------------------------------------
-procedure TSdlImages.SortSearchObjects(Left, Right: Integer);
-var
-   Lo, Hi: Integer;
-   TempIndex: Integer;
-   MidValue: string;
-begin
-   Lo := Left;
-   Hi := Right;
-   MidValue := FData[FSearchObjects[(Left + Right) div 2]].Name;
-   repeat
-      while FData[FSearchObjects[Lo]].Name < MidValue do
-         Inc(Lo);
-      while MidValue < FData[FSearchObjects[Hi]].Name do
-         Dec(Hi);
-      if Lo <= Hi then
-      begin
-         TempIndex := FSearchObjects[Lo];
-         FSearchObjects[Lo] := FSearchObjects[Hi];
-         FSearchObjects[Hi] := TempIndex;
-         Inc(Lo);
-         Dec(Hi);
-      end;
-   until (Lo > Hi);
-   if Left < Hi then
-      SortSearchObjects(Left, Hi);
-   if Lo < Right then
-      SortSearchObjects(Lo, Right);
-end;
-
-//---------------------------------------------------------------------------
-procedure TSdlImages.PrepareSearchObjects;
-var
-   Amount: Integer;
-begin
-   Amount := CountSearchObjects;
-   FillSearchObjects(Amount);
-   if Amount > 0 then
-      SortSearchObjects(0, Amount - 1);
-   FSearchDirty := False;
 end;
 
 //---------------------------------------------------------------------------
@@ -444,7 +369,6 @@ begin
    if FData[Hi] = nil then
       dec(Hi);
    setLength(FData, Hi + 1);
-   FSearchDirty := true;
 end;
 
 //---------------------------------------------------------------------------
@@ -466,6 +390,7 @@ function TSdlImages.Insert(Element: TSdlImage): Integer;
 var
    Slot: Integer;
 begin
+   FHash.Add(element.name, element);
    Slot := FindEmptySlot;
    if Slot = -1 then
    begin
@@ -473,7 +398,6 @@ begin
       SetLength(FData, Slot + 1);
    end;
    FData[Slot] := Element;
-   FSearchDirty := True;
    Result := Slot;
 end;
 
@@ -497,8 +421,22 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-function TSdlImages.EnsureImage(filename, imagename: string;
-  spritesize: TSgPoint): TSdlImage;
+function TSdlImages.EnsureBGImage(filename, imagename: string): TSdlImage;
+var
+   index: integer;
+begin
+   if self.Contains(imagename) then
+      result := GetImage(imagename)
+   else begin
+      if FileExists(filename) then
+         index := AddFromFile(filename, imagename, TSdlBackgroundImage)
+      else index := AddSpriteFromArchive(filename, imagename, EMPTY, TSdlBackgroundImage);
+      result := Self[index];
+   end;
+end;
+
+//---------------------------------------------------------------------------
+function TSdlImages.EnsureImage(filename, imagename: string; spritesize: TSgPoint): TSdlImage;
 var
    index: integer;
 begin
@@ -521,7 +459,7 @@ begin
          Exit;
       result := FData[num];
       FData[num] := nil;
-      FSearchDirty := true;
+      FHash.Remove(result.name);
    finally
       SDL_UnlockMutex(FUpdateMutex);
    end;
@@ -534,8 +472,8 @@ begin
    try
       if (Num < 0) or (Num >= Length(FData)) then
          Exit;
+      FHash.Remove(FData[Num].name);
       freeAndNil(FData[Num]);
-      FSearchDirty := True;
    finally
       SDL_UnlockMutex(FUpdateMutex);
    end;
@@ -561,7 +499,8 @@ end;
 
 //---------------------------------------------------------------------------
 function TSdlImages.AddSpriteFromArchive(filename, imagename: string;
-  spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
+  spritesize: TSgPoint; imgClass: TSdlImageClass;
+  loader: TArchiveLoader): integer;
 var
    dummy: PSDL_RWops;
 begin
@@ -573,16 +512,29 @@ begin
    if dummy = nil then
       raise ESdlImageException.CreateFmt('Archive loader failed to extract "%s" from the archive.', [filename]);
 
-   result := self.Add(TSdlImage.CreateSprite(dummy, ExtractFileExt(filename), imagename, nil, spriteSize));
+   result := self.Add(imgClass.CreateSprite(dummy, ExtractFileExt(filename), imagename, nil, spriteSize));
    if assigned(FArchiveCallback) then
       FArchiveCallback(dummy)
    else SDL_FreeRW(dummy);
 end;
 
 //---------------------------------------------------------------------------
+function TSdlImages.AddSpriteFromArchive(filename, imagename: string;
+  spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
+begin
+   result := AddSpriteFromArchive(filename, imagename, spritesize, TSdlImage, loader);
+end;
+
+//---------------------------------------------------------------------------
 function TSdlImages.AddFromFile(filename, imagename: string): integer;
 begin
-   result := self.Add(TSdlImage.Create(filename, filename, nil));
+   result := AddFromFile(filename, filename, TSdlImage);
+end;
+
+//---------------------------------------------------------------------------
+function TSdlImages.AddFromFile(filename, imagename: string; imgClass: TSdlImageClass): integer;
+begin
+   result := self.Add(imgClass.Create(filename, filename, nil));
 end;
 
 //---------------------------------------------------------------------------
@@ -592,13 +544,11 @@ var
 begin
    SDL_LockMutex(FUpdateMutex);
    try
+      FHash.Clear;
       if FFreeOnClear then
          for i := 0 to Length(FData) - 1 do
             FData[i].Free;
-
       SetLength(FData, 0);
-      SetLength(FSearchObjects, 0);
-      FSearchDirty := False;
    finally
       SDL_LockMutex(FUpdateMutex);
    end;
@@ -832,6 +782,14 @@ begin
    if extension[1] <> '.' then
       extension := '.' + extension;
    loaders.Add(extension, loader);
+end;
+
+{ TSdlBackgroundImage }
+
+procedure TSdlBackgroundImage.processImage(image: PSdlSurface);
+begin
+  SDL_SetColorKey(image, false, 0);
+  integer(FColorKey) := 0;
 end;
 
 initialization

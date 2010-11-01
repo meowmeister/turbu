@@ -280,9 +280,6 @@ end;
 function TEBProcedure.ParamList: string;
 var
    header: TEBHeader;
-   child: TEBObject;
-   param: TEBParam;
-   list: TStringList;
 begin
    header := self.EnsureHeader;
    if header.ComponentCount = 0 then

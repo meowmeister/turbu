@@ -162,7 +162,7 @@ type
 
    TEBParenExpr = class(TEBExpression)
    public
-      constructor Create(subExpr: TEBExpression);
+      constructor Create(subExpr: TEBExpression); reintroduce;
       function GetNodeText: string; override;
    end;
 
@@ -614,7 +614,6 @@ const
    LINE = '%s.%s(%s)';
 var
    list: TStringList;
-   child: TEBObject;
    i: integer;
    selfptr: string;
 begin

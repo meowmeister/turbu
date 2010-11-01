@@ -160,9 +160,6 @@ end;
 { TTileGroupRecord }
 
 constructor TTileGroupRecord.Load(savefile: TStream);
-var
-   i: integer;
-   dummy: TTileAttributes;
 begin
    inherited Load(savefile);
    savefile.readBuffer(FLayers, sizeof(FLayers));
@@ -177,9 +174,6 @@ begin
 end;
 
 procedure TTileGroupRecord.save(savefile: TStream);
-var
-   attribute: TTileAttributes;
-   i: integer;
 begin
    inherited Save(savefile);
    savefile.writeBuffer(FLayers, sizeof(FLayers));

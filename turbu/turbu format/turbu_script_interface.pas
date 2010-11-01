@@ -25,6 +25,7 @@ type
    ['{A3B2746C-F3D1-4B61-B9D8-9D8E82229979}']
       procedure upload(db: TdmDatabase);
       function GetFunctions(ResultType: integer): TDeclList;
+      function FindFunction(name: string): TRpgDecl;
    end;
 implementation
 

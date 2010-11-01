@@ -20,7 +20,7 @@ inherited frmEBSetInteger: TfrmEBSetInteger
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Which variable'
       TabOrder = 0
-      object radSwitch: TRadioButton
+      object radVariable: TRadioButton
         Left = 11
         Top = 28
         Width = 70
@@ -28,7 +28,7 @@ inherited frmEBSetInteger: TfrmEBSetInteger
         Caption = 'Variable'
         TabOrder = 0
       end
-      object radInt: TRadioButton
+      object radReference: TRadioButton
         Left = 202
         Top = 28
         Width = 129
@@ -36,7 +36,7 @@ inherited frmEBSetInteger: TfrmEBSetInteger
         Caption = 'Variable Reference'
         TabOrder = 1
       end
-      object IntSelector1: TIntSelector
+      object selLhsValue: TIntSelector
         Left = 11
         Top = 54
         Width = 320
@@ -79,7 +79,7 @@ inherited frmEBSetInteger: TfrmEBSetInteger
         Caption = 'Value of Variable'
         TabOrder = 1
       end
-      object radReference: TRadioButton
+      object radRefValue: TRadioButton
         Tag = 2
         Left = 11
         Top = 96
@@ -92,7 +92,7 @@ inherited frmEBSetInteger: TfrmEBSetInteger
         Caption = 'Value of Variable Reference'
         TabOrder = 2
       end
-      object radRandom: TRadioButton
+      object radFunction: TRadioButton
         Tag = 3
         Left = 11
         Top = 131
@@ -105,7 +105,7 @@ inherited frmEBSetInteger: TfrmEBSetInteger
         Caption = 'Function Result'
         TabOrder = 3
       end
-      object radItem: TRadioButton
+      object radProperty: TRadioButton
         Tag = 4
         Left = 11
         Top = 164
@@ -230,6 +230,7 @@ inherited frmEBSetInteger: TfrmEBSetInteger
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Operation'
     Columns = 3
+    ItemIndex = 0
     Items.Strings = (
       'Set Equal'
       'Add'

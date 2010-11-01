@@ -37,6 +37,7 @@ type
 
       FLogicalWidth: integer;
       FLogicalHeight: integer;
+      FOnPaint: TNotifyEvent;
 
       function CreateWindow: boolean;
       function CreateRenderer: boolean;
@@ -76,6 +77,7 @@ type
       function IndexOfName(const name: string): integer;
       function LogicalCoordinates(x, y: integer): TPoint;
       procedure ClearTextures;
+      procedure Select;
 
       property Available: boolean read FRenderer;
       property SdlWindow: TSdlWindowId read FWindowID;
@@ -91,6 +93,7 @@ type
       property LogicalHeight: integer read FLogicalHeight write SetLogicalHeight;
       property OnTimer: TNotifyEvent read FOnTimer write FOnTimer;
       property OnAvailable: TNotifyEvent read FOnAvailable write FOnAvailable;
+      property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
    published
       property Align;
       property Anchors;
@@ -234,7 +237,9 @@ procedure TSdlFrame.Paint;
 begin
    if SDL_SelectRenderer(FWindowID) = -1 then
       CreateRenderer;
-   self.Flip;
+   if assigned(FOnPaint) then
+      FOnPaint(self)
+   else self.Flip;
 end;
 
 {******************************************************************************}
@@ -317,6 +322,11 @@ begin
    result := FImageManager.Contains(name);
 end;
 
+procedure TSdlFrame.Select;
+begin
+   SDL_SelectRenderer(FWindowID);
+end;
+
 procedure TSdlFrame.SetActive(const Value: boolean);
 begin
    FActive := Value;
@@ -341,6 +351,7 @@ begin
          ratioY := size.Y / self.Height;
          self.LogicalWidth := round(AWidth * ratioX);
          self.LogicalHeight := round(AHeight * ratioY);
+         SDL_SetWindowSize(FWindowID, self.Width, self.Height);
       end;
    end;
    inherited SetBounds(ALeft, ATop, AWidth, AHeight);
@@ -396,7 +407,7 @@ begin
       Exit(-1);
 
    SDL_SelectRenderer(FWindowID);
-   result := FImageManager.Add(TSdlImage.Create(surface, '', nil));
+   result := FImageManager.Add(TSdlImage.Create(surface, IntToStr(FImageManager.Count), nil));
 end;
 
 function TSdlFrame.AddImage(image: TSdlImage): integer;

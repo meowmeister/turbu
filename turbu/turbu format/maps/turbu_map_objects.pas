@@ -97,7 +97,6 @@ type
 {      FEventScript: ansiString;
       FScriptText: ansiString;
       FCompiledScript: ansiString; }
-//      FCommands: TRpgObjectList<TEventCommand>;
       function isValid: boolean; inline;
 
 {      function getEventScript: ansiString;
@@ -112,6 +111,7 @@ type
       FConditions: TRpgEventConditions;
       [NoUpload]
       FParent: TRpgMapObject;
+      [NoUpload]
       FEventText: string;
       class function keyChar: AnsiChar; override;
    public
@@ -136,6 +136,7 @@ type
       property isBarrier: boolean read FNoOverlap write FNoOverlap;
       property animType: TAnimType read FAnimType write FAnimType;
       property moveSpeed: byte read FMoveSpeed write FMoveSpeed;
+      property scriptName: string read FEventText write FeventText;
       property actionMatrix: word read FMatrix;
 //      property eventScript: ansiString read getEventScript;
       property parent: TRpgMapObject read FParent;
@@ -246,17 +247,10 @@ begin
 end;
 
 function TRpgMapObject.getCurrentPage: TRpgEventPage;
-//var i: integer;
+var i: integer;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   if FPages[0].FGlobal then
-   begin
-      result := FPages[0];
-      Exit;
-   end;
-
    result := nil;
-   I := high(FPages);
+   I := FPages.High;
    while (result = nil) and (i >= 0) do
    begin
       if FPages[i].valid then
@@ -265,8 +259,6 @@ begin
    end;
    FPageChanged := (FCurrentPage = result);
    FCurrentPage := result;
-   if FPageChanged and assigned(FCurrentPage) then
-      FCurrentPage.FOverrideSprite := false;}
 end;
 
 function TRpgMapObject.getPage(x: integer): TRpgEventPage;

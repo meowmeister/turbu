@@ -59,6 +59,7 @@ type
       procedure SetUnits(const Value: TUnitDictionary);
       function GetCompiler: TPSPascalCompiler;
       function GetFunctions(ResultType: integer): TDeclList;
+      function FindFunction(name: string): TRpgDecl;
    protected
       FScriptEngine: TPSExec;
       FImporter: TPSRuntimeClassImporter;
@@ -183,6 +184,15 @@ begin
    {$WARN CONSTRUCTING_ABSTRACT ON}
 end;
 
+function TTurbuScriptEngine.FindFunction(name: string): TRpgDecl;
+begin
+   result := FDeclarations.firstWhere(
+      function (value: TRpgDecl): boolean
+      begin
+         result := AnsiSameText(value.name, name);
+      end);
+end;
+
 function TTurbuScriptEngine.tryUseFile(Sender: TPSPascalCompiler; const Name: tbtstring): Boolean;
 var
    uName: string;
@@ -285,7 +295,7 @@ begin
    try
      for decl in FDeclarations do
         if decl.retval = ResultType then
-           result.Add(TRpgDecl.Create(decl));
+           result.Add(decl.Clone);
    except
       result.free;
       raise;

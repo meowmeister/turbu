@@ -92,7 +92,7 @@ begin
    grpSetTo.ItemIndex := obj.Values[0];
 end;
 
-{initialization
+initialization
    RegisterEbEditor(TEBGlobalSwitch, TfrmEbSetSwitch);
-   RegisterEbEditor(TEBLocalSwitch, TfrmEbSetSwitch); }
+   RegisterEbEditor(TEBLocalSwitch, TfrmEbSetSwitch);
 end.
