@@ -133,6 +133,7 @@ type
         const ALibHandle: Cardinal);
       procedure pluginManagerAfterUnload(Sender: TObject; FileName: string);
       procedure imgLogoPaint(Sender: TObject);
+      procedure FormResize(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
@@ -315,6 +316,16 @@ begin
    FMapEngine := nil;
    GScriptEngine := nil;
    FPaletteImages.Free;
+end;
+
+procedure TfrmTurbuMain.FormResize(Sender: TObject);
+begin
+   if assigned(FMapEngine) then
+   begin
+      imgBackground.Picture.Graphic := nil;
+      FMapEngine.ResizeWindow(imgBackground.BoundsRect);
+      fMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
+   end;
 end;
 
 procedure TfrmTurbuMain.FormShow(Sender: TObject);

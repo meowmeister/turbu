@@ -59,6 +59,7 @@ type
       property CurrentLayer: shortint read GetCurrentLayer write SetCurrentLayer;
       function mapPosition: TSgPoint;
       procedure SetMapResizeEvent(const value: TMapResizeEvent);
+      procedure ResizeWindow(rect: TRect);
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TList<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
