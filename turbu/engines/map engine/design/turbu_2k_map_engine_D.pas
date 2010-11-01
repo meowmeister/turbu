@@ -213,7 +213,7 @@ begin
 
    if FCurrentMap.passable(position.x, position.y) then
    begin
-      if FParty = nil then
+      if FPartySprite = nil then
          initializeParty;
       FPartySprite.leaveTile;
       if not assigned(FCurrentMap.CurrentParty) then
@@ -229,6 +229,7 @@ begin
    if assigned(FCurrentMap) then
    begin
       self.ClearContainers;
+      FreeAndNil(FPartySprite);
       if not FCurrentMap.mapObj.modified then
          freeAndNil(FMaps[FCurrentMap.mapObj.id])
       else if FAutosaveMaps then
