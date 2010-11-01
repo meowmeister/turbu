@@ -44,7 +44,6 @@ const
 constructor T2k2RpgMap.Convert(base: TMapUnit; metadata: TMapTreeData; db: TLcfDataBase; id: smallint);
 var
    i: integer;
-   scriptBlock: TEBMap;
    nameList: TStringList;
 begin
    self.Create;
@@ -78,20 +77,19 @@ begin
    FEncounters[1] := metadata.encounterRate;
    self.FRegions := TRegionList.Create;
    self.FMapObjects := TMapObjectList.Create;
-   scriptBlock := TEBMap.Create(nil);
+   FScriptObject := TEBMap.Create(nil);
    nameList := TStringList.Create;
    try
       nameList.sorted := true;
-      scriptBlock.name := validIdent(metadata.name);
+      FScriptObject.name := validIdent(metadata.name);
       for I := 0 to base.eventCount - 1 do
          FMapObjects.Add(TRpgMapObject.Convert(base.events[i], nameList,
                            procedure(script: TEBProcedure)
                            begin
-                              scriptBlock.add(script);
+                              FScriptObject.add(script);
                            end));
-      self.saveScript(utf8String(scriptBlock.serialize));
+      self.saveScript(utf8String(FScriptObject.serialize));
    finally
-      scriptBlock.Free;
       nameList.Free;
    end;
 end;

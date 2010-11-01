@@ -684,5 +684,5 @@ begin
 end;
 
 initialization
-   RegisterClass(TEBObject);
+   RegisterClasses([TEBObject, TEBHeader, TEBParam]);
 end.

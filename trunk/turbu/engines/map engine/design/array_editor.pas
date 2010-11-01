@@ -113,7 +113,7 @@ begin
    FLocal.LogChanges := true;
    FLocal.Filtered := true;
    srcList.DataSet := FLocal;
-   count := dset.RecordCount;
+   count := dset.RecordCount - 1;
    maxGroup := count div SUBLIST_SIZE;
    if count mod SUBLIST_SIZE <> 0 then
       inc(maxGroup);

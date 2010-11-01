@@ -63,6 +63,7 @@ type
       procedure setPaletteList(value: TList<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
+      procedure Repaint;
       procedure doubleClick;
       procedure rightClick(const position: TSgPoint);
       procedure KeyDown(key: word; Shift: TShiftState);

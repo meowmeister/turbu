@@ -39,6 +39,7 @@ type
       FCursorPosition: TSgPoint;
       FHookedObject: TMapSprite;
       FOnResize: TMapResizeEvent;
+      FTopLeft: TSgPoint;
 
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
       procedure saveMap(value: TRpgMap);
@@ -51,8 +52,7 @@ type
       function NewMapObjectID(engine: T2kSpriteEngine): integer;
       function GetCurrentMapObject: TMapSprite;
       procedure DoDelete;
-      function mapSize: TSgPoint;
-      procedure DoResize;
+      function DoResize(map: TRpgMap; viewport: TRect): TRect;
    private //IBreakable
       procedure BreakSomething;
    private //IDesignMapEngine
@@ -213,34 +213,41 @@ function T2kMapEngineD.DesignLoadMap(map: IMapMetadata): IRpgMap;
 var
    viewport: TRect;
 begin
-   if assigned(FCurrentMap) then
-   begin
-      self.ClearContainers;
-      if not FCurrentMap.mapObj.modified then
-         freeAndNil(FMaps[FCurrentMap.mapObj.id])
-      else if FAutosaveMaps then
+   FDrawLock := true;
+   try
+      if assigned(FCurrentMap) then
       begin
-         saveMap(FCurrentMap.mapObj);
-         freeAndNil(FMaps[FCurrentMap.mapObj.id])
+         self.ClearContainers;
+         if not FCurrentMap.mapObj.modified then
+            freeAndNil(FMaps[FCurrentMap.mapObj.id])
+         else if FAutosaveMaps then
+         begin
+            saveMap(FCurrentMap.mapObj);
+            freeAndNil(FMaps[FCurrentMap.mapObj.id])
+         end;
+         FImages.Clear;
       end;
-      FImages.Clear;
-   end;
 
-   prepareMap(map);
-   viewport := createViewport(FWaitingMap, FScrollPosition);
-   if not assigned(FMaps[FWaitingMap.id]) then
-   begin
-      FTilesetListD.Free;
-      FTilesetListD := loadTilesetD(FDatabase.tileset[FWaitingMap.tileset]);
-      FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
-                                FCanvas, FDatabase.tileset[FWaitingMap.tileset],
-                                FImages);
+      prepareMap(map);
+      FCurrentMap := nil;
+      viewport := createViewport(FWaitingMap, FScrollPosition);
+      FTopLeft := viewport.TopLeft;
+      viewport := DoResize(FWaitingMap, viewport);
+      if not assigned(FMaps[FWaitingMap.id]) then
+      begin
+         FTilesetListD.Free;
+         FTilesetListD := loadTilesetD(FDatabase.tileset[FWaitingMap.tileset]);
+         FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
+                                   FCanvas, FDatabase.tileset[FWaitingMap.tileset],
+                                   FImages);
+      end;
+      FCurrentLayer := 0;
+      if doneLoadingMap then
+         result := FCurrentMap.mapObj
+      else result := nil;
+   finally
+      FDrawLock := false;
    end;
-   FCurrentLayer := 0;
-   if doneLoadingMap then
-      result := FCurrentMap.mapObj
-   else result := nil;
-   DoResize;
 end;
 
 procedure T2kMapEngineD.DoDelete;
@@ -448,8 +455,10 @@ begin
    if eval.TfrmMapProperties.EditMap(meta, newMap) then
    begin
       result := meta;
+      meta.internalFilename := GArchives[MAP_ARCHIVE].MakeValidFilename(format('%s.tmf', [meta.name]));
       saveMap(newMap);
       designLoadMap(result);
+      FDatabase.save;
    end
    else begin
       result := nil;
@@ -471,7 +480,7 @@ begin
       if oldsize <> map.mapObj.size then
       begin
          map.RecreateTileMatrix;
-         DoResize;
+         FCurrentMap.viewport := DoResize(FCurrentMap.mapObj, FCurrentMap.viewport);
       end;
       self.repaint;
    end;
@@ -535,10 +544,11 @@ begin
    end;
 end;
 
-procedure T2kMapEngineD.DoResize;
+function T2kMapEngineD.DoResize(map: TRpgMap; viewport: TRect): TRect;
 begin
    if assigned(FOnResize) then
-      FCurrentMap.viewport := rect(point(0, 0), FOnResize(MapSize) / TILE_SIZE);
+      result := rect(point(0, 0), FOnResize(map.size * TILE_SIZE) / TILE_SIZE)
+   else result := viewport;
 end;
 
 procedure T2kMapEngineD.doubleClick;
@@ -573,9 +583,6 @@ end;
 function T2kMapEngineD.GetTilesetImageSize(const index: byte): TSgPoint;
 var
    tileCount: integer;
-   localCount: integer;
-   pair: TTileGroupPair;
-   kind: TTileType;
 begin
 
    //first calculate size
@@ -583,25 +590,8 @@ begin
    //already and saved with the tileset
    FTilesize := FTilesetListD.last.Key.group.dimensions;
    MAX_WIDTH := FTilesetListD.Last.Value.Width div FTilesize.x;
-   tileCount := 0;
-   for pair in FTilesetListD do
-   begin
-      if not (index in pair.Key.layers) then
-         Continue;
 
-      kind := pair.Key.group.tileType;
-      if tsBordered in kind then
-         localCount := 1
-      else
-      begin
-         localcount := pair.Value.Width div FTilesize.x;
-         if kind = [] then
-            localcount := (pair.Value.Height div FTilesize.y) * localcount;
-      end;
-      inc(tilecount, localcount);
-   end;
-
-{   tileCount := TFunctional.reduce2<TTileGroupPair, integer>(FTilesetListD,
+   tileCount := TFunctional.reduce2<TTileGroupPair, integer>(FTilesetListD,
       function(const input1: TTileGroupPair; input2: integer): integer
       var
          kind: TTileType;
@@ -619,7 +609,7 @@ begin
                result := (input1.Value.Height div FTilesize.y) * result;
          end;
          result := result + input2;
-      end);}
+      end);
 
    result := FTilesize * sgPoint(MAX_WIDTH, Ceil(tileCount / MAX_WIDTH));
 end;
@@ -675,17 +665,8 @@ begin
    end;
 end;
 
-// *grumble* Stupid URWs...
 function T2kMapEngineD.loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
-var input: TTileGroupRecord;
-newItem: TTileGroupPair;
-{var
-filename: string;
-rw: PSDL_RWops;}
 begin
-{   result := TList<TTileGroupPair>.Create;
-   for input in value.Records do}
-
    result := value.Records.mapFP<TTileGroupPair>(
       function(const input: TTileGroupRecord): TTileGroupPair
       var
@@ -703,22 +684,17 @@ begin
          end
          else
          begin
-            result {newItem} := TTileGroupPair.Create(input,
+            result := TTileGroupPair.Create(input,
               (FImages.Image[input.group.filename] as TRpgSdlImage).surface);
          end;
       end);
-{         result.Add(newItem);
-      end;}
 end;
 
 function T2kMapEngineD.mapPosition: TSgPoint;
 begin
-   result := sgPoint(trunc(FCurrentMap.WorldX), trunc(FCurrentMap.WorldY));
-end;
-
-function T2kMapEngineD.mapSize: TSgPoint;
-begin
-   result := TSgPoint(FCurrentMap.mapRect.BottomRight) * TILE_SIZE;
+   if assigned(FCurrentMap) then
+      result := sgPoint(trunc(FCurrentMap.WorldX), trunc(FCurrentMap.WorldY))
+   else result := FTopleft;
 end;
 
 function T2kMapEngineD.NewMapObjectID(engine: T2kSpriteEngine): integer;

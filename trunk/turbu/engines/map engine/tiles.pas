@@ -111,7 +111,6 @@ type
       constructor Create(parent: TSpriteEngine; x, y: shortint; autoX, autoY: boolean); reintroduce; overload;
       destructor Destroy; override;
       procedure scroll;
-      procedure Draw; override;
 
       property scrollData: TScrollData read FScroll write FScroll;
    end;
@@ -440,11 +439,6 @@ destructor TBackgroundSprite.Destroy;
 begin
    FScroll.Free;
    inherited;
-end;
-
-procedure TBackgroundSprite.Draw;
-begin
-  inherited Draw;
 end;
 
 function TBackgroundSprite.InVisibleRect: boolean;

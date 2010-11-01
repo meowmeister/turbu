@@ -895,7 +895,7 @@ end;
 procedure TRpgParty.removeExp(const id: smallint; number: integer);
 var
    I: Integer;
-   dummy: TRpgHero;
+//   dummy: TRpgHero;
 begin
    if id = -1 then
    begin
@@ -919,7 +919,7 @@ end;
 procedure TRpgParty.removeLevels(const id: smallint; number: integer);
 var
    I: Integer;
-   dummy: TRpgHero;
+//   dummy: TRpgHero;
 begin
    if id = -1 then
    begin

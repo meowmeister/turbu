@@ -5,21 +5,21 @@ interface
 uses
    SysUtils, Controls, Forms, Classes, Dialogs, ExtCtrls, StdCtrls, Mask,
    JvExMask, JvSpin,
-   EbEdit, variable_selector, turbu_classes;
+   EventBuilder, EbEdit, variable_selector, turbu_classes;
 
 type
    [EditorCategory('Basics', 'Set Integer', 1)]
    TfrmEBSetInteger = class(TfrmEbEditBase)
       grpOperand: TGroupBox;
-      radSwitch: TRadioButton;
-      radInt: TRadioButton;
-      IntSelector1: TIntSelector;
+      radVariable: TRadioButton;
+      radReference: TRadioButton;
+      selLhsValue: TIntSelector;
       grpOperation: TRadioGroup;
       radNumber: TRadioButton;
       radValue: TRadioButton;
-      radReference: TRadioButton;
-      radRandom: TRadioButton;
-      radItem: TRadioButton;
+      radRefValue: TRadioButton;
+      radFunction: TRadioButton;
+      radProperty: TRadioButton;
       spnNumber: TJvSpinEdit;
       selValue: TIntSelector;
       selIndex: TIntSelector;
@@ -30,6 +30,11 @@ type
    private
       FFunctionList: TDeclList;
       procedure DisableControls;
+      procedure BuildFunctionList;
+   protected
+      procedure UploadObject(obj: TEbObject); override;
+//      procedure DownloadObject(obj: TEbObject); override;
+      function NewClassType: TEbClass; override;
    public
      { Public declarations }
      destructor Destroy; override;
@@ -38,9 +43,26 @@ type
 implementation
 uses
    turbu_database, turbu_script_interface, turbu_vartypes,
-   EB_System;
+   EB_System, EB_Expressions;
 
 {$R *.dfm}
+
+procedure TfrmEBSetInteger.BuildFunctionList;
+const FUNCTIONS: array[1..2] of string = ('random', 'heldItems');
+var
+   engine: IDesignScriptEngine;
+   name: string;
+   decl: TRpgDecl;
+begin
+//   TODO: Implement this way eventually
+//   FFunctionList := (GScriptEngine as IDesignScriptEngine).GetFunctions(turbu_vartypes.lookupType('integer'));
+   engine := GScriptEngine as IDesignScriptEngine;
+   FFunctionList := TDeclList.Create;
+   for name in FUNCTIONS do
+      FFunctionList.Add(engine.FindFunction(name).Clone);
+   for decl in FFunctionList do
+      cbxFunctions.AddItem(decl.designName, decl);
+end;
 
 destructor TfrmEBSetInteger.Destroy;
 begin
@@ -58,12 +80,66 @@ begin
 end;
 
 procedure TfrmEBSetInteger.FormCreate(Sender: TObject);
-var
-   decl: TRpgDecl;
 begin
-   FFunctionList := (GScriptEngine as IDesignScriptEngine).GetFunctions(turbu_vartypes.lookupType('integer'));
-   for decl in FFunctionList do
-      cbxFunctions.AddItem(decl.designName, decl);
+   BuildFunctionList;
+end;
+
+function TfrmEBSetInteger.NewClassType: TEbClass;
+begin
+   result := TEBGlobalInt;
+end;
+
+procedure TfrmEBSetInteger.UploadObject(obj: TEbObject);
+var
+   lValue, rValue: TEBExpression;
+begin
+   assert(obj is TEBGlobalInt);
+   lValue := obj.components[0] as TEBExpression;
+   if lValue is TEBIntegerValue then
+   begin
+      radVariable.Checked := true;
+      selLhsValue.ID := lValue.Values[0];
+   end
+   else begin
+      radReference.Checked := true;
+      if lValue is TEBIntsValue then
+         selLhsValue.ID := lValue.Values[0]
+      else selLhsValue.ID := ContextLookup((lValue as TEBVariableValue).GetNodeText);
+   end;
+   rValue := obj.components[1] as TEBExpression;
+   if rValue is TEBBinaryOp then
+   begin
+      assert(lValue.GetScriptText = (rValue.Components[1] as TEBExpression).GetScriptText);
+      grpOperation.ItemIndex := ord(TEBBinaryOp(rValue).op) + 1;
+      rValue := rValue.Components[1] as TEBExpression;
+   end;
+   if rValue is TEBIntegerValue then
+   begin
+      radNumber.Checked := true;
+      spnNumber.AsInteger := rValue.Values[0];
+   end
+   else if rValue is TEBIntsValue then
+   begin
+      if rValue.ComponentCount = 0 then
+      begin
+         radValue.Checked := true;
+         selValue.ID := rValue.Values[0];
+      end
+      else begin
+         rValue := rValue.Components[0] as TEBIntsValue;
+         radRefValue.Checked := true;
+         selIndex.ID := rValue.Values[0];
+      end;
+   end
+   else if rValue is TEBCall then
+   begin
+{      radFunction.Checked := true;
+      LoadFunction(TEBCall(rValue)); }
+   end
+   else if rValue is TEBLookupObjExpr then
+   begin
+      radProperty.Checked := true;
+   end;
 end;
 
 {initialization

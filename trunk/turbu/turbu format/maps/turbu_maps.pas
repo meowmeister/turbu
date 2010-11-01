@@ -97,6 +97,7 @@ type
       procedure blitToGrid(var grid: TTileBlitGrid; const bounds: TRect);
       procedure blitFromGrid(const grid: TTileBlitGrid; const bounds: TRect);
       function calcGridDelta(const size: TSgPoint; position: byte): TRect;
+      procedure saveScript;
    protected
       FEncounters: T4IntArray;
       [NoUpload]
@@ -163,6 +164,9 @@ begin
    self.SetDepth(turbu_constants.LAYERS);
    FTileset := 1;
    FRegions := TRegionList.Create;
+   FMapObjects := TMapObjectList.Create;
+   FScriptObject := TEBMap.Create(nil);
+   FScriptfile := ScriptFileName;
    FModified := true;
 end;
 
@@ -264,6 +268,23 @@ begin
       mapObj.save(savefile);
    savefile.writeChar(UpCase(TRpgMapObject.keyChar));
    self.writeEnd(savefile);
+   saveScript;
+end;
+
+procedure TRpgMap.saveScript;
+var
+   stream: TMemoryStream;
+   script: utf8String;
+begin
+   script := utf8String(FScriptObject.Serialize);
+   stream := TMemoryStream.Create;
+   try
+      stream.WriteBuffer(script[1], length(script));
+      assert(self.scriptFile <> '');
+      GArchives[SCRIPT_ARCHIVE].writeFile(self.scriptFile, stream);
+   finally
+      stream.Free;
+   end;
 end;
 
 function TRpgMap.calcBlitBounds(const size: TSgPoint; position: byte): TRect;
