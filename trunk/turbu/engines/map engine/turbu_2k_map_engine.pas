@@ -45,7 +45,7 @@ type
       FScrollPosition: TSgPoint;
       FTimer: TAsphyreTimer;
       FPartySprite: THeroSprite;
-      FParty: TRpgParty;
+      FParty: IRpgCharacter;
       FGameEnvironment: T2kEnvironment;
 
       function retrieveImage(const folder, filename: string): TRpgSdlImage;
@@ -218,15 +218,18 @@ end;
 procedure T2kMapEngine.initializeParty;
 var
    i: integer;
+   party: TRpgParty;
 begin
-   FParty := TRpgParty.Create;
+   if FParty = nil then
+      FParty := TRpgParty.Create;
+   party := FParty as TRpgParty;
    for I := 0 to FGameEnvironment.Heroes.Count - 1 do
    begin
-      FParty.hero[1] := FGameEnvironment.heroes[i];
+      party.hero[1] := FGameEnvironment.heroes[i];
       if FGameEnvironment.heroes[i].sprite <> '' then
          Break;
    end;
-   FPartySprite := THeroSprite.create(FCurrentMap, FParty.hero[1], FParty);
+   FPartySprite := THeroSprite.create(FCurrentMap, party.hero[1], party);
 end;
 
 procedure T2kMapEngine.KeyDown(key: TSdlKeySym);
