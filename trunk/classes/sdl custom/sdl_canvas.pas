@@ -133,6 +133,11 @@ type
       procedure popRenderTarget;
 
       {************************************************************************
+      * Notify the canvas that the SDL_Window has been resized
+      ************************************************************************}
+      procedure Resize;
+
+      {************************************************************************
       * The current render target.  Setting this property to nil will set the
       * render target back to the screen canvas.
       ************************************************************************}
@@ -286,6 +291,11 @@ end;
 procedure TSdlCanvas.pushRenderTarget;
 begin
    FRenderStack.Push(FRenderTarget as TSdlRenderTarget);
+end;
+
+procedure TSdlCanvas.Resize;
+begin
+   SDL_GetWindowSize(FWindow, FSize.x, FSize.y);
 end;
 
 (*

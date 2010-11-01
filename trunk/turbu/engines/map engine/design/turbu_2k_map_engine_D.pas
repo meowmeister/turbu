@@ -62,6 +62,7 @@ type
       function DesignLoadMap(map: IMapMetadata): IRpgMap;
       function mapPosition: TSgPoint;
       procedure SetMapResizeEvent(const value: TMapResizeEvent);
+      procedure ResizeWindow(rect: TRect);
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TList<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
@@ -191,6 +192,18 @@ begin
    self.FImages := nil;
    self.FDefaultBattleEngine := nil;
    self.FInitialized := false;
+end;
+
+procedure T2kMapEngineD.ResizeWindow(rect: TRect);
+var
+   viewport: TRect;
+   topleft: TSgPoint;
+begin
+   topleft := rect.TopLeft;
+   viewport.TopLeft := FCurrentMap.viewport.TopLeft;
+   viewport.BottomRight := (TSgPoint(rect.BottomRight) - topLeft) / TILE_SIZE;
+   FCurrentMap.viewport := DoResize(FCurrentMap.mapObj, viewport);
+   FCanvas.resize;
 end;
 
 procedure T2kMapEngineD.rightClick(const position: TSgPoint);
@@ -541,7 +554,7 @@ end;
 function T2kMapEngineD.DoResize(map: TRpgMap; viewport: TRect): TRect;
 begin
    if assigned(FOnResize) then
-      result := rect(point(0, 0), FOnResize(map.size * TILE_SIZE) / TILE_SIZE)
+      result := rect(viewport.TopLeft, FOnResize(map.size * TILE_SIZE) / TILE_SIZE)
    else result := viewport;
 end;
 
