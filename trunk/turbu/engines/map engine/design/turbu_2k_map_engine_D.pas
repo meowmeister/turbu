@@ -213,41 +213,36 @@ function T2kMapEngineD.DesignLoadMap(map: IMapMetadata): IRpgMap;
 var
    viewport: TRect;
 begin
-   FDrawLock := true;
-   try
-      if assigned(FCurrentMap) then
+   if assigned(FCurrentMap) then
+   begin
+      self.ClearContainers;
+      if not FCurrentMap.mapObj.modified then
+         freeAndNil(FMaps[FCurrentMap.mapObj.id])
+      else if FAutosaveMaps then
       begin
-         self.ClearContainers;
-         if not FCurrentMap.mapObj.modified then
-            freeAndNil(FMaps[FCurrentMap.mapObj.id])
-         else if FAutosaveMaps then
-         begin
-            saveMap(FCurrentMap.mapObj);
-            freeAndNil(FMaps[FCurrentMap.mapObj.id])
-         end;
-         FImages.Clear;
+         saveMap(FCurrentMap.mapObj);
+         freeAndNil(FMaps[FCurrentMap.mapObj.id])
       end;
-
-      prepareMap(map);
-      FCurrentMap := nil;
-      viewport := createViewport(FWaitingMap, FScrollPosition);
-      FTopLeft := viewport.TopLeft;
-      viewport := DoResize(FWaitingMap, viewport);
-      if not assigned(FMaps[FWaitingMap.id]) then
-      begin
-         FTilesetListD.Free;
-         FTilesetListD := loadTilesetD(FDatabase.tileset[FWaitingMap.tileset]);
-         FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
-                                   FCanvas, FDatabase.tileset[FWaitingMap.tileset],
-                                   FImages);
-      end;
-      FCurrentLayer := 0;
-      if doneLoadingMap then
-         result := FCurrentMap.mapObj
-      else result := nil;
-   finally
-      FDrawLock := false;
+      FImages.Clear;
    end;
+
+   prepareMap(map);
+   FCurrentMap := nil;
+   viewport := createViewport(FWaitingMap, FScrollPosition);
+   FTopLeft := viewport.TopLeft;
+   viewport := DoResize(FWaitingMap, viewport);
+   if not assigned(FMaps[FWaitingMap.id]) then
+   begin
+      FTilesetListD.Free;
+      FTilesetListD := loadTilesetD(FDatabase.tileset[FWaitingMap.tileset]);
+      FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
+                                FCanvas, FDatabase.tileset[FWaitingMap.tileset],
+                                FImages);
+   end;
+   FCurrentLayer := 0;
+   if doneLoadingMap then
+      result := FCurrentMap.mapObj
+   else result := nil;
 end;
 
 procedure T2kMapEngineD.DoDelete;
