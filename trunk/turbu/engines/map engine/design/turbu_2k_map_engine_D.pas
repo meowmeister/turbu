@@ -576,7 +576,8 @@ begin
       self.repaint;
    end
    else begin
-      obj := TFrmObjectEditor.NewMapObject(self.NewMapObjectID(FCurrentMap), FCurrentMap.tileset.name);
+      obj := TFrmObjectEditor.NewMapObject(self.NewMapObjectID(FCurrentMap),
+                                           FCurrentMap.MapObj, FCurrentMap.tileset.name);
       if assigned(obj) then
       begin
          sprite := FCurrentMap.AddMapObject(obj);

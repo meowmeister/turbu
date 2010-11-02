@@ -105,7 +105,7 @@ type
   public
     { Public declarations }
     class procedure EditMapObject(obj: TRpgMapObject; map: TRpgMap; const tilesetName: string);
-    class function NewMapObject(id: integer; const tilesetName: string): TRpgMapObject;
+    class function NewMapObject(id: integer; map: TRpgMap; const tilesetName: string): TRpgMapObject;
   end;
 
 implementation
@@ -514,13 +514,14 @@ begin
    end;
 end;
 
-class function TfrmObjectEditor.NewMapObject(id: integer;
+class function TfrmObjectEditor.NewMapObject(id: integer; map: TRpgMap;
   const tilesetName: string): TRpgMapObject;
 var
    form: TfrmObjectEditor;
 begin
    form := TfrmObjectEditor.Create(nil);
    result := TRpgMapObject.Create(id);
+   form.FMap := map;
    result.name := format('Map%.4d', [id]);
    try
       if form.DoEdit(result, tilesetName) <> mrOK then
