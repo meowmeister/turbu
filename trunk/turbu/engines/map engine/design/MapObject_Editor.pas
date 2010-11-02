@@ -247,12 +247,17 @@ var
    page, newpage: TRpgEventPage;
 begin
    id := dsPagesId.Value;
-   page := FMapObject.pages[id];
-   newpage := TRpgEventPage.Create(nil, 0);
-   newpage.name := page.name;
-   newpage.direction := page.direction;
-   newpage.whichTile := page.whichTile;
-   InsertPage(newpage);
+   page := TRpgEventPage.Create(nil, id);
+   try
+      FSerializer.download(page, dsPages);
+      newpage := TRpgEventPage.Create(nil, 0);
+      newpage.name := page.name;
+      newpage.direction := page.direction;
+      newpage.whichTile := page.whichTile;
+      InsertPage(newpage);
+   finally
+      page.Free;
+   end;
 end;
 
 procedure TfrmObjectEditor.btnScriptClick(Sender: TObject);
