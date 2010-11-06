@@ -137,6 +137,7 @@ type
    private
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
+      FLastGoodLayer: integer;
       FPaletteTexture: integer;
       FPaletteSelection: TRect;
       FPaletteSelectionTiles: TRect;
@@ -679,12 +680,9 @@ begin
 end;
 
 procedure TfrmTurbuMain.setLayer(const value: integer);
-begin
-   RequireMapEngine;
-   FCurrentLayer := value;
-   if value >= 0 then
+
+   procedure LoadImage(const value: integer);
    begin
-      imgPalette.Enabled := true;
       if not FPaletteImages.ContainsKey(value) then
       begin
          assignPaletteImage(FMapEngine.tilesetImage[value]);
@@ -695,8 +693,15 @@ begin
          bindPaletteCursor;
          resizePalette;
       end;
-   end
-   else imgPalette.Enabled := false;
+   end;
+
+begin
+   RequireMapEngine;
+   FCurrentLayer := value;
+   if value > 0 then
+      FLastGoodLayer := value;
+   imgPalette.Enabled := value >= 0;
+   LoadImage(FLastGoodLayer);
    FMapEngine.SetCurrentLayer(value);
 end;
 
@@ -711,7 +716,7 @@ begin
       bg := clBlack;
       fg := clOrange;
    end
-   else if (month = 12) and (day = 25) then
+   else if (month = 12) and (day in [24, 25]) then
    begin
       bg := clGreen;
       fg := clRed;
