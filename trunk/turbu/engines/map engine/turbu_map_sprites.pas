@@ -745,6 +745,7 @@ begin
    if FUnderConstruction or not (self.hasPage and (FMapObj.currentPage.animType in [at_fixedDir..at_statue])) then
       FFacing := data;
    FMoveDir := data;
+   FMoving := 1; //set to middle frame instead of first frame
 end;
 
 procedure TMapSprite.setLocation(data: TSgPoint);
@@ -975,10 +976,9 @@ procedure TCharSprite.updatePage(data: TRpgEventPage);
 begin
    FUnderConstruction := true;
    self.facing := data.direction;
+   FMoving := data.whichTile;
    FUnderConstruction := false;
    update(data.name, translucency >= 3);
-   FTiles[2].ImageIndex := data.whichTile * 2;
-   FTiles[1].ImageIndex := TEventTile(FTiles[2]).ImageIndex + 3;
 end;
 
 { TMapSpriteHelper }
