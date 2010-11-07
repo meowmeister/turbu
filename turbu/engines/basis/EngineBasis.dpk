@@ -27,7 +27,7 @@ package EngineBasis;
 {$DEFINE PS_USESSUPPORT}
 
 requires
-  dsnap,
+  dbrtl,
   vcl;
 
 contains
@@ -56,6 +56,12 @@ contains
   archiveInterface in '..\..\archiveInterface.pas',
   midaslib,
   crtl,
+  dsIntf,
+  midConst,
+  Midas,
+  DataBkr,
+  Provider,
+  DBClient,
   AsphyreTimer in '..\..\..\classes\Asphyre\AsphyreTimer.pas',
   turbu_tbi_lib in '..\..\turbu format\turbu_tbi_lib.pas',
   EventBuilder in '..\..\turbu format\EventBuilder.pas',
@@ -87,4 +93,3 @@ contains
   StringListComp in '..\..\..\..\ListCompare\StringListComp.pas';
 
 end.
-

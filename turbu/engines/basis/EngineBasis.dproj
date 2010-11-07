@@ -65,7 +65,7 @@
 			<DelphiCompile Include="EngineBasis.dpk">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="dsnap.dcp"/>
+			<DCCReference Include="dbrtl.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="..\..\..\components\PascalScript\upsCompiler.pas"/>
 			<DCCReference Include="..\..\..\components\PascalScript\uPSRuntime.pas"/>

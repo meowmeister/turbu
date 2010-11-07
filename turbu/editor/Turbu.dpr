@@ -13,6 +13,7 @@ uses
   Forms,
   dialogs,
   SysUtils,
+  MidasLib, {Make sure this initializes before the Application.CreateForm calls start running}
   sdl,
   sdl_canvas,
   types,
