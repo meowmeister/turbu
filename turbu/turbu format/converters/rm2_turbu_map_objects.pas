@@ -149,8 +149,6 @@ end;
 
 constructor T2k2RpgEventPage.Convert(base: TEventPage; id: integer;
   parent: TRpgMapObject; saveScript: TScriptCallback);
-const
-   FRAMES: array[TFacing] of word = (1, 4, 7, 10);
 begin
    FId := id;
    self.FConditions := TRpgEventConditions.Convert(base.conditionBlock);
@@ -158,7 +156,7 @@ begin
       CalculateTileID(base.whichChip)
    else begin
       FName := format('%s %d', [string(base.filename), base.whichChip]);
-      self.whichTile := FRAMES[base.direction];
+      self.whichTile := ord(base.animFrame);
    end;
    self.direction := base.direction;
    self.transparent := base.transparent;
