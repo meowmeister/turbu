@@ -64,6 +64,7 @@ type
       procedure AddLocation(const position: TSgPoint; character: TMapSprite);
       procedure LeaveLocation(const position: TSgPoint; character: TMapSprite);
       function normalizePoint(var x, y: integer): boolean;
+      procedure ResizeCanvas;
 
       property overlapping: TFacingSet read FOverlapping;
       property viewport: TRect read FViewport write SetViewport;
@@ -516,6 +517,13 @@ begin
    for i := low(FMap.tileMap) to high(FMap.tileMap) do
       FTiles.add(TTileMatrix.Create(FMap.size));
    self.SetViewport(FViewport);
+end;
+
+procedure T2kSpriteEngine.ResizeCanvas;
+begin
+   self.Canvas.Resize;
+   self.VisibleWidth := canvas.Width;
+   self.VisibleHeight := canvas.Height;
 end;
 
 procedure T2kSpriteEngine.SetViewport(const viewport: TRect);

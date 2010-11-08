@@ -21,9 +21,9 @@ object frmTurbuMain: TfrmTurbuMain
   TextHeight = 17
   object sbxMain: TScrollBox
     Left = 218
-    Top = 26
+    Top = 67
     Width = 914
-    Height = 850
+    Height = 809
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -45,15 +45,15 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 0
       Width = 888
-      Height = 824
+      Height = 783
       Align = alClient
       OnClick = imgBackgroundClick
-      ExplicitLeft = 8
-      ExplicitTop = 8
+      ExplicitLeft = -120
+      ExplicitTop = 19
     end
     object pnlHorizScroll: TPanel
       Left = 0
-      Top = 824
+      Top = 783
       Width = 910
       Height = 22
       Margins.Left = 4
@@ -95,7 +95,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 888
       Top = 0
       Width = 22
-      Height = 824
+      Height = 783
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -107,7 +107,7 @@ object frmTurbuMain: TfrmTurbuMain
         Left = 0
         Top = 0
         Width = 22
-        Height = 824
+        Height = 783
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -123,7 +123,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 0
       Width = 888
-      Height = 824
+      Height = 783
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -131,7 +131,7 @@ object frmTurbuMain: TfrmTurbuMain
       Framerate = 0
       Active = False
       LogicalWidth = 888
-      LogicalHeight = 824
+      LogicalHeight = 783
       OnAvailable = imgLogoAvailable
       OnPaint = imgLogoPaint
       Align = alClient
@@ -145,9 +145,9 @@ object frmTurbuMain: TfrmTurbuMain
   end
   object pnlSidebar: TPanel
     Left = 0
-    Top = 26
+    Top = 67
     Width = 218
-    Height = 850
+    Height = 809
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -226,7 +226,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 503
       Width = 218
-      Height = 347
+      Height = 306
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -313,6 +313,123 @@ object frmTurbuMain: TfrmTurbuMain
       Action = actPause
     end
   end
+  object pnlZoom: TPanel
+    Left = 0
+    Top = 26
+    Width = 1132
+    Height = 41
+    Align = alTop
+    TabOrder = 3
+    OnResize = pnlZoomResize
+    DesignSize = (
+      1132
+      41)
+    object Label1: TLabel
+      Left = 3
+      Top = 24
+      Width = 20
+      Height = 12
+      Caption = '25%'
+      Enabled = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -10
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lbl50: TLabel
+      Tag = 50
+      Left = 74
+      Top = 24
+      Width = 20
+      Height = 12
+      Caption = '50%'
+      Enabled = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -10
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lbl100: TLabel
+      Tag = 100
+      Left = 220
+      Top = 24
+      Width = 25
+      Height = 12
+      Caption = '100%'
+      Enabled = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -10
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object lbl200: TLabel
+      Tag = 200
+      Left = 518
+      Top = 26
+      Width = 25
+      Height = 12
+      Caption = '200%'
+      Enabled = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -10
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label2: TLabel
+      Tag = 300
+      Left = 812
+      Top = 26
+      Width = 25
+      Height = 12
+      Caption = '300%'
+      Enabled = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -10
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label3: TLabel
+      Tag = 400
+      Left = 1090
+      Top = 24
+      Width = 25
+      Height = 12
+      Anchors = [akTop, akRight]
+      Caption = '400%'
+      Enabled = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -10
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+    end
+    object sldZoom: TJvxSlider
+      Left = 1
+      Top = -6
+      Width = 1130
+      Height = 26
+      Enabled = False
+      Increment = 5
+      MinValue = 25
+      MaxValue = 400
+      Options = [soShowPoints]
+      TabOrder = 0
+      Value = 100
+      Anchors = [akLeft, akTop, akRight]
+      OnChanged = sldZoomChanged
+    end
+  end
   object mnuMain: TMainMenu
     Left = 544
     Top = 160
@@ -390,14 +507,14 @@ object frmTurbuMain: TfrmTurbuMain
     OnAfterLoad = pluginManagerAfterLoad
     OnBeforeUnload = pluginManagerBeforeUnload
     OnAfterUnload = pluginManagerAfterUnload
-    Left = 264
-    Top = 48
+    Left = 352
+    Top = 88
   end
   object ilToolbarIcons: TImageList
     Left = 312
     Top = 152
     Bitmap = {
-      494C01010800C800140110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010800C8001C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -48,6 +48,8 @@ type
       procedure SetLogicalWidth(const Value: integer);
       procedure SetLogicalHeight(const Value: integer);
       function GetAspectRatio: double;
+      function GetLogicalSize: TPoint;
+      procedure SetLogicalSize(const Value: TPoint);
    protected
       procedure CreateWnd; override;
       procedure DestroyWnd; override;
@@ -85,6 +87,7 @@ type
       property TextureByName[name: string]: TSdlTexture read GetTextureByName {write SetTextureByName};
       property Images: TSdlImages read FImageManager;
       property AspectRatio: double read GetAspectRatio;
+      property LogicalSize: TPoint read GetLogicalSize write SetLogicalSize;
    published
       property Framerate: word read FFramerate write SetFramerate;
       property Active: boolean read FActive write SetActive;
@@ -226,6 +229,11 @@ end;
 function TSdlFrame.GetAspectRatio: double;
 begin
    result := self.Width / self.Height;
+end;
+
+function TSdlFrame.GetLogicalSize: TPoint;
+begin
+   result := point(FLogicalWidth, FLogicalHeight);
 end;
 
 function TSdlFrame.GetTextureByName(name: string): TSdlTexture;
@@ -372,6 +380,18 @@ begin
       Exit;
 
    FLogicalHeight := Value;
+   SDL_SetWindowLogicalSize(FWindowID, FLogicalWidth, FLogicalHeight);
+   if FRenderer then
+      self.Flip;
+end;
+
+procedure TSdlFrame.SetLogicalSize(const Value: TPoint);
+begin
+   if (value.x = FLogicalWidth) and (value.y = FLogicalHeight)  then
+      Exit;
+
+   FLogicalWidth := value.X;
+   FLogicalHeight := value.Y;
    SDL_SetWindowLogicalSize(FWindowID, FLogicalWidth, FLogicalHeight);
    if FRenderer then
       self.Flip;

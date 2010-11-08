@@ -12,8 +12,10 @@ type
       class operator NotEqual(a, b: TSgPoint): boolean; inline; static;
       class operator Multiply(a: TSgPoint; b: integer): TSgPoint; inline; static;
       class operator Multiply(a, b: TSgPoint): TSgPoint; inline; static;
+      class operator Multiply(a: TSgPoint; b: double): TSgPoint; inline; static;
       class operator Divide(a: TSgPoint; b: integer): TSgPoint; inline; static;
       class operator Divide(a: TSgPoint; b: TSgPoint): TSgPoint; inline; static;
+      class operator Divide(a: TSgPoint; b: double): TSgPoint; inline; static;
       class operator Modulus(a, b: TSgPoint): TSgPoint; inline; static;
       class operator Add(a, b: TSgPoint): TSgPoint; inline; static;
       class operator Subtract(a, b: TSgPoint): TSgPoint; inline; static;
@@ -130,6 +132,18 @@ function sgPoint(x, y: integer): TSgPoint;
 begin
    result.x := x;
    result.y := y;
+end;
+
+class operator TSgPoint.Multiply(a: TSgPoint; b: double): TSgPoint;
+begin
+   result.x := round(a.x * b);
+   result.y := round(a.y * b);
+end;
+
+class operator TSgPoint.Divide(a: TSgPoint; b: double): TSgPoint;
+begin
+   result.x := round(a.x / b);
+   result.y := round(a.y / b);
 end;
 
 { TSgFloatPoint }
