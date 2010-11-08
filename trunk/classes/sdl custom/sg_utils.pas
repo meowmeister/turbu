@@ -11,8 +11,8 @@ function constrictSdlRect(const value: TRect; amount: integer): TRect;
 function expandSdlRect(const value: TRect; amount: integer): TRect;
 function multiplyRect(const value: TRect; amount: integer): TRect; overload;
 function multiplyRect(const value: TRect; amount: TSgPoint): TRect; overload;
-function pointToGridLoc(const point, cellSize: TSgPoint; const hScroll, vScroll,
-                        scale: integer): TSgPoint;
+function pointToGridLoc(const point, cellSize: TSgPoint; const hScroll, vScroll: integer;
+                        const scale: double): TSgPoint;
 function TRectToSdlRect(const value: TRect): TRect;
 
 implementation
@@ -59,8 +59,8 @@ begin
    result.Bottom := value.Bottom * amount.y;
 end;
 
-function pointToGridLoc(const point, cellSize: TSgPoint; const hScroll, vScroll,
-                        scale: integer): TSgPoint;
+function pointToGridLoc(const point, cellSize: TSgPoint; const hScroll, vScroll: integer;
+                        const scale: double): TSgPoint;
 begin
    result := ((point / scale) + sgPoint(hScroll, vScroll)) / cellSize;
 end;

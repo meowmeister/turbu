@@ -203,7 +203,7 @@ begin
    viewport.TopLeft := FCurrentMap.viewport.TopLeft;
    viewport.BottomRight := (TSgPoint(rect.BottomRight) - topLeft) / TILE_SIZE;
    FCurrentMap.viewport := DoResize(FCurrentMap.mapObj, viewport);
-   FCanvas.resize;
+   FCurrentMap.ResizeCanvas;
 end;
 
 procedure T2kMapEngineD.rightClick(const position: TSgPoint);

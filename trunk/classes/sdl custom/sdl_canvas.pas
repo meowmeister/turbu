@@ -208,7 +208,7 @@ begin
       SDL_InitSubSystem(SDL_INIT_VIDEO);
 
    FWindow := SDL_CreateWindow(PAnsiChar(title), size.Left, size.Top, size.Right, size.Bottom, flags);
-   SDL_GetWindowSize(FWindow, FSize.x, FSize.y);
+   SDL_GetWindowLogicalSize(FWindow, FSize.x, FSize.y);
    if SDL_CreateRenderer(FWindow, -1, [sdlrPresentFlip3]) <> 0 then
       raise EBadHandle.Create(string(SDL_GetError));
    SDL_SelectRenderer(FWindow);
@@ -226,7 +226,7 @@ begin
       SDL_InitSubSystem(SDL_INIT_VIDEO);
 
    FWindow := value;
-   SDL_GetWindowSize(FWindow, FSize.x, FSize.y);
+   SDL_GetWindowLogicalSize(FWindow, FSize.x, FSize.y);
 
    self.RenderTarget := self;
 end;
@@ -295,7 +295,7 @@ end;
 
 procedure TSdlCanvas.Resize;
 begin
-   SDL_GetWindowSize(FWindow, FSize.x, FSize.y);
+   SDL_GetWindowLogicalSize(FWindow, FSize.x, FSize.y);
 end;
 
 (*

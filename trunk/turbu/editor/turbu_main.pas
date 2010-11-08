@@ -26,7 +26,7 @@ uses
    design_script_engine, turbu_plugin_interface, turbu_engines, turbu_map_engine,
    turbu_map_interface, turbu_map_metadata,
    sdl_frame, sdl, sdl_13, sg_defs, ActnList, PlatformDefaultStyleActnCtrls,
-  ActnMan;
+  ActnMan, JvExControls, JvxSlider;
 
 type
    TfrmTurbuMain = class(TForm)
@@ -84,6 +84,9 @@ type
       imgBackground: TImage;
       actRun: TAction;
       actPause: TAction;
+      pnlZoom: TPanel;
+      sldZoom: TJvxSlider;
+      lbl50: TLabel;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -134,6 +137,8 @@ type
       procedure pluginManagerAfterUnload(Sender: TObject; FileName: string);
       procedure imgLogoPaint(Sender: TObject);
       procedure FormResize(Sender: TObject);
+      procedure pnlZoomResize(Sender: TObject);
+      procedure sldZoomChanged(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
@@ -145,6 +150,7 @@ type
       FCurrPalettePos: integer;
       FPaletteImages: TDictionary<integer, integer>;
       FIgnoreMouseDown: boolean;
+      FZoom: double;
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
       procedure openProject(location: string);
@@ -166,6 +172,8 @@ type
       procedure RequireMapEngine;
       procedure enableRunButtons(running: boolean);
       function SetMapSize(const size: TSgPoint): TSgPoint;
+      procedure SetZoom(const value: double);
+      procedure EnableZoom(value: boolean);
    public
       { Public declarations }
    end;
@@ -176,7 +184,7 @@ var
 implementation
 
 uses
-   SysUtils, Types, Math, Graphics, Windows,
+   SysUtils, Types, Math, Graphics, Windows, OpenGL,
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
    PackageRegistry,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
@@ -225,6 +233,15 @@ begin
    trvMapTree.Enabled := not running;
    actPause.Enabled := running;
 //   btnStop.Enabled := running;
+   enableZoom(not running);
+end;
+
+procedure TfrmTurbuMain.EnableZoom(value: boolean);
+var
+   i: integer;
+begin
+   for i := 0 to pnlZoom.ControlCount - 1 do
+      pnlZoom.Controls[i].Enabled := value;
 end;
 
 procedure TfrmTurbuMain.resizePalette;
@@ -299,8 +316,8 @@ procedure TfrmTurbuMain.configureScrollBars(const size, position: TSgPoint);
    end;
 
 begin
-   configureScrollBar(sbHoriz, size.x, min(imgLogo.width, size.x), position.x);
-   configureScrollBar(sbVert, size.y, min(imgLogo.height, size.y), position.y);
+   configureScrollBar(sbHoriz, size.x, min(imgLogo.LogicalWidth, size.x), position.x);
+   configureScrollBar(sbVert, size.y, min(imgLogo.LogicalHeight, size.y), position.y);
 end;
 
 procedure TfrmTurbuMain.FormCreate(Sender: TObject);
@@ -309,6 +326,7 @@ begin
       createProjectFolder;
    FPaletteTexture := -1;
    FPaletteImages := TDictionary<integer, integer>.Create;
+   FZoom := 1;
 end;
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
@@ -320,12 +338,15 @@ begin
 end;
 
 procedure TfrmTurbuMain.FormResize(Sender: TObject);
+var
+   availableSize: TSgPoint;
 begin
    if assigned(FMapEngine) then
    begin
       imgBackground.Picture.Graphic := nil;
-      FMapEngine.ResizeWindow(imgBackground.BoundsRect);
-      fMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
+      availableSize := sgPoint(imgBackground.Width, imgBackground.Height) / FZoom;
+      FMapEngine.ResizeWindow(classes.rect(ORIGIN, availableSize));
+      FMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
    end;
 end;
 
@@ -363,6 +384,7 @@ begin
          loadEngine(engines[j]);
       engines.free;
    end;
+   pnlZoomResize(self);
    focusControl(trvMapTree);
 end;
 
@@ -429,7 +451,7 @@ begin
    if FIgnoreMouseDown then
       FIgnoreMouseDown := false
    else begin
-      point := pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, 1);
+      point := pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, FZoom);
       case button of
          mbLeft: FMapEngine.draw(point, true);
          mbRight: FMapEngine.RightClick(point);
@@ -443,7 +465,7 @@ procedure TfrmTurbuMain.imgLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
 begin
    RequireMapEngine;
    if (ssLeft in shift) then
-      FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, 1),
+      FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, FZoom),
                       false);
 end;
 
@@ -521,6 +543,7 @@ begin
    imgPalette.ClearTextures;
    FPaletteImages.Clear;
    setLayer(FCurrentLayer);
+   EnableZoom(true);
 end;
 
 procedure TfrmTurbuMain.loadMap(const value: word);
@@ -645,6 +668,25 @@ begin
    loadProject;
 end;
 
+procedure TfrmTurbuMain.pnlZoomResize(Sender: TObject);
+
+   procedure CenterControl(ctrl: TControl; position: integer);
+   begin
+      ctrl.Left := sldZoom.GetOffsetByValue(position) - (ctrl.Width div 4);
+   end;
+
+var
+   i: integer;
+   ctrl: TControl;
+begin
+   for i := 0 to pnlZoom.ControlCount -1 do
+   begin
+      ctrl := pnlZoom.Controls[i];
+      if (ctrl.tag <> 0) and (ctrl is TLabel) then
+         CenterControl(ctrl, ctrl.tag);
+   end;
+end;
+
 procedure TfrmTurbuMain.pluginManagerAfterLoad(Sender: TObject;
   FileName: string; const ALibHandle: {HMODULE} cardinal; var AllowLoad: Boolean);
 begin
@@ -745,20 +787,40 @@ function TfrmTurbuMain.SetMapSize(const size: TSgPoint): TSgPoint;
       imgBackground.canvas.FillRect(imgBackground.ClientRect);
    end;
 
+var
+   pSize: TSgPoint;
 begin
-   if (size.x >= imgBackground.ClientWidth) and (size.y >= imgBackground.ClientHeight) then
-      imgLogo.Align := alClient
+   pSize := size * FZoom;
+   if (pSize.x >= imgBackground.ClientWidth) and (pSize.y >= imgBackground.ClientHeight) then
+   begin
+      imgLogo.Align := alClient;
+   end
    else begin
       imgLogo.Align := alNone;
-      imgLogo.Width := min(imgBackground.ClientWidth, size.x);
-      imgLogo.Height := min(imgBackground.ClientHeight, size.y);
+      imgLogo.Width := min(imgBackground.ClientWidth, pSize.x);
+      imgLogo.Height := min(imgBackground.ClientHeight, pSize.y);
       imgLogo.Left := (imgBackground.ClientWidth - imgLogo.width) div 2;
       imgLogo.Top := (imgBackground.ClientHeight - imgLogo.height) div 2;
       imgBackground.Invalidate;
       AddCrosshatch;
    end;
-   result := sgPoint(imgLogo.width, imgLogo.height);
+   if (imgLogo.Width < imgBackground.ClientWidth) and (imgLogo.Height < imgBackground.ClientHeight) then
+      result := size
+   else result := sgPoint(imgLogo.Width, imgLogo.Height) / FZoom;
+   imgLogo.LogicalSize := result;
    configureScrollBars(size, FMapEngine.mapPosition);
+end;
+
+procedure TfrmTurbuMain.SetZoom(const value: double);
+var
+   availableSize: TSgPoint;
+begin
+   if abs(value - FZoom) < 0.01 then //comparing floats with = doesn't always work
+      Exit;
+   FZoom := value;
+   imgLogo.Select;
+   GLLineWidth(value);
+   FormResize(self);
 end;
 
 procedure TfrmTurbuMain.bindPaletteCursor;
@@ -795,6 +857,11 @@ begin
    dec(result.bottom, FCurrPalettePos * 2);
    inc(result.right, 31);
    inc(result.bottom, 31);
+end;
+
+procedure TfrmTurbuMain.sldZoomChanged(Sender: TObject);
+begin
+   SetZoom(sldZoom.Value / 100);
 end;
 
 procedure TfrmTurbuMain.splSidebarMoved(Sender: TObject);
