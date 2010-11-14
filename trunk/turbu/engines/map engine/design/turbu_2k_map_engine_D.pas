@@ -546,6 +546,7 @@ begin
             result := (arg1.base = FHookedObject);
          end));
       FHookedObject.location := FCursorPosition;
+      FHookedObject.event.location := FCursorPosition;
       FObjectContainers.Add(TMapObjectContainer.Create(FHookedObject, FCanvas));
       FHookedObject := nil;
       self.repaint;
