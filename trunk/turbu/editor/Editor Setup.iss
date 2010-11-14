@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TURBU"
-#define MyAppVerName "TURBU Editor 0.8.6"
+#define MyAppVerName "TURBU Editor 0.8.7"
 #define MyAppPublisher "Dragon Slayers, Inc."
 #define MyAppURL "http://www.turbu-rpg.com/"
 #define MyAppExeName "Turbu.exe"
@@ -18,7 +18,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\setup
-OutputBaseFilename=TURBU_Editor_0.8.6
+OutputBaseFilename=TURBU_Editor_0.8.7
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -45,8 +45,6 @@ Source: ..\..\dlls\libvorbis-0.dll; DestDir: {sys}
 Source: ..\..\dlls\libvorbisfile-3.dll; DestDir: {sys}
 Source: ..\..\dlls\SDL.dll; DestDir: {app}
 Source: ..\..\dlls\sdl_image.dll; DestDir: {app}
-Source: ..\..\dlls\SDL_mixer.dll; DestDir: {sys}
-Source: ..\..\dlls\smpeg.dll; DestDir: {sys}
 Source: ..\..\dlls\zlib1.dll; DestDir: {sys}
 Source: ..\bin\design\scripts\general\battle_algorithms.trs; DestDir: {app}\design\scripts\general
 Source: ..\bin\design\scripts\general\dt_algorithms.trs; DestDir: {app}\design\scripts\general
@@ -67,9 +65,7 @@ Source: c:\Windows\SysWOW64\rtl150.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\vclimg150.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\vclx150.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\vcldb150.bpl; DestDir: {sys}
-Source: c:\Windows\SysWOW64\dsnap150.bpl; DestDir: {sys}
 Source: c:\Windows\SysWOW64\dbrtl150.bpl; DestDir: {sys}
-Source: c:\Windows\SysWOW64\midas.dll; DestDir: {sys}
 Source: c:\Windows\SysWOW64\vcl150.bpl; DestDir: {sys}
 
 [Icons]
@@ -92,6 +88,8 @@ Name: {app}\design
 Name: {app}\design\scripts
 Name: {app}\design\scripts\general
 Name: {app}\design\scripts\menu
+
+
 
 
 

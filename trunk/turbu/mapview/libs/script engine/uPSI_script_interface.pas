@@ -44,7 +44,7 @@ procedure SIRegister_TRpgEvent(CL: TPSPascalCompiler);
 procedure SIRegister_TRpgParty(CL: TPSPascalCompiler);
 procedure SIRegister_TRpgHero(CL: TPSPascalCompiler);
 procedure SIRegister_TRpgVehicle(CL: TPSPascalCompiler);
-procedure SIRegister_TRpgMediaPlayer(CL: TPSPascalCompiler);
+//procedure SIRegister_TRpgMediaPlayer(CL: TPSPascalCompiler);
 procedure SIRegister_TRpgItem(CL: TPSPascalCompiler);
 procedure SIRegister_script_interface(CL: TPSPascalCompiler);
 
@@ -56,7 +56,7 @@ procedure RIRegister_TRpgTimer(CL: TPSRuntimeClassImporter);
 procedure RIRegister_TRpgEvent(CL: TPSRuntimeClassImporter);
 procedure RIRegister_TRpgParty(CL: TPSRuntimeClassImporter);
 procedure RIRegister_TRpgHero(CL: TPSRuntimeClassImporter);
-procedure RIRegister_TRpgMediaPlayer(CL: TPSRuntimeClassImporter);
+//procedure RIRegister_TRpgMediaPlayer(CL: TPSRuntimeClassImporter);
 procedure RIRegister_TRpgVehicle(CL: TPSRuntimeClassImporter);
 procedure RIRegister_TRpgItem(CL: TPSRuntimeClassImporter);
 procedure RIRegister_script_interface(CL: TPSRuntimeClassImporter);
@@ -90,7 +90,7 @@ begin
     RegisterProperty('flees', 'word', iptr);
     RegisterProperty('timer', 'TRpgTimer', iptrw);
     RegisterProperty('timer2', 'TRpgTimer', iptrw);
-    RegisterProperty('BGM', 'TRpgMediaPlayer', iptr);
+//    RegisterProperty('BGM', 'TRpgMediaPlayer', iptr);
     RegisterProperty('levelGainNotify', 'boolean', iptw);
     RegisterProperty('deathPossible', 'boolean', iptw);
     RegisterProperty('menuEnabled', 'boolean', iptrw);
@@ -266,6 +266,7 @@ begin
   end;
 end;
 
+{
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_TRpgMediaPlayer(CL: TPSPascalCompiler);
 begin
@@ -277,13 +278,14 @@ begin
     RegisterProperty('looped', 'boolean', iptr);
   end;
 end;
+}
 
 (*----------------------------------------------------------------------------*)
 procedure SIRegister_script_interface(CL: TPSPascalCompiler);
 begin
   CL.AddTypeS('TImageEffects', '( ie_none, ie_rotate, ie_wave )');
 
-  SIRegister_TRpgMediaPlayer(CL);
+//  SIRegister_TRpgMediaPlayer(CL);
   SIRegister_TRpgImage(CL);
   SIRegister_TRpgItem(CL);
   SIRegister_TRpgList(CL);
@@ -311,9 +313,11 @@ begin Self.menuEnabled := T; end;
 procedure TScriptInterfacedeathPossible_W(Self: TScriptInterface; const T: boolean);
 begin Self.deathPossible := T; end;
 
+{
 (*----------------------------------------------------------------------------*)
 procedure TScriptInterfaceBGM_R(Self: TScriptInterface; var T: TRpgMediaPlayer);
 begin T := Self.BGM; end;
+}
 
 (*----------------------------------------------------------------------------*)
 procedure TScriptInterfaceLevelGainNotify_W(Self: TScriptInterface; const T: boolean);
@@ -759,6 +763,7 @@ begin Self.skill[t1] := T; end;
 procedure TRpgHeroskill_R(Self: TRpgHero; var T: boolean; const t1: word);
 begin T := Self.skill[t1]; end;
 
+{
 (*----------------------------------------------------------------------------*)
 procedure TRpgMediaPlayerposition_R(Self: TRpgMediaPlayer; var T: integer);
 begin T := Self.position; end;
@@ -766,6 +771,7 @@ begin T := Self.position; end;
 (*----------------------------------------------------------------------------*)
 procedure TRpgMediaPlayerlooped_R(Self: TRpgMediaPlayer; var T: boolean);
 begin T := Self.looped; end;
+}
 
 {$ENDREGION}
 
@@ -790,7 +796,7 @@ begin
     RegisterPropertyHelper(@TScriptInterfaceflees_R,nil,'flees');
     RegisterPropertyHelper(@TScriptInterfacetimer_R,@TScriptInterfacetimer_W,'timer');
     RegisterPropertyHelper(@TScriptInterfacetimer2_R,@TScriptInterfacetimer2_W,'timer2');
-    RegisterPropertyHelper(@TScriptInterfaceBGM_R,nil,'BGM');
+//    RegisterPropertyHelper(@TScriptInterfaceBGM_R,nil,'BGM');
     RegisterPropertyHelper(nil,@TScriptInterfaceLevelGainNotify_w, 'levelGainNotify');
     RegisterPropertyHelper(nil,@TScriptInterfacedeathPossible_W,'deathPossible');
     RegisterPropertyHelper(@TScriptInterfaceMenuEnabled_R, @TScriptInterfaceMenuEnabled_W, 'menuEnabled');
@@ -910,6 +916,7 @@ begin
   end;
 end;
 
+{
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TRpgMediaPlayer(CL: TPSRuntimeClassImporter);
 begin
@@ -920,6 +927,7 @@ begin
     RegisterPropertyHelper(@TRpgMediaPlayerlooped_R,nil,'looped');
   end;
 end;
+}
 
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_TRpgItem(CL: TPSRuntimeClassImporter);
@@ -971,7 +979,7 @@ end;
 (*----------------------------------------------------------------------------*)
 procedure RIRegister_script_interface(CL: TPSRuntimeClassImporter);
 begin
-  RIRegister_TRpgMediaPlayer(CL);
+//  RIRegister_TRpgMediaPlayer(CL);
   RIRegister_TRpgCharacter(CL);
 //  RIRegister_TRpgImage(CL);
   RIRegister_TRpgItem(CL);
