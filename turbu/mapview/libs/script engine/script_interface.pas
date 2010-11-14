@@ -23,12 +23,12 @@ uses
    {turbu_database,} rpg_list, charset_data, turbu_mapchars, turbu_heroes,
    events, rm_sound, turbu_map_sprites, {rpg_image,} commons, turbu_defs, //turbu libs
    turbu_map_objects,
-   SDL_sprite, SG_Defs, sdl_mixer, sdlaudiomixer; //SDL libs
+   SDL_sprite, SG_Defs{, sdl_mixer, sdlaudiomixer}; //SDL libs
 
 {$I ..\..\..\..\unfinished.inc}
 
 type
-   TRpgMediaPlayer = class(TObject)
+{   TRpgMediaPlayer = class(TObject)
    private
       FBgm: string;
       FSavedBgm: TSDLMusic;
@@ -70,7 +70,7 @@ type
       property player: TSdlAudioManager read FMediaPlayer;
       property currentTrack: TSDLMusic read FCurrentTrack write FCurrentTrack;
       property syncWait: boolean read FSyncWait;
-   end;
+   end; }
 
    TRpgGlobalEvent = class(TObject)
    private
@@ -130,7 +130,7 @@ type
       procedure setCash(value: integer);
       function getTimer: TRpgTimer;
       function getTimer2: TRpgTimer;
-      function getPlayer: TRpgMediaPlayer;
+//      function getPlayer: TRpgMediaPlayer;
       function getEvent(index: word): TRpgEvent;
       function getParty: TRpgParty;
       function getPartySize: byte;
@@ -157,7 +157,7 @@ type
       property flees: word read battleFlees;
       property timer: TRpgTimer read getTimer write setTimer;
       property timer2: TRpgTimer read getTimer2 write setTimer2;
-      property BGM: TRpgMediaPlayer read getPlayer;
+//      property BGM: TRpgMediaPlayer read getPlayer;
       property levelGainNotify: boolean write notifyOnLevelGain;
       property deathPossible: boolean write canDieOnHpChange;
       property menuEnabled: boolean read isMenuEnabled write enableMenu;
@@ -260,10 +260,12 @@ begin
    //end FOR}
 end;
 
+(*
 function TScriptInterface.getPlayer: TRpgMediaPlayer;
 begin
 //   result := GCurrentEngine.mediaPlayer;
 end;
+*)
 
 function TScriptInterface.getSaveCount: word;
 begin
@@ -411,7 +413,7 @@ begin
    end;
 end;
 
-{ TRpgMediaPlayer }
+(*{ TRpgMediaPlayer }
 
 constructor TRpgMediaPlayer.create;
 begin
@@ -619,6 +621,7 @@ begin
    else FCurrentTrack.play;
    FSyncWait := false;
 end;
+*)
 
 { TRpgGlobalEvent }
 
