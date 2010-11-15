@@ -21,6 +21,8 @@ type
       constructor Create(AOwner: TComponent); override;
       property ID: integer read FID write SetID;
       property varname: string read FVarName;
+   published
+      property Enabled;
    end;
 
    TSwitchSelector = class(TVarSelector)

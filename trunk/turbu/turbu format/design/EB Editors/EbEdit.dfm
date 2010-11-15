@@ -12,6 +12,7 @@ object frmEbEditBase: TfrmEbEditBase
   Font.Style = []
   OldCreateOrder = False
   Position = poOwnerFormCenter
+  OnCloseQuery = FormCloseQuery
   DesignSize = (
     349
     258)

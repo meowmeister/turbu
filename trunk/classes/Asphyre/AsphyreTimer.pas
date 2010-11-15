@@ -45,7 +45,7 @@ interface
 
 //---------------------------------------------------------------------------
 uses
- Windows, Classes, Forms, Math, MMSystem;
+ Windows, Classes, Forms, Math{, MMSystem};
 
 //---------------------------------------------------------------------------
 type
@@ -145,8 +145,6 @@ begin
  {$else}
  Application.OnIdle:= AppIdle;
  {$endif}
-
- timeBeginPeriod(1);
 
  FixedDelta := 0;
  FFrameRate := 0;

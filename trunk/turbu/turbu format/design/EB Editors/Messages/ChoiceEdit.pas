@@ -123,7 +123,8 @@ begin
       if not assigned(ElseBlock) then
          ElseBlock := TEbElseBlock.Create(nil);
       obj.Add(ElseBlock);
-   end;
+   end
+   else elseBlock.Free;
 end;
 
 initialization
