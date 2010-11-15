@@ -50,6 +50,7 @@ contains
   InputNumber in 'EB Editors\Messages\InputNumber.pas' {frmInputNumber},
   ChoiceEdit in 'EB Editors\Messages\ChoiceEdit.pas' {frmShowChoice},
   EditInt in 'EB Editors\Basics\EditInt.pas' {frmEBSetInteger},
-  EditSwitch in 'EB Editors\Basics\EditSwitch.pas' {frmEbSetSwitch};
+  EditSwitch in 'EB Editors\Basics\EditSwitch.pas' {frmEbSetSwitch},
+  EditTimer in 'EB Editors\Basics\EditTimer.pas' {frmTimerEdit};
 
 end.
