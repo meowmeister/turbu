@@ -19,6 +19,7 @@ type
       btnOK: TButton;
       btnCancel: TButton;
       btnHelp: TButton;
+      procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
    private
       class function GetEditors: TEditorDic; static;
    protected
@@ -111,6 +112,11 @@ begin
    result := ShowModal = mrOK;
    if result then
       DownloadObject(obj);
+end;
+
+procedure TfrmEBEditBase.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+   CanClose := self.ValidateForm;
 end;
 
 class function TfrmEBEditBase.GetEditors: TEditorDic;
