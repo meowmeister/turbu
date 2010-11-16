@@ -12,7 +12,8 @@ implementation
 uses
    SysUtils, Generics.Defaults, Generics.Collections, TypInfo,
    turbu_defs, commons, move_data, turbu_pathing, rm2_turbu_map_objects,
-   EB_RpgScript, EB_Messages, EB_Expressions, EB_System, EB_Maps;
+   EB_RpgScript, EB_Messages, EB_Expressions, EB_System, EB_Maps, EB_Characters,
+   EB_Settings, EB_Media;
 
 type
    TConvertRoutine = function (opcode: TEventCommand; parent: TEBObject): TEBObject;

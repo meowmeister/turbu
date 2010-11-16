@@ -196,6 +196,7 @@ type
 
 const
    BOOL_STR: array[0..1] of string = ('false', 'true');
+   ADDREM: array[0..1] of string = ('Add', 'Remove');
 
 implementation
 uses
