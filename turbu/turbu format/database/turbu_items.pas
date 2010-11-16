@@ -81,8 +81,9 @@ type
       FUsable: boolean;
       [TUploadByteSet]
       FConditions: TByteSet;
-      FAttributes: TPointArray;
       FCursed: boolean;
+   protected
+      FAttributes: TPointArray;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;

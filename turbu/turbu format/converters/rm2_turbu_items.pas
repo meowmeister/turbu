@@ -194,14 +194,12 @@ var
    i: integer;
    counter: word;
    percentage, runningtotal: extended;
-   points: PPointArray;
 begin
    inherited Convert(base);
    counter := 0;
    runningtotal := 0;
    self.evasion := base.ignoreEvasion;
 
-   points := @self.attribute;
    for I := 1 to GLcfDatabase.attributes do
    begin
       if base.attribute[i] then
@@ -214,8 +212,8 @@ begin
          if base.attribute[i] then
          begin
             runningtotal := runningtotal + counter;
-            setLength(points^, length(self.attribute) + 1);
-            with self.attribute[high(self.attribute)] do
+            setLength(FAttributes, length(FAttributes) + 1);
+            with FAttributes[high(FAttributes)] do
             begin
                x := i;
                y := trunc(percentage);
@@ -238,17 +236,15 @@ end;
 constructor T2k2ArmorTemplate.Convert(base: TItem);
 var
    i: integer;
-   points: PPointArray;
 begin
    inherited Convert(base);
    self.evasion := base.boostEvade;
 
-   points := @self.attribute;
    for I := 1 to GLcfDatabase.attributes do
       if base.attribute[i] then
       begin
-         setLength(points^, length(self.attribute) + 1);
-         with self.attribute[high(self.attribute)] do
+         setLength(FAttributes, length(FAttributes) + 1);
+         with FAttributes[high(FAttributes)] do
          begin
             x := i;
             y := GLcfDatabase.attribute[i].average;

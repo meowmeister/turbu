@@ -53,8 +53,6 @@ type
       typeVar: integer;
    end;
 
-   PPointArray = ^TPointArray; //TODO: Do some refactoring and remove this
-
    TWeaponStyle = (ws_single, ws_shield, ws_dual, ws_all);
 
    TVarSets = (vs_switch, vs_integer, vs_float, vs_string);
