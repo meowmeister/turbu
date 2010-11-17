@@ -94,13 +94,14 @@ type
       FPhased: boolean;
       [TUploadByteSet]
       FCondition: TByteSet;
-      FAttributes: TPointArray;
       FResistMod: boolean;
 
       function getStat(x: byte): boolean;
       procedure setStat(x: byte; const Value: boolean);
       procedure setSkillPower(x: byte; const Value: integer);
       function getSkillPower(x: byte): integer;
+   protected
+      FAttributes: TPointArray;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
