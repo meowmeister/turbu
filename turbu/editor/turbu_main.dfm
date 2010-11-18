@@ -41,13 +41,14 @@ object frmTurbuMain: TfrmTurbuMain
     Color = clBlack
     ParentColor = False
     TabOrder = 0
-    object imgBackground: TImage
+    object imgBackground: TPaintBox
       Left = 0
       Top = 0
       Width = 888
       Height = 783
       Align = alClient
       OnClick = imgBackgroundClick
+      OnPaint = imgBackgroundPaint
       ExplicitLeft = -120
       ExplicitTop = 19
     end
@@ -514,7 +515,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C01010800C8001C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010800C800280110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
