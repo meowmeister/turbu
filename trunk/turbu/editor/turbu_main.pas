@@ -20,13 +20,13 @@ unit turbu_main;
 interface
 
 uses
-   Controls, Classes, Forms, Menus, ExtCtrls, StdCtrls, ComCtrls,
-   Generics.Collections, Dialogs, ImgList, ToolWin,
-   JvComponentBase, JvPluginManager,
+   Controls, Classes, Forms, Menus, ExtCtrls, StdCtrls, ComCtrls, Dialogs,
+   Generics.Collections, ImgList, ToolWin, ActnList, ActnMan,
+   PlatformDefaultStyleActnCtrls,
+   JvComponentBase, JvPluginManager, JvExControls, JvxSlider,
    design_script_engine, turbu_plugin_interface, turbu_engines, turbu_map_engine,
    turbu_map_interface, turbu_map_metadata,
-   sdl_frame, sdl, sdl_13, sg_defs, ActnList, PlatformDefaultStyleActnCtrls,
-  ActnMan, JvExControls, JvxSlider;
+   sdl_frame, sdl, sdl_13, sg_defs;
 
 type
    TfrmTurbuMain = class(TForm)
@@ -81,7 +81,7 @@ type
       MapObjects1: TMenuItem;
       N1: TMenuItem;
       imgLogo: TSdlFrame;
-      imgBackground: TImage;
+      imgBackground: TPaintBox;
       actRun: TAction;
       actPause: TAction;
       pnlZoom: TPanel;
@@ -139,6 +139,7 @@ type
       procedure FormResize(Sender: TObject);
       procedure pnlZoomResize(Sender: TObject);
       procedure sldZoomChanged(Sender: TObject);
+      procedure imgBackgroundPaint(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
@@ -343,7 +344,6 @@ var
 begin
    if assigned(FMapEngine) then
    begin
-      imgBackground.Picture.Graphic := nil;
       availableSize := sgPoint(imgBackground.Width, imgBackground.Height) / FZoom;
       FMapEngine.ResizeWindow(classes.rect(ORIGIN, availableSize));
       FMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
@@ -774,19 +774,20 @@ begin
    end;
 end;
 
+procedure TfrmTurbuMain.imgBackgroundPaint(Sender: TObject);
+var
+   bg, fg: TColor;
+   box: TPaintBox;
+begin
+   box := sender as TPaintBox;
+   GetColorsForDate(bg, fg);
+   box.canvas.brush.Style := bsDiagCross;
+   box.canvas.brush.color := fg;
+   Windows.SetBkColor(box.Canvas.Handle, ColorToRgb(bg));
+   box.canvas.FillRect(box.ClientRect);
+end;
+
 function TfrmTurbuMain.SetMapSize(const size: TSgPoint): TSgPoint;
-
-   procedure AddCrosshatch;
-   var
-      bg, fg: TColor;
-   begin
-      GetColorsForDate(bg, fg);
-      imgBackground.canvas.brush.Style := bsDiagCross;
-      imgBackground.canvas.brush.color := fg;
-      Windows.SetBkColor(imgBackground.Canvas.Handle, ColorToRgb(bg));
-      imgBackground.canvas.FillRect(imgBackground.ClientRect);
-   end;
-
 var
    pSize: TSgPoint;
 begin
@@ -801,8 +802,6 @@ begin
       imgLogo.Height := min(imgBackground.ClientHeight, pSize.y);
       imgLogo.Left := (imgBackground.ClientWidth - imgLogo.width) div 2;
       imgLogo.Top := (imgBackground.ClientHeight - imgLogo.height) div 2;
-      imgBackground.Invalidate;
-      AddCrosshatch;
    end;
    if (imgLogo.Width < imgBackground.ClientWidth) and (imgLogo.Height < imgBackground.ClientHeight) then
       result := size
