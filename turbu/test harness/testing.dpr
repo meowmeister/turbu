@@ -65,7 +65,6 @@ uses
   skill_data in '..\skill_data.pas',
   strtok in '..\strtok.pas',
   attributes_editor in '..\editor\attributes_editor.pas' {frmAttributesEditor},
-  database in '..\editor\database.pas' {frmDatabase},
   design_script_engine in '..\editor\design_script_engine.pas',
   dm_database in '..\editor\dm_database.pas' {dmDatabase: TDataModule},
   frame_class in '..\editor\frame_class.pas' {frameClass: TFrame},
@@ -110,15 +109,10 @@ uses
   base_selector in '..\turbu format\design\base_selector.pas' {frmBaseSelector},
   ClipboardWatcher in '..\engines\basis\ClipboardWatcher.pas',
   rm2_turbu_event_builder in '..\turbu format\converters\rm2_turbu_event_builder.pas',
-  EB_RpgScript in '..\turbu format\script\EB_RpgScript.pas',
   EventBuilder in '..\turbu format\EventBuilder.pas',
-  EB_Messages in '..\turbu format\script\EB_Messages.pas',
   turbu_containers in '..\turbu format\turbu_containers.pas',
   EBListView in '..\turbu format\design\EBListView.pas',
   rm2_turbu_map_objects in '..\turbu format\converters\rm2_turbu_map_objects.pas',
-  EB_Expressions in '..\turbu format\script\EB_Expressions.pas',
-  EB_System in '..\turbu format\script\EB_System.pas',
-  EB_Maps in '..\turbu format\script\EB_Maps.pas',
   turbu_mapchars in '..\turbu format\turbu_mapchars.pas',
   turbu_2k_environment in '..\engines\map engine\turbu_2k_environment.pas',
   MessageOptions in '..\turbu format\design\EB Editors\Messages\MessageOptions.pas' {frmMessageOptions},
@@ -130,7 +124,23 @@ uses
   MessageEdit in '..\turbu format\design\EB Editors\Messages\MessageEdit.pas' {frmMessageEdit},
   EditSwitch in '..\turbu format\design\EB Editors\Basics\EditSwitch.pas' {frmEbSetSwitch},
   turbu_2k_sprite_list in '..\engines\map engine\turbu_2k_sprite_list.pas',
-  EditInt in '..\turbu format\design\EB Editors\Basics\EditInt.pas' {frmEBSetInteger};
+  EditInt in '..\turbu format\design\EB Editors\Basics\EditInt.pas' {frmEBSetInteger},
+  StringListComp in '..\..\..\ListCompare\StringListComp.pas',
+  finalizer_hack in '..\engines\basis\finalizer_hack.pas',
+  turbu_2k_map_tiles in '..\engines\map engine\turbu_2k_map_tiles.pas',
+  turbu_2k_map_locks in '..\engines\map engine\turbu_2k_map_locks.pas',
+  turbu_2k_char_sprites in '..\engines\map engine\turbu_2k_char_sprites.pas',
+  database in '..\editor\database.pas',
+  EB_Media in '..\turbu format\script\EB_Media.pas',
+  EB_System in '..\turbu format\script\EB_System.pas',
+  EB_Settings in '..\turbu format\script\EB_Settings.pas',
+  EB_RpgScript in '..\turbu format\script\EB_RpgScript.pas',
+  EB_Messages in '..\turbu format\script\EB_Messages.pas',
+  EB_Maps in '..\turbu format\script\EB_Maps.pas',
+  EB_Expressions in '..\turbu format\script\EB_Expressions.pas',
+  EB_Characters in '..\turbu format\script\EB_Characters.pas',
+  AsphyreTimer in '..\..\classes\Asphyre\AsphyreTimer.pas',
+  sdl_frame_helper in '..\turbu format\design\sdl_frame_helper.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -143,7 +153,6 @@ begin
    Application.MainFormOnTaskbar := True;
    Application.CreateForm(TdmDatabase, dmDatabase);
   Application.CreateForm(TfrmTestConsole, frmTestConsole);
-  Application.CreateForm(TfrmDatabase, frmDatabase);
   Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
   Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
   Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
