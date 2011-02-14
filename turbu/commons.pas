@@ -45,11 +45,6 @@ type
       true: (rgba: packed array[1..4] of byte);
    end;
 
-   TRpgStack = class(TObjectStack)
-      function pop: TObject;
-      function peek: TObject;
-   end;
-
    {Custom exception for handling parse errors.}
    EParseMessage = class(Exception);
 
@@ -64,9 +59,7 @@ type
       constructor create;
    end;
 
-   TRpgThread = class(TThread)
-   protected
-      procedure Execute; override;
+   TRpgThread = class helper for TThread
    public
       procedure syncRun(AMethod: TThreadMethod); inline;
    end;
@@ -89,9 +82,7 @@ type
    //modulus function that doesn't "mirror" for negative numbers
    function safeMod(big, small: integer): integer; inline;
 
-   function GCurrentThread: TRpgThread;
-   procedure setCurrentThread(value: TRpgThread);
-   procedure runThreadsafe(closure: TThreadProcedure);
+   procedure runThreadsafe(closure: TThreadProcedure; synchronous: boolean = false);
 
 var
    GCurrentFolder: string;
@@ -102,24 +93,17 @@ implementation
 uses
    shlobj;
 
-threadvar
-   LCurrentThread: TRpgThread;
-
-function GCurrentThread: TRpgThread;
+procedure runThreadsafe(closure: TThreadProcedure; synchronous: boolean = false);
+var
+   ct: TThread;
 begin
-   result := LCurrentThread;
-end;
-
-procedure setCurrentThread(value: TRpgThread);
-begin
-   assert(LCurrentThread = nil);
-   LCurrentThread := value;
-end;
-
-procedure runThreadsafe(closure: TThreadProcedure);
-begin
-   if assigned(LCurrentThread) then
-      TThread.Queue(LCurrentThread, closure)
+   ct := TThread.CurrentThread;
+   if ct.Handle <> System.MainThreadID then
+   begin
+      if synchronous then
+         TThread.Synchronize(ct, closure)
+      else TThread.Queue(ct, closure);
+   end
    else closure();
 end;
 
@@ -180,21 +164,23 @@ end;
 simpler.  Updated 3-15-08 for thread safety}
 function MsgBox(text, caption: string; Flags: Word = MB_OK): Integer;
 var
+   ct: TThread;
    tempCharArray1, tempCharArray2: array[0..300] of Char;
    syncMessager: TMessageBoxer;
 begin
+   ct := TThread.CurrentThread;
    StrPCopy(tempCharArray1, Copy(text, 0, 299));
    StrPCopy(tempCharArray2, Copy(caption, 0, 299));
-   if assigned(LCurrentThread) then
+   if ct.Handle <> System.MainThreadID then
    begin
       syncMessager := TMessageBoxer.create(tempCharArray1, tempCharArray2, Flags);
-      LCurrentThread.syncRun(syncMessager.display);
+      ct.syncRun(syncMessager.display);
       while not syncMessager.finished do
          sleep(100);
       result := syncMessager.result;
       syncMessager.free;
-   end else
-      result := Application.MessageBox(tempCharArray1, tempCharArray2, Flags);
+   end
+   else result := Application.MessageBox(tempCharArray1, tempCharArray2, Flags);
 end;
 
 {Retrieves the specified value from the Windows Registry}
@@ -263,32 +249,11 @@ begin
       control.Enabled := enabled;
 end;
 
-{ TRpgStack }
-
-function TRpgStack.peek: TObject;
-begin
-   if List.Count = 0 then
-      result := nil
-   else result := inherited peek;
-end;
-
-function TRpgStack.pop: TObject;
-begin
-   if List.Count = 0 then
-      result := nil
-   else result := inherited pop;
-end;
-
 { TRpgThread }
-
-procedure TRpgThread.Execute;
-begin
-   LCurrentThread := self;
-end;
 
 procedure TRpgThread.syncRun(AMethod: TThreadMethod);
 begin
-   self.Synchronize(AMethod);
+   Synchronize(self, AMethod);
 end;
 
 function getPersonalFolder: string;
@@ -334,11 +299,6 @@ begin
    self.rgba[2] := g;
    self.rgba[3] := b;
    self.rgba[4] := a;
-end;
-
-initialization
-begin
-   LCurrentThread := nil;
 end;
 
 end.
