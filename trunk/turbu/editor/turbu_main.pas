@@ -31,55 +31,24 @@ uses
 type
    TfrmTurbuMain = class(TForm)
       mnuMain: TMainMenu;
-      mnuFile: TMenuItem;
-      mnuNew: TMenuItem;
-      mnuOpen: TMenuItem;
-      mnuImport: TMenuItem;
-      mnuSep1: TMenuItem;
-      mnuExit: TMenuItem;
-      mnu2K: TMenuItem;
-      mnuEdit1: TMenuItem;
       mnuDatabase: TMenuItem;
       dlgOpen: TOpenDialog;
       pluginManager: TJvPluginManager;
-      pnlSidebar: TPanel;
       sbxPallette: TScrollBox;
-      sbxMain: TScrollBox;
       splSidebar: TSplitter;
       imgPalette: TSdlFrame;
       trvMapTree: TTreeView;
       sbPalette: TScrollBar;
-      pnlHorizScroll: TPanel;
       sbHoriz: TScrollBar;
-      pnlCorner: TPanel;
-      pnlVertScroll: TPanel;
       sbVert: TScrollBar;
       ilToolbarIcons: TImageList;
-      mnuOptions: TMenuItem;
       mnuAutosaveMaps: TMenuItem;
       ToolBar2: TToolBar;
       btnLayer1: TToolButton;
-      btnLayer2: TToolButton;
-      ToolButton1: TToolButton;
-      btnSave: TToolButton;
-      btnSaveAll: TToolButton;
       mnuTreePopup: TPopupMenu;
-      mnuAddNewMap: TMenuItem;
       mnuEditMapProperties: TMenuItem;
       mnuDeleteMap: TMenuItem;
-      mnuTestbugreps: TMenuItem;
-      ToolButton2: TToolButton;
-      btnRun: TToolButton;
-      btnPause: TToolButton;
-      btnMapObj: TToolButton;
-      Layer11: TMenuItem;
       ActionManager: TActionManager;
-      actLayer1: TAction;
-      actLayer2: TAction;
-      actMapObjects: TAction;
-      Layer21: TMenuItem;
-      MapObjects1: TMenuItem;
-      N1: TMenuItem;
       imgLogo: TSdlFrame;
       imgBackground: TPaintBox;
       actRun: TAction;
@@ -185,7 +154,7 @@ var
 implementation
 
 uses
-   SysUtils, Types, Math, Graphics, Windows, OpenGL,
+   SysUtils, Math, Graphics, Windows, OpenGL,
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
    PackageRegistry,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
@@ -633,7 +602,7 @@ procedure TfrmTurbuMain.openProject(location: string);
    end;
 
 var
-   loadStream: TStream;
+   fileStream, loadStream: TStream;
    filename: string;
 begin
    location := IncludeTrailingPathDelimiter(location);
@@ -642,11 +611,13 @@ begin
    openArchive(IMAGE_DB, IMAGE_ARCHIVE);
    openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
 
-   filename := IncludeTrailingPathDelimiter(location) + DBNAME;
-   loadStream := TFileStream.Create(filename, fmOpenRead);
    frmDatabase.reset;
-
+   filename := IncludeTrailingPathDelimiter(location) + DBNAME;
+   fileStream := TFileStream.Create(filename, fmOpenRead);
+   loadStream := TMemoryStream.Create;
    try
+      loadStream.CopyFrom(fileStream, fileStream.Size);
+      loadStream.rewind;
       try
          GDatabase := TRpgDatabase.Load(loadStream, true);
       except
@@ -663,6 +634,7 @@ begin
       end;
    finally
       loadStream.free;
+      fileStream.Free;
    end;
    GDatabase.filename := filename;
    loadProject;
