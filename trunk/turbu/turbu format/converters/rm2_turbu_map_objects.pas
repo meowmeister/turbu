@@ -150,8 +150,8 @@ end;
 constructor T2k2RpgEventPage.Convert(base: TEventPage; id: integer;
   parent: TRpgMapObject; saveScript: TScriptCallback);
 begin
-   FId := id;
-   self.FConditions := TRpgEventConditions.Convert(base.conditionBlock);
+   inherited Create(parent, id);
+   FConditions.Convert(base.conditionBlock);
    if base.filename = '' then
       CalculateTileID(base.whichChip)
    else begin
@@ -161,7 +161,10 @@ begin
    self.direction := base.direction;
    self.transparent := base.transparent;
    if assigned(base.moveBlock) then
+   begin
+      self.path.Free;
       self.path := TPath.Convert(base.moveBlock);
+   end;
    self.moveType := TMoveType(base.moveType);
    self.moveFrequency := base.moveFrequency;
    self.startCondition := TStartCondition(base.startCondition);
@@ -169,7 +172,6 @@ begin
    self.isBarrier := base.is_barrier;
    self.animType := TAnimType(base.animType);
    self.moveSpeed := base.moveSpeed;
-   self.FParent := parent;
    if base.opcode.count > 0 then
       CreateEventScript(base, saveScript);
 end;

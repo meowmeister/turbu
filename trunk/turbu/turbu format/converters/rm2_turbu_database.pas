@@ -42,7 +42,7 @@ var
 
 implementation
 uses
-   sysUtils,
+   sysUtils, StrUtils,
    turbu_characters, turbu_items, turbu_skills, turbu_animations, conversion_table,
    turbu_resists, turbu_map_metadata,
    rm2_turbu_items, rm2_turbu_characters, rm2_turbu_skills, rm2_turbu_animations,
@@ -278,24 +278,31 @@ end;
 
 procedure T2k2Database.convertEvents(block: TEventBlock);
 var
-   globals: TEBUnit;
    nameList: TStringList;
    i: integer;
+   obj: TRpgMapObject;
+   scriptName: string;
 begin
-   globals := TEBUnit.Create(nil);
+   FGlobalScriptBlock := TEBUnit.Create(nil);
    nameList := TStringList.Create;
    try
       nameList.Sorted := true;
-      globals.name := 'GlobalEvents';
+      FGlobalScriptBlock.name := 'GlobalEvents';
       for I := 0 to block.len - 1  do
-         GlobalEvents.Add(TRpgMapObject.Convert(block.events[i], nameList,
-                           procedure(script: TEBProcedure)
-                           begin
-                              globals.add(script);
-                           end));
-      self.saveScript(utf8String(globals.serialize));
+      begin
+         obj := TRpgMapObject.Convert(block.events[i], nameList,
+            procedure(script: TEBProcedure)
+            begin
+               FGlobalScriptBlock.add(script);
+               script.Name := copy(script.name, 1, length(script.name) - 6)
+            end);
+         scriptName := obj.pages[0].scriptName;
+         if AnsiEndsText('_page1', scriptName) then
+            obj.pages[0].scriptName := copy(scriptName, 1, length(scriptName) - 6);
+         GlobalEvents.Add(obj);
+      end;
+      self.saveScript(utf8String(FGlobalScriptBlock.serialize));
    finally
-      globals.Free;
       nameList.Free;
    end;
 end;
