@@ -545,9 +545,8 @@ begin
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
       begin
          expr := nil;
-         result := TEBChangeStatus.Create(parent);
+         result := TEBFullHeal.Create(parent);
       end);
-   result.values.count := 0;
 end;
 
 function ConvertSetSprite(opcode: TEventCommand; parent: TEBObject): TEBObject;
