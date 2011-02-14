@@ -119,7 +119,7 @@ end;
 procedure runThreadsafe(closure: TThreadProcedure);
 begin
    if assigned(LCurrentThread) then
-      TThread.Synchronize(LCurrentThread, closure)
+      TThread.Queue(LCurrentThread, closure)
    else closure();
 end;
 
