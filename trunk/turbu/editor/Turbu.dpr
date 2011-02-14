@@ -11,6 +11,7 @@ uses
   madListProcesses,
   madListModules,
   Forms,
+  Variants,
   dialogs,
   SysUtils,
   MidasLib, {Make sure this initializes before the Application.CreateForm calls start running}
@@ -76,6 +77,7 @@ uses
 {$WARN SYMBOL_PLATFORM OFF}
 begin
    Application.Initialize;
+   Variants.NullStrictConvert := false;
    {$IFDEF DEBUG}
    ReportMemoryLeaksOnShutdown := DebugHook <> 0;
    {$ELSE IFDEF TEST_BUILD}
