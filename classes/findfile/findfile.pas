@@ -40,7 +40,7 @@ implementation
 {$WARN SYMBOL_PLATFORM OFF}
 {$WARN UNIT_PLATFORM OFF}
 uses
-   Windows, SysUtils, FileCtrl;
+   Windows, SysUtils;
 
 constructor TFindFile.Create(path: string);
 begin
