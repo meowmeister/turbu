@@ -77,23 +77,22 @@ type
       Strings: TClientDataSet;
       Switches: TClientDataSet;
       Variables: TClientDataSet;
+      GlobalScripts: TClientDataSet;
 
       dsCharClasses: TDataSource;
-      charClassesid: TIntegerField;
-      charClassesName: TWideStringField;
+
       charClassesmodified: TBooleanField;
-      items_scriptusableByHero: TBytesField;
-      items_scriptscript: TMemoField;
-      conditionscolor: TWordField;
-      metadataParent: TSmallintField;
       metadataBgmState: TByteField;
-      metadataMapEngine: TShortintField;
+      items_scriptusableByHero: TBytesField;
+      charClassesid: TIntegerField;
       charClassesSp: TLargeintField;
+      items_scriptscript: TMemoField;
+      metadataMapEngine: TShortintField;
       heroesportraitShiftFColorSet1: TSingleField;
-      heroescanCrit: TBooleanField;
-      heroescritRate: TIntegerField;
-      heroesTranslucent: TBooleanField;
-      charClassesTranslucent: TBooleanField;
+      metadataParent: TSmallintField;
+      GlobalScriptsEventText: TWideMemoField;
+      charClassesName: TWideStringField;
+      conditionscolor: TWordField;
 
       procedure DataModuleCreate(Sender: TObject);
       procedure restoreClone(DataSet: TDataSet);

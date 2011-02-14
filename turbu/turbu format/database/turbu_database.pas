@@ -21,7 +21,7 @@ interface
 uses
    classes, Generics.Collections, DB,
 //   events,
-   dm_database, turbu_database_interface,
+   dm_database, turbu_database_interface, EB_RpgScript,
    turbu_characters, turbu_items, turbu_skills, turbu_classes, turbu_resists,
    turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations,
    turbu_unit_dictionary, turbu_containers, turbu_script_interface, turbu_game_data,
@@ -114,8 +114,10 @@ type
       procedure saveTileGroups(savefile: TStream);
       procedure saveTilesets(savefile: TStream);
       procedure uploadStringList(dataset: TDataset; list: TStringList);
+      procedure UploadGlobalEvents(db: TdmDatabase);
    protected
       FLegacyCruft: TLegacySections;
+      FGlobalScriptBlock: TEBUnit;
       class function keyChar: ansiChar; override;
    public
       constructor Create;
@@ -196,11 +198,11 @@ windows,
    sysUtils, zlib, math, TypInfo,
    archiveInterface, commons,
    turbu_constants, turbu_engines, turbu_versioning, turbu_plugin_interface,
-   turbu_functional;
+   turbu_functional, turbu_map_objects;
 
 const
-   MIN_DBVERSION = 35;
-   DBVERSION = 35;
+   MIN_DBVERSION = 36;
+   DBVERSION = 36;
 
 { TRpgDatabase }
 
@@ -537,12 +539,25 @@ begin
    FLayout := TGameLayout.Load(savefile);
    lassert(savefile.readChar = 'l');
 
+   lassert(savefile.readChar = 'G');
+   FGlobalEvents.Capacity := savefile.readInt;
+   for i := 0 to FGlobalEvents.Capacity - 1 do
+      FGlobalEvents.Add(TRpgMapObject.Load(savefile));
+   lassert(savefile.readChar = 'g');
+
+   subStream := GArchives[SCRIPT_ARCHIVE].getFile(format('%s.trs', [self.name]));
+   try
+      FGlobalScriptBlock := TEBUnit.LoadFromStream(subStream) as TEBUnit;
+   finally
+      subStream.Free;
+   end;
+
    lassert(savefile.readChar = 'd');
 end;
 
 procedure TRpgDatabase.save(savefile: TStream);
 var
-   substream: TMemoryStream;
+   substream: TStream;
    i, j: integer;
    item: TItemType;
    iterator: TRpgDatafile;
@@ -806,6 +821,20 @@ begin
    FLayout.save(savefile);
    savefile.writeChar('l');
 
+   savefile.writeChar('G');
+   savefile.writeInt(FGlobalEvents.Count);
+   for i := 0 to FGlobalEvents.High do
+      FGlobalEvents[i].save(savefile);
+   savefile.writeChar('g');
+
+   subStream := TStringStream.Create(self.FGlobalScriptBlock.Serialize);
+   try
+      subStream.rewind;
+      GArchives[SCRIPT_ARCHIVE].writeFile(format('%s.trs', [self.name]), subStream);
+   finally
+      subStream.Free;
+   end;
+
    savefile.writeChar('d');
 end;
 
@@ -892,6 +921,7 @@ destructor TRpgDatabase.Destroy;
 var
    i: integer;
 begin
+   FGlobalScriptBlock.Free;
    FGlobalEvents.Free;
    FScripts.Free;
    FLegacyCruft.Free;
@@ -962,6 +992,47 @@ begin
       end;
    finally
       dataset.EnableControls;
+   end;
+end;
+
+procedure TRpgDatabase.UploadGlobalEvents(db: TdmDatabase);
+var
+   obj: TRpgMapObject;
+   page: TRpgEventPage;
+   ds: TDataset;
+   id: integer;
+   idField: TIntegerField;
+   nameField: TWideStringField;
+   eventField: TWideMemoField;
+   condField: TIntegerField;
+   hasSwitchField: TBooleanField;
+   switchField: TIntegerField;
+begin
+   ds := db.GlobalScripts;
+   ds.DisableControls;
+   try
+      idField := ds.FieldByName('id') as TIntegerField;
+      nameField := ds.FieldByName('Name') as TWideStringField;
+      eventField := ds.FieldByName('EventText') as TWideMemoField;
+      condField := ds.FieldByName('StartCondition') as TIntegerField;
+      hasSwitchField := ds.FieldByName('HasSwitch') as TBooleanField;
+      switchField := ds.FieldByName('switch') as TIntegerField;
+      id := 0;
+      for obj in self.globalEvents do
+      begin
+         inc(id);
+         page := obj.pages.First;
+         ds.Append;
+         idField.Value := id;
+         nameField.Value := page.scriptName;
+         eventField.Value := (FGlobalScriptBlock.FindComponent(page.scriptName) as TEBProcedure).Serialize;
+         condField.Value := ord(page.startCondition);
+         hasSwitchField.Value := pc_switch1 in page.conditionBlock.conditions;
+         switchField.Value := page.conditionBlock.switch1Set;
+         ds.Post;
+      end;
+   finally
+      ds.EnableControls;
    end;
 end;
 
@@ -1046,7 +1117,11 @@ begin
       rd_int: uploadStringList(db.Variables, FVariables);
       rd_float: uploadStringList(db.Floats, FFloats);
       rd_string: uploadStringList(db.Strings, FStrings);
-      rd_script: (GScriptEngine as IDesignScriptEngine).upload(db);
+      rd_script:
+      begin
+         (GScriptEngine as IDesignScriptEngine).upload(db);
+         UploadGlobalEvents(db);
+      end;
       rd_metadata:
       begin
          for enumerator in FMapTree do

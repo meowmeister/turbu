@@ -20,9 +20,10 @@ unit database;
 interface
 
 uses
-   Classes, Controls, Forms, StdCtrls, ExtCtrls, ComCtrls,
-   turbu_database, events, frame_commands, frame_class,
-   dm_database, frame_items, DB;
+   Classes, Controls, Forms, StdCtrls, ExtCtrls, ComCtrls, DB, Grids, DBGrids,
+   Mask, DBCtrls,
+   turbu_database, events, frame_commands, frame_class, dm_database, frame_items,
+   EBListView, turbu_listGrid, variable_selector, DBIndexComboBox;
 
 type
    TfrmDatabase = class(TForm)
@@ -33,25 +34,22 @@ type
       tabPages: TPageControl;
       tshClass: TTabSheet;
       lblGlobalEvents: TLabel;
-      lstEvents: TListBox;
+      lstEvents: TRpgListGrid;
       pnlEvents: TPanel;
       grpName: TGroupBox;
-      txtName: TEdit;
+      txtName: TDBEdit;
       grpStartCondition: TGroupBox;
-      cbxStartCondition: TComboBox;
+      cbxStartCondition: TDBIndexComboBox;
       grpConditionSwitch: TGroupBox;
-      chkHasSwitch: TCheckBox;
-      txtCondSwitch: TEdit;
-      btnCondSwitch: TButton;
+      chkHasSwitch: TDBCheckBox;
       grpEventCommands: TGroupBox;
-      txtEventScript: TMemo;
       tshHero: TTabSheet;
-      btnCodeView: TButton;
       frmClass: TframeClass;
       tshItems: TTabSheet;
       frameItems1: TframeItems;
-      procedure lstEventsClick(Sender: TObject);
-      procedure lstEventsKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+      trvGlobal: TEBTreeView;
+      srcGlobals: TDataSource;
+      selConditionSwitch: TSwitchSelector;
       procedure btnCodeViewClick(Sender: TObject);
       procedure chkHasSwitchClick(Sender: TObject);
       procedure tshClassShow(Sender: TObject);
@@ -68,8 +66,10 @@ type
       FViewingCode: boolean;
       FWasInit: boolean;
       FUploaded: boolean;
-      procedure loadEvent(data: word);
       procedure initGlobalEvents;
+
+      procedure GlobalScriptsAfterScroll(DataSet: TDataSet);
+      procedure GlobalScriptsBeforeScroll(DataSet: TDataSet);
    public
       { Public declarations }
       function init(const database: TRpgDatabase): boolean;
@@ -84,7 +84,7 @@ implementation
 
 uses
    commons, sysUtils, DBClient,
-   turbu_battle_engine;
+   turbu_battle_engine, eventBuilder, EB_RpgScript;
 
 procedure TfrmDatabase.applyChanges(Sender: TObject);
 var
@@ -114,8 +114,7 @@ end;
 
 procedure TfrmDatabase.chkHasSwitchClick(Sender: TObject);
 begin
-   txtCondSwitch.Enabled := chkHasSwitch.Checked;
-   btnCondSwitch.Enabled := chkHasSwitch.Checked;
+   selConditionSwitch.Enabled := chkHasSwitch.Checked;
 end;
 
 procedure TfrmDatabase.FormShow(Sender: TObject);
@@ -139,6 +138,23 @@ begin
    end;
    frmClass.onShow;
    frameItems1.onShow;
+
+   GlobalScriptsAfterScroll(srcGlobals.DataSet);
+   srcglobals.dataset.BeforeScroll := self.GlobalScriptsBeforeScroll;
+   srcglobals.dataset.AfterScroll := self.GlobalScriptsAfterScroll;
+end;
+
+procedure TfrmDatabase.GlobalScriptsAfterScroll(DataSet: TDataSet);
+begin
+   trvGlobal.proc.Free;
+   trvGlobal.proc := TEBObject.Load(dataset.FieldByName('EventText').Value) as TEBProcedure;
+end;
+
+procedure TfrmDatabase.GlobalScriptsBeforeScroll(DataSet: TDataSet);
+begin
+   dataset.Edit;
+   dataset.FieldByName('EventText').Value := trvGlobal.proc.Serialize;
+   dataset.Post;
 end;
 
 procedure TfrmDatabase.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -148,6 +164,8 @@ begin
    frmClass.onHide;
    for iterator in dmDatabase.datasets do
       iterator.LogChanges := false;
+   srcglobals.dataset.BeforeScroll := nil;
+   srcglobals.dataset.AfterScroll := nil;
 end;
 
 function TfrmDatabase.init(const database: TRpgDatabase): boolean;
@@ -163,82 +181,13 @@ begin
 end;
 
 procedure TfrmDatabase.initGlobalEvents;
-var
-   I: Integer;
-   j, k: integer;
-   header: string;
-   eventBlock: TEventBlock;
 begin
-   eventBlock := {FDatabase.globalEventBlock as TEventBlock;} nil;
-   if not assigned(eventBlock) then
-      Exit;
-
-   for I := 0 to eventBlock.len - 1 do
-   begin
-      header := '';
-      j := i + 1;
-      k := 0;
-      repeat
-         j := j div 10;
-         inc(k)
-      until j = 0;
-      for j := 1 to 4 - k do
-         header := header + '0';
-      header := header + intToStr(i) + ': ';
-      lstEvents.AddItem(header + unicodeString(eventBlock[i].name), eventBlock[i]);
-   end;
-   if eventBlock.len > 0 then
-      loadEvent(0);
-end;
-
-procedure TfrmDatabase.loadEvent(data: word);
-var
-   dummy: word;
-begin
-   FId := data;
-   FEvent := lstEvents.items.Objects[data] as TEvent;
-   FEventPage := FEvent.page[0];
-   txtName.Text := unicodeString(FEvent.name);
-   FViewingCode := false;
-   if lstEvents.itemIndex <> data then
-      lstEvents.ItemIndex := data;
-{   if FViewingCode then
-      txtEventScript.Text := FEventPage.eventScript
-   else txtEventScript.Text := FEventPage.eventText;}
-   txtEventScript.Text := unicodeString(FEventPage.eventScript);
-
-   case FEventPage.startCondition of
-      automatic: cbxStartCondition.ItemIndex := 1;
-      parallel: cbxStartCondition.ItemIndex := 2;
-      on_call: cbxStartCondition.ItemIndex := 0;
-      else assert(false);
-   end;
-   chkHasSwitch.Checked := FEventPage.conditionBlock.conditions[switch1];
-   dummy := FEventPage.conditionBlock.switch1set;
-   if chkHasSwitch.Checked then
-      txtCondSwitch.Text := intToStr(dummy) + ': ' + FDatabase.switch[dummy]
-   else
-      txtCondSwitch.Text := '';
-   //end if
-   chkHasSwitchClick(self);
-end;
-
-procedure TfrmDatabase.lstEventsClick(Sender: TObject);
-begin
-   if lstEvents.ItemIndex <> FId then
-      loadEvent(lstEvents.ItemIndex);
-end;
-
-procedure TfrmDatabase.lstEventsKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-   lstEventsClick(sender);
+   {$MESSAGE WARN 'TfrmDatabase.initGlobalEvents is not implemented'}
 end;
 
 procedure TfrmDatabase.reset;
 begin
    FWasInit := false;
-   lstEvents.Clear;
-//   lstClasses.Clear;
 end;
 
 procedure TfrmDatabase.tshClassShow(Sender: TObject);

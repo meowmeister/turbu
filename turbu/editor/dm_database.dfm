@@ -6360,4 +6360,67 @@ object dmDatabase: TdmDatabase
       Calculated = True
     end
   end
+  object GlobalScripts: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'Id'
+        DataType = ftInteger
+      end
+      item
+        Name = 'Name'
+        DataType = ftWideString
+        Size = 255
+      end
+      item
+        Name = 'EventText'
+        DataType = ftWideMemo
+      end
+      item
+        Name = 'StartCondition'
+        DataType = ftInteger
+      end
+      item
+        Name = 'HasSwitch'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'Switch'
+        DataType = ftInteger
+      end>
+    IndexDefs = <>
+    IndexFieldNames = 'Id'
+    Params = <>
+    StoreDefs = True
+    Left = 748
+    Top = 496
+    Data = {
+      9F0000009619E0BD0100000018000000060000000000030000009F0002496404
+      00010000000000044E616D6502004A000000010005574944544802000200FE01
+      094576656E745465787404004B00000001000753554254595045020049000900
+      5769646554657874000E5374617274436F6E646974696F6E0400010000000000
+      0948617353776974636802000300000000000653776974636804000100000000
+      000000}
+    object GlobalScriptsId: TIntegerField
+      FieldName = 'Id'
+    end
+    object GlobalScriptsName: TWideStringField
+      FieldName = 'Name'
+      Size = 255
+    end
+    object GlobalScriptsEventText: TWideMemoField
+      FieldName = 'EventText'
+      BlobType = ftWideMemo
+    end
+    object GlobalScriptsStartConditon: TIntegerField
+      FieldName = 'StartCondition'
+    end
+    object GlobalScriptsHasSwitch: TBooleanField
+      FieldName = 'HasSwitch'
+    end
+    object GlobalScriptsSwitch: TIntegerField
+      FieldName = 'Switch'
+    end
+  end
 end

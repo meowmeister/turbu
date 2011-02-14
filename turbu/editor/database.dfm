@@ -89,10 +89,6 @@ object frmDatabase: TfrmDatabase
       Margins.Bottom = 4
       Caption = '&Class'
       OnShow = tshClassShow
-      ExplicitLeft = 0
-      ExplicitTop = 24
-      ExplicitWidth = 785
-      ExplicitHeight = 459
       inline frmClass: TframeClass
         Left = 0
         Top = 0
@@ -151,6 +147,7 @@ object frmDatabase: TfrmDatabase
               Left = 10
               Top = 21
               Width = 221
+              Height = 25
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
@@ -502,9 +499,9 @@ object frmDatabase: TfrmDatabase
                 Margins.Right = 4
                 Margins.Bottom = 4
                 ExplicitLeft = 4
-                ExplicitTop = 24
+                ExplicitTop = 28
                 ExplicitWidth = 188
-                ExplicitHeight = 158
+                ExplicitHeight = 154
                 inherited lblEquip1: TLabel
                   Left = 10
                   Top = 10
@@ -650,9 +647,9 @@ object frmDatabase: TfrmDatabase
                 Margins.Right = 4
                 Margins.Bottom = 4
                 ExplicitLeft = 4
-                ExplicitTop = 24
+                ExplicitTop = 28
                 ExplicitWidth = 188
-                ExplicitHeight = 158
+                ExplicitHeight = 154
                 inherited frameHeroCommands: TframeHeroCommands
                   Width = 242
                   Height = 204
@@ -1015,8 +1012,9 @@ object frmDatabase: TfrmDatabase
         Font.Style = []
         ParentColor = False
         ParentFont = False
+        Transparent = False
       end
-      object lstEvents: TListBox
+      object lstEvents: TRpgListGrid
         Left = 21
         Top = 51
         Width = 250
@@ -1025,10 +1023,26 @@ object frmDatabase: TfrmDatabase
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
-        ExtendedSelect = False
-        ItemHeight = 17
+        DataSource = srcGlobals
+        ReadOnly = True
         TabOrder = 0
-        OnClick = lstEventsClick
+        TitleFont.Charset = DEFAULT_CHARSET
+        TitleFont.Color = clWindowText
+        TitleFont.Height = -14
+        TitleFont.Name = 'Tahoma'
+        TitleFont.Style = []
+        Columns = <
+          item
+            Expanded = False
+            FieldName = 'Id'
+            Visible = True
+          end
+          item
+            Expanded = False
+            FieldName = 'Name'
+            Width = 162
+            Visible = True
+          end>
       end
       object pnlEvents: TPanel
         Left = 303
@@ -1053,15 +1067,17 @@ object frmDatabase: TfrmDatabase
           Margins.Bottom = 4
           Caption = 'Name'
           TabOrder = 0
-          object txtName: TEdit
+          object txtName: TDBEdit
             Left = 10
             Top = 17
             Width = 201
-            Height = 21
+            Height = 25
             Margins.Left = 4
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
+            DataField = 'Name'
+            DataSource = srcGlobals
             TabOrder = 0
           end
         end
@@ -1076,7 +1092,7 @@ object frmDatabase: TfrmDatabase
           Margins.Bottom = 4
           Caption = 'Event Start Condition'
           TabOrder = 1
-          object cbxStartCondition: TComboBox
+          object cbxStartCondition: TDBIndexComboBox
             Left = 10
             Top = 17
             Width = 221
@@ -1085,12 +1101,13 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            Style = csDropDownList
-            TabOrder = 0
+            DataField = 'StartCondition'
+            DataSource = srcGlobals
             Items.Strings = (
               'Call'
               'Auto Start'
               'Parallel Process')
+            TabOrder = 0
           end
         end
         object grpConditionSwitch: TGroupBox
@@ -1104,7 +1121,7 @@ object frmDatabase: TfrmDatabase
           Margins.Bottom = 4
           Caption = 'Condition Switch'
           TabOrder = 2
-          object chkHasSwitch: TCheckBox
+          object chkHasSwitch: TDBCheckBox
             Left = 4
             Top = 20
             Width = 29
@@ -1113,85 +1130,47 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
+            DataField = 'HasSwitch'
+            DataSource = srcGlobals
             TabOrder = 0
+            ValueChecked = 'True'
+            ValueUnchecked = 'False'
             OnClick = chkHasSwitchClick
           end
-          object txtCondSwitch: TEdit
-            Left = 31
-            Top = 18
-            Width = 183
-            Height = 21
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
-            Enabled = False
-            ReadOnly = True
-            TabOrder = 1
-          end
-          object btnCondSwitch: TButton
-            Left = 191
-            Top = 21
-            Width = 22
-            Height = 22
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
-            Caption = '...'
-            Enabled = False
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clWindowText
-            Font.Height = -15
-            Font.Name = 'Tahoma'
-            Font.Style = [fsBold]
-            ParentFont = False
-            TabOrder = 2
+          object selConditionSwitch: TSwitchSelector
+            Left = 30
+            Top = 17
+            Width = 186
+            Height = 25
           end
         end
         object grpEventCommands: TGroupBox
           Left = 21
           Top = 72
           Width = 702
-          Height = 473
+          Height = 514
           Margins.Left = 4
           Margins.Top = 4
           Margins.Right = 4
           Margins.Bottom = 4
           Caption = 'Event Commands'
           TabOrder = 3
-          DesignSize = (
-            702
-            473)
-          object txtEventScript: TMemo
-            Left = 10
-            Top = 21
-            Width = 682
-            Height = 441
-            Margins.Left = 4
-            Margins.Top = 4
-            Margins.Right = 4
-            Margins.Bottom = 4
-            Anchors = [akLeft, akTop, akRight, akBottom]
-            ReadOnly = True
-            ScrollBars = ssVertical
+          object trvGlobal: TEBTreeView
+            Left = 2
+            Top = 19
+            Width = 698
+            Height = 493
+            Align = alClient
+            Indent = 19
             TabOrder = 0
           end
         end
-        object btnCodeView: TButton
-          Left = 31
-          Top = 553
-          Width = 129
-          Height = 38
-          Margins.Left = 4
-          Margins.Top = 4
-          Margins.Right = 4
-          Margins.Bottom = 4
-          Caption = '&Switch Code View'
-          TabOrder = 4
-          OnClick = btnCodeViewClick
-        end
       end
     end
+  end
+  object srcGlobals: TDataSource
+    DataSet = dmDatabase.GlobalScripts
+    Left = 48
+    Top = 664
   end
 end
