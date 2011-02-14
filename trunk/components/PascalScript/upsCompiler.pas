@@ -7430,6 +7430,7 @@ function TPSPascalCompiler.ProcessSub(BlockInfo: TPSBlockInfo): Boolean;
       NewVar: TPSValue;
       NewVarU: TPSUnValueOp;
       Proc: TPSProcedure;
+
       function ReadArray: Boolean;
       var
         tmp: TPSValue;
@@ -8011,7 +8012,7 @@ function TPSPascalCompiler.ProcessSub(BlockInfo: TPSBlockInfo): Boolean;
                       end;
                     end
                     else
-          begin
+                    begin
                       with MakeWarning('', ewCalculationAlwaysEvaluatesTo, 'False') do
                       begin
                         FRow := p1.Row;
@@ -9138,7 +9139,7 @@ begin
           Tmp.TempVar := AllocStackReg(at2ut(FindBaseType(btstring)))
         end else
         begin
-        Tmp.TempVar := AllocStackReg(Tmp.ExpectedType);
+          Tmp.TempVar := AllocStackReg(Tmp.ExpectedType);
         end;
         if not WriteCalculation(Tmp.Val, Tmp.TempVar) then
         begin
