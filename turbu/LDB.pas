@@ -627,7 +627,6 @@ begin
 
       dummy := 0;
       Read(dummy, 1);
-      OutputDebugString(PChar('Section x' + intTohex(dummy, 2) + ' begins at offset x' + intTohex(theLDB.Position, 2)));
       theLDB.Seek(-1, soFromCurrent);
 
       skipSec($20, theLDB); //what does this do? system page 2?
