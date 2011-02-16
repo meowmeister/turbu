@@ -1387,7 +1387,7 @@ var
    newDecl: TRpgDecl;
 begin
    for newdecl in GScriptEngine.decl do
-      FScripts.add(TScriptRecord.create(newdecl, GScriptEngine.exec.GetProcAsMethodN(ansiString(newdecl.name))))
+      FScripts.add(TScriptRecord.create(newdecl, GScriptEngine.getExecMethod(newdecl.name)));
 end;
 
 procedure TRpgDatabase.prepareBlanks;
