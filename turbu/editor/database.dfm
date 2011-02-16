@@ -988,10 +988,6 @@ object frmDatabase: TfrmDatabase
       Margins.Bottom = 4
       Caption = '&Global Events'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblGlobalEvents: TLabel
         Left = 21
         Top = 21

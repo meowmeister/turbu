@@ -2,7 +2,7 @@ object frmTurbuMain: TfrmTurbuMain
   Left = 183
   Top = 38
   Caption = 'TURBU - The Ultimate Rpg BUilder'
-  ClientHeight = 876
+  ClientHeight = 896
   ClientWidth = 1132
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -13,6 +13,7 @@ object frmTurbuMain: TfrmTurbuMain
   Menu = mnuMain
   OldCreateOrder = False
   Position = poDesigned
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnResize = FormResize
@@ -23,7 +24,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 218
     Top = 67
     Width = 914
-    Height = 809
+    Height = 810
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -41,6 +42,7 @@ object frmTurbuMain: TfrmTurbuMain
     Color = clBlack
     ParentColor = False
     TabOrder = 0
+    ExplicitHeight = 809
     object imgBackground: TPaintBox
       Left = 0
       Top = 0
@@ -148,7 +150,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 0
     Top = 67
     Width = 218
-    Height = 809
+    Height = 810
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -156,6 +158,7 @@ object frmTurbuMain: TfrmTurbuMain
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitHeight = 809
     object splSidebar: TSplitter
       Left = 0
       Top = 500
@@ -227,7 +230,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 503
       Width = 218
-      Height = 306
+      Height = 307
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -239,6 +242,7 @@ object frmTurbuMain: TfrmTurbuMain
       TabOrder = 1
       OnChange = trvMapTreeChange
       OnContextPopup = trvMapTreeContextPopup
+      ExplicitHeight = 306
     end
   end
   object ToolBar2: TToolBar
@@ -431,6 +435,46 @@ object frmTurbuMain: TfrmTurbuMain
       OnChanged = sldZoomChanged
     end
   end
+  object pnlStatusBar: TPanel
+    Left = 0
+    Top = 877
+    Width = 1132
+    Height = 19
+    Align = alBottom
+    TabOrder = 4
+    object Panel1: TPanel
+      Left = 1
+      Top = 1
+      Width = 185
+      Height = 17
+      Align = alLeft
+      BevelOuter = bvLowered
+      TabOrder = 0
+      object lblUpload: TLabel
+        Left = 3
+        Top = 0
+        Width = 4
+        Height = 17
+      end
+    end
+    object Panel2: TPanel
+      Left = 186
+      Top = 1
+      Width = 945
+      Height = 17
+      Align = alClient
+      BevelOuter = bvLowered
+      TabOrder = 1
+      object pbUpload: TProgressBar
+        Left = 1
+        Top = 1
+        Width = 943
+        Height = 15
+        Align = alClient
+        TabOrder = 0
+      end
+    end
+  end
   object mnuMain: TMainMenu
     Left = 544
     Top = 160
@@ -515,7 +559,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C01010800C800280110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010800C8002C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

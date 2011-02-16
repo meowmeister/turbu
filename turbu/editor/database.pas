@@ -76,9 +76,6 @@ type
       procedure reset;
    end;
 
-var
-   frmDatabase: TfrmDatabase;
-
 implementation
 {$R *.dfm}
 
@@ -123,7 +120,6 @@ var
 begin
    if not FUploaded then
    begin
-      GDatabase.copyToDB(dm_database.dmDatabase);
       for iterator in dmDatabase.datasets do
       begin
          if assigned(iterator.CloneSource) and (iterator.RecordCount <> iterator.CloneSource.RecordCount) then

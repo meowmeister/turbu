@@ -103,6 +103,7 @@ type
    private
       { Private declarations }
 
+      FAllDatasetList: TDatasetList;
       FDatasetList: TDatasetList;
       FViewList: TDatasetList;
       function usableByFilter(field: TBytesField; master: TDataset): boolean;
@@ -133,7 +134,7 @@ end;
 
 procedure TdmDatabase.DataModuleCreate(Sender: TObject);
 var
-   clone: TClientDataset;
+   clone, dataset: TClientDataset;
    context: TRttiContext;
    instance: TRttiInstanceType;
    field: TRttiField;
@@ -141,12 +142,15 @@ begin
    context := TRttiContext.Create;
    instance := context.GetType(TdmDatabase) as TRttiInstanceType;
 
+   FAllDatasetList := TDatasetList.Create;
    FDatasetList := TDatasetList.Create(TComparer<TClientDataset>.Construct(CDSComparer));
    for field in instance.GetDeclaredFields do
       if (field.FieldType as TRttiInstanceType).metaclassType = TClientDataset then
       begin
+         dataset := field.GetValue(self).AsObject as TClientDataset;
          if not assigned(field.GetAttribute(TRelationAttribute)) then
-            FDatasetList.Add(field.GetValue(self).AsObject as TClientDataset);
+            FDatasetList.Add(dataset);
+         FAllDatasetList.Add(dataset);
       end;
    FDatasetList.Sort;
 
@@ -170,13 +174,14 @@ begin
    TEBObject.Datastore := nil;
    FDatasetList.Free;
    FViewList.Free;
+   FAllDatasetList.Free;
 end;
 
 procedure TdmDatabase.beginUpload;
 var
    ds: TClientDataset;
 begin
-   for ds in datasets do
+   for ds in FAllDatasetList do
    begin
       ds.AutoCalcFields := false;
       ds.LogChanges := false;
@@ -188,7 +193,7 @@ procedure TdmDatabase.endUpload;
 var
    ds: TClientDataset;
 begin
-   for ds in dmDatabase.datasets do
+   for ds in FAllDatasetList do
    begin
       ds.AutoCalcFields := true;
       ds.LogChanges := true;

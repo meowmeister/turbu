@@ -345,8 +345,15 @@ begin
 end;
 
 procedure TframeClass.lstSkillsDblClick(Sender: TObject);
+var
+   frmSkillLearning: TFrmSkillLearning;
 begin
-   frmSkillLearning.ShowModal;
+   frmSkillLearning := TFrmSkillLearning.Create(nil);
+   try
+      frmSkillLearning.ShowModal;
+   finally
+      frmSkillLearning.Free;
+   end;
 end;
 
 procedure TframeClass.onShow;
