@@ -46,30 +46,22 @@ const
 
    //variable types
    vt_none: integer  = -1;
-   vt_U8             = 0;
-   vt_U16            = 1;
-   vt_U32            = 2;
-   vt_U64            = 3;
-   vt_S8             = 4;
-   vt_S16            = 5;
-   vt_S32            = 6;
-   vt_S64            = 7;
-   vt_boolean        = 8;
-   vt_float          = 9;
-   vt_string         = 10;
-   vt_char           = 11;
-   vt_object         = 12;
-   vt_rpgHero        = 13;
-   vt_rpgCharacter   = 14;
-   vt_rpgParty       = 15;
-   vt_rpgVehicle     = 16;
-   vt_rpgMapobj      = 17;
+   vt_integer        = 0;
+   vt_boolean        = 1;
+   vt_float          = 2;
+   vt_string         = 3;
+   vt_char           = 4;
+   vt_object         = 5;
+   vt_rpgHero        = 6;
+   vt_rpgCharacter   = 7;
+   vt_rpgParty       = 8;
+   vt_rpgVehicle     = 9;
+   vt_rpgMapobj      = 10;
 
-   VT_ADDRESSES = [12..17]; //set of parameters that are pointers
+   VT_ADDRESSES = [5..10]; //set of parameters that are pointers
 
-   TYPENAMES: array[0..17] of string =
-   ('byte', 'word', 'cardinal', 'UInt64', 'shortint', 'smallint', 'integer', 'Int64',
-    'boolean', 'float', 'string', 'char', 'TObject', 'TRpgHero', 'TRpgCharacter',
+   TYPENAMES: array[0..10] of string =
+   ('integer', 'boolean', 'float', 'string', 'char', 'TObject', 'TRpgHero', 'TRpgCharacter',
     'TRpgParty', 'TRpgVehicle', 'TRpgMapObject');
 
     //custom message types
