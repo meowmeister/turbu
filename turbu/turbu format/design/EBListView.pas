@@ -165,33 +165,38 @@ var
    stack: TStack<TEBNodeData>;
    dict: TDictionary<TEBNodeData, TTreeNode>;
 begin
-   Items.Clear;
-   FProc := Value;
-   tree := FProc.GetNode;
-   stack := TStack<TEBNodeData>.Create;
-   dict := TDictionary<TEBNodeData, TTreeNode>.Create;
+   Items.BeginUpdate;
    try
-      last := tree.Data;
-      stack.push(tree.Data);
-      dict.add(last, nil);
-      for node in tree do
-      begin
-         if (node = last) or (node.line = '') then
-            Continue;
-         if (last <> stack.Peek) then
-            if (node.FindParent = last) then
-               stack.Push(last)
-            else while node.FindParent <> stack.Peek do
-               stack.Pop;
-         dict.Add(node, items.AddChildObject(dict[stack.Peek], node.line, node.obj));
-         last := node;
+      Items.Clear;
+      FProc := Value;
+      tree := FProc.GetNode;
+      stack := TStack<TEBNodeData>.Create;
+      dict := TDictionary<TEBNodeData, TTreeNode>.Create;
+      try
+         last := tree.Data;
+         stack.push(tree.Data);
+         dict.add(last, nil);
+         for node in tree do
+         begin
+            if (node = last) or (node.line = '') then
+               Continue;
+            if (last <> stack.Peek) then
+               if (node.FindParent = last) then
+                  stack.Push(last)
+               else while node.FindParent <> stack.Peek do
+                  stack.Pop;
+            dict.Add(node, items.AddChildObject(dict[stack.Peek], node.line, node.obj));
+            last := node;
+         end;
+         EndLoading;
+         SetupContext;
+      finally
+         stack.free;
+         dict.Free;
+         tree.free;
       end;
-      EndLoading;
-      SetupContext;
    finally
-      stack.free;
-      dict.Free;
-      tree.free;
+      items.EndUpdate;
    end;
 end;
 
