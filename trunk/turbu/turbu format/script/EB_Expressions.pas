@@ -301,7 +301,9 @@ end;
 
 function TEBIntsValue.GetScriptText: string;
 begin
-   result := format('Ints[%d]', [values[0]])
+   if values.count > 0 then
+      result := format('Ints[%d]', [values[0]])
+   else result := inherited GetScriptText;
 end;
 
 { TEBIntegerValue }
