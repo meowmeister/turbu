@@ -754,7 +754,7 @@ begin
    result := FParams.Count >= 5;
    if result then
       for I := 1 to 4 do
-         result := result and (FParams[i].typeVar = vt_S32);
+         result := result and (FParams[i].typeVar = vt_integer);
 end;
 
 { TFieldExt }
