@@ -128,7 +128,7 @@ begin
       try
          frmConversionReport.thread := TConverterThread.Create(frmConversionReport, dirProjectLocation.Text, dirOutput.Text, FFormat);
          case frmConversionReport.ShowModal of
-            mrOk: self.Close;
+            mrOk: self.ModalResult := SUCCESSFUL_IMPORT;
             else ;
          end;
       finally
