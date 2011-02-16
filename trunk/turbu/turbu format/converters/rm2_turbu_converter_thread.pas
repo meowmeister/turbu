@@ -24,7 +24,7 @@ uses
    LDB, LMT, LMU, events;
 
 type
-   TConverterThread = class(TRpgThread)
+   TConverterThread = class(TThread)
    private
       FReport: IConversionReport;
       FLdb: TLcfDataBase;
@@ -76,6 +76,7 @@ type
    TImageProcessor = function (archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
 
 function convertSprite(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward; overload;
+function convertSprite(name: string; id: integer; dirty: boolean): boolean; forward; overload;
 function convertPortrait(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
 function convertAnim(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
 function extLength(filename: string): integer; forward; inline;
@@ -258,7 +259,6 @@ var
 begin
    legacy := nil; //to silence a compiler warning
    try
-      inherited Execute;
       fromFolder := discInterface.openFolder(FFromLoc);
       try
          conversionArchive := GArchives.Add(fromFolder);
@@ -522,6 +522,14 @@ begin
    end;
 end;
 
+function convertSprite(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; overload;
+var i: integer;
+begin
+   result := true;
+   for I := 0 to 7 do
+      result := result and convertSprite(filename, i, dirty);
+end;
+
 function convertSprite(name: string; id: integer; dirty: boolean): boolean; overload;
 const
    FRAME: TSgPoint = (X: 24; Y: 32);
@@ -543,14 +551,6 @@ begin
       image.free;
    end;
    result := true;
-end;
-
-function convertSprite(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; overload;
-var i: integer;
-begin
-   result := true;
-   for I := 0 to 7 do
-      result := result and convertSprite(filename, i, dirty);
 end;
 
 function convertPortrait(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
