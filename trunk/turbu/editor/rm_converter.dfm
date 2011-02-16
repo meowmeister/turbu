@@ -116,10 +116,6 @@ object frmRmConverter: TfrmRmConverter
       Caption = 'Events'
       Enabled = False
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object grpEventFormat: TRadioGroup
         Left = 4
         Top = 4
@@ -145,10 +141,6 @@ object frmRmConverter: TfrmRmConverter
       Caption = 'Culling'
       Enabled = False
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblCullSelect: TLabel
         Left = 21
         Top = 131
