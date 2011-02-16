@@ -203,7 +203,7 @@ begin
    FTransparent := template.translucent;
    FExpTable[1] := 0;
 
-   calc := TExpCalcEvent(GScriptEngine.Exec.GetProcAsMethodN(AnsiString(template.expFunc)));
+   calc := TExpCalcEvent(GScriptEngine.GetExecMethod(template.expFunc));
    if assigned(calc) then
       for I := 2 to 50 do
          FExpTable[i] := calc(i, template.expVars[1], template.expVars[2], template.expVars[3], template.expVars[4]);

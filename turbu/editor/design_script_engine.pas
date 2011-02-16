@@ -53,13 +53,13 @@ type
       function buildProcList(Sender: TPSPascalCompiler): Boolean;
       function getBounds(name: string): TSgPoint;
       function tryUseFile(Sender: TPSPascalCompiler; const Name: tbtstring): Boolean;
-      function GetExec: TPSExec;
       function GetDeclarations: TDeclList;
       function GetUnits: TUnitDictionary;
       procedure SetUnits(const Value: TUnitDictionary);
       function GetCompiler: TPSPascalCompiler;
       function GetFunctions(ResultType: integer): TDeclList;
       function FindFunction(name: string): TRpgDecl;
+      function getExecMethod(const name: string): TMethod;
    protected
       FScriptEngine: TPSExec;
       FImporter: TPSRuntimeClassImporter;
@@ -78,7 +78,6 @@ type
       //properties
       property compiler: TPSPascalCompiler read GetCompiler;
       property script: ansiString write setDBScript;
-      property exec: TPSExec read GetExec;
       property units: TUnitDictionary read GetUnits write SetUnits;
       property func[name: string]: string read getFunc;
       property decl: TDeclList read FDeclarations;
@@ -272,9 +271,9 @@ begin
    result := FDeclarations;
 end;
 
-function TTurbuScriptEngine.GetExec: TPSExec;
+function TTurbuScriptEngine.getExecMethod(const name: string): TMethod;
 begin
-   result := FScriptEngine;
+   result := FScriptEngine.GetProcAsMethodN(ansiString(name));
 end;
 
 function TTurbuScriptEngine.getFunc(name: string): string;
