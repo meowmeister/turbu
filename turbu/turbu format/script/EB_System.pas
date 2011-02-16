@@ -171,7 +171,7 @@ var
 begin
    int := self.components[0] as TEBExpression;
    value := self.components[1] as TEBExpression;
-   result := format(LINE, [int.GetScript(0), value.GetScript(0)]);
+   result := format(LINE, [int.GetNodeText, value.GetNodeText]);
 end;
 
 function TEBGlobalInt.GetScriptText: string;
@@ -225,7 +225,7 @@ begin
 end;
 
 function TEBInput.GetScriptText: string;
-const LINE = 'ints[%d] := keyScan($s, %s);';
+const LINE = 'ints[%d] := keyScan(%s, %s);';
 var
    mask: string;
 
@@ -277,9 +277,8 @@ end;
 
 function TEBCallEvent.GetNodeText: string;
 begin
-   result := 'Call Event: ';
    case Values[0] of
-      0: result := format('Common Event #%d', [Values[1]]);
+      0: result := format('Global Event #%d', [Values[1]]);
       1:
       begin
          if Values[1] <> 10005 then
@@ -289,20 +288,21 @@ begin
       end;
       2: result := format('#Ints[%s], Page Ints[%s]', [IntName(Values[1]), IntName(Values[2])]);
    end;
+   result := 'Call Script: ' + result;
 end;
 
 function TEBCallEvent.GetScriptText: string;
 begin
    case Values[0] of
-      0: result := format('callGlobalEvent(%d);', [Values[1]]);
+      0: result := format('globalScript%.4d;', [Values[1]]);
       1:
       begin
          if Values[1] <> 10005 then
-            result := format('callEvent(%d, %d);', [Values[1], Values[2]])
+            result := format('callScript(%d, %d);', [Values[1], Values[2]])
          else
-            result := format('callEvent(thisEvent.id, %d);', [Values[2]]);
+            result := format('callScript(thisEvent.id, %d);', [Values[2]]);
       end;
-      2: result := format('callEvent(Ints[%d], Ints[%d]);', [Values[1], Values[2]]);
+      2: result := format('callScript(Ints[%d], Ints[%d]);', [Values[1], Values[2]]);
    end;
 end;
 

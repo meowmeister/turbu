@@ -381,12 +381,9 @@ begin
    if boolean(Values[0]) then
    begin
       result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
-      result := format(LINE, [ChildNode[0], IntName(Values[1]), IntName(Values[2])]);
+      result := format(result, [ChildNode[0], IntName(Values[1]), IntName(Values[2])]);
    end
-   else begin
-      result := LINE;
-      result := format(LINE, [ChildNode[0], Values[1], Values[2]]);
-   end;
+   else result := format(LINE, [ChildNode[0], Values[1], Values[2]]);
 end;
 
 function TEBTeleportMapObj.GetScriptText: string;
