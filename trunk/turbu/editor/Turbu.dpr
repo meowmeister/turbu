@@ -85,9 +85,7 @@ begin
    {$ENDIF}
    Application.CreateForm(TfrmTurbuMain, frmTurbuMain);
   Application.CreateForm(TdmDatabase, dmDatabase);
-  Application.CreateForm(TfrmDatabase, frmDatabase);
   Application.CreateForm(TfrmRmConverter, frmRmConverter);
-  Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
   Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
   Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);

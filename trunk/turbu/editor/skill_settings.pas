@@ -58,9 +58,6 @@ type
       { Public declarations }
    end;
 
-var
-   frmSkillLearning: TfrmSkillLearning;
-
 implementation
 
 uses

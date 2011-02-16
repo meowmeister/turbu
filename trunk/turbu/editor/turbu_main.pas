@@ -21,7 +21,7 @@ interface
 
 uses
    Controls, Classes, Forms, Menus, ExtCtrls, StdCtrls, ComCtrls, Dialogs,
-   Generics.Collections, ImgList, ToolWin, ActnList, ActnMan,
+   Generics.Collections, ImgList, ToolWin, ActnList, ActnMan, SyncObjs, Messages,
    PlatformDefaultStyleActnCtrls,
    JvComponentBase, JvPluginManager, JvExControls, JvxSlider,
    design_script_engine, turbu_plugin_interface, turbu_engines, turbu_map_engine,
@@ -55,7 +55,8 @@ type
       actPause: TAction;
       pnlZoom: TPanel;
       sldZoom: TJvxSlider;
-      lbl50: TLabel;
+      pbUpload: TProgressBar;
+      lblUpload: TLabel;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -109,6 +110,7 @@ type
       procedure pnlZoomResize(Sender: TObject);
       procedure sldZoomChanged(Sender: TObject);
       procedure imgBackgroundPaint(Sender: TObject);
+      procedure FormClose(Sender: TObject; var Action: TCloseAction);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
@@ -121,6 +123,8 @@ type
       FPaletteImages: TDictionary<integer, integer>;
       FIgnoreMouseDown: boolean;
       FZoom: double;
+      FLoadSignal: TSimpleEvent;
+      FDBSignal: TSimpleEvent;
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
       procedure openProject(location: string);
@@ -144,6 +148,8 @@ type
       function SetMapSize(const size: TSgPoint): TSgPoint;
       procedure SetZoom(const value: double);
       procedure EnableZoom(value: boolean);
+      procedure UploadDatabase;
+      procedure DBCheck(const name: string);
    public
       { Public declarations }
    end;
@@ -154,7 +160,7 @@ var
 implementation
 
 uses
-   SysUtils, Math, Graphics, Windows, OpenGL,
+   SysUtils, Math, Graphics, Windows, OpenGL, 
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
    PackageRegistry,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
@@ -163,6 +169,17 @@ uses
    sdl_image, sdlstreams, sg_utils;
 
 {$R *.dfm}
+
+type
+   TDatabaseLoadThread = class(TThread)
+   private
+      FProgressBar: TProgressBar;
+      FSignal: TSimpleEvent;
+   protected
+      procedure Execute; override;
+   public
+      constructor Create(bar: TProgressBar; signal: TSimpleEvent);
+   end;
 
 const
    TILE_SIZE: integer = 16;
@@ -290,6 +307,15 @@ begin
    configureScrollBar(sbVert, size.y, min(imgLogo.LogicalHeight, size.y), position.y);
 end;
 
+procedure TfrmTurbuMain.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+   if FLoadSignal.WaitFor(0) <> wrSignaled then
+   begin
+      self.Cursor := crHourGlass;
+      FLoadSignal.WaitFor(INFINITE);
+   end;
+end;
+
 procedure TfrmTurbuMain.FormCreate(Sender: TObject);
 begin
    if getProjectFolder = '' then
@@ -297,10 +323,14 @@ begin
    FPaletteTexture := -1;
    FPaletteImages := TDictionary<integer, integer>.Create;
    FZoom := 1;
+   FLoadSignal := TSimpleEvent.Create;
+   FDBSignal := TSimpleEvent.Create;
 end;
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
 begin
+   FDBSignal.Free;
+   FLoadSignal.Free;
    cleanupEngines;
    FMapEngine := nil;
    GScriptEngine := nil;
@@ -524,7 +554,7 @@ procedure TfrmTurbuMain.loadProject;
 begin
    if GDatabase = nil then
       GDatabase := TRpgDatabase.Create;
-   frmDatabase.init(GDatabase);
+   FLoadSignal.SetEvent;
    trvMapTree.buildMapTree(GDatabase.mapTree);
 end;
 
@@ -532,11 +562,7 @@ procedure TfrmTurbuMain.mnu2KClick(Sender: TObject);
 begin
    closeProject;
    if frmRmConverter.loadProject = SUCCESSFUL_IMPORT then
-   begin
-      frmDatabase.reset;
       self.loadProject;
-      mnuDatabase.Enabled := true;
-   end;
 end;
 
 procedure TfrmTurbuMain.mnuAutosaveMapsClick(Sender: TObject);
@@ -550,8 +576,17 @@ begin
 end;
 
 procedure TfrmTurbuMain.mnuDatabaseClick(Sender: TObject);
+var
+   frmDatabase: TfrmDatabase;
 begin
-   frmDatabase.ShowModal;
+   DBCheck('Database Editor');
+   frmDatabase := TFrmDatabase.Create(nil);
+   try
+      frmDatabase.init(GDatabase);
+      frmDatabase.ShowModal;
+   finally
+      frmDatabase.Free;
+   end;
 end;
 
 procedure TfrmTurbuMain.mnuExitClick(Sender: TObject);
@@ -591,6 +626,15 @@ begin
    trvMapTree.Selections[0].selected := true;
 end;
 
+procedure TfrmTurbuMain.UploadDatabase;
+var
+   thread: TDatabaseLoadThread;
+begin
+   thread := TDatabaseLoadThread.Create(pbUpload, FDBSignal);
+   thread.FreeOnTerminate := true;
+   thread.Start;
+end;
+
 procedure TfrmTurbuMain.openProject(location: string);
 
    procedure openArchive(folderName: string; index: integer);
@@ -611,33 +655,44 @@ begin
    openArchive(IMAGE_DB, IMAGE_ARCHIVE);
    openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
 
-   frmDatabase.reset;
    filename := IncludeTrailingPathDelimiter(location) + DBNAME;
-   fileStream := TFileStream.Create(filename, fmOpenRead);
-   loadStream := TMemoryStream.Create;
-   try
-      loadStream.CopyFrom(fileStream, fileStream.Size);
-      loadStream.rewind;
-      try
-         GDatabase := TRpgDatabase.Load(loadStream, true);
-      except
-         on ERpgLoadError do
-         begin
-            GDatabase := nil;
-            MsgBox('TDB file is using an outdated format and can''t be loaded.', 'Load error');
-            Abort;
-         end
-         else begin
-            GDatabase := nil;
-            raise;
+   lblUpload.caption := 'Loading Database:';
+   TThread.CreateAnonymousThread(
+      procedure
+      begin
+         fileStream := TFileStream.Create(filename, fmOpenRead);
+         loadStream := TMemoryStream.Create;
+         try
+            loadStream.CopyFrom(fileStream, fileStream.Size);
+            loadStream.rewind;
+            try
+               GDatabase := TRpgDatabase.Load(loadStream, true,
+                 procedure(tree: IMapTree)
+                 begin
+                   trvMapTree.buildMapTree(tree);
+                   btnLayer1Click(self);
+                 end,
+                 procedure(value: integer) begin pbUpload.Max := value + 2; end);
+            except
+               on ERpgLoadError do
+               begin
+                  GDatabase := nil;
+                  MsgBox('TDB file is using an outdated format and can''t be loaded.', 'Load error');
+                  Abort;
+               end
+               else begin
+                  GDatabase := nil;
+                  raise;
+               end;
+            end;
+         finally
+            loadStream.free;
+            fileStream.Free;
          end;
-      end;
-   finally
-      loadStream.free;
-      fileStream.Free;
-   end;
-   GDatabase.filename := filename;
-   loadProject;
+         GDatabase.filename := filename;
+         FLoadSignal.SetEvent;
+         self.UploadDatabase;
+      end).Start;
 end;
 
 procedure TfrmTurbuMain.pnlZoomResize(Sender: TObject);
@@ -712,7 +767,7 @@ procedure TfrmTurbuMain.setLayer(const value: integer);
 begin
    RequireMapEngine;
    FCurrentLayer := value;
-   if value > 0 then
+   if value >= 0 then
       FLastGoodLayer := value;
    imgPalette.Enabled := value >= 0;
    LoadImage(FLastGoodLayer);
@@ -843,8 +898,18 @@ begin
       resizePalette;
 end;
 
+procedure TfrmTurbuMain.DBCheck(const name: string);
+begin
+   if FDBSignal.WaitFor(0) = wrTimeout then
+   begin
+      MsgBox(format('The %s can''t be used until database loading is complete', [name]), 'Please wait...');
+      Abort;
+   end
+end;
+
 procedure TfrmTurbuMain.btnMapObjClick(Sender: TObject);
 begin
+   DBCheck('Map Object layer');
    setLayer(-1);
 end;
 
@@ -898,6 +963,49 @@ begin
    topNode := trvMapTree.selected = trvMapTree.items[0];
    mnuDeleteMap.Enabled := not topNode;
    mnuEditMapProperties.Enabled := not topNode;
+end;
+
+{ TDatabaseLoadThread }
+
+constructor TDatabaseLoadThread.Create(bar: TProgressBar; signal: TSimpleEvent);
+begin
+   inherited Create(true);
+   FProgressBar := bar;
+   FSignal := signal;
+end;
+
+procedure TDatabaseLoadThread.Execute;
+var
+   index: TRpgDataTypes;
+begin
+   try
+      try
+         for index := Low(TRpgDataTypes) to High(TRpgDataTypes) do
+         begin
+            if self.Terminated then
+               Exit;
+            GDatabase.copyTypeToDB(dmDatabase, index);
+            self.Queue(procedure begin FProgressBar.Position := ord(index) + 1 ; end);
+         end;
+         sleep(100);
+         self.Synchronize(
+            procedure
+            begin
+               frmTurbuMain.lblUpload.caption := 'Done!';
+               FProgressBar.Max := FProgressBar.Position;
+               frmTurbuMain.mnuDatabase.Enabled := true;
+            end);
+      finally
+         FSignal.SetEvent;
+      end;
+   except
+      self.Synchronize(
+         procedure
+         begin
+            frmTurbuMain.lblUpload.caption := 'Error!';
+            FProgressBar.State := pbsError;
+         end);
+   end;
 end;
 
 initialization

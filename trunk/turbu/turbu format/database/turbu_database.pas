@@ -19,9 +19,9 @@ unit turbu_database;
 
 interface
 uses
-   classes, Generics.Collections, DB,
+   classes, sysUtils, Generics.Collections, DB,
 //   events,
-   dm_database, turbu_database_interface, EB_RpgScript,
+   dm_database, turbu_database_interface, turbu_map_interface, EB_RpgScript,
    turbu_characters, turbu_items, turbu_skills, turbu_classes, turbu_resists,
    turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations,
    turbu_unit_dictionary, turbu_containers, turbu_script_interface, turbu_game_data,
@@ -52,6 +52,8 @@ type
    public
       function indexOf (name: string): integer;
    end;
+
+   TMapLoadProc = reference to procedure(tree: IMapTree);
 
    TLegacySections = class(TDictionary<word, rawbytestring>);
 
@@ -121,7 +123,7 @@ type
       class function keyChar: ansiChar; override;
    public
       constructor Create;
-      constructor Load(savefile: TStream; design: boolean); reintroduce;
+      constructor Load(savefile: TStream; design: boolean; onLoadMap: TMapLoadProc; onStageCount: TProc<integer>); reintroduce;
       destructor Destroy; override;
       procedure save(savefile: TStream); overload; override;
       procedure save; reintroduce; overload;
@@ -195,14 +197,14 @@ var
 implementation
 uses
 windows,
-   sysUtils, zlib, math, TypInfo,
+   zlib, math, TypInfo,
    archiveInterface, commons,
    turbu_constants, turbu_engines, turbu_versioning, turbu_plugin_interface,
    turbu_functional, turbu_map_objects;
 
 const
-   MIN_DBVERSION = 36;
-   DBVERSION = 36;
+   MIN_DBVERSION = 37;
+   DBVERSION = 37;
 
 { TRpgDatabase }
 
@@ -230,7 +232,7 @@ begin
    self.prepareBlanks;
 end;
 
-constructor TRpgDatabase.Load(savefile: TStream; design: boolean);
+constructor TRpgDatabase.Load(savefile: TStream; design: boolean; onLoadMap: TMapLoadProc; onStageCount: TProc<integer>);
 type
    TItemClass = class of TItemTemplate;
    TSkillClass = class of TSkillTemplate;
@@ -280,6 +282,9 @@ begin
    lassert(FName = 'TURBU RPG Database');
    lassert(FID = DBVERSION);
 
+   if assigned(onStageCount) then
+      onStageCount(ord(high(TRpgDataTypes)));
+
    substream := GArchives[DATABASE_ARCHIVE].getFile('legacy.tdf');
    try
       while not substream.eof do
@@ -304,6 +309,26 @@ begin
       substream.free;
    end;
 
+   lassert(savefile.readChar = 'L');
+   FLayout := TGameLayout.Load(savefile);
+   lassert(savefile.readChar = 'l');
+
+   lassert(savefile.readChar ='G');
+   for i := 1 to savefile.readInt do
+   begin
+      dummy := savefile.readString;
+      FTileGroup.Add(dummy, TTileGroup.Load(savefile));
+   end;
+//   savefile.readDict<TTileGroup>(FTileGroup);
+   lassert(savefile.readChar = 'g');
+
+   lassert(savefile.readChar = 'T');
+   for i := 1 to savefile.readInt do
+      FTileSet.Add(TTileSet.Load(savefile));
+
+//   savefile.readDict<TTileset>(FTileset);
+   lassert(savefile.readChar = 't');
+
    lassert(savefile.readChar = 'S');
    FStatSet.free;
    FStatSet := TStatSet.load(savefile);
@@ -324,6 +349,28 @@ begin
    end;
    lassert(savefile.readInt = FSkillAlgs.Count);
    lassert(savefile.readInt = FStatAlgs.Count);
+
+   lassert(savefile.readChar = 'M');
+   setLength(FMoveMatrix, savefile.readWord);
+   for I := 0 to high(FMoveMatrix) do
+   begin
+      setLength(FMoveMatrix[i], savefile.readWord);
+      for j := 0 to high(FMoveMatrix[i]) do
+      begin
+         setLength(FMoveMatrix[i,j], savefile.readWord);
+         savefile.readBuffer(FMoveMatrix[i,j,0], length(FMoveMatrix[i,j]));
+      end;
+   end;
+   lassert(savefile.readChar = 'm');
+
+   if assigned(onLoadMap) then
+   begin
+      commons.runThreadsafe(
+      procedure
+      begin
+         onLoadMap(FMapTree);
+      end, true);
+   end;
 
    savefile.ReadBuffer(FScriptFormat, sizeof(FScriptFormat));
    FScriptFile := savefile.readString;
@@ -488,35 +535,6 @@ begin
       end;
    end;
 
-   lassert(savefile.readChar ='G');
-   for i := 1 to savefile.readInt do
-   begin
-      dummy := savefile.readString;
-      FTileGroup.Add(dummy, TTileGroup.Load(savefile));
-   end;
-//   savefile.readDict<TTileGroup>(FTileGroup);
-   lassert(savefile.readChar = 'g');
-
-   lassert(savefile.readChar = 'T');
-   for i := 1 to savefile.readInt do
-      FTileSet.Add(TTileSet.Load(savefile));
-
-//   savefile.readDict<TTileset>(FTileset);
-   lassert(savefile.readChar = 't');
-
-   lassert(savefile.readChar = 'M');
-   setLength(FMoveMatrix, savefile.readWord);
-   for I := 0 to high(FMoveMatrix) do
-   begin
-      setLength(FMoveMatrix[i], savefile.readWord);
-      for j := 0 to high(FMoveMatrix[i]) do
-      begin
-         setLength(FMoveMatrix[i,j], savefile.readWord);
-         savefile.readBuffer(FMoveMatrix[i,j,0], length(FMoveMatrix[i,j]));
-      end;
-   end;
-   lassert(savefile.readChar = 'm');
-
    lassert(savefile.readChar = 'B');
    FBattleStyle.Capacity := savefile.readByte;
    for I := 0 to FBattleStyle.Capacity - 1 do
@@ -534,10 +552,6 @@ begin
       FMapEngines.Add(requireEngine(et_map, dummy, TVersion.Create(savefile.readInt)) as TMapEngineData);
    end;
    lassert(savefile.readChar = 'm');
-
-   lassert(savefile.readChar = 'L');
-   FLayout := TGameLayout.Load(savefile);
-   lassert(savefile.readChar = 'l');
 
    lassert(savefile.readChar = 'G');
    FGlobalEvents.Capacity := savefile.readInt;
@@ -608,6 +622,20 @@ begin
       substream.free;
    end;
 
+   savefile.writeChar('L');
+   FLayout.save(savefile);
+   savefile.writeChar('l');
+
+   savefile.writeChar('G');
+   saveTileGroups(savefile);
+//   savefile.writeDict<TTileGroup>(FTileGroup);
+   savefile.writeChar('g');
+
+   savefile.writeChar('T');
+   saveTilesets(savefile);
+//   savefile.writeDict<TTileset>(FTileset);
+   savefile.writeChar('t');
+
    savefile.writeChar('S');
    FStatSet.save(savefile);
    savefile.writeChar('s');
@@ -628,6 +656,19 @@ begin
    finally
       substream.free;
    end;
+
+   savefile.writeChar('M');
+   savefile.writeWord(length(FMoveMatrix));
+   for I := 0 to high(FMoveMatrix) do
+   begin
+      savefile.writeWord(length(FMoveMatrix[i]));
+      for j := 0 to high(FMoveMatrix[i]) do
+      begin
+         savefile.writeWord(length(FMoveMatrix[i,j]));
+         savefile.WriteBuffer(FMoveMatrix[i,j,0], length(FMoveMatrix[i,j]));
+      end;
+   end;
+   savefile.writeChar('m');
 
    savefile.WriteBuffer(FScriptFormat, sizeof(FScriptFormat));
    savefile.writeString(FScriptFile);
@@ -776,29 +817,6 @@ begin
       end;
    end;
 
-   savefile.writeChar('G');
-   saveTileGroups(savefile);
-//   savefile.writeDict<TTileGroup>(FTileGroup);
-   savefile.writeChar('g');
-
-   savefile.writeChar('T');
-   saveTilesets(savefile);
-//   savefile.writeDict<TTileset>(FTileset);
-   savefile.writeChar('t');
-
-   savefile.writeChar('M');
-   savefile.writeWord(length(FMoveMatrix));
-   for I := 0 to high(FMoveMatrix) do
-   begin
-      savefile.writeWord(length(FMoveMatrix[i]));
-      for j := 0 to high(FMoveMatrix[i]) do
-      begin
-         savefile.writeWord(length(FMoveMatrix[i,j]));
-         savefile.WriteBuffer(FMoveMatrix[i,j,0], length(FMoveMatrix[i,j]));
-      end;
-   end;
-   savefile.writeChar('m');
-
    savefile.writeChar('B');
    savefile.WriteByte(FBattleStyle.Count);
    for I := 0 to FBattleStyle.High do
@@ -816,10 +834,6 @@ begin
       savefile.writeInt(FMapEngines[i].version.value);
    end;
    savefile.writeChar('m');
-
-   savefile.writeChar('L');
-   FLayout.save(savefile);
-   savefile.writeChar('l');
 
    savefile.writeChar('G');
    savefile.writeInt(FGlobalEvents.Count);
@@ -957,14 +971,14 @@ procedure TRpgDatabase.copyToDB(db: TdmDatabase; typeSet: TRpgDataTypeSet = []);
 var
    i: TRpgDataTypes;
 begin
-   db.beginUpload;
+   runThreadsafe(db.beginUpload, true);
    try
       if typeSet = [] then
          typeSet := [low(TRpgDataTypes)..high(TRpgDataTypes)];
       for i in typeSet do
          copyTypeToDB(db, i);
    finally
-      db.endUpload;
+      runThreadsafe(db.endUpload, true);
    end;
 end;
 
@@ -1045,6 +1059,8 @@ begin
    if value in FUploadedTypes then
       Exit;
 
+   runThreadsafe(db.beginUpload, true);
+   try
    case value of
       rd_class:
       begin
@@ -1130,8 +1146,12 @@ begin
       end;
       else assert(false);
    end;
-   for dummy in db.datasets do
-      dummy.First;
+   finally
+      runThreadsafe(db.endUpload, true);
+   end;
+
+{   for dummy in db.datasets do
+      dummy.First; }
    include(FUploadedTypes, value);
 end;
 
