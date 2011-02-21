@@ -325,6 +325,7 @@ begin
    FZoom := 1;
    FLoadSignal := TSimpleEvent.Create;
    FDBSignal := TSimpleEvent.Create;
+   FLoadSignal.SetEvent;
 end;
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
@@ -660,6 +661,7 @@ begin
    TThread.CreateAnonymousThread(
       procedure
       begin
+         FLoadSignal.ResetEvent;
          fileStream := TFileStream.Create(filename, fmOpenRead);
          loadStream := TMemoryStream.Create;
          try
@@ -838,8 +840,6 @@ begin
 end;
 
 procedure TfrmTurbuMain.SetZoom(const value: double);
-var
-   availableSize: TSgPoint;
 begin
    if abs(value - FZoom) < 0.01 then //comparing floats with = doesn't always work
       Exit;
