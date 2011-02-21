@@ -189,7 +189,7 @@ uses
 constructor TRpgHero.Create(base: TClassTemplate);
 var
   I: Integer;
-  dummy: byte;
+//  dummy: byte;
   calc: TExpCalcEvent;
   template: THeroTemplate absolute base;
 begin
@@ -259,9 +259,9 @@ begin
 end;
 
 destructor TRpgHero.Destroy;
-var
+{var
    i: integer;
-   j: integer;
+   j: integer;}
 begin
 {   for i := 1 to 5 do
    begin
@@ -351,28 +351,26 @@ begin
    begin
       for I := 0 to 4 do
          unequip(i);
-      //end for
-   //end if
       Exit;
    end;
 
-   inc(id);
-//   if FEquipment[id] <> nil then
+{   inc(id);
+   if FEquipment[id] <> nil then
    begin
-{      GParty.inventory.Add(FEquipment[id]);
+      GParty.inventory.Add(FEquipment[id]);
       dec(FStat[stat_eq_mod, 1], TEquipment(FEquipment[id]).attack);
       dec(FStat[stat_eq_mod, 2], TEquipment(FEquipment[id]).defense);
       dec(FStat[stat_eq_mod, 3], TEquipment(FEquipment[id]).mind);
       dec(FStat[stat_eq_mod, 4], TEquipment(FEquipment[id]).speed);
       if (id in [1, 2]) and (FEquipment[id].template.twoHanded) then
          FEquipment[3 - id] := nil;
-      FEquipment[id] := nil;}
-   end;
+      FEquipment[id] := nil;
+   end;}
 end;
 
 function TRpgHero.equipped(id: smallint): boolean;
-var
-   i: Integer;
+{var
+   i: Integer;}
 begin
    result := false;
 {   for I := low(FEquipment) to high(FEquipment) do
@@ -475,8 +473,8 @@ begin
 end;
 
 function TRpgHero.inParty: boolean;
-var
-  I: Integer;
+{var
+  I: Integer;}
 begin
    result := false;
 {   for I := 1 to MAXPARTYSIZE do
@@ -558,7 +556,7 @@ end;
 
 
 procedure TRpgHero.levelAdjustDown(before: byte);
-var i: word;
+//var i: word;
 begin
 {   for I := 1 to Template.skills do
       if (Template.skill[i].level > FLevel) and (Template.skill[i].level <= before) then
@@ -569,7 +567,7 @@ begin
 end;
 
 procedure TRpgHero.levelAdjustUp(before: byte);
-var i: word;
+//var i: word;
 begin
 {   for I := 1 to Template.skills do
       if (Template.skill[i].level <= FLevel) and (Template.skill[i].level > before) then
@@ -730,7 +728,7 @@ end;
 procedure TRpgParty.addExp(const id: smallint; number: integer);
 var
   I: Integer;
-  dummy: TRpgHero;
+//  dummy: TRpgHero;
 begin
    if id = -1 then
    begin
@@ -755,7 +753,7 @@ end;
 procedure TRpgParty.addLevels(const id: smallint; number: integer);
 var
    I: Integer;
-   dummy: TRpgHero;
+//   dummy: TRpgHero;
 begin
    if id = -1 then
    begin
@@ -962,14 +960,14 @@ begin
 end;
 
 procedure TRpgParty.setX(const Value: word);
-var place: TPoint;
+//var place: TPoint;
 begin
 {   place := GGameEngine.currentParty.location;
    GGameEngine.currentParty.location := point(value, place.Y);}
 end;
 
 procedure TRpgParty.setY(const Value: word);
-var place: TPoint;
+//var place: TPoint;
 begin
 {   place := GGameEngine.currentParty.location;
    GGameEngine.currentParty.location := point(place.x, value);}

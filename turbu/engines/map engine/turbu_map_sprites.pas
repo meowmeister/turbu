@@ -839,10 +839,10 @@ begin
    for i := 0 to high(eventlist) do
    begin
       eventPtr := (eventList[i] as TMapSprite).event;
-{$MESSAGE WARN 'Commented out code in live unit'}
-{      if (eventList[i] <> self) and assigned(eventPtr.currentPage) and (eventPtr.currentPage.hasScript)
+      if (eventList[i] <> self) and assigned(eventPtr.currentPage) and (eventPtr.currentPage.hasScript)
          and (eventPtr.currentPage.startCondition = by_key) then
-         GScriptEngine.executeEvent(eventPtr, eventList[i] as TMapSprite); }
+{$MESSAGE WARN 'Commented out code in live unit'}
+         {GScriptEngine.executeEvent(eventPtr, eventList[i] as TMapSprite)};
    end;
 end;
 
