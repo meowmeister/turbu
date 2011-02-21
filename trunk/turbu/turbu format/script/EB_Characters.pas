@@ -1,3 +1,21 @@
+{*****************************************************************************
+* The contents of this file are used with permission, subject to
+* the Mozilla Public License Version 1.1 (the "License"); you may
+* not use this file except in compliance with the License. You may
+* obtain a copy of the License at
+* http://www.mozilla.org/MPL/MPL-1.1.html
+*
+* Software distributed under the License is distributed on an
+* "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+* implied. See the License for the specific language governing
+* rights and limitations under the License.
+*
+*****************************************************************************
+*
+* This file was created by Mason Wheeler.  He can be reached for support at
+* www.turbu-rpg.com.
+*****************************************************************************}
+
 unit EB_Characters;
 
 interface
@@ -144,8 +162,8 @@ uses
 function GetIntScript(decider, value: integer): string;
 begin
    if boolean(decider) then
-      result := intToStr(Value)
-   else result := format('Ints[%s]', [TEBObject.IntName(value)]);
+      result := format('Ints[%s]', [TEBObject.IntName(value)])
+   else result := intToStr(Value);
 end;
 
 { TEBMoney }
@@ -153,7 +171,7 @@ end;
 function TEBMoney.GetNodeText: string;
 const
    LINE = 'Change Money: %s $%s';
-   SIGNS: array[0..1] of string = ('Add', 'Subtract');
+   SIGNS: array[0..2] of string = ('Add', 'Subtract', 'Set to');
 begin
    result := format(LINE, [SIGNS[Values[0]], GetIntScript(values[1], values[2])]);
 end;
@@ -161,9 +179,12 @@ end;
 function TEBMoney.GetScriptText: string;
 const
    LINE = 'money := money %s %s;';
+   LINE_EQ = 'money := %s;';
    SIGNS: array[0..1] of char = ('+', '-');
 begin
-   result := format(LINE, [SIGNS[Values[0]], GetIntScript(values[1], values[2])]);
+   if values[0] < 2 then
+      result := format(LINE, [SIGNS[Values[0]], GetIntScript(values[1], values[2])])
+   else result := format(LINE_EQ, [GetIntScript(values[1], values[2])]);
 end;
 
 { TEBInventory }

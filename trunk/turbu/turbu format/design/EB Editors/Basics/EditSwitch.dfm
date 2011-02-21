@@ -63,11 +63,14 @@ inherited frmEbSetSwitch: TfrmEbSetSwitch
   end
   inherited btnOK: TButton
     Top = 161
+    ExplicitTop = 161
   end
   inherited btnCancel: TButton
     Top = 161
+    ExplicitTop = 161
   end
   inherited btnHelp: TButton
     Top = 161
+    ExplicitTop = 161
   end
 end

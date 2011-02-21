@@ -2,6 +2,7 @@ inherited frmSelectPortrait: TfrmSelectPortrait
   Caption = 'Select Portrait'
   ClientHeight = 183
   ClientWidth = 314
+  ExplicitWidth = 320
   ExplicitHeight = 218
   PixelsPerInch = 120
   TextHeight = 16
