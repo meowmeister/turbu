@@ -54,6 +54,8 @@ contains
   EditTimer in 'EB Editors\Basics\EditTimer.pas' {frmTimerEdit},
   EditInput in 'EB Editors\Basics\EditInput.pas' {frmInputEdit},
   EditDeleteObject in 'EB Editors\Basics\EditDeleteObject.pas' {frmEBDeleteObject},
-  EditCallScript in 'EB Editors\Basics\EditCallScript.pas' {frmEBEditCall};
+  EditCallScript in 'EB Editors\Basics\EditCallScript.pas' {frmEBEditCall},
+  EditNull in 'EB Editors\Basics\EditNull.pas' {frmEBEditNull},
+  EditMoney in 'EB Editors\Characters\EditMoney.pas' {frmEBEditMoney};
 
 end.

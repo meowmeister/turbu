@@ -12,10 +12,10 @@ inherited frmMessageEdit: TfrmMessageEdit
     ExplicitWidth = 410
     ExplicitHeight = 127
     object Memo1: TMemo
-      Left = 0
-      Top = 0
-      Width = 410
-      Height = 127
+      Left = 10
+      Top = 10
+      Width = 395
+      Height = 112
       Align = alClient
       TabOrder = 0
     end

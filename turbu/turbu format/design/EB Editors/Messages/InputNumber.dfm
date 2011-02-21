@@ -1,7 +1,6 @@
 inherited frmInputNumber: TfrmInputNumber
   Caption = 'Input Number'
   ClientHeight = 117
-  ExplicitWidth = 355
   ExplicitHeight = 152
   PixelsPerInch = 120
   TextHeight = 16
