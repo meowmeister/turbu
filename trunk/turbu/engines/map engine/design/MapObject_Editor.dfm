@@ -476,6 +476,7 @@ object frmObjectEditor: TfrmObjectEditor
     Default = True
     ModalResult = 1
     TabOrder = 1
+    OnClick = btnApplyClick
   end
   object btnCancel: TButton
     Left = 684

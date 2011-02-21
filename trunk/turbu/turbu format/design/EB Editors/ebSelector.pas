@@ -24,6 +24,7 @@ type
       trvList: TTreeView;
       procedure FormCreate(Sender: TObject);
       procedure trvListClick(Sender: TObject);
+    procedure trvListDblClick(Sender: TObject);
    private
       type
          TTreeTemplate = class(TDoubleSortedMultiMap<string, TTreeData>);
@@ -105,6 +106,12 @@ end;
 procedure TfrmEBSelector.trvListClick(Sender: TObject);
 begin
    btnOK.Enabled := assigned(trvList.selected) and assigned(trvList.selected.Data);
+end;
+
+procedure TfrmEBSelector.trvListDblClick(Sender: TObject);
+begin
+   if GetCurrent <> nil then
+      btnOK.Click;
 end;
 
 function TfrmEBSelector.GetCurrent: TEbEditorClass;

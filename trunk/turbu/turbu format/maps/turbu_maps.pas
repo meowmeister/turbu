@@ -98,6 +98,7 @@ type
       procedure blitFromGrid(const grid: TTileBlitGrid; const bounds: TRect);
       function calcGridDelta(const size: TSgPoint; position: byte): TRect;
       procedure saveScript;
+      function GetMapObjects: TStrings;
    protected
       FEncounters: T4IntArray;
       [NoUpload]
@@ -442,6 +443,20 @@ end;
 function TRpgMap.GetBattleCount: integer;
 begin
    result := Length(FBattles);
+end;
+
+function TRpgMap.GetMapObjects: TStrings;
+var
+   obj: TRpgMapObject;
+begin
+   result := TStringList.Create;
+   try
+      for obj in FMapObjects do
+         result.AddObject(obj.name, obj);
+   except
+      result.Free;
+      raise;
+   end;
 end;
 
 function TRpgMap.GetTileset: integer;

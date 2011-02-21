@@ -3,7 +3,7 @@ unit EBListView;
 interface
 uses
    ComCtrls, Messages, Classes, DB, DBCtrls,
-   EventBuilder;
+   EventBuilder{$IFNDEF COMPONENT}, turbu_map_interface{$ENDIF};
 
 type
    TOrphanEvent = procedure(sender: TObject; obj: TEbObject) of object;
@@ -14,6 +14,9 @@ type
       FDblClickExpand: boolean;
       FOnOrphan: TOrphanEvent;
       FDataLink: TFieldDataLink;
+      {$IFNDEF COMPONENT}
+      FMap: IRpgMap;
+      {$ENDIF}
       procedure SetProc(const Value: TEBRoutine);
       procedure EndLoading;
       procedure ReconcilePostEdit(obj: TEbObject; node: TTreeNode);
@@ -26,13 +29,20 @@ type
    private
       function GetDataSet: TDataSet;
       procedure SetDataSet(const Value: TDataSet);
-   protected
+      procedure insertNewObject(obj: TEBObject);
+   private
       procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
+      procedure WMChar(var Message: TWMChar); //message WM_CHAR;
+      procedure WMGetDlgCode(var msg: TMessage); message WM_GETDLGCODE;
+   protected
       procedure DblClick; override;
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
       property proc: TEBRoutine read FProc write SetProc;
+      {$IFNDEF COMPONENT}
+      property map: IRpgMap read FMap write FMap;
+      {$ENDIF}
    published
       property DoubleClickExpand: boolean read FDblClickExpand write FDblClickExpand stored FDblClickExpand;
       property OnOrphan: TOrphanEvent read FOnOrphan write FOnOrphan;
@@ -46,7 +56,7 @@ procedure Register;
 
 implementation
 uses
-   SysUtils, Controls, Generics.Collections, DBClient{$IFNDEF COMPONENT},
+   Windows, SysUtils, Controls, Generics.Collections, DBClient{$IFNDEF COMPONENT},
    EbEdit, EbSelector, turbu_vartypes, turbu_constants, turbu_script_interface,
    turbu_database, uPSCompiler, array_editor{$ENDIF};
 
@@ -81,8 +91,11 @@ begin
          obj := TObject(node.Data) as TEbObject;
          {$IFNDEF COMPONENT}
          if assigned(obj) then
-            if EbEdit.EditEbObject(obj) and ((obj.ComponentCount > 0) or (node.HasChildren)) then
+         begin
+            if EbEdit.EditEbObject(obj, map) and ((obj.ComponentCount > 0) or (node.HasChildren)) then
                self.ReconcilePostEdit(obj, node);
+            node.Text := obj.GetNodeText;
+         end;
          {$ENDIF}
       end;
    end;
@@ -127,6 +140,29 @@ begin
 {$ENDIF}
 end;
 
+procedure TEBTreeView.insertNewObject(obj: TEBObject);
+var
+   parent, current: TTreeNode;
+   index: integer;
+begin
+   current := self.Selected;
+   parent := current.Parent;
+   items.InsertObject(current, obj.GetNodeText, obj);
+   if assigned(parent) then
+   begin
+      if assigned(selected.Data) then
+         index := (TObject(selected.Data) as TEBObject).ComponentIndex
+      else index := -1;
+      (TObject(parent.Data) as TEBObject).Add(obj);
+      if index <> -1 then
+         obj.ComponentIndex := index;
+   end
+   else begin
+      FProc.Add(obj);
+      obj.ComponentIndex := 0;
+   end;
+end;
+
 {$WARN CONSTRUCTING_ABSTRACT OFF}
 procedure TEBTreeView.InsertObject;
 {$IFNDEF COMPONENT}
@@ -141,12 +177,13 @@ begin
       begin
          editor := selector.Current.Create(nil);
          try
+            editor.SetupMap(FMap);
             obj := editor.NewObj;
          finally
             editor.free;
          end;
          if assigned(obj) then
-            ;// do something
+            InsertNewObject(obj);
       end;
    finally
       selector.Free;
@@ -268,6 +305,20 @@ begin
    end;
 end;
 
+procedure TEBTreeView.WMChar(var Message: TWMChar);
+begin
+   case message.CharCode of
+      VK_RETURN: self.DblClick;
+      VK_SPACE, VK_INSERT: self.InsertObject;
+      else inherited;
+   end;
+end;
+
+procedure TEBTreeView.WMGetDlgCode(var msg: TMessage);
+begin
+   msg.Result := msg.Result or DLGC_WANTALLKEYS or DLGC_WANTARROWS;
+end;
+
 procedure TEBTreeView.WMLButtonDblClk(var Message: TWMLButtonDblClk);
 begin
    //basically copied from TControl.WMLButtonDblClk, but making the call to
@@ -316,6 +367,8 @@ begin
       end;
       for subObj in obj do
       begin
+         if subObj is TEBExpression then
+            Continue;
          subnode := findSubnode(nodelist, subObj);
          if assigned(subnode) then
             nodelist.Extract(subnode)

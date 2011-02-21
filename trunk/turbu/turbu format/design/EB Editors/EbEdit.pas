@@ -5,7 +5,7 @@ interface
 uses
    SysUtils, Classes, Controls, Forms, StdCtrls, ExtCtrls, Generics.Collections,
    DB,
-   EventBuilder, finalizer_hack;
+   EventBuilder, finalizer_hack, turbu_map_interface;
 
 type
    EditorCategoryAttribute = finalizer_hack.EditorCategoryAttribute;
@@ -33,14 +33,15 @@ type
 
       class property AllEditors: TEditorDic read GetEditors;
    public
+      procedure SetupMap(const map: IRpgMap); dynamic;
       function NewObj: TEbObject; dynamic;
       class function Category: EditorCategoryAttribute;
    end;
 
    procedure RegisterEbEditor(ebType: TEbClass; editor: TEbEditorClass);
    procedure UnregisterEbEditor(ebType: TEbClass);
-   function NewEbObject(ebType: TEbClass): TEbObject;
-   function EditEbObject(obj: TEbObject): boolean;
+   function NewEbObject(ebType: TEbClass; const context: IRpgMap): TEbObject;
+   function EditEbObject(obj: TEbObject; const context: IRpgMap): boolean;
 
 implementation
 uses
@@ -62,7 +63,7 @@ begin
    dic.Remove(ebType);
 end;
 
-function NewEbObject(ebType: TEbClass): TEbObject;
+function NewEbObject(ebType: TEbClass; const context: IRpgMap): TEbObject;
 var
    editorCls: TEbEditorClass;
    editor: TfrmEBEditBase;
@@ -72,13 +73,14 @@ begin
 
    editor := editorCls.Create(nil);
    try
+      editor.SetupMap(context);
       result := editor.NewObj;
    finally
       editor.Release;
    end;
 end;
 
-function EditEbObject(obj: TEbObject): boolean;
+function EditEbObject(obj: TEbObject; const context: IRpgMap): boolean;
 var
    editorCls: TEbEditorClass;
    editor: TfrmEBEditBase;
@@ -88,6 +90,7 @@ begin
 
    editor := editorCls.Create(nil);
    try
+      editor.SetupMap(context);
       result := editor.EditObj(obj);
    finally
       editor.Release;
@@ -137,6 +140,11 @@ begin
       end;
    end
    else result := nil;
+end;
+
+procedure TfrmEBEditBase.SetupMap(const map: IRpgMap);
+begin
+  //this method intentionally left blank
 end;
 
 procedure TfrmEBEditBase.ValidateError(control: TWinControl; const reason: string);

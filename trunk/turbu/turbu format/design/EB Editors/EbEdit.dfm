@@ -26,6 +26,10 @@ object frmEbEditBase: TfrmEbEditBase
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
+    Padding.Left = 10
+    Padding.Top = 10
+    Padding.Right = 5
+    Padding.Bottom = 5
     TabOrder = 0
   end
   object btnOK: TButton
