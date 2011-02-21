@@ -51,6 +51,9 @@ contains
   ChoiceEdit in 'EB Editors\Messages\ChoiceEdit.pas' {frmShowChoice},
   EditInt in 'EB Editors\Basics\EditInt.pas' {frmEBSetInteger},
   EditSwitch in 'EB Editors\Basics\EditSwitch.pas' {frmEbSetSwitch},
-  EditTimer in 'EB Editors\Basics\EditTimer.pas' {frmTimerEdit};
+  EditTimer in 'EB Editors\Basics\EditTimer.pas' {frmTimerEdit},
+  EditInput in 'EB Editors\Basics\EditInput.pas' {frmInputEdit},
+  EditDeleteObject in 'EB Editors\Basics\EditDeleteObject.pas' {frmEBDeleteObject},
+  EditCallScript in 'EB Editors\Basics\EditCallScript.pas' {frmEBEditCall};
 
 end.
