@@ -646,9 +646,7 @@ object frmDatabase: TfrmDatabase
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                ExplicitLeft = 4
                 ExplicitTop = 28
-                ExplicitWidth = 188
                 ExplicitHeight = 154
                 inherited frameHeroCommands: TframeHeroCommands
                   Width = 242
