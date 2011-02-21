@@ -163,9 +163,6 @@
 				<Form>frameParams</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
-			<DCCReference Include="..\editor\generic_algorithm_editor.pas">
-				<Form>frmAlgorithmEditor</Form>
-			</DCCReference>
 			<DCCReference Include="..\editor\skill_settings.pas">
 				<Form>frmSkillLearning</Form>
 			</DCCReference>

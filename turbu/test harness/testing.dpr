@@ -71,7 +71,6 @@ uses
   frame_commands in '..\editor\frame_commands.pas' {frameHeroCommands: TFrame},
   frame_items in '..\editor\frame_items.pas' {frameItems: TFrame},
   frame_params in '..\editor\frame_params.pas' {frameParams: TFrame},
-  generic_algorithm_editor in '..\editor\generic_algorithm_editor.pas' {frmAlgorithmEditor},
   skill_settings in '..\editor\skill_settings.pas' {frmSkillLearning},
   turbu_heroes in '..\engines\map engine\turbu_heroes.pas',
   function_header in '..\editor\function_header.pas' {frmFuncHeader},
@@ -154,8 +153,6 @@ begin
    Application.CreateForm(TdmDatabase, dmDatabase);
   Application.CreateForm(TfrmTestConsole, frmTestConsole);
   Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
-  Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
-  Application.CreateForm(TfrmSkillLearning, frmSkillLearning);
   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
   Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
   Application.CreateForm(TfrmConversionReport, frmConversionReport);
