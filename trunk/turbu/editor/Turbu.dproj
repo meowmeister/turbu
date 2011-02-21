@@ -118,9 +118,6 @@
 			<DCCReference Include="skill_settings.pas">
 				<Form>frmSkillLearning</Form>
 			</DCCReference>
-			<DCCReference Include="generic_algorithm_editor.pas">
-				<Form>frmAlgorithmEditor</Form>
-			</DCCReference>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_database.pas"/>
 			<DCCReference Include="..\turbu format\converters\conversion_table.pas"/>
 			<DCCReference Include="frame_commands.pas">

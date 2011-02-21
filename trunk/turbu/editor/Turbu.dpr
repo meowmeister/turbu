@@ -35,7 +35,6 @@ uses
   rm_converter in 'rm_converter.pas' {frmRmConverter},
   rm2_turbu_characters in '..\turbu format\converters\rm2_turbu_characters.pas',
   skill_settings in 'skill_settings.pas' {frmSkillLearning},
-  generic_algorithm_editor in 'generic_algorithm_editor.pas' {frmAlgorithmEditor},
   rm2_turbu_database in '..\turbu format\converters\rm2_turbu_database.pas',
   conversion_table in '..\turbu format\converters\conversion_table.pas',
   frame_commands in 'frame_commands.pas' {frameHeroCommands: TFrame},
@@ -87,7 +86,6 @@ begin
   Application.CreateForm(TdmDatabase, dmDatabase);
   Application.CreateForm(TfrmRmConverter, frmRmConverter);
   Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
-  Application.CreateForm(TfrmAlgorithmEditor, frmAlgorithmEditor);
   Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
   if (SDL_Init(SDL_INIT_VIDEO) <> 0) then
       raise Exception.create('Unable to initialize graphics converter.');
