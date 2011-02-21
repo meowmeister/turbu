@@ -19,13 +19,14 @@ unit turbu_map_interface;
 
 interface
 uses
-   types;
+   Types, Classes;
 
 type
    IRpgMap = interface(IInterface)
    ['{8B9CDCC2-AFB6-408C-88C3-2E50D145C901}']
       function GetTileset: integer;
       procedure SetTileset(const Value: integer);
+      function GetMapObjects: TStrings;
       property tileset: integer read GetTileset write SetTileset;
    end;
 
@@ -43,8 +44,6 @@ type
       property treeOpen: boolean read GetTreeOpen;
       property mapEngine: string read GetMapEngine;
    end;
-
-   IMapTree = interface;
 
    IMapMetadataEnumerator = interface
    ['{4FD5CC25-13B8-4127-A67E-668909C3B977}']

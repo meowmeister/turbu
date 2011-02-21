@@ -301,6 +301,7 @@ end;
 
 procedure TfrmObjectEditor.FormCreate(Sender: TObject);
 begin
+{$WARN SYMBOL_PLATFORM OFF}
    FSerializer := TDatasetSerializer.Create;
    Button1.Visible := DebugHook <> 0;
    ClipboardWatcher.RegisterClipboardViewer(self.OnClipboardChange);
@@ -489,6 +490,7 @@ end;
 
 function TfrmObjectEditor.DoEdit(obj: TRpgMapObject; const tilesetName: string): integer;
 begin
+   self.trvEvents.map := FMap;
    UploadMapObject(obj);
    FTileset := GDatabase.tileset.firstWhere(
       function(arg1: TTileset): boolean

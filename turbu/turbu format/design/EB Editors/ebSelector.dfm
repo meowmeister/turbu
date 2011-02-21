@@ -13,10 +13,10 @@ inherited frmEBSelector: TfrmEBSelector
     ExplicitWidth = 290
     ExplicitHeight = 402
     object trvList: TTreeView
-      Left = 0
-      Top = 0
-      Width = 290
-      Height = 402
+      Left = 10
+      Top = 10
+      Width = 275
+      Height = 387
       Align = alClient
       Indent = 19
       ReadOnly = True
@@ -24,6 +24,7 @@ inherited frmEBSelector: TfrmEBSelector
       RowSelect = True
       TabOrder = 0
       OnClick = trvListClick
+      OnDblClick = trvListDblClick
     end
   end
   inherited btnOK: TButton
