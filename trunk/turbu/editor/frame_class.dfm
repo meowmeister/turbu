@@ -69,7 +69,6 @@ object frameClass: TframeClass
         ItemIndex = 0
         TabOrder = 0
         Text = 'Hit Points'
-        OnChange = cbxBaseStatsChange
         Items.Strings = (
           'Hit Points'
           'Magic Points'

@@ -95,7 +95,6 @@ type
 
       procedure tabGraphicsChange(Sender: TObject);
       procedure tmrAnimTimer(Sender: TObject);
-      procedure cbxBaseStatsChange(Sender: TObject);
       procedure radWeaponStyleClick(Sender: TObject);
       procedure grdClassesRowEnter(Sender: TObject; FromIndex, ToIndex: Integer);
       procedure lstSkillsDblClick(Sender: TObject);
@@ -135,7 +134,7 @@ uses
    zlib, math,
    turbu_database, archiveInterface, turbu_constants, turbu_items,
    turbu_tbi_lib, turbu_sdl_image, turbu_classes, dm_database,
-   generic_algorithm_editor, design_script_engine, skill_settings,
+   design_script_engine, skill_settings,
    attributes_editor,
    SDL, SDL_13;
 
@@ -268,8 +267,7 @@ begin
             eventName := events[i];
             item.Caption := eventName;
             item.Data := FTemplate.signature[eventName];
-         end
-         else item := lstScripts.Items[i];
+         end;
       end;
    finally
       events.Free;
@@ -277,7 +275,6 @@ begin
 
    tabGraphicsChange(tabGraphics); //load portrait or sprite
    frameHeroCommands.size := FTemplate.commands;
-   cbxBaseStatsChange(cbxBaseStats);
    radWeaponStyle.ItemIndex := ord(FTemplate.dualWield);
    chkEqLocked.Checked := FTemplate.staticEq;
    chkStrongDef.Checked := FTemplate.strongDef;
@@ -497,14 +494,6 @@ end;
 procedure TframeClass.btnSetGfxClick(Sender: TObject);
 begin
    imgMapSprite.Clear;
-end;
-
-procedure TframeClass.cbxBaseStatsChange(Sender: TObject);
-var
-   box: TComboBox;
-begin
-   box := sender as TComboBox;
-   //come back to this later
 end;
 
 end.
