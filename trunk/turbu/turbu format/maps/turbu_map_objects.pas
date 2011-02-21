@@ -100,8 +100,8 @@ type
       function isValid: boolean; inline;
 
 {      function getEventScript: ansiString;
-      function getCompiledScript: ansiString;
-      function hasScriptFunction: boolean; inline; }
+      function getCompiledScript: ansiString;}
+      function hasScriptFunction: boolean; inline;
 
 {      function getOpcode(x: word): TEventCommand;
       function getLength: word; }
@@ -140,8 +140,8 @@ type
       property actionMatrix: word read FMatrix;
 //      property eventScript: ansiString read getEventScript;
       property parent: TRpgMapObject read FParent;
-{      property compiledScript: tbtString read getCompiledScript;
       property hasScript: boolean read hasScriptFunction;
+{      property compiledScript: tbtString read getCompiledScript;
       property parseStack: TStack read FParseStack write FParseStack;
       property opcode[x: word]: TEventCommand read getOpcode;
       property len: word read getLength;}
@@ -404,6 +404,11 @@ begin
    if FName[1] <> '*' then
       Exit(-1);
    result := StrToInt(Copy(FName, 2, MAXINT));
+end;
+
+function TRpgEventPage.hasScriptFunction: boolean;
+begin
+   result := FEventText <> '';
 end;
 
 { UploadConditionsAttribute }
