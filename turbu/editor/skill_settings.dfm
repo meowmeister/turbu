@@ -39,7 +39,7 @@ object frmSkillLearning: TfrmSkillLearning
         Left = 10
         Top = 18
         Width = 79
-        Height = 22
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -65,7 +65,7 @@ object frmSkillLearning: TfrmSkillLearning
         Left = 10
         Top = 18
         Width = 79
-        Height = 22
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -98,7 +98,6 @@ object frmSkillLearning: TfrmSkillLearning
         Margins.Bottom = 4
         Caption = '&Add New...'
         TabOrder = 1
-        OnClick = btnNewAlgorithmClick
       end
       object btnEdit: TButton
         Left = 24
@@ -111,7 +110,6 @@ object frmSkillLearning: TfrmSkillLearning
         Margins.Bottom = 4
         Caption = '&Edit...'
         TabOrder = 2
-        OnClick = btnEditClick
       end
       object cbxAlgorithm: TDBLookupComboBox
         Left = 10
@@ -167,7 +165,7 @@ object frmSkillLearning: TfrmSkillLearning
         Left = 10
         Top = 18
         Width = 79
-        Height = 22
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -193,7 +191,7 @@ object frmSkillLearning: TfrmSkillLearning
         Left = 10
         Top = 18
         Width = 79
-        Height = 22
+        Height = 25
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
