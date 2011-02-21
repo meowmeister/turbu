@@ -2,7 +2,7 @@ unit variable_selector;
 
 interface
 uses
-   Classes, StdCtrls, Controls, DBClient;
+   Messages, Classes, StdCtrls, Controls, DBClient;
 
 type
    TVarSelector = class(TCustomEdit)
@@ -13,6 +13,7 @@ type
       procedure ButtonClick(Sender: TObject);
       procedure UpdateText;
       procedure SetID(const Value: integer);
+      procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
    protected
       procedure SetParent(AParent: TWinControl); override;
       function GetName: string; virtual; abstract;
@@ -49,6 +50,12 @@ begin
 end;
 
 { TVarSelector }
+
+procedure TVarSelector.CMEnabledChanged(var Message: TMessage);
+begin
+   inherited;
+   FButton.Enabled := self.Enabled;
+end;
 
 constructor TVarSelector.Create(AOwner: TComponent);
 begin
