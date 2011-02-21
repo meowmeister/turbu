@@ -32,7 +32,7 @@ type
       procedure insertNewObject(obj: TEBObject);
    private
       procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
-      procedure WMChar(var Message: TWMChar); //message WM_CHAR;
+      procedure WMChar(var Message: TWMChar); message WM_CHAR;
       procedure WMGetDlgCode(var msg: TMessage); message WM_GETDLGCODE;
    protected
       procedure DblClick; override;
