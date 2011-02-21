@@ -1,7 +1,6 @@
 inherited frmEbSetSwitch: TfrmEbSetSwitch
   Caption = 'Set Switch'
   ClientHeight = 204
-  ExplicitWidth = 355
   ExplicitHeight = 239
   PixelsPerInch = 120
   TextHeight = 16
@@ -21,7 +20,9 @@ inherited frmEbSetSwitch: TfrmEbSetSwitch
         Width = 70
         Height = 17
         Caption = 'Switch:'
+        Checked = True
         TabOrder = 0
+        TabStop = True
         OnClick = RadioButtonClick
       end
       object radInt: TRadioButton
@@ -52,6 +53,7 @@ inherited frmEbSetSwitch: TfrmEbSetSwitch
       Height = 49
       Caption = 'Set to'
       Columns = 3
+      ItemIndex = 1
       Items.Strings = (
         'OFF'
         'ON'
