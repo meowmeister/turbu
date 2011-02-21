@@ -59,10 +59,7 @@ type
       procedure btnCancelClick(Sender: TObject);
    private
       { Private declarations }
-      FId: word;
-      FEvent: TEvent;
       FDatabase: TRpgDatabase;
-      FEventPage: TEventPage;
       FViewingCode: boolean;
       FWasInit: boolean;
       FUploaded: boolean;
