@@ -35,13 +35,11 @@ type
       spnExactValue: TJvSpinEdit;
       selValue: TIntSelector;
       procedure FormShow(Sender: TObject);
-      procedure OnRadClick(Sender: TObject);
-   private
-      procedure EnableControlsProperly;
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
       function NewClassType: TEbClass; override;
+      procedure EnableControlsProperly; override;
    end;
 
 implementation
@@ -55,11 +53,6 @@ uses
 function TfrmEBEditMoney.NewClassType: TEbClass;
 begin
    result := TEBMoney;
-end;
-
-procedure TfrmEBEditMoney.OnRadClick(Sender: TObject);
-begin
-   EnableControlsProperly;
 end;
 
 procedure TfrmEBEditMoney.DownloadObject(obj: TEbObject);
@@ -91,15 +84,8 @@ end;
 procedure TfrmEBEditMoney.UploadObject(obj: TEbObject);
 begin
    grpOperation.ItemIndex := obj.Values[0];
-   if obj.Values[1] = 0 then
-   begin
-      radExactAmount.Checked := true;
-      spnExactValue.AsInteger := obj.Values[2];
-   end
-   else begin
-      radPointer.Checked := true;
-      selValue.ID := obj.Values[2];
-   end;
+   UploadValuePtrSelection(obj.Values[1], obj.Values[2], radExactAmount, radPointer,
+     spnExactValue, selValue);
    EnableControlsProperly;
 end;
 

@@ -89,13 +89,11 @@ inherited frmEBEditCall: TfrmEBEditCall
         Width = 154
         Height = 24
       end
-      object cbxGlobalName: TDBLookupComboBox
+      object cbxGlobalName: TIDLookupCombo
         Left = 119
         Top = 25
         Width = 212
         Height = 24
-        DataField = 'id'
-        DataSource = srcGlobalOutput
         KeyField = 'Id'
         ListField = 'Name'
         ListSource = srcGlobals
@@ -119,23 +117,5 @@ inherited frmEBEditCall: TfrmEBEditCall
     DataSet = dmDatabase.GlobalScripts
     Left = 16
     Top = 224
-  end
-  object srcGlobalOutput: TDataSource
-    DataSet = dsGlobalOutput
-    Left = 16
-    Top = 176
-  end
-  object dsGlobalOutput: TClientDataSet
-    Active = True
-    Aggregates = <>
-    Params = <>
-    Left = 40
-    Top = 104
-    Data = {
-      250000009619E0BD010000001800000001000000000003000000250002696404
-      000100000000000000}
-    object dsGlobalOutputid: TIntegerField
-      FieldName = 'id'
-    end
   end
 end
