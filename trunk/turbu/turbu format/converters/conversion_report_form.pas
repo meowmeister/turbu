@@ -152,7 +152,7 @@ begin
       self.FocusControl(btnDone);
       FFinished := true;
    end;
-   runThreadsafe(closure);
+   runThreadsafe(closure, true);
 end;
 
 procedure TfrmConversionReport.newStep(name: string);
