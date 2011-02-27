@@ -56,6 +56,9 @@ contains
   EditDeleteObject in 'EB Editors\Basics\EditDeleteObject.pas' {frmEBDeleteObject},
   EditCallScript in 'EB Editors\Basics\EditCallScript.pas' {frmEBEditCall},
   EditNull in 'EB Editors\Basics\EditNull.pas' {frmEBEditNull},
-  EditMoney in 'EB Editors\Characters\EditMoney.pas' {frmEBEditMoney};
+  EditMoney in 'EB Editors\Characters\EditMoney.pas' {frmEBEditMoney},
+  EditInventory in 'EB Editors\Characters\EditInventory.pas' {frmEBEditInventory},
+  EditParty in 'EB Editors\Characters\EditParty.pas' {frmEBEditParty},
+  EditExp in 'EB Editors\Characters\EditExp.pas' {frmEBEditExp};
 
 end.
