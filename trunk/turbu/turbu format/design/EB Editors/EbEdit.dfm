@@ -13,6 +13,7 @@ object frmEbEditBase: TfrmEbEditBase
   OldCreateOrder = False
   Position = poOwnerFormCenter
   OnCloseQuery = FormCloseQuery
+  OnShow = FormShow
   DesignSize = (
     349
     258)
