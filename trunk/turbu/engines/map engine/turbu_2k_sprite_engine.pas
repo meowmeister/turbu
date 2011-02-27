@@ -545,6 +545,7 @@ begin
       include(FOverlapping, facing_up)
    else if viewport.Top > self.Height then
       include(FOverlapping, facing_down);
+   ResizeCanvas;
 end;
 
 function T2kSpriteEngine.SpritesAt(location: TSgPoint): TArray<TMapSprite>;
