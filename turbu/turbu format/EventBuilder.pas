@@ -98,6 +98,7 @@ type
       procedure SaveScript;
       function RequiredVariables: TStringList;
       function Clone: TEBObject;
+      procedure Clear;
 
       property Values: TList<integer> read FValues write FValues;
       property InUnit: string read GetUnit;
@@ -180,6 +181,15 @@ const INDENT_SIZE = 2;
 procedure TEBObject.Add(aObject: TEBObject);
 begin
    self.InsertComponent(aObject);
+end;
+
+procedure TEBObject.Clear;
+var
+   sub: TComponent;
+begin
+   values.Clear;
+   for sub in self do
+      sub.Free;
 end;
 
 function TEBObject.Clone: TEBObject;
