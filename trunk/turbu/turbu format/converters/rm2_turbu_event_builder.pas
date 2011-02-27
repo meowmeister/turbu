@@ -300,7 +300,7 @@ function ConvertIfElse(opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    assert(blockStack.peek = -1);
    ifStack.Peek.SetElse;
-   result := nil;
+   result := ifStack.Peek;
 end;
 
 function ConvertEndIf(opcode: TEventCommand; parent: TEBObject): TEBObject;
