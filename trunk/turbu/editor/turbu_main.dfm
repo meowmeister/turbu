@@ -42,21 +42,21 @@ object frmTurbuMain: TfrmTurbuMain
     Color = clBlack
     ParentColor = False
     TabOrder = 0
-    ExplicitHeight = 809
     object imgBackground: TPaintBox
       Left = 0
       Top = 0
       Width = 888
-      Height = 783
+      Height = 784
       Align = alClient
       OnClick = imgBackgroundClick
       OnPaint = imgBackgroundPaint
       ExplicitLeft = -120
       ExplicitTop = 19
+      ExplicitHeight = 783
     end
     object pnlHorizScroll: TPanel
       Left = 0
-      Top = 783
+      Top = 784
       Width = 910
       Height = 22
       Margins.Left = 4
@@ -98,7 +98,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 888
       Top = 0
       Width = 22
-      Height = 783
+      Height = 784
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -110,7 +110,7 @@ object frmTurbuMain: TfrmTurbuMain
         Left = 0
         Top = 0
         Width = 22
-        Height = 783
+        Height = 784
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -126,7 +126,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 0
       Width = 888
-      Height = 783
+      Height = 784
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -134,7 +134,7 @@ object frmTurbuMain: TfrmTurbuMain
       Framerate = 0
       Active = False
       LogicalWidth = 888
-      LogicalHeight = 783
+      LogicalHeight = 784
       OnAvailable = imgLogoAvailable
       OnPaint = imgLogoPaint
       Align = alClient
@@ -158,7 +158,6 @@ object frmTurbuMain: TfrmTurbuMain
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitHeight = 809
     object splSidebar: TSplitter
       Left = 0
       Top = 500
@@ -242,7 +241,6 @@ object frmTurbuMain: TfrmTurbuMain
       TabOrder = 1
       OnChange = trvMapTreeChange
       OnContextPopup = trvMapTreeContextPopup
-      ExplicitHeight = 306
     end
   end
   object ToolBar2: TToolBar
@@ -559,7 +557,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C01010800C8002C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010800C8003C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000003000000001002000000000000030
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
