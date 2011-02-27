@@ -36,6 +36,7 @@ contains
   sdl_frame in '..\..\..\components\TURBU\sdl_frame.pas',
   DBIndexComboBox in '..\..\..\components\TURBU\DBIndexComboBox.pas',
   extensible_cds in '..\..\..\components\TURBU\extensible_cds.pas',
-  ClipboardWatcher in 'ClipboardWatcher.pas';
+  ClipboardWatcher in 'ClipboardWatcher.pas',
+  IDLookupCombo in '..\..\..\components\TURBU\IDLookupCombo.pas';
 
 end.
