@@ -192,15 +192,19 @@ end;
 function TEBInventory.GetNodeText: string;
 const LINE = 'Change Inventory: %s %s of %s';
 begin
-   result := format(LINE, [ADDREM[Values[0]], GetIntScript(Values[1], Values[2]),
-                           (Components[0] as TEBExpression).GetNodeText]);
+   if values[0] < 2 then
+      result := format(LINE, [ADDREM[Values[0]], GetIntScript(Values[1], Values[2]),
+                              ChildNode[0]])
+   else result := format(LINE, [ADDREM[1], 'all', ChildNode[0]]);
 end;
 
 function TEBInventory.GetScriptText: string;
 const LINE = '%sItem(%s, %s);';
 begin
-   result := format(LINE, [ADDREM[Values[0]], GetIntScript(Values[1], Values[2]),
-                           (Components[0] as TEBExpression).GetScript(0)]);
+   if values[0] < 2 then
+      result := format(LINE, [ADDREM[Values[0]], GetIntScript(Values[1], Values[2]),
+                              ChildScript[0]])
+   else result := format(LINE, [ADDREM[1], '-1', ChildNode[0]]);
 end;
 
 { TEBChangeParty }
@@ -208,14 +212,14 @@ end;
 function TEBChangeParty.GetNodeText: string;
 const LINE = 'Change Party: %s %s';
 begin
-   result := format(LINE, [ADDREM[values[0]], (Components[0] as TEBExpression).GetNodeText]);
+   result := format(LINE, [ADDREM[values[0]], ChildNode[0]]);
 end;
 
 function TEBChangeParty.GetScriptText: string;
 var
    param: string;
 begin
-   param := (Components[0] as TEBExpression).GetScript(0);
+   param := ChildScript[0];
    if boolean(Values[0]) then
       result := format('heroLeave(%s);', [param])
    else result := format('heroJoin(%s);', [param]);
@@ -224,17 +228,19 @@ end;
 { TEBExperience }
 
 function TEBExperience.GetNodeText: string;
+const LINE = 'Change Experience: %s, %s %s';
+var
+   param1, param2: string;
 begin
-   result := result + 'Change Experience: ';
    case Values[0] of
-      0: result := result + '[All Members]';
-      1: result := result + HeroName(Values[1]);
-      2: result := result + format('Ints[%s]', [IntName(Values[1])]);
+      0: param1 := '[All Members]';
+      1: param1 := HeroName(Values[1]);
+      2: param1 := format('Ints[%s]', [IntName(Values[1])]);
    end;
    if boolean(Values[2]) then
-      result := result + 'Subtract '
-   else result := result + 'Add ';
-   result := result + GetIntScript(Values[3], Values[4]);
+      param2 := 'Subtract'
+   else param2 := 'Add';
+   result := format(LINE, [param1, param2, GetIntScript(Values[3], Values[4])]);
 end;
 
 function TEBExperience.GetScriptText: string;
