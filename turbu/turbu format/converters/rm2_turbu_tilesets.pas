@@ -47,6 +47,7 @@ begin
    self.HiSpeed := base.hispeed;
    //convert images here
    convertTileGroups(string(base.filename), base);
+   BuildGroupMap;
 end;
 
 const

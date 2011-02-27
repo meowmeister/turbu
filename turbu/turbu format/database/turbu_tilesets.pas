@@ -91,6 +91,7 @@ type
       FGroupMap: array [0..7] of TList<byte>;
       function TileCount(value: TTileGroupRecord): byte;
    protected
+      procedure BuildGroupMap;
       class function keyChar: ansiChar; override;
    public
       constructor Create;
@@ -204,35 +205,13 @@ end;
 
 { TTileSet }
 
-constructor TTileSet.Load(savefile: TStream);
-var
-   i, j: integer;
-   layer: byte;
-begin
-   inherited Load(savefile);
-   for i := 0 to 7 do
-      FGroupMap[i] := TList<byte>.Create;
-   {records.load(savefile); //Do this once QC 67762 gets fixed}
-   lassert(savefile.readChar = TTileGroupRecord.keyChar);
-
-   FRecords := TTileGroupList.Create;
-   for I := 1 to savefile.readInt do
-   begin
-      FRecords.Add(TTileGroupRecord.Load(savefile));
-      for j := 1 to tileCount(FRecords.Last) do
-      begin
-         for layer in FRecords.Last.FLayers do
-            FGroupMap[layer].Add(i - 1);
-      end;
-   end;
-   lassert(savefile.readChar = UpCase(TTileGroupRecord.keyChar));
-
-   FHiSpeed := savefile.readBool;
-end;
-
 constructor TTileSet.Create;
+var
+   i: integer;
 begin
    inherited Create;
+   for i := 0 to 7 do
+      FGroupMap[i] := TList<byte>.Create;
    FRecords := TTileGroupList.Create;
 end;
 
@@ -244,6 +223,36 @@ begin
    for I := low(FGroupMap) to high(FGroupMap) do
       FGroupMap[i].Free;
    inherited Destroy;
+end;
+
+procedure TTileSet.BuildGroupMap;
+var
+   i, j: integer;
+   layer: byte;
+begin
+   for i := 0 to FRecords.count - 1 do
+      for j := 1 to tileCount(FRecords[i]) do
+         for layer in FRecords[i].FLayers do
+            FGroupMap[layer].Add(i);
+end;
+
+constructor TTileSet.Load(savefile: TStream);
+var
+   i: integer;
+begin
+   inherited Load(savefile);
+   for i := 0 to 7 do
+      FGroupMap[i] := TList<byte>.Create;
+   {records.load(savefile); //Do this once QC 67762 gets fixed}
+   lassert(savefile.readChar = TTileGroupRecord.keyChar);
+
+   FRecords := TTileGroupList.Create;
+   for I := 1 to savefile.readInt do
+      FRecords.Add(TTileGroupRecord.Load(savefile));
+   BuildGroupMap;
+   lassert(savefile.readChar = UpCase(TTileGroupRecord.keyChar));
+
+   FHiSpeed := savefile.readBool;
 end;
 
 procedure TTileSet.save(savefile: TStream);
