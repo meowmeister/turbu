@@ -23,7 +23,8 @@ interface
 uses
    Forms, StdCtrls, Classes, Controls, ExtCtrls, DB, DBCtrls, DBIndexComboBox,
    Mask, DBClient, JvExMask, JvSpin,
-   dm_database, EbEdit, EventBuilder, variable_selector, turbu_map_interface;
+   dm_database, EbEdit, EventBuilder, variable_selector, turbu_map_interface,
+   IDLookupCombo;
 
 type
    [EditorCategory('Basics', 'Call Script', 5)]
@@ -38,19 +39,15 @@ type
       radMapObjectPtr: TRadioButton;
       selObjPtr: TIntSelector;
       selPage: TIntSelector;
-      cbxGlobalName: TDBLookupComboBox;
-      srcGlobalOutput: TDataSource;
-      dsGlobalOutput: TClientDataSet;
-      dsGlobalOutputid: TIntegerField;
-      procedure RadioButtonClick(Sender: TObject);
+      cbxGlobalName: TIDLookupCombo;
       procedure cbxMapObjectClick(Sender: TObject);
    private
       function GetCheckedRadioButton: integer;
-      procedure EnableControlsProperly;
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
       function NewClassType: TEbClass; override;
+      procedure EnableControlsProperly; override;
    public
       procedure SetupMap(const map: IRpgMap); override;
    end;
@@ -115,7 +112,7 @@ begin
    case checked of
       0:
       begin
-         obj.Values.add(dsGlobalOutputid.Value);
+         obj.Values.add(cbxGlobalName.id);
          obj.Values.add(0);
       end;
       1:
@@ -137,16 +134,10 @@ begin
    result := TEBCallEvent;
 end;
 
-procedure TfrmEBEditCall.RadioButtonClick(Sender: TObject);
-begin
-   EnableControlsProperly;
-end;
-
 procedure TfrmEBEditCall.SetupMap(const map: IRpgMap);
 var
    list: TStrings;
 begin
-   dsGlobalOutput.AppendRecord([0]);
    EnableControlsProperly;
    if assigned(map) then
    begin
@@ -171,9 +162,7 @@ begin
       0:
       begin
          radGlobalScript.Checked := true;
-         dsGlobalOutput.Edit;
-         dsGlobalOutputid.Value := obj.Values[1];
-         dsGlobalOutput.Post;
+         cbxGlobalName.id := obj.Values[1];
       end;
       1:
       begin

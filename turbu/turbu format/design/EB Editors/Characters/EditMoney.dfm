@@ -1,20 +1,20 @@
 inherited frmEBEditMoney: TfrmEBEditMoney
   Caption = 'Change Money'
-  ClientHeight = 218
+  ClientHeight = 215
   ClientWidth = 288
   OnShow = FormShow
   ExplicitWidth = 294
-  ExplicitHeight = 253
+  ExplicitHeight = 250
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Width = 288
-    Height = 165
+    Height = 162
     object GroupBox1: TGroupBox
       Left = 8
-      Top = 72
+      Top = 61
       Width = 272
-      Height = 105
+      Height = 94
       Caption = 'Amount'
       TabOrder = 0
       object radExactAmount: TRadioButton
@@ -26,16 +26,16 @@ inherited frmEBEditMoney: TfrmEBEditMoney
         Checked = True
         TabOrder = 0
         TabStop = True
-        OnClick = OnRadClick
+        OnClick = RadioButtonClick
       end
       object radPointer: TRadioButton
         Left = 7
-        Top = 61
+        Top = 62
         Width = 75
         Height = 17
         Caption = 'Value of:'
         TabOrder = 1
-        OnClick = OnRadClick
+        OnClick = RadioButtonClick
       end
       object spnExactValue: TJvSpinEdit
         Left = 91
@@ -48,7 +48,7 @@ inherited frmEBEditMoney: TfrmEBEditMoney
       end
       object selValue: TIntSelector
         Left = 91
-        Top = 57
+        Top = 58
         Width = 174
         Height = 24
       end
@@ -56,15 +56,15 @@ inherited frmEBEditMoney: TfrmEBEditMoney
   end
   inherited btnOK: TButton
     Left = 5
-    Top = 175
+    Top = 172
   end
   inherited btnCancel: TButton
     Left = 99
-    Top = 175
+    Top = 172
   end
   inherited btnHelp: TButton
     Left = 192
-    Top = 175
+    Top = 172
   end
   object grpOperation: TRadioGroup
     Left = 8
