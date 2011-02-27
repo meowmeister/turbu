@@ -563,7 +563,10 @@ procedure TfrmTurbuMain.mnu2KClick(Sender: TObject);
 begin
    closeProject;
    if frmRmConverter.loadProject = SUCCESSFUL_IMPORT then
+   begin
+      FDBSignal.SetEvent;
       self.loadProject;
+   end;
 end;
 
 procedure TfrmTurbuMain.mnuAutosaveMapsClick(Sender: TObject);
