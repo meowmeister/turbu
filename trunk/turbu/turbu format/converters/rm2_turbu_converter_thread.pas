@@ -364,6 +364,7 @@ begin
             FReport.setCurrentTask('Saving database');
             GDatabase.save(savefile);
             toFolder.writeFile(DBNAME, savefile);
+            GDatabase.Filename := IncludeTrailingPathDelimiter(FToLoc) + DBNAME;
          finally
             savefile.free;
          end;
