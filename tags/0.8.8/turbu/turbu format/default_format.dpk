@@ -1,0 +1,66 @@
+package default_format;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  EngineBasis;
+
+contains
+  turbu_database in 'database\turbu_database.pas',
+  turbu_characters in 'database\turbu_characters.pas',
+  turbu_classes in 'database\turbu_classes.pas',
+  turbu_animations in 'database\turbu_animations.pas',
+  turbu_items in 'database\turbu_items.pas',
+  turbu_resists in 'database\turbu_resists.pas',
+  turbu_skills in 'database\turbu_skills.pas',
+  turbu_sounds in 'database\turbu_sounds.pas',
+  dm_database in '..\editor\dm_database.pas' {dmDatabase: TDataModule},
+  turbu_sprites in 'turbu_sprites.pas',
+  turbu_unit_dictionary in 'turbu_unit_dictionary.pas',
+  turbu_defs in 'turbu_defs.pas',
+  turbu_decl_utils in 'turbu_decl_utils.pas',
+  turbu_vartypes in 'turbu_vartypes.pas',
+  turbu_constants in 'turbu_constants.pas',
+  turbu_game_data in 'database\turbu_game_data.pas',
+  turbu_map_metadata in 'database\turbu_map_metadata.pas',
+  turbu_maps in 'maps\turbu_maps.pas',
+  turbu_tilesets in 'database\turbu_tilesets.pas',
+  timing in '..\mapview\libs\timing.pas',
+  turbu_script_interface in 'turbu_script_interface.pas',
+  commons in '..\commons.pas',
+  turbu_map_objects in 'maps\turbu_map_objects.pas',
+  charset_data in '..\charset_data.pas',
+  turbu_pathing in 'turbu_pathing.pas',
+  EB_RpgScript in 'script\EB_RpgScript.pas',
+  EB_Messages in 'script\EB_Messages.pas',
+  EB_Expressions in 'script\EB_Expressions.pas',
+  EB_Maps in 'script\EB_Maps.pas',
+  EB_System in 'script\EB_System.pas',
+  EB_Characters in 'script\EB_Characters.pas',
+  EB_Settings in 'script\EB_Settings.pas',
+  EB_Media in 'script\EB_Media.pas';
+
+end.

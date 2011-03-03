@@ -1,0 +1,158 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{98f9c45d-3814-41dd-b1c4-d4201445334e}</ProjectGuid>
+		</PropertyGroup>
+		<ItemGroup>
+			<Projects Include="..\build utils\TepRename.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="engines\basis\EngineBasis.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="engines\basis\turbu_design_basis.dproj">
+				<Dependencies>engines\basis\EngineBasis.dproj</Dependencies>
+			</Projects>
+			<Projects Include="turbu format\default_format.dproj">
+				<Dependencies>engines\basis\EngineBasis.dproj</Dependencies>
+			</Projects>
+			<Projects Include="turbu format\design\default_format_design.dproj">
+				<Dependencies>engines\basis\EngineBasis.dproj;turbu format\default_format.dproj;engines\basis\turbu_design_basis.dproj</Dependencies>
+			</Projects>
+			<Projects Include="engines\battle basis\battle_default.dproj">
+				<Dependencies>engines\basis\EngineBasis.dproj</Dependencies>
+			</Projects>
+			<Projects Include="engines\map engine\map_default.dproj">
+				<Dependencies>engines\basis\EngineBasis.dproj;turbu format\default_format.dproj</Dependencies>
+			</Projects>
+			<Projects Include="engines\map engine\design\map_default_design.dproj">
+				<Dependencies>turbu format\design\default_format_design.dproj;engines\basis\EngineBasis.dproj;turbu format\default_format.dproj;engines\basis\turbu_design_basis.dproj;engines\map engine\map_default.dproj</Dependencies>
+			</Projects>
+			<Projects Include="mapview\mapshow.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="editor\Turbu.dproj">
+				<Dependencies>..\build utils\TepRename.dproj;engines\basis\EngineBasis.dproj;turbu format\default_format.dproj;engines\basis\turbu_design_basis.dproj;turbu format\design\default_format_design.dproj;engines\battle basis\battle_default.dproj;engines\map engine\map_default.dproj;engines\map engine\design\map_default_design.dproj</Dependencies>
+			</Projects>
+			<Projects Include="test harness\testing.dproj">
+				<Dependencies/>
+			</Projects>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Default.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<BorlandProject>
+					<Default.Personality/>
+				</BorlandProject>
+			</BorlandProject>
+		</ProjectExtensions>
+		<Target Name="TepRename">
+			<MSBuild Projects="..\build utils\TepRename.dproj"/>
+		</Target>
+		<Target Name="TepRename:Clean">
+			<MSBuild Projects="..\build utils\TepRename.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="TepRename:Make">
+			<MSBuild Projects="..\build utils\TepRename.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="EngineBasis">
+			<MSBuild Projects="engines\basis\EngineBasis.dproj"/>
+		</Target>
+		<Target Name="EngineBasis:Clean">
+			<MSBuild Projects="engines\basis\EngineBasis.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="EngineBasis:Make">
+			<MSBuild Projects="engines\basis\EngineBasis.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="turbu_design_basis" DependsOnTargets="EngineBasis">
+			<MSBuild Projects="engines\basis\turbu_design_basis.dproj"/>
+		</Target>
+		<Target Name="turbu_design_basis:Clean" DependsOnTargets="EngineBasis:Clean">
+			<MSBuild Projects="engines\basis\turbu_design_basis.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="turbu_design_basis:Make" DependsOnTargets="EngineBasis:Make">
+			<MSBuild Projects="engines\basis\turbu_design_basis.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="default_format" DependsOnTargets="EngineBasis">
+			<MSBuild Projects="turbu format\default_format.dproj"/>
+		</Target>
+		<Target Name="default_format:Clean" DependsOnTargets="EngineBasis:Clean">
+			<MSBuild Projects="turbu format\default_format.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="default_format:Make" DependsOnTargets="EngineBasis:Make">
+			<MSBuild Projects="turbu format\default_format.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="default_format_design" DependsOnTargets="EngineBasis;default_format;turbu_design_basis">
+			<MSBuild Projects="turbu format\design\default_format_design.dproj"/>
+		</Target>
+		<Target Name="default_format_design:Clean" DependsOnTargets="EngineBasis:Clean;default_format:Clean;turbu_design_basis:Clean">
+			<MSBuild Projects="turbu format\design\default_format_design.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="default_format_design:Make" DependsOnTargets="EngineBasis:Make;default_format:Make;turbu_design_basis:Make">
+			<MSBuild Projects="turbu format\design\default_format_design.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="battle_default" DependsOnTargets="EngineBasis">
+			<MSBuild Projects="engines\battle basis\battle_default.dproj"/>
+		</Target>
+		<Target Name="battle_default:Clean" DependsOnTargets="EngineBasis:Clean">
+			<MSBuild Projects="engines\battle basis\battle_default.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="battle_default:Make" DependsOnTargets="EngineBasis:Make">
+			<MSBuild Projects="engines\battle basis\battle_default.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="map_default" DependsOnTargets="EngineBasis;default_format">
+			<MSBuild Projects="engines\map engine\map_default.dproj"/>
+		</Target>
+		<Target Name="map_default:Clean" DependsOnTargets="EngineBasis:Clean;default_format:Clean">
+			<MSBuild Projects="engines\map engine\map_default.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="map_default:Make" DependsOnTargets="EngineBasis:Make;default_format:Make">
+			<MSBuild Projects="engines\map engine\map_default.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="map_default_design" DependsOnTargets="default_format_design;EngineBasis;default_format;turbu_design_basis;map_default">
+			<MSBuild Projects="engines\map engine\design\map_default_design.dproj"/>
+		</Target>
+		<Target Name="map_default_design:Clean" DependsOnTargets="default_format_design:Clean;EngineBasis:Clean;default_format:Clean;turbu_design_basis:Clean;map_default:Clean">
+			<MSBuild Projects="engines\map engine\design\map_default_design.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="map_default_design:Make" DependsOnTargets="default_format_design:Make;EngineBasis:Make;default_format:Make;turbu_design_basis:Make;map_default:Make">
+			<MSBuild Projects="engines\map engine\design\map_default_design.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="mapshow">
+			<MSBuild Projects="mapview\mapshow.dproj"/>
+		</Target>
+		<Target Name="mapshow:Clean">
+			<MSBuild Projects="mapview\mapshow.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="mapshow:Make">
+			<MSBuild Projects="mapview\mapshow.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="Turbu" DependsOnTargets="TepRename;EngineBasis;default_format;turbu_design_basis;default_format_design;battle_default;map_default;map_default_design">
+			<MSBuild Projects="editor\Turbu.dproj"/>
+		</Target>
+		<Target Name="Turbu:Clean" DependsOnTargets="TepRename:Clean;EngineBasis:Clean;default_format:Clean;turbu_design_basis:Clean;default_format_design:Clean;battle_default:Clean;map_default:Clean;map_default_design:Clean">
+			<MSBuild Projects="editor\Turbu.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="Turbu:Make" DependsOnTargets="TepRename:Make;EngineBasis:Make;default_format:Make;turbu_design_basis:Make;default_format_design:Make;battle_default:Make;map_default:Make;map_default_design:Make">
+			<MSBuild Projects="editor\Turbu.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="testing">
+			<MSBuild Projects="test harness\testing.dproj"/>
+		</Target>
+		<Target Name="testing:Clean">
+			<MSBuild Projects="test harness\testing.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="testing:Make">
+			<MSBuild Projects="test harness\testing.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="TepRename;EngineBasis;turbu_design_basis;default_format;default_format_design;battle_default;map_default;map_default_design;mapshow;Turbu;testing"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="TepRename:Clean;EngineBasis:Clean;turbu_design_basis:Clean;default_format:Clean;default_format_design:Clean;battle_default:Clean;map_default:Clean;map_default_design:Clean;mapshow:Clean;Turbu:Clean;testing:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="TepRename:Make;EngineBasis:Make;turbu_design_basis:Make;default_format:Make;default_format_design:Make;battle_default:Make;map_default:Make;map_default_design:Make;mapshow:Make;Turbu:Make;testing:Make"/>
+		</Target>
+		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')" Project="$(BDS)\Bin\CodeGear.Group.Targets"/>
+	</Project>

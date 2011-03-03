@@ -1,0 +1,45 @@
+package map_default_design;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'JEDI Plugin Package'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  map_default,
+  JvStdCtrls,
+  JvDB,
+  turbu_design_basis,
+  default_format_design;
+
+contains
+  map_default_design_plugin in 'map_default_design_plugin.pas' {RpgBasicMapDesignPlugin: TJvPlugIn},
+  turbu_2k_map_engine_D in 'turbu_2k_map_engine_D.pas',
+  eval in 'eval.pas' {frmMapProperties},
+  mapobject_container in 'mapobject_container.pas',
+  frame_conditions in 'frame_conditions.pas' {frameConditions: TFrame},
+  MapObject_Editor in 'MapObject_Editor.pas' {frmObjectEditor},
+  dataset_viewer in 'dataset_viewer.pas' {frmDatasetViewer};
+
+end.
