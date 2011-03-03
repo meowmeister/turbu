@@ -280,7 +280,7 @@ begin
             while not datafile.eof do
             begin
                key := peekAhead(datafile);
-               if not (key in SECTIONS_I_KNOW_HOW_TO_READ) then
+               if not key in SECTIONS_I_KNOW_HOW_TO_READ then
                      legacy.Add(key, getStrSec(key, datafile, nil))
                else skipSec(key, datafile);
             end;
