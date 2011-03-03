@@ -358,12 +358,8 @@ var
    whichInnVocab: TInnVocabSet;
 begin
    inherited Create;
-   dummy := 0;
 try
-with theLDB do
-begin
-   Read(dummy, 1);
-   if dummy <> $0b then
+   if not PeekAhead(theLDB, $0b) then //hero section
       raise EParseMessage.create('Hero section of RPG_RT.LDB not found!');
    converter := TBerConverter.Create(theLDB); // read the length statement
    converter.read(theLDB); // this one is the number of heroes
@@ -379,8 +375,7 @@ begin
          skipSec(i, theLDB);
 
       //class section
-      Read(dummy, 1);
-      if dummy <> $1E then
+      if not PeekAhead(theLDB, $1E) then
          raise EParseMessage.create('Class section of RPG_RT.LDB not found!');
       converter.read(theLDB); // read the length statement
       converter.read(theLDB); // this one is the number of class records
@@ -394,9 +389,8 @@ begin
       theLDB.Seek(savedPos, soFromBeginning);
    end;
 
-//skills section
-   Read(dummy, 1);
-   if dummy <> $0c then
+   //skills section
+   if not PeekAhead(theLDB, $0c) then
       raise EParseMessage.create('Skill section of RPG_RT.LDB not found!');
    converter.read(theLDB); // read the length statement
    converter.read(theLDB); // this one is the number of items
@@ -407,9 +401,8 @@ begin
    for i := 1 to FSkills do
       FSkill[i] := TSkill.Create(theLDB, i, self);
 
-//items section
-   Read(dummy, 1);
-   if dummy <> $0d then
+   //items section
+   if not PeekAhead(theLDB, $0d) then
       raise EParseMessage.create('Item section of RPG_RT.LDB not found!');
    converter.read(theLDB); // read the length statement
    converter.read(theLDB); // this one is the number of items
@@ -422,7 +415,7 @@ begin
 
    skipSec($0e, theLDB); //monsters section
 
-//mparty section
+   //mparty section
    if not peekAhead(theLDB, $0f) then
       raise EParseMessage.create('MParty section of RPG_RT.LDB not found!');
    converter.read(theLDB); // read the length statement
@@ -454,8 +447,8 @@ begin
    for I := 1 to FAttributes do
       FAttribute[i] := TAttribute.Create(theLDB, i);
 
-   Read(dummy, 1); //Conditions section
-   if dummy <> $12 then
+   //Conditions section
+   if not PeekAhead(theLDB, $12) then
       raise EParseMessage.create('Condition section of RPG_RT.LDB not found!');
    converter.read(theLDB); // read the length statement
    converter.read(theLDB); // this one is the number of items
@@ -479,8 +472,8 @@ begin
          FClass[i].reviseConditions(converter.getData + 1);
    end;
 
-   Read(dummy, 1); //Animations section
-   if dummy <> $13 then
+   //Animations section
+   if not PeekAhead(theLDB, $13) then
       raise EParseMessage.create('Animation section of RPG_RT.LDB not found!');
    converter.read(theLDB); // read the length statement
    converter.read(theLDB); // this one is the number of items
@@ -492,8 +485,7 @@ begin
       FBattleAnim[i] := TBattleAnim.Create(theLDB, i);
 
    //chipset section
-   Read(dummy, 1);
-   if dummy <> $14 then
+   if not PeekAhead(theLDB, $14) then
       raise EParseMessage.create('Chipset section of RPG_RT.LDB not found!');
    converter.read(theLDB); // read the length statement
    converter.read(theLDB); // this one is the number of chipsets
@@ -565,36 +557,28 @@ begin
    assert(peekAhead(theLdb, 0));
 
    //System Data
-   Read(dummy, 1);
-   if dummy <> $16 then
+   if not PeekAhead(theLDB, $16) then
       raise EParseMessage.create('System Info section of RPG_RT.LDB not found!');
    converter.read(theLDB); // bypass the length statement
    FSystemData := TSystemRecord.create(theLDB);
 
-//switch section
-   Read(dummy, 1);
-   if dummy <> $17 then
+   //switch section
+   if not PeekAhead(theLDB, $17) then
       raise EParseMessage.create('Switch section of RPG_RT.LDB not found!');
    converter.read(theLDB); // bypass the length statement
    converter.read(theLDB); // this one is the number of switches
-   dummy := converter.getData;
-   FSwitches := TSwitchSection.create(theLDB, dummy);
+   FSwitches := TSwitchSection.create(theLDB, converter.getData);
 
 //variable section
-   dummy := 0;
-   Read(dummy, 1);
-   if dummy <> $18 then
+   if not PeekAhead(theLDB, $18) then
       raise EParseMessage.create('Variable section of RPG_RT.LDB not found!');
    converter.read(theLDB); // bypass the length statement
    converter.read(theLDB); // this one is the number of variables
-   dummy := converter.getData;
-   FVariables := TVarSection.create(theLDB, dummy);
+   FVariables := TVarSection.create(theLDB, converter.getData);
 
 {$IFNDEF NOPARSE_EVENTS}
 //common event section
-   dummy := 0;
-   Read(dummy, 1);
-   if dummy <> $19 then
+   if not PeekAhead(theLDB, $19) then
       raise EParseMessage.create('Variable section of RPG_RT.LDB not found!');
    converter.read(theLDB); // bypass the length statement
    FGlobalEvents := TEventBlock.create(theLDB);
@@ -606,33 +590,27 @@ begin
    begin
       //sections $1A-$1C (and 1F, below) are apparently always empty.
       //Why are they in there?
-      read(dummy, 2);
+      theLDB.read(dummy, 2);
       assert(dummy = $001A);
-      read(dummy, 2);
+      theLDB.read(dummy, 2);
       assert(dummy = $001B);
-      read(dummy, 2);
+      theLDB.read(dummy, 2);
       assert(dummy = $001C);
 
       //battle layout
-      Read(dummy, 1);
-      if dummy <> $1D then
+      if not PeekAhead(theLDB, $1D) then
          raise EParseMessage.create('Battle Layout section of RPG_RT.LDB not found!');
       converter.read(theLDB); // read the length statement
       FBattleLayout := TBattleLayout.Create(theLDB);
 
       skipSec($1E, theLDB); //class section has already been read
 
-      read(dummy, 2);
+      theLDB.read(dummy, 2);
       assert(dummy = $001F);
-
-      dummy := 0;
-      Read(dummy, 1);
-      theLDB.Seek(-1, soFromCurrent);
 
       skipSec($20, theLDB); //what does this do? system page 2?
    end;
    assert(theLDB.position = theLDB.Size);
-end; // end of WITH block
 except
    on E: EParseMessage do
    begin
