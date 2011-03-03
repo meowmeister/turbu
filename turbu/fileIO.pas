@@ -38,6 +38,7 @@ function getChboxSec (expected: byte; theFile: TStream; handleUnex: PIntHandler)
 function getArraySec (expected: byte; theFile: TStream; out theArray): integer;
 function getNext(theFile: TStream): byte;
 function loadString(inFile: TStream): string;
+function peekAheadW(thefile: TStream; const expected: word): boolean;
 function peekAhead(thefile: TStream; const expected: byte): boolean; overload;
 function peekAhead(thefile: TStream): byte; overload;
 procedure saveString(const theString: string; outFile: TStream);
@@ -317,6 +318,16 @@ begin
       inFile.read(result[1], len);
    end
    else result := '';
+end;
+
+function peekAheadW(thefile: TStream; const expected: word): boolean;
+var
+   dummy: word;
+begin
+   theFile.Read(dummy, 2);
+   result := dummy = expected;
+   if not result then
+      theFile.seek(-2, soFromCurrent);
 end;
 
 function peekAhead(thefile: TStream; const expected: byte): boolean;

@@ -312,13 +312,10 @@ procedure fillInSysRecordInt(const expected: byte; out theResult: integer); forw
 
 constructor TMParty.Create(theLDB: TStream; const id: word);
 var
-   dummy: byte;
    converter: intX80;
 begin
    inherited Create;
 try
-with theLDB do
-begin
    converter := TBerConverter.Create(theLDB);
    if converter.getData <> id then
       raise EParseMessage.create('MParty section ' + intToStr(id) + ' of RPG_RT.LDB not found!');
@@ -330,10 +327,8 @@ begin
    if GProjectFormat = pf_2k3 then
       skipSec(6, theLDB);
    skipSec($0b, theLDB);
-   Read(dummy, 1);
-   if dummy <> 0 then
+   if not PeekAhead(theLDB, 0) then
       raise EParseMessage.create('MParty section ' + intToStr(id) + ' final 0 not found');
-end; // end of WITH block
 except
    on E: EParseMessage do
    begin
@@ -350,7 +345,6 @@ end;
 
 constructor TLcfDataBase.Create(theLDB: TStream);
 var
-   dummy: word;
    converter: intX80;
    i, whichSet: word;
    savedPos: integer;
@@ -590,12 +584,9 @@ try
    begin
       //sections $1A-$1C (and 1F, below) are apparently always empty.
       //Why are they in there?
-      theLDB.read(dummy, 2);
-      assert(dummy = $001A);
-      theLDB.read(dummy, 2);
-      assert(dummy = $001B);
-      theLDB.read(dummy, 2);
-      assert(dummy = $001C);
+      assert(PeekAheadW(theLDB, $001A));
+      assert(PeekAheadW(theLDB, $001B));
+      assert(PeekAheadW(theLDB, $001C));
 
       //battle layout
       if not PeekAhead(theLDB, $1D) then
@@ -605,8 +596,7 @@ try
 
       skipSec($1E, theLDB); //class section has already been read
 
-      theLDB.read(dummy, 2);
-      assert(dummy = $001F);
+      assert(PeekAheadW(theLDB, $001F));
 
       skipSec($20, theLDB); //what does this do? system page 2?
    end;
