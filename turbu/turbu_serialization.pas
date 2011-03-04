@@ -9,6 +9,8 @@ type
    TInstancePair = TPair<pointer, PTypeInfo>;
    TInstanceStack = class(TStack<TInstancePair>);
    TConstructorDict = TDictionary<TRttiInstanceType, TRttiMethod>;
+   TDBSerializerRule = class;
+   TRuleDict = TObjectDictionary<TClass, TDBSerializerRule>;
 
    TSerializer = class abstract(TObject)
    private
@@ -45,6 +47,7 @@ type
       FUploadPrefix: string;
       FRelationDepth: integer;
       FKeyFields: TKeyFieldStack;
+      FRules: TRuleDict;
 
       function handleReferenceManagement(db: TDataset; var value: TValue; const fieldname: string): TReferenceResult;
 
@@ -115,9 +118,49 @@ type
       function CreateNew(itemType: TRttiType): TValue; virtual;
    end;
 
+   TDBSerializationOperation = class
+   private
+      FField: TRttiField;
+   public
+      constructor Create(field: TRttiField);
+      procedure Upload(Value: TObject; db: TDataset); virtual; abstract;
+      procedure Download(Value: TObject; db: TDataset); virtual; abstract;
+   end;
+
+   TDBAttributeOperation = class(TDBSerializationOperation)
+   private
+      FAttribute: TDBUploadAttribute;
+   public
+      constructor Create(field: TRttiField; attr: TDBUploadAttribute);
+      procedure Upload(Value: TObject; db: TDataset); override;
+      procedure Download(Value: TObject; db: TDataset); override;
+   end;
+
+   TDBFieldOperation = class(TDBSerializationOperation)
+   private
+      FName: string;
+      FSerializer: TDatasetSerializer;
+   public
+      constructor Create(field: TRttiField; const name: string; ser: TDatasetSerializer);
+      procedure Upload(Value: TObject; db: TDataset); override;
+      procedure Download(Value: TObject; db: TDataset); override;
+   end;
+
+   TDBSerializerRule = class
+   private
+      FSteps: TArray<TDBSerializationOperation>;
+   public
+      constructor Create(cls: TClass; ser: TDatasetSerializer);
+      destructor Destroy; override;
+      procedure Upload(Value: TObject; db: TDataset);
+      procedure Download(Value: TObject; db: TDataset);
+   end;
+
 implementation
 uses
    SysUtils;
+
+{$OPTIMIZATION ON}
 
 { TSerializer }
 
@@ -182,10 +225,12 @@ constructor TDatasetSerializer.Create;
 begin
    inherited Create;
    FKeyFields := TKeyFieldStack.Create;
+   FRules := TRuleDict.Create([doOwnsValues]);
 end;
 
 destructor TDatasetSerializer.Destroy;
 begin
+   FRules.Free;
    FKeyFields.Free;
    inherited;
 end;
@@ -470,37 +515,17 @@ begin
 end;
 
 procedure TDatasetSerializer.download(value: TObject; db: TDataset);
-const
-   SKIP_KINDS = [tkMethod, tkUnknown];
 var
-   field: TRttiField;
-   attr: TCustomAttribute;
-   lValue: TValue;
-   fieldname: string;
+   rule: TDBSerializerRule;
 begin
    FInstances.Push(TInstancePair.Create(value, value.ClassInfo));
    try
-      for field in FContext.GetType(value.ClassType).GetFields do
+      if not FRules.TryGetValue(value.ClassType, rule) then
       begin
-         if field.FieldType.TypeKind in SKIP_KINDS then
-            Continue;
-         if not ((field.name <> '') and (field.Name[1] = 'F')) then
-            Continue;
-         fieldname := getFieldName(field);
-         if (FKeyFields.Count > 0) and (isKeyField(fieldname)) then
-            Continue;
-
-         attr := field.GetAttribute(TDBUploadAttribute);
-         if assigned(attr) then
-            TDBUploadAttribute(attr).download(db, field, value)
-         else begin
-            FCurrentField := field;
-            begin
-               lValue := field.GetValue(value);
-               field.SetValue(value, downloadValue(db, lValue, fieldname));
-            end;
-         end;
+         rule := TDBSerializerRule.Create(value.ClassType, self);
+         FRules.Add(value.ClassType, rule);
       end;
+      rule.Download(value, db);
    finally
       FInstances.Pop;
    end;
@@ -508,27 +533,19 @@ end;
 
 procedure TDatasetSerializer.upload(value: TObject; db: TDataset);
 var
-   field: TRttiField;
-   attr: TCustomAttribute;
+   rule: TDBSerializerRule;
 begin
    FInstances.Push(TInstancePair.Create(value, value.ClassInfo));
    try
       if FUploadPrefix = '' then
          db.Append;
 
-      for field in FContext.GetType(value.ClassType).GetFields do
+      if not FRules.TryGetValue(value.ClassType, rule) then
       begin
-         if not ((field.name <> '') and (field.Name[1] = 'F')) then
-            Continue;
-
-         attr := field.GetAttribute(TDBUploadAttribute);
-         if assigned(attr) then
-            TDBUploadAttribute(attr).upload(db, field, value)
-         else begin
-            FCurrentField := field;
-            uploadValue(db, field.GetValue(value), getFieldName(field))
-         end;
+         rule := TDBSerializerRule.Create(value.ClassType, self);
+         FRules.Add(value.ClassType, rule);
       end;
+      rule.Upload(value, db);
    finally
       FInstances.Pop;
    end;
@@ -751,6 +768,110 @@ end;
 function TEnumerableManagerAttribute.CreateNew(itemType: TRttiType): TValue;
 begin
    // do nothing
+end;
+
+{ TSerializationOperation }
+
+constructor TDBSerializationOperation.Create(field: TRttiField);
+begin
+   FField := field;
+end;
+
+{ TDBAttributeOperation }
+
+constructor TDBAttributeOperation.Create(field: TRttiField; attr: TDBUploadAttribute);
+begin
+   inherited Create(field);
+   FAttribute := attr;
+end;
+
+procedure TDBAttributeOperation.Download(Value: TObject; db: TDataset);
+begin
+   FAttribute.download(db, FField, value);
+end;
+
+procedure TDBAttributeOperation.Upload(Value: TObject; db: TDataset);
+begin
+   FAttribute.upload(db, FField, value)
+end;
+
+{ TDBFieldOperation }
+
+constructor TDBFieldOperation.Create(field: TRttiField; const name: string; ser: TDatasetSerializer);
+begin
+   inherited Create(field);
+   FName := name;
+   FSerializer := ser;
+end;
+
+procedure TDBFieldOperation.Download(Value: TObject; db: TDataset);
+var
+   lValue: TValue;
+begin
+   if (FSerializer.FKeyFields.Count > 0) and (FSerializer.isKeyField(FName)) then
+      Exit;
+   FSerializer.FCurrentField := FField;
+   lValue := FField.GetValue(value);
+   FField.SetValue(value, FSerializer.downloadValue(db, lValue, FName));
+end;
+
+procedure TDBFieldOperation.Upload(Value: TObject; db: TDataset);
+begin
+   FSerializer.FCurrentField := FField;
+   FSerializer.uploadValue(db, FField.GetValue(value), FName)
+end;
+
+{ TDBSerializerRule }
+
+constructor TDBSerializerRule.Create(cls: TClass; ser: TDatasetSerializer);
+var
+   fields: TArray<TRttiField>;
+   field: TRttiField;
+   attr: TCustomAttribute;
+   counter: integer;
+   op: TDBSerializationOperation;
+begin
+   fields := TSerializer.FContext.GetType(cls).GetFields;
+   SetLength(FSteps, length(fields));
+   counter := 0;
+   for field in fields do
+   begin
+      if not ((field.name <> '') and (field.Name[1] = 'F')) then
+         Continue;
+
+      attr := field.GetAttribute(TDBUploadAttribute);
+      if assigned(attr) then
+         op := TDBAttributeOperation.Create(field, TDBUploadAttribute(attr))
+      else op := TDBFieldOperation.Create(field, ser.getFieldName(field), ser);
+      FSteps[counter] := op;
+      inc(counter);
+   end;
+   SetLength(FSteps, counter);
+end;
+
+destructor TDBSerializerRule.Destroy;
+var
+   i: integer;
+begin
+   for i := 0 to High(FSteps) do
+      FSteps[i].Free;
+   inherited;
+end;
+
+procedure TDBSerializerRule.Download(Value: TObject; db: TDataset);
+var
+   i: integer;
+begin
+   for i := 0 to High(FSteps) do
+      FSteps[i].Download(value, db);
+end;
+
+procedure TDBSerializerRule.Upload(Value: TObject; db: TDataset);
+var
+   i: integer;
+begin
+   for i := 0 to High(FSteps) do
+      FSteps[i].Upload(value, db);
 end;
 
 end.
