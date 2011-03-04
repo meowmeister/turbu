@@ -30,6 +30,13 @@ type
       procedure EnableControlsProperly; override;
    end;
 
+   [EditorCategory('Characters', 'Change Level', 4)]
+   TFrmEBEditLevel = class(TfrmEBEditExp)
+      procedure FormShow(Sender: TObject);
+   protected
+      function NewClassType: TEbClass; override;
+   end;
+
 implementation
 uses
    EB_Characters;
@@ -96,6 +103,21 @@ begin
    obj.Values.Add(ord(chkLevelMssage.Checked));
 end;
 
+{ TFrmEBEditLevel }
+
+procedure TFrmEBEditLevel.FormShow(Sender: TObject);
+begin
+   inherited;
+   self.Caption := 'Change Level';
+   spnExactValue.MaxValue := 99;
+end;
+
+function TFrmEBEditLevel.NewClassType: TEbClass;
+begin
+   result := TEBLevel;
+end;
+
 initialization
    RegisterEbEditor(TEBExperience, TfrmEBEditExp);
+   RegisterEbEditor(TEBLevel, TfrmEBEditLevel);
 end.

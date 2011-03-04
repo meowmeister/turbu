@@ -107,6 +107,8 @@ inherited frmEBEditExp: TfrmEBEditExp
         Height = 24
         ButtonKind = bkClassic
         MaxValue = 9999999.000000000000000000
+        MinValue = 1.000000000000000000
+        Value = 1.000000000000000000
         TabOrder = 2
       end
       object selValue: TIntSelector
