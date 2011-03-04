@@ -21,7 +21,8 @@ interface
 
 uses
   SysUtils, Classes, Controls, Forms, Menus, StdCtrls, Dialogs,
-  turbu_map_engine, turbu_map_interface;
+  turbu_map_engine, turbu_map_interface,
+  database;
 
 type
    TfrmTestConsole = class(TForm)
@@ -48,8 +49,8 @@ type
       mnuEventEditor: TMenuItem;
       mnuMaps: TMenuItem;
       mnuTestMapObjectContainers: TMenuItem;
-    mnuTestDatabaseUpload: TMenuItem;
-    mnuTestPartySetup: TMenuItem;
+      mnuTestDatabaseUpload: TMenuItem;
+      mnuTestPartySetup: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -69,13 +70,14 @@ type
       procedure estRenderTargets1Click(Sender: TObject);
       procedure mnuEventEditorClick(Sender: TObject);
       procedure mnuTestMapObjectContainersClick(Sender: TObject);
-    procedure mnuTestDatabaseUploadClick(Sender: TObject);
-    procedure mnuTestPartySetupClick(Sender: TObject);
+      procedure mnuTestDatabaseUploadClick(Sender: TObject);
+      procedure mnuTestPartySetupClick(Sender: TObject);
    private
       { Private declarations }
       FEngine: IDesignMapEngine;
       folder, outFolder: string;
       FCurrentMap: IRpgMap;
+      frmDatabase: TFrmDatabase;
       procedure setupConversionPaths;
       procedure renderTest(Sender: TObject);
    public
@@ -89,7 +91,7 @@ implementation
 
 uses
    Contnrs, DBClient, Generics.Collections, Registry, windows,
-   dm_database, turbu_database, database, test_project,
+   dm_database, turbu_database, test_project,
    archiveInterface, discInterface, test_map_tree,
    turbu_constants, conversion_report, conversion_report_form,
    rm2_turbu_converter_thread, design_script_engine,
@@ -436,7 +438,7 @@ begin
       try
          freeAndNil(GDatabase);
          try
-            GDatabase := TRpgDatabase.Load(loadStream, true);
+            GDatabase := TRpgDatabase.Load(loadStream, true, nil, nil);
          except
             GDatabase := nil;
             raise;
