@@ -131,7 +131,7 @@ type
 
 implementation
 uses
-   zlib, math,
+   Types, zlib, math,
    turbu_database, archiveInterface, turbu_constants, turbu_items,
    turbu_tbi_lib, turbu_sdl_image, turbu_classes, dm_database,
    design_script_engine, skill_settings,
