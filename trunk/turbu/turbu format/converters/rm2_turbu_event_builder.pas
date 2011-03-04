@@ -463,8 +463,6 @@ function ConvertStats(opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := SetupPartySubscript(Opcode.data[0], Opcode.data[1], Opcode.data[2],
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
-      const
-         STATS: array[0..5] of string = ('MaxHp', 'MaxMp', 'Attack', 'Defense', 'Mind', 'Agility');
       begin
          subscript.Chain := TEBPropExpr.Create(STATS[opcode.data[3]]);
          subscript.Chain.hint := 1;
@@ -488,9 +486,6 @@ begin
 end;
 
 function ConvertEquipment(opcode: TEventCommand; parent: TEBObject): TEBObject;
-const
-   SLOTS: array[0..5] of string = ('eq_weapon', 'eq_shield', 'eq_armor', 'eq_helmet',
-                    'eq_relic', 'eq_all');
 begin
    result := SetupPartySubscript(Opcode.data[0], Opcode.data[1], Opcode.data[2],
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
