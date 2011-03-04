@@ -154,6 +154,11 @@ type
       function GetScriptText: string; override;
    end;
 
+const
+   STATS: array[0..5] of string = ('MaxHp', 'MaxMp', 'Attack', 'Defense', 'Mind', 'Agility');
+   SLOTS: array[0..5] of string = ('eq_weapon', 'eq_shield', 'eq_armor', 'eq_helmet',
+                    'eq_relic', 'eq_all');
+
 implementation
 uses
    SysUtils, Classes,
@@ -300,9 +305,7 @@ end;
 function TEBStats.GetNodeText: string;
 const LINE = 'Change Stat: (%s): %s %s';
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetNodeText,
-                           ADDREM[Values[0]],
-                           (Components[1] as TEBExpression).GetNodeText]);
+   result := format(LINE, [ChildNode[0], ADDREM[Values[0]], ChildNode[1]]);
 end;
 
 function TEBStats.GetScriptText: string;
@@ -312,9 +315,9 @@ const
 var
    dummy: string;
 begin
-   dummy := (Components[0] as TEBExpression).GetScript(0);
+   dummy := ChildScript[0];
    result := format(LINE, [dummy, dummy, OPS[Values[0]],
-                           (Components[1] as TEBExpression).GetScript(0)]);
+                           ChildScript[1]]);
 end;
 
 { TEBSkills }
