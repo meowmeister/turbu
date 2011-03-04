@@ -21,7 +21,7 @@ unit portrait_selector;
 interface
 
 uses
-   StdCtrls, Controls, Classes, ExtCtrls,
+   StdCtrls, Controls, Types, Classes, ExtCtrls,
    base_selector, sdl_frame;
 
 type

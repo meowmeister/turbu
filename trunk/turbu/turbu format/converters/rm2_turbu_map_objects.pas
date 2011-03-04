@@ -43,7 +43,7 @@ type
 
 implementation
 uses
-   SysUtils, Generics.Collections,
+   SysUtils, Types, Generics.Collections,
    charset_data, turbu_defs, rm2_turbu_maps, rm2_turbu_event_builder,
    EventBuilder;
 
