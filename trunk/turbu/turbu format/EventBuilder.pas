@@ -230,15 +230,13 @@ end;
 
 class function TEBObject.LoadFromStream(stream: TStream): TEBObject;
 var
-   list: TStringList;
+   size: int64;
+   value: utf8String;
 begin
-   list := TStringList.Create;
-   try
-      list.LoadFromStream(stream);
-      result := Load(list.text);
-   finally
-      list.Free;
-   end;
+   size := stream.Size - stream.Position;
+   setLength(value, size);
+   stream.Read(value[1], size);
+   result := Load(string(value));
 end;
 
 class function TEBObject.Load(const Value: string): TEBObject;
