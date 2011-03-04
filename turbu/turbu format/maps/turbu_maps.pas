@@ -33,7 +33,7 @@ type
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
-      procedure download(db: TDataset); override;
+      procedure download(ser: TDatasetSerializer; db: TDataset); override;
 
       property bounds: TRect read FBounds write FBounds;
       property battles: TPWordArray read FBattles write FBattles;
@@ -547,10 +547,10 @@ begin
    setLength(FBattles, Value);
 end;
 
-procedure TMapRegion.download(db: TDataset);
+procedure TMapRegion.download(ser: TDatasetSerializer; db: TDataset);
 begin
-   inherited;
    assert(false);
+   inherited;
 end;
 
 { UploadSetAttribute }

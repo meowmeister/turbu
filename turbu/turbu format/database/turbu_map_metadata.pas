@@ -4,7 +4,7 @@ interface
 uses
    types, classes, DB, Generics.Collections,
    turbu_defs, turbu_classes, turbu_sounds, turbu_containers, archiveInterface,
-   turbu_map_interface;
+   turbu_map_interface, turbu_serialization;
 
 const
    HERO_START_LOCATION = 0;
@@ -46,7 +46,7 @@ type
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
-      procedure download(db: TDataset); override;
+      procedure download(ser: TDatasetSerializer; db: TDataset); override;
       destructor Destroy; override;
 
       property parent: smallint read FParent write SetParent;
@@ -186,10 +186,10 @@ begin
    inherited;
 end;
 
-procedure TMapMetadata.download(db: TDataset);
+procedure TMapMetadata.download(ser: TDatasetSerializer; db: TDataset);
 begin
-   inherited;
    assert(false);
+   inherited;
 end;
 
 class function TMapMetadata.getDatasetName: string;

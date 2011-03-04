@@ -49,7 +49,7 @@ type
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
-      procedure download(db: TDataset); override;
+      procedure download(ser: TDatasetSerializer; db: TDataset); override;
 
       property filename: string read FFilename write FFilename;
       property linkedFilename: string read FLinkedFilename write FLinkedFilename;
@@ -71,7 +71,7 @@ type
       constructor Load(savefile: TStream); override;
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
-      procedure download(db: TDataset); override;
+      procedure download(ser: TDatasetSerializer; db: TDataset); override;
 
       property group: TTileGroup read FGroup write FGroup;
       property layers: TLayerSet read FLayers write FLayers;
@@ -98,7 +98,7 @@ type
       constructor Load(savefile: TStream); override;
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
-      procedure download(db: TDataset); override;
+      procedure download(ser: TDatasetSerializer; db: TDataset); override;
 
       function tile(index: integer; layer: byte): TTileRef;
 
@@ -148,7 +148,7 @@ begin
    savefile.WriteBuffer(FDimensions, sizeof(FDimensions));
 end;
 
-procedure TTileGroup.download(db: TDataset);
+procedure TTileGroup.download(ser: TDatasetSerializer; db: TDataset);
 begin
 assert(false);
 end;
@@ -193,7 +193,7 @@ begin
    inherited Destroy;
 end;
 
-procedure TTileGroupRecord.download(db: TDataset);
+procedure TTileGroupRecord.download(ser: TDatasetSerializer; db: TDataset);
 begin
 assert(false);
 end;
@@ -292,7 +292,7 @@ begin
    {TODO: Remove these hard-coded values}
 end;
 
-procedure TTileSet.download(db: TDataset);
+procedure TTileSet.download(ser: TDatasetSerializer; db: TDataset);
 begin
 assert(false);
 end;

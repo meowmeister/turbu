@@ -87,7 +87,7 @@ var
 
 procedure TfrmMapProperties.btnApplyClick(Sender: TObject);
 begin
-   FMap.download(dsMap);
+   FMap.download(GDatabase.serializer, dsMap);
 end;
 
 procedure TfrmMapProperties.btnOKClick(Sender: TObject);
@@ -110,8 +110,8 @@ begin
       try
          ds.Filter := format('id = %d', [metadata.id]);
          if ds.RecordCount = 0 then
-            metadata.upload(ds);
-         map.upload(frmMapProperties.dsMap);
+            metadata.upload(GDatabase.serializer, ds);
+         map.upload(GDatabase.serializer, frmMapProperties.dsMap);
          dimensions := map.size;
          GDatabase.copyTypeToDB(dmDatabase, rd_tileset);
       finally

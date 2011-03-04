@@ -94,8 +94,8 @@ type
       constructor Create;
       constructor Load(savefile: TStream); virtual;
       procedure save(savefile: TStream); virtual;
-      procedure upload(db: TDataSet);
-      procedure download(db: TDataset); virtual;
+      procedure upload(ser: TDatasetSerializer; db: TDataSet);
+      procedure download(ser: TDatasetSerializer; db: TDataset); virtual;
       procedure CopyToClipboard;
       constructor PasteFromClipboard;
       function GetAllEvents: TStringList;
@@ -170,7 +170,7 @@ type
       constructor Create; virtual;
       constructor Load(savefile: TStream); virtual;
       procedure save(savefile: TStream); virtual;
-      procedure upload(db: TDataSet); virtual;
+      procedure upload(ser: TDatasetSerializer; db: TDataSet); virtual;
       function GetEnumerator: TEnumerator;
    end;
 
@@ -341,34 +341,20 @@ begin
    result := self.getDatasetName;
 end;
 
-procedure TRpgDatafile.download(db: TDataset);
-var
-   serializer: TDatasetSerializer;
+procedure TRpgDatafile.download(ser: TDatasetSerializer; db: TDataset);
 begin
    if self.datasetName <> '' then
       assert((db.Name = self.datasetName) or (self.datasetName[1] = '_'));
 
-   serializer := TDatasetSerializer.Create;
-   try
-      serializer.download(self, db);
-   finally
-      serializer.Free;
-   end;
+   ser.download(self, db);
 end;
 
-procedure TRpgDatafile.upload(db: TDataSet);
-var
-   serializer: TDatasetSerializer;
+procedure TRpgDatafile.upload(ser: TDatasetSerializer; db: TDataSet);
 begin
    if self.datasetName <> '' then
       assert((db.Name = self.datasetName) or (self.datasetName[1] = '_'));
 
-   serializer := TDatasetSerializer.Create;
-   try
-      serializer.upload(self, db);
-   finally
-      serializer.Free;
-   end;
+   ser.upload(self, db);
 end;
 
 function TRpgDatafile.GetAllEvents: TStringList;
@@ -829,7 +815,7 @@ begin
    savefile.writeChar(T.keyChar);
 end;
 
-procedure TRpgDataList<T>.upload(db: TDataSet);
+procedure TRpgDataList<T>.upload(ser: TDatasetSerializer; db: TDataSet);
 var
    iterator: T;
 begin
@@ -837,7 +823,7 @@ begin
    begin
       if iterator.id = 0 then
          Continue
-      else iterator.upload(db);
+      else iterator.upload(ser, db);
    end;
    if self.Count > 1 then
       db.postSafe;
