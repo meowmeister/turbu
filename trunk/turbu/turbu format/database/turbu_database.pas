@@ -25,7 +25,8 @@ uses
    turbu_characters, turbu_items, turbu_skills, turbu_classes, turbu_resists,
    turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations,
    turbu_unit_dictionary, turbu_containers, turbu_script_interface, turbu_game_data,
-   turbu_map_metadata, turbu_tilesets, turbu_decl_utils, turbu_maps;
+   turbu_map_metadata, turbu_tilesets, turbu_decl_utils, turbu_maps,
+   turbu_serialization;
 
 type
    TCharClassList = TRpgObjectList<TClassTemplate>;
@@ -117,6 +118,8 @@ type
       procedure saveTilesets(savefile: TStream);
       procedure uploadStringList(dataset: TDataset; list: TStringList);
       procedure UploadGlobalEvents(db: TdmDatabase);
+   private
+      FSerializer: TDatasetSerializer;
    protected
       FLegacyCruft: TLegacySections;
       FGlobalScriptBlock: TEBUnit;
@@ -188,6 +191,7 @@ type
       property projectName: string read getProjectName;
       property uploadedTypes: TRpgDataTypeSet read FUploadedTypes;
       property Filename: string read FFilename write FFilename;
+      property serializer: TDatasetSerializer read FSerializer;
    end;
 
 var
@@ -841,7 +845,7 @@ begin
       FGlobalEvents[i].save(savefile);
    savefile.writeChar('g');
 
-   subStream := TStringStream.Create(self.FGlobalScriptBlock.Serialize);
+   subStream := TStringStream.Create(self.FGlobalScriptBlock.Serialize, TEncoding.UTF8, false);
    try
       subStream.rewind;
       GArchives[SCRIPT_ARCHIVE].writeFile(format('%s.trs', [self.name]), subStream);
@@ -933,8 +937,9 @@ end;
 
 destructor TRpgDatabase.Destroy;
 var
-   i: integer;
+   i: TItemType;
 begin
+   FSerializer.Free;
    FGlobalScriptBlock.Free;
    FGlobalEvents.Free;
    FScripts.Free;
@@ -952,8 +957,8 @@ begin
    if assigned(FSkillAlgs) then
       FSkillAlgs.OwnsObjects := true;
    FSkillAlgs.Free;
-   for i := 0 to ord(high(TItemType)) do
-      FItems[TItemType(i)].free;
+   for i := low(TItemType) to high(TItemType) do
+      FItems[i].free;
    FAnims.Free;
    FConditions.Free;
    FAttributes.Free;
@@ -1066,21 +1071,21 @@ begin
       begin
          for enumerator in FClass do
             if enumerator.id > 0 then
-               enumerator.upload(db.charClasses);
+               enumerator.upload(FSerializer, db.charClasses);
          db.charClasses.postSafe;
       end;
       rd_hero:
       begin
          for enumerator in FHero do
             if enumerator.id > 0 then
-               enumerator.upload(db.heroes);
+               enumerator.upload(FSerializer, db.heroes);
          db.heroes.postSafe;
       end;
       rd_command:
       begin
          for enumerator in FCommand do
             if enumerator.id > 0 then
-               enumerator.upload(db.commands);
+               enumerator.upload(FSerializer, db.commands);
          db.commands.postSafe;
       end;
       rd_item:
@@ -1091,7 +1096,7 @@ begin
             for enumerator in FItems[TItemType(i)] do
                if enumerator.id > 0 then
                begin
-                  enumerator.upload(dummy);
+                  enumerator.upload(FSerializer, dummy);
                   dummy.FieldByName('itemType').AsInteger := i;
                end;
             dummy.postSafe;
@@ -1101,32 +1106,32 @@ begin
       begin
          for enumerator in FSkills do
             if enumerator.id > 0 then
-               enumerator.upload(db.skills);
+               enumerator.upload(FSerializer, db.skills);
          db.skills.postSafe;
       end;
       rd_anim:
       begin
          for enumerator in FAnims do
             if enumerator.id > 0 then
-               enumerator.upload(db.animations);
+               enumerator.upload(FSerializer, db.animations);
          db.animations.postSafe;
       end;
       rd_attrib:
       begin
          for I := 1 to FAttributes.High do
-            FAttributes[i].upload(db.attributes);
+            FAttributes[i].upload(FSerializer, db.attributes);
          db.attributes.postSafe;
       end;
       rd_condition:
       begin
          for I := 1 to FConditions.High do
-            FConditions[i].upload(db.conditions);
+            FConditions[i].upload(FSerializer, db.conditions);
          db.conditions.postSafe;
       end;
       rd_tileset:
       begin
          for i := 1 to FTileset.High do
-            FTileset[i].upload(db.tilesets);
+            FTileset[i].upload(FSerializer, db.tilesets);
          db.tilesets.postSafe;
       end;
       rd_switch: uploadStringList(db.Switches, FSwitches);
@@ -1141,7 +1146,7 @@ begin
       rd_metadata:
       begin
          for enumerator in FMapTree do
-            enumerator.upload(db.metadata);
+            enumerator.upload(FSerializer, db.metadata);
          db.metadata.postSafe;
       end;
       else assert(false);
@@ -1394,6 +1399,7 @@ procedure TRpgDatabase.prepareBlanks;
 var
    item: TItemType;
 begin
+   FSerializer := TDatasetSerializer.Create;
    FClass := TCharClassList.Create;
    addClass;
    FHero := THeroTemplateList.Create;

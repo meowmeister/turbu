@@ -230,7 +230,7 @@ var
    iterator: TRpgDatafile;
 begin
    for iterator in FIndices do
-      iterator.upload(db.scriptRange);
+      iterator.upload(GDatabase.serializer, db.scriptRange);
 end;
 
 function TTurbuScriptEngine.QueryInterface(const IID: TGUID; out Obj): HResult;
