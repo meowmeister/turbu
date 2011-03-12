@@ -19,7 +19,7 @@ unit LDB;
 
 interface
 uses
-   types, classes, //system libraries
+   types, classes, Generics.Collections, //system libraries
    chipset, hero_data, item_data, skill_data, rm_sound, condition_data,
    charset_data, battle_anims, turbu_defs; //modules
 
@@ -41,6 +41,8 @@ type
                 shp_sold);
    TInnVocabSet = (inn_greet1, inn_greet2, inn_greet3, inn_stay, inn_cancel);
    TBattleVocabSet = (bv_fight, bv_autobattle, bv_flee, bv_attack, bv_defend, bv_item, bv_skill);
+
+   TVocabDict = TDictionary<integer, AnsiString>;
 
    TAttribute = class(TObject)
    private
@@ -232,6 +234,7 @@ type
       FShopVocabulary: TShopVocabulary;
       FInnVocabulary: TInnVocabulary;
       FBattleVocabulary: TBattleVocabulary;
+      FVocabDict: TVocabDict;
       FSystemData: TSystemRecord;
       FSwitches: TSwitchSection;
       FVariables: TVarSection;
@@ -258,6 +261,8 @@ type
       function getClassCount: word;
       function getCommands: word;
       function getCommand(x: word): TBattleCommand;
+      procedure AddVocabRange(theLDB: TStream; low, high: integer);
+      procedure AddVocab(theLDB: TStream; index: integer);
    public
       constructor Create(theLDB: TStream);
       destructor Destroy; override;
@@ -283,10 +288,11 @@ type
       property anim[x: word]: TBattleAnim read getAnim write setAnim;
       property anims: word read FBattleAnims;
       property SystemData: TSystemRecord read FSystemData;
-      property vocabulary: TVocabulary read FVocabulary write FVocabulary;
-      property shopVocab: TShopVocabulary read FShopVocabulary write FShopVocabulary;
-      property innVocab: TInnVocabulary read FInnVocabulary write FInnVocabulary;
-      property battleVocab: TBattleVocabulary read FBattleVocabulary write FBattleVocabulary;
+      property vocabulary: TVocabulary read FVocabulary;
+      property shopVocab: TShopVocabulary read FShopVocabulary;
+      property innVocab: TInnVocabulary read FInnVocabulary;
+      property battleVocab: TBattleVocabulary read FBattleVocabulary;
+      property vocabDict: TVocabDict read FVocabDict;
       property charClasses: word read getClassCount;
       property charClass[x: word]: TRm2CharClass read getClass;
       property commands: word read getCommands;
@@ -341,6 +347,20 @@ end;
 function TMParty.getName: ansiString;
 begin
    result := name
+end;
+
+procedure TLcfDataBase.AddVocab(theLDB: TStream; index: integer);
+begin
+   if NextSecIs(TheLDB, index) then
+      FVocabDict.Add(index, getStrSec(index, theLDB, nil));
+end;
+
+procedure TLcfDataBase.AddVocabRange(theLDB: TStream; low, high: integer);
+var
+   i: integer;
+begin
+   for i := low to high do
+      AddVocab(theLDB, i);
 end;
 
 constructor TLcfDataBase.Create(theLDB: TStream);
@@ -493,14 +513,8 @@ try
    //VOCAB SECTION
    if not peekAhead(theLDB, $15) then
       raise EParseMessage.create('System Vocabulary section of RPG_RT.LDB not found!');
-   converter.read(theLDB);
-   for I := 1 to $25 do
-      skipSec(i, theLDB);
-   if GProjectFormat = pf_2k3 then
-   begin
-      skipSec($26, theLDB);
-      skipSec($27, theLDB);
-   end;
+   FVocabDict := TVocabDict.Create(converter.create(theLDB).getData * 2);
+   AddVocabRange(theLDB, 1, $27);
    i := $29;
    for whichSet := 1 to SHOP_STYLES do
    begin
@@ -525,12 +539,20 @@ try
    FBattleVocabulary[bv_fight] := getStrSec($65, theLDB, fillInBlankStr);
    FBattleVocabulary[bv_autobattle] := getStrSec($66, theLDB, fillInBlankStr);
    FBattleVocabulary[bv_flee] := getStrSec($67, theLDB, fillInBlankStr);
-   FBattleVocabulary[bv_attack] := getStrSec($68, theLDB, fillInBlankStr);
-   FBattleVocabulary[bv_defend] := getStrSec($69, theLDB, fillInBlankStr);
+   if GProjectFormat = pf_2k then
+   begin
+      FBattleVocabulary[bv_attack] := getStrSec($68, theLDB, fillInBlankStr);
+      FBattleVocabulary[bv_defend] := getStrSec($69, theLDB, fillInBlankStr);
+   end
+   else begin
+      skipSec($68, theLDB);
+      skipSec($69, theLDB);
+   end;
    FBattleVocabulary[bv_item] := getStrSec($6A, theLDB, fillInBlankStr);
    FBattleVocabulary[bv_skill] := getStrSec($6B, theLDB, fillInBlankStr);
-   for I := $6C to $7D do
-      skipSec(i, theLDB);
+
+   AddVocabRange(theLDB, $6C, $7D);
+
    FVocabulary[normalStatus] := getStrSec($7E, theLDB, fillInBlankStr);
    FVocabulary[expShort] := getStrSec($7F, theLDB, fillInBlankStr);
    FVocabulary[lvShort] := getStrSec($80, theLDB, fillInBlankStr);
@@ -546,8 +568,8 @@ try
    FVocabulary[armor] := getStrSec($8A, theLDB, fillInBlankStr);
    FVocabulary[helmet] := getStrSec($8B, theLDB, fillInBlankStr);
    FVocabulary[relic] := getStrSec($8C, theLDB, fillInBlankStr);
-   for i := $92 to $99 do
-      skipSec(i, theLDB);
+
+   AddVocabRange(theLDB, $92, $99);
    assert(peekAhead(theLdb, 0));
 
    //System Data
@@ -614,6 +636,7 @@ destructor TLcfDataBase.Destroy;
 var
   I: Integer;
 begin
+   FVocabDict.Free;
    for I := 0 to high(FHeroes) do
       FHeroes[i].Free;
    for I := 0 to high(FItem) do

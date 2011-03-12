@@ -21,7 +21,8 @@ interface
 
 uses
    classes,
-   LDB, LMT, turbu_database, events, turbu_unit_dictionary, conversion_report;
+   LDB, LMT, turbu_database, events, turbu_unit_dictionary, conversion_report,
+   formats;
 
 type
 
@@ -31,6 +32,10 @@ type
                           spriteList, portList, animList, battleSpriteList: TStringList);
       procedure convertEvents(block: TEventBlock);
       procedure SaveScript(const script: utf8String);
+      procedure ConvertVocab(base: TLcfDatabase);
+      procedure AddVocab(const left: string; const right: AnsiString);
+      procedure AddVocabCond(const left, formatString: string; base: TLcfDatabase;
+        index: integer; cond: TProjectFormat);
    public
       constructor convert(base: TLcfDatabase; tree: TFullTree; dic: TUnitDictionary;
                           legacy: TLegacySections; ConversionReport: IConversionReport;
@@ -50,7 +55,7 @@ uses
    turbu_versioning, turbu_plugin_interface, turbu_constants, turbu_sdl_image,
    turbu_tbi_lib, turbu_tilesets, rm2_turbu_map_objects, turbu_map_objects,
    hero_data, locate_files, turbu_maps,
-   archiveInterface, formats, commons, turbu_battle_engine, turbu_engines, logs,
+   archiveInterface, commons, turbu_battle_engine, turbu_engines, logs,
    turbu_map_engine, EB_RpgScript,
    SDL, SDL_13, sdl_image, sg_defs;
 
@@ -270,6 +275,8 @@ begin
       for I := 1 to base.switches.len do
          self.switch.Add(string(base.switches.name[i]));
       assert(self.switch.Count = base.switches.len);
+
+      ConvertVocab(base);
    finally
       classTable.free;
       heroClassTable.free;
@@ -305,6 +312,124 @@ begin
    finally
       nameList.Free;
    end;
+end;
+
+procedure T2k2Database.AddVocab(const left: string; const right: AnsiString);
+begin
+   self.FSysVocab.Values[left] := string(right);
+end;
+
+procedure T2k2Database.AddVocabCond(const left, formatString: string; base: TLcfDatabase;
+  index: integer; cond: TProjectFormat);
+begin
+   if GProjectFormat = cond then
+      AddVocab(left, AnsiString(format(formatString, [base.vocabDict[index]])))
+   else AddVocab(left, '');
+end;
+
+type
+   TVocabPair = record
+      id: integer;
+      name: string;
+   end;
+
+const
+  BASE_VOCAB: array[TVocabSet] of string =
+  ('Items Owned', 'Items Equipped', 'Money', 'Normal Status', 'Stat-Exp',
+   'StatShort-Lv', 'StatShort-HP', 'StatShort-MP', 'MP Cost', 'Stat-Attack',
+   'Stat-Defense', 'Stat-Mind', 'Stat-Speed', 'EQ-Weapon', 'EQ-Shield', 'EQ-Armor',
+   'EQ-Helmet', 'EQ-Accessory'
+  );
+  INN_FMT = 'Inn%d-%s';
+  SHOP_VOCAB: array[TShopVocabSet] of string =
+  (
+   'Shop%d-Greet', 'Shop%d-Continue', 'Shop%d-Buy', 'Shop%d-Sell', 'Shop%d-Leave',
+   'Shop%d-Buy What', 'Shop%d-Buy Quantity', 'Shop%d-Bought', 'Shop%d-Sell What',
+   'Shop%d-Sell Quantity', 'Shop%d-Sold'
+  );
+  BATTLE_VOCAB: array [TBattleVocabSet] of string =
+  (
+   'Battle-Fight', 'Battle-Auto', 'Battle-Flee', 'Battle-Attack',
+   'Battle-Defend', 'Battle-Item', 'Battle-Skill'
+  );
+  VOCAB_LIST: array[0..16] of TVocabPair = (
+   (id: 2; name: 'Battle-Surprise Attack'), (id: 4; name: 'Battle-Failed Escape'),
+   (id: 5; name: 'Battle-Victory'), (id: 6; name: 'Battle-Defeat'),
+   (id: $6C; name: 'Menu-Equip'), (id: $6E; name: 'Menu-Save'),
+   (id: $73; name: 'Menu-Load Game'), (id: $75; name: 'Menu-Quit Game'),
+   (id: $7B; name: 'Stat-Lv'),
+   (id: $7C; name: 'Stat-HP'), (id: $7D; name: 'Stat-MP'),
+   (id: $92; name: 'Save-Save Where'), (id: $93; name: 'Save-Load Where'),
+   (id: $94; name: 'Save-File'), (id: $97; name: 'Confirm-Quit'),
+   (id: $98; name: 'Confirm-Yes'), (id: $99; name: 'Confirm-No')
+  );
+  VOCAB_LIST_P: array[0..3] of TVocabPair = (
+   (id: 7; name: 'Battle-Exp Gained'), (id: $A; name: 'Battle-Found Item'),
+   (id: $24; name: 'Character-Level Up'), (id: $25; name: 'Character-Learned Skill')
+  );
+  VOCAB_LIST_2K: array[0..2] of TVocabPair = (
+   (id: 3; name: 'Battle-Fled'), (id: $C; name: 'Battle-Ally Crit'),
+   (id: $D; name: 'Battle-Enemy Crit')
+  );
+  VOCAB_LIST_2K_P: array[0..15] of TVocabPair = (
+   (id: 1; name: 'Battle-Enemy Appears'), (id: $B; name: 'Battle-Ally Attacks'),
+   (id: $E; name: 'Battle-Ally Defends'), (id: $F; name: 'Battle-Enemy Defends'),
+   (id: $10; name: 'Battle-Enemy Building Strength'), (id: $11; name: 'Battle-Explodes'),
+   (id: $12; name: 'Battle-Enemy Flees'), (id: $13; name: 'Battle-Enemy Transforms'),
+   (id: $14; name: 'Battle-Enemy Injured'), (id: $15; name: 'Battle-Enemy Missed'),
+   (id: $16; name: 'Battle-Ally Injured'), (id: $17; name: 'Battle-Ally Missed'),
+   (id: $18; name: 'Battle-Skill Failed 1'), (id: $19; name: 'Battle-Skill Failed 2'),
+   (id: $1A; name: 'Battle-Skill Failed 3'), (id: $1B; name: 'Battle-Dodge')
+  );
+  VOCAB_LIST_2K_PS: array[0..7] of TVocabPair = (
+   (id: $1C; name: 'Battle-Uses Item'), (id: $1D; name: 'Battle-Recovery'),
+   (id: $1E; name: 'Battle-Ability Up'), (id: $1F; name: 'Battle-Ability Down'),
+   (id: $20; name: 'Battle-Ally Absorb'), (id: $21; name: 'Battle-Enemy Absorb'),
+   (id: $22; name: 'Battle-Defense Up'), (id: $23; name: 'Battle-Defense Down')
+  );
+  VOCAB_LIST_2K3: array[0..8] of TVocabPair = (
+   (id: $26; name: 'Battle-Begin'), (id: $27; name: 'Battle-Miss'),
+   (id: $70; name: 'Menu-Quit 2k3'), (id: $72; name: 'Menu-New Game'),
+   (id: $76; name: 'Menu-Status'), (id: $77; name: 'Menu-Row'),
+   (id: $78; name: 'Menu-Order'),
+   (id: $79; name: 'ATB-Wait'), (id: $7A; name: 'ATB-Active')
+  );
+
+procedure T2k2Database.ConvertVocab(base: TLcfDatabase);
+var
+   vocab: TVocabSet;
+   shops: TShopVocabSet;
+   battle: TBattleVocabSet;
+   i: integer;
+   pair: TVocabPair;
+begin
+   for vocab := low(TVocabSet) to High(TVocabSet) do
+      AddVocab(BASE_VOCAB[vocab], base.vocabulary[vocab]);
+   for I := 1 to INN_STYLES do
+   begin
+      AddVocab(format(INN_FMT, [i, 'Greet1']),
+               AnsiString(format('%s\i%s %s', [base.innVocab[i, inn_greet1], base.innVocab[i, inn_greet2], base.innVocab[i, inn_greet3]])));
+      AddVocab(format(INN_FMT, [i, 'Stay']), base.innVocab[i, inn_stay]);
+      AddVocab(format(INN_FMT, [i, 'Cancel']), base.innVocab[i, inn_cancel]);
+   end;
+   for i := 1 to SHOP_STYLES do
+      for shops := low(TShopVocabSet) to high(TShopVocabSet) do
+         AddVocab(format(SHOP_VOCAB[shops], [i]), base.shopVocab[i, shops]);
+   for battle := Low(TBattleVocabSet) to High(TBattleVocabSet) do
+      AddVocab(BATTLE_VOCAB[battle], base.battleVocab[battle]);
+   AddVocab('Battle-Found Gold', AnsiString(format('%s\i%s', [base.vocabDict[8], base.vocabDict[9]])));
+   for pair in VOCAB_LIST do
+      AddVocab(pair.name, base.vocabDict[pair.id]);
+   for pair in VOCAB_LIST_P do
+      AddVocab(pair.name, AnsiString(format('\i%s', [base.vocabDict[pair.id]])));
+   for pair in VOCAB_LIST_2K do
+      AddVocabCond(pair.name, '%s', base, pair.id, pf_2k);
+   for pair in VOCAB_LIST_2K_P do
+      AddVocabCond(pair.name, '\i%s', base, pair.id, pf_2k);
+   for pair in VOCAB_LIST_2K_PS do
+      AddVocabCond(pair.name, '\i1%s\i2', base, pair.id, pf_2k);
+   for pair in VOCAB_LIST_2K3 do
+      AddVocabCond(pair.name, '%s', base, pair.id,  pf_2k3);
 end;
 
 procedure T2k2Database.SaveScript(const script: utf8String);

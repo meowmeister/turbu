@@ -44,6 +44,7 @@ function peekAhead(thefile: TStream): byte; overload;
 procedure saveString(const theString: string; outFile: TStream);
 procedure fillInBlankStr(const expected: byte; out theResult: ansiString);
 procedure fillInZeroInt(const expected: byte; out theResult: integer);
+function NextSecIs(theFile: TStream; value: word): boolean;
 
 implementation
 
@@ -346,6 +347,20 @@ begin
    theFile.Read(dummy, 1);
    theFile.seek(-1, soFromCurrent);
    result := dummy;
+end;
+
+function NextSecIs(theFile: TStream; value: word): boolean;
+var
+   converter: intX80;
+   pos: int64;
+begin
+   pos := theFile.Position;
+   try
+      converter := TBerConverter.Create(theFile);
+      result := converter.getData = value;
+   finally
+      theFile.Seek(pos, soFromBeginning);
+   end;
 end;
 
 procedure foundWrongSection(callername: string; expected, actual: integer);

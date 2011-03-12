@@ -6423,4 +6423,68 @@ object dmDatabase: TdmDatabase
       FieldName = 'Switch'
     end
   end
+  object Vocab: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'Key'
+        DataType = ftWideString
+        Size = 32
+      end
+      item
+        Name = 'Value'
+        DataType = ftWideString
+        Size = 255
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 592
+    Top = 384
+    Data = {
+      4C0000009619E0BD0100000018000000020000000000030000004C00034B6579
+      01004A00000001000557494454480200020040000556616C756502004A000000
+      010005574944544802000200FE010000}
+    object VocabKey: TWideStringField
+      FieldName = 'Key'
+      Size = 32
+    end
+    object VocabValue: TWideStringField
+      FieldName = 'Value'
+      Size = 255
+    end
+  end
+  object CustomVocab: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'Key'
+        DataType = ftWideString
+        Size = 32
+      end
+      item
+        Name = 'Value'
+        DataType = ftWideString
+        Size = 255
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 592
+    Top = 440
+    Data = {
+      4C0000009619E0BD0100000018000000020000000000030000004C00034B6579
+      01004A00000001000557494454480200020040000556616C756502004A000000
+      010005574944544802000200FE010000}
+    object WideStringField5: TWideStringField
+      FieldName = 'Key'
+      Size = 32
+    end
+    object WideStringField6: TWideStringField
+      FieldName = 'Value'
+      Size = 255
+    end
+  end
 end

@@ -46,7 +46,7 @@ type
 
    TRpgDataTypes = (rd_class, rd_hero, rd_command, rd_item, rd_skill, rd_anim,
                     rd_attrib, rd_condition, rd_tileset, rd_switch, rd_int,
-                    rd_float, rd_string, rd_script, rd_metadata);
+                    rd_float, rd_string, rd_script, rd_metadata, rd_vocab);
    TRpgDataTypeSet = set of TRpgDataTypes;
 
    TBattleCommandList = class(TRpgObjectList<TBattleCommand>)
@@ -71,7 +71,7 @@ type
 
       //I need monsters and monster parties
       //and battle anims and terrains
-      //and vocabulary and system data
+      //and system data
       //and a battle layout section
       //and whatever $20 is in 2003
 
@@ -118,11 +118,14 @@ type
       procedure saveTilesets(savefile: TStream);
       procedure uploadStringList(dataset: TDataset; list: TStringList);
       procedure UploadGlobalEvents(db: TdmDatabase);
+      procedure UploadVocab(db: TdmDatabase);
    private
       FSerializer: TDatasetSerializer;
    protected
       FLegacyCruft: TLegacySections;
       FGlobalScriptBlock: TEBUnit;
+      FSysVocab: TStringList;
+      FCustomVocab: TStringList;
       class function keyChar: ansiChar; override;
    public
       constructor Create;
@@ -207,8 +210,8 @@ windows,
    turbu_functional, turbu_map_objects;
 
 const
-   MIN_DBVERSION = 37;
-   DBVERSION = 37;
+   MIN_DBVERSION = 38;
+   DBVERSION = 38;
 
 { TRpgDatabase }
 
@@ -347,6 +350,8 @@ begin
       loadStringList(substream, FVariables);
       loadStringList(substream, FFloats);
       loadStringList(substream, FStrings);
+      loadStringList(substream, FSysVocab);
+      loadStringList(substream, FCustomVocab);
       lassert(subStream.readChar = 'l');
    finally
       substream.free;
@@ -399,10 +404,6 @@ begin
       self.scriptBuild;
       self.parseMeta;
    end;
-
-{   turbu_characters.setDatabase(self);
-   turbu_skills.setDatabase(self);
-   turbu_tilesets.setDatabase(self); }
 
    GArchives[DATABASE_ARCHIVE].CurrentFolder := '';
    j := savefile.readInt;
@@ -655,6 +656,8 @@ begin
       saveStringList(substream, FVariables);
       saveStringList(substream, FFloats);
       saveStringList(substream, FStrings);
+      saveStringList(substream, FSysVocab);
+      saveStringList(substream, FCustomVocab);
       substream.writeChar('l');
       GArchives[DATABASE_ARCHIVE].writeFile('lists.tdf', substream);
    finally
@@ -845,7 +848,7 @@ begin
       FGlobalEvents[i].save(savefile);
    savefile.writeChar('g');
 
-   subStream := TStringStream.Create(self.FGlobalScriptBlock.Serialize, TEncoding.UTF8, false);
+   subStream := TStringStream.Create(FGlobalScriptBlock.Serialize, TEncoding.UTF8, false);
    try
       subStream.rewind;
       GArchives[SCRIPT_ARCHIVE].writeFile(format('%s.trs', [self.name]), subStream);
@@ -940,6 +943,8 @@ var
    i: TItemType;
 begin
    FSerializer.Free;
+   FSysVocab.Free;
+   FCustomVocab.Free;
    FGlobalScriptBlock.Free;
    FGlobalEvents.Free;
    FScripts.Free;
@@ -1055,6 +1060,16 @@ begin
    end;
 end;
 
+procedure TRpgDatabase.UploadVocab(db: TdmDatabase);
+var
+   i: integer;
+begin
+   for I := 0 to FSysVocab.Count - 1 do
+      db.Vocab.AppendRecord([FSysVocab.Names[i], FSysVocab.ValueFromIndex[i]]);
+   for I := 0 to FCustomVocab.Count - 1 do
+      db.CustomVocab.AppendRecord([FCustomVocab.Names[i], FCustomVocab.ValueFromIndex[i]]);
+end;
+
 procedure TRpgDatabase.copyTypeToDB(db: TdmDatabase; value: TRpgDataTypes);
 var
    i: integer;
@@ -1149,6 +1164,7 @@ begin
             enumerator.upload(FSerializer, db.metadata);
          db.metadata.postSafe;
       end;
+      rd_vocab: UploadVocab(db);
       else assert(false);
    end;
    finally
@@ -1419,6 +1435,8 @@ begin
    FLegacyCruft := TLegacySections.Create;
    FScripts := TScriptList.Create;
    FGlobalEvents := TMapObjectList.Create;
+   FSysVocab := TStringList.Create;
+   FCustomVocab := TStringList.Create;
 end;
 
 { TBattleCommandList }

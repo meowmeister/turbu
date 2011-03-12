@@ -78,6 +78,8 @@ type
       Switches: TClientDataSet;
       Variables: TClientDataSet;
       GlobalScripts: TClientDataSet;
+      Vocab: TClientDataSet;
+      CustomVocab: TClientDataSet;
 
       dsCharClasses: TDataSource;
 
