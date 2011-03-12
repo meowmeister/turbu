@@ -23,7 +23,7 @@ uses
    Classes, Controls, Forms, StdCtrls, ExtCtrls, ComCtrls, DB, Grids, DBGrids,
    Mask, DBCtrls,
    turbu_database, events, frame_commands, frame_class, dm_database, frame_items,
-   EBListView, turbu_listGrid, variable_selector, DBIndexComboBox;
+   EBListView, turbu_listGrid, variable_selector, DBIndexComboBox, frame_vocab;
 
 type
    TfrmDatabase = class(TForm)
@@ -50,6 +50,7 @@ type
       trvGlobal: TEBTreeView;
       srcGlobals: TDataSource;
       selConditionSwitch: TSwitchSelector;
+      frameVocab: TframeVocab;
       procedure btnCodeViewClick(Sender: TObject);
       procedure chkHasSwitchClick(Sender: TObject);
       procedure tshClassShow(Sender: TObject);
@@ -63,7 +64,6 @@ type
       FViewingCode: boolean;
       FWasInit: boolean;
       FUploaded: boolean;
-      procedure initGlobalEvents;
 
       procedure GlobalScriptsAfterScroll(DataSet: TDataSet);
       procedure GlobalScriptsBeforeScroll(DataSet: TDataSet);
@@ -168,14 +168,8 @@ begin
       Exit;
 
    FDatabase := database;
-   initGlobalEvents;
    frmClass.initClasses;
    FWasInit := true;
-end;
-
-procedure TfrmDatabase.initGlobalEvents;
-begin
-   {$MESSAGE WARN 'TfrmDatabase.initGlobalEvents is not implemented'}
 end;
 
 procedure TfrmDatabase.reset;

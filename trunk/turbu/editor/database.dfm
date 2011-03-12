@@ -89,6 +89,10 @@ object frmDatabase: TfrmDatabase
       Margins.Bottom = 4
       Caption = '&Class'
       OnShow = tshClassShow
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       inline frmClass: TframeClass
         Left = 0
         Top = 0
@@ -155,6 +159,7 @@ object frmDatabase: TfrmDatabase
               ExplicitLeft = 10
               ExplicitTop = 21
               ExplicitWidth = 221
+              ExplicitHeight = 25
             end
           end
           inherited grpClassStats: TGroupBox
@@ -917,6 +922,56 @@ object frmDatabase: TfrmDatabase
       ExplicitWidth = 0
       ExplicitHeight = 0
     end
+    object tshVocab: TTabSheet
+      Caption = 'Vocabulary'
+      ImageIndex = 4
+      inline frameVocab: TframeVocab
+        Left = 0
+        Top = 0
+        Width = 1029
+        Height = 588
+        TabOrder = 0
+        inherited pnlVocab: TPanel
+          inherited pnlSysVocab: TPanel
+            inherited lstSysVocab: TRpgListGrid
+              TitleFont.Height = -14
+            end
+            inherited StaticText1: TStaticText
+              Width = 127
+              Height = 21
+              ExplicitWidth = 127
+              ExplicitHeight = 21
+            end
+          end
+          inherited pnlCustomVocab: TPanel
+            inherited lstCustomVocab: TRpgListGrid
+              TitleFont.Height = -14
+            end
+            inherited StaticText2: TStaticText
+              Width = 129
+              Height = 21
+              ExplicitWidth = 129
+              ExplicitHeight = 21
+            end
+            inherited StaticText3: TStaticText
+              Width = 30
+              Height = 21
+              ExplicitWidth = 30
+              ExplicitHeight = 21
+            end
+            inherited StaticText4: TStaticText
+              Width = 42
+              Height = 21
+              ExplicitWidth = 42
+              ExplicitHeight = 21
+            end
+          end
+        end
+        inherited DBNavigator1: TDBNavigator
+          Hints.Strings = ()
+        end
+      end
+    end
     object tshItems: TTabSheet
       Margins.Left = 4
       Margins.Top = 4
@@ -986,6 +1041,10 @@ object frmDatabase: TfrmDatabase
       Margins.Bottom = 4
       Caption = '&Global Events'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblGlobalEvents: TLabel
         Left = 21
         Top = 21
