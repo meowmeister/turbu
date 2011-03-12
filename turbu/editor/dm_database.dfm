@@ -6437,7 +6437,14 @@ object dmDatabase: TdmDatabase
         DataType = ftWideString
         Size = 255
       end>
-    IndexDefs = <>
+    IndexDefs = <
+      item
+        Name = 'DEFAULT_ORDER'
+      end
+      item
+        Name = 'CHANGEINDEX'
+      end>
+    IndexFieldNames = 'Key'
     Params = <>
     StoreDefs = True
     Left = 592
@@ -6469,7 +6476,14 @@ object dmDatabase: TdmDatabase
         DataType = ftWideString
         Size = 255
       end>
-    IndexDefs = <>
+    IndexDefs = <
+      item
+        Name = 'DEFAULT_ORDER'
+      end
+      item
+        Name = 'CHANGEINDEX'
+      end>
+    IndexFieldNames = 'Key'
     Params = <>
     StoreDefs = True
     Left = 592

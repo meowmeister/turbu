@@ -175,6 +175,10 @@
 			</DCCReference>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_event_builder.pas"/>
 			<DCCReference Include="..\..\classes\PackageRegistry.pas"/>
+			<DCCReference Include="frame_vocab.pas">
+				<Form>frameVocab</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
 			<RcCompile Include="..\turbures.rc">
 				<ContainerId>RC</ContainerId>
 				<Form>turbures.res</Form>
@@ -218,8 +222,8 @@
 						<VersionInfo Name="AutoIncBuild">True</VersionInfo>
 						<VersionInfo Name="MajorVer">0</VersionInfo>
 						<VersionInfo Name="MinorVer">8</VersionInfo>
-						<VersionInfo Name="Release">7</VersionInfo>
-						<VersionInfo Name="Build">1403</VersionInfo>
+						<VersionInfo Name="Release">8</VersionInfo>
+						<VersionInfo Name="Build">1412</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -231,13 +235,13 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc,</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">TURBU Editor</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">0.8.7.1403</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.8.8.1412</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">TURBU Editor</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">Turbu.exe</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">TURBU editor</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">0.8.7</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">0.8.8</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Source>

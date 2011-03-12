@@ -69,7 +69,8 @@ uses
   rm2_turbu_map_objects in '..\turbu format\converters\rm2_turbu_map_objects.pas',
   conversion_output in '..\turbu format\converters\conversion_output.pas' {frmConversionOutput},
   rm2_turbu_event_builder in '..\turbu format\converters\rm2_turbu_event_builder.pas',
-  PackageRegistry in '..\..\classes\PackageRegistry.pas';
+  PackageRegistry in '..\..\classes\PackageRegistry.pas',
+  frame_vocab in 'frame_vocab.pas' {frameVocab: TFrame};
 
 {$R *.res}
 
