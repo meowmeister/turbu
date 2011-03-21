@@ -78,6 +78,7 @@ type
    function clamp(number, low, high: integer): integer; inline; overload;
    procedure EnableControls(const controls: array of TControl; enabled: boolean);
    procedure swap(var x, y: integer); inline;
+   procedure OutputFormattedString(const value: string; const args: array of const);
 
    //modulus function that doesn't "mirror" for negative numbers
    function safeMod(big, small: integer): integer; inline;
@@ -247,6 +248,11 @@ var
 begin
    for control in controls do
       control.Enabled := enabled;
+end;
+
+procedure OutputFormattedString(const value: string; const args: array of const);
+begin
+   OutputDebugString(PChar(format(value, args)));
 end;
 
 { TRpgThread }
