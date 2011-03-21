@@ -139,7 +139,8 @@ uses
   EB_Expressions in '..\turbu format\script\EB_Expressions.pas',
   EB_Characters in '..\turbu format\script\EB_Characters.pas',
   AsphyreTimer in '..\..\classes\Asphyre\AsphyreTimer.pas',
-  sdl_frame_helper in '..\turbu format\design\sdl_frame_helper.pas';
+  sdl_frame_helper in '..\turbu format\design\sdl_frame_helper.pas',
+  frame_vocab in '..\editor\frame_vocab.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

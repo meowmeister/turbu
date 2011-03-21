@@ -60,7 +60,7 @@ type
    private
       FCost: integer;
       FCostPercent: boolean;
-      FDesc: string;
+      FDescription: string;
       FUseString: string;
       FUseString2: string;
       FFailureMessage: word;
@@ -73,7 +73,7 @@ type
       procedure save(savefile: TStream); override;
 
       property cost: integer read FCost write FCost;
-      property desc: string read FDesc write FDesc;
+      property desc: string read FDescription write FDescription;
       property costAsPercentage: boolean read FCostPercent write FCostPercent;
       property useString: string read FUseString write FUseString;
       property useString2: string read FUseString2 write FUseString2;
@@ -193,7 +193,7 @@ begin
    inherited Load(savefile);
    FCost := savefile.readInt;
    FCostPercent := savefile.readBool;
-   FDesc := savefile.readString;
+   FDescription := savefile.readString;
    FUseString := savefile.readString;
    FUseString2 := savefile.readString;
    FFailureMessage := savefile.readWord;
@@ -207,7 +207,7 @@ begin
    inherited save(savefile);
    savefile.writeInt(FCost);
    savefile.writeBool(FCostPercent);
-   savefile.writeString(FDesc);
+   savefile.writeString(FDescription);
    savefile.writeString(FUseString);
    savefile.writeString(FUseString2);
    savefile.writeWord(FFailureMessage);

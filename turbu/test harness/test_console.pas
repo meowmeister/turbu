@@ -51,6 +51,8 @@ type
       mnuTestMapObjectContainers: TMenuItem;
       mnuTestDatabaseUpload: TMenuItem;
       mnuTestPartySetup: TMenuItem;
+    mnuGenerateDBScript: TMenuItem;
+    txtOutput: TMemo;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -72,12 +74,12 @@ type
       procedure mnuTestMapObjectContainersClick(Sender: TObject);
       procedure mnuTestDatabaseUploadClick(Sender: TObject);
       procedure mnuTestPartySetupClick(Sender: TObject);
+    procedure mnuGenerateDBScriptClick(Sender: TObject);
    private
       { Private declarations }
       FEngine: IDesignMapEngine;
       folder, outFolder: string;
       FCurrentMap: IRpgMap;
-      frmDatabase: TFrmDatabase;
       procedure setupConversionPaths;
       procedure renderTest(Sender: TObject);
    public
@@ -90,7 +92,7 @@ var
 implementation
 
 uses
-   Contnrs, DBClient, Generics.Collections, Registry, windows,
+   Contnrs, DB, DBClient, Generics.Collections, Registry, windows, Variants,
    dm_database, turbu_database, test_project,
    archiveInterface, discInterface, test_map_tree,
    turbu_constants, conversion_report, conversion_report_form,
@@ -114,8 +116,8 @@ var
 
 procedure TfrmTestConsole.mnuTestDatabaseUploadClick(Sender: TObject);
 begin
-   if FCurrentMap = nil then
-      mnuTestMapLoadingClick(sender);
+   if not assigned(GDatabase) then
+      mnuTestLoadingClick(Sender);
    GDatabase.copyToDB(dmDatabase, []);
 
    if sender = mnuTestDatabaseUpload then
@@ -123,13 +125,21 @@ begin
 end;
 
 procedure TfrmTestConsole.mnuTestDatabasewindow1Click(Sender: TObject);
+var
+   frmDatabase: TFrmDatabase;
 begin
    if not dmDatabase.charClasses.Active then
       mnuTestDatasetsClick(sender);
-   if not assigned(GDatabase) then
-      mnuTestLoadingClick(Sender);
-   frmDatabase.init(GDatabase);
-   frmDatabase.ShowModal;
+   if VarIsNull(dmDatabase.switches.Lookup('id', 0, 'DisplayName')) then
+      mnuTestDatabaseUploadClick(Sender);
+
+   frmDatabase := TFrmDatabase.Create(nil);
+   try
+      frmDatabase.init(GDatabase);
+      frmDatabase.ShowModal;
+   finally
+      frmDatabase.Free;
+   end;
 end;
 
 procedure TfrmTestConsole.mnuCreateSdlWindowClick(Sender: TObject);
@@ -394,6 +404,108 @@ begin
    mnuTestConversion1.Enabled := folder <> '\';
 end;
 
+function FieldType(field: TField): string;
+begin
+   case field.DataType of
+      ftSmallint, ftWord, ftShortint, ftByte: result := 'SMALLINT';
+      ftInteger, ftLongWord: result := 'INTEGER';
+      ftBoolean: result := 'BOOLEAN';
+      ftCurrency: result := 'DECIMAL(18, 4)';
+      ftBytes, ftVarBytes: result := 'BLOB';
+      ftWideMemo: result := 'BLOB SUB_TYPE TEXT';
+      ftWideString: result := format('VARCHAR(%d) CHARACTER SET UNICODE_FSS', [field.Size]);
+      ftLargeint: result := 'BIGINT';
+      ftSingle, ftFloat, ftExtended: result := 'REAL';
+      else asm int 3 end;
+   end;
+end;
+
+function FieldName(const name: string): string;
+begin
+   result := StringReplace(name, '.', '_', []);
+   result := StringReplace(result, '[', '_', []);
+   result := StringReplace(result, ']', '', []);
+end;
+
+function MasterIndexGen(dset: TClientDataset): string;
+const
+   FK = 'ALTER TABLE $SUB' + CRLF + '  ADD CONSTRAINT FK_$SUB' + CRLF +
+        '  FOREIGN KEY (MASTER)' + CRLF + '    REFERENCES $MASTER(ID);' + CRLF;
+   IX_MX = 'CREATE UNIQUE INDEX IX_$SUB' + CRLF + '  ON $SUB' + CRLF + '  (MASTER, X);';
+   IX_MID = 'ALTER TABLE $SUB' + CRLF + '  ADD CONSTRAINT PK_$SUB' + CRLF + '  PRIMARY KEY (MASTER, ID);';
+var
+   masterIdx: integer;
+   master: string;
+begin
+   result := FK;
+   if dset.FindField('X') <> nil then
+      result := result + IX_MX
+   else if dset.FindField('skill') <> nil then
+      result := result + StringReplace(IX_MID, 'ID', 'SKILL', [])
+   else begin
+      dset.FieldByName('ID');
+      result := result + IX_MID;
+   end;
+   result := StringReplace(result, '$SUB', dset.Name, [rfReplaceAll]);
+   masterIdx := Pos('_', dset.Name);
+   assert(masterIdx > 0);
+   master := Copy(dset.Name, 1, masterIdx - 1);
+   result := StringReplace(result, '$MASTER', master, []);
+end;
+
+function IndexGen(dset: TClientDataset): string;
+const
+   INDEX = 'ALTER TABLE %s' + CRLF + '  ADD CONSTRAINT PK_%s' + CRLF + '  PRIMARY KEY (ID);';
+
+begin
+   if assigned(dset.FindField('MASTER')) then
+      result := MasterIndexGen(dset)
+   else if assigned(dset.FindField('ID')) then
+      result := StringReplace(INDEX, '%s', dset.Name, [rfReplaceAll])
+   else result := '';
+   if result <> '' then
+      result := CRLF + result;
+end;
+
+function ScriptGen(dset: TClientDataset): string;
+const
+   CREATE_SCRIPT = 'CREATE TABLE %s (';
+   CREATE_FIELD = '   %s %s NOT NULL,';
+var
+   field: TField;
+begin
+   result := format(CREATE_SCRIPT, [dset.Name]);
+   for field in dset.fields do
+      if field.FieldKind = fkData then
+         result := result + CRLF + format(CREATE_FIELD, [FieldName(field.FieldName), FieldType(field)]);
+   delete(result, length(result), 1);
+   result := result + ');' + IndexGen(dset);
+end;
+
+procedure TfrmTestConsole.mnuGenerateDBScriptClick(Sender: TObject);
+const
+   VERSION = 'CREATE TABLE DB_VERSION (' + CRLF + ' ID INTEGER NOT NULL, ' + CRLF + '  NAME VARCHAR(255) NOT NULL' + CRLF + ');';
+var
+   component: TComponent;
+   output: TStringList;
+begin
+   if not dmDatabase.charClasses.Active then
+      mnuTestDatasetsClick(sender);
+   output := TStringList.Create;
+   try
+      output.Add(VERSION);
+      for component in dmDatabase do
+      begin
+         if not (component is TClientDataset) or (component.Tag <> 0) or (component.Name = 'scriptRange') then
+            continue;
+         output.Add(ScriptGen(TClientDataset(component)));
+      end;
+      txtOutput.Lines.Assign(output);
+   finally
+      output.Free;
+   end;
+end;
+
 procedure TfrmTestConsole.mnuTestDatasetsClick(Sender: TObject);
 var
    dataset: TClientDataSet;
@@ -402,7 +514,6 @@ begin
    try
       dataset.Close;
       dataset.CreateDataSet;
-//      dataset.Open;
    except
       asm int 3 end;
       Abort;
