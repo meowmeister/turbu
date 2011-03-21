@@ -32,7 +32,7 @@ type
    TBattleCommand = class(TRpgDatafile)
    private
       FStyle: TCommandStyle;
-      FValue: smallint;
+      FVal: smallint;
    protected
       class function keyChar: ansiChar; override;
    public
@@ -40,7 +40,7 @@ type
       procedure save(savefile: TStream); override;
 
       property style: TCommandStyle read FStyle write FStyle;
-      property value: smallint read FValue write FValue;
+      property value: smallint read FVal write FVal;
    end;
 
    TStatBlock = class;

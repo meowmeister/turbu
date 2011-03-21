@@ -30,7 +30,7 @@ type
 
    TItemTemplate = class abstract(TRpgDatafile)
    private
-      FDesc: string;
+      FDescription: string;
       FCost: integer;
       FTag: T4IntArray;
    protected
@@ -39,7 +39,7 @@ type
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
-      property desc: string read FDesc write FDesc;
+      property desc: string read FDescription write FDescription;
       property cost: integer read FCost write FCost;
       property tag: T4IntArray read FTag write FTag;
    end;
@@ -209,7 +209,7 @@ end;
 constructor TItemTemplate.Load(savefile: TStream);
 begin
    inherited Load(savefile);
-   FDesc := savefile.readString;
+   FDescription := savefile.readString;
    FCost := savefile.readInt;
    savefile.readBuffer(FTag, sizeof(T4IntArray));
    lassert(savefile.readChar = 'I');
@@ -218,7 +218,7 @@ end;
 procedure TItemTemplate.save(savefile: TStream);
 begin
    inherited save(savefile);
-   savefile.writeString(FDesc);
+   savefile.writeString(FDescription);
    savefile.writeInt(FCost);
    savefile.WriteBuffer(FTag, sizeof(T4IntArray));
    savefile.writeChar('I');

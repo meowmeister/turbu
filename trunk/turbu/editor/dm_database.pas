@@ -40,6 +40,7 @@ type
       [TRelation]
       charClasses_Conditions: TClientDataSet;
       animations: TClientDataSet;
+      items: TClientDataSet;
       items_script: TClientDataSet;
       items_armor: TClientDataSet;
       items_weapon: TClientDataSet;
@@ -60,7 +61,6 @@ type
       skills: TClientDataSet;
       [TRelation]
       skills_attributes: TClientDataSet;
-      items: TClientDataSet;
       offhands: TClientDataSet;
       attributes: TClientDataSet;
       conditions: TClientDataSet;
@@ -88,7 +88,6 @@ type
       items_scriptusableByHero: TBytesField;
       charClassesid: TIntegerField;
       charClassesSp: TLargeintField;
-      items_scriptscript: TMemoField;
       metadataMapEngine: TShortintField;
       heroesportraitShiftFColorSet1: TSingleField;
       metadataParent: TSmallintField;

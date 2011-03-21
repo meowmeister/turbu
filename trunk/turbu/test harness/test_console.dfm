@@ -17,6 +17,15 @@ object frmTestConsole: TfrmTestConsole
   OnShow = FormShow
   PixelsPerInch = 120
   TextHeight = 17
+  object txtOutput: TMemo
+    Left = 0
+    Top = 0
+    Width = 443
+    Height = 269
+    Align = alClient
+    ScrollBars = ssVertical
+    TabOrder = 0
+  end
   object MainMenu1: TMainMenu
     Left = 144
     Top = 72
@@ -104,6 +113,10 @@ object frmTestConsole: TfrmTestConsole
       object mnuEventEditor: TMenuItem
         Caption = 'Test &Event Editor'
         OnClick = mnuEventEditorClick
+      end
+      object mnuGenerateDBScript: TMenuItem
+        Caption = 'Generate DB Script'
+        OnClick = mnuGenerateDBScriptClick
       end
     end
     object mnuTree: TMenuItem
