@@ -34,7 +34,6 @@ type
       radPointer: TRadioButton;
       spnExactValue: TJvSpinEdit;
       selValue: TIntSelector;
-      procedure FormShow(Sender: TObject);
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
@@ -76,17 +75,11 @@ begin
    selValue.Enabled := radPointer.Checked;
 end;
 
-procedure TfrmEBEditMoney.FormShow(Sender: TObject);
-begin
-   EnableControlsProperly;
-end;
-
 procedure TfrmEBEditMoney.UploadObject(obj: TEbObject);
 begin
    grpOperation.ItemIndex := obj.Values[0];
    UploadValuePtrSelection(obj.Values[1], obj.Values[2], radExactAmount, radPointer,
      spnExactValue, selValue);
-   EnableControlsProperly;
 end;
 
 initialization
