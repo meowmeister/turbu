@@ -146,6 +146,7 @@ end;
 function TfrmEBEditBase.EditObj(obj: TEbObject): boolean;
 begin
    UploadObject(obj);
+   EnableControlsProperly;
    result := ShowModal = mrOK;
    if result then
       DownloadObject(obj);

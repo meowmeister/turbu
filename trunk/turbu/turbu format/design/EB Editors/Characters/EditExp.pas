@@ -78,7 +78,6 @@ begin
    grpOperation.ItemIndex := obj.Values[2];
    UploadValuePtrSelection(obj.Values[3], obj.Values[4], radExactAmount, radPointer, spnExactValue, selValue);
    chkLevelMssage.Checked := boolean(obj.Values[5]);
-   EnableControlsProperly;
 end;
 
 procedure TfrmEBEditExp.DownloadObject(obj: TEbObject);

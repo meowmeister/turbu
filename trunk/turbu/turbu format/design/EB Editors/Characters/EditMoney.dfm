@@ -2,7 +2,6 @@ inherited frmEBEditMoney: TfrmEBEditMoney
   Caption = 'Change Money'
   ClientHeight = 215
   ClientWidth = 288
-  OnShow = FormShow
   ExplicitWidth = 294
   ExplicitHeight = 250
   PixelsPerInch = 120

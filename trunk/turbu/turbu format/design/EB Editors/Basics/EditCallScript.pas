@@ -177,7 +177,6 @@ begin
       end
       else assert(false);
    end;
-   EnableControlsProperly;
 end;
 
 initialization
