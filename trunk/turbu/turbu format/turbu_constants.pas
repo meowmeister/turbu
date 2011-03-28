@@ -48,7 +48,7 @@ const
    vt_none: integer  = -1;
    vt_integer        = 0;
    vt_boolean        = 1;
-   vt_float          = 2;
+   vt_real           = 2;
    vt_string         = 3;
    vt_char           = 4;
    vt_object         = 5;
@@ -61,11 +61,36 @@ const
    VT_ADDRESSES = [5..10]; //set of parameters that are pointers
 
    TYPENAMES: array[0..10] of string =
-   ('integer', 'boolean', 'float', 'string', 'char', 'TObject', 'TRpgHero', 'TRpgCharacter',
+   ('integer', 'boolean', 'real', 'string', 'char', 'TObject', 'TRpgHero', 'TRpgCharacter',
     'TRpgParty', 'TRpgVehicle', 'TRpgMapObject');
 
     //custom message types
     WM_RENDER = WM_USER + 1;
+
+    //Custom vocab constants
+    V_ITEMS_OWNED    = 'Items Owned';
+    V_ITEMS_EQUIPPED = 'Items Equipped';
+    V_MONEY_NAME     = 'Money';
+    V_NORMAL_STATUS  = 'Normal Status';
+    V_STAT_EXP       = 'Stat-Exp';
+    V_STAT_SHORT_LV  = 'StatShort-Lv';
+    V_STAT_SHORT_HP  = 'StatShort-HP';
+    V_STAT_SHORT_MP  = 'StatShort-MP';
+    V_MP_COST        = 'MP Cost';
+    V_STAT_HP        = 'Stat-HP';
+    V_STAT_MP        = 'Stat-MP';
+    V_STAT_ATTACK    = 'Stat-Attack';
+    V_STAT_DEFENSE   = 'Stat-Defense';
+    V_STAT_MIND      = 'Stat-Mind';
+    V_STAT_SPEED     = 'Stat-Speed';
+    V_STAT_LV        = 'Stat-Lv';
+    V_EQ_WEAPON      = 'EQ-Weapon';
+    V_EQ_SHIELD      = 'EQ-Shield';
+    V_EQ_ARMOR       = 'EQ-Armor';
+    V_EQ_HELMET      = 'EQ-Helmet';
+    V_EQ_ACCESSORY   = 'EQ-Accessory';
+
+
 
 resourcestring
    DESIGN_DB = 'design';

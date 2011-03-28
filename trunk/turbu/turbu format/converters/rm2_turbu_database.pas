@@ -335,11 +335,11 @@ type
 
 const
   BASE_VOCAB: array[TVocabSet] of string =
-  ('Items Owned', 'Items Equipped', 'Money', 'Normal Status', 'Stat-Exp',
-   'StatShort-Lv', 'StatShort-HP', 'StatShort-MP', 'MP Cost', 'Stat-Attack',
-   'Stat-Defense', 'Stat-Mind', 'Stat-Speed', 'EQ-Weapon', 'EQ-Shield', 'EQ-Armor',
-   'EQ-Helmet', 'EQ-Accessory'
-  );
+  (V_ITEMS_OWNED, V_ITEMS_EQUIPPED, V_MONEY_NAME, V_NORMAL_STATUS, V_STAT_EXP,
+   V_STAT_SHORT_LV, V_STAT_SHORT_HP, V_STAT_SHORT_MP, V_MP_COST, V_STAT_ATTACK,
+   V_STAT_DEFENSE, V_STAT_MIND, V_STAT_SPEED, V_EQ_WEAPON, V_EQ_SHIELD, V_EQ_ARMOR,
+   V_EQ_HELMET, V_EQ_ACCESSORY);
+
   INN_FMT = 'Inn%d-%s';
   SHOP_VOCAB: array[TShopVocabSet] of string =
   (
@@ -357,8 +357,8 @@ const
    (id: 5; name: 'Battle-Victory'), (id: 6; name: 'Battle-Defeat'),
    (id: $6C; name: 'Menu-Equip'), (id: $6E; name: 'Menu-Save'),
    (id: $73; name: 'Menu-Load Game'), (id: $75; name: 'Menu-Quit Game'),
-   (id: $7B; name: 'Stat-Lv'),
-   (id: $7C; name: 'Stat-HP'), (id: $7D; name: 'Stat-MP'),
+   (id: $7B; name: V_STAT_LV),
+   (id: $7C; name: V_STAT_HP), (id: $7D; name: V_STAT_MP),
    (id: $92; name: 'Save-Save Where'), (id: $93; name: 'Save-Load Where'),
    (id: $94; name: 'Save-File'), (id: $97; name: 'Confirm-Quit'),
    (id: $98; name: 'Confirm-Yes'), (id: $99; name: 'Confirm-No')
