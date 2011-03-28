@@ -23,16 +23,16 @@ type
     procedure lstGroupsClick(Sender: TObject);
   private
     { Private declarations }
-    FLocal: TClientDataset;
+    FLocal: TCustomClientDataset;
     class var FContext: TDataset;
 
-    procedure setup(const name, vartype: string; dset: TClientDataset; id: integer);
+    procedure setup(const name, vartype: string; dset: TCustomClientDataset; id: integer);
     procedure LocalBeforeOpen(DataSet: TDataSet);
     procedure LocalAfterScroll(DataSet: TDataSet);
   public
     { Public declarations }
     class property VariableContext: TDataset read FContext write FContext;
-    class procedure Edit(const caption, vartype: string; dset: TClientDataset; var id: integer);
+    class procedure Edit(const caption, vartype: string; dset: TCustomClientDataset; var id: integer);
   end;
 
 implementation
@@ -46,7 +46,7 @@ const SUBLIST_SIZE = 50;
 
 { TfrmArrayEdit }
 
-class procedure TfrmArrayEdit.Edit(const caption, vartype: string; dset: TClientDataset; var id: integer);
+class procedure TfrmArrayEdit.Edit(const caption, vartype: string; dset: TCustomClientDataset; var id: integer);
 var
    form: TfrmArrayEdit;
 begin
@@ -96,7 +96,7 @@ begin
    else srcList.Dataset := FContext;
 end;
 
-procedure TfrmArrayEdit.setup(const name, vartype: string; dset: TClientDataset; id: integer);
+procedure TfrmArrayEdit.setup(const name, vartype: string; dset: TCustomClientDataset; id: integer);
 const
    NEW_NAME = '[%.4d - %.4d]';
 var

@@ -162,6 +162,7 @@ implementation
 uses
    SysUtils, Math, Graphics, Windows, OpenGL, 
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
+Diagnostics,
    PackageRegistry,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
    turbu_classes, turbu_versioning, turbu_tilesets, turbu_defs,
@@ -652,6 +653,7 @@ procedure TfrmTurbuMain.openProject(location: string);
 var
    fileStream, loadStream: TStream;
    filename: string;
+stopwatch: TStopwatch;
 begin
    location := IncludeTrailingPathDelimiter(location);
    openArchive(PROJECT_DB, DATABASE_ARCHIVE);
@@ -664,6 +666,8 @@ begin
    TThread.CreateAnonymousThread(
       procedure
       begin
+stopwatch:= TStopwatch.Create;
+stopwatch.Start;
          FLoadSignal.ResetEvent;
          fileStream := TFileStream.Create(filename, fmOpenRead);
          loadStream := TMemoryStream.Create;
@@ -691,6 +695,8 @@ begin
                end;
             end;
          finally
+stopwatch.Stop;
+OutputFormattedString('DB loading took %d milliseconds', [stopwatch.ElapsedMilliseconds]);
             loadStream.free;
             fileStream.Free;
          end;

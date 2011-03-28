@@ -82,7 +82,7 @@ uses
 
 procedure TfrmDatabase.applyChanges(Sender: TObject);
 var
-   iterator: TClientDataset;
+   iterator: TCustomClientDataset;
 begin
    for iterator in dmDatabase.datasets do
       iterator.MergeChangeLog;
@@ -90,7 +90,7 @@ end;
 
 procedure TfrmDatabase.btnCancelClick(Sender: TObject);
 var
-   iterator: TClientDataSet;
+   iterator: TCustomClientDataset;
 begin
    for iterator in dmDatabase.datasets do
       iterator.CancelUpdates;
@@ -113,7 +113,7 @@ end;
 
 procedure TfrmDatabase.FormShow(Sender: TObject);
 var
-   iterator: TClientDataset;
+   iterator: TCustomClientDataset;
 begin
    if not FUploaded then
    begin
@@ -152,7 +152,7 @@ end;
 
 procedure TfrmDatabase.FormClose(Sender: TObject; var Action: TCloseAction);
 var
-   iterator: TClientDataSet;
+   iterator: TCustomClientDataSet;
 begin
    frmClass.onHide;
    for iterator in dmDatabase.datasets do

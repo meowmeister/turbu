@@ -35,7 +35,7 @@ type
    protected
       procedure SetParent(AParent: TWinControl); override;
       function GetName: string; virtual; abstract;
-      function GetDset: TClientDataset; virtual; abstract;
+      function GetDset: TCustomClientDataset; virtual; abstract;
    public
       constructor Create(AOwner: TComponent); override;
       property ID: integer read FID write SetID;
@@ -46,12 +46,12 @@ type
 
    TSwitchSelector = class(TVarSelector)
       function GetName: string; override;
-      function GetDset: TClientDataset; override;
+      function GetDset: TCustomClientDataset; override;
    end;
 
    TIntSelector = class(TVarSelector)
       function GetName: string; override;
-      function GetDset: TClientDataset; override;
+      function GetDset: TCustomClientDataset; override;
    end;
 
 procedure Register;
@@ -129,7 +129,7 @@ end;
 
 { TSwitchSelector }
 
-function TSwitchSelector.GetDset: TClientDataset;
+function TSwitchSelector.GetDset: TCustomClientDataset;
 begin
 {$IFNDEF COMPONENT}
    result := dmDatabase.Switches;
@@ -143,7 +143,7 @@ end;
 
 { TIntSelector }
 
-function TIntSelector.GetDset: TClientDataset;
+function TIntSelector.GetDset: TCustomClientDataset;
 begin
 {$IFNDEF COMPONENT}
    result := dmDatabase.Variables;
