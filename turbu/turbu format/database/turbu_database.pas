@@ -203,7 +203,6 @@ var
 
 implementation
 uses
-windows,
    zlib, math, TypInfo,
    archiveInterface, commons,
    turbu_constants, turbu_engines, turbu_versioning, turbu_plugin_interface,
@@ -248,6 +247,26 @@ const
    (TJunkTemplate, TWeaponTemplate, TArmorTemplate, TMedicineTemplate,
    TStatItemTemplate, TSkillBookTemplate, TSkillItemTemplate,
    TVariableItemTemplate, TScriptItemTemplate);
+
+   procedure loadStringList(stream: TStream; var list: TStringList);
+   var
+      newstream: TStringStream;
+      data: string;
+      size: integer;
+   begin
+      size := stream.readInt;
+      data := stream.readString;
+      newStream := TStringStream.Create(data);
+      try
+         newStream.Position := 0;
+         list := TStringList.Create;
+         list.LoadFromStream(newStream);
+         lassert(list.Count = size);
+      finally
+         newStream.Free;
+      end;
+   end;
+
 var
    substream: TStream;
    i, j, k: integer;
@@ -255,25 +274,7 @@ var
    skills: TSkillClass;
    dummy: string;
    filename, uFilename: string;
-
-   procedure loadStringList(stream: TStream; var list: TStringList);
-   var
-      newstream: TStringStream;
-      data: string;
-   begin
-      k := stream.readInt;
-      data := stream.readString;
-      newStream := TStringStream.Create(data);
-      try
-         newStream.Position := 0;
-         list := TStringList.Create;
-         list.LoadFromStream(newStream);
-         lassert(list.Count = k);
-      finally
-         newStream.Free;
-      end;
-   end;
-
+   EventLoader: TThread;
 begin
    skills := nil;
    for item := low(TItemType) to high(TItemType) do
@@ -380,6 +381,20 @@ begin
          onLoadMap(FMapTree);
       end, true);
    end;
+
+   EventLoader := TThread.CreateAnonymousThread(
+      procedure
+      var eventStream: TStream;
+      begin
+         eventStream := GArchives[SCRIPT_ARCHIVE].getFile(format('%s.trs', [self.name]));
+         try
+            FGlobalScriptBlock := TEBUnit.LoadFromStream(eventStream) as TEBUnit;
+         finally
+            eventStream.Free;
+         end;
+      end);
+   EventLoader.FreeOnTerminate := false;
+   EventLoader.Start;
 
    savefile.ReadBuffer(FScriptFormat, sizeof(FScriptFormat));
    FScriptFile := savefile.readString;
@@ -564,14 +579,9 @@ begin
       FGlobalEvents.Add(TRpgMapObject.Load(savefile));
    lassert(savefile.readChar = 'g');
 
-   subStream := GArchives[SCRIPT_ARCHIVE].getFile(format('%s.trs', [self.name]));
-   try
-      FGlobalScriptBlock := TEBUnit.LoadFromStream(subStream) as TEBUnit;
-   finally
-      subStream.Free;
-   end;
-
    lassert(savefile.readChar = 'd');
+   EventLoader.WaitFor;
+   EventLoader.Free;
 end;
 
 procedure TRpgDatabase.save(savefile: TStream);
