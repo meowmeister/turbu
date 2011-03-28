@@ -212,10 +212,10 @@ begin
    begin
       lResult := dataset.Lookup('id', id, 'name');
       if lResult = Null then
-         result := ''
+         result := BAD_LOOKUP
       else result := lResult;
    end
-   else result := '';
+   else result := BAD_LOOKUP;
 end;
 
 procedure TdmDatabase.charClasses_skillsetCalcFields(DataSet: TDataSet);

@@ -170,6 +170,7 @@ type
 
 const
    CRLF = #13#10;
+   BAD_LOOKUP = #1;
 
 implementation
 uses
@@ -374,8 +375,8 @@ class function TEBObject.GetLookup(id: integer; const name: string): string;
 begin
    if assigned(FDatastore) then
       result := FDatastore.NameLookup(name, id)
-   else result := '';
-   if result = '' then
+   else result := BAD_LOOKUP;
+   if result = BAD_LOOKUP then
       result := format('??%s #%d??', [name, id]);
 end;
 
