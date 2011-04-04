@@ -165,7 +165,6 @@ begin
    if current = '' then
       sdlFrame.setSprite(current, frame, tileset, rename);
    selectSprite(tileset, current, frame);
-   SDL_SelectRenderer(sdlFrame.SdlWindow);
    sdlFrame.setSprite(current, frame, tileset, rename);
 end;
 

@@ -77,7 +77,7 @@ type
    public
       constructor Create; override;
       destructor Destroy; override;
-      procedure initialize(window: TSdlWindowId; database: IRpgDatabase); override;
+      procedure initialize(window: TSdlWindow; database: IRpgDatabase); override;
       function loadMap(map: IMapMetadata): IRpgMap; override;
       procedure Play; override;
       function Playing: boolean; override;
@@ -174,9 +174,10 @@ begin
    inherited;
 end;
 
-procedure T2kMapEngine.initialize(window: TSdlWindowId; database: IRpgDatabase);
+procedure T2kMapEngine.initialize(window: TSdlWindow; database: IRpgDatabase);
 var
    layout: TGameLayout;
+   renderer: TSdlRenderer;
 begin
    if FInitialized then
       Exit;
@@ -186,25 +187,27 @@ begin
    if not assigned(FDatabase) then
       raise ERpgPlugin.Create('Incompatible project database');
    layout := FDatabase.layout;
-   if window = 0 then
+   if window.ptr = nil then
    begin
       //In RM2K, project title is stored in the LMT.  I'll need to convert that
       //to grab a project title. This will do for now.
       window :=  SDL_CreateWindow(PAnsiChar(ansiString(format('TURBU engine - %s', [FDatabase.mapTree[0].name]))),
-                        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                        SDL_WINDOWPOS_CENTERED_MASK, SDL_WINDOWPOS_CENTERED_MASK,
                         layout.physWidth, layout.physHeight,
                         [sdlwOpenGl, sdlwShown {,sdlwResizable, sdlwInputGrabbed}]);
 
-      if window = 0 then
+      if window.ptr = nil then
          raise ERpgPlugin.CreateFmt('Unable to initialize SDL window: %s%s', [LFCR, SDL_GetError]);
-      if SDL_CreateRenderer(window, -1, [sdlrPresentFlip2, sdlrAccelerated]) <> 0 then
+      renderer := SDL_CreateRenderer(window, -1, [sdlrAccelerated]);
+      if renderer.ptr = nil then
          raise ERpgPlugin.CreateFmt('Unable to initialize SDL renderer: %s%s', [LFCR, SDL_GetError]);;
-      SDL_RenderPresent;
-   end;
+      SDL_RenderPresent(renderer);
+   end
+   else renderer := SDL_GetRenderer(window);
    FCanvas := TSdlCanvas.CreateFrom(window);
    FStretchRatio.x := layout.physWidth / layout.width;
    FStretchRatio.y := layout.physHeight / layout.height;
-   FImages := TSdlImages.Create();
+   FImages := TSdlImages.Create(renderer);
    FImages.ArchiveCallback := aCallback;
    FImages.ArchiveLoader := aLoader;
    setLength(FMaps, FDatabase.mapTree.lookupCount);
@@ -382,7 +385,7 @@ end;
 procedure T2kMapEngine.repaint;
 begin
    FCanvas.SetRenderer;
-   SDL_SetRenderDrawColor(0, 0, 0, 255);
+   SDL_SetRenderDrawColor(FCanvas.renderer, 0, 0, 0, 255);
    FCanvas.Clear;
    FCurrentMap.Draw;
    self.AfterPaint;

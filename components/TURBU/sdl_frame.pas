@@ -22,12 +22,13 @@ type
 
    TSdlFrame = class(TCustomControl)
    private
-      FWindowID: TSdlWindowId;
+      FWindow: TSdlWindow;
+      FRenderer: TSdlRenderer;
       FFlags: TSdlWindowFlags;
       FTimer: TTimer;
       FFramerate: word;
       FActive: boolean;
-      FRenderer: boolean;
+      FRendererAvailable: boolean;
       FRendererType: TRendererType;
 
       FImageManager: TSdlImages;
@@ -40,7 +41,7 @@ type
       FOnPaint: TNotifyEvent;
 
       function CreateWindow: boolean;
-      function CreateRenderer: boolean;
+      procedure CreateRenderer;
       procedure InternalOnTimer(Sender: TObject);
       procedure SetFramerate(Value: word);
       procedure SetActive(const Value: boolean);
@@ -79,10 +80,10 @@ type
       function IndexOfName(const name: string): integer;
       function LogicalCoordinates(x, y: integer): TPoint;
       procedure ClearTextures;
-      procedure Select;
 
-      property Available: boolean read FRenderer;
-      property SdlWindow: TSdlWindowId read FWindowID;
+      property Available: boolean read FRendererAvailable;
+      property SdlWindow: TSdlWindow read FWindow;
+      property Renderer: TSdlRenderer read FRenderer;
       property Flags: TSdlWindowFlags read FFlags;
       property TextureByName[name: string]: TSdlTexture read GetTextureByName {write SetTextureByName};
       property Images: TSdlImages read FImageManager;
@@ -137,7 +138,7 @@ begin
    self.ControlStyle := self.ControlStyle + [csGestures];
    {$IFEND}
    self.TabStop := true;
-   FImageManager := TSdlImages.Create;
+   FImageManager := TSdlImages.Create(FRenderer);
    FLogicalWidth := 1;
    FLogicalHeight := 1;
    if SDL_WasInit(SDL_INIT_VIDEO) <> SDL_INIT_VIDEO then
@@ -160,9 +161,8 @@ end;
 procedure TSdlFrame.DestroyWnd;
 begin
    FTimer.OnTimer := nil;
-   SDL_DestroyRenderer(FWindowID);
-   SDL_DestroyWindow(FWindowID);
-   FWindowID := 0;
+   SDL_DestroyRenderer(FRenderer);
+   FWindow.Free;
    FFlags := [];
    self.Framerate := 0;
    inherited;
@@ -171,24 +171,20 @@ end;
 procedure TSdlFrame.DrawBox(const region: TRect; const color: SDL_Color;
   const alpha: byte = $FF);
 begin
-   if CreateRenderer then
-   begin
-      assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
-      assert(SDL_RenderDrawRect(@region) = 0);
-   end;
+   CreateRenderer;
+   assert(SDL_SetRenderDrawColor(FRenderer, color.r, color.g, color.b, alpha) = 0);
+   assert(SDL_RenderDrawRect(FRenderer, @region) = 0);
 end;
 
 procedure TSdlFrame.DrawRect(const region: TRect; const color: SDL_Color;
   const alpha: byte = $FF);
 begin
-   if CreateRenderer then
-   begin
-      assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
-      assert(SDL_RenderDrawLine(region.Left, region.Top, region.Right, region.Top) = 0);
-      assert(SDL_RenderDrawLine(region.right, region.Top, region.Right, region.bottom) = 0);
-      assert(SDL_RenderDrawLine(region.right, region.bottom, region.left, region.bottom) = 0);
-      assert(SDL_RenderDrawLine(region.Left, region.bottom, region.left, region.Top) = 0);
-   end;
+   CreateRenderer;
+   assert(SDL_SetRenderDrawColor(FRenderer, color.r, color.g, color.b, alpha) = 0);
+   assert(SDL_RenderDrawLine(FRenderer, region.Left, region.Top, region.Right, region.Top) = 0);
+   assert(SDL_RenderDrawLine(FRenderer, region.right, region.Top, region.Right, region.bottom) = 0);
+   assert(SDL_RenderDrawLine(FRenderer, region.right, region.bottom, region.left, region.bottom) = 0);
+   assert(SDL_RenderDrawLine(FRenderer, region.Left, region.bottom, region.left, region.Top) = 0);
 end;
 
 procedure TSdlFrame.DrawTexture(index: integer; src, dst: PSdlRect);
@@ -203,27 +199,22 @@ end;
 
 procedure TSdlFrame.DrawTexture(texture: TSdlTexture; src, dst: PSdlRect);
 begin
-   if not FRenderer then
+   if not FRendererAvailable then
       raise EBadHandle.Create('No renderer available.');
-   if not ((SDL_SelectRenderer(FWindowID) = 0) and
-          (SDL_RenderCopy(texture, src, dst) = 0)) then
+   if not (SDL_RenderCopy(FRenderer, texture, src, dst) = 0) then
       raise EBadHandle.Create(string(SDL_GetError));
 end;
 
 procedure TSdlFrame.FillColor(color: SDL_Color; alpha: byte);
 begin
-   if CreateRenderer then
-   begin
-      assert(SDL_SetRenderDrawColor(color.r, color.g, color.b, alpha) = 0);
-      assert(SDL_RenderFillRect(nil) = 0);
-   end;
+   CreateRenderer;
+   assert(SDL_SetRenderDrawColor(FRenderer, color.r, color.g, color.b, alpha) = 0);
+   assert(SDL_RenderFillRect(FRenderer, nil) = 0);
 end;
 
 procedure TSdlFrame.Flip;
 begin
-   if not (SDL_SelectRenderer(FWindowID) = 0) then
-      raise EBadHandle.Create(string(SDL_GetError));
-   SDL_RenderPresent;
+   SDL_RenderPresent(FRenderer);
 end;
 
 function TSdlFrame.GetAspectRatio: double;
@@ -243,8 +234,7 @@ end;
 
 procedure TSdlFrame.Paint;
 begin
-   if SDL_SelectRenderer(FWindowID) = -1 then
-      CreateRenderer;
+   CreateRenderer;
    if assigned(FOnPaint) then
       FOnPaint(self)
    else self.Flip;
@@ -252,15 +242,19 @@ end;
 
 {******************************************************************************}
 function TSdlFrame.CreateWindow: boolean;
+var
+   flags: TSdlWindowFlags;
 begin
-   if FWindowID = 0 then
-      FWindowID := SDL_CreateWindowFrom(self.Handle);
-   result := FWindowID <> 0;
-   if FWindowID = 0 then
+   if FWindow.ptr = nil then
+      FWindow := SDL_CreateWindowFrom(self.Handle);
+   flags := SDL_GetWindowFlags(FWindow);
+   assert(sdlwResizable in flags);
+   result := assigned(FWindow.ptr);
+   if not result then
       OutputDebugStringA(SDL_GetError);
 end;
 
-function TSdlFrame.CreateRenderer: boolean;
+procedure TSdlFrame.CreateRenderer;
 const
    pf: tagPIXELFORMATDESCRIPTOR = (nSize: sizeof(pf); nVersion: 1;
        dwFlags: PFD_DRAW_TO_WINDOW or PFD_SUPPORT_OPENGL or PFD_DOUBLEBUFFER;
@@ -271,11 +265,8 @@ const
 var
    pFormat: integer;
 begin
-   if (SDL_SelectRenderer(FWindowID) = 0) then
-   begin
-      result := true;
+   if (FRendererAvailable) then
       Exit;
-   end;
    if FRendererType = rtOpenGL then
    begin
       pFormat := ChoosePixelFormat(canvas.Handle, @pf);
@@ -284,18 +275,19 @@ begin
       if wglCreateContext(canvas.Handle) = 0 then
          outputDebugString(PChar(SysErrorMessage(GetLastError)));
    end;
-   if (SDL_CreateRenderer(FWindowID, SDL_RendererIndex(RENDERERS[FRendererType]), [sdlrPresentFlip3, sdlrAccelerated]) = 0) then
+   FRenderer := SDL_CreateRenderer(FWindow, SDL_RendererIndex(RENDERERS[FRendererType]), [sdlrAccelerated]);
+   if FRenderer.ptr <> nil then
    begin
-      SDL_ShowWindow(FWindowID);
-      assert(SDL_SetRenderDrawColor(0, 0, 0, 255) = 0);
-      SDL_RenderFillRect(nil);
-      FFlags := SDL_GetWindowFlags(FWindowID);
-      FRenderer := true;
+      SDL_ShowWindow(FWindow);
+      assert(SDL_SetRenderDrawColor(FRenderer, 0, 0, 0, 255) = 0);
+      SDL_RenderFillRect(FRenderer, nil);
+      FFlags := SDL_GetWindowFlags(FWindow);
+      FRendererAvailable := true;
       if assigned(FOnAvailable) then
          FOnAvailable(self);
+      FImageManager.SetRenderer(FRenderer);
    end
    else outputDebugString(pChar(format('SDL_CreateRenderer failed: %s', [sdl_GetError])));
-   result := SDL_SelectRenderer(FWindowID) = 0;
 end;
 
 function TSdlFrame.IndexOfName(const name: string): integer;
@@ -330,11 +322,6 @@ begin
    result := FImageManager.Contains(name);
 end;
 
-procedure TSdlFrame.Select;
-begin
-   SDL_SelectRenderer(FWindowID);
-end;
-
 procedure TSdlFrame.SetActive(const Value: boolean);
 begin
    FActive := Value;
@@ -348,18 +335,18 @@ var
 begin
    if (AWidth <> self.Width) or (AHeight <> self.Height) then
    begin
-      if not FRenderer then
+      if not FRendererAvailable then
       begin
          FLogicalWidth := aWidth;
          FLogicalHeight := aHeight;
       end
       else begin
-         SDL_GetWindowLogicalSize(FWindowID, size.X, size.Y);
+         SDL_GetWindowLogicalSize(FWindow, size.X, size.Y);
          ratioX := size.X / self.Width;
          ratioY := size.Y / self.Height;
          self.LogicalWidth := round(AWidth * ratioX);
          self.LogicalHeight := round(AHeight * ratioY);
-         SDL_SetWindowSize(FWindowID, self.Width, self.Height);
+         SDL_SetWindowSize(FWindow, self.Width, self.Height);
       end;
    end;
    inherited SetBounds(ALeft, ATop, AWidth, AHeight);
@@ -380,8 +367,8 @@ begin
       Exit;
 
    FLogicalHeight := Value;
-   SDL_SetWindowLogicalSize(FWindowID, FLogicalWidth, FLogicalHeight);
-   if FRenderer then
+   SDL_SetWindowLogicalSize(FWindow, FLogicalWidth, FLogicalHeight);
+   if FRendererAvailable then
       self.Flip;
 end;
 
@@ -392,8 +379,8 @@ begin
 
    FLogicalWidth := value.X;
    FLogicalHeight := value.Y;
-   SDL_SetWindowLogicalSize(FWindowID, FLogicalWidth, FLogicalHeight);
-   if FRenderer then
+   SDL_SetWindowLogicalSize(FWindow, FLogicalWidth, FLogicalHeight);
+   if FRendererAvailable then
       self.Flip;
 end;
 
@@ -403,8 +390,8 @@ begin
       Exit;
 
    FLogicalWidth := Value;
-   SDL_SetWindowLogicalSize(FWindowID, FLogicalWidth, FLogicalHeight);
-   if FRenderer then
+   SDL_SetWindowLogicalSize(FWindow, FLogicalWidth, FLogicalHeight);
+   if FRendererAvailable then
       self.Flip;
 end;
 
@@ -417,7 +404,7 @@ procedure TSdlFrame.ResetLogicalSize;
 begin
    FLogicalWidth := self.Width;
    FLogicalHeight := self.Height;
-   SDL_SetWindowLogicalSize(FWindowID, FLogicalWidth, FLogicalHeight);
+   SDL_SetWindowLogicalSize(FWindow, FLogicalWidth, FLogicalHeight);
    self.Flip;
 end;
 
@@ -426,8 +413,7 @@ begin
    if not assigned(surface) then
       Exit(-1);
 
-   SDL_SelectRenderer(FWindowID);
-   result := FImageManager.Add(TSdlImage.Create(surface, IntToStr(FImageManager.Count), nil));
+   result := FImageManager.Add(TSdlImage.Create(FRenderer, surface, IntToStr(FImageManager.Count), nil));
 end;
 
 function TSdlFrame.AddImage(image: TSdlImage): integer;
@@ -441,7 +427,7 @@ var
 begin
    if self.ContainsName(name) then
       raise EListError.CreateFmt('Texture "%s" already exists', [name]);
-   index := FIMageManager.Add(TSdlImage.Create(surface, name, nil));
+   index := FIMageManager.Add(TSdlImage.Create(FRenderer, surface, name, nil));
    if index = -1 then
       raise EInvalidArgument.Create('Invalid surface');
 end;
@@ -457,13 +443,13 @@ procedure TSdlFrame.Clear;
 var
    i: integer;
 begin
-   if CreateRenderer then
-      for I := 1 to 3 do
-      begin
-         assert(SDL_SetRenderDrawColor(0, 0, 0, 255) = 0);
-         assert(SDL_RenderFillRect(nil) = 0);
-         SDL_RenderPresent;
-      end;
+   CreateRenderer;
+   for I := 1 to 3 do
+   begin
+      assert(SDL_SetRenderDrawColor(FRenderer, 0, 0, 0, 255) = 0);
+      assert(SDL_RenderFillRect(FRenderer, nil) = 0);
+      SDL_RenderPresent(FRenderer);
+   end;
 end;
 
 procedure TSdlFrame.ClearTextures;

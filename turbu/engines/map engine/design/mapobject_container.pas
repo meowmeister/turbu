@@ -75,20 +75,22 @@ procedure TMapObjectContainer.DoDraw;
 var
    drawRect: TRect;
    key: TSDL_Color;
+   renderer: TSdlRenderer;
 begin
+   renderer := FCanvas.Renderer;
    drawRect := normalizeRect(rect(trunc(self.X), trunc(self.Y), self.Width, self.Height));
    FCanvas.drawBox(constrictSdlRect(drawRect, 2), SDL_WHITE);
    drawRect := constrictSdlRect(drawRect, 3);
    if assigned(FMainTile.Image) then
    begin
       key := FMainTile.Image.colorkey;
-      SDL_SetRenderDrawColor(key.r, key.g, key.b, $ff);
-      SDL_RenderFillRect(@drawRect);
+      SDL_SetRenderDrawColor(renderer, key.r, key.g, key.b, $ff);
+      SDL_RenderFillRect(renderer, @drawRect);
       FMainTile.drawTo(drawRect);
    end
    else begin
-      SDL_SetRenderDrawColor(SDL_GREEN);
-      SDL_RenderFillRect(@drawRect);
+      SDL_SetRenderDrawColor(renderer, SDL_GREEN);
+      SDL_RenderFillRect(renderer, @drawRect);
    end;
 end;
 

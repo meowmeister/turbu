@@ -111,7 +111,6 @@ type
       FTemplate: TClassTemplate;
       FSpriteData: TSpriteData;
       FMatrixPosition: TSgPoint;
-      FCurrentTexture: integer;
       FSpriteIndexToLoad: integer;
       FSpriteToLoad: string;
       FOldWeaponScroll: TDatasetNotifyEvent;
@@ -308,13 +307,13 @@ begin
         try
            fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
            try
-              image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, imgMapSprite.Images);
+              image := TRpgSdlImage.CreateSprite(imgMapSprite.Renderer, loadFromTBI(fileStream), filename, imgMapSprite.Images);
            finally
               fileStream.Free;
            end;
         except
            on EArchiveError do
-              image := TRpgSdlImage.CreateBlankSprite(filename, imgMapSprite.Images, SPRITE_SIZE, 18);
+              image := TRpgSdlImage.CreateBlankSprite(imgMapSprite.Renderer, filename, imgMapSprite.Images, SPRITE_SIZE, 18);
         end;
      end
      else image := imgMapSprite.Images.image[filename] as TRpgSdlImage;
@@ -392,18 +391,17 @@ begin
       try
          fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
          try
-            image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, imgMapSprite.Images, SPRITE_SIZE * SgPoint(1, 2));
+            image := TRpgSdlImage.CreateSprite(imgMapSprite.Renderer, loadFromTBI(fileStream), filename, imgMapSprite.Images, SPRITE_SIZE * SgPoint(1, 2));
          finally
             fileStream.Free;
          end;
       except
          on EArchiveError do
-            image := TRpgSdlImage.CreateBlankSprite(filename, imgMapSprite.Images, SPRITE_SIZE, 12);
+            image := TRpgSdlImage.CreateBlankSprite(imgMapSprite.Renderer, filename, imgMapSprite.Images, SPRITE_SIZE, 12);
       end;
       assert(frame in [0..image.count]);
    end
    else image := imgMapSprite.Images.image[filename] as TRpgSdlImage;
-   FCurrentTexture := image.texture.ID;
 
    spriteRect := image.spriteRect[frame];
    destRect.left := (imgMapSprite.Width div 2) - (spriteRect.right);

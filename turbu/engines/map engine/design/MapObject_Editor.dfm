@@ -171,6 +171,7 @@ object frmObjectEditor: TfrmObjectEditor
             LogicalWidth = 69
             LogicalHeight = 77
             OnAvailable = imgEventSpriteAvailable
+            OnPaint = imgEventSpritePaint
             OnKeyDown = imgEventSpriteKeyDown
           end
           object chkTransparent: TDBCheckBox

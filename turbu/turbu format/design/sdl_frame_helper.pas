@@ -49,13 +49,12 @@ function TSdlFrameSpriteHelper.EnsureImage(const filename: string): TRpgSdlImage
 var
    stream: TStream;
 begin
-   SDL_SelectRenderer(self.SdlWindow);
    if not self.ContainsName(filename) then
    begin
       stream := GArchives[IMAGE_ARCHIVE].getFile(filename);
       try
-         result := TRpgSdlImage.CreateSprite(loadFromTBI(stream), filename, self.Images);
-         assert(result.Texture.ID > 0);
+         result := TRpgSdlImage.CreateSprite(self.renderer, loadFromTBI(stream), filename, self.Images);
+         assert(assigned(result.Texture.ptr));
       finally
          stream.Free;
       end;

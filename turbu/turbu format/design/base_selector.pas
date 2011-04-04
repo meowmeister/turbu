@@ -208,7 +208,7 @@ var
 begin
    stream := GArchives[IMAGE_ARCHIVE].getFile(filename);
    try
-      imgSelector.AddImage(TRpgSdlImage.CreateSprite(loadFromTBI(stream), imagename, nil));
+      imgSelector.AddImage(TRpgSdlImage.CreateSprite(imgSelector.renderer, loadFromTBI(stream), imagename, nil));
    finally
       stream.Free;
    end;
@@ -229,7 +229,7 @@ end;
 
 procedure TfrmBaseSelector.WMRender(var message: TMessage);
 begin
-   SDL_SetRenderDrawBlendMode([sdlbBlend]);
+   SDL_SetRenderDrawBlendMode(imgSelector.renderer, [sdlbBlend]);
    lstFilenamesClick(self);
 end;
 
