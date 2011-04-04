@@ -97,6 +97,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure btnScriptClick(Sender: TObject);
     procedure tabEventPagesChanging(Sender: TObject; var AllowChange: Boolean);
+    procedure imgEventSpritePaint(Sender: TObject);
   private
     procedure WMRender(var message: TMessage); message WM_RENDER;
     procedure OnClipboardChange(Sender: TObject);
@@ -360,6 +361,11 @@ begin
    outputDebugString(PChar(format('Key pressed: %d', [key])));
 end;
 
+procedure TfrmObjectEditor.imgEventSpritePaint(Sender: TObject);
+begin
+   imgEventSprite.SetSprite(dsPagesName.Value, dsPagesFrame.Value, FTileset, FRenameProc);
+end;
+
 procedure TfrmObjectEditor.tabEventPagesChange(Sender: TObject);
 begin
    dsPages.Locate('id', tabEventPages.TabIndex, []);
@@ -483,8 +489,8 @@ begin
    begin
       stream := GArchives[IMAGE_ARCHIVE].getFile(name);
       try
-         image := TRpgSdlImage.CreateSprite(loadFromTBI(stream), name, sdlFrame.Images);
-         assert(image.Texture.ID > 0);
+         image := TRpgSdlImage.CreateSprite(sdlFrame.Renderer, loadFromTBI(stream), name, sdlFrame.Images);
+         assert(assigned(image.Texture.ptr));
       finally
          stream.Free;
       end;

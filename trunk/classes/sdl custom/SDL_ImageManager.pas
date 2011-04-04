@@ -71,7 +71,8 @@ type
       FColorkey: TSDL_Color;
 
       function getSpriteRect(index: integer): TRect;
-      procedure setup(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint; lSurface: PSdlSurface); virtual;
+      procedure setup(renderer: TSdlRenderer; filename, imagename: string;
+        container: TSdlImages; spriteSize: TSgPoint; lSurface: PSdlSurface); virtual;
       procedure SetTextureSize(size: TSgPoint);
       function GetCount: integer; inline;
       procedure processImage(image: PSdlSurface); virtual;
@@ -81,20 +82,20 @@ type
       * the image.  The image will automatically add itself to container if the
       * argument is not nil.
       ************************************************************************}
-      constructor Create(filename, imagename: string; container: TSdlImages); overload;
+      constructor Create(renderer: TSdlRenderer; filename, imagename: string; container: TSdlImages); overload;
 
       {************************************************************************
       * Like the previous constructor, except that it creates a TSdlImage from
       * a pre-existing SDL_Surface.
       ************************************************************************}
-      constructor Create(surface: PSdlSurface; imagename: string; container: TSdlImages); overload;
+      constructor Create(renderer: TSdlRenderer; surface: PSdlSurface; imagename: string; container: TSdlImages); overload;
 
       {************************************************************************
       * Like the previous constructor, except that it creates a TSdlImage from
       * an SDL_RWops.  Pass in the filetype extension instead of the full
       * filename.
       ************************************************************************}
-      constructor Create(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages); overload;
+      constructor Create(renderer: TSdlRenderer; rw: PSDL_RWops; extension, imagename: string; container: TSdlImages); overload;
 
       {************************************************************************
       * These three are like the last three, but with an additional spriteSize
@@ -105,11 +106,11 @@ type
       * values of the SpriteSize parameters, or creation will fail and raise an
       * exception.
       ************************************************************************}
-      constructor CreateSprite(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
-      constructor CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
-      constructor CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
+      constructor CreateSprite(renderer: TSdlRenderer; filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
+      constructor CreateSprite(renderer: TSdlRenderer; rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
+      constructor CreateSprite(renderer: TSdlRenderer; surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
 
-      constructor CreateBlankSprite(imagename: string; container: TSdlImages; spriteSize: TSgPoint; count: integer);
+      constructor CreateBlankSprite(renderer: TSdlRenderer; imagename: string; container: TSdlImages; spriteSize: TSgPoint; count: integer);
 
       destructor Destroy; override;
 
@@ -154,6 +155,7 @@ type
    ***************************************************************************}
    TSdlImages = class(TObject)
    private
+      FRenderer: TSdlRenderer;
       FData: array of TSdlImage;
       FFreeOnClear: Boolean;
       FArchiveLoader: TArchiveLoader;
@@ -171,7 +173,7 @@ type
       * Sets up the image list.  The FreeOnClear argument controls whether
       * images held in the list will be freed when the Clear method is called.
       ************************************************************************}
-      constructor Create(FreeOnClear: boolean = true; loader: TArchiveLoader = nil; callback: TArchiveCallback = nil);
+      constructor Create(renderer: TSdlRenderer; FreeOnClear: boolean = true; loader: TArchiveLoader = nil; callback: TArchiveCallback = nil);
       destructor Destroy; override;
 
       function Contains(const name: string): boolean; inline;
@@ -237,6 +239,8 @@ type
       ************************************************************************}
       procedure Pack;
 
+      procedure SetRenderer(renderer: TSdlRenderer);
+
       property Count: Integer read GetCount;
       property Items[Num: Integer]: TSdlImage read GetItem; default;
       property Image[const Name: string]: TSdlImage read GetImage;
@@ -270,9 +274,10 @@ var
 { TSdlImages }
 {$REGION TSdlImages}
 //---------------------------------------------------------------------------
-constructor TSdlImages.Create(FreeOnClear: boolean = true; loader: TArchiveLoader = nil; callback: TArchiveCallback = nil);
+constructor TSdlImages.Create(renderer: TSdlRenderer; FreeOnClear: boolean = true; loader: TArchiveLoader = nil; callback: TArchiveCallback = nil);
 begin
    inherited Create;
+   FRenderer := renderer;
    FFreeOnClear := FreeOnClear;
    FArchiveLoader := loader;
    FArchiveCallback := callback;
@@ -480,6 +485,14 @@ begin
 end;
 
 //---------------------------------------------------------------------------
+procedure TSdlImages.SetRenderer(renderer: TSdlRenderer);
+begin
+   if FRenderer.ptr <> nil then
+      raise Exception.Create('Cannot call TSdlImages.SetRenderer twice!');
+   FRenderer := renderer;
+end;
+
+//---------------------------------------------------------------------------
 function TSdlImages.AddFromArchive(filename, imagename: string; loader: TArchiveLoader = nil): integer;
 var
    dummy: PSDL_RWops;
@@ -491,7 +504,7 @@ begin
    else raise ESdlImageException.Create('No archive loader available!');
    if dummy = nil then
       raise ESdlImageException.CreateFmt('Archive loader failed to extract "%s" from the archive.', [filename]);
-   result := self.Add(TSdlImage.Create(dummy, ExtractFileExt(filename), imagename, nil));
+   result := self.Add(TSdlImage.Create(FRenderer, dummy, ExtractFileExt(filename), imagename, nil));
    if assigned(FArchiveCallback) then
       FArchiveCallback(dummy)
    else SDL_FreeRW(dummy);
@@ -512,7 +525,7 @@ begin
    if dummy = nil then
       raise ESdlImageException.CreateFmt('Archive loader failed to extract "%s" from the archive.', [filename]);
 
-   result := self.Add(imgClass.CreateSprite(dummy, ExtractFileExt(filename), imagename, nil, spriteSize));
+   result := self.Add(imgClass.CreateSprite(FRenderer, dummy, ExtractFileExt(filename), imagename, nil, spriteSize));
    if assigned(FArchiveCallback) then
       FArchiveCallback(dummy)
    else SDL_FreeRW(dummy);
@@ -534,7 +547,7 @@ end;
 //---------------------------------------------------------------------------
 function TSdlImages.AddFromFile(filename, imagename: string; imgClass: TSdlImageClass): integer;
 begin
-   result := self.Add(imgClass.Create(filename, filename, nil));
+   result := self.Add(imgClass.Create(FRenderer, filename, filename, nil));
 end;
 
 //---------------------------------------------------------------------------
@@ -558,19 +571,19 @@ end;
 { TSdlImage }
 {$REGION TSdlImage}
 //---------------------------------------------------------------------------
-constructor TSdlImage.Create(filename, imagename: string; container: TSdlImages);
+constructor TSdlImage.Create(renderer: TSdlRenderer; filename, imagename: string; container: TSdlImages);
 begin
    inherited Create;
-   setup(filename, imagename, container, EMPTY, nil);
+   setup(renderer, filename, imagename, container, EMPTY, nil);
 end;
 
 //---------------------------------------------------------------------------
-constructor TSdlImage.Create(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages);
+constructor TSdlImage.Create(renderer: TSdlRenderer; rw: PSDL_RWops; extension, imagename: string; container: TSdlImages);
 begin
    SDL_LockMutex(rwMutex);
    try
       FRw := rw;
-      setup(ExtractFileExt(extension), imagename, container, EMPTY, nil);
+      setup(renderer, ExtractFileExt(extension), imagename, container, EMPTY, nil);
       FRw := nil;
    finally
       SDL_UnlockMutex(rwMutex);
@@ -578,42 +591,41 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-constructor TSdlImage.Create(surface: PSdlSurface; imagename: string; container: TSdlImages);
+constructor TSdlImage.Create(renderer: TSdlRenderer; surface: PSdlSurface; imagename: string; container: TSdlImages);
 begin
    inherited Create;
-   FSurface := TSdlTexture.Create(0, surface);
-   setup('', imagename, container, EMPTY, surface);
+   FSurface := TSdlTexture.Create(renderer, 0, surface);
+   setup(renderer, '', imagename, container, EMPTY, surface);
 end;
 
 //---------------------------------------------------------------------------
-constructor TSdlImage.CreateSprite(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint);
+constructor TSdlImage.CreateSprite(renderer: TSdlRenderer; filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint);
 begin
    inherited Create;
-   setup(filename, imagename, container, spriteSize, nil);
+   setup(renderer, filename, imagename, container, spriteSize, nil);
 end;
 
-constructor TSdlImage.CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TSgPoint);
+constructor TSdlImage.CreateSprite(renderer: TSdlRenderer; surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TSgPoint);
 begin
    inherited Create;
-//   FSurface := TSdlTexture.Create(0, surface);
-   setup('', imagename, container, spriteSize, surface);
+   setup(renderer, '', imagename, container, spriteSize, surface);
 end;
 
-constructor TSdlImage.CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TSgPoint);
+constructor TSdlImage.CreateSprite(renderer: TSdlRenderer; rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TSgPoint);
 begin
    inherited Create;
    SDL_LockMutex(rwMutex);
    FRw := rw;
-   setup(extension, imagename, container, spriteSize, nil);
+   setup(renderer, extension, imagename, container, spriteSize, nil);
    FRw := nil;
    SDL_UnlockMutex(rwMutex);
 end;
 
-constructor TSdlImage.CreateBlankSprite(imagename: string; container: TSdlImages; spriteSize: TSgPoint; count: integer);
+constructor TSdlImage.CreateBlankSprite(renderer: TSdlRenderer; imagename: string; container: TSdlImages; spriteSize: TSgPoint; count: integer);
 begin
    inherited Create;
    spriteSize.Y := spriteSize.Y * count;
-   setup('', imagename, container, spriteSize, nil);
+   setup(renderer, '', imagename, container, spriteSize, nil);
    spriteSize.Y := spriteSize.Y div count;
    self.textureSize := spriteSize;
 end;
@@ -625,14 +637,15 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-procedure TSdlImage.setup(filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint; lSurface: PSdlSurface);
+procedure TSdlImage.setup(renderer: TSdlRenderer; filename, imagename: string;
+  container: TSdlImages; spriteSize: TSgPoint; lSurface: PSdlSurface);
 var
    loader: TImgLoadMethod;
    loadStream: TStream;
    intFilename: PAnsiChar; //internal version of the filename
 begin
    FName := imagename;
-   if (lSurface = nil) and (FSurface.ID = 0) then
+   if (lSurface = nil) and (FSurface.ptr = nil) then
    begin
       if filename <> '' then
       begin
@@ -680,9 +693,8 @@ begin
    end;
    //Allow descendant classes to fix up the image, if desired.
    processImage(LSurface);
-   if FSurface.ID = 0 then
-      FSurface := TSdlTexture.Create(0, LSurface);
-   FSurface.scaleMode := sdltsBest;
+   if FSurface.ptr = nil then
+      FSurface := TSdlTexture.Create(renderer, 0, LSurface);
 
    if (spriteSize.X = EMPTY.X) and (spriteSize.Y = EMPTY.Y) then
       self.textureSize := point(LSurface.width, LSurface.height)

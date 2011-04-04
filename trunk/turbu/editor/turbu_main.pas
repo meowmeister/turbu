@@ -162,7 +162,6 @@ implementation
 uses
    SysUtils, Math, Graphics, Windows, OpenGL, 
    commons, rm_converter, skill_settings, turbu_database, archiveInterface,
-Diagnostics,
    PackageRegistry,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
    turbu_classes, turbu_versioning, turbu_tilesets, turbu_defs,
@@ -277,7 +276,6 @@ var
 begin
    FPaletteTexture := imgPalette.AddTexture(surface);
    texture := imgPalette.images[FPaletteTexture].surface;
-   texture.ScaleMode := sdltsFast;
    bindPaletteCursor;
    resizePalette;
 end;
@@ -481,7 +479,7 @@ procedure TfrmTurbuMain.imgLogoPaint(Sender: TObject);
 begin
    if assigned(FMapEngine) then
       FMapEngine.Repaint
-   else SDL_RenderPresent;
+   else imgLogo.Flip;
 end;
 
 procedure TfrmTurbuMain.imgPaletteMouseDown(Sender: TObject;
@@ -540,7 +538,6 @@ begin
    FMapEngine.autosaveMaps := mnuAutosaveMaps.checked;
    FMapEngine.loadMap(value);
    FMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
-   imgPalette.Select;
    imgPalette.ClearTextures;
    FPaletteImages.Clear;
    setLayer(FCurrentLayer);
@@ -653,7 +650,6 @@ procedure TfrmTurbuMain.openProject(location: string);
 var
    fileStream, loadStream: TStream;
    filename: string;
-stopwatch: TStopwatch;
 begin
    location := IncludeTrailingPathDelimiter(location);
    openArchive(PROJECT_DB, DATABASE_ARCHIVE);
@@ -666,8 +662,6 @@ begin
    TThread.CreateAnonymousThread(
       procedure
       begin
-stopwatch:= TStopwatch.Create;
-stopwatch.Start;
          FLoadSignal.ResetEvent;
          fileStream := TFileStream.Create(filename, fmOpenRead);
          loadStream := TMemoryStream.Create;
@@ -695,8 +689,6 @@ stopwatch.Start;
                end;
             end;
          finally
-stopwatch.Stop;
-OutputFormattedString('DB loading took %d milliseconds', [stopwatch.ElapsedMilliseconds]);
             loadStream.free;
             fileStream.Free;
          end;
@@ -853,7 +845,7 @@ begin
    if abs(value - FZoom) < 0.01 then //comparing floats with = doesn't always work
       Exit;
    FZoom := value;
-   imgLogo.Select;
+   SDL_RenderDrawLine(imgLogo.Renderer, -1, -1, -1, -1); //hack: can't use SelectRenderer anymore
    GLLineWidth(value);
    FormResize(self);
 end;

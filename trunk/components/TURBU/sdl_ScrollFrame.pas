@@ -28,7 +28,7 @@ type
                 var ScrollPos: Integer);
 
       function IsAvailable: boolean;
-      function GetSdlWindow: TSdlWindowId;
+      function GetSdlWindow: TSdlWindow;
       function GetFlags: TSdlWindowFlags;
       procedure SetScrollBars(const Value: TScrollBarSet);
       function GetFramerate: word;
@@ -52,7 +52,7 @@ type
       procedure Flip;
 
       property Available: boolean read IsAvailable;
-      property SdlWindow: TSdlWindowId read GetSdlWindow;
+      property SdlWindow: TSdlWindow read GetSdlWindow;
       property Flags: TSdlWindowFlags read GetFlags;
    published
       property Framerate: word read GetFramerate write SetFramerate;
@@ -168,7 +168,7 @@ begin
    result := FSdlFrame.Flags;
 end;
 
-function TSdlScrollFrame.GetSdlWindow: TSdlWindowId;
+function TSdlScrollFrame.GetSdlWindow: TSdlWindow;
 begin
    result := FSdlFrame.SdlWindow;
 end;

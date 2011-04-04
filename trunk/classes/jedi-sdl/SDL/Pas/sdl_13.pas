@@ -20,15 +20,14 @@ type
   SDL_DisplayMode = TSdlDisplayMode;
   {$EXTERNALSYM SDL_DisplayMode}
 
-  TSdlWindowId = type UInt32;
-  SDL_WindowID = TSdlWindowId;
-  {$EXTERNALSYM SDL_WindowID}
-
   TSdlColor32 = type UInt32;
+  SDL_Bool = LongBool;
 
 const
-  SDL_WINDOWPOS_UNDEFINED = $7FFFFFF;
-  SDL_WINDOWPOS_CENTERED = $7FFFFFE;
+  SDL_WINDOWPOS_UNDEFINED_MASK        = $1FFF0000;
+  {$EXTERNALSYM SDL_WINDOWPOS_UNDEFINED_MASK}
+  SDL_WINDOWPOS_CENTERED_MASK         = $2FFF0000;
+  {$EXTERNALSYM SDL_WINDOWPOS_CENTERED_MASK}
 
 type
 
@@ -45,6 +44,7 @@ type
     SDL_WINDOWEVENT_EXPOSED,            /**< Window has been exposed and should be redrawn */
     SDL_WINDOWEVENT_MOVED,              /**< Window has been moved to data1,data2 */
     SDL_WINDOWEVENT_RESIZED,            /**< Window size changed to data1xdata2 */
+    SDL_WINDOWEVENT_SIZE_CHANGED,   /**< The window size has changed, either as a result of an API call or through the system or user changing the window size. */
     SDL_WINDOWEVENT_MINIMIZED,          /**< Window has been minimized */
     SDL_WINDOWEVENT_MAXIMIZED,          /**< Window has been maximized */
     SDL_WINDOWEVENT_RESTORED,           /**< Window has been restored to normal size and position */
@@ -54,8 +54,8 @@ type
     SDL_WINDOWEVENT_FOCUS_LOST,         /**< The window has lost keyboard focus */
     SDL_WINDOWEVENT_CLOSE               /**< The window manager requests that the window be closed */
 }
-  TSdlWindowEventID = (sdlweNone, sdlweShown, sdlweHidden, sdlweExposed,
-                        sdlweMoved, sdlweResized, sdlweMinimized, sdlweMaximized,
+  TSdlWindowEventID = (sdlweNone, sdlweShown, sdlweHidden, sdlweExposed, sdlweMoved,
+                        sdlweResized, sdlweSizeChanged, sdlweMinimized, sdlweMaximized,
                         sdlweRestored, sdlweEnter, sdlweLeave, sdlweFocusGained,
                         sdlweFocusLost, sdlweClose);
   SDL_WindowEventID = TSdlWindowEventID;
@@ -96,17 +96,11 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
  *
  * Flags used when creating a rendering context
 
-    SDL_RENDERER_SINGLEBUFFER = 0x00000001,     /**< Render directly to the window, if possible */
-    SDL_RENDERER_PRESENTCOPY = 0x00000002,      /**< Present uses a copy from back buffer to the front buffer */
-    SDL_RENDERER_PRESENTFLIP2 = 0x00000004,     /**< Present uses a flip, swapping back buffer and front buffer */
-    SDL_RENDERER_PRESENTFLIP3 = 0x00000008,     /**< Present uses a flip, rotating between two back buffers and a front buffer */
-    SDL_RENDERER_PRESENTDISCARD = 0x00000010,   /**< Present leaves the contents of the backbuffer undefined */
-    SDL_RENDERER_PRESENTVSYNC = 0x00000020,     /**< Present is synchronized with the refresh rate */
-    SDL_RENDERER_ACCELERATED = 0x00000040       /**< The renderer uses hardware acceleration */
+    SDL_RENDERER_SOFTWARE = 0x00000001,         /**< The renderer is a software fallback */
+    SDL_RENDERER_ACCELERATED = 0x00000002,      /**< The renderer uses hardware acceleration */
+    SDL_RENDERER_PRESENTVSYNC = 0x00000004      /**< Present is synchronized with the refresh rate */
 } SDL_RendererFlags; *)
-  TSdlRendererFlag = (sdlrSingleBuffer, sdlrPresentCopy, sdlrPresentFlip2,
-                      sdlrPresentFlip3, sdlrPresentDiscard, sdlrPresentVsync,
-                      sdlrAccelerated, sdlrForce32 = 31);
+  TSdlRendererFlag = (sdlrSoftware, sdlrAccelerated, sdlrPresentVsync, sdlrForce32 = 31);
   TSdlRendererFlags = set of TSdlRendererFlag;
 
 {$MINENUMSIZE 4}
@@ -132,39 +126,23 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
 
 (*{
     SDL_BLENDMODE_NONE = 0x00000000,     /**< No blending */
-    SDL_BLENDMODE_MASK = 0x00000001,     /**< dst = A ? src : dst (alpha is mask) */
-    SDL_BLENDMODE_BLEND = 0x00000002,    /**< dst = (src * A) + (dst * (1-A)) */
-    SDL_BLENDMODE_ADD = 0x00000004,      /**< dst = (src * A) + dst */
-    SDL_BLENDMODE_MOD = 0x00000008       /**< dst = src * dst */
+    SDL_BLENDMODE_BLEND = 0x00000001,    /**< dst = (src * A) + (dst * (1-A)) */
+    SDL_BLENDMODE_ADD = 0x00000002,      /**< dst = (src * A) + dst */
+    SDL_BLENDMODE_MOD = 0x00000004       /**< dst = src * dst */
 } SDL_BlendMode;*)
   //"none" left out because a 0 value would break the set.
   //SDL_BLENDMODE_NONE = []
-   TSdlBlendMode = (sdlbMask, sdlbBlend, sdlbAdd, sdlbMod, sdlbForce32 = 31);
+   TSdlBlendMode = (sdlbBlend, sdlbAdd, sdlbMod, sdlbForce32 = 31);
    TSdlBlendModes = set of TSdlBlendMode;
-
-(*{
-    SDL_TEXTURESCALEMODE_NONE = 0x00000000,     /**< No scaling, rectangles must match dimensions */
-    SDL_TEXTURESCALEMODE_FAST = 0x00000001,     /**< Point sampling or equivalent algorithm */
-    SDL_TEXTURESCALEMODE_SLOW = 0x00000002,     /**< Linear filtering or equivalent algorithm */
-    SDL_TEXTURESCALEMODE_BEST = 0x00000004      /**< Bicubic filtering or equivalent algorithm */
-} SDL_TextureScaleMode;*)
-  //"none" left out because a 0 value would break the set.
-  //SDL_TEXTURESCALEMODE_NONE = []
-  TSdlTextureScaleMode = (sdltsFast, sdltsSlow, sdltsBest, sdltsForce32 = 31);
-  TSdlTextureScaleModes = set of TSdlTextureScaleMode;
 
   PSDL_RendererInfo = ^TSDL_RendererInfo;
   TSDL_RendererInfo = record
     name: PAnsiChar;                    // The name of the renderer
     flags: TSdlRendererFlags;           // Supported SDL_RendererFlags
-    mod_modes: TSdlTextureModulates;    // Supported channel modulations
-    blend_modes: TSdlBlendModes;        // Supported blend modes
-    scale_modes: TSdlTextureScaleModes; // Supported scale modes
     num_texture_formats: cardinal;      // The number of available texture formats
-    texture_formats: array[0..49] of cardinal; // The available texture formats
+    texture_formats: array[0..15] of cardinal; // The available texture formats
     max_texture_width: integer;         // The maximimum texture width */
     max_texture_height: integer;        // The maximimum texture height */
-    logical_size: boolean;
   end;
 
   SDL_RendererInfo = TSDL_RendererInfo;
@@ -190,31 +168,28 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
   TSdlColorArray = array[0..255] of TSDL_Color;
 
   PSdlPalette = ^TSdlPalette;
-  TSdlPaletteChangedFunc = function(userdata: pointer; palette: PSdlPalette): integer; cdecl;
-
-  PSdlPaletteWatch = ^TSdlPaletteWatch;
-  TSdlPaletteWatch = record
-    callback: TSdlPaletteChangedFunc;
-    userdata: pointer;
-    next: PSdlPaletteWatch;
-  end;
-
   TSdlPalette = record
     count: integer;
     colors: PSdlColorArray;
+    version: Cardinal;
     refcount: integer;
-    watch: PSdlPaletteWatch;
   end;
 
+{$HINTS OFF} //don't warn me that I'm declaring symbols I don't use. They're
+             //used internally by SDL and have to be declared here.
   PSdlPixelFormat = ^TSdlPixelFormat;
   TSdlPixelFormat = record
   private
+    FFormat: UInt32;
     FPalette: PSdlPalette;
     FBpp: Uint8;
     FBypp: Uint8;
+    padding: word;
+    FRmask, FGmask, FBmask, FAmask: Uint32;
     FRloss, FGloss, FBloss, FAloss: UInt8;
     FRshift, FGshift, FBshift, FAshift: Uint8;
-    FRmask, FGmask, FBmask, FAmask: Uint32;
+    FRefcount: integer;
+    FNext: PSdlPixelFormat;
   public
     property palette: PSdlPalette read FPalette;
     property BitsPerPixel: Uint8 read FBpp;
@@ -233,7 +208,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     property AMask: UInt32 read FAMask;
   end;
 
-  TSdlSurfaceFlag = (sdlsfPrealloc, sdlsfRleAccel, sdlsfColorKey = 17, sdlsfForce32 = 31);
+  TSdlSurfaceFlag = (sdlsfPrealloc, sdlsfRleAccel, sldsfDontFree, sdlsfForce32 = 31);
   TSdlSurfaceFlags = set of TSdlSurfaceFlag;
 
   PSdlSurface = ^TSdlSurface;
@@ -257,8 +232,6 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     r, g, b, a: UInt8;
   end;
 
-{$HINTS OFF} //don't warn me that I'm declaring symbols I don't use. They're
-             //used internally by SDL and have to be declared here.
   PSdlBlitMap = ^TSdlBlitMap;
   TSdlBlitMap = record
   private
@@ -267,7 +240,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     blit: TSdlBlitFunc;
     data: pointer;
     info: TSdlBlitInfo;
-    formatVersion: cardinal;
+    paletteVersion: cardinal;
   end;
 
   TSdlSurface = record
@@ -283,7 +256,6 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     FLockData: pointer;
     FClipRect: TSdlRect;
     FBlitMap: PSdlBlitMap;
-    FFormatVersion: cardinal;
     FRefcount: integer;
     procedure SetClipRect(const Value: TSdlRect);
     function GetMustLock: boolean;
@@ -322,32 +294,44 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
   end;
   SDL_Surface = TSdlSurface;
   {$EXTERNALSYM SDL_Surface}
-{$HINTS ON}
 
-  TSdlTextureID = type UInt32;
-  SDL_TextureID = TSdlTextureID;
-  {$EXTERNALSYM SDL_TextureID}
+  TSdlWindow = record
+  private
+    FPtr: pointer;
+    function GetID: UInt32;
+  public
+    constructor Create(title: PAnsiChar; x, y, w, h: integer; flags: TSdlWindowFlags); overload;
+    constructor Create(orig: HWND); overload;
+    procedure Free;
+    property ID: UInt32 read GetID;
+    property ptr: pointer read FPtr;
+  end;
+
+  TSdlRenderer = record
+  private
+    FPtr: pointer;
+  public
+    constructor Create(window: TSdlWindow; index: integer; flags: TSdlRendererFlags);
+    property ptr: pointer read FPtr;
+  end;
 
   TSdlTexture = record
   private
-    FId: TSdlTextureID;
+    FPtr: Pointer;
     function GetSize: TPoint;
-    function GetColor(index: byte): TSDL_Color;
     function GetAlpha: byte;
     procedure SetAlpha(const Value: byte);
-    function GetScaleMode: TSdlTextureScaleMode;
-    procedure SetScaleMode(const Value: TSdlTextureScaleMode);
   public
-    constructor Create(format: Uint32; access: TSdlTextureAccess; w, h: integer); overload;
-    constructor Create(format: Uint32; surface: PSdlSurface); overload;
+    constructor Create(renderer: TSdlRenderer; format: Uint32; access: TSdlTextureAccess; w, h: integer); overload;
+    constructor Create(renderer: TSdlRenderer; format: Uint32; surface: PSdlSurface); overload;
     procedure Free;
 
-    property ID: TSdlTextureID read FId;
+    property ptr: pointer read FPtr;
     property size: TPoint read GetSize;
-    property color[index: byte]: TSDL_Color read GetColor;
     property alpha: byte read GetAlpha write SetAlpha;
-    property scaleMode: TSdlTextureScaleMode read GetScaleMode write SetScaleMode;
   end;
+
+{$HINTS ON}
 
   // SDL_error.h types
   TSDL_errorcode = (
@@ -612,7 +596,7 @@ function SDL_GetCurrentDisplayMode(var mode: TSdlDisplayMode): integer; cdecl; e
  *
  * Returns the id of the window created, or zero if window creation failed.
  *}
-function SDL_CreateWindow(title: PAnsiChar; x, y, w, h: integer; flags: TSdlWindowFlags): TSdlWindowID;
+function SDL_CreateWindow(title: PAnsiChar; x, y, w, h: integer; flags: TSdlWindowFlags): TSdlWindow;
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_CreateWindow'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_CreateWindow}
 
@@ -628,22 +612,28 @@ cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_CreateWindow'{$ELSE} SDLL
  * Warning: This function is NOT SUPPORTED, use at your own risk!
  *}
 {$IFDEF WIN32}
-function SDL_CreateWindowFrom(data: HWND): TSdlWindowId;
+function SDL_CreateWindowFrom(data: HWND): TSdlWindow;
 {$ELSE}
-function SDL_CreateWindowFrom(data: Pointer): TSdlWindowId;
+function SDL_CreateWindowFrom(data: Pointer): TSdlWindow;
 {$ENDIF}
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_CreateWindowFrom'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_CreateWindowFrom}
 
-procedure SDL_DestroyWindow(windowID: TSdlWindowID);
+procedure SDL_DestroyWindow(window: TSdlWindow);
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_DestroyWindow'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_DestroyWindow}
 
-function SDL_GetWindowFlags(windowID: TSdlWindowID): TSdlWindowFlags; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_GetWindowFlags}
-
-procedure SDL_ShowWindow(windowID: TSdlWindowID); cdecl; external SDLLibName;
+procedure SDL_ShowWindow(window: TSdlWindow); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_ShowWindow}
+
+function SDL_GetWindowID(window: TSdlWindow): Uint32; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetWindowID}
+
+function SDL_GetWindowFromID(id: Uint32): TSDLWindow; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetWindowFromID}
+
+function SDL_GetWindowFlags(window: TSdlWindow): TSdlWindowFlags; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetWindowFlags}
 
 (**
  * SDL_SetWindowSize
@@ -653,7 +643,7 @@ procedure SDL_ShowWindow(windowID: TSdlWindowID); cdecl; external SDLLibName;
  * NOTE: You can't change the size of a fullscreen window, it automatically
  * matches the size of the display mode.
  *)
-procedure SDL_SetWindowSize(windowID: TSdlWindowID; w, h: integer); cdecl; external SDLLibName;
+procedure SDL_SetWindowSize(windowID: TSdlWindow; w, h: integer); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_SetWindowSize}
 
 (**
@@ -661,26 +651,23 @@ procedure SDL_SetWindowSize(windowID: TSdlWindowID; w, h: integer); cdecl; exter
  *
  * Gets the size of the window's client area.
  *)
-procedure SDL_GetWindowSize(windowID: TSdlWindowID; var w, h: integer); cdecl; external SDLLibName;
+procedure SDL_GetWindowSize(windowID: TSdlWindow; var w, h: integer); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetWindowSize}
 
 (**
- * SDL_SetWindowSize
+ * SDL_SetWindowLogicalSize
  *
- * Sets the size of the window's client area.
- *
- * NOTE: You can't change the size of a fullscreen window, it automatically
- * matches the size of the display mode.
+ * Sets the logical size of the window.
  *)
-function SDL_SetWindowLogicalSize(windowID: TSdlWindowID; w, h: integer): integer; cdecl; external SDLLibName;
+function SDL_SetWindowLogicalSize(windowID: TSdlWindow; w, h: integer): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_SetWindowLogicalSize}
 
 (**
- * \SDL_GetWindowSize
+ * SDL_GetWindowLogicalSize
  *
- * Gets the size of the window's client area.
+ * Gets the logical size of the window.
  *)
-procedure SDL_GetWindowLogicalSize(windowID: TSdlWindowID; var w, h: integer); cdecl; external SDLLibName;
+procedure SDL_GetWindowLogicalSize(windowID: TSdlWindow; var w, h: integer); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetWindowLogicalSize}
 
 function SDL_GetNumRenderDrivers(): integer; cdecl; external SDLLibName;
@@ -689,27 +676,130 @@ function SDL_GetNumRenderDrivers(): integer; cdecl; external SDLLibName;
 function SDL_GetRenderDriverInfo(index: integer; var info: TSDL_RendererInfo): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetRenderDriverInfo}
 
-function SDL_GetRendererInfo(var info: TSDL_RendererInfo): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_GetRenderDriverInfo}
-
 (**
  * SDL_CreateRenderer
  *
  * Creates and makes active a 2D rendering context for a window.
  *
- * windowID: The window used for rendering
- * index: The index of the rendering driver to initialize, or -1 to initialize
- *        the first one supporting the requested flags.
- * flags: SDL_RendererFlags
+ * window: The window used for rendering
+ * index:  The index of the rendering driver to initialize, or -1 to initialize
+ *         the first one supporting the requested flags.
+ * flags:  SDL_RendererFlags
  *
- * Returns 0 on success, -1 if there was an error creating the renderer.
+ * Returns a valid rendering context or NULL if there was an error.
  *
  *)
-function SDL_CreateRenderer(windowID: TSdlWindowID; index: integer; flags: TSdlRendererFlags): integer; cdecl; external SDLLibName;
+function SDL_CreateRenderer(windowID: TSdlWindow; index: integer; flags: TSdlRendererFlags): TSdlRenderer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_CreateRenderer}
 
-function SDL_SelectRenderer(windowID: TSdlWindowID): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_SelectRenderer}
+function SDL_CreateSoftwareRenderer(surface: PSDLSurface): TSDLRenderer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_CreateSoftwareRenderer}
+
+function SDL_RenderTargetSupported(renderer: TSDLRenderer): SDL_bool; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderTargetSupported}
+
+function SDL_SetTargetTexture(renderer: TSdlRenderer; texture: TSDLTexture): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_SetTargetTexture}
+
+function SDL_GetRendererInfo(renderer: TSdlRenderer; var info: TSDL_RendererInfo): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetRenderDriverInfo}
+
+function SDL_CreateTexture(renderer: TSdlRenderer; format: Uint32; access: TSdlTextureAccess; w, h: integer): TSdlTexture; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_CreateTexture}
+
+function SDL_CreateTextureFromSurface(renderer: TSdlRenderer; surface: PSdlSurface): TSdlTexture; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_CreateTextureFromSurface}
+
+function SDL_QueryTexture(texture: TSdlTexture; format: PCardinal;
+                          access: PSdlTextureAccess; w, h: PInteger): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_QueryTexture}
+
+(**
+ *  SDL_SetTextureColorMod
+ *
+ *  Set an additional color value used in render copy operations.
+ *
+ *  texture The texture to update.
+ *  r       The red color value multiplied into copy operations.
+ *  g       The green color value multiplied into copy operations.
+ *  b       The blue color value multiplied into copy operations.
+ *
+ *  Returns 0 on success, or -1 if the texture is not valid or color modulation
+ *          is not supported.
+ *
+ *)
+function SDL_SetTextureColorMod(texture: TSDLTexture; r, g, b: Uint8): Integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_SetTextureColorMod}
+
+(**
+ *  SDL_GetTextureColorMod
+ *
+ *  Gets the additional color value used in render copy operations.
+ *
+ *  texture The texture to query.
+ *  r       The current red color value.
+ *  g       The current green color value.
+ *  b       The current blue color value.
+ *
+ *  Returns 0 on success, or -1 if the texture is not valid.
+ *
+ *)
+function SDL_GetTextureColorMod(texture: TSDLTexture; var r, g, b: Uint8): Integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetTextureColorMod}
+
+(**
+ * SDL_SetTextureAlphaMod
+ *
+ * Sets an additional alpha value used in render copy operations
+ *
+ * texture: The texture to update
+ * alpha: The source alpha value multiplied into copy operations.
+ * returns 0 on success, or -1 if the texture is not valid or alpha modulation is not supported
+ *)
+function SDL_SetTextureAlphaMod(textureID: TSdlTexture; alpha: byte): integer; cdecl;
+external SDLLibName;
+{$EXTERNALSYM SDL_SetTextureAlphaMod}
+
+(**
+ * SDL_GetTextureAlphaMod
+ *
+ * Gets the additional alpha value used in render copy operations
+ *
+ * texture: The texture to query
+ * alpha: A pointer filled in with the source alpha value
+ * returns 0 on success, or -1 if the texture is not valid
+ *)
+function SDL_GetTextureAlphaMod(textureID: TSdlTexture; var alpha: byte): integer; cdecl;
+external SDLLibName;
+{$EXTERNALSYM SDL_GetTextureAlphaMod}
+
+(**
+ * SDL_SetTextureBlendMode
+ *
+ *  Set the blend mode used for texture copy operations.
+ *
+ *  texture The texture to update.
+ *  blendMode TSDLBlendModes to use for texture blending.
+ *
+ *  Returns 0 on success, or -1 if the texture is not valid or the blend mode is
+ *          not supported.
+ *
+ *  note: If the blend mode is not supported, the closest supported mode is
+ *        chosen.
+ *)
+function SDL_SetTextureBlendMode(texture: TSDLTexture; blendMode: TSDLBlendModes): Integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_SetTextureBlendMode}
+
+(**
+ *  Get the blend mode used for texture copy operations.
+ *
+ *  texture   The texture to query.
+ *  blendMode A pointer filled in with the current blend mode.
+ *
+ *  Returns 0 on success, or -1 if the texture is not valid.
+ *)
+function SDL_GetTextureBlendMode(texture: TSDLTexture; var blendMode: TSDLBlendModes): Integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetTextureBlendMode}
 
 {*
  * SDL_SetRenderDrawColor
@@ -718,10 +808,20 @@ function SDL_SelectRenderer(windowID: TSdlWindowID): integer; cdecl; external SD
  *
  * Returns 0 on success, or -1 if there is no rendering context current
  }
-function SDL_SetRenderDrawColor(r, g, b, a: byte): integer; cdecl; overload; external SDLLibName;
+function SDL_SetRenderDrawColor(renderer: TSdlRenderer; r, g, b, a: byte): integer; cdecl; overload; external SDLLibName;
 {$EXTERNALSYM SDL_SetRenderDrawColor}
 
-function SDL_SetRenderDrawColor(color: TSDL_Color): integer; overload;
+function SDL_SetRenderDrawColor(renderer: TSdlRenderer; color: TSDL_Color): integer; overload;
+
+{*
+ * SDL_GetRenderDrawColor
+ *
+ * Get the color used for drawing operations (Fill and Line).
+ *
+ * Returns 0 on success, or -1 if there is no rendering context current
+ }
+function SDL_GetRenderDrawColor(renderer: TSdlRenderer; var r, g, b, a: byte): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetRenderDrawColor}
 
 (**
  *  SDL_SetRenderDrawBlendMode
@@ -735,7 +835,7 @@ function SDL_SetRenderDrawColor(color: TSDL_Color): integer; overload;
  *  Note: If the blend mode is not supported, the closest supported mode is
  *        chosen.
  *)
-function SDL_SetRenderDrawBlendMode(blendMode: TSdlBlendModes): integer; cdecl; external SDLLibName;
+function SDL_SetRenderDrawBlendMode(renderer: TSdlRenderer; blendMode: TSdlBlendModes): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_SetRenderDrawBlendMode}
 
 (**
@@ -745,42 +845,47 @@ function SDL_SetRenderDrawBlendMode(blendMode: TSdlBlendModes): integer; cdecl; 
  *
  *  Returns 0 on success, or -1 if there is no rendering context current.
  *)
-function SDL_GetRenderDrawBlendMode(var blendMode: TSdlBlendModes): integer; cdecl; external SDLLibName;
+function SDL_GetRenderDrawBlendMode(renderer: TSdlRenderer; var blendMode: TSdlBlendModes): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetRenderDrawBlendMode}
 
-{*
- * SDL_GetRenderDrawColor
+(**
+ *  Clears the current rendering target with the drawing color
  *
- * Get the color used for drawing operations (Fill and Line).
- *
- * Returns 0 on success, or -1 if there is no rendering context current
- }
-function SDL_GetRenderDrawColor(var r, g, b, a: byte): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_GetRenderDrawColor}
+ *  This function clears the entire rendering target, ignoring the viewport.
+ *)
+function SDL_RenderClear(renderer: TSDLRenderer): Integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderClear}
 
-function SDL_RenderDrawRect(const rect: PSdlRect): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_RenderDrawRect}
-
-function SDL_RenderDrawLine(x1, y1, x2, y2: integer): integer; cdecl; external SDLLibName;
+function SDL_RenderDrawLine(renderer: TSDLRenderer; x1, y1, x2, y2: integer): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderDrawLine}
 
-function SDL_RenderFillRect(const rect: PSdlRect): integer; cdecl; external SDLLibName;
+function SDL_RenderDrawRect(renderer: TSDLRenderer; const rect: PSdlRect): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderDrawRect}
+
+function SDL_RenderFillRect(renderer: TSDLRenderer; const rect: PSdlRect): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderFillRect}
 
-{ Copy a portion of the texture to the current rendering target.
-  textureID: The source texture.
-  srcrect: A pointer to the source rectangle, or nil for the entire texture.
-  dstrect: A pointer to the destination rectangle, or nil for the entire rendering target.
-  returns 0 on success, or -1 if there is no rendering context current, or the driver
-  doesn't support the requested operation.
-}
-function SDL_RenderCopy(textureID: TSdlTexture; const srcrect, dstrect: PSdlRect): integer; cdecl; external SDLLibName;
+(**
+ *  Copy a portion of the texture to the current rendering target.
+ *  textureID: The source texture.
+ *  srcrect: A pointer to the source rectangle, or nil for the entire texture.
+ *  dstrect: A pointer to the destination rectangle, or nil for the entire rendering target.
+ *  returns 0 on success, or -1 if there is no rendering context current, or the driver
+ *  doesn't support the requested operation.
+ *)
+function SDL_RenderCopy(renderer: TSDLRenderer; texture: TSdlTexture; const srcrect, dstrect: PSdlRect): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderCopy}
 
-procedure SDL_RenderPresent(); cdecl; external SDLLibName;
+procedure SDL_RenderPresent(renderer: TSDLRenderer); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderPresent}
 
-procedure SDL_DestroyRenderer(windowID: TSdlWindowID ); cdecl; external SDLLibName;
+function SDL_GetRenderer(window: TSDLWindow): TSDLRenderer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_GetRenderer}
+
+procedure SDL_DestroyTexture(textureID: TSdlTexture); cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_DestroyTexture}
+
+procedure SDL_DestroyRenderer(renderer: TSdlRenderer); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_DestroyRenderer}
 
 { Maps an RGB triple to an opaque pixel value for a given pixel format }
@@ -862,22 +967,6 @@ function SDL_SetPaletteColors(palette: PSdlPalette;  colors: PSdlColorArray; fir
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetPaletteColors'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_SetPaletteColors}
 
-function SDL_CreateTexture(format: Uint32; access: TSdlTextureAccess; w, h: integer): TSdlTextureID; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_CreateTexture}
-
-function SDL_CreateTextureFromSurface(format: Uint32; surface: PSdlSurface): TSdlTextureID; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_CreateTextureFromSurface}
-
-procedure SDL_DestroyTexture(textureID: TSDLTextureID); cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_DestroyTexture}
-
-function SDL_QueryTexture(textureID: TSdlTextureID; format: PCardinal;
-                          access: PSdlTextureAccess; w, h: PInteger): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_QueryTexture}
-
-function SDL_SetTargetTexture(texture: TSDLTexture): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_SetTargetTexture}
-
 (**
  * SDL_SetTexturePalette
  *
@@ -889,50 +978,9 @@ function SDL_SetTargetTexture(texture: TSDLTexture): integer; cdecl; external SD
  * ncolors: The number of palette entries to fill with the color data
  * returns 0 on success, or -1 if the texture is not valid or not an indexed texture
  *)
-function SDL_SetTexturePalette(textureID: TSdlTextureID; const colors: PSdlColorArray;
+function SDL_SetTexturePalette(textureID: TSdlTexture; const colors: PSdlColorArray;
                                firstcolor, ncolors: integer): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_SetTexturePalette}
-
-(**
- * SDL_GetTexturePalette
- *
- * Retrieves the color palette from an indexed texture
- *
- * texture: The texture to update
- * colors: The array of RGB color data
- * firstcolor: The first index to update
- * ncolors: The number of palette entries to fill with the color data
- * returns 0 on success, or -1 if the texture is not valid or not an indexed texture
- *)
-function SDL_GetTexturePalette(textureID: TSdlTextureID; const colors: PSdlColorArray;
-                               firstcolor, ncolors: integer): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_GetTexturePalette}
-
-(**
- * SDL_SetTextureAlphaMod
- *
- * Sets an additional alpha value used in render copy operations
- *
- * texture: The texture to update
- * alpha: The source alpha value multiplied into copy operations.
- * returns 0 on success, or -1 if the texture is not valid or alpha modulation is not supported
- *)
-function SDL_SetTextureAlphaMod(textureID: TSdlTextureID; alpha: byte): integer; cdecl;
-external SDLLibName;
-{$EXTERNALSYM SDL_SetTextureAlphaMod}
-
-(**
- * SDL_GetTextureAlphaMod
- *
- * Gets the additional alpha value used in render copy operations
- *
- * texture: The texture to query
- * alpha: A pointer filled in with the source alpha value
- * returns 0 on success, or -1 if the texture is not valid
- *)
-function SDL_GetTextureAlphaMod(textureID: TSdlTextureID; var alpha: byte): integer; cdecl;
-external SDLLibName;
-{$EXTERNALSYM SDL_GetTextureAlphaMod}
 
 (**
  * SDL_SetTextureScaleMode
@@ -943,23 +991,6 @@ external SDLLibName;
  * scaleMode TSdlTextureScaleModes to use for texture scaling.
  * returns 0 on success, or -1 if the texture is not valid or alpha modulation is not supported
  *)
-function SDL_SetTextureScaleMode(textureID: TSdlTextureID; scale: TSdlTextureScaleModes): integer; cdecl;
-external SDLLibName;
-{$EXTERNALSYM SDL_SetTextureScaleMode}
-
-(**
- * SDL_GetTextureScaleMode
- *
- * Gets the scale mode used for texture copy operations.
- *
- * texture: The texture to query
- * scaleMode: Returns the current scale mode.
- * returns 0 on success, or -1 if the texture is not valid
- *)
-function SDL_GetTextureScaleMode(textureID: TSdlTextureID; var scale: TSdlTextureScaleModes): integer; cdecl;
-external SDLLibName;
-{$EXTERNALSYM SDL_GetTextureScaleMode}
-
 {*
  *  Pumps the event loop, gathering events from the input devices.
  *
@@ -1255,72 +1286,46 @@ end;
 
 { TSdlTexture }
 
-constructor TSdlTexture.Create(format: Uint32; access: TSdlTextureAccess; w, h: integer);
+constructor TSdlTexture.Create(renderer: TSdlRenderer; format: Uint32; access: TSdlTextureAccess; w, h: integer);
 begin
-  FId := SDL_CreateTexture(format, access, w, h);
-  if FId = 0 then
+  self := SDL_CreateTexture(renderer, format, access, w, h);
+  if FPtr = nil then
     raise EBadHandle.Create(string(SDL_GetError));
 end;
 
-constructor TSdlTexture.Create(format: Uint32; surface: PSdlSurface);
+constructor TSdlTexture.Create(renderer: TSdlRenderer; format: Uint32; surface: PSdlSurface);
 begin
-  FId := SDL_CreateTextureFromSurface(format, surface);
-  if FId = 0 then
+  self := SDL_CreateTextureFromSurface(renderer, surface);
+  if FPtr = nil then
     raise EBadHandle.Create(string(SDL_GetError));
 end;
 
 procedure TSdlTexture.Free;
 begin
-  if FId <> 0 then
+  if FPtr <> nil then
   begin
-    SDL_DestroyTexture(FId);
-    FId := 0;
+    SDL_DestroyTexture(self);
+    FPtr := nil;
   end;
-end;
-
-function TSdlTexture.GetColor(index: byte): TSDL_Color;
-var
-   colors: TSdlColorArray;
-begin
-  SDL_GetTexturePalette(FId, @colors, 0, 255);
-  result := colors[index];
 end;
 
 function TSdlTexture.GetSize: TPoint;
 begin
-  if SDL_QueryTexture(FId, nil, nil, @result.X, @result.Y) <> 0 then
+  if SDL_QueryTexture(self, nil, nil, @result.X, @result.Y) <> 0 then
     raise EBadHandle.Create('SDL_QueryTexture failed due to invalid texture.');
 end;
 
 function TSdlTexture.GetAlpha: byte;
 begin
-   if SDL_GetTextureAlphaMod(FId, result) <> 0 then
+   if SDL_GetTextureAlphaMod(self, result) <> 0 then
       raise EBadHandle.Create('Alpha not supported for this texture.');
 end;
 
 procedure TSdlTexture.SetAlpha(const Value: byte);
 begin
-   if SDL_SetTextureAlphaMod(FId, Value) <> 0 then
+   if SDL_SetTextureAlphaMod(self, Value) <> 0 then
       raise EBadHandle.Create('Alpha not supported for this texture.');
 end;
-
-procedure TSdlTexture.SetScaleMode(const Value: TSdlTextureScaleMode);
-begin
-   SDL_SetTextureScaleMode(FID, [Value]);
-end;
-
-{$WARN NO_RETVAL OFF}
-function TSdlTexture.GetScaleMode: TSdlTextureScaleMode;
-var
-   modes: TSdlTextureScaleModes;
-   mode: TSdlTextureScaleMode;
-begin
-   SDL_GetTextureScaleMode(FID, modes);
-   assert(modes <> []);
-   for mode in modes do
-      Exit(mode);
-end;
-{$WARN NO_RETVAL ON}
 
 procedure SDL_OutOfMemory;
 begin
@@ -1354,9 +1359,9 @@ begin
   result := -1;
 end;
 
-function SDL_SetRenderDrawColor(color: TSDL_Color): integer;
+function SDL_SetRenderDrawColor(renderer: TSdlRenderer; color: TSDL_Color): integer;
 begin
-   result := SDL_SetRenderDrawColor(color.r, color.g, color.b, color.unused);
+   result := SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.unused);
 end;
 
 function SDL_GetEvents(minType: cardinal = 0; maxType: cardinal = SDL_LASTEVENT): TSdlEventArray;
@@ -1368,6 +1373,43 @@ end;
 function SDL_GetEventState(type_:cardinal): byte; inline;
 begin
    result := SDL_EventState(type_, SDL_QUERY);
+end;
+
+{ TSdlWindow }
+
+constructor TSdlWindow.Create(title: PAnsiChar; x, y, w, h: integer; flags: TSdlWindowFlags);
+begin
+  self := SDL_CreateWindow(title, x, y, w, h, flags);
+  if FPtr = nil then
+    raise EBadHandle.Create(string(SDL_GetError));
+end;
+
+constructor TSdlWindow.Create(orig: HWND);
+begin
+  self := SDL_CreateWindowFrom(orig);
+  if FPtr = nil then
+    raise EBadHandle.Create(string(SDL_GetError));
+end;
+
+procedure TSdlWindow.Free;
+begin
+   SDL_DestroyWindow(self);
+   FPtr := nil;
+end;
+
+function TSdlWindow.GetID: UInt32;
+begin
+   result := SDL_GetWindowID(self);
+end;
+
+{ TSdlRenderer }
+
+constructor TSdlRenderer.Create(window: TSdlWindow; index: integer;
+  flags: TSdlRendererFlags);
+begin
+   self := SDL_CreateRenderer(window, index, flags);
+   if FPtr = nil then
+      raise EBadHandle.Create(string(SDL_GetError));
 end;
 
 initialization

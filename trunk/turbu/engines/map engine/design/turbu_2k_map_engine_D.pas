@@ -56,7 +56,7 @@ type
    private //IBreakable
       procedure BreakSomething;
    private //IDesignMapEngine
-      procedure initializeDesigner(window: TSdlWindowId; database: IRpgDatabase);
+      procedure initializeDesigner(window: TSdlWindow; database: IRpgDatabase);
       function GetTilesetImageSize(const index: byte): TSgPoint;
       function GetTilesetImage(const index: byte): PSdlSurface;
       function DesignLoadMap(map: IMapMetadata): IRpgMap;
@@ -143,7 +143,7 @@ begin
    draw(position, true);
 end;
 
-procedure T2kMapEngineD.initializeDesigner(window: TSdlWindowId; database: IRpgDatabase);
+procedure T2kMapEngineD.initializeDesigner(window: TSdlWindow; database: IRpgDatabase);
 begin
    self.initialize(window, database);
    FObjectContainers.Free;
@@ -436,18 +436,20 @@ end;
 procedure T2kMapEngineD.DrawGrid;
 var
    x, y: integer;
+   renderer: TSdlRenderer;
 begin
+   renderer := FCanvas.Renderer;
    x := -(trunc(FCurrentMap.WorldX) mod TILE_SIZE.x);
    y := -(trunc(FCurrentMap.WorldY) mod TILE_SIZE.y);
-   SDL_SetRenderDrawColor(SDL_BLACK);
+   SDL_SetRenderDrawColor(renderer, SDL_BLACK);
    while x < FCanvas.Width do
    begin
-      SDL_RenderDrawLine(x, 0, x, FCanvas.Height);
+      SDL_RenderDrawLine(renderer, x, 0, x, FCanvas.Height);
       inc(x, TILE_SIZE.x);
    end;
    while y < FCanvas.Height do
    begin
-      SDL_RenderDrawLine(0, y, FCanvas.Width, y);
+      SDL_RenderDrawLine(renderer, 0, y, FCanvas.Width, y);
       inc(y, TILE_SIZE.y);
    end;
 end;
@@ -687,7 +689,7 @@ begin
          begin
             rw := sdlstreams.SDLStreamSetup(GArchives[IMAGE_ARCHIVE].getFile(filename));
             result {newItem} := TTileGroupPair.Create(input,
-              TRpgSdlImage.CreateSprite(rw, '.png', input.group.filename, FImages).surface);
+              TRpgSdlImage.CreateSprite(FCanvas.Renderer, rw, '.png', input.group.filename, FImages).surface);
             TStream(rw.unknown).Free;
             SDLStreamCloseRWops(rw);
          end

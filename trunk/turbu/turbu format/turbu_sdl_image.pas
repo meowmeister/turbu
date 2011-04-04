@@ -30,8 +30,8 @@ type
    protected
       procedure processImage(image: PSdlSurface); override;
    public
-      constructor CreateSprite(surface: PSdlSurface; imagename: string; container: TSdlImages); overload;
-      constructor CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages); overload;
+      constructor CreateSprite(renderer: TSdlRenderer; surface: PSdlSurface; imagename: string; container: TSdlImages); overload;
+      constructor CreateSprite(renderer: TSdlRenderer; rw: PSDL_RWops; extension, imagename: string; container: TSdlImages); overload;
       destructor Destroy; override;
       property Texture: TSdlTexture read FSurface;
       property surface: PSdlSurface read FOrigSurface;
@@ -51,15 +51,15 @@ end;
 
 { TRpgSdlImage }
 
-constructor TRpgSdlImage.CreateSprite(surface: PSdlSurface; imagename: string;
+constructor TRpgSdlImage.CreateSprite(renderer: TSdlRenderer; surface: PSdlSurface; imagename: string;
   container: TSdlImages);
 begin
-   inherited CreateSprite(surface, imagename, container, GetTBIInfo(surface).size);
+   inherited CreateSprite(renderer, surface, imagename, container, GetTBIInfo(surface).size);
 end;
 
-constructor TRpgSdlImage.CreateSprite(rw: PSDL_RWops; extension, imagename: string; container: TSdlImages);
+constructor TRpgSdlImage.CreateSprite(renderer: TSdlRenderer; rw: PSDL_RWops; extension, imagename: string; container: TSdlImages);
 begin
-   inherited CreateSprite(rw, extension, imagename, container, EMPTY);
+   inherited CreateSprite(renderer, rw, extension, imagename, container, EMPTY);
    self.TextureSize := GetTBIInfo(surface).size;
 end;
 

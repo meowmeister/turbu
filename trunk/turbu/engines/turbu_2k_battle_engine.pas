@@ -26,7 +26,7 @@ type
    private
    public
       constructor Create; override;
-      procedure initialize(window: TSdlWindowId); override;
+      procedure initialize(window: TSdlWindow); override;
       function startBattle(party: {TRpgParty} TObject; foes: TObject; conditions: TBattleConditions): TBattleResultData; override;
    end;
 
@@ -41,7 +41,7 @@ begin
    self.data := TBattleEngineData.Create('First-person battle engine', TVersion.Create(0, 1, 1), bv_firstPerson, bt_turns);
 end;
 
-procedure T2kBattleEngine.initialize(window: TSdlWindowId);
+procedure T2kBattleEngine.initialize(window: TSdlWindow);
 begin
    //fill this in
    FInitialized := true;

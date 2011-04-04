@@ -37,7 +37,7 @@ type
    IBattleEngine = interface(IInterface)
    ['{B4F083F0-B3F3-465D-930F-C9542CF1B9C0}']
       function startBattle(party: {TRpgParty} TObject; foes: TObject; conditions: TBattleConditions): TBattleResultData;
-      procedure initialize(window: TSdlWindowId);
+      procedure initialize(window: TSdlWindow);
       function getData: TBattleEngineData;
       property data: TBattleEngineData read getData;
    end;
@@ -80,7 +80,7 @@ type
    public
       destructor Destroy; override;
       procedure AfterConstruction; override;
-      procedure initialize(window: TSdlWindowId); virtual; abstract;
+      procedure initialize(window: TSdlWindow); virtual; abstract;
       function startBattle(party: {TRpgParty} TObject; foes: TObject; conditions: TBattleConditions): TBattleResultData; virtual; abstract;
 
       property data: TBattleEngineData read getData write FData;
