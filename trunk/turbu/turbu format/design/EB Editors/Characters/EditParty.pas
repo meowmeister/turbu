@@ -7,7 +7,7 @@ uses
   EventBuilder, dm_database, EbEdit, variable_selector, IDLookupCombo;
 
 type
-   [EditorCategory('Characters', 'Change Party', 2)]
+   [EditorCategory('Characters', 'Change Party')]
    TfrmEBEditParty = class(TfrmEbEditBase)
       GroupBox2: TGroupBox;
       cboHeroID: TIDLookupCombo;

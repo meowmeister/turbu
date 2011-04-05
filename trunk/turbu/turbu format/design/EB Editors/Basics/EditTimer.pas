@@ -26,23 +26,23 @@ uses
   EventBuilder, EbEdit, variable_selector;
 
 type
-   [EditorCategory('Basics', 'Set Timer', 2)]
+   [EditorCategory('Basics', 'Set Timer')]
    TfrmTimerEdit = class(TfrmEbEditBase)
       radWhichTimer: TRadioGroup;
       radOperation: TRadioGroup;
       grpOptions: TGroupBox;
       chkVisible: TCheckBox;
       chkBattle: TCheckBox;
-    grpDuration: TGroupBox;
-    lblMinutes: TLabel;
-    lblSeconds: TLabel;
+      grpDuration: TGroupBox;
+      lblMinutes: TLabel;
+      lblSeconds: TLabel;
       radFixed: TRadioButton;
       spnMinutes: TJvSpinEdit;
       spnSeconds: TJvSpinEdit;
       radVariable: TRadioButton;
       selSeconds: TIntSelector;
       procedure radOperationClick(Sender: TObject);
-    procedure radFixedClick(Sender: TObject);
+      procedure radFixedClick(Sender: TObject);
    private
       procedure DisableControls;
       procedure EnableControls(group: TGroupBox; value: boolean);

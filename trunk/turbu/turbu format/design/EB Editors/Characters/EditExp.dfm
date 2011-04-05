@@ -133,7 +133,7 @@ inherited frmEBEditExp: TfrmEBEditExp
     Top = 345
     ExplicitTop = 345
   end
-  object chkLevelMssage: TCheckBox
+  object chkLevelMessage: TCheckBox
     Left = 15
     Top = 200
     Width = 312

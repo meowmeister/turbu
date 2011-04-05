@@ -7,7 +7,7 @@ uses
   EventBuilder, variable_selector, ebPartyBase, IDLookupCombo, EBEdit;
 
 type
-   [EditorCategory('Characters', 'Change Equipment', 5)]
+   [EditorCategory('Characters', 'Change Equipment')]
    TfrmEBEditEquipment = class(TfrmEBPartyBase)
       grpOperation: TRadioGroup;
       grpItem: TGroupBox;

@@ -26,7 +26,7 @@ uses
   variable_selector,  EventBuilder, EbEdit;
 
 type
-   [EditorCategory('Characters', 'Change Money', 0)]
+   [EditorCategory('Characters', 'Change Money')]
    TfrmEBEditMoney = class(TfrmEbEditBase)
       grpOperation: TRadioGroup;
       GroupBox1: TGroupBox;

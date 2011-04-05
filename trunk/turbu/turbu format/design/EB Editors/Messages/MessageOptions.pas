@@ -25,7 +25,7 @@ uses
    EbEdit, EventBuilder;
 
 type
-   [EditorCategory('Messages', 'Message Options', 1)]
+   [EditorCategory('Messages', 'Message Options')]
    TfrmMessageOptions = class(TfrmEbEditBase)
       GroupBox3: TGroupBox;
       radVisibility: TRadioGroup;

@@ -27,7 +27,7 @@ uses
    IDLookupCombo;
 
 type
-   [EditorCategory('Basics', 'Call Script', 5)]
+   [EditorCategory('Basics', 'Call Script')]
    TfrmEBEditCall = class(TfrmEbEditBase)
       grpMain: TGroupBox;
       radGlobalScript: TRadioButton;

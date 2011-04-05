@@ -25,7 +25,7 @@ uses
   EbEdit, EventBuilder;
 
 type
-   [EditorCategory('Basics', 'Delete Map Object', 4)]
+   [EditorCategory('Basics', 'Delete Map Object')]
    TfrmEBDeleteObject = class(TfrmEbEditBase)
       radDuration: TRadioGroup;
    public

@@ -26,7 +26,7 @@ uses
    EventBuilder, EbEdit;
 
 type
-   [EditorCategory('Basics', 'Set Switch', 0)]
+   [EditorCategory('Basics', 'Set Switch')]
    TfrmEbSetSwitch = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       radSwitch: TRadioButton;
