@@ -48,7 +48,8 @@ object frameVocab: TframeVocab
           end
           item
             Expanded = False
-            FieldName = 'Value'
+            FieldName = 'Val'
+            Title.Caption = 'Value'
             Width = 350
             Visible = True
           end>
@@ -94,7 +95,8 @@ object frameVocab: TframeVocab
           end
           item
             Expanded = False
-            FieldName = 'Value'
+            FieldName = 'Val'
+            Title.Caption = 'Value'
             Width = 350
             Visible = True
           end>
