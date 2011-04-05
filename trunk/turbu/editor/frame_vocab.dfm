@@ -32,6 +32,7 @@ object frameVocab: TframeVocab
         Anchors = [akLeft, akTop, akRight, akBottom]
         Constraints.MinWidth = 100
         DataSource = dsSysVocab
+        Options = [dgEditing, dgTitles, dgColumnResize, dgTabs, dgAlwaysShowSelection, dgCancelOnExit]
         TabOrder = 0
         TitleFont.Charset = DEFAULT_CHARSET
         TitleFont.Color = clWindowText
@@ -42,6 +43,7 @@ object frameVocab: TframeVocab
           item
             Expanded = False
             FieldName = 'Key'
+            ReadOnly = True
             Title.Caption = 'Name'
             Width = 150
             Visible = True
@@ -79,6 +81,7 @@ object frameVocab: TframeVocab
         Anchors = [akLeft, akTop, akRight, akBottom]
         Constraints.MinWidth = 100
         DataSource = dsCustomVocab
+        Options = [dgEditing, dgTitles, dgColumnResize, dgTabs, dgAlwaysShowSelection, dgCancelOnExit]
         TabOrder = 0
         TitleFont.Charset = DEFAULT_CHARSET
         TitleFont.Color = clWindowText
