@@ -25,7 +25,7 @@ uses
   EventBuilder, EbEdit, variable_selector;
 
 type
-   [EditorCategory('Basics', 'Direct Input', 3)]
+   [EditorCategory('Basics', 'Direct Input')]
    TfrmInputEdit = class(TfrmEbEditBase)
    protected
       procedure UploadObject(obj: TEbObject); override;

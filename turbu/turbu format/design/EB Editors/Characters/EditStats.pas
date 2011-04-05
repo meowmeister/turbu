@@ -7,7 +7,7 @@ uses
    EBEdit, ebPartyBase, variable_selector, EventBuilder, IDLookupCombo;
 
 type
-   [EditorCategory('Characters', 'Change Stats', 4)]
+   [EditorCategory('Characters', 'Change Stats')]
    TfrmEBEditStats = class(TfrmEBPartyBase)
       grpOperation: TRadioGroup;
       GroupBox1: TGroupBox;

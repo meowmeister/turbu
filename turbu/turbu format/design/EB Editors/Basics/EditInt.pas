@@ -26,7 +26,7 @@ uses
    EventBuilder, EbEdit, EB_Expressions, variable_selector, turbu_classes;
 
 type
-   [EditorCategory('Basics', 'Set Integer', 1)]
+   [EditorCategory('Basics', 'Set Integer')]
    TfrmEBSetInteger = class(TfrmEbEditBase)
       grpOperand: TGroupBox;
       radVariable: TRadioButton;

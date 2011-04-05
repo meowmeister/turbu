@@ -25,7 +25,7 @@ uses
   EbEdit, EventBuilder;
 
 type
-   [EditorCategory('Messages', 'Show Choice', 3)]
+   [EditorCategory('Messages', 'Show Choice')]
    TfrmShowChoice = class(TfrmEbEditBase)
       txtChoice1: TEdit;
       txtChoice2: TEdit;

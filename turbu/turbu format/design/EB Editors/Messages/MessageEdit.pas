@@ -25,7 +25,7 @@ uses
   EbEdit, EventBuilder;
 
 type
-   [EditorCategory('Messages', 'Show Message', 0)]
+   [EditorCategory('Messages', 'Show Message')]
    TfrmMessageEdit = class(TfrmEbEditBase)
       Memo1: TMemo;
    private

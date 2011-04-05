@@ -8,7 +8,7 @@ uses
    EventBuilder, EbEdit, dm_database, variable_selector, IDLookupCombo;
 
 type
-   [EditorCategory('Characters', 'Change Experience', 3)]
+   [EditorCategory('Characters', 'Change Experience')]
    TfrmEBEditExp = class(TfrmEbEditBase)
       cboHeroID: TIDLookupCombo;
       radSpecificHero: TRadioButton;
@@ -22,7 +22,7 @@ type
       radPointer: TRadioButton;
       spnExactValue: TJvSpinEdit;
       selValue: TIntSelector;
-      chkLevelMssage: TCheckBox;
+      chkLevelMessage: TCheckBox;
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
@@ -30,11 +30,19 @@ type
       procedure EnableControlsProperly; override;
    end;
 
-   [EditorCategory('Characters', 'Change Level', 4)]
+   [EditorCategory('Characters', 'Change Level')]
    TFrmEBEditLevel = class(TfrmEBEditExp)
       procedure FormShow(Sender: TObject);
    protected
       function NewClassType: TEbClass; override;
+   end;
+
+   [EditorCategory('Characters', 'Change HP')]
+   TFrmEBEditHP = class(TfrmEBEditExp)
+      procedure FormShow(Sender: TObject);
+   protected
+      function NewClassType: TEbClass; override;
+      procedure EnableControlsProperly; override;
    end;
 
 implementation
@@ -51,7 +59,7 @@ begin
    EnableControl(selItemID, radHeroPtr);
    EnableControl(spnExactValue, radExactAmount);
    EnableControl(selValue, radPointer);
-   chkLevelMssage.Enabled := grpOperation.ItemIndex = 0;
+   chkLevelMessage.Enabled := grpOperation.ItemIndex = 0;
 end;
 
 function TfrmEBEditExp.NewClassType: TEbClass;
@@ -77,7 +85,7 @@ begin
    end;
    grpOperation.ItemIndex := obj.Values[2];
    UploadValuePtrSelection(obj.Values[3], obj.Values[4], radExactAmount, radPointer, spnExactValue, selValue);
-   chkLevelMssage.Checked := boolean(obj.Values[5]);
+   chkLevelMessage.Checked := boolean(obj.Values[5]);
 end;
 
 procedure TfrmEBEditExp.DownloadObject(obj: TEbObject);
@@ -99,16 +107,18 @@ begin
    obj.Values.Add(grpOperation.ItemIndex);
    pair := DownloadValuePtrSelection(radExactAmount, radPointer, spnExactValue, selValue);
    obj.Values.AddRange(pair);
-   obj.Values.Add(ord(chkLevelMssage.Checked));
+   obj.Values.Add(ord(chkLevelMessage.Checked));
 end;
 
 { TFrmEBEditLevel }
 
 procedure TFrmEBEditLevel.FormShow(Sender: TObject);
 begin
-   inherited;
+   inherited FormShow(sender);
    self.Caption := 'Change Level';
    spnExactValue.MaxValue := 99;
+   grpOperation.Items[0] := 'Increase Level';
+   grpOperation.Items[1] := 'Decrease Level';
 end;
 
 function TFrmEBEditLevel.NewClassType: TEbClass;
@@ -116,7 +126,31 @@ begin
    result := TEBLevel;
 end;
 
+{ TFrmEBEditHP }
+
+procedure TFrmEBEditHP.EnableControlsProperly;
+begin
+   inherited EnableControlsProperly;
+   chkLevelMessage.Enabled := grpOperation.ItemIndex = 1;
+end;
+
+procedure TFrmEBEditHP.FormShow(Sender: TObject);
+begin
+   inherited FormShow(sender);
+   self.Caption := 'Change HP';
+   spnExactValue.MaxValue := 9999;
+   chkLevelMessage.Caption := 'Hero can die from HP decrease';
+   grpOperation.Items[0] := 'Increase HP';
+   grpOperation.Items[1] := 'Decrease HP';
+end;
+
+function TFrmEBEditHP.NewClassType: TEbClass;
+begin
+   result := TEBChangeHP;
+end;
+
 initialization
    RegisterEbEditor(TEBExperience, TfrmEBEditExp);
    RegisterEbEditor(TEBLevel, TfrmEBEditLevel);
+   RegisterEbEditor(TEBChangeHP, TfrmEBEditHP);
 end.

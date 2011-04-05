@@ -60,7 +60,7 @@ type
 
 implementation
 uses
-   Math,
+   Math, SysUtils,
    DeHL.Collections.Base, DeHL.KeyValuePair,
    EventBuilder;
 
@@ -143,7 +143,7 @@ end;
 
 function TTreeDataType.Compare(const AValue1, AValue2: TTreeData): Integer;
 begin
-   result := AValue1.Key.order - AValue2.Key.order;
+   result := StrComp(PChar(AValue1.Key.name), PChar(AValue2.Key.name));
 end;
 
 { TTreeData }

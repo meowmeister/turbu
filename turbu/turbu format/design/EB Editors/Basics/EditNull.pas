@@ -43,10 +43,10 @@ type
       function NewClassType: TEbClass; override;
    end;
 
-   [EditorCategory('Basics', 'Game Over', 6)]
+   [EditorCategory('Basics', 'Game Over')]
    TFrmGameOver = class(TfrmEBEditNull<TEBGameOver>);
 
-   [EditorCategory('Basics', 'Title Screen', 7)]
+   [EditorCategory('Basics', 'Title Screen')]
    TFrmTitleScreen = class(TfrmEBEditNull<TEBTitleScreen>);
 
 implementation

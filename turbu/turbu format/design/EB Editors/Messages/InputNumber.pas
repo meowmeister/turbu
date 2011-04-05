@@ -25,7 +25,7 @@ uses
   EbEdit, EventBuilder, Mask, JvExMask, JvSpin, variable_selector;
 
 type
-   [EditorCategory('Messages', 'Input Number', 4)]
+   [EditorCategory('Messages', 'Input Number')]
    TfrmInputNumber = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       spnDigits: TJvSpinEdit;

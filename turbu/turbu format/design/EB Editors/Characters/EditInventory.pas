@@ -8,7 +8,7 @@ uses
    EventBuilder, EbEdit, dm_database, variable_selector, IDLookupCombo;
 
 type
-   [EditorCategory('Characters', 'Change Inventory', 1)]
+   [EditorCategory('Characters', 'Change Inventory')]
    TfrmEBEditInventory = class(TfrmEbEditBase)
       grpOperation: TRadioGroup;
       grpItemCount: TGroupBox;

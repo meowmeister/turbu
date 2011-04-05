@@ -25,7 +25,7 @@ uses
    EventBuilder, EbEdit, sdl_frame;
 
 type
-   [EditorCategory('Messages', 'Select Portrait', 2)]
+   [EditorCategory('Messages', 'Select Portrait')]
    TfrmSelectPortrait = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       imgPortrait: TSdlFrame;
