@@ -2,11 +2,13 @@ inherited frmEBEditStats: TfrmEBEditStats
   Caption = 'Change Stats'
   ClientHeight = 352
   OnCreate = FormCreate
+  ExplicitWidth = 320
   ExplicitHeight = 387
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 299
+    ExplicitHeight = 299
     object grpOperation: TRadioGroup
       Left = 8
       Top = 142
@@ -52,6 +54,7 @@ inherited frmEBEditStats: TfrmEBEditStats
         Checked = True
         TabOrder = 0
         TabStop = True
+        OnClick = RadioButtonClick
       end
       object radPointer: TRadioButton
         Left = 7
@@ -60,6 +63,7 @@ inherited frmEBEditStats: TfrmEBEditStats
         Height = 17
         Caption = 'Value of:'
         TabOrder = 1
+        OnClick = RadioButtonClick
       end
       object spnExactValue: TJvSpinEdit
         Left = 91
@@ -80,11 +84,14 @@ inherited frmEBEditStats: TfrmEBEditStats
   end
   inherited btnOK: TButton
     Top = 309
+    ExplicitTop = 309
   end
   inherited btnCancel: TButton
     Top = 309
+    ExplicitTop = 309
   end
   inherited btnHelp: TButton
     Top = 309
+    ExplicitTop = 309
   end
 end

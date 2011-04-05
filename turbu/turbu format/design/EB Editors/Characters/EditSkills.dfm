@@ -1,28 +1,40 @@
-inherited frmEBEditParty: TfrmEBEditParty
-  Caption = 'Change Party'
-  ClientHeight = 215
-  ExplicitWidth = 355
-  ExplicitHeight = 250
+inherited frmEBEditSkills: TfrmEBEditSkills
+  Caption = 'frmEBEditSkills'
+  ClientHeight = 344
+  ExplicitHeight = 379
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
-    Height = 162
-    ExplicitHeight = 162
+    Height = 291
+    ExplicitHeight = 291
+    object grpOperation: TRadioGroup
+      Left = 8
+      Top = 142
+      Width = 333
+      Height = 51
+      Caption = 'Operation'
+      Columns = 2
+      ItemIndex = 0
+      Items.Strings = (
+        'Add Skill'
+        'Remove Skill')
+      TabOrder = 1
+    end
     object GroupBox2: TGroupBox
       Left = 8
-      Top = 62
+      Top = 197
       Width = 333
       Height = 88
-      Caption = 'Hero'
-      TabOrder = 0
-      object cboHeroID: TIDLookupCombo
+      Caption = 'Skill'
+      TabOrder = 2
+      object cboSkillID: TIDLookupCombo
         Left = 104
         Top = 24
         Width = 215
         Height = 24
         KeyField = 'id'
         ListField = 'name'
-        ListSource = srcHeroes
+        ListSource = srcSkills
         TabOrder = 0
       end
       object radSpecificItem: TRadioButton
@@ -34,7 +46,7 @@ inherited frmEBEditParty: TfrmEBEditParty
         Checked = True
         TabOrder = 1
         TabStop = True
-        OnDblClick = RadioButtonClick
+        OnClick = RadioButtonClick
       end
       object radItemPtr: TRadioButton
         Left = 7
@@ -43,44 +55,31 @@ inherited frmEBEditParty: TfrmEBEditParty
         Height = 17
         Caption = 'ID Value of:'
         TabOrder = 2
-        OnDblClick = RadioButtonClick
+        OnClick = RadioButtonClick
       end
-      object selItemID: TIntSelector
+      object selSkillID: TIntSelector
         Left = 104
         Top = 58
         Width = 215
         Height = 24
       end
     end
-    object grpOperation: TRadioGroup
-      Left = 8
-      Top = 8
-      Width = 333
-      Height = 49
-      Caption = 'Operation'
-      Columns = 2
-      ItemIndex = 0
-      Items.Strings = (
-        'Add'
-        'Remove')
-      TabOrder = 1
-    end
   end
   inherited btnOK: TButton
-    Top = 172
-    ExplicitTop = 172
+    Top = 301
+    ExplicitTop = 301
   end
   inherited btnCancel: TButton
-    Top = 172
-    ExplicitTop = 172
+    Top = 301
+    ExplicitTop = 301
   end
   inherited btnHelp: TButton
-    Top = 172
-    ExplicitTop = 172
+    Top = 301
+    ExplicitTop = 301
   end
-  object srcHeroes: TDataSource
-    DataSet = dmDatabase.heroes
-    Left = 24
-    Top = 160
+  object srcSkills: TDataSource
+    DataSet = dmDatabase.skills
+    Left = 16
+    Top = 312
   end
 end

@@ -29,6 +29,7 @@ inherited frmEBPartyBase: TfrmEBPartyBase
         Height = 17
         Caption = 'Specific:'
         TabOrder = 1
+        OnClick = RadioButtonClick
       end
       object radHeroPtr: TRadioButton
         Left = 7
@@ -37,8 +38,9 @@ inherited frmEBPartyBase: TfrmEBPartyBase
         Height = 17
         Caption = 'ID Value of:'
         TabOrder = 2
+        OnClick = RadioButtonClick
       end
-      object selItemID: TIntSelector
+      object selHeroID: TIntSelector
         Left = 104
         Top = 86
         Width = 215
@@ -53,6 +55,7 @@ inherited frmEBPartyBase: TfrmEBPartyBase
         Checked = True
         TabOrder = 4
         TabStop = True
+        OnClick = RadioButtonClick
       end
     end
   end
