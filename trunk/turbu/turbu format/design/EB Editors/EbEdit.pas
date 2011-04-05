@@ -56,7 +56,9 @@ type
       class property AllEditors: TEditorDic read GetEditors;
    protected
       procedure UploadValuePtrSelection(v1, v2: integer; r1, r2: TRadioButton;
-        valueBox: TJvSpinEdit; ptrBox: TIntSelector);
+        valueBox: TJvSpinEdit; ptrBox: TIntSelector); overload;
+      procedure UploadValuePtrSelection(expr: TEBExpression; r1, r2: TRadioButton;
+        valueBox: TJvSpinEdit; ptrBox: TIntSelector); overload;
       procedure UploadLookupPtrSelection(expr: TEBExpression; r1, r2: TRadioButton;
         valueBox: TIDLookupCombo; ptrBox: TIntSelector);
       function DownloadValuePtrSelection(r1, r2: TRadioButton;
@@ -241,6 +243,16 @@ begin
       r2.Checked := true;
       ptrBox.ID := v2;
    end;
+end;
+
+procedure TfrmEBEditBase.UploadValuePtrSelection(expr: TEBExpression; r1,
+  r2: TRadioButton; valueBox: TJvSpinEdit; ptrBox: TIntSelector);
+var
+   v1: integer;
+begin
+   assert((expr is TEBLookupValue) or (expr is TEBIntsValue));
+   v1 := ord(expr is TEBIntsValue);
+   UploadValuePtrSelection(v1, expr.Values[0], r1, r2, valueBox, ptrBox);
 end;
 
 function TfrmEBEditBase.DownloadValuePtrSelection(r1, r2: TRadioButton;

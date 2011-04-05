@@ -59,6 +59,10 @@ contains
   EditMoney in 'EB Editors\Characters\EditMoney.pas' {frmEBEditMoney},
   EditInventory in 'EB Editors\Characters\EditInventory.pas' {frmEBEditInventory},
   EditParty in 'EB Editors\Characters\EditParty.pas' {frmEBEditParty},
-  EditExp in 'EB Editors\Characters\EditExp.pas' {frmEBEditExp};
+  EditExp in 'EB Editors\Characters\EditExp.pas' {frmEBEditExp},
+  ebPartyBase in 'EB Editors\Characters\ebPartyBase.pas' {frmEBPartyBase},
+  EditStats in 'EB Editors\Characters\EditStats.pas' {frmEBEditStats},
+  EditSkills in 'EB Editors\Characters\EditSkills.pas' {frmEBEditSkills},
+  EditEquipment in 'EB Editors\Characters\EditEquipment.pas' {frmEBEditEquipment};
 
 end.

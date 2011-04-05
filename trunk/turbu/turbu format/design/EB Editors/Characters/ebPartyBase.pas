@@ -12,7 +12,7 @@ type
       cboHeroID: TIDLookupCombo;
       radSpecificHero: TRadioButton;
       radHeroPtr: TRadioButton;
-      selItemID: TIntSelector;
+      selHeroID: TIntSelector;
       radAllParty: TRadioButton;
       srcHeroes: TDataSource;
    private
@@ -51,7 +51,7 @@ begin
    case WhichRadioButton of
       0: subscript := TEBObjArrayValue.Create('Party', TEBVariableValue.Create('Num'));
       1: subscript := TEBLookupObjExpr.Create('Hero', cboHeroID.id, 'heroes');
-      2: subscript := TEBLookupObjExpr.Create('Hero', TEBIntsValue.Create(selItemID.ID), 'heroes');
+      2: subscript := TEBLookupObjExpr.Create('Hero', TEBIntsValue.Create(selHeroID.ID), 'heroes');
       else assert(false);
    end;
    obj.Add(subscript);
@@ -60,12 +60,14 @@ end;
 procedure TfrmEBPartyBase.EnableControlsProperly;
 begin
    EnableControl(cboHeroID, radSpecificHero);
-   EnableControl(selItemID, radHeroPtr);
+   EnableControl(selHeroID, radHeroPtr);
 end;
 
 procedure TfrmEBPartyBase.UploadObject(obj: TEbObject);
 var
    sub: TEBExpression;
+   i: integer;
+   found: boolean;
 begin
    sub := obj.Components[0] as TEBExpression;
    if sub.classtype = TEBObjArrayValue then
@@ -78,9 +80,19 @@ begin
          cboHeroID.id := sub.Values[0];
       end
       else begin
-         sub := sub.Components[1] as TEBIntsValue;
-         radHeroPtr.Checked := true;
-         selItemID.ID := sub.Values[0];
+         //*grumble* Stupid serializer treating Components[] and TPersistent properties differently
+         found := false;
+         for I := 0 to sub.ComponentCount - 1 do
+            if sub.Components[i] is TEBIntsValue then
+            begin
+               sub := TEBIntsValue(sub.Components[i]);
+               radHeroPtr.Checked := true;
+               selHeroID.ID := sub.Values[0];
+               found := true;
+               break;
+            end;
+         if not found then
+            raise ERPGScriptError.Create('Subscript not found');
       end;
    end;
 end;

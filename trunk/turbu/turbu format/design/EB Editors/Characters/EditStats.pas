@@ -61,7 +61,6 @@ end;
 procedure TfrmEBEditStats.UploadObject(obj: TEbObject);
 var
    prop: TEBPropExpr;
-   value: TEBExpression;
    i: integer;
 begin
    inherited UploadObject(obj);
@@ -76,17 +75,8 @@ begin
       end;
    assert(cboStat.ItemIndex <> -1);
    grpOperation.ItemIndex := obj.Values[0];
-   value := obj.Components[1] as TEBExpression;
-   if value is TEBIntegerValue then
-   begin
-      radExactAmount.Checked := true;
-      spnExactValue.AsInteger := value.Values[0];
-   end
-   else begin
-      assert(value is TEBIntsValue);
-      radPointer.Checked := true;
-      selValue.ID := value.Values[0];
-   end;
+   UploadValuePtrSelection(obj.Components[1] as TEBExpression, radExactAmount,
+     radPointer, spnExactValue, selValue);
 end;
 
 procedure TfrmEBEditStats.DownloadObject(obj: TEbObject);

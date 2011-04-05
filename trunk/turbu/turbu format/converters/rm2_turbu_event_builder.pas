@@ -494,7 +494,7 @@ begin
             expr := TEBEnumValue.Create(SLOTS[opcode.Data[3]])
          else if boolean(opcode.data[3]) then
             expr := TEBIntsValue.Create(opcode.Data[4])
-         else expr := TEBLookupObjExpr.Create('items', opcode.Data[4], 'items');
+         else expr := TEBLookupValue.Create(opcode.Data[4], 'items');
          result := TEBEquipment.Create(parent);
       end);
 end;

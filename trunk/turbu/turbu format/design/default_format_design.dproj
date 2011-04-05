@@ -135,6 +135,18 @@
 			<DCCReference Include="EB Editors\Characters\EditExp.pas">
 				<Form>frmEBEditExp</Form>
 			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\ebPartyBase.pas">
+				<Form>frmEBPartyBase</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditStats.pas">
+				<Form>frmEBEditStats</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditSkills.pas">
+				<Form>frmEBEditSkills</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditEquipment.pas">
+				<Form>frmEBEditEquipment</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

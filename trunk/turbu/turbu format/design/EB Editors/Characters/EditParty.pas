@@ -10,7 +10,7 @@ type
    [EditorCategory('Characters', 'Change Party', 2)]
    TfrmEBEditParty = class(TfrmEbEditBase)
       GroupBox2: TGroupBox;
-      cboItemID: TIDLookupCombo;
+      cboHeroID: TIDLookupCombo;
       radSpecificItem: TRadioButton;
       radItemPtr: TRadioButton;
       selItemID: TIntSelector;
@@ -33,7 +33,7 @@ uses
 
 procedure TfrmEBEditParty.EnableControlsProperly;
 begin
-   EnableControl(cboItemID, radSpecificItem);
+   EnableControl(cboHeroID, radSpecificItem);
    EnableControl(selItemID, radItemPtr);
 end;
 
@@ -46,14 +46,14 @@ procedure TfrmEBEditParty.DownloadObject(obj: TEbObject);
 begin
    obj.Clear;
    obj.Values.Add(grpOperation.ItemIndex);
-   obj.Add(DownloadLookupPtrSelection(radSpecificItem, radItemPtr, cboItemID, selItemID, 'Heroes'));
+   obj.Add(DownloadLookupPtrSelection(radSpecificItem, radItemPtr, cboHeroID, selItemID, 'Heroes'));
 end;
 
 procedure TfrmEBEditParty.UploadObject(obj: TEbObject);
 begin
    grpOperation.ItemIndex := obj.Values[0];
    UploadLookupPtrSelection(obj.Components[0] as TEBExpression, radSpecificItem,
-     radItemPtr, cboItemID, selItemID);
+     radItemPtr, cboHeroID, selItemID);
 end;
 
 initialization
