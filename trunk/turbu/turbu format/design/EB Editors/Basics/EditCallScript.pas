@@ -181,4 +181,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBCallEvent, TfrmEBEditCall);
+finalization
+   UnRegisterEbEditor(TEBCallEvent);
 end.

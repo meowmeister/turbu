@@ -71,5 +71,6 @@ end;
 
 initialization
    RegisterEbEditor(TEbMessageOptions, TfrmMessageOptions);
-
+finalization
+   UnRegisterEbEditor(TEbMessageOptions);
 end.

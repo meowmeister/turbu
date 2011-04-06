@@ -101,4 +101,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBStats, TfrmEBEditStats);
+finalization
+   UnRegisterEbEditor(TEBStats);
 end.

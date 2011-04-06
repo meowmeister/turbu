@@ -84,5 +84,6 @@ end;
 
 initialization
    RegisterEbEditor(TEbShowMessage, TfrmMessageEdit);
-
+finalization
+   UnRegisterEbEditor(TEbShowMessage);
 end.

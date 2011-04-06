@@ -109,4 +109,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBEquipment, TfrmEBEditEquipment);
+finalization
+   UnRegisterEbEditor(TEBEquipment);
 end.

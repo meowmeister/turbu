@@ -141,4 +141,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBTimer, TfrmTimerEdit);
+finalization
+   UnRegisterEbEditor(TEBTimer);
 end.

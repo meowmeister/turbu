@@ -89,4 +89,7 @@ end;
 initialization
    RegisterEbEditor(TEBGameOver, TFrmGameOver);
    RegisterEbEditor(TEBTitleScreen, TFrmTitleScreen);
+finalization
+   UnRegisterEbEditor(TEBGameOver);
+   UnRegisterEbEditor(TEBTitleScreen);
 end.
