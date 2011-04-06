@@ -106,5 +106,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBPortrait, TfrmSelectPortrait);
-
+finalization
+   UnRegisterEbEditor(TEBPortrait);
 end.

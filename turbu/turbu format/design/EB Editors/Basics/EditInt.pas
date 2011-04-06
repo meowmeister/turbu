@@ -177,5 +177,7 @@ begin
 end;
 
 {initialization
-   RegisterEbEditor(TEBGlobalInt, TfrmEbSetInteger);}
+   RegisterEbEditor(TEBGlobalInt, TfrmEbSetInteger);
+finalization
+   UnRegisterEbEditor(TEBGlobalInt);}
 end.

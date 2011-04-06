@@ -60,4 +60,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBDeleteObj, TfrmEBDeleteObject);
+finalization
+   UnRegisterEbEditor(TEBDeleteObj);
 end.

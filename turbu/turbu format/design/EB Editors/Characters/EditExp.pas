@@ -153,4 +153,8 @@ initialization
    RegisterEbEditor(TEBExperience, TfrmEBEditExp);
    RegisterEbEditor(TEBLevel, TfrmEBEditLevel);
    RegisterEbEditor(TEBChangeHP, TfrmEBEditHP);
+finalization
+   UnRegisterEbEditor(TEBExperience);
+   UnRegisterEbEditor(TEBLevel);
+   UnRegisterEbEditor(TEBChangeHP );
 end.

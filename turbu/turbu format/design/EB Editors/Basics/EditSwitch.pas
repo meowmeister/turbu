@@ -113,4 +113,7 @@ end;
 initialization
    RegisterEbEditor(TEBGlobalSwitch, TfrmEbSetSwitch);
    RegisterEbEditor(TEBLocalSwitch, TfrmEbSetSwitch);
+finalization
+   UnRegisterEbEditor(TEBGlobalSwitch);
+   UnRegisterEbEditor(TEBLocalSwitch);
 end.

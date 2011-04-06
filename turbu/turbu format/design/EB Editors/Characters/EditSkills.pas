@@ -75,4 +75,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBSkills, TfrmEBEditSkills);
+finalization
+   UnRegisterEbEditor(TEBSkills);
 end.

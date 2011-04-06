@@ -67,4 +67,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBInputNumber, TfrmInputNumber);
+finalization
+   UnRegisterEbEditor(TEBInputNumber);
 end.

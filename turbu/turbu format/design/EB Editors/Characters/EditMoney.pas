@@ -84,4 +84,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBMoney, TfrmEBEditMoney);
+finalization
+   UnRegisterEbEditor(TEBMoney);
 end.

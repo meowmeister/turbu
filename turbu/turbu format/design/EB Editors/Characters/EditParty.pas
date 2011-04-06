@@ -58,4 +58,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBChangeParty, TfrmEBEditParty);
+finalization
+   UnRegisterEbEditor(TEBChangeParty);
 end.

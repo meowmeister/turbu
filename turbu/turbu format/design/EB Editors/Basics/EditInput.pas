@@ -59,5 +59,7 @@ begin
 end;
 
 {initialization
-   RegisterEbEditor(TEBInput, TfrmInputEdit);}
+   RegisterEbEditor(TEBInput, TfrmInputEdit);
+finalization
+   UnRegisterEbEditor(TEBInput);}
 end.

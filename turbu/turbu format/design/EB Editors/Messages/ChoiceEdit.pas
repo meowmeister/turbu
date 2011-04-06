@@ -147,4 +147,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBChoiceMessage, TfrmShowChoice);
+finalization
+   UnRegisterEbEditor(TEBChoiceMessage);
 end.

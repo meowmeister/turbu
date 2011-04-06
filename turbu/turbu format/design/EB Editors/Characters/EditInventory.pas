@@ -76,4 +76,6 @@ end;
 
 initialization
    RegisterEbEditor(TEBInventory, TfrmEBEditInventory);
+finalization
+   UnRegisterEbEditor(TEBInventory);
 end.
