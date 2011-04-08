@@ -250,8 +250,8 @@ procedure TfrmEBEditBase.UploadValuePtrSelection(expr: TEBExpression; r1,
 var
    v1: integer;
 begin
-   assert((expr is TEBLookupValue) or (expr is TEBIntsValue));
-   v1 := ord(expr is TEBIntsValue);
+   assert(expr.values.count > 0);
+   v1 := ord(expr.ClassType = TEBIntsValue);
    UploadValuePtrSelection(v1, expr.Values[0], r1, r2, valueBox, ptrBox);
 end;
 
