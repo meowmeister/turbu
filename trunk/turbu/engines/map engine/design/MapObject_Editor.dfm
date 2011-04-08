@@ -637,6 +637,7 @@ object frmObjectEditor: TfrmObjectEditor
       FieldName = 'Id'
     end
     object dsPagesName: TWideStringField
+      DisplayWidth = 32
       FieldName = 'Name'
       Size = 255
     end
