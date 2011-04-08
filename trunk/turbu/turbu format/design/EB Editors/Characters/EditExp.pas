@@ -37,14 +37,6 @@ type
       function NewClassType: TEbClass; override;
    end;
 
-   [EditorCategory('Characters', 'Change HP')]
-   TFrmEBEditHP = class(TfrmEBEditExp)
-      procedure FormShow(Sender: TObject);
-   protected
-      function NewClassType: TEbClass; override;
-      procedure EnableControlsProperly; override;
-   end;
-
 implementation
 uses
    EB_Characters;
@@ -126,35 +118,10 @@ begin
    result := TEBLevel;
 end;
 
-{ TFrmEBEditHP }
-
-procedure TFrmEBEditHP.EnableControlsProperly;
-begin
-   inherited EnableControlsProperly;
-   chkLevelMessage.Enabled := grpOperation.ItemIndex = 1;
-end;
-
-procedure TFrmEBEditHP.FormShow(Sender: TObject);
-begin
-   inherited FormShow(sender);
-   self.Caption := 'Change HP';
-   spnExactValue.MaxValue := 9999;
-   chkLevelMessage.Caption := 'Hero can die from HP decrease';
-   grpOperation.Items[0] := 'Increase HP';
-   grpOperation.Items[1] := 'Decrease HP';
-end;
-
-function TFrmEBEditHP.NewClassType: TEbClass;
-begin
-   result := TEBChangeHP;
-end;
-
 initialization
    RegisterEbEditor(TEBExperience, TfrmEBEditExp);
    RegisterEbEditor(TEBLevel, TfrmEBEditLevel);
-   RegisterEbEditor(TEBChangeHP, TfrmEBEditHP);
 finalization
    UnRegisterEbEditor(TEBExperience);
    UnRegisterEbEditor(TEBLevel);
-   UnRegisterEbEditor(TEBChangeHP );
 end.

@@ -3,7 +3,7 @@ unit EditEquipment;
 interface
 
 uses
-  Dialogs, DBClient, Classes, Controls, ExtCtrls, DB, StdCtrls, DBCtrls,
+  DBClient, Classes, Controls, ExtCtrls, DB, StdCtrls, DBCtrls,
   EventBuilder, variable_selector, ebPartyBase, IDLookupCombo, EBEdit;
 
 type
