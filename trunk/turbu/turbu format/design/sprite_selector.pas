@@ -71,6 +71,7 @@ begin
       AddNewImage(filename, oFilename);
    end;
 
+   EnsureCanvas;
    image := imgSelector.Images.Image[oFilename];
    logicalSize := image.TextureSize * SgPoint(3, 4);
    finishLoading(image, logicalSize, logicalSize * SELECTOR_SCALE,
@@ -123,8 +124,8 @@ begin
    end;
 
    image := imgSelector.images.Image[oFilename];
-   size := TSgPoint(image.surface.size) * SELECTOR_SCALE;
-   FinishLoading(image, size, size,
+   size := TSgPoint(image.surface.size);
+   FinishLoading(image, size, size * SELECTOR_SCALE,
       procedure
       begin
          imgSelector.FillColor(FBackground, $FF);

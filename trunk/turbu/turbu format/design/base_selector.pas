@@ -22,7 +22,7 @@ interface
 
 uses
    SysUtils, Classes, Controls, Forms, Dialogs, StdCtrls, ExtCtrls, Messages,
-   sdl_frame,
+   sdl_frame, sdl_canvas,
    turbu_constants,
    sdl_ImageManager, sdl_13, sg_defs;
 
@@ -47,6 +47,9 @@ type
       procedure FormCreate(Sender: TObject);
       procedure FormDestroy(Sender: TObject);
    private
+      FCanvas: TSdlCanvas;
+      FOldCanvas: TSdlRenderSurface;
+
       procedure WMRender(var message: TMessage); message WM_RENDER;
    protected
       FBackground: SDL_Color;
@@ -61,6 +64,7 @@ type
       property CurrentFrame: integer read GetFrame write SetFrame;
       class procedure DoSelection(var current: string; const folder: string;
         var frame: integer; selector: TSelectorClass; extra: TSelectorSetupProc = nil);
+      procedure EnsureCanvas;
    private
       FTextureSize: TSgPoint;
       FRedrawProc: TProc;
@@ -128,6 +132,16 @@ begin
    end;
 end;
 
+procedure TfrmBaseSelector.EnsureCanvas;
+begin
+   if FCanvas = nil then
+   begin
+      FOldCanvas := currentRenderTarget;
+      FCanvas := TSdlCanvas.CreateFrom(imgSelector.SdlWindow);
+      FCanvas.SetRenderer;
+   end;
+end;
+
 procedure TfrmBaseSelector.ShowLoad;
 begin
    //this virtual method intentionally left blank
@@ -150,16 +164,16 @@ procedure TfrmBaseSelector.FinishLoading(image: TSdlImage; size,
 begin
    FTextureSize := image.textureSize;
    FBackground := image.Colorkey;
-   if (imgSelector.width <> size.x) or (imgSelector.height <> size.y) then
+   if (imgSelector.width <> logicalSize.x) or (imgSelector.height <> logicalSize.y) then
    begin
-      imgSelector.Width := size.x;
-      imgSelector.Height := Size.y;
+      imgSelector.Width := logicalSize.x;
+      imgSelector.Height := logicalSize.y;
       imgSelector.Clear;
       imgSelector.Update;
       GlLineWidth(SELECTOR_SCALE);
    end;
-   imgSelector.LogicalWidth := logicalSize.x;
-   imgSelector.LogicalHeight := logicalSize.y;
+   imgSelector.LogicalWidth := size.x;
+   imgSelector.LogicalHeight := size.y;
    FRedrawProc := redrawProc;
 end;
 
@@ -170,6 +184,11 @@ end;
 
 procedure TfrmBaseSelector.FormDestroy(Sender: TObject);
 begin
+   if assigned(FCanvas) then
+   begin
+      FCanvas.Free;
+      FOldCanvas.parent.RenderTarget := FOldCanvas;
+   end;
    FFileList.Free;
 end;
 
