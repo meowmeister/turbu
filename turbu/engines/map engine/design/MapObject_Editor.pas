@@ -121,6 +121,9 @@ type
     procedure InsertPage(page: TRpgEventPage);
     function Procname(id: integer): string;
     procedure PostProc;
+    procedure DrawSprite;
+    function GetDrawFrame: integer;
+    procedure SetDrawFrame(value: integer);
   public
     { Public declarations }
     class procedure EditMapObject(obj: TRpgMapObject; map: TRpgMap; const tilesetName: string);
@@ -290,11 +293,11 @@ var
    frame: integer;
 begin
    filename := dsPagesName.Value;
-   frame := dsPagesFrame.Value;
+   frame := GetDrawFrame;
    TfrmSpriteSelector.SelectSpriteInto(imgEventSprite, filename, frame, FTileset, FRenameProc);
    dsPages.Edit;
    dsPagesName.Value := filename;
-   dsPagesFrame.Value := frame;
+   SetDrawFrame(frame);
    dsPages.Post;
 end;
 
@@ -309,8 +312,8 @@ begin
       FViewer.DBMemo1.DataSource := srcPages;
       FViewer.DBMemo1.DataField := 'EventText';
       FViewer.DBNavigator1.DataSource := srcPages;
-      FViewer.Show;
    end;
+   FViewer.Show;
 end;
 
 procedure TfrmObjectEditor.ClearViewer(sender: TObject);
@@ -361,15 +364,45 @@ begin
    outputDebugString(PChar(format('Key pressed: %d', [key])));
 end;
 
+function TfrmObjectEditor.GetDrawFrame: integer;
+var
+   matrix, action, frame: integer;
+begin
+   if dsPagesName.Value[1] = '*' then
+      result := dsPagesFrame.Value
+   else begin
+      matrix := dsPagesMatrix.Value;
+      action := dsPagesDirection.Value;
+      frame := dsPagesFrame.Value;
+      result := GDatabase.moveMatrix[matrix][action, frame];
+   end;
+end;
+
+procedure TfrmObjectEditor.SetDrawFrame(value: integer);
+begin
+   assert(dsPages.State in [dsEdit, dsInsert]);
+   if dsPagesName.Value[1] = '*' then
+      dsPagesFrame.Value := value
+   else begin
+      dsPagesDirection.Value := value div 3;
+      dsPagesFrame.Value := value mod 3;
+   end;
+end;
+
+procedure TfrmObjectEditor.DrawSprite;
+begin
+   imgEventSprite.SetSprite(dsPagesName.Value, GetDrawFrame, FTileset, FRenameProc)
+end;
+
 procedure TfrmObjectEditor.imgEventSpritePaint(Sender: TObject);
 begin
-   imgEventSprite.SetSprite(dsPagesName.Value, dsPagesFrame.Value, FTileset, FRenameProc);
+   DrawSprite;
 end;
 
 procedure TfrmObjectEditor.tabEventPagesChange(Sender: TObject);
 begin
    dsPages.Locate('id', tabEventPages.TabIndex, []);
-   imgEventSprite.SetSprite(dsPagesName.Value, dsPagesFrame.Value, FTileset, FRenameProc);
+   DrawSprite;
    assert(dsPagesEventText.BlobSize > 0);
    trvEvents.proc.Free;
    trvEvents.proc := TEBObject.Load(dsPagesEventText.Value) as TEBProcedure;
