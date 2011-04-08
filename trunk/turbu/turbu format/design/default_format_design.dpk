@@ -63,6 +63,10 @@ contains
   ebPartyBase in 'EB Editors\Characters\ebPartyBase.pas' {frmEBPartyBase},
   EditStats in 'EB Editors\Characters\EditStats.pas' {frmEBEditStats},
   EditSkills in 'EB Editors\Characters\EditSkills.pas' {frmEBEditSkills},
-  EditEquipment in 'EB Editors\Characters\EditEquipment.pas' {frmEBEditEquipment};
+  EditEquipment in 'EB Editors\Characters\EditEquipment.pas' {frmEBEditEquipment},
+  EditHP in 'EB Editors\Characters\EditHP.pas' {frmEBEditHP},
+  EditMP in 'EB Editors\Characters\EditMP.pas' {frmEBEditMP},
+  EditConditions in 'EB Editors\Characters\EditConditions.pas' {frmEBEditConditions},
+  EditFullHeal in 'EB Editors\Characters\EditFullHeal.pas' {frmEBEditFullHeal};
 
 end.
