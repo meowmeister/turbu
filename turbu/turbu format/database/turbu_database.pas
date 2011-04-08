@@ -235,6 +235,8 @@ begin
    FVariables := TStringList.Create;
    FFloats := TStringList.Create;
    FStrings := TStringList.Create;
+   FSysVocab := TStringList.Create;
+   FCustomVocab := TStringList.Create;
    self.prepareBlanks;
 end;
 
@@ -1445,8 +1447,6 @@ begin
    FLegacyCruft := TLegacySections.Create;
    FScripts := TScriptList.Create;
    FGlobalEvents := TMapObjectList.Create;
-   FSysVocab := TStringList.Create;
-   FCustomVocab := TStringList.Create;
 end;
 
 { TBattleCommandList }
