@@ -230,7 +230,7 @@ end;
 
 procedure TSdlCanvas.DrawTo(image: TSdlImage; dest: TRect);
 begin
-   SDL_RenderCopy(FRenderer, image.surface, nil, @dest);
+   assert(SDL_RenderCopy(FRenderer, image.surface, nil, @dest) = 0);
 end;
 
 procedure TSdlCanvas.DrawBox(const region: TRect; const color: SDL_Color;
@@ -246,12 +246,12 @@ var
 begin
    dummy.TopLeft := dest;
    dummy.BottomRight := source.BottomRight;
-   SDL_RenderCopy(FRenderer, image.surface, @source, @dummy);
+   assert(SDL_RenderCopy(FRenderer, image.surface, @source, @dummy) = 0);
 end;
 
 procedure TSdlCanvas.DrawRectTo(image: TSdlImage; dest, source: TRect);
 begin
-   SDL_RenderCopy(FRenderer, image.surface, @source, @dest);
+   assert(SDL_RenderCopy(FRenderer, image.surface, @source, @dest) = 0);
 end;
 
 procedure TSdlCanvas.Flip;

@@ -59,6 +59,7 @@ begin
       AddNewImage(filename, oFilename);
    end;
 
+   EnsureCanvas;
    size := sgPoint(imgSelector.width, imgSelector.height);
    image := imgSelector.Images.Image[oFilename];
    finishLoading(image, size, size,
