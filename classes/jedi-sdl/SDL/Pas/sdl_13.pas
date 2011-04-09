@@ -103,6 +103,9 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
   TSdlRendererFlag = (sdlrSoftware, sdlrAccelerated, sdlrPresentVsync, sdlrForce32 = 31);
   TSdlRendererFlags = set of TSdlRendererFlag;
 
+  TSdlFlipAxis = (sdlfHoriz, sdlfVert, sdlfForce32 = 31);
+  TSdlFlipAxes = set of TSdlFlipAxis;
+
 {$MINENUMSIZE 4}
 (*{
     SDL_TEXTUREACCESS_STATIC,    /**< Changes rarely, not lockable */
@@ -874,6 +877,9 @@ function SDL_RenderFillRect(renderer: TSDLRenderer; const rect: PSdlRect): integ
  *  doesn't support the requested operation.
  *)
 function SDL_RenderCopy(renderer: TSDLRenderer; texture: TSdlTexture; const srcrect, dstrect: PSdlRect): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderCopy}
+
+function SDL_RenderCopyFlipped(renderer: TSDLRenderer; texture: TSdlTexture; const srcrect, dstrect: PSdlRect; axes: TSdlFlipAxes): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderCopy}
 
 procedure SDL_RenderPresent(renderer: TSDLRenderer); cdecl; external SDLLibName;

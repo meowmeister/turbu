@@ -75,6 +75,7 @@ type
       procedure DrawTexture(texture: TSdlTexture; src: PSdlRect = nil; dst: PSdlRect = nil); overload;
       procedure DrawTexture(const name: string; src: PSdlRect = nil; dst: PSdlRect = nil); overload;
       procedure DrawTexture(index: integer; src: PSdlRect = nil; dst: PSdlRect = nil); overload;
+      procedure DrawTextureFlipped(texture: TSdlTexture; axes: TSdlFlipAxes; src: PSdlRect = nil; dst: PSdlRect = nil);
       procedure Flip;
       function ContainsName(const name: string): boolean;
       function IndexOfName(const name: string): integer;
@@ -190,6 +191,14 @@ end;
 procedure TSdlFrame.DrawTexture(index: integer; src, dst: PSdlRect);
 begin
    drawTexture(FImageManager[index].surface, src, dst);
+end;
+
+procedure TSdlFrame.DrawTextureFlipped(texture: TSdlTexture; axes: TSdlFlipAxes; src, dst: PSdlRect);
+begin
+   if not FRendererAvailable then
+      raise EBadHandle.Create('No renderer available.');
+   if not (SDL_RenderCopyFlipped(FRenderer, texture, src, dst, axes) = 0) then
+      raise EBadHandle.Create(string(SDL_GetError));
 end;
 
 procedure TSdlFrame.DrawTexture(const name: string; src, dst: PSdlRect);

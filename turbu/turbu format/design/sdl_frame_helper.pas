@@ -110,13 +110,10 @@ begin
    name := format(FILENAME_STRING, ['portrait', name]);
    image := EnsureImage(name);
    spriteRect := image.spriteRect[frame];
-   if flipped then
-   begin
-      inc(spriteRect.Left, spriteRect.Right);
-      spriteRect.Right := -spriteRect.Right;
-   end;
    self.fillColor(image.surface.Format.palette.colors[image.surface.ColorKey], 255);
-   self.DrawTexture(image.Texture, @spriteRect, nil);
+   if flipped then
+      self.DrawTextureFlipped(image.Texture, [sdlfHoriz], @spriteRect, nil)
+   else self.DrawTexture(image.Texture, @spriteRect, nil);
    self.Flip;
 end;
 
