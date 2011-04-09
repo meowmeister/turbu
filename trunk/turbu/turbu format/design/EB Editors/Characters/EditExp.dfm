@@ -9,7 +9,7 @@ inherited frmEBEditExp: TfrmEBEditExp
     ExplicitHeight = 335
     object GroupBox2: TGroupBox
       Left = 8
-      Top = 9
+      Top = 8
       Width = 333
       Height = 128
       Caption = 'Character'
@@ -57,6 +57,7 @@ inherited frmEBEditExp: TfrmEBEditExp
         Checked = True
         TabOrder = 4
         TabStop = True
+        OnClick = RadioButtonClick
       end
     end
     object grpOperation: TRadioGroup

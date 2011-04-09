@@ -110,7 +110,7 @@ type
       function GetScriptText: string; override;
    end;
 
-   TEBHeroClass = class(TEBCharacterObject)
+   TEBHeroTitle = class(TEBCharacterObject)
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
@@ -492,16 +492,16 @@ begin
    result := format('hero[%d].name := %s;', [Values[0], QuotedStr(Text)]);
 end;
 
-{ TEBHeroClass }
+{ TEBHeroTitle }
 
-function TEBHeroClass.GetNodeText: string;
+function TEBHeroTitle.GetNodeText: string;
 begin
-   result := format('Change Hero %s''s class to %s', [HeroName(Values[0]), Text]);
+   result := format('Change Hero %s''s title to %s', [HeroName(Values[0]), Text]);
 end;
 
-function TEBHeroClass.GetScriptText: string;
+function TEBHeroTitle.GetScriptText: string;
 begin
-   result := format('hero[%d].CharClass := %s;', [Values[0], QuotedStr(Text)]);
+   result := format('hero[%d].title := %s;', [Values[0], QuotedStr(Text)]);
 end;
 
 { TEBHeroSprite }
@@ -575,7 +575,7 @@ begin
 end;
 
 function TEBClassChange.GetScriptText: string;
-const LINE = 'ChangeClass(%d, %d, %s, %d, %d, %s);';
+const LINE = 'hero[%d].ChangeClass(%d, %s, %d, %d, %s);';
 begin
    result := format(LINE, [Values[0], Values[1], BOOL_STR[Values[2]], Values[3],
                            Values[4], BOOL_STR[Values[5]]]);
@@ -605,7 +605,7 @@ initialization
    RegisterClasses([TEBMoney, TEBInventory, TEBChangeParty, TEBExperience,
                     TEBLevel, TEBStats,TEBSkills, TEBEquipment, TEBChangeHP,
                     TEBChangeStatus, TEBFullHeal, TEBTakeDamage, TEBHeroName,
-                    TEBHeroClass, TEBHeroSprite, TEBHeroPortrait, TEBClassChange,
+                    TEBHeroTitle, TEBHeroSprite, TEBHeroPortrait, TEBClassChange,
                     TEBVehicleSprite, TEBChangeMP, TEBTranslucency,
                     TEBBattleCommand]);
 end.
