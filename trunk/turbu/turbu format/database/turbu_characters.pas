@@ -169,6 +169,7 @@ type
       property staticEq: boolean read FStaticEq write FStaticEq;
       property strongDef: boolean read FStrongDef write FStrongDef;
       property unarmedAnim: integer read FUnarmedAnim write FUnarmedAnim;
+      property actionMatrix: integer read FActionMatrix write FActionMatrix;
    published
       [EventType('TPartyEvent')]
       property OnJoin: TScriptEvent read FOnJoin write FOnJoin;

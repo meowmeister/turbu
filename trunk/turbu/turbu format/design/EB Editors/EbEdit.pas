@@ -49,6 +49,7 @@ type
       procedure UploadObject(obj: TEbObject); virtual; abstract;
       procedure DownloadObject(obj: TEbObject); virtual; abstract;
       function NewClassType: TEbClass; virtual; abstract;
+      procedure EnableControlsProperly; virtual;
       function ValidateForm: boolean; dynamic;
       procedure ValidateError(control: TWinControl; const reason: string);
       function ContextLookup(const name: string): integer;
@@ -68,7 +69,6 @@ type
       procedure EnableControl(control: TControl; controller: TRadioButton); overload;
       procedure EnableControl(control: TControl; controller: TCheckBox); overload;
       procedure EnableGroupBox(box: TGroupBox; value: boolean);
-      procedure EnableControlsProperly; virtual;
    public
       procedure SetupMap(const map: IRpgMap); dynamic;
       function NewObj: TEbObject; dynamic;
