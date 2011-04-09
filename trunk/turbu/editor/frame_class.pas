@@ -111,12 +111,12 @@ type
       FTemplate: TClassTemplate;
       FSpriteData: TSpriteData;
       FMatrixPosition: TSgPoint;
+      FRepCounter: integer;
       FSpriteIndexToLoad: integer;
       FSpriteToLoad: string;
       FOldWeaponScroll: TDatasetNotifyEvent;
 
       procedure loadPortrait(name: string; id: integer);
-      procedure loadMapSprite(name: string; id: integer; frame: byte);
       procedure weaponsAfterScroll(DataSet: TDataSet);
    public
       constructor Create(AOwner: TComponent); override;
@@ -135,7 +135,7 @@ uses
    turbu_tbi_lib, turbu_sdl_image, turbu_classes, dm_database,
    design_script_engine, skill_settings,
    attributes_editor,
-   SDL, SDL_13;
+   SDL, SDL_13, sdl_frame_helper;
 
 {$R *.dfm}
 
@@ -370,48 +370,6 @@ begin
    imgMapSprite.Active := false;
 end;
 
-procedure TframeClass.loadMapSprite(name: string; id: integer; frame: byte);
-var
-   filename: string;
-   image: TRpgSdlImage;
-   fileStream: TStream;
-   spriteRect, destRect: TRect;
-begin
-   FSpriteData.name := name;
-   FSpriteData.moveMatrix := id;
-   if name = '' then
-   begin
-      imgMapSprite.Clear;
-      Exit;
-   end;
-
-   filename := format('mapsprite\%s.png', [FSpriteData.name]);
-   if imgMapSprite.IndexOfName(filename) = -1 then
-   begin
-      try
-         fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
-         try
-            image := TRpgSdlImage.CreateSprite(imgMapSprite.Renderer, loadFromTBI(fileStream), filename, imgMapSprite.Images, SPRITE_SIZE * SgPoint(1, 2));
-         finally
-            fileStream.Free;
-         end;
-      except
-         on EArchiveError do
-            image := TRpgSdlImage.CreateBlankSprite(imgMapSprite.Renderer, filename, imgMapSprite.Images, SPRITE_SIZE, 12);
-      end;
-      assert(frame in [0..image.count]);
-   end
-   else image := imgMapSprite.Images.image[filename] as TRpgSdlImage;
-
-   spriteRect := image.spriteRect[frame];
-   destRect.left := (imgMapSprite.Width div 2) - (spriteRect.right);
-   destRect.top := (imgMapSprite.height div 2) - (spriteRect.bottom);
-   destRect.BottomRight := TSgPoint(spriteRect.BottomRight) * 2;
-   imgMapSprite.fillColor(image.surface.Format.palette.colors[image.surface.ColorKey], 255);
-   imgMapSprite.DrawTexture(image.Texture, @spriteRect, @destRect);
-   imgMapSprite.Flip;
-end;
-
 procedure TframeClass.radWeaponStyleClick(Sender: TObject);
 begin
    cbxEquip2.DataField := ''; //needed to make sure the display changes
@@ -444,9 +402,10 @@ begin
    case (sender as TTabControl).TabIndex of
       0: loadPortrait(dsCharClass.DataSet.FieldByName('portrait').AsString,
                       dsCharClass.DataSet.FieldByName('portraitIndex').AsInteger);
-      1: loadMapSprite(dsCharClass.DataSet.FieldByName('mapSprite').asString,
+      1: imgMapSprite.loadMapSprite(dsCharClass.DataSet.FieldByName('mapSprite').asString,
                        max(0, (dsCharClass.DataSet.FieldByName('actionMatrix').asInteger)),
-                       nextPosition(GDatabase.moveMatrix[FSpriteData.moveMatrix], FMatrixPosition));
+                       nextPosition(GDatabase.moveMatrix[FSpriteData.moveMatrix], FMatrixPosition),
+                       FSpriteData);
       2: {fix this later};
       else assert(false);
    end;
@@ -455,25 +414,17 @@ end;
 procedure TframeClass.tmrAnimTimer(Sender: TObject);
 var
    matrix: TMoveMatrix;
-const
-   REPS = 3;
 begin
    if tabGraphics.TabIndex = 0 then
       Exit;
 
    matrix := GDatabase.moveMatrix[FSpriteData.moveMatrix];
    case tabGraphics.TabIndex of
-      1: loadMapSprite(dsCharClass.DataSet.FieldByName('mapSprite').AsString,
+      1: imgMapSprite.DemoWalk(dsCharClass.DataSet.FieldByName('mapSprite').AsString,
                        max(0, (dsCharClass.DataSet.FieldByName('actionMatrix').AsInteger)),
-                       nextPosition(matrix, FMatrixPosition));
+                       matrix, FSpriteData, FMatrixPosition, FRepCounter);
       2: {fix this later};
       else assert(false);
-   end;
-   if FMatrixPosition.y = 0 then
-   begin
-      tmrAnim.Tag := (tmrAnim.Tag + 1) mod REPS;
-      if tmrAnim.Tag = 0 then
-         FMatrixPosition.x := (FMatrixPosition.x + 1) mod length(matrix);
    end;
 end;
 
@@ -491,7 +442,12 @@ end;
 
 procedure TframeClass.btnSetGfxClick(Sender: TObject);
 begin
-   imgMapSprite.Clear;
+(*   case tabGraphics.TabIndex of
+      0: ;
+      1: ;
+      2: {fix this later};
+      else assert(false);
+   end; *)
 end;
 
 end.
