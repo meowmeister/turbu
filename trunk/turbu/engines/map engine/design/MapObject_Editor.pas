@@ -368,7 +368,7 @@ function TfrmObjectEditor.GetDrawFrame: integer;
 var
    matrix, action, frame: integer;
 begin
-   if dsPagesName.Value[1] = '*' then
+   if (dsPagesName.Value <> '') and (dsPagesName.Value[1] = '*') then
       result := dsPagesFrame.Value
    else begin
       matrix := dsPagesMatrix.Value;
