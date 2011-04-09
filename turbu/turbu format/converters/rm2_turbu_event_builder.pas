@@ -776,7 +776,7 @@ const
       (K: 10110; V: TEBShowMessage), (K: 20110; V: TEBExtension), (K: 10130; V: TEBPortrait),
       (K: 11410; V: TEBWait), (K: 10150; V: TEBInputNumber), (K: 10230; V: TEBTimer),
       (K: 10310; V: TEBMoney), (K: 10410; V: TEBExperience), (K: 10420; V: TEBLevel),
-      (K: 10500; V: TEBTakeDamage), (K: 10610; V: TEBHeroName), (K: 10620; V: TEBHeroClass),
+      (K: 10500; V: TEBTakeDamage), (K: 10610; V: TEBHeroName), (K: 10620; V: TEBHeroTitle),
       (K: 10660; V: TEBSysBGM), (K: 10670; V: TEBSysSFX), (K: 10680; V: TEBSysSkin),
       (K: 10690; V: TEBTransition), (K: 10740; V: TEBInputHeroName), (K: 10810; V: TEBTeleport),
       (K: 10820; V: TEBMemorizeLocation), (K: 10830; V: TEBMemoTeleport), (K: 10840; V: TEBRideVehicle),

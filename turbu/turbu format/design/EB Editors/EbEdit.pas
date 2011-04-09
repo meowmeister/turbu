@@ -65,7 +65,8 @@ type
         valueBox: TJvSpinEdit; ptrBox: TIntSelector): TIntPair;
       function DownloadLookupPtrSelection(r1, r2: TRadioButton;
         valueBox: TIDLookupCombo; ptrBox: TIntSelector; const lookupName: string): TEBExpression;
-      procedure EnableControl(control: TControl; controller: TRadioButton);
+      procedure EnableControl(control: TControl; controller: TRadioButton); overload;
+      procedure EnableControl(control: TControl; controller: TCheckBox); overload;
       procedure EnableGroupBox(box: TGroupBox; value: boolean);
       procedure EnableControlsProperly; virtual;
    public
@@ -155,6 +156,11 @@ begin
 end;
 
 procedure TfrmEBEditBase.EnableControl(control: TControl; controller: TRadioButton);
+begin
+   control.Enabled := controller.Checked;
+end;
+
+procedure TfrmEBEditBase.EnableControl(control: TControl; controller: TCheckBox);
 begin
    control.Enabled := controller.Checked;
 end;

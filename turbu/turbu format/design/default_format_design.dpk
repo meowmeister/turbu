@@ -67,6 +67,8 @@ contains
   EditHP in 'EB Editors\Characters\EditHP.pas' {frmEBEditHP},
   EditMP in 'EB Editors\Characters\EditMP.pas' {frmEBEditMP},
   EditConditions in 'EB Editors\Characters\EditConditions.pas' {frmEBEditConditions},
-  EditFullHeal in 'EB Editors\Characters\EditFullHeal.pas' {frmEBEditFullHeal};
+  EditFullHeal in 'EB Editors\Characters\EditFullHeal.pas' {frmEBEditFullHeal},
+  EditTakeDamage in 'EB Editors\Characters\EditTakeDamage.pas' {frmEBEditTakeDamage},
+  EditHeroName in 'EB Editors\Characters\EditHeroName.pas' {frmEBEditHeroName};
 
 end.
