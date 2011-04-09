@@ -34,8 +34,7 @@ type
 
 implementation
 uses
-   sysUtils, types,
-   classes;
+   sysUtils, types, classes;
 
 function extractSpriteData(const value: string): TSpriteData;
 var
@@ -51,11 +50,7 @@ function nextPosition(matrix: TMoveMatrix; var current: TSgPoint): byte;
 begin
    if (current.x > high(matrix)) or (current.y > high(matrix[current.x])) then
       current := point(0, 0)
-   else begin
-      inc(current.y);
-      if (current.y > high(matrix[current.x])) then
-         current.y := 0;
-   end;
+   else current.y := (current.y + 1) mod length(matrix[current.x]);
    result := matrix[current.x, current.y];
 end;
 
