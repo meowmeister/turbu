@@ -71,6 +71,8 @@ begin
    FDataset.Edit;
    FIDField.Value := value;
    FDataset.Post;
+   if assigned(self.OnClick) then
+      OnClick(self);
 end;
 
 end.
