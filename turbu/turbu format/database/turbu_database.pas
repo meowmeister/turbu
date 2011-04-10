@@ -43,10 +43,12 @@ type
    TTilesetList = TRpgObjectList<TTileset>;
    TTileDictionary = TObjectDictionary<string, TTileGroup>;
    TScriptList = TRpgObjectList<TScriptRecord>;
+   TVehicleList = TRpgObjectList<TVehicleTemplate>;
 
    TRpgDataTypes = (rd_class, rd_hero, rd_command, rd_item, rd_skill, rd_anim,
                     rd_attrib, rd_condition, rd_tileset, rd_switch, rd_int,
-                    rd_float, rd_string, rd_script, rd_metadata, rd_vocab);
+                    rd_float, rd_string, rd_script, rd_metadata, rd_vocab,
+                    rd_vehicles);
    TRpgDataTypeSet = set of TRpgDataTypes;
 
    TBattleCommandList = class(TRpgObjectList<TBattleCommand>)
@@ -68,6 +70,7 @@ type
       FAnims: TAnimList;
       FAttributes: TAttribList;
       FConditions: TConditionList;
+      FVehicles: TVehicleList;
 
       //I need monsters and monster parties
       //and battle anims and terrains
@@ -189,6 +192,7 @@ type
       property scripts: TScriptList read FScripts write FScripts;
       property scriptFormat: TScriptFormat read FScriptFormat write SetScriptFormat;
       property scriptFile: string read FScriptFile write FScriptFile;
+      property vehicles: TVehicleList read FVehicles;
 
       property units: TUnitDictionary read FUnits write setUnits;
       property projectName: string read getProjectName;
@@ -209,8 +213,8 @@ uses
    turbu_functional, turbu_map_objects;
 
 const
-   MIN_DBVERSION = 38;
-   DBVERSION = 38;
+   MIN_DBVERSION = 39;
+   DBVERSION = 39;
 
 { TRpgDatabase }
 
@@ -581,6 +585,12 @@ begin
       FGlobalEvents.Add(TRpgMapObject.Load(savefile));
    lassert(savefile.readChar = 'g');
 
+   lassert(savefile.readChar = 'V');
+   FVehicles.Capacity := savefile.readInt;
+   for i := 1 to FVehicles.Capacity - 1 do
+      FVehicles.Add(TVehicleTemplate.Load(savefile));
+   lassert(savefile.readChar = 'v');
+
    lassert(savefile.readChar = 'd');
    EventLoader.WaitFor;
    EventLoader.Free;
@@ -860,6 +870,12 @@ begin
       FGlobalEvents[i].save(savefile);
    savefile.writeChar('g');
 
+   savefile.writeChar('V');
+   savefile.writeInt(FVehicles.Count);
+   for i := 1 to FVehicles.High do
+      FVehicles[i].save(savefile);
+   savefile.writeChar('v');
+
    subStream := TStringStream.Create(FGlobalScriptBlock.Serialize, TEncoding.UTF8, false);
    try
       subStream.rewind;
@@ -954,6 +970,7 @@ destructor TRpgDatabase.Destroy;
 var
    i: TItemType;
 begin
+   FVehicles.Free;
    FSerializer.Free;
    FSysVocab.Free;
    FCustomVocab.Free;
@@ -1160,6 +1177,12 @@ begin
          for i := 1 to FTileset.High do
             FTileset[i].upload(FSerializer, db.tilesets);
          db.tilesets.postSafe;
+      end;
+      rd_vehicles:
+      begin
+         for i := 1 to FVehicles.High do
+            FVehicles[i].upload(FSerializer, db.vehicles);
+         db.vehicles.postSafe;
       end;
       rd_switch: uploadStringList(db.Switches, FSwitches);
       rd_int: uploadStringList(db.Variables, FVariables);
@@ -1447,6 +1470,8 @@ begin
    FLegacyCruft := TLegacySections.Create;
    FScripts := TScriptList.Create;
    FGlobalEvents := TMapObjectList.Create;
+   FVehicles := TVehicleList.Create;
+   FVehicles.Add(TVehicleTemplate.Create);
 end;
 
 { TBattleCommandList }

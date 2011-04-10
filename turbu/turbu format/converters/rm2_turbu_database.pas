@@ -36,6 +36,7 @@ type
       procedure AddVocab(const left: string; const right: AnsiString);
       procedure AddVocabCond(const left, formatString: string; base: TLcfDatabase;
         index: integer; cond: TProjectFormat);
+      procedure ConvertVehicles(base: TSystemRecord);
    public
       constructor convert(base: TLcfDatabase; tree: TFullTree; dic: TUnitDictionary;
                           legacy: TLegacySections; ConversionReport: IConversionReport;
@@ -48,6 +49,7 @@ var
 implementation
 uses
    sysUtils, StrUtils,
+   charset_data,
    turbu_characters, turbu_items, turbu_skills, turbu_animations, conversion_table,
    turbu_resists, turbu_map_metadata,
    rm2_turbu_items, rm2_turbu_characters, rm2_turbu_skills, rm2_turbu_animations,
@@ -265,6 +267,8 @@ begin
       self.layout.physWidth := PHYSICAL_SIZE.X;
       self.layout.physHeight := PHYSICAL_SIZE.Y;
 
+      ConvertVehicles(base.SystemData);
+
       ConversionReport.newStep('Converting map tree');
       self.mapTree := TMapTree.convert(tree, true);
 
@@ -447,6 +451,43 @@ begin
    finally
       stream.Free;
    end;
+end;
+
+function ConvertVehicle(base: TSystemRecord; vehicle: TVehicleSet): TVehicleTemplate;
+begin
+   result := TVehicleTemplate.Create;
+   result.id := ord(vehicle) + 1;
+   result.mapSprite :=  format('%s %d', [string(base.vehicleGraphic[vehicle]), base.vehicleIndex[vehicle]]);
+   result.translucent := false;
+   case vehicle of
+      vh_boat:
+      begin
+         result.name := 'Boat';
+         result.shallowWater := true;
+         result.movementStyle := msSurface;
+      end;
+      vh_ship:
+      begin
+         result.name := 'Ship';
+         result.shallowWater := true;
+         result.deepWater := true;
+         result.movementStyle := msSurface;
+      end;
+      vh_airship:
+      begin
+         result.name := 'Airship';
+         result.movementStyle := msFly;
+         result.altitude := 16;
+      end;
+   end;
+end;
+
+procedure T2k2Database.ConvertVehicles(base: TSystemRecord);
+var
+   vehicle: TVehicleSet;
+begin
+   for vehicle := Low(TVehicleSet) to High(TVehicleSet) do
+      self.vehicles.add(ConvertVehicle(base, vehicle));
 end;
 
 end.

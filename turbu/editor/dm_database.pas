@@ -80,6 +80,7 @@ type
       GlobalScripts: TClientDataSet;
       Vocab: TClientDataSet;
       CustomVocab: TClientDataSet;
+      vehicles: TClientDataSet;
 
       dsCharClasses: TDataSource;
 
