@@ -206,21 +206,38 @@ type
       property critRate: integer read FCritRate write FCritRate;
    end;
 
-//procedure SetDatabase(value: TRpgDatafile);
+   TMovementStyle = (msSurface, msHover, msFly);
+
+   TVehicleTemplate = class(TRpgDatafile)
+   private
+      FMapSprite: string;
+      FTranslucent: boolean;
+      FShallowWater: boolean;
+      FDeepWater: boolean;
+      FLowLand: boolean;
+      FMovementStyle: TMovementStyle;
+      FAltitude: byte;
+   protected
+      class function getDatasetName: string; override;
+      class function keyChar: ansiChar; override;
+   public
+      constructor Load(savefile: TStream); override;
+      procedure save(savefile: TStream); override;
+
+      property mapSprite: string read FMapSprite write FMapSprite;
+      property translucent: boolean read FTranslucent write FTranslucent;
+      property shallowWater: boolean read FShallowWater write FShallowWater;
+      property deepWater: boolean read FDeepWater write FDeepWater;
+      property lowLand: boolean read FLowLand write FLowLand;
+      property movementStyle: TMovementStyle read FMovementStyle write FMovementStyle;
+      property altitude: byte read FAltitude write FAltitude;
+   end;
 
 implementation
 
 uses
    sysUtils,
    turbu_database;
-
-{var
-   GDatabase: TRpgDatabase;
-
-procedure SetDatabase(value: TRpgDatafile);
-begin
-   GDatabase := value as TRpgDatabase;
-end; }
 
 resourcestring
    NOT_IN_BLOCK = 'Stat block not found in stat set!';
@@ -597,6 +614,42 @@ begin
    assert(template is TClassTemplate);
    for i := 1 to high(template.FStatBlocks) do
       getField(db, i).AsInteger := template.FStatBlocks[i].index;
+end;
+
+{ TVehicleTemplate }
+
+class function TVehicleTemplate.getDatasetName: string;
+begin
+   result := 'vehicles'
+end;
+
+class function TVehicleTemplate.keyChar: ansiChar;
+begin
+   result := 'v';
+end;
+
+constructor TVehicleTemplate.Load(savefile: TStream);
+begin
+   inherited Load(savefile);
+   FMapSprite := savefile.readString;
+   FTranslucent := savefile.readBool;
+   FShallowWater := savefile.readBool;
+   FDeepWater := savefile.readBool;
+   FLowLand := savefile.readBool;
+   savefile.ReadBuffer(FMovementStyle, sizeof(TMovementStyle));
+   FAltitude := savefile.readByte;
+end;
+
+procedure TVehicleTemplate.save(savefile: TStream);
+begin
+   inherited save(savefile);
+   savefile.writeString(FMapSprite);
+   savefile.writeBool(FTranslucent);
+   savefile.writeBool(FShallowWater);
+   savefile.writeBool(FDeepWater);
+   savefile.writeBool(FLowLand);
+   savefile.writeBuffer(FMovementStyle, sizeof(TMovementStyle));
+   savefile.writeByte(FAltitude)
 end;
 
 end.

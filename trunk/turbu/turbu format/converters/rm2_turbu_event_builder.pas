@@ -562,6 +562,7 @@ begin
    result := TEBVehicleSprite.Create(parent);
    result.Text := format('%s %d', [opcode.name, opcode.Data[1]]);
    result.Values.Add(opcode.Data[0]);
+   result.Values.Add(0);
 end;
 
 function WrapCall(call: TEBCall; opcode: TEventCommand; parent: TEBObject): TEBObject;

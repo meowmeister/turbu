@@ -6504,4 +6504,97 @@ object dmDatabase: TdmDatabase
       Size = 255
     end
   end
+  object vehicles: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'id'
+        DataType = ftInteger
+      end
+      item
+        Name = 'name'
+        DataType = ftWideString
+        Size = 20
+      end
+      item
+        Name = 'modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'mapSprite'
+        DataType = ftWideString
+        Size = 255
+      end
+      item
+        Name = 'translucent'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'shallowWater'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'deepWater'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'lowLand'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'movementStyle'
+        DataType = ftByte
+      end
+      item
+        Name = 'altitude'
+        DataType = ftByte
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 311
+    Top = 22
+    Data = {
+      DF0000009619E0BD01000000180000000A000000000003000000DF0002696404
+      00010000000000046E616D6501004A0000000100055749445448020002002800
+      086D6F6469666965640200030000000000096D617053707269746502004A0000
+      00010005574944544802000200FE010B7472616E736C7563656E740200030000
+      0000000C7368616C6C6F77576174657202000300000000000964656570576174
+      65720200030000000000076C6F774C616E6402000300000000000D6D6F76656D
+      656E745374796C65010002000000000008616C74697475646501000200000000
+      000000}
+    object IntegerField9: TIntegerField
+      FieldName = 'id'
+    end
+    object WideStringField7: TWideStringField
+      FieldName = 'name'
+    end
+    object BooleanField4: TBooleanField
+      FieldName = 'modified'
+    end
+    object WideStringField8: TWideStringField
+      DisplayWidth = 20
+      FieldName = 'mapSprite'
+      Size = 255
+    end
+    object BooleanField19: TBooleanField
+      FieldName = 'translucent'
+    end
+    object vehiclesShallowWater: TBooleanField
+      FieldName = 'shallowWater'
+    end
+    object vehiclesdeepWater: TBooleanField
+      FieldName = 'deepWater'
+    end
+    object vehicleslowLand: TBooleanField
+      FieldName = 'lowLand'
+    end
+    object vehiclesmovementStyle: TByteField
+      FieldName = 'movementStyle'
+    end
+    object vehiclesAltitude: TByteField
+      FieldName = 'altitude'
+    end
+  end
 end

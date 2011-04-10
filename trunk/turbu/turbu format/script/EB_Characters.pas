@@ -542,12 +542,14 @@ const
    VEHICLES: array[0..2] of string = ('Boat', 'Ship', 'Airship');
 begin
    result := format(LINE, [VEHICLES[Values[0]], Text]);
+   if boolean(Values[1]) then
+      result := result + ' (Transparent)';
 end;
 
 function TEBVehicleSprite.GetScriptText: string;
-const LINE = 'vehicle[%d].SetSprite(%s);';
+const LINE = 'vehicle[%d].SetSprite(%s, %s);';
 begin
-   result := format(LINE, [Values[0], QuotedStr(Text)]);
+   result := format(LINE, [Values[0], QuotedStr(Text), BOOL_STR[Values[1]]]);
 end;
 
 { TEBTranslucency }
