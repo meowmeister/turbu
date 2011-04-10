@@ -14,7 +14,7 @@ inherited frmEBEditHeroSprite: TfrmEBEditHeroSprite
       IntegralHeight = True
       TabOrder = 0
     end
-    object StaticText1: TStaticText
+    object txtName: TStaticText
       Left = 8
       Top = 9
       Width = 36
