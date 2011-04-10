@@ -70,6 +70,7 @@ procedure T2k2Database.buildNameLists(base: TLcfDatabase; ConversionReport: ICon
                           spriteList, portList, animList, battleSpriteList: TStringList);
 var
    i: integer;
+   v: TVehicleSet;
 begin
    for i := 1 to base.heroes do
       spriteList.add(string(base.hero[i].sprite));
@@ -79,6 +80,9 @@ begin
 
    for i := 1 to base.anims do
       animList.Add(string(base.anim[i].filename));
+
+   for v := low(TVehicleSet) to high(TVehicleSet) do
+      spriteList.Add(string(base.SystemData.vehicleGraphic[v]));
 
    { worry about battlesprites later }
 end;

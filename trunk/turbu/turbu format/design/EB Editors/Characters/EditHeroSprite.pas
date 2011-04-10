@@ -11,7 +11,7 @@ type
    [EditorCategory('Characters', 'Change Hero Sprite')]
    TfrmEBEditHeroSprite = class(TfrmEbEditBase)
       lstFilenames: TListBox;
-      StaticText1: TStaticText;
+      txtName: TStaticText;
       cboHero: TIDLookupCombo;
       srcHeroes: TDataSource;
       imgMapSprite: TSdlFrame;
@@ -33,6 +33,14 @@ type
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
+      function NewClassType: TEbClass; override;
+   end;
+
+   [EditorCategory('Characters', 'Change Vehicle Sprite')]
+   TfrmEBEditVehicleSprite = class(TfrmEBEditHeroSprite)
+      procedure FormShow(Sender: TObject);
+      procedure cboHeroClick(Sender: TObject);
+   protected
       function NewClassType: TEbClass; override;
    end;
 
@@ -133,8 +141,36 @@ begin
    result := TEBHeroSprite;
 end;
 
+{ TfrmEBEditVehicleSprite }
+
+procedure TfrmEBEditVehicleSprite.FormShow(Sender: TObject);
+begin
+   self.Caption := 'Change Vehicle Sprite';
+   txtName.Caption := 'Vehicle:';
+   srcHeroes.DataSet := dmDatabase.Vehicles;
+   inherited FormShow(Sender);
+end;
+
+procedure TfrmEBEditVehicleSprite.cboHeroClick(Sender: TObject);
+var
+   vehicle: TVehicleTemplate;
+begin
+   vehicle := GDatabase.vehicles[cboHero.id];
+   SetFilename(vehicle.mapSprite);
+   chkTranslucent.Checked := vehicle.translucent;
+   chkTranslucentClick(self);
+   FMatrix := GDatabase.moveMatrix[0];
+end;
+
+function TfrmEBEditVehicleSprite.NewClassType: TEbClass;
+begin
+   result := TEBVehicleSprite;
+end;
+
 initialization
    RegisterEbEditor(TEBHeroSprite, TfrmEBEditHeroSprite);
+   RegisterEbEditor(TEBVehicleSprite, TfrmEBEditVehicleSprite);
 finalization
    UnRegisterEbEditor(TEBHeroSprite);
+   UnRegisterEbEditor(TEBVehicleSprite);
 end.
