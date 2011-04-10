@@ -8,6 +8,7 @@ uses
   turbu_sprites, sg_defs;
 
 type
+   [EditorCategory('Characters', 'Change Hero Sprite')]
    TfrmEBEditHeroSprite = class(TfrmEbEditBase)
       lstFilenames: TListBox;
       StaticText1: TStaticText;
@@ -20,7 +21,7 @@ type
       procedure imgMapSpriteTimer(Sender: TObject);
       procedure FormCreate(Sender: TObject);
       procedure chkTranslucentClick(Sender: TObject);
-    procedure imgMapSpriteAvailable(Sender: TObject);
+      procedure imgMapSpriteAvailable(Sender: TObject);
    private
       FNotNew: boolean;
       FMatrix: TMoveMatrix;
@@ -97,7 +98,6 @@ end;
 
 procedure TfrmEBEditHeroSprite.chkTranslucentClick(Sender: TObject);
 var
-   texture: TSdlTexture;
    opacity: byte;
    name: string;
 begin
