@@ -166,7 +166,7 @@ begin
       FCurrentTaskRunning := true;
       lblSteps.Caption := name;
    end;
-   runThreadsafe(closure);
+   runThreadsafe(closure, true);
 end;
 
 procedure TfrmConversionReport.setCurrentTask(const name: string; const steps: integer);
@@ -183,7 +183,7 @@ begin
       prgSteps.Max := steps;
       prgSteps.Position := 0;
    end;
-   runThreadsafe(closure);
+   runThreadsafe(closure, true);
 end;
 
 procedure TfrmConversionReport.setCurrentTask(const name: string);
@@ -196,7 +196,7 @@ begin
       newStep('');
       newStep(name);
    end;
-   runThreadsafe(closure);
+   runThreadsafe(closure, true);
 end;
 
 procedure TfrmConversionReport.setTasks(const value: integer);
@@ -209,7 +209,7 @@ begin
       prgConversion.Position := 0;
       FRunning := false;
    end;
-   runThreadsafe(closure);
+   runThreadsafe(closure, true);
 end;
 
 end.
