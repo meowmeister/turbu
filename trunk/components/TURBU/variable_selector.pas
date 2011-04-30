@@ -20,28 +20,24 @@ unit variable_selector;
 
 interface
 uses
-   Messages, Classes, StdCtrls, Controls, DBClient;
+   Messages, Classes, StdCtrls, Controls, DBClient,
+   button_edit;
 
 type
-   TVarSelector = class(TCustomEdit)
+   TVarSelector = class(TRpgCustomButtonEdit)
    private
-      FButton: TButton;
       FID: integer;
       FVarName: string;
-      procedure ButtonClick(Sender: TObject);
       procedure UpdateText;
       procedure SetID(const Value: integer);
-      procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
    protected
-      procedure SetParent(AParent: TWinControl); override;
+      procedure ButtonClick(Sender: TObject); override;
       function GetName: string; virtual; abstract;
       function GetDset: TCustomClientDataset; virtual; abstract;
    public
       constructor Create(AOwner: TComponent); override;
       property ID: integer read FID write SetID;
       property varname: string read FVarName;
-   published
-      property Enabled;
    end;
 
    TSwitchSelector = class(TVarSelector)
@@ -69,16 +65,9 @@ end;
 
 { TVarSelector }
 
-procedure TVarSelector.CMEnabledChanged(var Message: TMessage);
-begin
-   inherited;
-   FButton.Enabled := self.Enabled;
-end;
-
 constructor TVarSelector.Create(AOwner: TComponent);
 begin
    inherited Create(AOwner);
-   self.ReadOnly := true;
    self.ID := 0;
 end;
 
@@ -90,21 +79,6 @@ begin
 {$ELSE}
    self.Caption := '';
 {$ENDIF}
-end;
-
-procedure TVarSelector.SetParent(AParent: TWinControl);
-begin
-   inherited SetParent(AParent);
-   if not assigned(FButton) then
-   begin
-      FButton := TButton.Create(self);
-      FButton.Parent := self;
-      FButton.Width := 22;
-      FButton.Height := 22;
-      FButton.Align := alRight;
-      FButton.Caption := '...';
-      FButton.OnClick := self.ButtonClick;
-   end;
 end;
 
 procedure TVarSelector.UpdateText;
