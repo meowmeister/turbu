@@ -155,6 +155,7 @@ begin
    inherited Create;
    FRoot := root;
    FCollection := TFileCollection.Create(FRoot);
+   FCollection.path := '';
 end;
 
 destructor TDiscArchive.Destroy;
