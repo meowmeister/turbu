@@ -99,6 +99,7 @@ resourcestring
    MAP_DB = 'maps';
    IMAGE_DB = 'images';
    SCRIPT_DB = 'scripts';
+   MUSIC_DB = 'music';
 
 implementation
 

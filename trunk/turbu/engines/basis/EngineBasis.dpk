@@ -90,6 +90,9 @@ contains
   DeHL.Collections.DoubleSortedMultiMap in '..\..\..\classes\DeHL\Collections\DeHL.Collections.DoubleSortedMultiMap.pas',
   DeHL.Collections.SortedDictionary in '..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedDictionary.pas',
   finalizer_hack in 'finalizer_hack.pas',
-  StringListComp in '..\..\..\..\ListCompare\StringListComp.pas';
+  StringListComp in '..\..\..\..\ListCompare\StringListComp.pas',
+  sdlaudiomixer in '..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdlaudiomixer.pas',
+  sdl_mixer in '..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdl_mixer.pas',
+  smpeg in '..\..\..\classes\jedi-sdl\smpeg\Pas\smpeg.pas';
 
 end.

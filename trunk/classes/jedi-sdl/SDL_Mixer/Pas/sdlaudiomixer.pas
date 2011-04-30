@@ -102,6 +102,11 @@ type
     FPaused : boolean;
     FFading : TMix_Fading;
     FPlaying : boolean;
+
+    FChannel : integer;
+    FPanning : Uint8;
+    FDistance : Uint8;
+    FAngle : Sint16;
     function GetVolume : integer; virtual; abstract;
     procedure SetVolume( const Value : integer ); virtual; abstract;
     function GetFading : TMix_Fading; virtual; abstract;
@@ -110,18 +115,23 @@ type
     procedure InitialiseFields;
   public
     constructor Create( const aFileName : string ); overload;
-    constructor Create( aStream : TMemoryStream ); overload;
+    constructor Create( aStream : TStream ); overload;
 
     procedure Play( aLoops : integer = 0 ); virtual;
     procedure Stop; virtual;
     procedure Pause; virtual;
     procedure Resume; virtual;
 
+    procedure SetPanning( val : Uint8 );
+    procedure SetDistance( Distance : Uint8 );
+    procedure SetPosition( Angle : Sint16; Distance : Uint8 );
+    function SetReverseStereo( aFlip : integer ) : integer;
+
     procedure FadeIn( aTime : integer; aLoops : integer = 0 ); virtual;
     procedure FadeOut( aTime : integer ); virtual;
 
-    procedure LoadFromFile( const aFileName : string ); virtual; 
-    procedure LoadFromStream( aStream : TMemoryStream ); virtual;
+    procedure LoadFromFile( const aFileName : string ); virtual;
+    procedure LoadFromStream( aStream : TStream ); virtual;
 
     procedure UnLoad; virtual;
 
@@ -129,17 +139,18 @@ type
     property IsPaused : boolean read GetPaused;
     property Fading : TMix_Fading read GetFading;
     property Volume : integer read GetVolume write SetVolume;
+    property Channel : integer read FChannel write FChannel;
+
+    property Panning : Uint8 read FPanning write SetPanning;
+    property Distance : Uint8 read FDistance write SetDistance;
+    property Angle : SInt16 read FAngle;
   end;
 
   ESDLSoundEffect = class( ESDLAudioException );
 
   TSDLSoundEffect = class( TSDLAudio )
   private
-    FPanning : Uint8;
-    FDistance : Uint8;
-    FAngle : Sint16;
     FMix_Chunk : PMix_Chunk;
-    FChannel : integer;
     FGroup : integer;
     function GetFading : TMix_Fading; override;
     function GetPaused : boolean; override;
@@ -153,12 +164,7 @@ type
     procedure FadeOut( aTime : integer ); override;
 
     procedure LoadFromFile( const aFileName : string ); override;
-    procedure LoadFromStream( aStream : TMemoryStream ); override;
-
-    procedure SetPanning( val : Uint8 );
-    procedure SetDistance( Distance : Uint8 );
-    procedure SetPosition( Angle : Sint16; Distance : Uint8 );
-    function SetReverseStereo( aFlip : integer ) : integer;
+    procedure LoadFromStream( aStream : TStream ); override;
 
     procedure Play( aLoops : integer = 0 ); override;
     procedure Stop; override;
@@ -167,10 +173,6 @@ type
 
     procedure UnLoad; override;
   published
-    property Panning : Uint8 read FPanning write SetPanning;
-    property Distance : Uint8 read FDistance write SetDistance;
-    property Angle : SInt16 read FAngle;
-    property Channel : integer read FChannel write FChannel;
     property Group : integer read FGroup;
   end;
 
@@ -228,7 +230,7 @@ type
     procedure FadeOut( aTime : integer ); override;
 
     procedure LoadFromFile( const aFileName : string ); override;
-    procedure LoadFromStream( aStream : TMemoryStream ); override;
+    procedure LoadFromStream( aStream : TStream ); override;
 
     procedure Play( aLoops : integer = 0 ); override;
     procedure Stop; override;
@@ -286,6 +288,8 @@ type
   end;
 
 implementation
+uses
+   sdlstreams, SDL_13;
 
 { TSDLAudio }
 
@@ -298,7 +302,7 @@ begin
   LoadFromFile( aFileName );
 end;
 
-constructor TSDLAudio.Create( aStream : TMemoryStream );
+constructor TSDLAudio.Create( aStream : TStream );
 begin
   inherited Create;
 
@@ -329,7 +333,7 @@ begin
   UnLoad;
 end;
 
-procedure TSDLAudio.LoadFromStream(aStream: TMemoryStream);
+procedure TSDLAudio.LoadFromStream(aStream: TStream);
 begin
   UnLoad;
 end;
@@ -363,6 +367,45 @@ begin
   Stop;
 end;
 
+procedure TSdlAudio.SetPanning( val : Uint8 );
+var
+   l, r: Uint8;
+begin
+  FPanning := val;
+  if (val = 127) or (val = 128) then
+    Mix_SetPanning( FChannel, 255, 255 )
+  else begin
+    if val > 128 then
+    begin
+      r := 255;
+      l := 255 - val
+    end
+    else begin
+      l := 255;
+      r := val;
+    end;
+    Mix_SetPanning( FChannel, l, r );
+  end;
+end;
+
+procedure TSdlAudio.SetDistance( Distance : Uint8 );
+begin
+  FDistance := Distance;
+  Mix_SetDistance( FChannel, FDistance );
+end;
+
+procedure TSdlAudio.SetPosition( Angle : Sint16; Distance : Uint8 );
+begin
+  FAngle := Angle;
+  FDistance := Distance;
+  Mix_SetPosition( FChannel, FAngle, FDistance );
+end;
+
+function TSDLAudio.SetReverseStereo( aFlip : integer ) : integer;
+begin
+  result := Mix_SetReverseStereo( FChannel, aFlip );
+end;
+
 { TSDLSoundEffect }
 
 destructor TSDLSoundEffect.Destroy;
@@ -382,29 +425,19 @@ begin
   FMix_Chunk := Mix_LoadWAV( PAnsiChar( ansiString(aFileName) ) );
 end;
 
-procedure TSDLSoundEffect.LoadFromStream( aStream : TMemoryStream );
+procedure TSDLSoundEffect.LoadFromStream( aStream : TStream );
+var
+   rw: PSdl_Rwops;
 begin
   inherited;
-  FMix_Chunk := Mix_QuickLoad_WAV( PUint8( aStream.Memory ) );
-end;
-
-procedure TSDLSoundEffect.SetPanning( val : Uint8 );
-begin
-  FPanning := val;
-  Mix_SetPanning( FChannel, val, 255 - val );
-end;
-
-procedure TSDLSoundEffect.SetDistance( Distance : Uint8 );
-begin
-  FDistance := Distance;
-  Mix_SetDistance( FChannel, FDistance );
-end;
-
-procedure TSDLSoundEffect.SetPosition( Angle : Sint16; Distance : Uint8 );
-begin
-  FAngle := Angle;
-  FDistance := Distance;
-  Mix_SetPosition( FChannel, FAngle, FDistance );
+  rw := sdlstreams.SDLStreamSetup(aStream);
+  try
+    FMix_Chunk := Mix_LoadWav_RW(rw, false);
+    if FMix_Chunk = nil then
+      raise EBadHandle.Create(string(AnsiString(SDL_GetError)));
+  finally
+     sdlstreams.SDLStreamCloseRWops(rw);
+  end;
 end;
 
 procedure TSDLSoundEffect.UnLoad;
@@ -464,11 +497,6 @@ begin
   result := Mix_VolumeChunk( FMix_Chunk, -1 );
 end;
 
-function TSDLSoundEffect.SetReverseStereo( aFlip : integer ) : integer;
-begin
-  result := Mix_SetReverseStereo( FChannel, aFlip );
-end;
-
 function TSDLSoundEffect.GetPlaying: boolean;
 begin
   result := ( Mix_Playing( FChannel ) = 1 );
@@ -485,18 +513,18 @@ end;
 procedure TSDLMusic.FadeIn( aTime, aLoops : integer );
 begin
   inherited;
-  Mix_FadeInMusic( FMix_Music, aLoops, aTime );
+  Mix_FadeInMusic( FMix_Music, aLoops, aTime , FChannel);
 end;
 
 procedure TSDLMusic.FadeOut( aTime : integer );
 begin
   inherited;
-  Mix_FadeOutMusic( aTime );
+  Mix_FadeOutMusic( aTime, FChannel);
 end;
 
 function TSDLMusic.GetFading : TMix_Fading;
 begin
-  result := Mix_FadingMusic;
+  result := Mix_FadingMusic(FChannel);
 end;
 
 function TSDLMusic.GetMusic : TMix_MusicType;
@@ -521,7 +549,7 @@ begin
   else
   {$ENDIF}
   {$ENDIF}
-    result := ( Mix_PausedMusic = 1 );
+    result := ( Mix_PausedMusic(FChannel) = 1 );
 end;
 
 function TSDLMusic.GetPlaying: boolean;
@@ -533,7 +561,7 @@ begin
   else
   {$ENDIF}
   {$ENDIF}
-    result := ( Mix_PlayingMusic = 1 );
+    result := ( Mix_PlayingMusic(FChannel) = 1 );
 end;
 
 function TSDLMusic.GetVolume : integer;
@@ -545,7 +573,7 @@ begin
   else
   {$ENDIF}
   {$ENDIF}
-    result := Mix_VolumeMusic( -1 );
+    result := Mix_VolumeMusic( -1, FChannel );
 end;
 
 {$T-}
@@ -589,10 +617,19 @@ begin
 end;
 {$T+}
 
-procedure TSDLMusic.LoadFromStream( aStream : TMemoryStream );
+procedure TSDLMusic.LoadFromStream( aStream : TStream );
+var
+   rw: PSdl_Rwops;
 begin
   inherited;
-  
+  rw := sdlstreams.SDLStreamSetup(aStream);
+  try
+    FMix_Music := Mix_LoadMUS_RW(rw);
+    if FMix_Music = nil then
+      raise EBadHandle.Create(string(AnsiString(SDL_GetError)));
+  finally
+     sdlstreams.SDLStreamCloseRWops(rw);
+  end;
 end;
 
 procedure TSDLMusic.Pause;
@@ -605,7 +642,7 @@ begin
   else
   {$ENDIF}
   {$ENDIF}
-    Mix_PauseMusic;
+    Mix_PauseMusic(FChannel);
 end;
 
 procedure TSDLMusic.Play( aLoops : integer );
@@ -622,8 +659,8 @@ begin
   {$ENDIF}
   {$ENDIF}
   begin
-    if ( Mix_PlayingMusic = 0 ) then
-      Mix_PlayMusic( FMix_Music, aLoops );
+    if ( Mix_PlayingMusic(FChannel) = 0 ) then
+      Mix_PlayMusic( FMix_Music, aLoops, FChannel );
   end;
 end;
 
@@ -637,7 +674,7 @@ begin
   else
   {$ENDIF}
   {$ENDIF}
-    Mix_ResumeMusic;
+    Mix_ResumeMusic(FChannel);
 end;
 
 procedure TSDLMusic.Rewind;
@@ -649,7 +686,7 @@ begin
   else
   {$ENDIF}
   {$ENDIF}
-    Mix_RewindMusic;
+    Mix_RewindMusic(FChannel);
 end;
 
 procedure TSDLMusic.SetFinishedEvent( const Value : TMusicFinishedEvent );
@@ -663,7 +700,7 @@ begin
   if FMusicPosition <> Value then
   begin
     FMusicPosition := Value;
-    if ( Mix_SetMusicPosition( Value ) = -1 ) then
+    if ( Mix_SetMusicPosition( Value, FChannel ) = -1 ) then
       raise ESDLMusic.CreateFmt( 'Mix_SetMusicPosition : %s', [ Mix_GetError ] );
   end;
 end;
@@ -677,7 +714,7 @@ begin
   else
   {$ENDIF}
   {$ENDIF}
-    Mix_VolumeMusic( Value );
+    Mix_VolumeMusic( Value, FChannel );
 end;
 
 procedure TSDLMusic.Stop;
@@ -690,7 +727,7 @@ begin
   else
   {$ENDIF}
   {$ENDIF}
-    Mix_HaltMusic;
+    Mix_HaltMusic(FMix_Music);
 end;
 
 procedure TSDLMusic.UnLoad;
@@ -988,6 +1025,8 @@ end;
 initialization
   if ( SDL_WasInit( SDL_INIT_AUDIO ) = 0 ) then
     SDL_InitSubSystem( SDL_INIT_AUDIO );
+  Mix_Init([mifFlac, mifMod, mifMp3, mifOgg]);
+
 
 finalization
   SDL_QuitSubSystem( SDL_INIT_AUDIO );

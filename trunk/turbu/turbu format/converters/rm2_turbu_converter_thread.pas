@@ -78,6 +78,7 @@ type
 function convertSprite(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward; overload;
 function convertSprite(name: string; id: integer; dirty: boolean): boolean; forward; overload;
 function convertPortrait(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
+function convertMusic(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
 function convertAnim(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
 function extLength(filename: string): integer; forward; inline;
 function ProcessImage(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
@@ -190,9 +191,8 @@ begin
    processImageList('CharSet', 'Mapsprite', 'Character sprites', FMapSprites, convertSprite);
    processImageList('FaceSet', 'Portrait', 'Character portraits', FPortraits, convertPortrait);
    processImageList('Battle', 'Animation', 'Battle animations', FAnims, convertAnim);
-   if FFormat = pf_2k3 then
-      processImageList('CharSet', 'Mapsprite', 'Character sprites', FMapSprites, convertSprite);
-   //FSongs FSounds FMovies
+   processImageList('Music', 'Music', 'Music', FSongs, convertMusic);
+   //FSounds FMovies
 end;
 
 constructor TConverterThread.Create(report: IConversionReport; fromLoc, toLoc: string; format: TProjectFormat);
@@ -352,7 +352,7 @@ begin
 
          if terminated then
             Exit;
-         FReport.setCurrentTask('Copying Resources', 3);
+         FReport.setCurrentTask('Copying Resources', 7);
          if locate_files.rtpLocation = '' then
             FReport.makeNotice('RTP not found.  RTP resources will not be copied.')
          else self.copyResources(fromFolder, toFolder);
@@ -576,6 +576,24 @@ begin
       image.free;
    end;
    result := true;
+end;
+
+function convertMusic(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
+var
+   oname: string;
+   stream: TStream;
+begin
+   filename := extractFileName(filename);
+   oname := filename;
+   findMusic(filename);
+   if filename = '' then
+      Exit(false);
+   stream := TFileStream.Create(filename, fmOpenRead);
+   try
+      GArchives[MUSIC_ARCHIVE].writeFile(oname, stream);
+   finally
+      stream.Free;
+   end;
 end;
 
 function convertAnim(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;

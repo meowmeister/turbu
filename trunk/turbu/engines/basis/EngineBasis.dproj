@@ -119,6 +119,9 @@
 			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedDictionary.pas"/>
 			<DCCReference Include="finalizer_hack.pas"/>
 			<DCCReference Include="..\..\..\..\ListCompare\StringListComp.pas"/>
+			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdlaudiomixer.pas"/>
+			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdl_mixer.pas"/>
+			<DCCReference Include="..\..\..\classes\jedi-sdl\smpeg\Pas\smpeg.pas"/>
 			<None Include="..\..\..\classes\DeHL\DeHL.Defines.inc"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>

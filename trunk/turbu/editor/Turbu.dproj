@@ -41,7 +41,7 @@
 			<DCC_DcpOutput>..\dcus\</DCC_DcpOutput>
 			<DCC_Define>JCLINSTALL;PS_USESSUPPORT;$(DCC_Define)</DCC_Define>
 			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\design;..\..\turbu\turbu format\design\EB Editors;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\turbu\engines\map engine\design;..\..\classes\sdl custom;..\bin;..\dcus;..\..\classes\FastMM4;..\..\components\TURBU;..\..\components\PascalScript;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_UsePackage>default_format;EngineBasis;JvPluginSystem</DCC_UsePackage>
+			<DCC_UsePackage>default_format;EngineBasis;JvPluginSystem;turbu_design_basis</DCC_UsePackage>
 			<DCC_DependencyCheckOutputName>..\bin\Turbu.exe</DCC_DependencyCheckOutputName>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -223,7 +223,7 @@
 						<VersionInfo Name="MajorVer">0</VersionInfo>
 						<VersionInfo Name="MinorVer">8</VersionInfo>
 						<VersionInfo Name="Release">8</VersionInfo>
-						<VersionInfo Name="Build">1412</VersionInfo>
+						<VersionInfo Name="Build">1414</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -235,7 +235,7 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc,</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">TURBU Editor</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">0.8.8.1412</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.8.8.1414</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">TURBU Editor</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>

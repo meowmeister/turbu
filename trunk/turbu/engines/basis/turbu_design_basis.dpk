@@ -28,7 +28,11 @@ package turbu_design_basis;
 requires
   EngineBasis,
   dbrtl,
-  vcldb;
+  vcldb,
+  vclimg,
+  Jcl,
+  JvCore,
+  JvStdCtrls;
 
 contains
   turbu_listGrid in '..\..\..\components\TURBU\turbu_listGrid.pas',
@@ -37,6 +41,8 @@ contains
   DBIndexComboBox in '..\..\..\components\TURBU\DBIndexComboBox.pas',
   extensible_cds in '..\..\..\components\TURBU\extensible_cds.pas',
   ClipboardWatcher in 'ClipboardWatcher.pas',
-  IDLookupCombo in '..\..\..\components\TURBU\IDLookupCombo.pas';
+  IDLookupCombo in '..\..\..\components\TURBU\IDLookupCombo.pas',
+  MusicSelector in 'MusicSelector.pas',
+  button_edit in '..\..\..\components\TURBU\button_edit.pas';
 
 end.

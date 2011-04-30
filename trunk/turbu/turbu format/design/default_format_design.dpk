@@ -71,6 +71,7 @@ contains
   EditTakeDamage in 'EB Editors\Characters\EditTakeDamage.pas' {frmEBEditTakeDamage},
   EditHeroName in 'EB Editors\Characters\EditHeroName.pas' {frmEBEditHeroName},
   EditHeroSprite in 'EB Editors\Characters\EditHeroSprite.pas' {frmEBEditHeroSprite},
-  EditPortrait in 'EB Editors\Characters\EditPortrait.pas' {frmEBEditPortrait};
+  EditPortrait in 'EB Editors\Characters\EditPortrait.pas' {frmEBEditPortrait},
+  sound_edit in '..\..\..\components\TURBU\sound_edit.pas';
 
 end.
