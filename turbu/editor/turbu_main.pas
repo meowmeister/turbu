@@ -25,6 +25,7 @@ uses
    PlatformDefaultStyleActnCtrls,
    JvComponentBase, JvPluginManager, JvExControls, JvxSlider,
    design_script_engine, turbu_plugin_interface, turbu_engines, turbu_map_engine,
+   MusicSelector,
    turbu_map_interface, turbu_map_metadata,
    sdl_frame, sdl, sdl_13, sg_defs;
 
@@ -57,6 +58,7 @@ type
       sldZoom: TJvxSlider;
       pbUpload: TProgressBar;
       lblUpload: TLabel;
+      actPlayMusic: TAction;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -111,6 +113,7 @@ type
       procedure sldZoomChanged(Sender: TObject);
       procedure imgBackgroundPaint(Sender: TObject);
       procedure FormClose(Sender: TObject; var Action: TCloseAction);
+      procedure actPlayMusicExecute(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
@@ -125,6 +128,7 @@ type
       FZoom: double;
       FLoadSignal: TSimpleEvent;
       FDBSignal: TSimpleEvent;
+      FMusicPlayer: TfrmMusicSelector;
       procedure loadEngine(data: TEngineData);
       procedure loadProject;
       procedure openProject(location: string);
@@ -268,6 +272,14 @@ begin
       FMapEngine.DeleteMap(trvMapTree.currentMapID, deleteResult);
       trvMapTree.buildMapTree(GDatabase.mapTree);
    end;
+end;
+
+procedure TfrmTurbuMain.actPlayMusicExecute(Sender: TObject);
+begin
+   RequireMapEngine;
+   if FMusicPlayer = nil then
+      FMusicPlayer := TFrmMusicSelector.Create(self);
+   FMusicPlayer.ShowModal;
 end;
 
 procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);
@@ -656,6 +668,7 @@ begin
    openArchive(MAP_DB, MAP_ARCHIVE);
    openArchive(IMAGE_DB, IMAGE_ARCHIVE);
    openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
+   openArchive(MUSIC_DB, MUSIC_ARCHIVE);
 
    filename := IncludeTrailingPathDelimiter(location) + DBNAME;
    lblUpload.caption := 'Loading Database:';

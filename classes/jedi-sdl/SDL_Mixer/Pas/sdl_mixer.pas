@@ -449,6 +449,8 @@ type
     );
   Mix_MusicType = TMix_MusicType;
 
+  TMixInitFlags = set of (mifFlac, mifMod, mifMp3, mifOgg, mifForce32 = 31);
+
   TMusicUnion = record
     case Byte of
       0 : ( cmd : PMusicCMD );
@@ -478,11 +480,8 @@ type
   PMix_Music = ^TMix_Music;
   TMix_Music = T_Mix_Music;
 
-  {$IFNDEF __GPC__}
-  TMixFunction = function( udata : Pointer; stream : PUint8; len : integer ) : Pointer; cdecl;
-  {$ELSE}
-  TMixFunction = function( udata : Pointer; stream : PUint8; len : integer ) : Pointer;
-  {$ENDIF}
+  TMixFunction = function( udata : Pointer; music_playing: PMix_Music;
+    stream : PUint8; len : integer ) : Pointer; {$IFNDEF __GPC__} cdecl; {$ENDIF}
 
 { This macro can be used to fill a version structure with the compile-time
   version of the SDL_mixer library. }
@@ -495,6 +494,9 @@ procedure SDL_MIXER_VERSION(var X: TSDL_Version);
 function Mix_Linked_Version : PSDL_version;
 cdecl; external {$IFDEF __GPC__}name 'Mix_Linked_Version'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_Linked_Version}
+
+function Mix_Init(flags: TMixInitFlags): TMixInitFlags; cdecl; external SDL_MixerLibName;
+{$EXTERNALSYM Mix_Init}
 
 { Open the mixer with a certain audio format }
 function Mix_OpenAudio( frequency : integer; format : Uint16; channels :
@@ -519,7 +521,7 @@ cdecl; external {$IFDEF __GPC__}name 'Mix_QuerySpec'{$ELSE} SDL_MixerLibName{$EN
 {$EXTERNALSYM Mix_QuerySpec}
 
 { Load a wave file or a music (.mod .s3m .it .xm) file }
-function Mix_LoadWAV_RW( src : PSDL_RWops; freesrc : integer ) : PMix_Chunk;
+function Mix_LoadWAV_RW( src : PSDL_RWops; freesrc : LongBool) : PMix_Chunk;
 cdecl; external {$IFDEF __GPC__}name 'Mix_LoadWAV_RW'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_LoadWAV_RW}
 
@@ -529,11 +531,10 @@ function Mix_LoadMUS( const filename : PAnsiChar ) : PMix_Music;
 cdecl; external {$IFDEF __GPC__}name 'Mix_LoadMUS'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_LoadMUS}
 
-(*#if 0 { This hasn't been hooked into music.c yet }
 { Load a music file from an SDL_RWop object (MikMod-specific currently)
    Matt Campbell (matt@campbellhome.dhs.org) April 2000 }
-function Mix_LoadMUS_RW(SDL_RWops *rw) : PMix_Music;  cdecl;
-#endif*)
+function Mix_LoadMUS_RW(rw: PSDL_RWops) : PMix_Music;  cdecl; external SDL_MixerLibName;
+{$EXTERNALSYM Mix_LoadMUS_RW}
 
 { Load a wave file of the mixer format from a memory buffer }
 function Mix_QuickLoad_WAV( mem : PUint8 ) : PMix_Chunk;
@@ -926,14 +927,18 @@ cdecl; external {$IFDEF __GPC__}name 'Mix_PlayChannelTimed'{$ELSE} SDL_MixerLibN
 }
 function Mix_PlayChannel( channel : integer; chunk : PMix_Chunk; loops : integer ) : integer;
 
-function Mix_PlayMusic( music : PMix_Music; loops : integer ) : integer;
+function Mix_PlayMusic( music : PMix_Music; loops, channel : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_PlayMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_PlayMusic}
 
 { Fade in music or a channel over "ms" milliseconds, same semantics as the "Play" functions }
-function Mix_FadeInMusic( music : PMix_Music; loops : integer; ms : integer ) : integer;
+function Mix_FadeInMusic( music : PMix_Music; loops, ms, channel : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_FadeInMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_FadeInMusic}
+
+function Mix_FadeInMusicPos( music : PMix_Music; loops, ms, channel : integer; positin: double ) : integer;
+cdecl; external {$IFDEF __GPC__}name 'Mix_FadeInMusicPos'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
+{$EXTERNALSYM Mix_FadeInMusicPos}
 
 function Mix_FadeInChannelTimed( channel : integer; chunk : PMix_Chunk; loops : integer; ms : integer; ticks : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_FadeInChannelTimed'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
@@ -954,7 +959,7 @@ function Mix_VolumeChunk( chunk : PMix_Chunk; volume : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_VolumeChunk'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_VolumeChunk}
 
-function Mix_VolumeMusic( volume : integer ) : integer;
+function Mix_VolumeMusic( volume, channel : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_VolumeMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_VolumeMusic}
 
@@ -967,7 +972,7 @@ function Mix_HaltGroup( tag : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_HaltGroup'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_HaltGroup}
 
-function Mix_HaltMusic : integer;
+function Mix_HaltMusic(music: PMix_Music) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_HaltMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_HaltMusic}
 
@@ -989,12 +994,12 @@ cdecl; external {$IFDEF __GPC__}name 'Mix_FadeOutChannel'{$ELSE} SDL_MixerLibNam
 function Mix_FadeOutGroup( tag : integer; ms : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_FadeOutGroup'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_FadeOutGroup}
-function Mix_FadeOutMusic( ms : integer ) : integer;
+function Mix_FadeOutMusic( ms, channel : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_FadeOutMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_FadeOutMusic}
 
 { Query the fading status of a channel }
-function Mix_FadingMusic : TMix_Fading;
+function Mix_FadingMusic( channel : integer ) : TMix_Fading;
 cdecl; external {$IFDEF __GPC__}name 'Mix_FadingMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_FadingMusic}
 
@@ -1016,21 +1021,15 @@ cdecl; external {$IFDEF __GPC__}name 'Mix_Paused'{$ELSE} SDL_MixerLibName{$ENDIF
 {$EXTERNALSYM Mix_Paused}
 
 { Pause/Resume the music stream }
-procedure Mix_PauseMusic;
-cdecl; external {$IFDEF __GPC__}name 'Mix_PauseMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
-{$EXTERNALSYM Mix_PauseMusic}
+procedure Mix_PauseMusic( channel : integer ); inline;
 
-procedure Mix_ResumeMusic;
-cdecl; external {$IFDEF __GPC__}name 'Mix_ResumeMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
-{$EXTERNALSYM Mix_ResumeMusic}
+procedure Mix_ResumeMusic( channel : integer ); inline;
 
-procedure Mix_RewindMusic;
+procedure Mix_RewindMusic( channel : integer ); 
 cdecl; external {$IFDEF __GPC__}name 'Mix_RewindMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_RewindMusic}
 
-function Mix_PausedMusic : integer;
-cdecl; external {$IFDEF __GPC__}name 'Mix_PausedMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
-{$EXTERNALSYM Mix_PausedMusic}
+function Mix_PausedMusic( channel : integer ) : integer; inline;
 
 { Set the current position in the music stream.
   This returns 0 if successful, or -1 if it failed or isn't implemented.
@@ -1038,7 +1037,7 @@ cdecl; external {$IFDEF __GPC__}name 'Mix_PausedMusic'{$ELSE} SDL_MixerLibName{$
   order number) and for OGG music (set position in seconds), at the
   moment.
 }
-function Mix_SetMusicPosition( position : double ) : integer;
+function Mix_SetMusicPosition( position : double; channel : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_SetMusicPosition'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_SetMusicPosition}
 
@@ -1049,12 +1048,12 @@ function Mix_Playing( channel : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_Playing'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_Playing}
 
-function Mix_PlayingMusic : integer;
+function Mix_PlayingMusic( channel : integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_PlayingMusic'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_PlayingMusic}
 
 { Stop music and set external music playback command }
-function Mix_SetMusicCMD( const command : PAnsiChar ) : integer;
+function Mix_SetMusicCMD( const command : PAnsiChar; channel: integer ) : integer;
 cdecl; external {$IFDEF __GPC__}name 'Mix_SetMusicCMD'{$ELSE} SDL_MixerLibName{$ENDIF __GPC__};
 {$EXTERNALSYM Mix_SetMusicCMD}
 
@@ -1106,7 +1105,7 @@ end;
 
 function Mix_LoadWAV( filename : PAnsiChar ) : PMix_Chunk;
 begin
-  result := Mix_LoadWAV_RW( SDL_RWFromFile( filename, 'rb' ), 1 );
+  result := Mix_LoadWAV_RW( SDL_RWFromFile( filename, 'rb' ), true );
 end;
 
 function Mix_PlayChannel( channel : integer; chunk : PMix_Chunk; loops : integer ) : integer;
@@ -1128,6 +1127,21 @@ end;
 function Mix_GetError : PAnsiChar;
 begin
   result := SDL_GetError;
+end;
+
+procedure Mix_PauseMusic( channel : integer );
+begin
+   Mix_Pause(channel);
+end;
+
+procedure Mix_ResumeMusic( channel : integer );
+begin
+   Mix_Resume(channel);
+end;
+
+function Mix_PausedMusic( channel : integer ) : integer;
+begin
+   result := Mix_Paused(channel);
 end;
 
 end.

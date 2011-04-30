@@ -23,12 +23,12 @@ uses
    {turbu_database,} rpg_list, charset_data, turbu_mapchars, turbu_heroes,
    events, rm_sound, turbu_map_sprites, {rpg_image,} commons, turbu_defs, //turbu libs
    turbu_map_objects,
-   SDL_sprite, SG_Defs{, sdl_mixer, sdlaudiomixer}; //SDL libs
+   SDL_sprite, SG_Defs, sdl_mixer, sdlaudiomixer; //SDL libs
 
 {$I ..\..\..\..\unfinished.inc}
 
 type
-{   TRpgMediaPlayer = class(TObject)
+   TRpgMediaPlayer = class(TObject)
    private
       FBgm: string;
       FSavedBgm: TSDLMusic;
@@ -70,7 +70,7 @@ type
       property player: TSdlAudioManager read FMediaPlayer;
       property currentTrack: TSDLMusic read FCurrentTrack write FCurrentTrack;
       property syncWait: boolean read FSyncWait;
-   end; }
+   end;
 
    TRpgGlobalEvent = class(TObject)
    private
@@ -413,7 +413,7 @@ begin
    end;
 end;
 
-(*{ TRpgMediaPlayer }
+{ TRpgMediaPlayer }
 
 constructor TRpgMediaPlayer.create;
 begin
@@ -436,14 +436,14 @@ end;
 procedure TRpgMediaPlayer.fadeOut(time: integer);
 begin
    Mix_HookMusicFinished(nil);
-   Mix_FadeOutMusic(time);
+//   Mix_FadeOutMusic(time);
 end;
 
 procedure TRpgMediaPlayer.fadeIn(time: integer);
 begin
-   FCurrentTrack.FadeIn(time);
+{   FCurrentTrack.FadeIn(time);
    FCurrentTrack.OnMusicFinished := musicLoopedHook;
-   FBgmLooped := false;
+   FBgmLooped := false; }
 end;
 
 function TRpgMediaPlayer.getBgmPosition: integer;
@@ -518,9 +518,9 @@ begin
    begin
       FLoadname := musicFile.filename;
       FSyncWait := true;
-      if GCurrentThread <> nil then
+{      if GCurrentThread <> nil then
          GCurrentThread.syncRun(self.syncLoadFile)
-      else self.syncLoadFile;
+      else} self.syncLoadFile;
       while FSyncWait do
          sdl_delay(10);
    end
@@ -528,9 +528,9 @@ begin
    FCurrentTrack.OnMusicFinished := musicLoopedHook;
    FFadeTime := musicFile.fadeIn;
    FPlayOnce := false;
-   if GCurrentThread <> nil then
+{   if GCurrentThread <> nil then
       GCurrentThread.syncRun(self.syncPlayMusic)
-   else self.syncPlayMusic;
+   else} self.syncPlayMusic;
 end;
 
 procedure TRpgMediaPlayer.playSfx(soundFile: TRmSound);
@@ -557,7 +557,7 @@ begin
    FCurrentTrack.OnMusicFinished := nil;
    if FSystemBgmRecord[which] <> nil then
    begin
-      Mix_VolumeMusic(128);
+//      Mix_VolumeMusic(128);
       if FSystemBgmTrack[which] = nil then
          FSystemBgmTrack[which] := TSDLMusic.Create(FSystemBgmRecord[which].filename);
       FSystemBgmTrack[which].play(1);
@@ -621,7 +621,6 @@ begin
    else FCurrentTrack.play;
    FSyncWait := false;
 end;
-*)
 
 { TRpgGlobalEvent }
 

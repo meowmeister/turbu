@@ -117,6 +117,7 @@ begin
       openArchive(MAP_DB, MAP_ARCHIVE);
       openArchive(IMAGE_DB, IMAGE_ARCHIVE);
       openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
+      openArchive(MUSIC_DB, MUSIC_ARCHIVE);
 
       GCurrentFolder := dirProjectLocation.Text;
       GProjectFolder := dirOutput.Text;
