@@ -52,7 +52,7 @@ type
       function handleReferenceManagement(db: TDataset; var value: TValue; const fieldname: string): TReferenceResult;
 
       function downloadArray(db: TDataset; const value: TValue; zeroOrder: boolean; const fieldname: string): TValue;
-      function downloadEnumerable(db: TDataset; const value: TValue; enum: TValue;
+      function downloadEnumerable(db: TDataset; const value: TValue;
                                   enumType: TRttiType; const fieldName: string): TValue;
       function downloadRecordRelation(db: TDataset; const fieldname: string): TValue;
       function downloadRecord(db: TDataset; const fieldname: string): TValue;
@@ -67,6 +67,7 @@ type
       procedure uploadPointer(db: TDataset; const value: TValue; const fieldname: string);
       procedure uploadClass(db: TDataset; const value: TValue; const fieldname: string);
       procedure uploadValue(db: TDataset; const value: TValue; fieldname: string);
+    function downloadString(db: TDataset; const fieldname: string): TValue;
    public
       class function getFieldName(field: TRttiField): string; static;
       class function getField(db: TDataset; field: TRttiField): TField; static;
@@ -114,7 +115,7 @@ type
    TEnumerableManagerAttribute = class abstract(TCustomAttribute)
    protected
       procedure Clear(const instance: TValue); virtual; abstract;
-      procedure Add(const instance: TValue); virtual; abstract;
+      procedure Add(const instance, value: TValue); virtual; abstract;
       function CreateNew(itemType: TRttiType): TValue; virtual;
    end;
 
@@ -142,6 +143,23 @@ type
       FSerializer: TDatasetSerializer;
    public
       constructor Create(field: TRttiField; const name: string; ser: TDatasetSerializer);
+   end;
+
+   TDBCompositeFieldOperation = class(TDBFieldOperation)
+   public
+      procedure Upload(Value: TObject; db: TDataset); override;
+      procedure Download(Value: TObject; db: TDataset); override;
+   end;
+
+   TDBSimpleFieldOperation = class(TDBFieldOperation)
+   private
+      FDBField: TField;
+      FDataset: TDataset;
+      procedure SetDataset(ds: TDataset);
+      procedure CheckDataset(ds: TDataset);
+      function GetVariant: TValue;
+      function GetString: TValue;
+   public
       procedure Upload(Value: TObject; db: TDataset); override;
       procedure Download(Value: TObject; db: TDataset); override;
    end;
@@ -149,6 +167,7 @@ type
    TDBSerializerRule = class
    private
       FSteps: TArray<TDBSerializationOperation>;
+      function GetFields(baseType: TRttiType): TArray<TRttiField>;
    public
       constructor Create(cls: TClass; ser: TDatasetSerializer);
       destructor Destroy; override;
@@ -158,7 +177,7 @@ type
 
 implementation
 uses
-   SysUtils;
+   SysUtils, Generics.Defaults;
 
 {$OPTIMIZATION ON}
 
@@ -219,7 +238,7 @@ end;
 { TDatasetSerializer }
 
 const
-  FIELDNAME_STR = '%s.%s';
+  FIELDNAME_STR = '%s_%s';
 
 constructor TDatasetSerializer.Create;
 begin
@@ -256,7 +275,7 @@ begin
    isNullAtt := TDBIsNullAttribute(FCurrentField.GetAttribute(TDBIsNullAttribute));
    if assigned(isNullAtt) then
       isNull := isNullAtt.IsFieldNull(db, fieldname)
-   else isNull := db.FieldByName(fieldname).IsNull;
+   else isNull := {db.FieldByName(fieldname).IsNull;} false;
 
    result := rrAssigned;
    if not isNull then
@@ -291,7 +310,7 @@ begin
          if subvalue.Kind = tkRecord then
             subfieldName := fieldname
          else
-            subfieldName := format('%s[%d]', [fieldname, index]);
+            subfieldName := format('%s_%d', [fieldname, index]);
           result.SetArrayElement(i, downloadValue(db, subvalue, subfieldName));
       end;
    finally
@@ -300,7 +319,7 @@ begin
 end;
 
 {$WARN USE_BEFORE_DEF OFF}
-function TDatasetSerializer.downloadEnumerable(db: TDataset; const value: TValue; enum: TValue;
+function TDatasetSerializer.downloadEnumerable(db: TDataset; const value: TValue;
                                                enumType: TRttiType; const fieldName: string): TValue;
 var
    enumerableManager: TEnumerableManagerAttribute;
@@ -308,7 +327,7 @@ var
 
    function downloadNonObjectEnum: TValue;
    begin
-      result := downloadValue(db, enum, fieldname);
+      result := downloadValue(db, result, fieldname);
    end;
 
    function downloadObjectEnum: TValue;
@@ -338,18 +357,18 @@ begin
       asm int 3 end;
    if assigned(relationKey) then
    begin
-      relationKey.SetRelationFilter(value, db);
+      relationKey.SetRelationFilter(TObject(CurrentInstance), db);
       keyFields := relationKey.GetRelationFilterFieldNames;
    end;
    if assigned(enumerableManager) then
-      enumerableManager.Clear(enum)
+      enumerableManager.Clear(value)
    else begin
       clearMethod := FCurrentField.FieldType.GetMethod('Clear');
       addMethod := FCurrentField.FieldType.GetMethod('Add');
       if not ((assigned(clearMethod)) and (length(clearMethod.GetParameters) = 0) and
               (assigned(addMethod)) and (length(addMethod.GetParameters) = 1)) then
          raise EInsufficientRtti.CreateFmt('Unable to find Add and Clear methods for enumerable %s', [FCurrentField.Name]);
-      clearMethod.Invoke(enum, []);
+      clearMethod.Invoke(value, []);
    end;
    FKeyFields.Push(keyFields);
    try
@@ -361,14 +380,14 @@ begin
          else newval := downloadNonObjectEnum;
 
          if assigned(enumerableManager) then
-            enumerableManager.Add(newval)
-         else addMethod.Invoke(enum, [newval]);
+            enumerableManager.Add(value, newval)
+         else addMethod.Invoke(value, [newval]);
          db.Next;
       end;
    finally
       FKeyFields.Pop;
    end;
-   result := enum;
+   result := value;
 end;
 {$WARN USE_BEFORE_DEF ON}
 
@@ -390,7 +409,7 @@ begin
 
    if assigned(enum) then
    begin
-      result := downloadEnumerable(db, value, FCurrentField.GetValue(value.AsObject), enum.EnumType, fieldname);
+      result := downloadEnumerable(db, value, enum.EnumType, fieldname);
       enum.Free;
    end
    else begin
@@ -398,8 +417,8 @@ begin
       try
          if FUploadPrefix = '' then
             FUploadPrefix := fieldname
-         else FUploadPrefix := format('%s.%s', [FUploadPrefix, fieldname]);
-         self.upload(value.AsObject, db);
+         else FUploadPrefix := format('%s_%s', [FUploadPrefix, fieldname]);
+         self.download(value.AsObject, db);
       finally
          FUploadPrefix := prefix;
       end;
@@ -459,7 +478,7 @@ begin
    dataType := FContext.GetType(CurrentTypeInfo);
    relationKey := TDBRelationKeyAttribute(dataType.GetAttribute(TDBRelationKeyAttribute));
    if assigned(relationKey) then
-     relationKey.SetRelationFilter(CurrentInstance, db);
+     relationKey.SetRelationFilter(TObject(CurrentInstance), db);
    result := FCurrentField.GetValue(currentInstance);
    offsetRef := result.GetReferenceToRawData;
    for recField in val.GetFields do
@@ -471,21 +490,15 @@ begin
    end;
 end;
 
+function TDatasetSerializer.downloadString(db: TDataset; const fieldname: string): TValue;
+begin
+   result := db.FieldByName(fieldname).AsString;
+end;
+
 function TDatasetSerializer.downloadValue(db: TDataset; var value: TValue; fieldname: string): TValue;
-
-   function downloadVariant: TValue;
-   begin
-      result := TValue.From<variant>(db.FieldByName(fieldname).Value);
-   end;
-
-   function downloadString: TValue;
-   begin
-      result := db.FieldByName(fieldname).AsString;
-   end;
-
 begin
    if FUploadPrefix <> '' then
-      fieldname := format('%s.%s', [FUploadPrefix, fieldname]);
+      fieldname := format('%s_%s', [FUploadPrefix, fieldname]);
    case value.Kind of
       tkArray: result := downloadArray(db, value, false, fieldname);
       tkDynArray: result := downloadArray(db, value, true, fieldname);
@@ -495,12 +508,16 @@ begin
          else result := downloadRecord(db, fieldName);
       tkPointer: result := downloadPointer(db, value, fieldname);
       tkClass: result := downloadClass(db, value, fieldName);
-      tkEnumeration: result := TValue.FromOrdinal(value.TypeInfo, integer(db.FieldByName(fieldname).value));
+      tkEnumeration:
+      begin
+         if value.TypeInfo = TypeInfo(Boolean) then
+            result := db.FieldByName(fieldname).AsBoolean
+         else result := TValue.FromOrdinal(value.TypeInfo, db.FieldByName(fieldname).AsInteger);
+      end;
       tkInteger: result := db.FieldByName(fieldname).asInteger;
       tkInt64: result := db.FieldByName(fieldname).AsLargeInt;
-      tkUString: result := downloadString;
-      tkMethod, tkUnknown: ;
-      else result := downloadVariant;
+      tkUString: result := downloadString(db, fieldname);
+      else assert(false);
    end;
 end;
 
@@ -566,7 +583,7 @@ procedure TDatasetSerializer.uploadValue(db: TDataset; const value: TValue;
 
 begin
    if FUploadPrefix <> '' then
-      fieldname := format('%s.%s', [FUploadPrefix, fieldname]);
+      fieldname := format('%s_%s', [FUploadPrefix, fieldname]);
    case value.Kind of
       tkArray: uploadArray(db, value, false, fieldname);
       tkDynArray: uploadArray(db, value, true, fieldname);
@@ -606,7 +623,7 @@ begin
          if subvalue.Kind = tkRecord then
             subfieldName := fieldname
          else
-            subfieldName := format('%s[%d]', [fieldname, index]);
+            subfieldName := format('%s_%d', [fieldname, index]);
          uploadValue(db, subvalue, subfieldName);
       end;
    finally
@@ -631,7 +648,7 @@ var
 
          uploadValue(db, enumerator, fieldname);
          if assigned(relationKey) then
-           relationKey.SetRelationKey(enumerator, db);
+           relationKey.SetRelationKey(TObject(CurrentInstance), db);
       end;
    end;
 
@@ -646,7 +663,7 @@ var
 
          upload(enumerator.AsObject, db);
          if assigned(relationKey) then
-           relationKey.SetRelationKey(enumerator, db);
+           relationKey.SetRelationKey(TObject(CurrentInstance), db);
       end;
    end;
 
@@ -706,7 +723,7 @@ begin
       try
          if FUploadPrefix = '' then
             FUploadPrefix := fieldname
-         else FUploadPrefix := format('%s.%s', [FUploadPrefix, fieldname]);
+         else FUploadPrefix := format('%s_%s', [FUploadPrefix, fieldname]);
          self.upload(value.AsObject, db);
       finally
          FUploadPrefix := prefix;
@@ -743,7 +760,7 @@ begin
    dataType := FContext.GetType(CurrentTypeInfo);
    relationKey := TDBRelationKeyAttribute(dataType.GetAttribute(TDBRelationKeyAttribute));
    if assigned(relationKey) then
-     relationKey.SetRelationKey(CurrentInstance, db);
+     relationKey.SetRelationKey(TObject(CurrentInstance), db);
    for field in val.GetFields do
       uploadValue(db, field.GetValue(value.GetReferenceToRawData), field.Name);
    db.post;
@@ -804,7 +821,9 @@ begin
    FSerializer := ser;
 end;
 
-procedure TDBFieldOperation.Download(Value: TObject; db: TDataset);
+{ TDBCompositeFieldOperation }
+
+procedure TDBCompositeFieldOperation.Download(Value: TObject; db: TDataset);
 var
    lValue: TValue;
 begin
@@ -815,9 +834,65 @@ begin
    FField.SetValue(value, FSerializer.downloadValue(db, lValue, FName));
 end;
 
-procedure TDBFieldOperation.Upload(Value: TObject; db: TDataset);
+procedure TDBCompositeFieldOperation.Upload(Value: TObject; db: TDataset);
 begin
    FSerializer.FCurrentField := FField;
+   FSerializer.uploadValue(db, FField.GetValue(value), FName)
+end;
+
+{ TDBSimpleFieldOperation }
+
+procedure TDBSimpleFieldOperation.SetDataset(ds: TDataset);
+var
+   fieldname: string;
+begin
+   FDataset := ds;
+   if FSerializer.FUploadPrefix <> '' then
+      fieldname := format('%s_%s', [FSerializer.FUploadPrefix, FName])
+   else fieldname := FName;
+   FDBField := ds.FieldByName(fieldname);
+end;
+
+procedure TDBSimpleFieldOperation.CheckDataset(ds: TDataset);
+begin
+   if (FDataset <> ds) then
+      SetDataset(ds);
+end;
+
+procedure TDBSimpleFieldOperation.Download(Value: TObject; db: TDataset);
+var
+   rValue: TValue;
+begin
+   CheckDataset(db);
+   case FField.FieldType.TypeKind of
+      tkEnumeration:
+      begin
+         if FField.FieldType.Handle = TypeInfo(Boolean) then
+            rValue := FDbField.AsBoolean
+         else rValue := TValue.FromOrdinal(FField.FieldType.Handle, FDbField.AsInteger);
+      end;
+      tkInteger: rValue := FDbField.asInteger;
+      tkInt64: rValue := FDbField.AsLargeInt;
+      tkUString: rValue := GetString;
+      tkFloat: rValue := FDBField.AsExtended;
+      else rValue := GetVariant;
+   end;
+   FField.SetValue(value, rValue);
+end;
+
+function TDBSimpleFieldOperation.GetString: TValue;
+begin
+   result := FDbField.AsString;
+end;
+
+function TDBSimpleFieldOperation.GetVariant: TValue;
+begin
+   result := TValue.FromVariant(FDbField.Value);
+end;
+
+procedure TDBSimpleFieldOperation.Upload(Value: TObject; db: TDataset);
+begin
+   CheckDataset(db);
    FSerializer.uploadValue(db, FField.GetValue(value), FName)
 end;
 
@@ -831,18 +906,22 @@ var
    counter: integer;
    op: TDBSerializationOperation;
 begin
-   fields := TSerializer.FContext.GetType(cls).GetFields;
+   fields :=  GetFields(TSerializer.FContext.GetType(cls));
    SetLength(FSteps, length(fields));
    counter := 0;
    for field in fields do
    begin
       if not ((field.name <> '') and (field.Name[1] = 'F')) then
          Continue;
+      if assigned(field.FieldType) and (field.FieldType.TypeKind in [tkMethod, tkProcedure]) then
+         Continue;
 
       attr := field.GetAttribute(TDBUploadAttribute);
       if assigned(attr) then
          op := TDBAttributeOperation.Create(field, TDBUploadAttribute(attr))
-      else op := TDBFieldOperation.Create(field, ser.getFieldName(field), ser);
+      else if field.FieldType.TypeKind in [tkEnumeration, tkInteger, tkInt64, tkUString, tkFloat] then
+         op := TDBSimpleFieldOperation.Create(field, ser.getFieldName(field), ser)
+      else op := TDBCompositeFieldOperation.Create(field, ser.getFieldName(field), ser);
       FSteps[counter] := op;
       inc(counter);
    end;
@@ -856,6 +935,16 @@ begin
    for i := 0 to High(FSteps) do
       FSteps[i].Free;
    inherited;
+end;
+
+function TDBSerializerRule.GetFields(baseType: TRttiType): TArray<TRttiField>;
+begin
+   result := baseType.GetFields;
+   TArray.Sort<TRttiField>(result, TComparer<TRttiField>.Construct(
+      function (const Left, Right: TRttiField): Integer
+      begin
+         result := left.Offset - right.Offset;
+      end));
 end;
 
 procedure TDBSerializerRule.Download(Value: TObject; db: TDataset);

@@ -23,7 +23,8 @@ type
       function GetCurrent: TValue;
       function GetEnumType: TRttiType;
    public
-      constructor Create(base: TRttiStructuredType; instance: TValue);
+      constructor Create(base: TRttiStructuredType; instance: TValue;
+        enumMethod: TRttiMethod);
       destructor Destroy; override;
       function GetEnumerator: TRttiEnumerator;
 
@@ -48,7 +49,9 @@ begin
    for enumerator in self.GetAttributes do
       if enumerator is classType then
          Exit(enumerator);
-   result := nil;
+   if (not (self is TRttiType)) or (TRttiType(self).baseType = nil) then
+      result := nil
+   else result := TRttiType(self).baseType.GetAttribute(classType);
 end;
 
 function TRttiObjectHelper.GetContext: TRttiContext;
@@ -59,16 +62,22 @@ end;
 { TRttiEnumerator }
 
 function GetRttiEnumerator(base: TRttiStructuredType; instance: TValue): TRttiEnumerator;
+var
+   method: TRttiMethod;
 begin
-   try
-      result := TRttiEnumerator.Create(base, instance);
-   except
-      on EAbort do
-         result := nil
-   end;
+   method := base.GetMethod('GetEnumerator');
+   if assigned(method) then
+      try
+         result := TRttiEnumerator.Create(base, instance, method)
+      except
+         on EAbort do
+            result := nil;
+      end
+   else result := nil;
 end;
 
-constructor TRttiEnumerator.Create(base: TRttiStructuredType; instance: TValue);
+constructor TRttiEnumerator.Create(base: TRttiStructuredType; instance: TValue;
+  enumMethod: TRttiMethod);
 
    function IsSimpleFunction(method: TRttiMethod): boolean;
    begin
@@ -77,10 +86,8 @@ constructor TRttiEnumerator.Create(base: TRttiStructuredType; instance: TValue);
    end;
 
 var
-   enumMethod: TRttiMethod;
    enumType: TRttiType;
 begin
-   enumMethod := base.GetMethod('GetEnumerator');
    if not IsSimpleFunction(enumMethod) then
       Abort;
 
