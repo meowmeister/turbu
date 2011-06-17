@@ -24,11 +24,6 @@ uses
 type
    EConversionTableError = class(Exception);
 
-   //replace this whole thing with TDictionaries once Update 3 comes out
-   TConvertRecord = record
-      before, after: integer;
-   end;
-
    TConversionTable = class(TDictionary<integer, integer>);
 
    TNameRecord = record

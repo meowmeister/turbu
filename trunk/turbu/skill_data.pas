@@ -63,6 +63,7 @@ type
       FUsesPercentCost: boolean;
       FPercentCost: byte;
       FInflictReversed: boolean; //refers to radio box under conditions
+      FDisplaySprite: integer;
       FUnk32: ansiString;
 
       function canUseOnField: boolean;
@@ -106,6 +107,10 @@ type
       property usesPercentCost: boolean read FUsesPercentCost;
       property percentCost: byte read FPercentCost;
       property resistMod: boolean read FResistMod;
+
+      property inflictReversed: boolean read FInflictReversed;
+      property displaySprite: integer read FDisplaySprite;
+      property unk32: ansiString read FUnk32;
    end;
 
 implementation
@@ -177,7 +182,7 @@ begin
    begin
       setLength(FAttribute, TLcfDataBase(parent).attributes + 1);
       dummy := 0;
-      skipSec($2C, input);
+      skipSec($2C, input); //safe
    end else dummy := getArraySec($2C, input, FAttribute[1]);
    if dummy = 0 then
       for I := 1 to high(FAttribute) do
@@ -189,7 +194,7 @@ begin
    FResistMod := getChboxSec($2D, input, fillInZeroInt);
    if GProjectFormat = pf_2k3 then
    begin
-      skipSec($31, input); //Purely visual element: which character to display in the editor's example
+      FDisplaySprite := GetNumSec($31, input, fillInZeroInt);
       FUnk32 := getStrSec($32, input, nil);
    end;
    if not peekAhead(input, 0) then

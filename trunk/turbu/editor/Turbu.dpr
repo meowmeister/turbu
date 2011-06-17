@@ -1,6 +1,5 @@
 program Turbu;
 
-
 {$R *.dres}
 
 uses
@@ -14,7 +13,7 @@ uses
   Variants,
   dialogs,
   SysUtils,
-  MidasLib, {Make sure this initializes before the Application.CreateForm calls start running}
+  MidasLib,
   sdl,
   sdl_canvas,
   types,
@@ -34,11 +33,9 @@ uses
   formats in '..\formats.pas',
   rm_converter in 'rm_converter.pas' {frmRmConverter},
   rm2_turbu_characters in '..\turbu format\converters\rm2_turbu_characters.pas',
-  skill_settings in 'skill_settings.pas' {frmSkillLearning},
   rm2_turbu_database in '..\turbu format\converters\rm2_turbu_database.pas',
   conversion_table in '..\turbu format\converters\conversion_table.pas',
   frame_commands in 'frame_commands.pas' {frameHeroCommands: TFrame},
-  frame_class in 'frame_class.pas' {frameClass: TFrame},
   rm2_turbu_items in '..\turbu format\converters\rm2_turbu_items.pas',
   rm2_turbu_sounds in '..\turbu format\converters\rm2_turbu_sounds.pas',
   rm2_turbu_skills in '..\turbu format\converters\rm2_turbu_skills.pas',
@@ -50,7 +47,6 @@ uses
   attributes_editor in 'attributes_editor.pas' {frmAttributesEditor},
   frame_items in 'frame_items.pas' {frameItems: TFrame},
   turbu_script_basis in '..\turbu format\turbu_script_basis.pas',
-  design_script_engine in 'design_script_engine.pas',
   rpg_list in '..\mapview\libs\script engine\rpg_list.pas',
   script_backend in '..\mapview\libs\script engine\script_backend.pas',
   script_interface in '..\mapview\libs\script engine\script_interface.pas',
@@ -70,7 +66,13 @@ uses
   conversion_output in '..\turbu format\converters\conversion_output.pas' {frmConversionOutput},
   rm2_turbu_event_builder in '..\turbu format\converters\rm2_turbu_event_builder.pas',
   PackageRegistry in '..\..\classes\PackageRegistry.pas',
-  frame_vocab in 'frame_vocab.pas' {frameVocab: TFrame};
+  frame_vocab in 'frame_vocab.pas' {frameVocab: TFrame},
+  db_create in '..\turbu format\design\db_create.pas',
+  dm_ProjectBoot in 'dm_ProjectBoot.pas' {dmProjectBoot: TDataModule},
+  frame_class in 'frame_class.pas' {frameClass: TFrame},
+  monster in '..\monster.pas',
+  rm2_turbu_monsters in '..\turbu format\converters\rm2_turbu_monsters.pas',
+  dm_databaseAux in 'dm_databaseAux.pas' {dmDatabaseAux: TDataModule};
 
 {$R *.res}
 
@@ -84,10 +86,6 @@ begin
    ReportMemoryLeaksOnShutdown := true;
    {$ENDIF}
    Application.CreateForm(TfrmTurbuMain, frmTurbuMain);
-  Application.CreateForm(TdmDatabase, dmDatabase);
-  Application.CreateForm(TfrmRmConverter, frmRmConverter);
-  Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
-  Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
   if (SDL_Init(SDL_INIT_VIDEO) <> 0) then
       raise Exception.create('Unable to initialize graphics converter.');
    {$IFDEF DEBUG}

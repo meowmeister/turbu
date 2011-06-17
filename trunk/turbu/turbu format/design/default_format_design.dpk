@@ -28,7 +28,6 @@ package default_format_design;
 requires
   default_format,
   turbu_design_basis,
-  vclx,
   vclimg,
   Jcl,
   JvCore,

@@ -65,6 +65,7 @@ type
       function getCurrentFolder: string;
       procedure deleteFile(name: string);
       function FileExists(key: string): boolean;
+      procedure createFolder(name: string);
    public
       constructor Create(root: string);
       destructor Destroy; override;
@@ -156,6 +157,11 @@ begin
    FRoot := root;
    FCollection := TFileCollection.Create(FRoot);
    FCollection.path := '';
+end;
+
+procedure TDiscArchive.createFolder(name: string);
+begin
+   ForceDirectories(IncludeTrailingPathDelimiter(FRoot) + name);
 end;
 
 destructor TDiscArchive.Destroy;
@@ -321,7 +327,7 @@ end;
 function openFolder(filename: string): IArchive;
 begin
    if not directoryExists(filename) then
-      raise EArchiveError.Create('Unable to open project folder ' + filename);
+      raise EArchiveError.CreateFmt('Unable to open project folder %s', [filename]);
    result := TDiscArchive.Create(IncludeTrailingPathDelimiter(filename));
 end;
 
@@ -332,7 +338,7 @@ begin
       deltree(filename);
    except
       on E: EOSError do
-         raise EArchiveError.Create('Unable to delete folder ' + filename + ':  ' + E.Message);
+         raise EArchiveError.CreateFmt('Unable to delete folder %s: %s', [filename, E.Message]);
    end;
 
    try
@@ -340,7 +346,7 @@ begin
          RaiseLastOSError;
    except
       on E: EOSError do
-         raise EArchiveError.Create('Unable to create folder ' + filename + ':  ' + E.Message);
+         raise EArchiveError.CreateFmt('Unable to create folder %s: %s', [filename, E.Message]);
    end;
    result := TDiscArchive.Create(IncludeTrailingPathDelimiter(filename));
 end;
@@ -382,9 +388,14 @@ begin
 end;
 
 procedure TFileCollection.pureSetPath(const Value: string);
+var
+   fullPath: string;
 begin
    FPath := Value;
-   FFinder.Path := FRoot + ExtractFilePath(FPath);
+   fullPath := FRoot + ExtractFilePath(FPath);
+   if DirectoryExists(fullPath) then
+      FFinder.Path := fullPath
+   else raise EFileNotFoundException.CreateFmt('Folder %s does not exist', [Value]);
 end;
 
 procedure TFileCollection.setPath(const Value: string);

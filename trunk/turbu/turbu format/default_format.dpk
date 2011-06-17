@@ -39,7 +39,6 @@ contains
   turbu_sounds in 'database\turbu_sounds.pas',
   dm_database in '..\editor\dm_database.pas' {dmDatabase: TDataModule},
   turbu_sprites in 'turbu_sprites.pas',
-  turbu_unit_dictionary in 'turbu_unit_dictionary.pas',
   turbu_defs in 'turbu_defs.pas',
   turbu_decl_utils in 'turbu_decl_utils.pas',
   turbu_vartypes in 'turbu_vartypes.pas',
@@ -61,6 +60,10 @@ contains
   EB_System in 'script\EB_System.pas',
   EB_Characters in 'script\EB_Characters.pas',
   EB_Settings in 'script\EB_Settings.pas',
-  EB_Media in 'script\EB_Media.pas';
+  EB_Media in 'script\EB_Media.pas',
+  FirebirdDataset in '..\..\components\TURBU\FirebirdDataset.pas',
+  turbu_monsters in 'database\turbu_monsters.pas',
+  EB_Battle in 'script\EB_Battle.pas';
 
 end.
+

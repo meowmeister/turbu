@@ -19,8 +19,7 @@ unit xyz_lib;
 
 interface
 uses
-   windows,
-   zlib;
+   windows;
 
 type
    TXyzImage = class(TObject)
@@ -35,7 +34,7 @@ type
 
 implementation
 uses
-   classes, graphics, SysUtils;
+   classes, graphics, SysUtils, zlib;
 
 { TXyzImage }
 

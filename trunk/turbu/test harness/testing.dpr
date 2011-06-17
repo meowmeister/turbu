@@ -1,4 +1,5 @@
 program testing;
+{$SetPeFlags $20}
 
 uses
   FastMM4,
@@ -21,7 +22,6 @@ uses
   script_interface in '..\mapview\libs\script engine\script_interface.pas',
   script_backend in '..\mapview\libs\script engine\script_backend.pas',
   timing in '..\mapview\libs\timing.pas',
-  turbu_unit_dictionary in '..\turbu format\turbu_unit_dictionary.pas',
   findfile in '..\..\classes\findfile\findfile.pas',
   turbu_classes in '..\turbu format\database\turbu_classes.pas',
   turbu_defs in '..\turbu format\turbu_defs.pas',
@@ -42,7 +42,6 @@ uses
   rm2_turbu_resists in '..\turbu format\converters\rm2_turbu_resists.pas',
   rm2_turbu_skills in '..\turbu format\converters\rm2_turbu_skills.pas',
   rm2_turbu_sounds in '..\turbu format\converters\rm2_turbu_sounds.pas',
-  xyz_lib in '..\xyz_lib.pas',
   archiveInterface in '..\archiveInterface.pas',
   battle_anims in '..\battle_anims.pas',
   BER in '..\BER.pas',
@@ -65,13 +64,10 @@ uses
   skill_data in '..\skill_data.pas',
   strtok in '..\strtok.pas',
   attributes_editor in '..\editor\attributes_editor.pas' {frmAttributesEditor},
-  design_script_engine in '..\editor\design_script_engine.pas',
   dm_database in '..\editor\dm_database.pas' {dmDatabase: TDataModule},
-  frame_class in '..\editor\frame_class.pas' {frameClass: TFrame},
   frame_commands in '..\editor\frame_commands.pas' {frameHeroCommands: TFrame},
   frame_items in '..\editor\frame_items.pas' {frameItems: TFrame},
   frame_params in '..\editor\frame_params.pas' {frameParams: TFrame},
-  skill_settings in '..\editor\skill_settings.pas' {frmSkillLearning},
   turbu_heroes in '..\engines\map engine\turbu_heroes.pas',
   function_header in '..\editor\function_header.pas' {frmFuncHeader},
   rm2_turbu_map_metadata in '..\turbu format\converters\rm2_turbu_map_metadata.pas',
@@ -140,7 +136,14 @@ uses
   EB_Characters in '..\turbu format\script\EB_Characters.pas',
   AsphyreTimer in '..\..\classes\Asphyre\AsphyreTimer.pas',
   sdl_frame_helper in '..\turbu format\design\sdl_frame_helper.pas',
-  frame_vocab in '..\editor\frame_vocab.pas';
+  frame_vocab in '..\editor\frame_vocab.pas',
+  db_create in '..\turbu format\design\db_create.pas',
+  uDataSetHelper in '..\..\classes\uDataSetHelper.pas',
+  frame_class in '..\editor\frame_class.pas' {frameClass: TFrame},
+  monster in '..\monster.pas',
+  turbu_monsters in '..\turbu format\database\turbu_monsters.pas',
+  rm2_turbu_monsters in '..\turbu format\converters\rm2_turbu_monsters.pas',
+  EB_Battle in '..\turbu format\script\EB_Battle.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -151,10 +154,7 @@ begin
       raise EParseMessage.create('Unable to initialize graphics converter.');
    Application.Initialize;
    Application.MainFormOnTaskbar := True;
-   Application.CreateForm(TdmDatabase, dmDatabase);
   Application.CreateForm(TfrmTestConsole, frmTestConsole);
-  Application.CreateForm(TfrmFuncHeader, frmFuncHeader);
-  Application.CreateForm(TfrmAttributesEditor, frmAttributesEditor);
   Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
   Application.CreateForm(TfrmConversionReport, frmConversionReport);
   Application.CreateForm(TfrmTestMapSize, frmTestMapSize);

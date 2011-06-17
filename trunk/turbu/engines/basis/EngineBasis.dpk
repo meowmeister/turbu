@@ -28,7 +28,9 @@ package EngineBasis;
 
 requires
   dbrtl,
-  vcl;
+  vcl,
+  dsnap,
+  DbxCommonDriver;
 
 contains
   upsCompiler in '..\..\..\components\PascalScript\upsCompiler.pas',
@@ -54,14 +56,12 @@ contains
   sg_utils in '..\..\..\classes\sdl custom\sg_utils.pas',
   ps_pointer in 'ps_pointer.pas',
   archiveInterface in '..\..\archiveInterface.pas',
+  SqlConst,
+  SqlExpr,
+  SimpleDS,
+  DBConnAdmin,
   midaslib,
   crtl,
-  dsIntf,
-  midConst,
-  Midas,
-  DataBkr,
-  Provider,
-  DBClient,
   AsphyreTimer in '..\..\..\classes\Asphyre\AsphyreTimer.pas',
   turbu_tbi_lib in '..\..\turbu format\turbu_tbi_lib.pas',
   EventBuilder in '..\..\turbu format\EventBuilder.pas',
@@ -93,6 +93,7 @@ contains
   StringListComp in '..\..\..\..\ListCompare\StringListComp.pas',
   sdlaudiomixer in '..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdlaudiomixer.pas',
   sdl_mixer in '..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdl_mixer.pas',
-  smpeg in '..\..\..\classes\jedi-sdl\smpeg\Pas\smpeg.pas';
+  smpeg in '..\..\..\classes\jedi-sdl\smpeg\Pas\smpeg.pas',
+  uDataSetHelper in '..\..\..\classes\uDataSetHelper.pas';
 
 end.

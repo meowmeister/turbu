@@ -22,20 +22,14 @@ uses
    battle_anims, turbu_animations;
 
 type
-
-   T2k2AnimCell = class helper for turbu_animations.TAnimCell
-   public
-      constructor Convert(base: battle_anims.TAnimCell; frame: word);
-   end;
-
-   T2k2AnimEffects = class helper for turbu_animations.TAnimEffects
-   public
-      constructor Convert(base: battle_anims.TAnimEffects);
-   end;
-
    T2k2RpgAnim = class helper for TAnimTemplate
    public
       constructor convert(base: TBattleAnim; id: word);
+   end;
+
+   T2k2RpgBattleChar = class helper for TBattleCharAnim
+   public
+      constructor convert(base: TBattleAnim2; id: word);
    end;
 
 implementation
@@ -44,11 +38,28 @@ uses
    commons, turbu_sounds,
    rm2_turbu_sounds;
 
+type
+   T2k2AnimCell = class helper for turbu_animations.TAnimCell
+   public
+      constructor Convert(base: battle_anims.TAnimCell; frame: word; index: integer);
+   end;
+
+   T2k2AnimEffects = class helper for turbu_animations.TAnimEffects
+   public
+      constructor Convert(base: battle_anims.TAnimEffects);
+   end;
+
+   T2k2RpgBattleData = class helper for TBattleCharData
+   public
+      constructor convert(base: TBattle2Data; id: word);
+   end;
+
 { T2k2RpgAnim }
 
 constructor T2k2RpgAnim.convert(base: TBattleAnim; id: word);
 var
    i, j: integer;
+   idx: integer;
 begin
    inherited Create;
    self.id := id;
@@ -59,9 +70,13 @@ begin
 
    self.frame := TAnimFrameList.Create;
    frame.Capacity := (base.frames + 1) * 2;
+   idx := 0;
    for I := 1 to base.frames do
       for j := 1 to high(base.frame[i]) do
-         self.frame.Add(TAnimCell.Convert(base.frame[i][j], i));
+      begin
+         inc(idx);
+         self.frame.Add(TAnimCell.Convert(base.frame[i][j], i, idx));
+      end;
 
    effect := TAnimEffectList.Create;
    effect.Add(TAnimEffects.Create);
@@ -72,9 +87,9 @@ end;
 
 { T2k2AnimCell }
 
-constructor T2k2AnimCell.Convert(base: battle_anims.TAnimCell; frame: word);
+constructor T2k2AnimCell.Convert(base: battle_anims.TAnimCell; frame: word; index: integer);
 begin
-   self.id := base.index;
+   self.id := index;
    self.frame := frame;
    self.position := point(base.x, base.y);
    self.zoom := point(base.zoom, base.zoom);
@@ -82,15 +97,49 @@ begin
    self.saturation := base.saturation;
 end;
 
+var
+   lID: integer;
+
 { T2k2AnimEffects }
 
 constructor T2k2AnimEffects.Convert(base: battle_anims.TAnimEffects);
 begin
-   self.id := base.frame;
+   inc(lID);
+   self.id := lID;
+   self.frame := base.frame;
    if assigned(base.sound) then   
       self.sound := TRpgSound.Convert(base.sound);
    self.flashWhere := TFlashTarget(base.flashWhere);
    self.color := TRpgColor.Create(base.r, base.g, base.b, base.a);
+   self.shakeWhere := TFlashTarget(base.shakeWhere);
+end;
+
+{ T2k2RpgBattleChar }
+
+constructor T2k2RpgBattleChar.convert(base: TBattleAnim2; id: word);
+var
+   i: integer;
+begin
+   Create;
+   self.id := id;
+   self.name := string(base.name);
+   FSpeed := base.speed;
+   for i := 1 to high(base.poses) do
+      FPoses.Add(TBattleCharData.convert(base.poses[i], i));
+   for i := 1 to high(base.weapons) do
+      FWeapons.Add(TBattleCharData.convert(base.weapons[i], i));
+end;
+
+{ T2k2RpgBattleData }
+
+constructor T2k2RpgBattleData.convert(base: TBattle2Data; id: word);
+begin
+   Create;
+   self.id := id;
+   self.name := string(base.filename);
+   FFrame := base.frame;
+   FUnk04 := base.unk04;
+   FUnk05 := base.unk05;
 end;
 
 end.

@@ -1,7 +1,7 @@
 object frameHeroCommands: TframeHeroCommands
   Left = 0
   Top = 0
-  Width = 158
+  Width = 161
   Height = 188
   VertScrollBar.Tracking = True
   AutoScroll = True
@@ -10,15 +10,15 @@ object frameHeroCommands: TframeHeroCommands
   object lblNumber: TLabel
     Left = 110
     Top = 3
-    Width = 41
-    Height = 13
+    Width = 50
+    Height = 16
     Caption = 'Number:'
   end
   object spnCount: TJvSpinEdit
     Left = 110
     Top = 22
     Width = 41
-    Height = 21
+    Height = 24
     MaxValue = 7.000000000000000000
     Value = 1.000000000000000000
     TabOrder = 0
@@ -28,8 +28,8 @@ object frameHeroCommands: TframeHeroCommands
     Left = 8
     Top = 6
     Width = 96
-    Height = 21
-    DataField = 'command[1]'
+    Height = 24
+    DataField = 'command_1'
     DataSource = DataSource
     KeyField = 'id'
     ListField = 'name'

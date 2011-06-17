@@ -37,9 +37,6 @@ type
       { Public declarations }
    end;
 
-var
-  frmAttributesEditor: TfrmAttributesEditor;
-
 implementation
 
 uses

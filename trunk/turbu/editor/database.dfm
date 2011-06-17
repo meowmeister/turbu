@@ -12,6 +12,7 @@ object frmDatabase: TfrmDatabase
   Font.Style = []
   OldCreateOrder = False
   OnClose = FormClose
+  OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 120
   TextHeight = 17
@@ -89,10 +90,6 @@ object frmDatabase: TfrmDatabase
       Margins.Bottom = 4
       Caption = '&Class'
       OnShow = tshClassShow
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       inline frmClass: TframeClass
         Left = 0
         Top = 0
@@ -104,8 +101,6 @@ object frmDatabase: TfrmDatabase
         Margins.Bottom = 4
         TabOrder = 0
         TabStop = True
-        ExplicitWidth = 1027
-        ExplicitHeight = 600
         inherited lblClasses: TLabel
           Left = 21
           Top = 4
@@ -116,10 +111,6 @@ object frmDatabase: TfrmDatabase
           Margins.Right = 4
           Margins.Bottom = 4
           Font.Height = -28
-          ExplicitLeft = 21
-          ExplicitTop = 4
-          ExplicitWidth = 179
-          ExplicitHeight = 37
         end
         inherited pnlClass: TPanel
           Left = 208
@@ -130,10 +121,6 @@ object frmDatabase: TfrmDatabase
           Margins.Top = 4
           Margins.Right = 4
           Margins.Bottom = 4
-          ExplicitLeft = 208
-          ExplicitTop = 21
-          ExplicitWidth = 798
-          ExplicitHeight = 556
           inherited grpClassName: TGroupBox
             Left = 10
             Top = 10
@@ -143,10 +130,6 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 10
-            ExplicitTop = 10
-            ExplicitWidth = 242
-            ExplicitHeight = 54
             inherited dbTxtName: TDBEdit
               Left = 10
               Top = 21
@@ -156,10 +139,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 21
-              ExplicitWidth = 221
-              ExplicitHeight = 25
             end
           end
           inherited grpClassStats: TGroupBox
@@ -171,10 +150,6 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 260
-            ExplicitTop = 10
-            ExplicitWidth = 242
-            ExplicitHeight = 167
             inherited imgStats: TImage
               Left = 10
               Top = 18
@@ -184,10 +159,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 18
-              ExplicitWidth = 220
-              ExplicitHeight = 105
             end
             inherited cbxBaseStats: TComboBox
               Left = 10
@@ -198,10 +169,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 131
-              ExplicitWidth = 220
-              ExplicitHeight = 25
             end
           end
           inherited grpClassOptions: TGroupBox
@@ -213,23 +180,15 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 260
-            ExplicitTop = 184
-            ExplicitWidth = 242
-            ExplicitHeight = 189
-            inherited radWeaponStyle: TDBRadioGroup
+            inherited radWeaponStyle: TDBIndexComboBox
               Left = 10
               Top = 18
               Width = 221
-              Height = 110
+              Height = 25
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 18
-              ExplicitWidth = 221
-              ExplicitHeight = 110
             end
             inherited chkEqLocked: TDBCheckBox
               Left = 10
@@ -240,10 +199,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 133
-              ExplicitWidth = 159
-              ExplicitHeight = 23
             end
             inherited chkStrongDef: TDBCheckBox
               Left = 10
@@ -254,10 +209,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 158
-              ExplicitWidth = 127
-              ExplicitHeight = 22
             end
           end
           inherited grpClassExp: TGroupBox
@@ -269,10 +220,6 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 10
-            ExplicitTop = 341
-            ExplicitWidth = 242
-            ExplicitHeight = 204
             inherited lblExpVal1: TLabel
               Left = 10
               Top = 52
@@ -282,10 +229,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 52
-              ExplicitWidth = 52
-              ExplicitHeight = 17
             end
             inherited lblExpVal2: TLabel
               Left = 126
@@ -296,10 +239,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 126
-              ExplicitTop = 52
-              ExplicitWidth = 63
-              ExplicitHeight = 17
             end
             inherited lblExpVal3: TLabel
               Left = 10
@@ -310,10 +249,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 105
-              ExplicitWidth = 76
-              ExplicitHeight = 17
             end
             inherited lblExpVal4: TLabel
               Left = 132
@@ -324,10 +259,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 132
-              ExplicitTop = 105
-              ExplicitWidth = 27
-              ExplicitHeight = 17
             end
             inherited btnExpCurveEditor: TButton
               Left = 41
@@ -338,10 +269,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 41
-              ExplicitTop = 161
-              ExplicitWidth = 138
-              ExplicitHeight = 33
             end
             inherited spnExpVal1: TJvDBSpinEdit
               Left = 10
@@ -352,10 +279,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 73
-              ExplicitWidth = 96
-              ExplicitHeight = 25
             end
             inherited spnExpVal2: TJvDBSpinEdit
               Left = 126
@@ -366,10 +289,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 126
-              ExplicitTop = 73
-              ExplicitWidth = 95
-              ExplicitHeight = 25
             end
             inherited spnExpVal3: TJvDBSpinEdit
               Left = 10
@@ -380,10 +299,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 126
-              ExplicitWidth = 96
-              ExplicitHeight = 25
             end
             inherited spnExpVal4: TJvDBSpinEdit
               Left = 126
@@ -394,10 +309,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 126
-              ExplicitTop = 126
-              ExplicitWidth = 95
-              ExplicitHeight = 25
             end
             inherited cbxExpAlgorithm: TDBLookupComboBox
               Left = 10
@@ -408,10 +319,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 18
-              ExplicitWidth = 211
-              ExplicitHeight = 25
             end
           end
           inherited grpGraphics: TGroupBox
@@ -423,10 +330,6 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 10
-            ExplicitTop = 72
-            ExplicitWidth = 242
-            ExplicitHeight = 254
             inherited tabGraphics: TTabControl
               Left = 10
               Top = 33
@@ -436,10 +339,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 33
-              ExplicitWidth = 227
-              ExplicitHeight = 210
               inherited btnSetGfx: TButton
                 Left = 21
                 Top = 165
@@ -449,10 +348,6 @@ object frmDatabase: TfrmDatabase
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                ExplicitLeft = 21
-                ExplicitTop = 165
-                ExplicitWidth = 98
-                ExplicitHeight = 32
               end
               inherited imgMapSprite: TSdlFrame
                 Left = 10
@@ -465,10 +360,6 @@ object frmDatabase: TfrmDatabase
                 Margins.Bottom = 4
                 LogicalWidth = 126
                 LogicalHeight = 126
-                ExplicitLeft = 10
-                ExplicitTop = 31
-                ExplicitWidth = 126
-                ExplicitHeight = 126
               end
             end
           end
@@ -481,10 +372,6 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 510
-            ExplicitTop = 72
-            ExplicitWidth = 276
-            ExplicitHeight = 272
             inherited pageRepertoire: TPageControl
               Left = 10
               Top = 21
@@ -494,19 +381,11 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 21
-              ExplicitWidth = 257
-              ExplicitHeight = 243
               inherited tshEquipment: TTabSheet
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                ExplicitLeft = 4
-                ExplicitTop = 28
-                ExplicitWidth = 188
-                ExplicitHeight = 154
                 inherited lblEquip1: TLabel
                   Left = 10
                   Top = 10
@@ -516,10 +395,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 10
-                  ExplicitTop = 10
-                  ExplicitWidth = 57
-                  ExplicitHeight = 17
                 end
                 inherited lblEquip2: TLabel
                   Left = 10
@@ -529,9 +404,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 10
-                  ExplicitTop = 50
-                  ExplicitHeight = 17
                 end
                 inherited lblEquip3: TLabel
                   Left = 10
@@ -542,10 +414,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 10
-                  ExplicitTop = 84
-                  ExplicitWidth = 43
-                  ExplicitHeight = 17
                 end
                 inherited lblEquip4: TLabel
                   Left = 10
@@ -556,10 +424,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 10
-                  ExplicitTop = 120
-                  ExplicitWidth = 47
-                  ExplicitHeight = 17
                 end
                 inherited lblEquip5: TLabel
                   Left = 10
@@ -570,10 +434,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 10
-                  ExplicitTop = 160
-                  ExplicitWidth = 67
-                  ExplicitHeight = 17
                 end
                 inherited cbxEquip1: TDBLookupComboBox
                   Left = 84
@@ -584,10 +444,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 84
-                  ExplicitTop = 7
-                  ExplicitWidth = 158
-                  ExplicitHeight = 25
                 end
                 inherited cbxEquip4: TDBLookupComboBox
                   Left = 84
@@ -598,10 +454,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 84
-                  ExplicitTop = 116
-                  ExplicitWidth = 158
-                  ExplicitHeight = 25
                 end
                 inherited cbxEquip3: TDBLookupComboBox
                   Left = 84
@@ -612,10 +464,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 84
-                  ExplicitTop = 81
-                  ExplicitWidth = 158
-                  ExplicitHeight = 25
                 end
                 inherited cbxEquip5: TDBLookupComboBox
                   Left = 84
@@ -626,10 +474,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 84
-                  ExplicitTop = 160
-                  ExplicitWidth = 158
-                  ExplicitHeight = 25
                 end
                 inherited cbxEquip2: TDBLookupComboBox
                   Left = 84
@@ -640,10 +484,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 84
-                  ExplicitTop = 46
-                  ExplicitWidth = 158
-                  ExplicitHeight = 25
                 end
               end
               inherited tshSkills: TTabSheet
@@ -651,8 +491,6 @@ object frmDatabase: TfrmDatabase
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
-                ExplicitTop = 28
-                ExplicitHeight = 154
                 inherited frameHeroCommands: TframeHeroCommands
                   Width = 242
                   Height = 204
@@ -660,8 +498,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitWidth = 242
-                  ExplicitHeight = 204
                   inherited lblNumber: TLabel
                     Left = 144
                     Top = 4
@@ -671,10 +507,6 @@ object frmDatabase: TfrmDatabase
                     Margins.Top = 4
                     Margins.Right = 4
                     Margins.Bottom = 4
-                    ExplicitLeft = 144
-                    ExplicitTop = 4
-                    ExplicitWidth = 54
-                    ExplicitHeight = 17
                   end
                   inherited spnCount: TJvSpinEdit
                     Left = 144
@@ -685,10 +517,6 @@ object frmDatabase: TfrmDatabase
                     Margins.Top = 4
                     Margins.Right = 4
                     Margins.Bottom = 4
-                    ExplicitLeft = 144
-                    ExplicitTop = 29
-                    ExplicitWidth = 53
-                    ExplicitHeight = 25
                   end
                   inherited cbxCommand1: TDBLookupComboBox
                     Left = 10
@@ -699,10 +527,6 @@ object frmDatabase: TfrmDatabase
                     Margins.Top = 4
                     Margins.Right = 4
                     Margins.Bottom = 4
-                    ExplicitLeft = 10
-                    ExplicitTop = 8
-                    ExplicitWidth = 126
-                    ExplicitHeight = 25
                   end
                 end
               end
@@ -734,10 +558,6 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 260
-            ExplicitTop = 381
-            ExplicitWidth = 242
-            ExplicitHeight = 164
             inherited lstScripts: TListView
               Left = 10
               Top = 21
@@ -756,10 +576,6 @@ object frmDatabase: TfrmDatabase
                   Caption = 'Script'
                   Width = 95
                 end>
-              ExplicitLeft = 10
-              ExplicitTop = 21
-              ExplicitWidth = 215
-              ExplicitHeight = 131
             end
           end
           inherited grpUnarmed: TGroupBox
@@ -771,10 +587,6 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 510
-            ExplicitTop = 10
-            ExplicitWidth = 276
-            ExplicitHeight = 54
             inherited cbxUnarmedAnim: TDBLookupComboBox
               Left = 10
               Top = 21
@@ -784,10 +596,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 21
-              ExplicitWidth = 253
-              ExplicitHeight = 25
             end
           end
           inherited grpResistVuln: TGroupBox
@@ -799,10 +607,6 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 510
-            ExplicitTop = 352
-            ExplicitWidth = 276
-            ExplicitHeight = 193
             inherited pageResists: TPageControl
               Left = 10
               Top = 21
@@ -812,10 +616,6 @@ object frmDatabase: TfrmDatabase
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
-              ExplicitLeft = 10
-              ExplicitTop = 21
-              ExplicitWidth = 257
-              ExplicitHeight = 165
               inherited tshAttributes: TTabSheet
                 Margins.Left = 4
                 Margins.Top = 4
@@ -841,10 +641,6 @@ object frmDatabase: TfrmDatabase
                   Margins.Top = 4
                   Margins.Right = 4
                   Margins.Bottom = 4
-                  ExplicitLeft = 197
-                  ExplicitTop = 88
-                  ExplicitWidth = 45
-                  ExplicitHeight = 32
                 end
               end
               inherited tshConditions: TTabSheet
@@ -888,10 +684,6 @@ object frmDatabase: TfrmDatabase
           Margins.Right = 4
           Margins.Bottom = 4
           Hints.Strings = ()
-          ExplicitLeft = 931
-          ExplicitTop = 432
-          ExplicitWidth = 45
-          ExplicitHeight = 32
         end
         inherited navDel: TDBNavigator
           Left = 931
@@ -903,10 +695,6 @@ object frmDatabase: TfrmDatabase
           Margins.Right = 4
           Margins.Bottom = 4
           Hints.Strings = ()
-          ExplicitLeft = 931
-          ExplicitTop = 472
-          ExplicitWidth = 45
-          ExplicitHeight = 33
         end
       end
     end
@@ -917,10 +705,6 @@ object frmDatabase: TfrmDatabase
       Margins.Bottom = 4
       Caption = '&Hero'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
     end
     object tshVocab: TTabSheet
       Caption = 'Vocabulary'
@@ -939,8 +723,6 @@ object frmDatabase: TfrmDatabase
             inherited StaticText1: TStaticText
               Width = 127
               Height = 21
-              ExplicitWidth = 127
-              ExplicitHeight = 21
             end
           end
           inherited pnlCustomVocab: TPanel
@@ -950,20 +732,14 @@ object frmDatabase: TfrmDatabase
             inherited StaticText2: TStaticText
               Width = 129
               Height = 21
-              ExplicitWidth = 129
-              ExplicitHeight = 21
             end
             inherited StaticText3: TStaticText
               Width = 30
               Height = 21
-              ExplicitWidth = 30
-              ExplicitHeight = 21
             end
             inherited StaticText4: TStaticText
               Width = 42
               Height = 21
-              ExplicitWidth = 42
-              ExplicitHeight = 21
             end
           end
         end
@@ -989,9 +765,6 @@ object frmDatabase: TfrmDatabase
         Margins.Right = 4
         Margins.Bottom = 4
         TabOrder = 0
-        ExplicitLeft = -4
-        ExplicitWidth = 1027
-        ExplicitHeight = 704
         inherited pnlItems: TPanel
           Left = -4
           Width = 1027
@@ -1000,9 +773,6 @@ object frmDatabase: TfrmDatabase
           Margins.Top = 4
           Margins.Right = 4
           Margins.Bottom = 4
-          ExplicitLeft = -4
-          ExplicitWidth = 1027
-          ExplicitHeight = 600
           inherited DBGrid1: TDBGrid
             Left = 9
             Top = 4
@@ -1023,10 +793,6 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            ExplicitLeft = 366
-            ExplicitTop = 543
-            ExplicitWidth = 190
-            ExplicitHeight = 25
           end
         end
         inherited dsWeapons: TDataSource
@@ -1041,10 +807,6 @@ object frmDatabase: TfrmDatabase
       Margins.Bottom = 4
       Caption = '&Global Events'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblGlobalEvents: TLabel
         Left = 21
         Top = 21

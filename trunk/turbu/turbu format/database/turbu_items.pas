@@ -26,7 +26,35 @@ type
    TItemType = (it_junk, it_weapon, it_armor, it_medicine, it_upgrade, it_book,
                 it_skill, it_variable, it_script);
 
-   TStatArray = array[1..STAT_COUNT] of integer;
+   TWeaponAnimType = (wa_weapon, wa_battleAnim);
+   TMovementMode = (mm_none, mm_stepForward, mm_jumpTo, mm_walkTo);
+
+   TWeaponAnimData = class(TRpgDatafile)
+   protected
+       FAnimType: TWeaponAnimType;
+       FWhichWeapon: integer;
+       FMovementMode: TMovementMode;
+       FAfterimage: boolean;
+       FAttackNum: integer;
+       FRanged: boolean;
+       FRangedProjectile: integer;
+       FRangedSpeed: integer;
+       FBattleAnim: integer;
+   protected
+      class function keyChar: ansiChar; override;
+   public
+      property animType: TWeaponAnimType read FAnimType;
+      property whichWeapon: integer read FWhichWeapon;
+      property moveMode: TMovementMode read FMovementMode;
+      property afterimage: boolean read FAfterimage;
+      property attackNum: integer read FAttackNum;
+      property ranged: boolean read FRanged;
+      property rangedProjectile: integer read FRangedProjectile;
+      property rangedSpeed: integer read FRangedSpeed;
+      property battleAnim: integer read FBattleAnim;
+   end;
+
+   TAnimDataList = class(TRpgDataList<TWeaponAnimData>);
 
    TItemTemplate = class abstract(TRpgDatafile)
    private
@@ -49,7 +77,7 @@ type
    TUsableItemTemplate = class abstract(TItemTemplate)
    private
       FUsesLeft: integer;
-      FUsable: TUsableWhere;
+      FUsableWhere: TUsableWhere;
       [TUploadByteSet]
       FUsableByHero: TByteSet;
       [TUploadByteSet]
@@ -64,7 +92,7 @@ type
 
       property stat[i: byte]: integer read getStat write setStat;
       property usesLeft: integer read FUsesLeft write FUsesLeft;
-      property usableWhere: TUsableWhere read FUsable write FUsable;
+      property usableWhere: TUsableWhere read FUsableWhere write FUsableWhere;
       property usableByHero: TByteSet read FUsableByHero write FUsableByHero;
       property usableByClass: TByteSet read FUsableByClass write FUsableByClass;
    end;
@@ -81,7 +109,10 @@ type
       FUsable: boolean;
       [TUploadByteSet]
       FConditions: TByteSet;
+      FSkill: integer;
+      FInvokeSkill: boolean;
       FCursed: boolean;
+      FInflictReversed: boolean;
    protected
       FAttributes: TPointArray;
    public
@@ -99,6 +130,9 @@ type
       property usable: boolean read FUsable write FUsable; //can be used as an item
       property condition: TByteSet read FConditions write FConditions;
       property attribute: TPointArray read FAttributes write FAttributes;
+      property skill: integer read FSkill write FSkill;
+      property InvokeSkill: boolean read FInvokeSkill write FInvokeSkill;
+      property inflictReversed: boolean read FInflictReversed write FInflictReversed;
    end;
 
    TWeaponTemplate = class(TEquipmentTemplate)
@@ -109,9 +143,12 @@ type
       FBattleAnim: word;
       FMPCost: word;
       FConditionChance: byte;
+      FAnimData: TAnimDataList;
    public
+      constructor Create; override;
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
+      destructor Destroy; override;
 
       property twoHanded: boolean read FTwoHanded write FTwoHanded;
       property attackTwice: boolean read FAttackTwice write FAttackTwice;
@@ -119,6 +156,7 @@ type
       property battleAnim: word read FBattleAnim write FBattleAnim;
       property mpCost: word read FMpCost write FMpCost;
       property conditionChance: byte read FConditionChance write FConditionChance;
+      property animData: TAnimDataList read FAnimData;
    end;
 
    TArmorTemplate = class(TEquipmentTemplate)
@@ -232,7 +270,7 @@ var
 begin
    inherited Load(savefile);
    FUsesLeft := savefile.readInt;
-   savefile.readBuffer(FUsable, sizeof(TUsableWhere));
+   savefile.readBuffer(FUsableWhere, sizeof(TUsableWhere));
    dummy := savefile.readByte;
    if dummy > 0 then
       savefile.readBuffer(self.FUsableByHero, dummy);
@@ -250,7 +288,7 @@ var
 begin
    inherited save(savefile);
    savefile.writeInt(FUsesLeft);
-   savefile.WriteBuffer(FUsable, sizeof(TUsableWhere));
+   savefile.WriteBuffer(FUsableWhere, sizeof(TUsableWhere));
    dummy := getSetLength(FUsableByHero);
    savefile.writeByte(dummy);
    if dummy > 0 then
@@ -326,6 +364,18 @@ begin
 end;
 
 { TWeaponTemplate }
+
+constructor TWeaponTemplate.Create;
+begin
+   inherited;
+   FAnimData := TAnimDataList.Create;
+end;
+
+destructor TWeaponTemplate.Destroy;
+begin
+   FAnimData.Free;
+   inherited;
+end;
 
 constructor TWeaponTemplate.Load(savefile: TStream);
 begin
@@ -453,6 +503,13 @@ end;
 procedure TScriptItemTemplate.save(savefile: TStream);
 begin
    assert(false, 'Can''t save this!');
+end;
+
+{ TWeaponAnimData }
+
+class function TWeaponAnimData.keyChar: ansiChar;
+begin
+   result := 'w';
 end;
 
 end.

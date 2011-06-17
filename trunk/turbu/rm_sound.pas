@@ -31,13 +31,12 @@ type
       FLeftBalance: byte;
       FRightBalance: byte;
 
-      procedure setFilename(value: ansiString); virtual;
    public
       constructor Create(id: word; input: TStream); overload;
       constructor Create(name: string; time, volume, tempo, balance: word); overload;
       constructor assign(const source: TRmMusic);
 
-      property filename: ansiString read FFilename write setFilename;
+      property filename: ansiString read FFilename;
       property fadeIn: integer read FFadein;
       property tempo: integer read FTempo;
       property left: byte read FLeftBalance;
@@ -46,8 +45,6 @@ type
    end;
 
    TRmSound = class(TRmMusic)
-   private
-      procedure setFilename(value: ansiString); override;
    public
 //      constructor Create(id: word; input: TStream); overload;
       constructor Create(filename: string); overload;
@@ -81,7 +78,7 @@ begin
       Exit;
 
    TBerConverter.Create(input); //get size block and discard
-   filename := getStrSec(1, input, fillInBlankStr);
+   FFilename := getStrSec(1, input, fillInBlankStr);
    FFadein := getNumSec(2, input, fillInRmSoundInt);
    FVolume := getNumSec(3, input, fillInRmSoundInt);
    FTempo := getNumSec(4, input, fillInRmSoundInt);
@@ -98,7 +95,7 @@ var
    dummy: integer;
 begin
    inherited Create;
-   filename := ansiString(name);
+   FFilename := ansiString(name);
    FFadeIn := time;
    FVolume := volume;
    FTempo := tempo;
@@ -107,17 +104,6 @@ begin
    FLeftBalance := 254 - FRightBalance;
    FRightBalance := commons.round(FRightBalance * (FVolume / 100));
    FLeftBalance := commons.round(FLeftBalance * (FVolume / 100));
-end;
-
-procedure TRmMusic.setFilename(value: ansiString);
-var
-   dummy: string;
-begin
-   dummy := unicodeString(value);
-   if (value <> '') and (value <> '(OFF)') then
-      findMusic(dummy)
-   else dummy := '';
-   FFilename := ansiString(dummy);
 end;
 
 procedure fillInRmSoundInt(const expected: byte; out theResult: integer);
@@ -135,49 +121,13 @@ begin
 end;
 
 { TRmSound }
-{$R-}
-{constructor TRmSound.Create(id: word; input: TStream);
-var
-   converter: intX80;
-   volume, dummy: integer;
-begin
-   if not peekAhead(input, id) then
-      Exit;
-
-   converter := intX80.Create(input); //get size block and discard
-try
-   filename := getStrSec(1, input, fillInBlankStr);
-   volume := getNumSec(2, input, fillInRmSoundInt);
-   FTempo := getNumSec(3, input, fillInRmSoundInt);
-   dummy := getNumSec(4, input, fillInRmSoundInt);
-   FRightBalance := round(254 * (dummy / 100));
-   FLeftBalance := 254 - FRightBalance;
-   FRightBalance := round(FRightBalance * (volume / 100));
-   FLeftBalance := round(FLeftBalance * (volume / 100));
-   assert(peekAhead(input, 0));
-finally
-   converter.Free;
-end;
-end;}
-{$R+}
 
 constructor TRmSound.Create(filename: string);
 begin
-   self.filename := ansiString(filename);
-   self.FTempo := 100;
-   self.FLeftBalance := 127;
-   self.FRightBalance := 127;
-end;
-
-procedure TRmSound.setFilename(value: ansiString);
-var
-   dummy: string;
-begin
-   dummy := unicodeString(value);
-   if (value <> '') and (value <> '(OFF)') then
-      findSfx(dummy)
-   else dummy := '';
-   FFilename := ansiString(dummy);
+   FFilename := ansiString(filename);
+   FTempo := 100;
+   FLeftBalance := 127;
+   FRightBalance := 127;
 end;
 
 end.

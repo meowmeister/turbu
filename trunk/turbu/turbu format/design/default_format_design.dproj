@@ -61,7 +61,6 @@
 			</DelphiCompile>
 			<DCCReference Include="default_format.dcp"/>
 			<DCCReference Include="turbu_design_basis.dcp"/>
-			<DCCReference Include="vclx.dcp"/>
 			<DCCReference Include="vclimg.dcp"/>
 			<DCCReference Include="Jcl.dcp"/>
 			<DCCReference Include="JvCore.dcp"/>

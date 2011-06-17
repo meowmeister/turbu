@@ -29,6 +29,11 @@ type
       function average: smallint;
    end;
 
+   T2k2WeaponAnimData = class helper for TWeaponAnimData
+   public
+      constructor Convert(base: TItemAnimData);
+   end;
+
    T2k2ItemTemplate = class helper for TItemTemplate
    public
       class procedure addNewItem(base: TItem);
@@ -82,6 +87,7 @@ type
 
 implementation
 uses
+   Generics.Collections,
    formats, rm2_turbu_database;
 
 { T2k2ItemTemplate }
@@ -114,17 +120,22 @@ begin
       it_variable: newItem := TVariableItemTemplate.Convert(base);
       else assert(false);
    end;
-   GDatabase.addItem(newItem, newClass);
+   GDatabase.Item[newClass].add(newItem);
 end;
 {$WARN USE_BEFORE_DEF ON}
 
 constructor T2k2ItemTemplate.Convert(base: TItem);
+var
+   pair: TPair<integer, rawByteString>;
 begin
-   inherited Create;
+   self.Create;
    self.id := base.id;
-   self.name := unicodeString(base.name);
-   self.desc := unicodeString(base.desc);
+   self.name := string(base.name);
+   self.desc := string(base.desc);
    self.cost := base.cost;
+   for pair in base.Legacy do
+      if pair.Value <> '' then
+         GDatabase.AddLegacy('Items', self.id, pair.Key, pair.Value);
 end;
 
 { T2k2UsableItemTemplate }
@@ -184,6 +195,9 @@ begin
       if base.condition[i] then
          include(conditions, i);
    self.condition := conditions;
+   self.Skill := base.skill;
+   self.invokeSkill := base.InvokeSkill;
+   self.inflictReversed := base.inflictReversed;
    // handle attributes in subclasses
 end;
 
@@ -199,6 +213,10 @@ begin
    counter := 0;
    runningtotal := 0;
    self.evasion := base.ignoreEvasion;
+   self.toHit := base.toHit;
+   self.critChance := base.critChance;
+   if base.preemptive then
+      self.preemptive := 100;
 
    for I := 1 to GLcfDatabase.attributes do
    begin
@@ -229,6 +247,8 @@ begin
    self.battleAnim := base.battleAnim;
    self.mpCost := base.mpCost;
    self.conditionChance := base.conditionChance;
+   for I := 1 to base.AnimDataCount do
+      self.animData.add(TWeaponAnimData.Convert(base.animData[i]));
 end;
 
 { T2k2ArmorTemplate }
@@ -239,6 +259,11 @@ var
 begin
    inherited Convert(base);
    self.evasion := base.boostEvade;
+   if base.preventCrits then
+      self.critPrevent := 100;
+   if base.halfMP then
+      self.mpReduction := 50;
+   self.noTerrainDamage := base.noTerrainDamage;
 
    for I := 1 to GLcfDatabase.attributes do
       if base.attribute[i] then
@@ -306,6 +331,14 @@ begin
    self.which := base.switch;
    self.style := vs_switch;
    self.operation := bo_add;
+   if base.onField then
+   begin
+      if base.inBattle then
+         self.usableWhere := us_both
+      else self.usableWhere := us_field
+   end
+   else if base.inBattle then
+      self.usableWhere := us_battle;
 end;
 
 { TAttributeHelper }
@@ -322,6 +355,22 @@ begin
       inc(result, space);
    end;
    result := round(result / 3);
+end;
+
+{ T2k2WeaponAnimData }
+
+constructor T2k2WeaponAnimData.Convert(base: TItemAnimData);
+begin
+   inherited Create;
+   FAnimType := turbu_items.TWeaponAnimType(base.animType);
+   FWhichWeapon := base.whichWeapon;
+   FMovementMode := turbu_items.TMovementMode(base.moveMode);
+   FAfterimage := base.afterimage;
+   FAttackNum := base.attackNum;
+   FRanged := base.ranged;
+   FRangedProjectile := base.rangedProjectile;
+   FRangedSpeed := base.rangedSpeed;
+   FBattleAnim := base.battleAnim;
 end;
 
 end.

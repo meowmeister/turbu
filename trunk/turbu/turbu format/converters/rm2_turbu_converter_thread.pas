@@ -40,8 +40,12 @@ type
       FSysTiles: TStringList;
       FPictures: TStringList;
       FMovies: TStringList;
+      FMonsters: TStringList;
       FAnims: TStringList;
+      FAnims2: TStringList;
       FBattleSprites: TStringList;
+      FWeapons: TStringList;
+      FFrames: TStringList;
       procedure VerifyFormat(datafile: TStream);
       procedure ConvertMap(const filename: string; database: TLcfDataBase; mapTree: TFullTree;
                      metadata: TMapTree; input, output: IArchive);
@@ -50,6 +54,8 @@ type
       procedure ScanEventsForResources(block: TEventBlock);
       procedure ScanPage(page: TEventPage);
       procedure ScanMove(block: TEventMoveBlock);
+      procedure ScanPageCommands(list: TEventCommandList);
+      procedure setNewStep(value: string);
    protected
       procedure Execute; override;
    public
@@ -63,14 +69,14 @@ var
 implementation
 uses
    SysUtils, StrUtils,
-   fileIO, discInterface, logs, locate_files, rm2_turbu_event_builder,
-   turbu_constants, turbu_database, turbu_unit_dictionary, turbu_engines,
+   fileIO, discInterface, logs, locate_files, rm2_turbu_event_builder, dm_database,
+   turbu_constants, turbu_database, turbu_engines, db_create,
    turbu_functional, turbu_maps, turbu_classes, turbu_pathing, turbu_tbi_lib,
    rm2_turbu_database, rm2_turbu_maps, rm2_turbu_map_metadata, rm2_turbu_map_objects,
    sdl, sdl_13, sdlStreams, sdl_image, sg_defs;
 
 const
-   CONVERSION_TASKS = 7;
+   CONVERSION_TASKS = 6;
 
 type
    TImageProcessor = function (archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
@@ -78,9 +84,13 @@ type
 function convertSprite(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward; overload;
 function convertSprite(name: string; id: integer; dirty: boolean): boolean; forward; overload;
 function convertPortrait(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
+function convertBattleChar(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
+function convertWeapon(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
 function convertMusic(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
+function convertSFX(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
 function convertAnim(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
-function extLength(filename: string): integer; forward; inline;
+function convertAnim2(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
+function convertMovies(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
 function ProcessImage(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean; forward;
 
 { TConverterThread }
@@ -144,55 +154,101 @@ end;
 
 procedure TConverterThread.CopyResources(input, output: IArchive);
 var
-   index: integer;
    rtpInput: IArchive;
 
    procedure processImageList(const folderName, outFolderName, stepname: string;
-                              fileList: TStringList; processor: TImageProcessor);
+                              fileList: TStringList; processor: TImageProcessor;
+                              rtpFunc: TLocateFileFunc = nil);
    const NOT_FOUND = 'File %s from %s not found!';
    var
       filename: string;
       lFilename: string;
+      index: integer;
    begin
       if terminated then
          Exit;
+      if not assigned(rtpFunc) then
+         rtpFunc := locate_files.findGraphicF;
       if fileList.Find('', index) then
          filelist.Delete(index);
+      if fileList.Find('(OFF)', index) then
+         filelist.Delete(index);
       rtpInput.currentFolder := folderName;
-      FReport.newStep(stepname);
-      for filename in input.allFiles(folderName) do
-      begin
-         if terminated then
-            Exit;
-         lFilename := extractFilename(leftStr(filename, length(filename) - extLength(filename)));
-         if processor(input, outFolderName, filename, false) then
+      if stepname <> '' then
+         FReport.newStep(stepname);
+      try
+         for filename in input.allFiles(folderName) do
          begin
-            if fileList.Find(lFilename, index) then
-               fileList.Delete(index);
-         end
-         else FReport.makeError(format(NOT_FOUND, [filename, folderName]));
+            if terminated then
+               Exit;
+            lFilename := ChangeFileExt(ExtractFileName(filename), '');
+            try
+               if processor(input, outFolderName, filename, false) then
+               begin
+                  if fileList.Find(lFilename, index) then
+                     fileList.Delete(index);
+               end
+               else FReport.makeError(format(NOT_FOUND, [filename, folderName]));
+            except
+               on E: EInvalidImage do
+                  FReport.makeError(format('Unable to convert image %s\%s: %s', [filename, folderName, E.Message]));
+            end;
+         end;
+      except
+         on EFileNotFoundException do ;
+         //Project folder doesn't exist. Swallow the error and continue
       end;
       for filename in fileList do
       begin
          if terminated then
             Exit;
-         lFilename := ExtractFilename(locate_files.findGraphicF(filename, folderName));
+         lFilename := ExtractFilename(rtpFunc(filename, folderName));
          if processor(rtpInput, outFolderName, format('%s\%s', [folderName, lFilename]), true) then
             FReport.makeNotice(format('Copied RTP resource %s\%s.', [folderName, filename]))
          else FReport.makeError(format(NOT_FOUND, [filename, folderName]));
       end;
    end;
 
+var
+   specialsList: TStringList;
 begin
    rtpInput := OpenFolder(locate_files.rtpLocation);
-   processImageList('Panorama', 'Backgrounds', 'Backgrounds', FBackgrounds, processImage);
-   processImageList('System', 'System', 'System layout', FSysTiles, processImage);
-   processImageList('Picture', 'Pictures', 'Images', FPictures, processImage);
-   processImageList('CharSet', 'Mapsprite', 'Character sprites', FMapSprites, convertSprite);
-   processImageList('FaceSet', 'Portrait', 'Character portraits', FPortraits, convertPortrait);
+   processImageList('Backdrop', 'Battle BG', 'Battle backgrounds', FBattleBackgrounds, processImage);
    processImageList('Battle', 'Animation', 'Battle animations', FAnims, convertAnim);
-   processImageList('Music', 'Music', 'Music', FSongs, convertMusic);
-   //FSounds FMovies
+   if GProjectFormat = pf_2k3 then
+   begin
+      processImageList('Battle2', 'Animation', '', FAnims2, convertAnim2);
+      processImageList('BattleCharSet', 'BattleSprite', 'Battle Sprites', FBattleSprites, ConvertBattleChar);
+      processImageList('BattleWeapon', 'BattleWeapon', '', FWeapons, ConvertWeapon);
+      processImageList('Frame', 'Frame', 'Frames', FFrames, processImage);
+   end;
+   processImageList('CharSet', 'MapSprite', 'Character sprites', FMapSprites, convertSprite);
+   processImageList('FaceSet', 'Portrait', 'Character portraits', FPortraits, convertPortrait);
+   processImageList('Monster', 'Monsters', 'Monsters', FMonsters, processImage);
+   processImageList('Music', 'Music', 'Music', FSongs, convertMusic, findSoundF);
+   processImageList('Movie', 'Movies', 'Movies', FMovies, convertMovies, findMovieF);
+   processImageList('Panorama', 'Backgrounds', 'Backgrounds', FBackgrounds, processImage);
+   processImageList('Picture', 'Pictures', 'Images', FPictures, processImage);
+   processImageList('Sound', 'SFX', 'Sound Effects', FSounds, convertSFX, findSoundF);
+   processImageList('System', 'System', 'System layout', FSysTiles, processImage);
+   specialsList := TStringList.Create;
+   try
+      specialsList.Add(string(FLdb.SystemData.titleScreen));
+      processImageList('Title', 'Special Images', '', specialsList, processImage);
+
+      specialsList.Clear;
+      specialsList.Add(string(FLdb.SystemData.gameOverScreen));
+      processImageList('GameOver', 'Special Images', '', specialsList, processImage);
+
+      if GProjectFormat = pf_2k3 then
+      begin
+         specialsList.Clear;
+         specialsList.Add(string(FLdb.systemData.battleSysGraphic));
+         processImageList('System2', 'System', '', specialsList, processImage);
+      end;
+   finally
+      specialsList.Free;
+   end;
 end;
 
 constructor TConverterThread.Create(report: IConversionReport; fromLoc, toLoc: string; format: TProjectFormat);
@@ -221,13 +277,21 @@ begin
    FPictures :=  CreateSortedStringList;
    FMovies := CreateSortedStringList;
    FAnims := CreateSortedStringList;
+   FAnims2 := CreateSortedStringList;
    FBattleSprites := CreateSortedStringList;
+   FWeapons := CreateSortedStringList;
+   FMonsters := CreateSortedStringList;
+   FFrames := CreateSortedStringList;
 end;
 
 destructor TConverterThread.Destroy;
 begin
+   FFrames.Free;
+   FMonsters.Free;
+   FWeapons.Free;
    FBattleSprites.Free;
    FAnims.Free;
+   FAnims2.Free;
    FMovies.Free;
    FPictures.Free;
    FSysTiles.Free;
@@ -242,140 +306,157 @@ begin
   inherited;
 end;
 
+type
+   TLegacySections = class(TDictionary<word, rawbytestring>);
+
 {$WARN SYMBOL_PLATFORM OFF}
 procedure TConverterThread.Execute;
 const
-	SECTIONS_I_KNOW_HOW_TO_READ = [$0b..$0d, $11..$14, $17..$18, $1e];
+	SECTIONS_I_KNOW_HOW_TO_READ = [$0b..$0e, $11..$14, $17..$18, $1e, $20];
 var
    datafile: TStream;
-   stream: TStream;
-   savefile: TMemoryStream;
-   filename, uFilename: string;
-   dic: TUnitDictionary;
+   filename: string;
    fromFolder, toFolder: IArchive;
    legacy: TLegacySections;
+   legacyPair: TPair<word, rawbytestring>;
    key: byte;
    list: TStringList;
    op: string;
+   i: integer;
 begin
-   legacy := nil; //to silence a compiler warning
+   legacy := nil;
    try
-      fromFolder := discInterface.openFolder(FFromLoc);
       try
-         conversionArchive := GArchives.Add(fromFolder);
-         toFolder := discInterface.openFolder(FToLoc);
-         datafile := fromFolder.getFile('RPG_RT.ldb');
+         fromFolder := discInterface.openFolder(FFromLoc);
          try
-            if getString(datafile) <> 'LcfDataBase' then
-               raise EParseMessage.create('RPG_RT.LDB is corrupt!');
-            VerifyFormat(datafile);
-
-            FReport.tasks := CONVERSION_TASKS;
-            FReport.setCurrentTask('Loading database');
-            FLdb := TLcfDataBase.Create(datafile);
-            //end of format and database check
-            legacy := TLegacySections.Create;
-            datafile.rewind;
-            getString(datafile);
-            while not datafile.eof do
-            begin
-               key := peekAhead(datafile);
-               if not (key in SECTIONS_I_KNOW_HOW_TO_READ) then
-                     legacy.Add(key, getStrSec(key, datafile, nil))
-               else skipSec(key, datafile);
-            end;
-         finally
-            datafile.Free;
-         end;
-
-         FReport.setCurrentTask('Loading map tree');
-         datafile := fromFolder.getFile('RPG_RT.lmt');
-         try
-            if getString(datafile) <> 'LcfMapTree' then
-               raise EParseMessage.create('RPG_RT.LMT is corrupt!');
-            FLmt := TFullTree.Create(datafile);
-            //done checking the map tree; now let's do some converting
-         finally
-            datafile.Free;
-         end;
-
-         FReport.setCurrentTask('Preparing scripts');
-         GDatabase.Free;
-         dic := TUnitDictionary.Create(10);
-         for filename in GArchives[0].allFiles('scripts\general\') do
-         begin
-            stream := GArchives[0].getFile(filename);
-            uFilename := StringReplace(filename, 'scripts\general\', '', []);
-            uFilename := StringReplace(uFilename, '.trs', '', []);
+            conversionArchive := GArchives.Add(fromFolder);
+            toFolder := discInterface.openFolder(FToLoc);
+            datafile := fromFolder.getFile('RPG_RT.ldb');
             try
-               dic.Add(uFilename, TStringList.Create);
-               dic[uFilename].LoadFromStream(stream);
+               if getString(datafile) <> 'LcfDataBase' then
+                  raise EParseMessage.create('RPG_RT.LDB is corrupt!');
+               VerifyFormat(datafile);
+
+               FReport.tasks := CONVERSION_TASKS;
+               FReport.setCurrentTask('Loading database');
+               FLdb := TLcfDataBase.Create(datafile);
+               //end of format and database check
+               legacy := TLegacySections.Create;
+               datafile.rewind;
+               getString(datafile);
+               while not datafile.eof do
+               begin
+                  key := peekAhead(datafile);
+                  if not (key in SECTIONS_I_KNOW_HOW_TO_READ) then
+                        legacy.Add(key, getStrSec(key, datafile, nil))
+                  else skipSec(key, datafile);
+               end;
             finally
-               stream.Free;
+               datafile.Free;
             end;
-         end;
 
-         try
-            FReport.setCurrentTask('Converting Database', 12);
-            GDatabase := TRpgDatabase.convert(FLdb, FLmt, dic, legacy, FReport,
-                                              FMapSprites, FPortraits, FAnims, FBattleSprites);
-         except
-            on E: EMissingPlugin do
+            FReport.setCurrentTask('Loading map tree');
+            datafile := fromFolder.getFile('RPG_RT.lmt');
+            try
+               if getString(datafile) <> 'LcfMapTree' then
+                  raise EParseMessage.create('RPG_RT.LMT is corrupt!');
+               FLmt := TFullTree.Create(datafile);
+               //done checking the map tree; now let's do some converting
+            finally
+               datafile.Free;
+            end;
+
+            FReport.setCurrentTask('Converting Database', 14);
+
+            //gathering resources
+            for i := 1 to FLdb.terrains do
             begin
-               MsgBox(E.Message, 'Missing plugin');
-               GDatabase := nil;
+               FBattleBackgrounds.Add(string(FLdb.terrain[i].battleBg));
+               if assigned(FLdb.terrain[i].soundEffect) then
+                  FSounds.Add(string(FLdb.terrain[i].soundEffect.filename));
+               FFrames.Add(string(FLdb.terrain[i].frame));
+            end;
+            FBattleBackgrounds.Add(string(FLdb.systemData.editorBattleBG));
+            FSysTiles.add(string(FLdb.SystemData.systemGraphic));
+            for i := 1 to FLdb.monsters do
+               FMonsters.Add(string(FLdb.monster[i].filename));
+            FFrames.Add(string(FLdb.SystemData.frame));
+
+            FreeAndNil(GDatabase);
+            dmDatabase := TdmDatabase.Create(nil);
+            try
+               GDatabase := TRpgDatabase.convert(FLdb, FLmt, FReport, self.ScanPageCommands,
+                                                 FMapSprites, FPortraits, FAnims, FAnims2,
+                                                 FBattleSprites, FWeapons, FSounds);
+               for legacyPair in legacy do
+                  GDatabase.AddLegacy('database', 0, legacyPair.key, legacyPair.value);
+            except
+               on E: EMissingPlugin do
+               begin
+                  MsgBox(E.Message, 'Missing plugin');
+                  GDatabase := nil;
+                  Exit;
+               end;
+               else begin
+                  GDatabase := nil;
+                  raise;
+               end;
+            end;
+
+            if terminated then
                Exit;
-            end;
-            else begin
-               GDatabase := nil;
-               raise;
-            end;
-         end;
+            FReport.setCurrentTask('Converting maps', fromFolder.countFiles('*.lmu'));
+            TFunctional.Map<string>(fromFolder.allFiles,
+               procedure(const filename: string)
+               begin
+                  FReport.newStep(filename);
+                  ConvertMap(filename, FLdb, FLmt, GDatabase.mapTree, fromFolder, toFolder);
+               end);
 
-         if terminated then
-            Exit;
-         FReport.setCurrentTask('Converting maps', fromFolder.countFiles('*.lmu'));
-         TFunctional.Map<string>(fromFolder.allFiles,
-            procedure(const filename: string)
+            if DebugHook <> 0 then
             begin
-               FReport.newStep(filename);
-               ConvertMap(filename, FLdb, FLmt, GDatabase.mapTree, fromFolder, toFolder);
-            end);
+               list := rm2_turbu_event_builder.UnknownOpcodeList;
+               for op in list do
+                  FReport.MakeHint(op);
+               list.free;
+            end;
 
-         if DebugHook <> 0 then
-         begin
-            list := rm2_turbu_event_builder.UnknownOpcodeList;
-            for op in list do
-               FReport.MakeHint(op);
-            list.free;
-         end;
+            if terminated then
+               Exit;
+            FReport.setCurrentTask('Copying Resources', 12);
+            if locate_files.rtpLocation = '' then
+               FReport.makeNotice('RTP not found.  RTP resources will not be copied.')
+            else self.copyResources(fromFolder, toFolder);
 
-         if terminated then
-            Exit;
-         FReport.setCurrentTask('Copying Resources', 7);
-         if locate_files.rtpLocation = '' then
-            FReport.makeNotice('RTP not found.  RTP resources will not be copied.')
-         else self.copyResources(fromFolder, toFolder);
-
-         if terminated then
-            Exit;
-         savefile := TMemoryStream.Create;
-         try
-            FReport.setCurrentTask('Saving database');
-            GDatabase.save(savefile);
-            toFolder.writeFile(DBNAME, savefile);
+            if terminated then
+               Exit;
+            FReport.setCurrentTask('Saving database', ord(high(TRpgDataTypes)) + dmDatabase.tableCount + 3);
+            FReport.newStep('Preparing schema');
             GDatabase.Filename := IncludeTrailingPathDelimiter(FToLoc) + DBNAME;
+            filename := IncludeTrailingPathDelimiter(FToLoc) + 'turbu.tdb';
+            db_create.ExtractDB(filename);
+            dmDatabase.BuildDatabase(filename, GDatabase);
+            GDatabase.copyToDB(dmDatabase, [], self.setNewStep);
+            dmDatabase.SaveAll(self.setNewStep);
+            FReport.newStep('Finished');
          finally
-            savefile.free;
+            conversionArchive := -1
          end;
-      finally
-         conversionArchive := -1
-      end;
 
-      FReport.makeReport;
-   except
-      FReport.fatal(TObject(AcquireExceptionObject) as Exception);
+         FReport.makeReport;
+      except
+         FReport.fatal(TObject(AcquireExceptionObject) as Exception);
+      end;
+   finally
+      legacy.Free;
+      FreeAndNil(dmDatabase);
+      FreeAndNil(GDatabase);
    end;
+end;
+
+procedure TConverterThread.setNewStep(value: string);
+begin
+   FReport.newStep(value);
 end;
 
 procedure TConverterThread.ScanCommands(list: TList<TEventCommand>);
@@ -390,12 +471,14 @@ begin
          case command.opcode of
             10130, 10640: FPortraits.Add(name);
             10630, 10650: FMapSprites.Add(name);
-            10660, 11550: FSongs.Add(name);
-            10670: FSounds.Add(name);
+            10660, 11510: FSongs.Add(name);
+            10670, 11550: FSounds.Add(name);
             10680: FSysTiles.Add(name);
+            10710: FBattleBackgrounds.Add(name);
             11110: FPictures.Add(name);
             11560: FMovies.Add(name);
             11720: FBackgrounds.Add(name);
+            else assert(false);
          end;
       end;
    finally
@@ -429,22 +512,27 @@ begin
    end;
 end;
 
-procedure TConverterThread.ScanPage(page: TEventPage);
-const OPCODES: array [1..12] of integer =
-   (10130, 10630, 10640, 10650, 10660, 10670, 10680, 11110, 11510, 11550, 11560,
-    11720);
+procedure TConverterThread.ScanPageCommands(list: TEventCommandList);
+const OPCODES: array [1..13] of integer =
+   (10130, 10630, 10640, 10650, 10660, 10670, 10680, 10710, 11110, 11510, 11550,
+    11560, 11720);
 begin
-   if page.filename <> '' then
-      FMapSprites.Add(string(page.filename));
-   if assigned(page.moveBlock.moveBlock) and (page.moveBlock.moveBlock.base <> '') then
-      scanMove(page.moveBlock);//do something
-   scanCommands(page.commands.where(
+   scanCommands(list.where(
       function(arg1: TEventCommand): boolean
       var
          dummy: integer;
       begin
          result := TArray.BinarySearch<integer>(OPCODES, arg1.opcode, dummy);
       end));
+end;
+
+procedure TConverterThread.ScanPage(page: TEventPage);
+begin
+   if page.filename <> '' then
+      FMapSprites.Add(string(page.filename));
+   if assigned(page.moveBlock.moveBlock) and (page.moveBlock.moveBlock.base <> '') then
+      scanMove(page.moveBlock);//do something
+   ScanPageCommands(page.commands);
 end;
 
 procedure TConverterThread.VerifyFormat(datafile: TStream);
@@ -473,7 +561,8 @@ begin
    framesPerSprite := sprite.X * sprite.Y;
    blitSurface := TSdlSurface.Create(frame.X, frame.Y * framesPerSprite, 8, 0, 0, 0, 0);
    try
-      if not blitSurface.SetPalette(image.format.palette.colors, 0, image.format.palette.count) then
+      if (not assigned(image.format.palette)) or
+         (not blitSurface.SetPalette(image.format.palette.colors, 0, image.format.palette.count)) then
          raise EInvalidImage.CreateFmt('Unable to convert sprite %s due to colorkey failure!', [name]);
       blitSurface.ColorKey := image.ColorKey;
 
@@ -547,6 +636,8 @@ begin
    if name = '' then
       Exit(false);
    image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(name))));
+   if image = nil then
+      Exit(false);
    try
       convertImage(image, id, FRAME, SPRITE, SHEET, oname, 'mapsprite', dirty);
    finally
@@ -570,8 +661,60 @@ begin
    if filename = '' then
       Exit(false);
    image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(filename))));
+   if image = nil then
+      Exit(false);
    try
       convertImage(image, -1, FRAME, SPRITE, SHEET, oname, 'portrait', dirty);
+   finally
+      image.free;
+   end;
+   result := true;
+end;
+
+function convertBattleChar(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
+const
+   FRAME: TSgPoint = (X: 48; Y: 48);
+   SPRITE: TSgPoint = (X: 3; Y: 8);
+   SHEET: TSgPoint = (X: 1; Y: 1);
+var
+   oname: string;
+   image: PSdlSurface;
+begin
+   filename := extractFileName(filename);
+   oname := filename;
+   findGraphic(filename, 'BattleCharSet');
+   if filename = '' then
+      Exit(false);
+   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(filename))));
+   if image = nil then
+      Exit(false);
+   try
+      convertImage(image, -1, FRAME, SPRITE, SHEET, oname, outFolderName, dirty);
+   finally
+      image.free;
+   end;
+   result := true;
+end;
+
+function convertWeapon(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
+const
+   FRAME: TSgPoint = (X: 64; Y: 64);
+   SPRITE: TSgPoint = (X: 3; Y: 8);
+   SHEET: TSgPoint = (X: 1; Y: 1);
+var
+   oname: string;
+   image: PSdlSurface;
+begin
+   filename := extractFileName(filename);
+   oname := filename;
+   findGraphic(filename, 'BattleWeapon');
+   if filename = '' then
+      Exit(false);
+   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(filename))));
+   if image = nil then
+      Exit(false);
+   try
+      convertImage(image, -1, FRAME, SPRITE, SHEET, oname, outFolderName, dirty);
    finally
       image.free;
    end;
@@ -594,6 +737,45 @@ begin
    finally
       stream.Free;
    end;
+   result := true;
+end;
+
+function convertMovies(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
+var
+   oname: string;
+   stream: TStream;
+begin
+   filename := extractFileName(filename);
+   oname := filename;
+   findMovie(filename);
+   if filename = '' then
+      Exit(false);
+   stream := TFileStream.Create(filename, fmOpenRead);
+   try
+      GArchives[VIDEO_ARCHIVE].writeFile(oname, stream);
+   finally
+      stream.Free;
+   end;
+   result := true;
+end;
+
+function convertSFX(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
+var
+   oname: string;
+   stream: TStream;
+begin
+   filename := extractFileName(filename);
+   oname := filename;
+   findSfx(filename);
+   if filename = '' then
+      Exit(false);
+   stream := TFileStream.Create(filename, fmOpenRead);
+   try
+      GArchives[SFX_ARCHIVE].writeFile(oname, stream);
+   finally
+      stream.Free;
+   end;
+   result := true;
 end;
 
 function convertAnim(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
@@ -611,6 +793,8 @@ begin
    if filename = '' then
       Exit(false);
    image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(filename))));
+   if image = nil then
+      Exit(false);
    sprite := SgPoint(5, image.width div 96);
    try
       convertImage(image, -1, FRAME, sprite, SHEET, oname, 'animation', dirty);
@@ -620,9 +804,30 @@ begin
    result := true;
 end;
 
-function extLength(filename: string): integer;
+function convertAnim2(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
+const
+   FRAME: TSgPoint = (X: 128; Y: 128);
+   SHEET: TSgPoint = (X: 1; Y: 1);
+var
+   oname: string;
+   image: PSdlSurface;
+   sprite: TSgPoint;
 begin
-   result := length(ExtractFileExt(filename));
+   filename := extractFileName(filename);
+   oname := filename;
+   findGraphic(filename, 'battle2');
+   if filename = '' then
+      Exit(false);
+   image := PSdlSurface(IMG_Load(PAnsiChar(Utf8String(filename))));
+   if image = nil then
+      Exit(false);
+   sprite := SgPoint(5, image.width div 128);
+   try
+      convertImage(image, -1, FRAME, sprite, SHEET, oname, 'animation', dirty);
+   finally
+      image.free;
+   end;
+   result := true;
 end;
 
 function ProcessImage(archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
@@ -639,7 +844,7 @@ begin
       begin
          tbi := ConvertWholeImage(aFile, dirty);
          if not assigned(tbi) then
-            Exit;
+            Exit(false);
          filename := ChangeFileExt(filename, '.png');
          aFile.Free;
          aFile := tbi;

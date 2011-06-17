@@ -65,6 +65,8 @@ type
    TDatafileRelationKeyAttribute = class(TDBRelationKeyAttribute)
    protected
       procedure SetRelationKey(instance: TValue; DB: TDataSet); override;
+      procedure SetRelationFilter(instance: TValue; DB: TDataSet); override;
+      function GetRelationFilterFieldNames: TArray<string>; override;
    end;
 
    [TDatafileIsUploadableAttribute]
@@ -75,7 +77,6 @@ type
    protected
       FName: string;
       FId: smallint;
-      FModified: boolean;
       FOnCreate: TScriptEvent;
       FOnDestroy: TScriptEvent;
 
@@ -91,7 +92,7 @@ type
       function GetID: integer;
       function GetName: string;
    public
-      constructor Create;
+      constructor Create; virtual;
       constructor Load(savefile: TStream); virtual;
       procedure save(savefile: TStream); virtual;
       procedure upload(ser: TDatasetSerializer; db: TDataSet);
@@ -104,7 +105,6 @@ type
       property signature[methodname: string]: TRpgDecl read getSignature;
       property name: string read FName write FName;
       property id: smallint read FId write FId;
-      property modified: boolean read FModified write FModified;
    published
       property OnCreate: TScriptEvent read FOnCreate write FOnCreate;
       property OnDestroy: TScriptEvent read FOnDestroy write FOnDestroy;
@@ -156,22 +156,25 @@ type
 
    TRpgDataList<T: TRpgDatafile, constructor> = class(TRpgObjectList<T>)
    private
-      type TEnumerator = record
+      type TEnumerator = class(TEnumerator<T>)
       private
          FIndex: Integer;
          FMyList: TRpgDataList<T>;
       public
          constructor Create(AMyList: TRpgDataList<T>);
-         function MoveNext: Boolean; inline;
-         function GetCurrent: T; inline;
-         property Current: T read GetCurrent;
+         function DoMoveNext: Boolean; override;
+         function DoGetCurrent: T; override;
       end;
+   protected
+      function DoGetEnumerator: TEnumerator<T>; override;
    public
       constructor Create; virtual;
       constructor Load(savefile: TStream); virtual;
       procedure save(savefile: TStream); virtual;
       procedure upload(ser: TDatasetSerializer; db: TDataSet); virtual;
-      function GetEnumerator: TEnumerator;
+      procedure download(ser: TDatasetSerializer; db: TDataSet); virtual;
+      procedure Clear;
+      function GetEnumerator: TEnumerator; reintroduce;
    end;
 
    TNameTypeList = TList<TNameType>;
@@ -746,15 +749,31 @@ end;
 { TFieldExt }
 
 function TFieldExt.getByteSet: TByteSet;
+var
+   stream: TMemoryStream;
 begin
-   assert(self.DataSize = SizeOf(Result));
-   assert(self.GetData(@Result));
+   stream := TMemoryStream.Create;
+   try
+      (self as TBlobField).SaveToStream(stream);
+      stream.rewind;
+      stream.read(result, sizeof(result));
+   finally
+      stream.Free;
+   end;
 end;
 
 procedure TFieldExt.setByteSet(const Value: TByteSet);
+var
+   stream: TMemoryStream;
 begin
-   assert(self.DataSize = SizeOf(Value));
-   self.SetData(@value);
+   stream := TMemoryStream.Create;
+   try
+      stream.Write(value, sizeof(value));
+      stream.rewind;
+      (self as TBlobField).LoadFromStream(stream);
+   finally
+      stream.Free;
+   end;
 end;
 
 function TFieldExt.getPSMethod: TMethod;
@@ -779,13 +798,19 @@ end;
 
 { TRpgDataList<T> }
 
+procedure TRpgDataList<T>.Clear;
+begin
+   inherited Clear;
+   self.Add(T.Create);
+end;
+
 constructor TRpgDataList<T>.Create;
 begin
    inherited Create(true);
    self.Add(T.Create);
 end;
 
-function TRpgDataList<T>.GetEnumerator: TEnumerator;
+function TRpgDataList<T>.DoGetEnumerator: TEnumerator<T>;
 begin
    result := TEnumerator.Create(self);
 end;
@@ -829,6 +854,27 @@ begin
       db.postSafe;
 end;
 
+procedure TRpgDataList<T>.download(ser: TDatasetSerializer; db: TDataSet);
+var
+   new: T;
+begin
+   self.Capacity := max(self.Capacity, db.RecordCount);
+   db.First;
+   while not db.Eof do
+   begin
+      new := T.Create;
+      new.download(ser, db);
+      self.Add(new);
+      db.Next;
+   end;
+end;
+
+function TRpgDataList<T>.GetEnumerator: TEnumerator;
+begin
+   //Grr! Why does Generics.Collections do this in such an overly-complicated way?
+   result := TEnumerator(DoGetEnumerator);
+end;
+
 { TRpgObject }
 
 constructor TRpgObject.Create(base: TRpgDatafile);
@@ -845,12 +891,12 @@ begin
    FIndex := 0;
 end;
 
-function TRpgDataList<T>.TEnumerator.GetCurrent: T;
+function TRpgDataList<T>.TEnumerator.DoGetCurrent: T;
 begin
    Result := FMyList[FIndex];
 end;
 
-function TRpgDataList<T>.TEnumerator.MoveNext: Boolean;
+function TRpgDataList<T>.TEnumerator.DoMoveNext: Boolean;
 begin
   Result := FIndex < FMyList.Count - 1;
   if Result then
@@ -880,6 +926,18 @@ begin
 end;
 
 { TDatafileRelationKeyAttribute }
+
+function TDatafileRelationKeyAttribute.GetRelationFilterFieldNames: TArray<string>;
+begin
+   SetLength(result, 1);
+   result[0] := 'master';
+end;
+
+procedure TDatafileRelationKeyAttribute.SetRelationFilter(instance: TValue;
+  DB: TDataSet);
+begin
+   db.filter := format('master = %d', [(instance.AsObject as TRpgDatafile).FId]);
+end;
 
 procedure TDatafileRelationKeyAttribute.SetRelationKey(instance: TValue;
   DB: TDataSet);

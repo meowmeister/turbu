@@ -29,7 +29,6 @@ type
    PStrHandler = procedure(const expected: byte; out theResult: ansiString);
 
 procedure skipSec (expected: byte; theFile: TStream; alreadyRead: boolean = false);
-function unknownCheck (x, y, z: byte; theFile: TStream): boolean; deprecated;
 function getString(theFile: TStream) : ansiString;
 function getStrSec (expected: word; theFile: TStream; handleUnex: PStrHandler) : ansiString;
 function getRSetSec (expected: byte; theFile: TStream; handleUnex: PIntHandler) : radioSet;
@@ -49,32 +48,6 @@ function NextSecIs(theFile: TStream; value: word): boolean;
 implementation
 
 procedure foundWrongSection(callername: string; expected, actual: integer); forward;
-
-function unknownCheck (x, y, z: byte; theFile: TStream): boolean;
-var
-   trueX, trueY, trueZ: byte;
-begin
-   with theFile do
-   begin
-      read(trueX, 1);
-      read(trueY, 1);
-      read(trueZ, 1);
-   end;
-   if trueX > x then
-   begin
-      msgBox ('Error: Expected section ' + intToHex(x, 2) + ' not found!', 'UnknownCheck says:', MB_OK);
-      result := true;
-      theFile.seek (-3, soFromCurrent)
-   end
-   else if trueX < x then
-   begin
-      msgBox ('Error: Expected section ' + intToHex(x, 2) + ', but found section ' + intToHex(trueX, 2) + ' stuck in there first.', 'UnknownCheck says:', MB_OK);
-      result := true;
-      theFile.seek (-3, soFromCurrent)
-   end
-   else
-      result := ((trueY = y) and (trueZ = z))
-end;
 
 {This procedure skips a section of a file.  If backUp is passed as TRUE, this
 means that the section number has already been read and the "expected" parameter
@@ -166,27 +139,24 @@ var
    i: word;
    converter: intX80;
 begin
-   with theFile do
+   converter := TBerConverter.Create(theFile);
+   i := converter.getData;
+   if i = expected then
+      result := getString(theFile)
+   else if i > expected then
    begin
-      converter := TBerConverter.Create(theFile);
-      i := converter.getData;
-      if i = expected then
-         result := getString(theFile)
-      else if i > expected then
-      begin
-         Seek(-1 * converter.size, soFromCurrent);
-         handleUnex(expected, result);
-      end
-      else if i = 0 then
-      begin
-         result := '';
-         seek(-1, soFromCurrent);
-      end
-      else
-      begin
-         foundWrongSection(callername, expected, i);
-         Exit;
-      end;
+      theFile.Seek(-1 * converter.size, soFromCurrent);
+      handleUnex(expected, result);
+   end
+   else if i = 0 then
+   begin
+      result := '';
+      theFile.seek(-1, soFromCurrent);
+   end
+   else
+   begin
+      foundWrongSection(callername, expected, i);
+      Exit;
    end;
 end;
 
@@ -245,7 +215,7 @@ begin
          read(recordLen, 1);
          read(dummy, recordlen);
          if recordLen > 1 then
-            raise EParseMessage.Create('Expected recordLen of 1 for section x' + IntToHex(expected,2) + ' but found ' + IntToStr(recordlen) + ' instead!');
+            raise EParseMessage.CreateFmt('Expected recordLen of 1 for section %d but found %d instead!', [expected, recordlen]);
       end
       else if (dummy > expected) or (dummy = 0) then
       begin
@@ -277,7 +247,7 @@ begin
          read(recordLen, 1);
          read(dummy, recordlen);
          if recordLen > 1 then
-            raise EParseMessage.Create('Expected recordLen of 1 for section x' + IntToHex(expected,2) + ' but found ' + IntToStr(recordlen) + ' instead!');
+            raise EParseMessage.CreateFmt('Expected recordLen of 1 for section %d but found %d instead!', [expected, recordlen]);
       end
       else if dummy > expected then
       begin

@@ -87,7 +87,7 @@ begin
    new.Height := last.Height;
    new.Width := last.Width;
    new.DataSource := DataSource;
-   new.DataField := format('command[%d]', [FCommandSet.Count + 1]);
+   new.DataField := format('command_%d', [FCommandSet.Count + 1]);
    new.ListSource := dsCommands;
    new.ListField := 'name';
    new.KeyField := 'id';

@@ -19,16 +19,20 @@ unit turbu_database_interface;
 
 interface
 uses
-   DB;
+   DB,
+   turbu_map_interface;
 
 type
    IRpgDatabase = interface(IInterface)
    ['{7C0AFF9B-9E51-4B67-AD08-5B8DAAF3EA24}']
+      function MapTree: IMapTree;
    end;
 
    IRpgDatastore = interface
       function NameLookup(const name: string; id: integer): string;
    end;
+
+   TUploadReportProc = reference to procedure (name: string);
 
 implementation
 

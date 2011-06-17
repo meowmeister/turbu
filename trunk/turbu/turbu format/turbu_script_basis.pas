@@ -41,7 +41,7 @@ type
       FUnit: string;
       FSignature: TScriptSignature;
    public
-      constructor Create(name, designName: string; point: TSgPoint);
+      constructor Create(name, designName: string; point: TSgPoint); reintroduce;
       procedure SetSignature(compiler: TPSPascalCompiler);
 
       property scriptUnitName: string read FUnit write FUnit;

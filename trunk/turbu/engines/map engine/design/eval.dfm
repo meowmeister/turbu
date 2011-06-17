@@ -13,7 +13,6 @@ object frmMapProperties: TfrmMapProperties
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
-  OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 120
   TextHeight = 16
@@ -143,7 +142,7 @@ object frmMapProperties: TfrmMapProperties
         Margins.Bottom = 4
         ButtonKind = bkStandard
         TabOrder = 0
-        DataField = 'size.x'
+        DataField = 'size_x'
         DataSource = srcMap
       end
       object spnHeight: TJvDBSpinEdit
@@ -157,7 +156,7 @@ object frmMapProperties: TfrmMapProperties
         Margins.Bottom = 4
         ButtonKind = bkStandard
         TabOrder = 1
-        DataField = 'size.y'
+        DataField = 'size_y'
         DataSource = srcMap
       end
     end
@@ -344,7 +343,7 @@ object frmMapProperties: TfrmMapProperties
           Margins.Bottom = 4
           ButtonKind = bkStandard
           TabOrder = 1
-          DataField = 'scrollSpeed.x'
+          DataField = 'scrollSpeed_x'
           DataSource = srcMap
         end
       end
@@ -414,7 +413,7 @@ object frmMapProperties: TfrmMapProperties
           Margins.Bottom = 4
           ButtonKind = bkStandard
           TabOrder = 1
-          DataField = 'scrollSpeed.y'
+          DataField = 'scrollSpeed_y'
           DataSource = srcMap
         end
       end
@@ -474,7 +473,7 @@ object frmMapProperties: TfrmMapProperties
         Margins.Top = 4
         Margins.Right = 4
         Margins.Bottom = 4
-        DataField = 'BgmData.name'
+        DataField = 'BgmData_name'
         DataSource = srcMetadata
         ReadOnly = True
         TabOrder = 2
@@ -742,7 +741,7 @@ object frmMapProperties: TfrmMapProperties
         Margins.Bottom = 4
         ButtonKind = bkStandard
         TabOrder = 0
-        DataField = 'encounters[1]'
+        DataField = 'encounters_1'
         DataSource = srcMap
       end
       object spnVar2: TJvDBSpinEdit
@@ -756,7 +755,7 @@ object frmMapProperties: TfrmMapProperties
         Margins.Bottom = 4
         ButtonKind = bkStandard
         TabOrder = 1
-        DataField = 'encounters[2]'
+        DataField = 'encounters_2'
         DataSource = srcMap
       end
       object spnVar3: TJvDBSpinEdit
@@ -770,7 +769,7 @@ object frmMapProperties: TfrmMapProperties
         Margins.Bottom = 4
         ButtonKind = bkStandard
         TabOrder = 2
-        DataField = 'encounters[3]'
+        DataField = 'encounters_3'
         DataSource = srcMap
       end
       object spnVar4: TJvDBSpinEdit
@@ -784,7 +783,7 @@ object frmMapProperties: TfrmMapProperties
         Margins.Bottom = 4
         ButtonKind = bkStandard
         TabOrder = 3
-        DataField = 'encounters[4]'
+        DataField = 'encounters_4'
         DataSource = srcMap
       end
       object cboEncounterScript: TDBLookupComboBox
@@ -865,38 +864,134 @@ object frmMapProperties: TfrmMapProperties
     TabOrder = 5
   end
   object srcMetadata: TDataSource
-    DataSet = dmDatabase.metadata
+    DataSet = metadata
     Left = 61
     Top = 392
   end
   object dsMap: TClientDataSet
     Active = True
     Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'id'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'name'
+        DataType = ftWideString
+        Size = 32
+      end
+      item
+        Name = 'modified'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'tileset'
+        DataType = ftInteger
+      end
+      item
+        Name = 'size_x'
+        DataType = ftInteger
+      end
+      item
+        Name = 'size_y'
+        DataType = ftInteger
+      end
+      item
+        Name = 'depth'
+        DataType = ftByte
+      end
+      item
+        Name = 'wraparound'
+        DataType = ftByte
+      end
+      item
+        Name = 'hasBG'
+        DataType = ftBoolean
+      end
+      item
+        Name = 'bgName'
+        DataType = ftWideString
+        Size = 255
+      end
+      item
+        Name = 'vscroll'
+        DataType = ftByte
+      end
+      item
+        Name = 'hscroll'
+        DataType = ftByte
+      end
+      item
+        Name = 'scrollSpeed_x'
+        DataType = ftInteger
+      end
+      item
+        Name = 'scrollSpeed_y'
+        DataType = ftInteger
+      end
+      item
+        Name = 'scriptFormat'
+        DataType = ftByte
+      end
+      item
+        Name = 'scriptFile'
+        DataType = ftWideString
+        Size = 255
+      end
+      item
+        Name = 'encounterScript'
+        DataType = ftWideString
+        Size = 255
+      end
+      item
+        Name = 'encounters_1'
+        DataType = ftInteger
+      end
+      item
+        Name = 'encounters_2'
+        DataType = ftInteger
+      end
+      item
+        Name = 'encounters_3'
+        DataType = ftInteger
+      end
+      item
+        Name = 'encounters_4'
+        DataType = ftInteger
+      end
+      item
+        Name = 'tileMap'
+        DataType = ftBlob
+      end>
+    IndexDefs = <>
     Params = <>
-    Left = 112
-    Top = 392
+    StoreDefs = True
+    Left = 168
+    Top = 504
     Data = {
-      E80100009619E0BD010000001800000016000000000003000000E80102696404
-      00010004000000046E616D650100490000000100055749445448020002002000
+      E40100009619E0BD010000001800000016000000000003000000E40102696404
+      00010004000000046E616D6501004A0000000100055749445448020002004000
       086D6F64696669656402000300000000000774696C6573657404000100000000
-      000673697A652E7804000100000000000673697A652E79040001000000000005
+      000673697A655F7804000100000000000673697A655F79040001000000000005
       646570746801000200000000000A7772617061726F756E640100020000000000
-      05686173424702000300000000000662674E616D650200490000000100055749
-      44544802000200FF0007767363726F6C6C010002000000000007687363726F6C
-      6C01000200000000000D7363726F6C6C53706565642E7804000100000000000D
-      7363726F6C6C53706565642E7904000100000000000C736372697074466F726D
-      617401000200000000000A73637269707446696C650200490000000100055749
-      44544802000200FF000F656E636F756E74657253637269707402004900000001
-      0005574944544802000200FF000D656E636F756E746572735B315D0400010000
-      0000000D656E636F756E746572735B325D04000100000000000D656E636F756E
-      746572735B335D04000100000000000D656E636F756E746572735B345D040001
-      00000000000774696C654D617004004B00000001000753554254595045020049
-      00070042696E617279000000}
+      05686173424702000300000000000662674E616D6502004A0000000100055749
+      44544802000200FE0107767363726F6C6C010002000000000007687363726F6C
+      6C01000200000000000D7363726F6C6C53706565645F7804000100000000000D
+      7363726F6C6C53706565645F7904000100000000000C736372697074466F726D
+      617401000200000000000A73637269707446696C6502004A0000000100055749
+      44544802000200FE010F656E636F756E74657253637269707402004A00000001
+      0005574944544802000200FE010C656E636F756E746572735F31040001000000
+      00000C656E636F756E746572735F3204000100000000000C656E636F756E7465
+      72735F3304000100000000000C656E636F756E746572735F3404000100000000
+      000774696C654D617004004B0000000100075355425459504502004900070042
+      696E617279000000}
     object dsMapid: TIntegerField
       FieldName = 'id'
       Required = True
     end
-    object dsMapname: TStringField
+    object dsMapname: TWideStringField
       FieldName = 'name'
       Size = 32
     end
@@ -907,10 +1002,10 @@ object frmMapProperties: TfrmMapProperties
       FieldName = 'tileset'
     end
     object dsMapsizex: TIntegerField
-      FieldName = 'size.x'
+      FieldName = 'size_x'
     end
     object dsMapsizey: TIntegerField
-      FieldName = 'size.y'
+      FieldName = 'size_y'
     end
     object dsMapdepth: TByteField
       FieldName = 'depth'
@@ -921,7 +1016,7 @@ object frmMapProperties: TfrmMapProperties
     object dsMaphasBG: TBooleanField
       FieldName = 'hasBG'
     end
-    object dsMapbgName: TStringField
+    object dsMapbgName: TWideStringField
       FieldName = 'bgName'
       Size = 255
     end
@@ -932,33 +1027,33 @@ object frmMapProperties: TfrmMapProperties
       FieldName = 'hscroll'
     end
     object dsMapscrollSpeedx: TIntegerField
-      FieldName = 'scrollSpeed.x'
+      FieldName = 'scrollSpeed_x'
     end
     object dsMapscrollSpeedy: TIntegerField
-      FieldName = 'scrollSpeed.y'
+      FieldName = 'scrollSpeed_y'
     end
     object dsMapscriptFormat: TByteField
       FieldName = 'scriptFormat'
     end
-    object dsMapscriptFile: TStringField
+    object dsMapscriptFile: TWideStringField
       FieldName = 'scriptFile'
       Size = 255
     end
-    object dsMapencounterScript: TStringField
+    object dsMapencounterScript: TWideStringField
       FieldName = 'encounterScript'
       Size = 255
     end
     object dsMapencounters1: TIntegerField
-      FieldName = 'encounters[1]'
+      FieldName = 'encounters_1'
     end
     object dsMapencounters2: TIntegerField
-      FieldName = 'encounters[2]'
+      FieldName = 'encounters_2'
     end
     object dsMapencounters3: TIntegerField
-      FieldName = 'encounters[3]'
+      FieldName = 'encounters_3'
     end
     object dsMapencounters4: TIntegerField
-      FieldName = 'encounters[4]'
+      FieldName = 'encounters_4'
     end
     object dsMaptileMap: TBlobField
       FieldName = 'tileMap'
@@ -978,5 +1073,238 @@ object frmMapProperties: TfrmMapProperties
     DataSet = dmDatabase.scriptRange
     Left = 208
     Top = 392
+  end
+  object metadata: TClientDataSet
+    Active = True
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'id'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'name'
+        Attributes = [faRequired]
+        DataType = ftWideString
+        Size = 20
+      end
+      item
+        Name = 'parent'
+        Attributes = [faRequired]
+        DataType = ftSmallint
+      end
+      item
+        Name = 'scrollPosition_x'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'scrollPosition_y'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'treeOpen'
+        Attributes = [faRequired]
+        DataType = ftBoolean
+      end
+      item
+        Name = 'bgmState'
+        Attributes = [faRequired]
+        DataType = ftByte
+      end
+      item
+        Name = 'BgmData_id'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'BgmData_name'
+        Attributes = [faRequired]
+        DataType = ftWideString
+        Size = 255
+      end
+      item
+        Name = 'BgmData_fadeIn'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'BgmData_tempo'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'BgmData_volume'
+        Attributes = [faRequired]
+        DataType = ftByte
+      end
+      item
+        Name = 'BgmData_leftBalance'
+        Attributes = [faRequired]
+        DataType = ftByte
+      end
+      item
+        Name = 'BgmData_rightBalance'
+        Attributes = [faRequired]
+        DataType = ftByte
+      end
+      item
+        Name = 'battleBgState'
+        Attributes = [faRequired]
+        DataType = ftByte
+      end
+      item
+        Name = 'battleBgName'
+        Attributes = [faRequired]
+        DataType = ftWideString
+        Size = 255
+      end
+      item
+        Name = 'canPort'
+        Attributes = [faRequired]
+        DataType = ftByte
+      end
+      item
+        Name = 'canEscape'
+        Attributes = [faRequired]
+        DataType = ftByte
+      end
+      item
+        Name = 'canSave'
+        Attributes = [faRequired]
+        DataType = ftByte
+      end
+      item
+        Name = 'internalFilename_Name'
+        Attributes = [faRequired]
+        DataType = ftWideString
+        Size = 255
+      end
+      item
+        Name = 'internalFilename_duplicates'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'mapEngine'
+        Attributes = [faRequired]
+        DataType = ftShortint
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 120
+    Top = 520
+    Data = {
+      1B0200009619E0BD0100000018000000160000000000030000001B0202696404
+      00010004000000046E616D6501004A0004000100055749445448020002002800
+      06706172656E740200010004000000107363726F6C6C506F736974696F6E5F78
+      0400010004000000107363726F6C6C506F736974696F6E5F7904000100040000
+      0008747265654F70656E02000300040000000862676D53746174650100020004
+      0000000A42676D446174615F696404000100040000000C42676D446174615F6E
+      616D6502004A000400010005574944544802000200FE010E42676D446174615F
+      66616465496E04000100040000000D42676D446174615F74656D706F04000100
+      040000000E42676D446174615F766F6C756D6501000200040000001342676D44
+      6174615F6C65667442616C616E636501000200040000001442676D446174615F
+      726967687442616C616E636501000200040000000D626174746C654267537461
+      746501000200040000000C626174746C6542674E616D6502004A000400010005
+      574944544802000200FE010763616E506F727401000200040000000963616E45
+      736361706501000200040000000763616E53617665010002000400000015696E
+      7465726E616C46696C656E616D655F4E616D6502004A00040001000557494454
+      4802000200FE011B696E7465726E616C46696C656E616D655F6475706C696361
+      7465730400010004000000096D6170456E67696E6501000100040000000000}
+    object metadataid: TIntegerField
+      FieldName = 'id'
+      Required = True
+    end
+    object metadataname: TWideStringField
+      FieldName = 'name'
+      Required = True
+    end
+    object metadataparent: TSmallintField
+      FieldName = 'parent'
+      Required = True
+    end
+    object metadatascrollPosition_x: TIntegerField
+      FieldName = 'scrollPosition_x'
+      Required = True
+    end
+    object metadatascrollPosition_y: TIntegerField
+      FieldName = 'scrollPosition_y'
+      Required = True
+    end
+    object metadatatreeOpen: TBooleanField
+      FieldName = 'treeOpen'
+      Required = True
+    end
+    object metadatabgmState: TByteField
+      FieldName = 'bgmState'
+      Required = True
+    end
+    object metadataBgmData_id: TIntegerField
+      FieldName = 'BgmData_id'
+      Required = True
+    end
+    object metadataBgmData_name: TWideStringField
+      FieldName = 'BgmData_name'
+      Required = True
+      Size = 255
+    end
+    object metadataBgmData_fadeIn: TIntegerField
+      FieldName = 'BgmData_fadeIn'
+      Required = True
+    end
+    object metadataBgmData_tempo: TIntegerField
+      FieldName = 'BgmData_tempo'
+      Required = True
+    end
+    object metadataBgmData_volume: TByteField
+      FieldName = 'BgmData_volume'
+      Required = True
+    end
+    object metadataBgmData_leftBalance: TByteField
+      FieldName = 'BgmData_leftBalance'
+      Required = True
+    end
+    object metadataBgmData_rightBalance: TByteField
+      FieldName = 'BgmData_rightBalance'
+      Required = True
+    end
+    object metadatabattleBgState: TByteField
+      FieldName = 'battleBgState'
+      Required = True
+    end
+    object metadatabattleBgName: TWideStringField
+      FieldName = 'battleBgName'
+      Required = True
+      Size = 255
+    end
+    object metadatacanPort: TByteField
+      FieldName = 'canPort'
+      Required = True
+    end
+    object metadatacanEscape: TByteField
+      FieldName = 'canEscape'
+      Required = True
+    end
+    object metadatacanSave: TByteField
+      FieldName = 'canSave'
+      Required = True
+    end
+    object metadatainternalFilename_Name: TWideStringField
+      FieldName = 'internalFilename_Name'
+      Required = True
+      Size = 255
+    end
+    object metadatainternalFilename_duplicates: TIntegerField
+      FieldName = 'internalFilename_duplicates'
+      Required = True
+    end
+    object metadatamapEngine: TShortintField
+      FieldName = 'mapEngine'
+      Required = True
+    end
   end
 end

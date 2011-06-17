@@ -94,12 +94,13 @@ const
 
 resourcestring
    DESIGN_DB = 'design';
-   DBNAME = 'project.tdb';
-   PROJECT_DB = 'database';
-   MAP_DB = 'maps';
-   IMAGE_DB = 'images';
-   SCRIPT_DB = 'scripts';
-   MUSIC_DB = 'music';
+   DBNAME = 'turbu.tdb';
+   MAP_DB = 'Maps';
+   IMAGE_DB = 'Images';
+   SCRIPT_DB = 'Scripts';
+   MUSIC_DB = 'Music';
+   SFX_DB = 'SFX';
+   VIDEO_DB = 'Movies';
 
 implementation
 

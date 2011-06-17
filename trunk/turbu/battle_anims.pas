@@ -35,6 +35,7 @@ type
       FGreen: byte;
       FBlue: byte;
       FPower: byte;
+      FShakeWhere: TFlashTarget;
    public
       constructor Create(input: TStream; const id: word);
       destructor Destroy; override;
@@ -46,11 +47,11 @@ type
       property g: byte read FGreen;
       property b: byte read FBlue;
       property a: byte read FPower;
+      property shakeWhere: TFlashTarget read FShakeWhere;
    end;
 
    TAnimCell = class(TObject)
    private
-      FUnknown: integer;
       FIndex: word;
       FX: smallint;
       FY: smallint;
@@ -78,10 +79,11 @@ type
       FHitsAll: boolean;
       FYTarget: TAnimYTarget;
       FFrameSec: array of TAnimFrame;
+      FLargeAnim: boolean;
 
       function countEffects: word; inline;
-      function getEffect(x: word): TAnimEffects; inline;
-      function getFrame(x: word): TAnimFrame; inline;
+      function getEffect(x: word): TAnimEffects;
+      function getFrame(x: word): TAnimFrame;
       function countFrames: word; inline;
    public
       constructor Create(input: TStream; const id: word);
@@ -95,6 +97,39 @@ type
       property effects: word read countEffects;
       property frame[x: word]: TAnimFrame read getFrame;
       property frames: word read countFrames;
+      property largeAnim: boolean read FLargeAnim;
+   end;
+
+   TBattle2Data = class
+   private
+      FName: ansiString;
+      FFilename: ansiString;
+      FFrame: integer;
+      FUnk04: integer;
+      FUnk05: integer;
+   public
+      constructor Create(input: TStream; const id: word);
+      property name: ansiString read FName;
+      property filename: ansiString read FFilename;
+      property frame: integer read FFrame;
+      property unk04: integer read FUnk04;
+      property unk05: integer read FUnk05;
+   end;
+
+   TBattleAnim2 = class
+   private
+      FName: ansiString;
+      FSpeed: integer;
+      FPoses: TArray<TBattle2Data>;
+      FWeapons: TArray<TBattle2Data>;
+   public
+      constructor Create(input: TStream; const id: word);
+      destructor Destroy; override;
+
+      property name: ansiString read FName;
+      property speed: integer read FSpeed;
+      property poses: TArray<TBattle2Data> read FPoses;
+      property weapons: TArray<TBattle2Data> read FWeapons;
    end;
 
 implementation
@@ -122,7 +157,7 @@ begin
    FGreen := getNumSec(5, input, fillInAnimFxInt);
    FBlue := getNumSec(6, input, fillInAnimFxInt);
    FPower := getNumSec(7, input, fillInAnimFxInt);
-   skipSec(8, input); //no idea what this does.  It showed up in Love and War's database
+   FShakeWhere := TFlashTarget(getNumSec(8, input, fillInZeroInt));
    if not peekAhead(input, 0) then
       raise EParseMessage.createFmt('Exceptional case found at LDB anim fx x%s!', [intToHex(id, 2)]);
    //end if
@@ -144,8 +179,7 @@ begin
    converter := TBerConverter.Create(input);
    if converter.getData <> id then
       raise EParseMessage.createFmt('Battle Animation FX record %d of RPG_RT.LDB not found!', [id]);
-   FUnknown := getNumSec(1, input, fillInZeroInt);
-   assert(FUnknown = 0);
+   assert(getNumSec(1, input, fillInZeroInt) = 0);
    FIndex := getNumSec(2, input, fillInZeroInt);
    FX := getNumSec(3, input, fillInZeroInt);
    FY := getNumSec(4, input, fillInZeroInt);
@@ -175,6 +209,7 @@ end;
 constructor TBattleAnim.Create(input: TStream; const id: word);
 var
    converter: intX80;
+   dummy: rawByteString;
    i, j: word;
 begin
    inherited create;
@@ -185,8 +220,13 @@ begin
    FFilename := getStrSec(2, input, fillInBlankStr);
    if GProjectFormat = pf_2k3 then
    begin
-      for i := 3 to 5 do
-         skipSec(i, input);
+      FLargeAnim := GetChboxSec(3, input, FillInZeroInt);
+      for i := 4 to 5 do
+      begin
+         dummy := getStrSec(i, input, fillInBlankStr);
+         if dummy <> '' then
+            raise EParseMessage.createFmt('Unexpected content in section %d, Battle Animation record %d!', [i, id]);
+      end;
    end;
 
    if not peekAhead(input, 6) then //FX section
@@ -225,10 +265,8 @@ begin
       //end if
    end;
 
-   //   FFrameSec := getStrSec($C, input, fillInAnimStr);
    if not peekAhead(input, 0) then
       raise EParseMessage.createFmt('Exceptional case found at LDB anim x%s!', [intToHex(id, 2)]);
-   //end if
 end;
 
 destructor TBattleAnim.Destroy;
@@ -253,6 +291,75 @@ end;
 function TBattleAnim.getFrame(x: word): TAnimFrame;
 begin
    result := FFrameSec[x];
+end;
+
+{ TBattle2Data }
+
+constructor TBattle2Data.Create(input: TStream; const id: word);
+var
+   converter: intX80;
+begin
+   inherited create;
+   converter := TBerConverter.Create(input);
+   if converter.getData <> id then
+      raise EParseMessage.createFmt('Battle 2 Data record %d not found!', [id]);
+   if peekAhead(input, 0) then
+      Exit;
+
+   FName := getStrSec(1, input, fillInBlankStr);
+   FFilename := getStrSec(2, input, fillInBlankStr);
+   FFrame := getNumSec(3, input, fillInZeroInt);
+   FUnk04 := getNumSec(4, input, fillInZeroInt);
+   FUnk05 := getNumSec(5, input, fillInZeroInt);
+   assert(peekAhead(input, 0));
+end;
+
+{ TBattleAnim2 }
+
+constructor TBattleAnim2.Create(input: TStream; const id: word);
+var
+   converter: intX80;
+   i: integer;
+begin
+   inherited create;
+   converter := TBerConverter.Create(input);
+   if converter.getData <> id then
+      raise EParseMessage.createFmt('Battle 2 record %d not found!', [id]);
+   FName := getStrSec(1, input, fillInBlankStr);
+   FSpeed := getNumSec(2, input, fillInZeroInt);
+   if FSpeed = 0 then
+      FSpeed := 20;
+
+   if not peekAhead(input, $A) then //Poses section
+      raise EParseMessage.createFmt('Poses section of Anim2 %d not found!', [id]);
+   converter.read(input); //length statement
+   converter.read(input); //quantity
+   setLength(FPoses, converter.getData + 1);
+   FPoses[0] := nil;
+   for I := 1 to high(FPoses) do
+      FPoses[i] := TBattle2Data.Create(input, i);
+
+   if not peekAhead(input, $B) then //Weapons section
+      raise EParseMessage.createFmt('Weapons section of Anim2 %d not found!', [id]);
+   converter.read(input); //length statement
+   converter.read(input); //quantity
+   setLength(FWeapons, converter.getData + 1);
+   FWeapons[0] := nil;
+   for I := 1 to high(FWeapons) do
+      FWeapons[i] := TBattle2Data.Create(input, i);
+
+   assert(peekAhead(input, 0));
+end;
+
+destructor TBattleAnim2.Destroy;
+var
+   i: integer;
+begin
+   for i := 1 to High(FPoses) do
+      FPoses[i].Free;
+   for i := 1 to High(FWeapons) do
+      FWeapons[i].Free;
+   inherited Destroy;
 end;
 
 { Classless }

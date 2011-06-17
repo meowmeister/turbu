@@ -79,6 +79,7 @@ type
       function getCurveSec: pointer;
       function getDModifierCount: word;
       function getDtypeModifier(x: word): byte;
+      function GetBattlePos: TPoint;
    public
       constructor create(input: TStream; const id: byte; parent: TObject);
       destructor Destroy; override;
@@ -118,6 +119,7 @@ type
       property initialEq[x: byte]: word read getInitialEq;
       property unarmedAnim: word read FUnarmedAnim;
       property battleSprite: word read FBattleChar write FBattleChar;
+      property battlePosition: TPoint read GetBattlePos;
       property id: byte read FID;
    end;
 
@@ -128,7 +130,7 @@ type
       FCurveSec: array of word; //1F
       FExpStandard: word; //29
       FExpAddition: word; //2A
-      FExpCorrection: byte; //2B
+      FExpCorrection: word; //2B
       FGraphicIndex: byte; //3E
       FSkillSection: array of THeroSkillRecord; //3F
       FConditionModifiers: array of byte;
@@ -162,7 +164,7 @@ type
       property strongDef: boolean read FStrongDefense write FStrongDefense;
       property expStandard: word read FExpStandard write FExpStandard;
       property expAddition: word read FExpAddition write FExpAddition;
-      property expCorrection: byte read FExpCorrection write FExpCorrection;
+      property expCorrection: word read FExpCorrection write FExpCorrection;
       property skills: word read getSkillCount;
       property skill[x: word]: THeroSkillRecord read getSkill;
       property dtypeModifiers: word read getDModifierCount;
@@ -274,6 +276,11 @@ begin
    for i := low(FSkillSection) to high(FSkillSection) do
       FSkillSection[i].Free;
    inherited;
+end;
+
+function THeroRecord.GetBattlePos: TPoint;
+begin
+   result := point(FBattleX, FBattleY);
 end;
 
 function THeroRecord.getCModifierCount: word;
@@ -389,7 +396,6 @@ begin
       getArraySec($48, input, FConditionModifiers[1])
    else
       getArraySec($48, input, FConditionModifiers[0]);
-   //end if
    setLength(FDtypeModifiers, getNumSec($49, input, fillInHeroInt) + 1);
    if length(FDtypeModifiers) > 1 then
       getArraySec($4a, input, FDtypeModifiers[1])

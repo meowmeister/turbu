@@ -130,6 +130,8 @@ type
 
       property Renderer: TSdlRenderer read FRenderer;
 
+      property Window: TSdlWindow read FWindow;
+
 //      property Fullscreen: boolean read IsFullscreen write SetFullscreen;
    end;
 

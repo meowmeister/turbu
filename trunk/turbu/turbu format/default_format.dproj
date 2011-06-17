@@ -77,7 +77,6 @@
 				<DesignClass>TDataModule</DesignClass>
 			</DCCReference>
 			<DCCReference Include="turbu_sprites.pas"/>
-			<DCCReference Include="turbu_unit_dictionary.pas"/>
 			<DCCReference Include="turbu_defs.pas"/>
 			<DCCReference Include="turbu_decl_utils.pas"/>
 			<DCCReference Include="turbu_vartypes.pas"/>
@@ -100,6 +99,9 @@
 			<DCCReference Include="script\EB_Characters.pas"/>
 			<DCCReference Include="script\EB_Settings.pas"/>
 			<DCCReference Include="script\EB_Media.pas"/>
+			<DCCReference Include="..\..\components\TURBU\FirebirdDataset.pas"/>
+			<DCCReference Include="database\turbu_monsters.pas"/>
+			<DCCReference Include="script\EB_Battle.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

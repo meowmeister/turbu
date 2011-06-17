@@ -13,6 +13,7 @@ type
   public
     { Public declarations }
     procedure AddItem(const name: string; group: integer);
+    procedure Dump(const filename: string);
   end;
 
 implementation
@@ -36,6 +37,11 @@ begin
             self.Show;
       end;
    runThreadsafe(closure);
+end;
+
+procedure TfrmConversionOutput.Dump(const filename: string);
+begin
+   listbox1.Items.SaveToFile(filename);
 end;
 
 end.

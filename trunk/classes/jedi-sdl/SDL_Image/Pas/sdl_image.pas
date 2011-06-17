@@ -186,7 +186,7 @@ external {$IFDEF __GPC__}name 'IMG_Linked_Version'{$ELSE} SDL_ImageLibName{$ENDI
 {$EXTERNALSYM IMG_Linked_Version}
 
 type
-   TImgInitFlags = set of (imgJpg, imgPng, imgTif, imgForce32 = 31);
+   TImgInitFlags = set of (imgJpg, imgPng, imgTif, imgXyz, imgForce32 = 31);
 
 { Loads dynamic libraries and prepares them for use. }
 function IMG_Init(flags: TImgInitFlags): TImgInitFlags;

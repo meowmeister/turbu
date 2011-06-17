@@ -24,17 +24,26 @@ type
       constructor Create(index: integer);
    end;
 
+   UploadBattleConditionsAttribute = class(TDBUploadAttribute)
+   protected
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
 type
    TMoveType = (mt_still, mt_randomMove, mt_cycleUD, mt_cycleLR, mt_chaseHero, mt_fleeHero, mt_byRoute);
    TStartCondition = (by_key, by_touch, by_collision, automatic, parallel, on_call);
    TAnimType = (at_sentry, at_jogger, at_fixedDir, at_fixedJog, at_statue, at_spinRight);
    TPageConditions = (pc_switch1, pc_switch2, pc_var1, pc_var2, pc_item, pc_hero, pc_timer1, pc_timer2);
+   TBattlePageConditions = (bp_turns, bp_monsterTime, bp_heroTime, bp_exhaustion, bp_monsterHP, bp_HeroHP, bp_commandUsed);
+
    TPageConditionSet = set of TPageConditions;
+   TBattlePageConditionSet = set of TBattlePageConditions;
 
    TRpgMapObject = class;
 
    TRpgEventConditions = class(TObject)
-   private
+   protected
       [UploadConditions]
       FConditions: TPageConditionSet;
       FSwitch1: integer;
@@ -78,6 +87,50 @@ type
       property script: string read FScript write FScript;
    end;
 
+   TBattleEventConditions = class(TRpgEventConditions)
+   protected
+      [UploadBattleConditions]
+      FBattleConditions: TBattlePageConditionSet;
+      FMonsterHP: integer;
+      FTurnsMultiple: integer;
+      FMonsterHPMax: integer;
+      FHeroCommandWhich: integer;
+      FHeroHP: integer;
+      FHeroHPMax: integer;
+      FExhaustionMax: integer;
+      FMonsterTurnsMultiple: integer;
+      FHeroTurnsMultiple: integer;
+      FMonsterHPMin: integer;
+      FHeroHPMin: integer;
+      FExhaustionMin: integer;
+      FTurnsConst: integer;
+      FMonsterTurnsConst: integer;
+      FHeroTurnsConst: integer;
+      FMonsterTurn: integer;
+      FHeroCommandWho: integer;
+      FHeroTurn: integer;
+   public
+      property battleConditions: TBattlePageConditionSet read FBattleConditions;
+      property turnsConst: integer read FTurnsConst;
+      property turnsMultiple: integer read FTurnsMultiple;
+      property monsterTurn: integer read FMonsterTurn;
+      property monsterTurnsConst: integer read FMonsterTurnsConst;
+      property monsterTurnsMultiple: integer read FMonsterTurnsMultiple;
+      property heroTurn: integer read FHeroTurn;
+      property heroTurnsConst: integer read FHeroTurnsConst;
+      property heroTurnsMultiple: integer read FHeroTurnsMultiple;
+      property exhaustionMin: integer read FExhaustionMin;
+      property exhaustionMax: integer read FExhaustionMax;
+      property monsterHP: integer read FMonsterHP;
+      property monsterHPMin: integer read FMonsterHPMin;
+      property monsterHPMax: integer read FMonsterHPMax;
+      property heroHP: integer read FHeroHP;
+      property heroHPMin: integer read FHeroHPMin;
+      property heroHPMax: integer read FHeroHPMax;
+      property heroCommandWho: integer read FHeroCommandWho;
+      property heroCommandWhich: integer read FHeroCommandWhich;
+   end;
+
    TRpgEventPage = class(TRpgDatafile)
    private
       FFrame: word;
@@ -115,7 +168,7 @@ type
       FEventText: string;
       class function keyChar: AnsiChar; override;
    public
-      constructor Create(parent: TRpgMapObject; id: smallint);
+      constructor Create(parent: TRpgMapObject; id: smallint); reintroduce;
       constructor Load(savefile: TStream); overload; override;
       constructor Load(savefile: TStream; parent: TRpgMapObject); reintroduce; overload;
       destructor Destroy; override;
@@ -164,8 +217,8 @@ type
    public //no idea why, but marking this protected generates a bad VMT.
       class function keyChar: ansiChar; override;
    public
-      constructor Create; overload;
-      constructor Create(id: smallint); overload;
+      constructor Create; overload; override;
+      constructor Create(id: smallint); reintroduce; overload;
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
       destructor Destroy; override;
@@ -467,7 +520,7 @@ var
    time: integer;
 begin
    time := (db.FieldByName(format('Clock%dMins', [FIndex])).AsInteger * 60) +
-   db.FieldByName(format('Clock%dSecs', [FIndex])).AsInteger;
+     db.FieldByName(format('Clock%dSecs', [FIndex])).AsInteger;
    field.SetValue(instance, time);
 end;
 
@@ -479,6 +532,45 @@ begin
    time := field.GetValue(instance).AsInteger;
    db.FieldByName(format('Clock%dMins', [FIndex])).AsInteger := time div 60;
    db.FieldByName(format('Clock%dSecs', [FIndex])).AsInteger := time mod 60;
+end;
+
+{ UploadBattleConditionsAttribute }
+
+procedure UploadBattleConditionsAttribute.download(db: TDataset; field: TRttiField; instance: TObject);
+var
+   conditions: TBattlePageConditionSet;
+
+   procedure setCondition(field: boolean; value: TBattlePageConditions);
+   begin
+      if field then
+         include(conditions, value)
+      else exclude(conditions, value);
+   end;
+
+begin
+   conditions := [];
+   setCondition(db.FieldByName('bTurns').AsBoolean, bp_turns);
+   setCondition(db.FieldByName('bMonsterTime').AsBoolean, bp_monsterTime);
+   setCondition(db.FieldByName('BHeroTime').AsBoolean, bp_heroTime);
+   setCondition(db.FieldByName('bExhaustion').AsBoolean, bp_exhaustion);
+   setCondition(db.FieldByName('bMonsterHP').AsBoolean, bp_monsterHP);
+   setCondition(db.FieldByName('bHeroHP').AsBoolean, bp_HeroHP);
+   setCondition(db.FieldByName('bCommandUsed').AsBoolean, bp_commandUsed);
+   field.SetValue(instance, TValue.From(conditions));
+end;
+
+procedure UploadBattleConditionsAttribute.upload(db: TDataset; field: TRttiField; instance: TObject);
+var
+   conditions: TBattlePageConditionSet;
+begin
+   conditions := field.GetValue(instance).AsType<TBattlePageConditionSet>;
+   db.FieldByName('bTurns').AsBoolean := (bp_turns in conditions);
+   db.FieldByName('bMonsterTime').AsBoolean := (bp_monsterTime in conditions);
+   db.FieldByName('BHeroTime').AsBoolean := (bp_heroTime in conditions);
+   db.FieldByName('bExhaustion').AsBoolean := (bp_exhaustion in conditions);
+   db.FieldByName('bMonsterHP').AsBoolean := (bp_monsterHP in conditions);
+   db.FieldByName('bHeroHP').AsBoolean := (bp_HeroHP in conditions);
+   db.FieldByName('bCommandUsed').AsBoolean := (bp_commandUsed in conditions);
 end;
 
 end.

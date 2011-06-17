@@ -158,13 +158,12 @@ begin
    oFilename := filename;
    outFile := nil;
    locate_files.findGraphic(filename, 'ChipSet');
-   if (filename = '') or (ExtractFileExt(filename) = '.xyx') then
+   if (filename = '') {or (ExtractFileExt(filename) = '.xyz')} then
       Exit(false);
    pointer(surface) := sdl_image.IMG_Load(PAnsiChar(ansiString(filename)));
-   assert(assigned(surface));
-   assert(surface.Width = 480);
-   assert(surface.Height = 256);
-   assert(surface.Format.BitsPerPixel = 8);
+   if not (assigned(surface) and (surface.Width = 480)and (surface.Height = 256)
+     and (surface.Format.BitsPerPixel = 8)) then
+      Exit(false);
    for i := low(TILESET_MAP) to high(TILESET_MAP) do
    begin
       currentRect := TILESET_MAP[i];
@@ -199,7 +198,7 @@ begin
    for i := low(TILESET_MAP) to high(TILESET_MAP) do
    begin
       newRecord := TTileGroupRecord.Create;
-      newRecord.id := i;
+      newRecord.id := i + 1;
       newRecord.group := GDatabase.tileGroup[format(KEYNAME, [filename, TILESET_NAME[i]])];
       if i <= 18 then
          newRecord.layers := [0]
@@ -207,8 +206,6 @@ begin
       if base.animation then
          newRecord.animDir := pmPingPong
       else newRecord.animDir := pmForward;
-      newRecord.attributes := TAttributeList.Create;
-      newRecord.terrain := TList<integer>.Create;
       case i of
          0..18:
          begin

@@ -296,15 +296,16 @@ end;
 function TEBCallEvent.GetNodeText: string;
 begin
    case Values[0] of
-      0: result := format('Global Event #%d', [Values[1]]);
+      0: result := format('Global Script #%d', [Values[1]]);
       1:
       begin
          if Values[1] <> 10005 then
             result := format('%s, Page %d', [EventName(Values[1]), Values[2]])
          else
-            result := format('This Event, Page %d', [Values[2]]);
+            result := format('This Object, Page %d', [Values[2]]);
       end;
-      2: result := format('#Ints[%s], Page Ints[%s]', [IntName(Values[1]), IntName(Values[2])]);
+      2: result := format('Object # Ints[%s], Page Ints[%s]', [IntName(Values[1]), IntName(Values[2])]);
+      3: result := format('Battle Global Script #%d', [Values[1]]);
    end;
    result := 'Call Script: ' + result;
 end;
@@ -321,6 +322,7 @@ begin
             result := format('callScript(thisEvent.id, %d);', [Values[2]]);
       end;
       2: result := format('callScript(Ints[%d], Ints[%d]);', [Values[1], Values[2]]);
+      3: result := format('battleGlobal%.4d;', [Values[1]]);
    end;
 end;
 

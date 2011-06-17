@@ -53,6 +53,9 @@ type
       function getBlock: TIntArray;
       procedure setBlock(const Value: TIntArray);
       function getIndex: integer;
+      procedure Load(stream: TStream);
+      procedure save(stream: TStream);
+      function compare(other: IStatBlock): boolean;
 
       property size: word read getSize write setSize;
       property block: TIntArray read getBlock write setBlock;
@@ -79,7 +82,9 @@ type
       function getIndex: integer;
    public
       constructor Create(size: word; parent: TStatSet);
-      function compare(other: TStatBlock): boolean;
+      function compare(other: IStatBlock): boolean;
+      procedure Load(stream: TStream);
+      procedure save(stream: TStream);
 
       property size: word read getSize write setSize;
       property block: TIntArray read getBlock write setBlock;
@@ -88,7 +93,7 @@ type
 
    TStatSet = class(TRpgDatafile)
    private
-      FBlocks: array of TStatBlock;
+      FBlocks: TArray<IStatBlock>;
       function getSize: integer;
    protected
       class function keyChar: ansiChar; override;
@@ -96,8 +101,8 @@ type
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
-      function add(var newBlock: TStatBlock): integer;
-      function indexOf(value: TStatBlock): smallint;
+      function add(var newBlock: IStatBlock): integer;
+      function indexOf(const value: IStatBlock): smallint;
 
       property size: integer read getSize;
    end;
@@ -128,6 +133,8 @@ type
       FStaticEq: boolean;
       FStrongDef : boolean;
       FUnarmedAnim: integer;
+      FGuest: boolean;
+      FBattlePos: TPoint;
       FOnJoin: TScriptEvent;
 
       function getCommand(x: byte): smallint; inline;
@@ -143,7 +150,7 @@ type
       class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream); override;
-      constructor Create;
+      constructor Create; override;
       destructor Destroy; override;
       procedure save(savefile: TStream); override;
 
@@ -170,6 +177,8 @@ type
       property strongDef: boolean read FStrongDef write FStrongDef;
       property unarmedAnim: integer read FUnarmedAnim write FUnarmedAnim;
       property actionMatrix: integer read FActionMatrix write FActionMatrix;
+      property guest: boolean read FGuest write FGuest;
+      property battlePos: TPoint read FBattlePos write FBattlePos;
    published
       [EventType('TPartyEvent')]
       property OnJoin: TScriptEvent read FOnJoin write FOnJoin;
@@ -184,7 +193,6 @@ type
       FBattleSpriteShift: TColorShift;
       FMinLevel: word;
       FMaxLevel: word;
-      FGuest: boolean;
       FCanCrit: boolean;
       FCritRate: integer;
    protected
@@ -201,7 +209,6 @@ type
       property battleSpriteShift: TColorShift read FBattleSpriteShift write FBattleSpriteShift;
       property minLevel: word read FMinLevel write FMinLevel;
       property maxLevel: word read FMaxLevel write FMaxLevel;
-      property guest: boolean read FGuest write FGuest;
       property canCrit: boolean read FCanCrit write FCanCrit;
       property critRate: integer read FCritRate write FCritRate;
    end;
@@ -265,6 +272,22 @@ begin
    result := length(FBlock);
 end;
 
+procedure TStatBlock.Load(stream: TStream);
+var
+   i: integer;
+begin
+   for i := 0 to high(FBlock) do
+      FBlock[i] := stream.readInt;
+end;
+
+procedure TStatBlock.save(stream: TStream);
+var
+   value: integer;
+begin
+   for value in FBlock do
+      stream.writeInt(value);
+end;
+
 procedure TStatBlock.setBlock(const Value: TIntArray);
 begin
    FBlock := Value;
@@ -275,18 +298,17 @@ begin
    setLength(FBlock, value);
 end;
 
-function TStatBlock.compare(other: TStatBlock): boolean;
+function TStatBlock.compare(other: IStatBlock): boolean;
 var
    i: integer;
+   lOther: TStatBlock;
 begin
-   if self.size <> other.size then
-   begin
-      result := false;
-      Exit;
-   end;
+   if not ((other is TStatBlock) and (self.size <> other.size) ) then
+      Exit(false);
 
+   lOther := TStatBlock(other);
    i := 0;
-   while (i < size) and (FBlock[i] = other.FBlock[i]) do
+   while (i < size) and (FBlock[i] = lOther.FBlock[i]) do
       inc(i);
    result := i = size;
 end;
@@ -297,7 +319,7 @@ constructor TStatSet.Load(savefile: TStream);
 var
    len: word;
    i: word;
-   newblock: TStatBlock;
+   newblock: IStatBlock;
 begin
    inherited Load(savefile);
    lassert ((FId = 0) and (FName = ''));
@@ -306,7 +328,7 @@ begin
    begin
       lassert(savefile.readWord = i);
       newblock := TStatBlock.Create(saveFile.readWord, self);
-      savefile.ReadBuffer(newblock.FBlock[0], newblock.Size * 4);
+      newblock.Load(savefile);
       lassert(self.add(newblock) = i);
    end;
    lassert(savefile.readChar = 'S');
@@ -324,12 +346,12 @@ begin
    begin
       savefile.writeWord(i);
       savefile.writeWord(FBlocks[i].size);
-      savefile.WriteBuffer(FBlocks[i].FBlock[0], FBlocks[i].size * 4);
+      FBlocks[i].save(savefile);
    end;
    savefile.writeChar('S');
 end;
 
-function TStatSet.add(var newBlock: TStatBlock): integer;
+function TStatSet.add(var newBlock: IStatBlock): integer;
 var
    i: integer;
 begin
@@ -341,14 +363,11 @@ begin
       setLength(FBlocks, length(FBlocks) + 1);
       FBlocks[high(FBlocks)] := newblock;
    end
-   else begin
-      newBlock.Free;
-      newBlock := FBlocks[i];
-   end;
+   else newBlock := FBlocks[i];
    result := i;
 end;
 
-function TStatSet.indexOf(value: TStatBlock): smallint;
+function TStatSet.indexOf(const value: IStatBlock): smallint;
 begin
    result := high(FBlocks);
    while (result >= 0) and (self.FBlocks[result] <> value) do
@@ -591,7 +610,7 @@ end;
 
 function TStatBlockUploadAttribute.getField(db: TDataset; i: integer): TField;
 begin
-   result := db.FieldByName(format('statblock[%d]', [i]));
+   result := db.FieldByName(format('statblock_%d', [i]));
 end;
 
 procedure TStatBlockUploadAttribute.download(db: TDataset; field: TRttiField;

@@ -111,10 +111,8 @@ begin
       end;
       animation := getChboxSec($0b, theLDB, fillInChipsetBool);
       hispeed := getChboxSec($0c, theLDB, fillInChipsetBool);
-      dummy := 0;
-      Read(dummy, 1);
-      if dummy <> 0 then
-         raise EParseMessage.create('Chipset section ' + intToStr(id) + ' final 0 not found');
+      if not peekAhead(theLDB, 0) then
+         raise EParseMessage.createFmt('Chipset section %d final 0 not found', [id]);
    end //end of IF block
    else
    begin

@@ -33,8 +33,6 @@ type
    TSkillGainInfo = class(TRpgDatafile)
    private
       FStyle: TSkillFuncStyle;
-      [NoUpload]
-      FPointer: TScriptRecord;
       FSkill: integer;
       FNums: T4IntArray;
       function getNum(x: byte): integer; inline;
@@ -47,7 +45,6 @@ type
       procedure save(savefile: TStream); override;
 
       property style: TSkillFuncStyle read FStyle write FStyle;
-      property method: TScriptRecord read  FPointer write FPointer;
       property skill: integer read FSkill write FSkill;
       property num[x: byte]: integer read getNum write setNum;
    end;
@@ -95,6 +92,8 @@ type
       [TUploadByteSet]
       FCondition: TByteSet;
       FResistMod: boolean;
+      FInflictReversed: boolean;
+      FDisplaySprite: integer;
 
       function getStat(x: byte): boolean;
       procedure setStat(x: byte; const Value: boolean);
@@ -117,6 +116,8 @@ type
       property condition: TByteSet read FCondition write FCondition;
       property attribute: TPointArray read FAttributes write FAttributes;
       property resistMod: boolean read FResistMod write FResistMod;
+      property inflictReversed: boolean read FInflictReversed write FInflictReversed;
+      property displaySprite: integer read FDisplaySprite write FDisplaySprite;
    end;
 
    TSpecialSkillTemplate = class(TSkillTemplate)
@@ -330,9 +331,6 @@ begin
    inherited Load(savefile);
    lassert((FId = -1) and (FName = ''));
    savefile.ReadBuffer(FStyle, sizeof(FStyle));
-   FPointer := GDatabase.scripts[savefile.readInt];
-   assert(FPointer.name = savefile.readString);
-//   assert(assigned(FPointer) and assigned(FPointer.displayMethod));
    FSkill := savefile.readInt;
    savefile.ReadBuffer(FNums[1], 16);
    lassert(savefile.readChar = 'G');
@@ -342,8 +340,6 @@ procedure TSkillGainInfo.save(savefile: TStream);
 begin
    inherited save(savefile);
    savefile.WriteBuffer(FStyle, sizeof(FStyle));
-   savefile.WriteInt(GDatabase.scripts.indexOf(FPointer));
-   savefile.WriteString(FPointer.name);
    savefile.writeInt(FSkill);
    savefile.WriteBuffer(FNums[1], 16);
    savefile.writeChar('G');
