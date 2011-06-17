@@ -36,7 +36,7 @@ type
    T2kCharClass = class helper for TClassTemplate
    public
       constructor convert(base: TRm2CharClass; statSet: TStatSet); overload;
-      constructor convert(base: THeroRecord; baseDB: TLcfDataBase; statSet: TStatSet); overload;
+      constructor convert(base: THeroRecord; baseDB: TLcfDataBase; statSet: TStatSet; idBase: integer); overload;
       procedure loadEq(base: THeroRecord);
    end;
 
@@ -59,7 +59,7 @@ uses
 constructor T2k2StatBlock.Convert(base: TRm2CharClass; block: byte; statSet: TStatSet);
 var
    blocksize: byte;
-   blockPtr: cardinal;
+   blockPtr: nativeUInt;
    localArray: array of word;
    i: integer;
 begin
@@ -67,7 +67,7 @@ begin
    blocksize := 99;
    self.Create(blocksize, statSet);
    setLength(localArray, blocksize);
-   blockPtr := cardinal(base.statBlock) + (blocksize * 2 * block);
+   blockPtr := nativeUInt(base.statBlock) + (blocksize * 2 * block);
    move(pointer(blockPtr), localArray[0], blocksize * 2); //2 bytes/element
    for I := 0 to blocksize - 1 do
       self.block[i] := localArray[i];
@@ -103,7 +103,7 @@ constructor T2kCharClass.convert(base: TRm2CharClass; statSet: TStatSet);
 var
    i: integer;
    resistVal: integer;
-   newstat: TStatBlock;
+   newstat: IStatBlock;
 begin
    self.Create;
    self.id := base.id;
@@ -111,8 +111,8 @@ begin
    self.battleSprite := base.spriteIndex;
    for i := 1 to COMMAND_COUNT do
    begin
-      self.command[i] := base.battleCommand[i] - 1;
-      if self.command[i] <> -1 then
+      self.command[i] := base.battleCommand[i];
+      if self.command[i] <> 0 then
          self.commands := self.commands + 1
       else Break;
    end;
@@ -151,16 +151,17 @@ begin
    end;
    self.staticEq := base.staticEq;
    self.strongDef := base.strongDef;
+   self.guest := base.computerControlled;
 end;
 
-constructor T2kCharClass.convert(base: THeroRecord; baseDB: TLcfDataBase; statSet: TStatSet);
+constructor T2kCharClass.convert(base: THeroRecord; baseDB: TLcfDataBase; statSet: TStatSet; idBase: integer);
 var
    i: integer;
    resistVal: integer;
-   newstat: TStatBlock;
+   newstat: IStatBlock;
 begin
    self.Create;
-   self.id := base.id;
+   self.id := base.id + idBase;
    if (base.charClass <> '') and (base.charClass <> 'None') then
       self.clsName := unicodeString(base.charClass)
    else self.clsName := unicodeString(base.name) + ' Class';
@@ -227,6 +228,8 @@ begin
    self.staticEq := base.staticEq;
    self.strongDef := base.strongDef;
    self.unarmedAnim := base.unarmedAnim;
+   self.guest := base.computerControlled;
+   self.battlePos := base.battlePosition;
 end;
 
 procedure T2kCharClass.loadEq(base: THeroRecord);
@@ -242,12 +245,11 @@ end;
 
 constructor T2k2Hero.convert(base: THeroRecord; classTable: TConversionTable; baseDB: TLcfDataBase; statSet: TStatSet);
 begin
-   inherited convert(base, baseDB, statSet);
-   self.name := unicodeString(base.name);
-   self.title := unicodeString(base.charClass);
+   inherited convert(base, baseDB, statSet, 0);
+   self.name := string(base.name);
+   self.title := string(base.charClass);
    self.minLevel := base.startLevel;
    self.maxLevel := base.maxLevel;
-   self.guest := base.computerControlled;
    if base.classNum = 0 then
       self.charClass := classTable[base.id];
    self.canCrit := base.canCrit;
@@ -265,7 +267,6 @@ begin
    self.style := table[ord(base.style)];
    case base.style of
       cs_anyskill: self.value := -1;
-//      cs_skillgroup: self.value := table[ord(base.style)];
       else self.value := id;
    end;
 end;

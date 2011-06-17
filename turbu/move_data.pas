@@ -127,10 +127,8 @@ var
    numStream: TStream;
 begin
    inherited Create;
-   numStream := TMemoryStream.Create;
+   numStream := TStringStream.Create(data);
    try
-      numStream.Write(data[1], length(data));
-      numStream.Seek(0, soFromBeginning);
       FString := data;
       FLoop := loop;
       while numStream.Position < numStream.Size do

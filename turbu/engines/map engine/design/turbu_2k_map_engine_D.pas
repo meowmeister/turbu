@@ -56,7 +56,7 @@ type
    private //IBreakable
       procedure BreakSomething;
    private //IDesignMapEngine
-      procedure initializeDesigner(window: TSdlWindow; database: IRpgDatabase);
+      procedure initializeDesigner(window: TSdlWindow; database: string);
       function GetTilesetImageSize(const index: byte): TSgPoint;
       function GetTilesetImage(const index: byte): PSdlSurface;
       function DesignLoadMap(map: IMapMetadata): IRpgMap;
@@ -143,7 +143,7 @@ begin
    draw(position, true);
 end;
 
-procedure T2kMapEngineD.initializeDesigner(window: TSdlWindow; database: IRpgDatabase);
+procedure T2kMapEngineD.initializeDesigner(window: TSdlWindow; database: string);
 begin
    self.initialize(window, database);
    FObjectContainers.Free;
@@ -348,6 +348,7 @@ begin
       image := retrieveImage('tileset', enumerator.group.filename);
       assert(assigned(image));
       texture := image.Texture;
+      //TODO: this is a horrible hack and will need to be fixed eventually
       if (value < 0) or (value in enumerator.layers) then
          texture.alpha := $FF
       else texture.alpha := $A0;

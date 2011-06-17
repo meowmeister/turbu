@@ -39,12 +39,14 @@ type
 
    IMapEngine = interface(IInterface)
    ['{A5FDC982-D72E-448E-8E37-7865094C5B5E}']
-      procedure initialize(window: TSdlWindow; database: IRpgDatabase);
+      procedure initialize(window: TSdlWindow; database: string);
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
       function loadMap(map: IMapMetadata): IRpgMap;
       procedure Play;
       function Playing: boolean;
+      function mapTree: IMapTree;
+      function database: IRpgDatabase;
 
       function getData: TMapEngineData;
       property data: TMapEngineData read getData;
@@ -95,12 +97,14 @@ type
    public
       destructor Destroy; override;
       procedure AfterConstruction; override;
-      procedure initialize(window: TSdlWindow; database: IRpgDatabase); virtual;
+      procedure initialize(window: TSdlWindow; database: string); virtual;
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
       function loadMap(map: IMapMetadata): IRpgMap; virtual; abstract;
       procedure Play; virtual; abstract;
       function Playing: boolean; virtual; abstract;
+      function MapTree: IMapTree; virtual; abstract;
+      function database: IRpgDatabase; virtual; abstract;
 
       property data: TMapEngineData read GetData write FData;
    end;
@@ -150,7 +154,7 @@ begin
    Result := FData;
 end;
 
-procedure TMapEngine.initialize(window: TSdlWindow; database: IRpgDatabase);
+procedure TMapEngine.initialize(window: TSdlWindow; database: string);
 begin
    FBattleEngines := TDictionary<string, IBattleEngine>.Create;
 end;

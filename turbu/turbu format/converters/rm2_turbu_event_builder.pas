@@ -11,9 +11,9 @@ function UnknownOpcodeList: TStringList;
 implementation
 uses
    SysUtils, Generics.Defaults, Generics.Collections, TypInfo,
-   turbu_defs, commons, move_data, turbu_pathing, rm2_turbu_map_objects,
+   turbu_defs, commons, move_data, turbu_pathing, rm2_turbu_map_objects, formats,
    EB_RpgScript, EB_Messages, EB_Expressions, EB_System, EB_Maps, EB_Characters,
-   EB_Settings, EB_Media;
+   EB_Settings, EB_Media, EB_Battle;
 
 type
    TConvertRoutine = function (opcode: TEventCommand; parent: TEBObject): TEBObject;
@@ -245,10 +245,9 @@ begin
       1:
       begin
          left := TEBIntsValue.Create(opcode.data[1]);
-         case boolean(opcode.data[2]) of
-            false: right := TEBIntegerValue.Create(opcode.data[3]);
-            true: right := TEBIntsValue.Create(opcode.data[3]);
-         end;
+         if boolean(opcode.data[2]) then
+            right := TEBIntsValue.Create(opcode.data[3])
+         else right := TEBIntegerValue.Create(opcode.data[3]);
          op := TComparisonOp(opcode.data[4]);
       end;
       2, 3, 10:
@@ -288,10 +287,32 @@ begin
       end;
       8: left := TEBVariableValue.Create('StartedWithButton');
       9: left := TEBObjExpr.Create('bgm', TEBPropExpr.Create('looped'));
+      else raise ERpgScriptError.CreateFmt('Unknown data[0] value %d', [opcode.data[0]]);
    end;
    if right = nil then
       right := TEBBooleanValue.Create(true);
    result := TEBIf.Create(parent, left, right, op);
+   blockStack.push(-1);
+   ifStack.Push(TEBIf(result));
+end;
+
+function ConvertBattleIf(opcode: TEventCommand; parent: TEBObject): TEBObject;
+var
+   left: TEBExpression;
+begin
+   case opcode.data[0] of
+      0..1: Exit(ConvertIf(opcode, parent));
+      2: left := TEBLookupObjExpr.Create('hero', opcode.Data[1], 'heroes', TEBPropExpr.Create('CanAct'));
+      3: left := TEBLookupObjExpr.Create('monster', opcode.Data[1], 'monsters', TEBPropExpr.Create('CanAct'));
+      4: left := TEBLookupObjExpr.Create('monster', opcode.Data[1], 'monsters', TEBPropExpr.Create('Targetted'));
+      5: begin
+         left := TEBCall.Create('UsesCommand');
+         left.Add(TEBLookupValue.Create(opcode.data[2], 'commands'));
+         left := TEBLookupObjExpr.Create('hero', opcode.Data[1], 'heroes', TEBChainable(left));
+      end;
+      else raise ERpgScriptError.CreateFmt('Unknown data[0] value %d', [opcode.data[0]]);
+   end;
+   result := TEBIf.Create(parent, left, TEBBooleanValue.Create(true), co_equals);
    blockStack.push(-1);
    ifStack.Push(TEBIf(result));
 end;
@@ -310,6 +331,20 @@ begin
    result := nil;
 end;
 
+type
+   TBattleFormation = (bf_normal, bf_initiative, bf_surprised, bf_surrounded, bf_pincer, bf_firstStrike);
+procedure MakeBattleTPCall(call: TEBCall; opcode: TEventCommand);
+var
+   formation: integer;
+begin
+   if opcode.data[5] = 1 then
+      formation := 5
+   else formation := opcode.data[6];
+   call.Add(TEBEnumValue.Create(GetEnumName(TypeInfo(TBattleFormation), formation)));
+   call.Add(TEBBooleanValue.Create(boolean(opcode.data[7])));
+   call.Text := 'BattleEx';
+end;
+
 function ConvertBattle(opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    call: TEBCall;
@@ -321,7 +356,10 @@ begin
    else call.add(TEBLookupValue.Create(opcode.data[1], 'mparties'));
    call.add(TEBStringValue.Create(string(opcode.Name)));
    call.add(TEBBooleanValue.Create(boolean(opcode.data[3])));
-   call.add(TEBBooleanValue.Create(boolean(opcode.data[5])));
+   if high(opcode.data) > 5 then
+      MakeBattleTPCall(call, opcode)
+   else call.add(TEBBooleanValue.Create(boolean(opcode.data[5])));
+
    if (opcode.Data[3] = 0) and (opcode.Data[4] = 0) then
       result := TEBFunctionCall.Create(parent, call)
    else if (boolean(opcode.Data[4]) = true) or (opcode.Data[3] = 2) then
@@ -425,6 +463,16 @@ begin
          TEBChainable(rValue).Chain := TEBPropExpr.Create(EVENTPROPS[opcode.data[6]]);
       end;
       7: rValue := TEBVariableValue.Create(MISCPROPS[opcode.Data[5]]);
+      8:
+      begin
+         rValue := TEBLookupObjExpr.Create('monster', opcode.data[5], 'monsters');
+         case opcode.Data[6] of
+            0..3: propname := HEROPROPS[opcode.data[6] + 2];
+            4..7: propname := format('stat[%d]', [opcode.Data[6] - 4]);
+            else raise ERPGScriptError.CreateFmt('Unknown variable data 6 value: %d!', [opcode.Data[6]]);
+         end;
+         TEBChainable(rValue).chain := TEBPropExpr.Create(propname);
+      end;
       else raise ERPGScriptError.CreateFmt('Unknown variable data 4 value: %d!', [opcode.Data[4]]);
    end;
    if opcode.data[3] > 0 then
@@ -770,8 +818,38 @@ begin
    result.values[2] := result.Values[2] xor 1;
 end;
 
+function ConvertMonsterHP(opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   result := ObjectFactory(TEBMonsterHP, opcode, parent);
+   result.Values[0] := result.Values[0] + 1;
+end;
+
+function ConvertMonsterMP(opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   result := ObjectFactory(TEBMonsterMP, opcode, parent);
+   result.Values[0] := result.Values[0] + 1;
+end;
+
+function ConvertMonsterStatus(opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   result := ObjectFactory(TEBMonsterStatus, opcode, parent);
+   result.Values[0] := result.Values[0] + 1;
+end;
+
+function ConvertShowMonster(opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   result := ObjectFactory(TEBShowMonster, opcode, parent);
+   result.Values[0] := result.Values[0] + 1;
+end;
+
+function ConvertBattleGlobalEvent(opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   result := TEBCallEvent.Create(parent);
+   result.Values.AddRange([0, opcode.Data[0]]);
+end;
+
 const
-   OPCODES_IMPLEMENTED = 63;
+   OPCODES_IMPLEMENTED = 68;
    OPCODE_LIST: array[1..OPCODES_IMPLEMENTED] of TOpcodePair =
      ((K: 10; V: nil), (K: 20713; v: nil), (K: 20720; V: nil), (K: 20730; V: nil),
       (K: 10110; V: TEBShowMessage), (K: 20110; V: TEBExtension), (K: 10130; V: TEBPortrait),
@@ -793,9 +871,11 @@ const
       (K: 11930; V: TEBSaveEnable), (K: 11950; V: TEBMenu), (K: 11960; V: TEBMenuEnable),
       (K: 12110; V: TEBLabel), (K: 12120; V: TEBGoto), (K: 12310; V: TEBExit),
       (K: 12330; V: TEBCallEvent), (K: 12410; V: TEBComment), (K: 22410; V: TEBExtension),
-      (K: 12420; V: TEBGameOver), (K: 12510; V: TEBTitleScreen));
+      (K: 12420; V: TEBGameOver), (K: 12510; V: TEBTitleScreen), (K: 13210; V: TEBBattleBG),
+      (K: 13410; V: TEBEndBattle), (K: 1006; V: TEBForceFlee), (K: 1007; V: TEBEnableCombo),
+      (K: 13260; V: TEBBattleAnimation));
 
-   COMPLEX_OPCODES = 48;
+   COMPLEX_OPCODES = 56;
    COMPLEX: array[1..COMPLEX_OPCODES] of TComplexOpcodePair =
      ((K: 0; V: Cleanup), (K: 10120; v: ConvertMessageOptions), (K: 20140; v: ConvertCaseExtension),
       (K: 10140; V: ConvertCase), (K: 20141; V: ConvertEndCase), (K: 12010; V: ConvertIf),
@@ -813,7 +893,10 @@ const
       (K: 11310; V: ConvertTranslucency), (K: 11320; V: ConvertFlash), (K: 11330; V: ConvertMove),
       (K: 11740; V: ConvertEncounterRate), (K: 12210; V: ConvertWhileLoop), (K: 22210; V: LoopEnd),
       (K: 12220; V: ConvertBreak), (K: 12320; V: ConvertDelete), (K: 1008; V: ConvertClassChange),
-      (K: 1009; V: ConvertBattleCommand));
+      (K: 1009; V: ConvertBattleCommand),
+      (K: 13110; V: ConvertMonsterHP), (K: 13120; V: ConvertMonsterMP), (K: 13130; V: ConvertMonsterStatus),
+      (K: 13150; V: ConvertShowMonster), (K: 1005; V: ConvertBattleGlobalEvent),
+      (K: 13310; V: ConvertBattleIf), (K: 23310; V: ConvertIfElse), (K: 23311; V: ConvertEndIf));
 
 var
    i: integer;

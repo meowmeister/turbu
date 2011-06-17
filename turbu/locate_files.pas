@@ -21,8 +21,14 @@ interface
 
 procedure findMusic(var filename: string);
 procedure findSfx(var filename: string);
+procedure findMovie(var filename: string);
 procedure findGraphic(var filename: string; const folder: string);
 function findGraphicF(filename: string; const folder: string): string;
+function findSoundF(filename: string; const folder: string): string;
+function findMovieF(filename: string; const folder: string): string;
+
+type
+   TLocateFileFunc = function(filename: string; const folder: string): string;
 
 var
    rtpLocation: string;
@@ -35,6 +41,7 @@ uses
 const
    AUDIO_EXTENSION: array[1..8] of string = ('.mid', '.wav', '.ogg', '.mp3', '.it', '.xm', '.s3m', '.mod');
    GRAPHIC_EXTENSION: array[1..4] of string = ('.png', '.bmp', '.xyz', '.gif');
+   MOVIE_EXTENSION: array[1..1] of string = ('.avi');
 
 function scanFile(var filename: string; const folder: string; list: array of string): boolean;
 var
@@ -93,9 +100,32 @@ begin
    filename := '';
 end;
 
+procedure findMovie(var filename: string);
+const FOLDER = 'Movie';
+begin
+   if scanFile(filename, IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(GCurrentFolder) + FOLDER), AUDIO_EXTENSION) then
+      Exit;
+   if scanFile(filename, IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(rtpLocation) + FOLDER), AUDIO_EXTENSION) then
+      Exit;
+
+   filename := '';
+end;
+
 function findGraphicF(filename: string; const folder: string): string;
 begin
    findGraphic(filename, folder);
+   result := filename;
+end;
+
+function findSoundF(filename: string; const folder: string): string;
+begin
+   findAudio(filename, folder);
+   result := filename;
+end;
+
+function findMovieF(filename: string; const folder: string): string;
+begin
+   findMovie(filename);
    result := filename;
 end;
 

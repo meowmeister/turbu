@@ -808,7 +808,7 @@ initialization
 begin
    loaders := TDictionary<string, TImgLoadMethod>.Create;
    rwMutex := SDL_CreateMutex;
-   assert(IMG_Init([imgPng]) = [imgPng]);
+   assert(IMG_Init([imgPng, imgXyz]) = [imgPng, imgXyz]);
 end;
 
 finalization

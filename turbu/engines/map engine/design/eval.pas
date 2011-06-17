@@ -17,54 +17,28 @@ type
       imgBG: TImage;
       lbHPanlSpeed: TLabel;
       txtName: TDBEdit;
-      txtBGM: TDBEdit;
-      txtBattleBG: TDBEdit;
-      txtBGName: TDBEdit;
       spnWidth: TJvDBSpinEdit;
       spnHeight: TJvDBSpinEdit;
-      spnVar1: TJvDBSpinEdit;
-      spnVar2: TJvDBSpinEdit;
-      spnVar3: TJvDBSpinEdit;
-      spnVar4: TJvDBSpinEdit;
-      spnHPanSpeed: TJvDBSpinEdit;
-      spnVPanSpeed: TJvDBSpinEdit;
       grdMonsterParties: TRpgListGrid;
       cboTileset: TDBLookupComboBox;
-      cboEncounterScript: TDBLookupComboBox;
-      cboWraparoundType: TDBIndexComboBox;
       cboTeleport: TDBIndexComboBox;
-      cboEscape: TDBIndexComboBox;
-      cboSave: TDBIndexComboBox;
-      cboBGM: TDBIndexComboBox;
-      cboBattleBG: TDBIndexComboBox;
-      cboHPan: TDBIndexComboBox;
-      cboVPan: TDBIndexComboBox;
       lblVar1: TDBText;
-      lblVar2: TDBText;
-      lblVar3: TDBText;
-      lblVar4: TDBText;
       chkUseBG: TDBCheckBox;
-      btnSet: TButton;
-      btnSetBGMTo: TButton;
-      btnSetBGTo: TButton;
       btnOK: TButton;
-      btnCancel: TButton;
-      btnApply: TButton;
-      btnHelp: TButton;
       srcMetadata: TDataSource;
       dsMap: TClientDataSet;
       srcMap: TDataSource;
-      dsMapid: TIntegerField;
-      dsMapname: TStringField;
-      dsMapmodified: TBooleanField;
-      dsMapdepth: TByteField;
       dsMaptileMap: TBlobField;
-      srcTileset: TDataSource;
-      srcScript: TDataSource;
       StaticText1: TStaticText;
+      metadata: TClientDataSet;
+      metadataid: TIntegerField;
+      metadataname: TWideStringField;
+      metadataparent: TSmallintField;
+      metadatatreeOpen: TBooleanField;
+      metadatabgmState: TByteField;
+      metadatamapEngine: TShortintField;
       procedure FormShow(Sender: TObject);
       procedure btnApplyClick(Sender: TObject);
-      procedure FormCreate(Sender: TObject);
       procedure btnOKClick(Sender: TObject);
    private
       FMetadata: TMapMetadata;
@@ -108,9 +82,7 @@ begin
       ds := frmMapProperties.srcMetadata.DataSet;
       ds.DisableControls;
       try
-         ds.Filter := format('id = %d', [metadata.id]);
-         if ds.RecordCount = 0 then
-            metadata.upload(GDatabase.serializer, ds);
+         metadata.upload(GDatabase.serializer, ds);
          map.upload(GDatabase.serializer, frmMapProperties.dsMap);
          dimensions := map.size;
          GDatabase.copyTypeToDB(dmDatabase, rd_tileset);
@@ -127,18 +99,6 @@ begin
    finally
       freeAndNil(frmMapProperties);
    end;
-end;
-
-procedure TfrmMapProperties.FormCreate(Sender: TObject);
-var
-   ds: TClientDataset;
-begin
-   //interpose a cloned dataset so the filtering in FormShow doesn't affect
-   //the original
-   ds := TClientDataset.Create(self);
-   ds.CloneCursor(dmDatabase.metadata, false);
-   srcMetadata.DataSet := ds;
-   ds.name := dmDatabase.metadata.name;
 end;
 
 procedure TfrmMapProperties.FormShow(Sender: TObject);

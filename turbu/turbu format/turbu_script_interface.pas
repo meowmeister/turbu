@@ -2,7 +2,7 @@ unit turbu_script_interface;
 
 interface
 uses
-   uPSCompiler, turbu_classes, turbu_unit_dictionary, dm_database;
+   uPSCompiler, turbu_classes, dm_database;
 
 type
    IScriptEngine = interface(IInterface)
@@ -11,13 +11,10 @@ type
       function getCompiler: TPSPascalCompiler;
       function getDeclarations: TDeclList;
       procedure setDBScript(const value: ansiString);
-      function getUnits: TUnitDictionary;
-      procedure setUnits(const value: TUnitDictionary);
 
       property compiler: TPSPascalCompiler read GetCompiler;
       property decl: TDeclList read getDeclarations;
       property dbScript: ansiString write setDBScript;
-      property units: TUnitDictionary read getUnits write setUnits;
    end;
 
    IDesignScriptEngine = interface(IScriptEngine)

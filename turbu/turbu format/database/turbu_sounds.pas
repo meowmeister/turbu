@@ -27,9 +27,8 @@ type
    private
       FFadeIn: integer;
       FTempo: integer;
-      FVolume: byte;
-      FLeftBalance: byte;
-      FRightBalance: byte;
+      FVolume: integer;
+      FBalance: integer;
 
       procedure setFilename(value: string); virtual; abstract;
    protected
@@ -42,9 +41,8 @@ type
       property filename: string read FName write setFilename;
       property fadeIn: integer read FFadeIn write FFadeIn;
       property tempo: integer read FTempo write FTempo;
-      property left: byte read FLeftBalance write FLeftBalance;
-      property right: byte read FRightBalance write FRightBalance;
-      property volume: byte read FVolume write FVolume;
+      property balance: integer read FBalance write FBalance;
+      property volume: integer read FVolume write FVolume;
    end;
 
    TRpgSound = class(TSoundTemplate)
@@ -69,8 +67,7 @@ begin
    FName := source.FName;
    FFadein := source.FFadein;
    FTempo := source.FTempo;
-   FLeftBalance := source.FLeftBalance;
-   FRightBalance := source.FRightBalance;
+   FBalance := source.FBalance;
 end;
 
 class function TSoundTemplate.keyChar: ansiChar;
@@ -83,9 +80,8 @@ begin
    inherited Load(savefile);
    FFadeIn := savefile.readInt;
    FTempo := savefile.readInt;
-   FVolume := savefile.readByte;
-   FLeftBalance := savefile.readByte;
-   FRightBalance := savefile.readByte;
+   FVolume := savefile.readInt;
+   FBalance := savefile.readInt;
    readEnd(savefile);
 end;
 
@@ -94,9 +90,8 @@ begin
    inherited save(savefile);
    savefile.writeInt(FFadeIn);
    savefile.writeInt(FTempo);
-   savefile.writeByte(FVolume);
-   savefile.writeByte(FLeftBalance);
-   savefile.writeByte(FRightBalance);
+   savefile.writeInt(FVolume);
+   savefile.writeInt(FBalance);
    writeEnd(savefile);
 end;
 

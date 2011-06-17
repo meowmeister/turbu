@@ -21,6 +21,7 @@ object frameClass: TframeClass
     Font.Style = []
     ParentColor = False
     ParentFont = False
+    Transparent = False
   end
   object pnlClass: TPanel
     Left = 159
@@ -82,15 +83,14 @@ object frameClass: TframeClass
       Left = 199
       Top = 141
       Width = 185
-      Height = 144
+      Height = 108
       Caption = 'Special Options'
       TabOrder = 2
-      object radWeaponStyle: TDBRadioGroup
+      object radWeaponStyle: TDBIndexComboBox
         Left = 8
-        Top = 14
+        Top = 24
         Width = 169
-        Height = 84
-        Caption = 'Weapon Style'
+        Height = 24
         DataField = 'dualWield'
         DataSource = dsCharClass
         Items.Strings = (
@@ -98,18 +98,12 @@ object frameClass: TframeClass
           'Weapon + Shield'
           'Dual weapon'
           'Any')
-        ParentBackground = True
         TabOrder = 2
-        Values.Strings = (
-          '0'
-          '1'
-          '2'
-          '3')
         OnClick = radWeaponStyleClick
       end
       object chkEqLocked: TDBCheckBox
         Left = 8
-        Top = 102
+        Top = 58
         Width = 121
         Height = 17
         Caption = 'Equipment Locked'
@@ -121,8 +115,8 @@ object frameClass: TframeClass
       end
       object chkStrongDef: TDBCheckBox
         Left = 8
-        Top = 121
-        Width = 97
+        Top = 80
+        Width = 129
         Height = 17
         Caption = 'Strong Defense'
         DataField = 'strongDef'
@@ -183,7 +177,7 @@ object frameClass: TframeClass
         Height = 24
         ButtonKind = bkClassic
         TabOrder = 2
-        DataField = 'expVars[1]'
+        DataField = 'expVars_1'
         DataSource = dsCharClass
       end
       object spnExpVal2: TJvDBSpinEdit
@@ -193,7 +187,7 @@ object frameClass: TframeClass
         Height = 24
         ButtonKind = bkClassic
         TabOrder = 3
-        DataField = 'expVars[2]'
+        DataField = 'expVars_2'
         DataSource = dsCharClass
       end
       object spnExpVal3: TJvDBSpinEdit
@@ -203,7 +197,7 @@ object frameClass: TframeClass
         Height = 24
         ButtonKind = bkClassic
         TabOrder = 4
-        DataField = 'expVars[3]'
+        DataField = 'expVars_3'
         DataSource = dsCharClass
       end
       object spnExpVal4: TJvDBSpinEdit
@@ -213,7 +207,7 @@ object frameClass: TframeClass
         Height = 24
         ButtonKind = bkClassic
         TabOrder = 5
-        DataField = 'expVars[4]'
+        DataField = 'expVars_4'
         DataSource = dsCharClass
       end
       object cbxExpAlgorithm: TDBLookupComboBox
@@ -221,7 +215,6 @@ object frameClass: TframeClass
         Top = 14
         Width = 161
         Height = 24
-        DataField = 'expFuncDesignName'
         DataSource = dsCharClass
         TabOrder = 1
       end
@@ -327,8 +320,11 @@ object frameClass: TframeClass
             Top = 5
             Width = 121
             Height = 24
-            DataField = 'weaponName'
+            DataField = 'equip_1'
             DataSource = dsCharClass
+            KeyField = 'id'
+            ListField = 'name'
+            ListSource = dmDatabaseAux.srcWeapons
             TabOrder = 0
             OnClick = checkFor2Handed
           end
@@ -337,9 +333,11 @@ object frameClass: TframeClass
             Top = 89
             Width = 121
             Height = 24
-            DataField = 'helmetName'
+            DataField = 'equip_4'
             DataSource = dsCharClass
+            KeyField = 'id'
             ListField = 'name'
+            ListSource = dmDatabaseAux.srcHelmets
             TabOrder = 2
           end
           object cbxEquip3: TDBLookupComboBox
@@ -347,9 +345,11 @@ object frameClass: TframeClass
             Top = 62
             Width = 121
             Height = 24
-            DataField = 'armorName'
+            DataField = 'equip_3'
             DataSource = dsCharClass
+            KeyField = 'id'
             ListField = 'name'
+            ListSource = dmDatabaseAux.srcArmors
             TabOrder = 3
           end
           object cbxEquip5: TDBLookupComboBox
@@ -357,9 +357,11 @@ object frameClass: TframeClass
             Top = 122
             Width = 121
             Height = 24
-            DataField = 'accessoryName'
+            DataField = 'equip_5'
             DataSource = dsCharClass
+            KeyField = 'id'
             ListField = 'name'
+            ListSource = dmDatabaseAux.srcAccessories
             TabOrder = 4
           end
           object cbxEquip2: TDBLookupComboBox
@@ -367,9 +369,11 @@ object frameClass: TframeClass
             Top = 35
             Width = 121
             Height = 24
+            DataField = 'equip_2'
             DataSource = dsCharClass
             KeyField = 'id'
             ListField = 'name'
+            ListSource = dmDatabaseAux.srcShields
             TabOrder = 1
           end
         end
@@ -385,12 +389,8 @@ object frameClass: TframeClass
             AutoScroll = True
             TabOrder = 0
             TabStop = True
-            ExplicitWidth = 185
-            ExplicitHeight = 156
             inherited spnCount: TJvSpinEdit
-              Height = 24
               ButtonKind = bkClassic
-              ExplicitHeight = 24
             end
           end
         end
@@ -409,7 +409,6 @@ object frameClass: TframeClass
             TitleFont.Height = -13
             TitleFont.Name = 'Tahoma'
             TitleFont.Style = []
-            OnDblClick = lstSkillsDblClick
             Columns = <
               item
                 Expanded = False
@@ -432,16 +431,16 @@ object frameClass: TframeClass
     end
     object grpScriptEvents: TGroupBox
       Left = 199
-      Top = 291
+      Top = 255
       Width = 185
-      Height = 126
+      Height = 162
       Caption = 'Script Events'
       TabOrder = 6
       object lstScripts: TListView
         Left = 8
         Top = 16
         Width = 164
-        Height = 100
+        Height = 138
         Columns = <
           item
             Caption = 'Event'
@@ -468,8 +467,11 @@ object frameClass: TframeClass
         Top = 16
         Width = 193
         Height = 24
-        DataField = 'animName'
+        DataField = 'unarmedAnim'
         DataSource = dsCharClass
+        KeyField = 'id'
+        ListField = 'name'
+        ListSource = dmDatabaseAux.srcAnimName
         TabOrder = 0
       end
     end
@@ -484,8 +486,8 @@ object frameClass: TframeClass
         Left = 8
         Top = 16
         Width = 196
-        Height = 126
-        ActivePage = tshAttributes
+        Height = 124
+        ActivePage = tshConditions
         TabOrder = 0
         object tshAttributes: TTabSheet
           Caption = 'Attributes'

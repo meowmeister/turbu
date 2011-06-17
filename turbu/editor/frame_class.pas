@@ -24,8 +24,8 @@ uses
    DBGrids, DB, Mask, DBCtrls, Grids, DBClient,
    JvDBSpinEdit, JvListBox, JvExStdCtrls, JvExMask, JvSpin,
    sdl_frame, turbu_listGrid,
-   commons, frame_commands, turbu_sprites, turbu_characters, turbu_defs,
-   sg_defs;
+   commons, frame_commands, turbu_sprites, turbu_characters, turbu_defs, dm_databaseAux,
+   sg_defs, DBIndexComboBox, SimpleDS;
 
 type
    TframeClass = class(TFrame)
@@ -68,22 +68,15 @@ type
       dsCharClass: TDataSource;
       dsSkillset: TDataSource;
       dsResist: TDataSource;
-      dsCondition: TDataSource;
       dbTxtName: TDBEdit;
       spnExpVal1: TJvDBSpinEdit;
-      spnExpVal2: TJvDBSpinEdit;
-      spnExpVal3: TJvDBSpinEdit;
-      spnExpVal4: TJvDBSpinEdit;
-      radWeaponStyle: TDBRadioGroup;
+      radWeaponStyle: TDBIndexComboBox;
       chkEqLocked: TDBCheckBox;
       chkStrongDef: TDBCheckBox;
       cbxUnarmedAnim: TDBLookupComboBox;
       grdClasses: TRpgListGrid;
       cbxEquip1: TDBLookupComboBox;
       cbxEquip2: TDBLookupComboBox;
-      cbxEquip3: TDBLookupComboBox;
-      cbxEquip4: TDBLookupComboBox;
-      cbxEquip5: TDBLookupComboBox;
       lstSkills: TRpgListGrid;
       lstAttributes: TRpgListGrid;
       navAdd: TDBNavigator;
@@ -92,12 +85,12 @@ type
       RpgListGrid1: TRpgListGrid;
       cbxExpAlgorithm: TDBLookupComboBox;
       imgMapSprite: TSdlFrame;
+      dsCondition: TDataSource;
 
       procedure tabGraphicsChange(Sender: TObject);
       procedure tmrAnimTimer(Sender: TObject);
       procedure radWeaponStyleClick(Sender: TObject);
       procedure grdClassesRowEnter(Sender: TObject; FromIndex, ToIndex: Integer);
-      procedure lstSkillsDblClick(Sender: TObject);
       procedure checkFor2Handed(Sender: TObject);
       procedure linkNav(Sender: TObject);
       procedure btnEditAttributesClick(Sender: TObject);
@@ -108,7 +101,6 @@ type
       FLoading: boolean;
       FLoaded: boolean;
       FId: integer;
-      FTemplate: TClassTemplate;
       FSpriteData: TSpriteData;
       FMatrixPosition: TSgPoint;
       FRepCounter: integer;
@@ -133,9 +125,9 @@ uses
    Types, zlib, math,
    turbu_database, archiveInterface, turbu_constants, turbu_items,
    turbu_tbi_lib, turbu_sdl_image, turbu_classes, dm_database,
-   design_script_engine, skill_settings,
    attributes_editor,
-   SDL, SDL_13, sdl_frame_helper;
+   SDL, SDL_13, sdl_frame_helper,
+   uDatasetHelper;
 
 {$R *.dfm}
 
@@ -148,9 +140,9 @@ begin
    field := base.FindField(cbxEquip1.DataField);
    if assigned(field) then
    begin
-      base := field.LookupDataSet;
+      base := cbxEquip1.ListSource.DataSet;
       field := base.FindField('twoHanded');
-      if assigned(field) and (field.AsBoolean = true) then
+      if assigned(field) and (field.AsBoolean) then
       begin
          cbxEquip2.Enabled := false;
          lblEquip2.Enabled := false;
@@ -163,7 +155,7 @@ begin
    if assigned(field) then
    begin
       field := base.FindField('twoHanded');
-      if assigned(field) and (field.AsBoolean = true) then
+      if assigned(field) and (field.AsBoolean) then
       begin
          cbxEquip1.Enabled := false;
          lblEquip1.Enabled := false;
@@ -178,22 +170,17 @@ begin
 end;
 
 constructor TframeClass.Create(AOwner: TComponent);
-var
-   i: byte;
 begin
    inherited Create(AOwner);
    FMatrixPosition := point(2, 0);
-   for i := 0 to radWeaponStyle.Items.Count - 1 do
-      radWeaponStyle.Values.Add(intToStr(i));
    tshAttributes.Tag := integer(dsResist);
    tshConditions.Tag := integer(dsCondition);
-   FOldWeaponScroll := dmDatabase.weapons.AfterScroll;
-   dmDatabase.weapons.AfterScroll := self.weaponsAfterScroll;
+   FOldWeaponScroll := dmDatabaseAux.weapons.AfterScroll;
+   dmDatabaseAux.weapons.AfterScroll := self.weaponsAfterScroll;
 end;
 
 destructor TframeClass.Destroy;
 begin
-   dmDatabase.weapons.AfterScroll := FOldWeaponScroll;
    pnlClass.Parent := self;
    DestroyComponents;
    inherited Destroy;
@@ -239,23 +226,25 @@ end;
 
 procedure TframeClass.loadClass(data: word);
 var
-   iterator: TDataSet;
-   events: TStringList;
+   rec: variant;
+//   events: TStringList;
    i: integer;
-   item: TListItem;
-   eventName: string;
+//   item: TListItem;
+//   eventName: string;
 begin
    if data = 0 then
       Exit;
 
    FId := data;
-   FTemplate := GDatabase.charClass[FId];
+//   FTemplate := GDatabase.charClass[FId];
+
+   rec := dsCharClass.DataSet.CurrentRec;
 
    for I := 0 to lstScripts.Items.Count - 1 do
       lstScripts.Items[i].SubItems.Clear;
    lstScripts.Clear;
 
-   events := FTemplate.GetAllEvents;
+{   events := FTemplate.GetAllEvents;
    try
       for I := 0 to events.Count - 1 do
       begin
@@ -270,19 +259,11 @@ begin
       end;
    finally
       events.Free;
-   end;
+   end; }
 
    tabGraphicsChange(tabGraphics); //load portrait or sprite
-   frameHeroCommands.size := FTemplate.commands;
-   radWeaponStyle.ItemIndex := ord(FTemplate.dualWield);
-   chkEqLocked.Checked := FTemplate.staticEq;
-   chkStrongDef.Checked := FTemplate.strongDef;
+   frameHeroCommands.size := rec.commands;
    self.radWeaponStyleClick(self); //adjust EQ box 2
-   for iterator in dmDatabase.views do
-   begin
-      iterator.Filtered := false;
-      iterator.Filtered := true;
-   end;
 end;
 
 procedure TframeClass.loadPortrait(name: string; id: integer);
@@ -340,20 +321,10 @@ begin
    end;
 end;
 
-procedure TframeClass.lstSkillsDblClick(Sender: TObject);
-var
-   frmSkillLearning: TFrmSkillLearning;
-begin
-   frmSkillLearning := TFrmSkillLearning.Create(nil);
-   try
-      frmSkillLearning.ShowModal;
-   finally
-      frmSkillLearning.Free;
-   end;
-end;
-
 procedure TframeClass.onShow;
 begin
+   dmDatabaseAux.EnsureAnims;
+   dmDatabaseAux.EnsureItems;
    tmrAnim.Enabled := true;
    imgMapSprite.Active := true;
    if not FLoaded then
@@ -378,17 +349,17 @@ begin
       ws_single: cbxEquip2.DataField := '';
       ws_shield:
       begin
-         cbxEquip2.DataField := 'shieldname';
+         cbxEquip2.ListSource := dmDatabaseAux.srcShields;
          lblEquip2.Caption := 'Shield:';
       end;
       ws_dual:
       begin
-         cbxEquip2.DataField := 'weapon2Name';
+         cbxEquip2.ListSource := dmDatabaseAux.srcWeapons;
          lblEquip2.Caption := 'Weapon:';
       end;
       ws_all:
       begin
-         cbxEquip2.DataField := 'offhandName';
+         cbxEquip2.ListSource := dmDatabaseAux.srcOffhands;
          lblEquip2.Caption := 'Offhand:';
       end;
    end;
@@ -436,8 +407,15 @@ begin
 end;
 
 procedure TframeClass.btnEditAttributesClick(Sender: TObject);
+var
+   frmAttributesEditor: TFrmAttributesEditor;
 begin
-   frmAttributesEditor.ShowModal;
+   frmAttributesEditor := TFrmAttributesEditor.Create(self);
+   try
+      frmAttributesEditor.ShowModal;
+   finally
+      frmAttributesEditor.Free;
+   end;
 end;
 
 procedure TframeClass.btnSetGfxClick(Sender: TObject);

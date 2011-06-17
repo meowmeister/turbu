@@ -3,7 +3,7 @@
 			<ProjectGuid>{920169D8-3955-472E-B306-74E825F6E932}</ProjectGuid>
 			<ProjectVersion>12.3</ProjectVersion>
 			<MainSource>testing.dpr</MainSource>
-			<Config Condition="'$(Config)'==''">Memleak Report</Config>
+			<Config Condition="'$(Config)'==''">Debug</Config>
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<Base>True</Base>
 			<Platform>Win32</Platform>
@@ -94,7 +94,6 @@
 			<DCCReference Include="..\mapview\libs\script engine\script_interface.pas"/>
 			<DCCReference Include="..\mapview\libs\script engine\script_backend.pas"/>
 			<DCCReference Include="..\mapview\libs\timing.pas"/>
-			<DCCReference Include="..\turbu format\turbu_unit_dictionary.pas"/>
 			<DCCReference Include="..\..\classes\findfile\findfile.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_classes.pas"/>
 			<DCCReference Include="..\turbu format\turbu_defs.pas"/>
@@ -117,7 +116,6 @@
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_resists.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_skills.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_sounds.pas"/>
-			<DCCReference Include="..\xyz_lib.pas"/>
 			<DCCReference Include="..\archiveInterface.pas"/>
 			<DCCReference Include="..\battle_anims.pas"/>
 			<DCCReference Include="..\BER.pas"/>
@@ -142,14 +140,9 @@
 			<DCCReference Include="..\editor\attributes_editor.pas">
 				<Form>frmAttributesEditor</Form>
 			</DCCReference>
-			<DCCReference Include="..\editor\design_script_engine.pas"/>
 			<DCCReference Include="..\editor\dm_database.pas">
 				<Form>dmDatabase</Form>
 				<DesignClass>TDataModule</DesignClass>
-			</DCCReference>
-			<DCCReference Include="..\editor\frame_class.pas">
-				<Form>frameClass</Form>
-				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\editor\frame_commands.pas">
 				<Form>frameHeroCommands</Form>
@@ -162,9 +155,6 @@
 			<DCCReference Include="..\editor\frame_params.pas">
 				<Form>frameParams</Form>
 				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
-			<DCCReference Include="..\editor\skill_settings.pas">
-				<Form>frmSkillLearning</Form>
 			</DCCReference>
 			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
 			<DCCReference Include="..\editor\function_header.pas">
@@ -276,6 +266,16 @@
 			<DCCReference Include="..\..\classes\Asphyre\AsphyreTimer.pas"/>
 			<DCCReference Include="..\turbu format\design\sdl_frame_helper.pas"/>
 			<DCCReference Include="..\editor\frame_vocab.pas"/>
+			<DCCReference Include="..\turbu format\design\db_create.pas"/>
+			<DCCReference Include="..\..\classes\uDataSetHelper.pas"/>
+			<DCCReference Include="..\editor\frame_class.pas">
+				<Form>frameClass</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="..\monster.pas"/>
+			<DCCReference Include="..\turbu format\database\turbu_monsters.pas"/>
+			<DCCReference Include="..\turbu format\converters\rm2_turbu_monsters.pas"/>
+			<DCCReference Include="..\turbu format\script\EB_Battle.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

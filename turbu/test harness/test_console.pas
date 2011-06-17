@@ -96,10 +96,10 @@ uses
    dm_database, turbu_database, test_project,
    archiveInterface, discInterface, test_map_tree,
    turbu_constants, conversion_report, conversion_report_form,
-   rm2_turbu_converter_thread, design_script_engine,
+   rm2_turbu_converter_thread,
    commons, fileIO, formats, LDB, LMT, LMU,
    turbu_characters, locate_files, map_tree_controller, turbu_containers,
-   rm2_turbu_characters, rm2_turbu_database, turbu_unit_dictionary,
+   rm2_turbu_characters, rm2_turbu_database,
    turbu_engines, turbu_plugin_interface, turbu_battle_engine,
    turbu_2k3_battle_engine, turbu_2k_battle_engine, turbu_sprites,
    turbu_maps, turbu_classes, turbu_2k_map_engine_D,
@@ -171,10 +171,12 @@ var
    conversionReport: IConversionReport;
 begin
    GArchives.clearFrom(1);
-   openArchive(PROJECT_DB, DATABASE_ARCHIVE);
    openArchive(MAP_DB, MAP_ARCHIVE);
    openArchive(IMAGE_DB, IMAGE_ARCHIVE);
    openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
+   openArchive(MUSIC_DB, MUSIC_ARCHIVE);
+   openArchive(SFX_DB, SFX_ARCHIVE);
+   openArchive(VIDEO_DB, VIDEO_ARCHIVE);
 
    filename := IncludeTrailingPathDelimiter(folder);
 
@@ -194,9 +196,9 @@ procedure TfrmTestConsole.mnuTestMapLoadingClick(Sender: TObject);
 begin
    if not assigned(GDatabase) then
       mnuTestLoadingClick(Sender);
+   if not assigned(lCanvas) then
+      mnuCreateSdlWindowClick(sender);
 
-   FEngine := T2kMapEngineD.Create;
-   FEngine.initialize(0, gdatabase);
    FCurrentMap := FEngine.loadMap(GDatabase.mapTree[1]);
 
    if sender = mnuTestMapLoading then
@@ -206,7 +208,7 @@ end;
 procedure TfrmTestConsole.mnuEditMapPropertiesClick(Sender: TObject);
 begin
    if not assigned(FEngine) then
-      mnuTestMapLoadingClick(Sender);
+      mnuTestLoadingClick(Sender);
 
    FEngine.editMapProperties(1);
    if sender = mnuEditMapProperties then
@@ -228,14 +230,14 @@ var
    fromFolder: IArchive;
    FLdb: TLcfDatabase;
    datafile, optimStream: TStream;
-   legacy: TLegacySections;
-   key: byte;
+//   legacy: TLegacySections;
+//   key: byte;
 const
 	SECTIONS_I_KNOW_HOW_TO_READ = [$0b..$0d, $11..$14, $17..$18, $1e];
 begin
    optimStream := nil;
    fLDB := nil;
-   legacy := nil;
+//   legacy := nil;
    fromFolder := discInterface.openFolder(folder);
    try
       datafile := fromFolder.getFile('RPG_RT.ldb');
@@ -247,9 +249,11 @@ begin
             raise EParseMessage.create('RPG_RT.LDB is corrupt!');
 
          GProjectFormat := scanRmFormat(optimStream);
+OutputDebugString('SAMPLING ON');
          FLdb := TLcfDataBase.Create(optimStream);
+OutputDebugString('SAMPLING OFF');
          //end of format and database check
-         legacy := TLegacySections.Create;
+{         legacy := TLegacySections.Create;
          optimStream.rewind;
          getString(optimStream);
          while not optimStream.eof do
@@ -258,14 +262,14 @@ begin
             if not key in SECTIONS_I_KNOW_HOW_TO_READ then
                legacy.Add(key, getStrSec(key, optimStream, nil))
             else skipSec(key, optimStream);
-         end;
+         end;}
       finally
          datafile.Free;
          optimStream.Free;
       end;
    finally
       FLdb.Free;
-      legacy.Free;
+//      legacy.Free;
    end;
    application.MessageBox('Test completed successfully!', 'Done loading LDB');
 end;
@@ -290,7 +294,7 @@ var
    i, j: integer;
 begin
    if not assigned(FEngine) then
-      mnuTestMapLoadingClick(Sender);
+      mnuTestLoadingClick(Sender);
    FEngine.Play;
    for j := 0 to 14 do
       for i := 0 to 19 do
@@ -321,7 +325,7 @@ var
    msg: string;
 begin
    if not assigned(FEngine) then
-      mnuTestMapLoadingClick(Sender);
+      mnuTestLoadingClick(Sender);
 
    map := (FCurrentMap as TRpgMap);
    for i := 1 to 100 do
@@ -343,7 +347,7 @@ var
    mode: byte;
 begin
    if not assigned(FEngine) then
-      mnuTestMapLoadingClick(Sender);
+      mnuTestLoadingClick(Sender);
 
    map := (FCurrentMap as TRpgMap);
    frmTestMapSize.showmodal;
@@ -404,111 +408,18 @@ begin
    mnuTestConversion1.Enabled := folder <> '\';
 end;
 
-function FieldType(field: TField): string;
-begin
-   case field.DataType of
-      ftSmallint, ftWord, ftShortint, ftByte: result := 'SMALLINT';
-      ftInteger, ftLongWord: result := 'INTEGER';
-      ftBoolean: result := 'BOOLEAN';
-      ftCurrency: result := 'DECIMAL(18, 4)';
-      ftBytes, ftVarBytes: result := 'BLOB';
-      ftWideMemo: result := 'BLOB SUB_TYPE TEXT';
-      ftWideString: result := format('VARCHAR(%d) CHARACTER SET UNICODE_FSS', [field.Size]);
-      ftLargeint: result := 'BIGINT';
-      ftSingle, ftFloat, ftExtended: result := 'REAL';
-      else asm int 3 end;
-   end;
-end;
-
-function FieldName(const name: string): string;
-begin
-   result := StringReplace(name, '.', '_', []);
-   result := StringReplace(result, '[', '_', []);
-   result := StringReplace(result, ']', '', []);
-end;
-
-function MasterIndexGen(dset: TClientDataset): string;
-const
-   FK = 'ALTER TABLE $SUB' + CRLF + '  ADD CONSTRAINT FK_$SUB' + CRLF +
-        '  FOREIGN KEY (MASTER)' + CRLF + '    REFERENCES $MASTER(ID);' + CRLF;
-   IX_MX = 'CREATE UNIQUE INDEX IX_$SUB' + CRLF + '  ON $SUB' + CRLF + '  (MASTER, X);';
-   IX_MID = 'ALTER TABLE $SUB' + CRLF + '  ADD CONSTRAINT PK_$SUB' + CRLF + '  PRIMARY KEY (MASTER, ID);';
-var
-   masterIdx: integer;
-   master: string;
-begin
-   result := FK;
-   if dset.FindField('X') <> nil then
-      result := result + IX_MX
-   else if dset.FindField('skill') <> nil then
-      result := result + StringReplace(IX_MID, 'ID', 'SKILL', [])
-   else begin
-      dset.FieldByName('ID');
-      result := result + IX_MID;
-   end;
-   result := StringReplace(result, '$SUB', dset.Name, [rfReplaceAll]);
-   masterIdx := Pos('_', dset.Name);
-   assert(masterIdx > 0);
-   master := Copy(dset.Name, 1, masterIdx - 1);
-   result := StringReplace(result, '$MASTER', master, []);
-end;
-
-function IndexGen(dset: TClientDataset): string;
-const
-   INDEX = 'ALTER TABLE %s' + CRLF + '  ADD CONSTRAINT PK_%s' + CRLF + '  PRIMARY KEY (ID);';
-
-begin
-   if assigned(dset.FindField('MASTER')) then
-      result := MasterIndexGen(dset)
-   else if assigned(dset.FindField('ID')) then
-      result := StringReplace(INDEX, '%s', dset.Name, [rfReplaceAll])
-   else result := '';
-   if result <> '' then
-      result := CRLF + result;
-end;
-
-function ScriptGen(dset: TClientDataset): string;
-const
-   CREATE_SCRIPT = 'CREATE TABLE %s (';
-   CREATE_FIELD = '   %s %s NOT NULL,';
-var
-   field: TField;
-begin
-   result := format(CREATE_SCRIPT, [dset.Name]);
-   for field in dset.fields do
-      if field.FieldKind = fkData then
-         result := result + CRLF + format(CREATE_FIELD, [FieldName(field.FieldName), FieldType(field)]);
-   delete(result, length(result), 1);
-   result := result + ');' + IndexGen(dset);
-end;
-
 procedure TfrmTestConsole.mnuGenerateDBScriptClick(Sender: TObject);
-const
-   VERSION = 'CREATE TABLE DB_VERSION (' + CRLF + ' ID INTEGER NOT NULL, ' + CRLF + '  NAME VARCHAR(255) NOT NULL' + CRLF + ');';
-var
-   component: TComponent;
-   output: TStringList;
 begin
    if not dmDatabase.charClasses.Active then
       mnuTestDatasetsClick(sender);
-   output := TStringList.Create;
-   try
-      output.Add(VERSION);
-      for component in dmDatabase do
-      begin
-         if not (component is TClientDataset) or (component.Tag <> 0) or (component.Name = 'scriptRange') then
-            continue;
-         output.Add(ScriptGen(TClientDataset(component)));
-      end;
-      txtOutput.Lines.Assign(output);
-   finally
-      output.Free;
-   end;
+   txtOutput.Lines.text := dmDatabase.dbScript;
+   if sender = mnuGenerateDBScript then
+      Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;
 
 procedure TfrmTestConsole.mnuTestDatasetsClick(Sender: TObject);
 var
-   dataset: TClientDataSet;
+   dataset: TCustomClientDataSet;
 begin
    for dataset in dmDatabase.datasets do
    try
@@ -534,29 +445,22 @@ var
       assert(GArchives.Add(openFolder(filename)) = index);
    end;
 
-var
-   loadStream: TStream;
 begin
+   if not assigned(lCanvas) then
+      mnuCreateSdlWindowClick(sender);
+   if assigned(GDatabase) then
+      Exit;
    try
       location := IncludeTrailingPathDelimiter(GetRegistryValue('\Software\TURBU', 'TURBU Test Project Output'));
       GArchives.clearFrom(1);
-      openArchive(PROJECT_DB, DATABASE_ARCHIVE);
       openArchive(MAP_DB, MAP_ARCHIVE);
       openArchive(IMAGE_DB, IMAGE_ARCHIVE);
       openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
-      loadStream := TFileStream.Create(IncludeTrailingPathDelimiter(location) + DBNAME, fmOpenRead);
-
-      try
-         freeAndNil(GDatabase);
-         try
-            GDatabase := TRpgDatabase.Load(loadStream, true, nil, nil);
-         except
-            GDatabase := nil;
-            raise;
-         end;
-      finally
-         loadStream.free;
-      end;
+      openArchive(MUSIC_DB, MUSIC_ARCHIVE);
+      openArchive(SFX_DB, SFX_ARCHIVE);
+      openArchive(VIDEO_DB, VIDEO_ARCHIVE);
+      FEngine := T2kMapEngineD.Create;
+      FEngine.initialize(lCanvas.Window, IncludeTrailingPathDelimiter(location) + DBNAME);
    except
       asm int 3 end;
       Abort;
@@ -573,7 +477,7 @@ begin
       mnuCreateSdlWindowClick(Sender);
 
    renderTest(sender);
-   SDL_RenderPresent;
+   SDL_RenderPresent(lcanvas.Renderer);
    if sender = mnuTestSdl then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;
@@ -590,14 +494,14 @@ begin
    filename := format(FULL_FILENAME, [GDatabase.charClass[1].mapSprite]);
    fileStream := GArchives[IMAGE_ARCHIVE].getFile(filename);
    try
-      image := TRpgSdlImage.CreateSprite(loadFromTBI(fileStream), filename, nil);
+      image := TRpgSdlImage.CreateSprite(lcanvas.Renderer, loadFromTBI(fileStream), filename, nil);
    finally
       fileStream.Free;
    end;
 
-   SDL_SetRenderDrawColor($ff, $ff, $ff, $ff);
-   lrect := rect(0, 0, 320, 240 );
-   SDL_RenderFillRect(@lrect);
+   SDL_SetRenderDrawColor(lcanvas.Renderer, $ff, $ff, $ff, $ff);
+   lrect := rect(0, 0, 320, 240);
+   SDL_RenderFillRect(lcanvas.Renderer, @lrect);
    lCanvas.Draw(image, ORIGIN);
    image.Free;
 end;
@@ -628,8 +532,8 @@ begin
       targets.add(TSdlRenderTarget.Create(lcanvas.size));
       targets.RenderOn(0, self.renderTest, 0, true);
       lCanvas.SetRenderer;
-      assert(SDL_RenderCopy(targets[0].handle, nil, nil) = 0);
-      SDL_RenderPresent;
+      assert(SDL_RenderCopy(lcanvas.Renderer, targets[0].handle, nil, nil) = 0);
+      SDL_RenderPresent(lcanvas.Renderer);
       if sender = mnuTestSdl then
          Application.MessageBox('Test concluded successfully!', 'Finished.')
    finally

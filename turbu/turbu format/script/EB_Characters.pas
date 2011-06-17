@@ -421,17 +421,13 @@ const
    LINE = 'Change Status: %s, %s %s';
    ACTION: array[0..1] of string = ('Set', 'Clear');
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetNodeText,
-                           ACTION[values[0]],
-                           (Components[1] as TEBExpression).GetNodeText]);
+   result := format(LINE, [ChildNode[0], ACTION[values[0]], ChildNode[1]]);
 end;
 
 function TEBChangeStatus.GetScriptText: string;
 const LINE = '%s.condition[%s] := %s;';
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetScript(0),
-                           (Components[1] as TEBExpression).GetScript(0),
-                           BOOL_STR[values[0]]]);
+   result := format(LINE, [ChildScript[0], ChildScript[1], BOOL_STR[values[0]]]);
 end;
 
 { TEBFullHeal }
@@ -439,13 +435,13 @@ end;
 function TEBFullHeal.GetNodeText: string;
 const LINE = 'Full Heal: %s';
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetNodeText]);
+   result := format(LINE, [ChildNode[0]]);
 end;
 
 function TEBFullHeal.GetScriptText: string;
 const LINE = '%s.FullHeal;';
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetScript(0)]);
+   result := format(LINE, [ChildScript[0]]);
 end;
 
 { TEBTakeDamage }

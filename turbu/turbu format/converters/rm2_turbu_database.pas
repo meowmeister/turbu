@@ -21,15 +21,15 @@ interface
 
 uses
    classes,
-   LDB, LMT, turbu_database, events, turbu_unit_dictionary, conversion_report,
+   LDB, LMT, battle_anims, turbu_database, events, conversion_report, rm2_turbu_monsters,
    formats;
 
 type
 
    T2k2Database = class helper for TRpgDatabase
    private
-      procedure buildNameLists(base: TLcfDatabase; ConversionReport: IConversionReport;
-                          spriteList, portList, animList, battleSpriteList: TStringList);
+      procedure buildNameLists(base: TLcfDatabase;
+         spriteList, portList, animList, animList2, battleSpriteList, weaponList: TStringList);
       procedure convertEvents(block: TEventBlock);
       procedure SaveScript(const script: utf8String);
       procedure ConvertVocab(base: TLcfDatabase);
@@ -37,10 +37,12 @@ type
       procedure AddVocabCond(const left, formatString: string; base: TLcfDatabase;
         index: integer; cond: TProjectFormat);
       procedure ConvertVehicles(base: TSystemRecord);
+      procedure ScanAnimSounds(base: TBattleAnim; list: TStringList);
    public
-      constructor convert(base: TLcfDatabase; tree: TFullTree; dic: TUnitDictionary;
-                          legacy: TLegacySections; ConversionReport: IConversionReport;
-                          spriteList, portList, animList, battleSpriteList: TStringList);
+      constructor convert(base: TLcfDatabase; tree: TFullTree;
+                          ConversionReport: IConversionReport; scanner: TEventScanner;
+                          spriteList, portList, animList, animList2, battleSpriteList,
+                          weaponList, soundList: TStringList);
    end;
 
 var
@@ -48,7 +50,7 @@ var
 
 implementation
 uses
-   sysUtils, StrUtils,
+   sysUtils, StrUtils, Generics.Collections,
    charset_data,
    turbu_characters, turbu_items, turbu_skills, turbu_animations, conversion_table,
    turbu_resists, turbu_map_metadata,
@@ -56,7 +58,7 @@ uses
    rm2_turbu_resists, rm2_turbu_map_metadata, rm2_turbu_tilesets, turbu_sprites,
    turbu_versioning, turbu_plugin_interface, turbu_constants, turbu_sdl_image,
    turbu_tbi_lib, turbu_tilesets, rm2_turbu_map_objects, turbu_map_objects,
-   hero_data, locate_files, turbu_maps,
+   locate_files, turbu_maps, turbu_monsters,
    archiveInterface, commons, turbu_battle_engine, turbu_engines, logs,
    turbu_map_engine, EB_RpgScript,
    SDL, SDL_13, sdl_image, sg_defs;
@@ -66,10 +68,10 @@ const
 
 { T2k2Database }
 
-procedure T2k2Database.buildNameLists(base: TLcfDatabase; ConversionReport: IConversionReport;
-                          spriteList, portList, animList, battleSpriteList: TStringList);
+procedure T2k2Database.buildNameLists(base: TLcfDatabase;
+   spriteList, portList, animList, animList2, battleSpriteList, weaponList: TStringList);
 var
-   i: integer;
+   i, j: integer;
    v: TVehicleSet;
 begin
    for i := 1 to base.heroes do
@@ -79,12 +81,22 @@ begin
       portList.Add(string(base.hero[i].portrait));
 
    for i := 1 to base.anims do
-      animList.Add(string(base.anim[i].filename));
+   begin
+      if base.anim[i].largeAnim then
+         animList2.Add(string(base.anim[i].filename))
+      else animList.Add(string(base.anim[i].filename));
+   end;
 
    for v := low(TVehicleSet) to high(TVehicleSet) do
       spriteList.Add(string(base.SystemData.vehicleGraphic[v]));
 
-   { worry about battlesprites later }
+   for i := 1 to high(base.anim2) do
+   begin
+      for j := 1 to High(base.anim2[i].poses) do
+         battleSpriteList.Add(string(base.anim2[i].poses[j].filename));
+      for j := 1 to High(base.anim2[i].weapons) do
+         weaponList.Add(string(base.anim2[i].weapons[j].filename));
+   end;
 end;
 
 function setup2kCommand(value: integer): TBattleCommand;
@@ -106,8 +118,8 @@ begin
 end;
 
 constructor T2k2Database.convert(base: TLcfDatabase; tree: TFullTree;
-   dic: TUnitDictionary; legacy: TLegacySections; ConversionReport: IConversionReport;
-   spriteList, portList, animList, battleSpriteList: TStringList);
+   ConversionReport: IConversionReport; scanner: TEventScanner;
+   spriteList, portList, animList, animList2, battleSpriteList, weaponList, soundList: TStringList);
 var
    i, j: integer;
    counter, classes: integer;
@@ -120,13 +132,7 @@ begin
    self.Create;
    GDatabase := self;
    GLcfDatabase := base;
-   self.units.free;
-   self.units := dic;
-   FLegacyCruft.Free;
-   FLegacyCruft := legacy;
    self.ConvertEvents(GlobalEventBlock as TEventBlock);
-   self.scriptBuild;
-   self.parseMeta;
    assert(SDL_WasInit(SDL_INIT_VIDEO) = SDL_INIT_VIDEO);
 
    // make sure required battle engine is available from plugins
@@ -160,7 +166,7 @@ begin
    self.statSet := TStatSet.Create;
 
    try
-      buildNameLists(base, ConversionReport, spriteList, portList, animList, battleSpriteList);
+      buildNameLists(base, spriteList, portList, animList, animList2, battleSpriteList, weaponList);
 
       ConversionReport.newStep('Converting heroes');
       // COMMANDS
@@ -182,7 +188,6 @@ begin
                command.Last.style := cs_skillgroup;
                command.Last.value := command. High;
             end;
-         // end FOR
       end;
 
       // CLASS RECORDS
@@ -211,7 +216,7 @@ begin
       begin
          if (not isEmpty(base.hero[i])) and (base.hero[i].classNum = 0) then
          begin
-            GDatabase.addClass(TClassTemplate.convert(base.hero[i], base, self.statSet));
+            GDatabase.charClass.Add(TClassTemplate.convert(base.hero[i], base, self.statSet, classes));
             inc(counter);
             heroClassTable.add(i, counter);
          end;
@@ -220,8 +225,8 @@ begin
       // HERO RECORDS
       for i := 1 to base.heroes do
          if base.hero[i].classNum <> 0 then
-            GDatabase.addHero(THeroTemplate.convert(base.hero[i], classTable, base, self.statSet))
-         else GDatabase.addHero(THeroTemplate.convert(base.hero[i], heroClassTable, base, self.statSet));
+            GDatabase.Hero.Add(THeroTemplate.convert(base.hero[i], classTable, base, self.statSet))
+         else GDatabase.Hero.Add(THeroTemplate.convert(base.hero[i], heroClassTable, base, self.statSet));
 
       ConversionReport.newStep('Converting Items');
       // ITEMS
@@ -248,7 +253,10 @@ begin
       ConversionReport.newStep('Converting Animations');
       // ANIMATIONS
       for i := 1 to base.anims do
-         self.addAnim(TAnimTemplate.convert(base.anim[i], i));
+      begin
+         self.anim.Add(TAnimTemplate.convert(base.anim[i], i));
+         ScanAnimSounds(base.anim[i], soundList);
+      end;
 
       ConversionReport.newStep('Converting Attributes and Conditions');
       // ATTRIBUTES
@@ -264,6 +272,23 @@ begin
       for I := 1 to base.getMaxChipsets do
          if not base.getChipset(i).empty then
             self.tileset.Add(TTileset.Convert(base.getChipset(i), i));
+
+      // MONSTERS
+      ConversionReport.newStep('Converting Monsters');
+      for i := 1 to base.monsters do
+         self.monsters.add(TRpgMonster.convert(base.monster[i], i));
+
+      // MONSTER PARTIES
+      ConversionReport.newStep('Converting Monster Parties');
+      ScanMPartiesForDuplicates(base.mparty, scanner);
+      for i := 1 to base.mparties do
+         self.monsterParties.add(TRpgMonsterParty.convert(base.mparty[i], i, scanner));
+      ReportMPartyDuplicates(ConversionReport);
+
+      // ANIM SECTION 2
+      ConversionReport.newStep('Converting Battle Char data');
+      for i := 1 to high(base.anim2) do
+         self.battleChars.Add(TBattleCharAnim.convert(base.anim2[i], i));
 
       ConversionReport.newStep('Preparing layout');
       self.layout.width := LOGICAL_SIZE.X;
@@ -455,6 +480,14 @@ begin
    finally
       stream.Free;
    end;
+end;
+
+procedure T2k2Database.ScanAnimSounds(base: TBattleAnim; list: TStringList);
+var
+   i: integer;
+begin
+   for i := 1 to base.effects do
+     list.Add(ExtractFileName(ChangeFileExt(string(base.effect[i].sound.filename), '')));
 end;
 
 function ConvertVehicle(base: TSystemRecord; vehicle: TVehicleSet): TVehicleTemplate;

@@ -32,6 +32,7 @@ type
    TCondition = class(TObject)
    private
       FName: ansiString;
+      FLastsOutsideBattle: boolean;
       FEffectChance: array[1..5] of byte;
       FColor: byte;
       FPriority: byte;
@@ -72,6 +73,7 @@ type
       constructor Create(input: TStream; const id: word);
 
       property name: ansiString read FName;
+      property lastsOutsideBattle: boolean read FLastsOutsideBattle;
       property chance[x: byte]: byte read getChance;
       property color: byte read FColor;
       property priority: byte read FPriority;
@@ -99,7 +101,7 @@ type
       property mpStepCount: byte read FMpStepCount;
       property mpStepQuantity: word read FMpStepQuantity;
 
-      property stat_effect: TStatEffect read FStatEffect;
+      property statEffect: TStatEffect read FStatEffect;
       property evade: boolean read FEvade;
       property reflect: boolean read FReflect;
       property eqLock: boolean read FEqLock;
@@ -124,9 +126,9 @@ begin
    inherited create;
    converter := TBerConverter.Create(input);
    if converter.getData <> id then
-      raise EParseMessage.create('Condition record' + intToStr(id) + ' of RPG_RT.LDB not found!');
+      raise EParseMessage.createFmt('Condition record %d of RPG_RT.LDB not found!', [id]);
    FName := getStrSec(1, input, fillInBlankStr);
-   skipSec(2, input);
+   FLastsOutsideBattle := getChboxSec(2, input, nil);
    FColor := getNumSec(3, input, fillInCondInt);
    FPriority := getNumSec(4, input, fillInCondInt);
    FLimitation := TAttackLimitation(getNumSec(5, input, fillInZeroInt));
@@ -179,10 +181,9 @@ end;
 
 function TCondition.getChance(x: byte): byte;
 begin
-   if not (x in [1..5]) then
-      result := 0
-   else
-      result := FEffectChance[x];
+   if (x in [1..5]) then
+      result := FEffectChance[x]
+   else result := 0;
 end;
 
 { Classless }

@@ -34,10 +34,12 @@ type
 
    TAnimEffects = class(TRpgDatafile)
    private
+      FFrame: word;
       FSound: TRpgSound;
       FFlashWhere: TFlashTarget;
       [TUploadColor]
       FColor: TRpgColor;
+      FShakeWhere: TFlashTarget;
    protected
       class function keyChar: ansiChar; override;
    public
@@ -45,9 +47,11 @@ type
       procedure save(savefile: TStream); override;
       destructor Destroy; override;
 
+      property frame: word read FFrame write FFrame;
       property sound: TRpgSound read FSound write FSound;
       property flashWhere: TFlashTarget read FFlashWhere write FFlashWhere;
       property color: TRpgColor read FColor write FColor;
+      property shakeWhere: TFlashTarget read FShakeWhere write FShakeWhere;
    end;
 
    TAnimCell = class(TRpgDatafile)
@@ -94,6 +98,29 @@ type
       property yTarget: TAnimYTarget read FYTarget write FYTarget;
       property effect: TAnimEffectList read FTimingSec write FTimingSec;
       property frame: TAnimFrameList read FFrameSec write FFrameSec;
+   end;
+
+   TBattleCharData = class(TRpgDatafile)
+   protected
+      FFilename: string;
+      FFrame: integer;
+      FUnk04: integer;
+      FUnk05: integer;
+   public
+      property filename: string read FFilename;
+      property frame: integer read FFrame;
+   end;
+
+   TBattleCharDataList = class(TRpgObjectList<TBattleCharData>);
+
+   TBattleCharAnim = class(TRpgDatafile)
+   protected
+      FSpeed: integer;
+      FPoses: TBattleCharDataList;
+      FWeapons: TBattleCharDataList;
+   public
+      constructor Create; override;
+      destructor Destroy; override;
    end;
 
 implementation
@@ -240,6 +267,22 @@ var
 begin
    assert(anim is TAnimEffects);
    db.FieldByName('color').AsInteger := integer(anim.FColor.color);
+end;
+
+{ TBattleCharAnim }
+
+constructor TBattleCharAnim.Create;
+begin
+   inherited;
+   FPoses := TBattleCharDataList.Create;
+   FWeapons := TBattleCharDataList.Create;
+end;
+
+destructor TBattleCharAnim.Destroy;
+begin
+   FWeapons.Free;
+   FPoses.Free;
+   inherited;
 end;
 
 end.

@@ -157,8 +157,8 @@ type
       FDataset: TDataset;
       procedure SetDataset(ds: TDataset);
       procedure CheckDataset(ds: TDataset);
-      function GetVariant: TValue;
       function GetString: TValue;
+      procedure SetString(const value: TValue);
    public
       procedure Upload(Value: TObject; db: TDataset); override;
       procedure Download(Value: TObject; db: TDataset); override;
@@ -419,6 +419,7 @@ begin
             FUploadPrefix := fieldname
          else FUploadPrefix := format('%s_%s', [FUploadPrefix, fieldname]);
          self.download(value.AsObject, db);
+         result := value;
       finally
          FUploadPrefix := prefix;
       end;
@@ -646,7 +647,8 @@ var
          if assigned(isUploadable) and (not isUploadable.IsUploadable(enumerator)) then
             Continue;
 
-         uploadValue(db, enumerator, fieldname);
+         db.Append;
+         uploadValue(db, enumerator, '');
          if assigned(relationKey) then
            relationKey.SetRelationKey(TObject(CurrentInstance), db);
       end;
@@ -682,7 +684,7 @@ begin
       asm int 3 end
    else db := newdb;
 
-   if parentType.TypeKind = tkClass then
+   if datafileType.TypeKind = tkClass then
       uploadObjectEnum
    else uploadNonObjectEnum;
 
@@ -736,12 +738,17 @@ procedure TDatasetSerializer.uploadRecord(db: TDataset; const value: TValue;
 var
    val: TRttiRecordType;
    field: TRttiField;
+   newFieldname: string;
 begin
    assert(value.Kind = tkRecord);
    val := FContext.GetType(value.TypeInfo) as TRttiRecordType;
    for field in val.GetFields do
-      uploadValue(db, field.GetValue(value.GetReferenceToRawData),
-                      format(FIELDNAME_STR, [fieldname, field.Name]));
+   begin
+      if fieldname = '' then
+         newFieldname := field.name
+      else newFieldname := format(FIELDNAME_STR, [fieldname, field.Name]);
+      uploadValue(db, field.GetValue(value.GetReferenceToRawData), newFieldname);
+   end;
 end;
 
 procedure TDatasetSerializer.uploadRecordRelation(db: TDataset; const value: TValue; const fieldname: string);
@@ -875,7 +882,7 @@ begin
       tkInt64: rValue := FDbField.AsLargeInt;
       tkUString: rValue := GetString;
       tkFloat: rValue := FDBField.AsExtended;
-      else rValue := GetVariant;
+      else assert(false);
    end;
    FField.SetValue(value, rValue);
 end;
@@ -885,15 +892,30 @@ begin
    result := FDbField.AsString;
 end;
 
-function TDBSimpleFieldOperation.GetVariant: TValue;
+procedure TDBSimpleFieldOperation.SetString(const value: TValue);
 begin
-   result := TValue.FromVariant(FDbField.Value);
+   FDbField.AsString := value.AsString;
 end;
 
 procedure TDBSimpleFieldOperation.Upload(Value: TObject; db: TDataset);
+var
+   lValue: TValue;
 begin
    CheckDataset(db);
-   FSerializer.uploadValue(db, FField.GetValue(value), FName)
+   lValue := FField.GetValue(value);
+   case FField.FieldType.TypeKind of
+      tkEnumeration:
+      begin
+         if FField.FieldType.Handle = TypeInfo(Boolean) then
+            FDbField.AsBoolean := lValue.AsBoolean
+         else FDbField.AsInteger := lValue.AsOrdinal;
+      end;
+      tkInteger: FDbField.asInteger := lValue.AsInteger;
+      tkInt64: FDbField.AsLargeInt := lValue.AsInt64;
+      tkUString: SetString(lValue);
+      tkFloat: FDBField.AsExtended := lValue.AsExtended;
+      else assert(false);
+   end;
 end;
 
 { TDBSerializerRule }

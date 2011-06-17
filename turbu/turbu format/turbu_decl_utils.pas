@@ -25,7 +25,7 @@ unit turbu_decl_utils;
 interface
 uses
    types, TypInfo, DB,
-   turbu_classes, turbu_defs;
+   turbu_classes, turbu_defs, turbu_serialization;
 
 type
    TScriptSignature = (ssNone, ssScriptEvent, ssDamageCalcEvent,
@@ -36,25 +36,6 @@ type
    TToHitEvent = function(character, target: TObject; effectiveness: integer; offensive: boolean): boolean of object;
    TCondOnTurnEvent = procedure(character, condition: TObject; var1, var2, var3, var4: integer) of object;
    TExpCalcEvent = function(level, var1, var2, var3, var4: integer): integer;}
-
-   TScriptRecord = class(TObject)
-   private
-      FName: string;
-      FDesignName: string;
-      FStrings: T4StrArray;
-      FMethod: TMethod;
-      FSignature: string;
-      function getMethod: TMethod;
-      procedure setName(const Value: string);
-   public
-      constructor Create(decl: TRpgDecl; script: TMethod);
-      procedure upload(db: TDataSet);
-      procedure update(db: TDataSet);
-
-      property name: string read FName write setName;
-      property designName: string read FDesignName write FDesignName;
-      property baseMethod: TMethod read getMethod;
-   end;
 
    function signatureMatch(func: TRpgDecl): string;
    function GetSignature(const Event: string): TRpgDecl;
@@ -128,46 +109,6 @@ function GetSignature(const Event: string): TRpgDecl;
 begin
    if not sigDict.TryGetValue(event, result) then
       result := nil;
-end;
-
-{ TScriptRecord }
-
-constructor TScriptRecord.Create(decl: TRpgDecl; script: TMethod);
-var
-   i: integer;
-begin
-   //TODO: Why do I have both this and turbu_script_basis.TScriptRange ?
-   FName := decl.name;
-   FDesignName := decl.designName;
-   FMethod := script;
-   if decl.fourInts then
-      for I := 1 to 4 do
-         FStrings[i] := decl.params[i].name;
-   FSignature := signatureMatch(decl);
-end;
-
-function TScriptRecord.getMethod: TMethod;
-begin
-   result := FMethod;
-end;
-
-procedure TScriptRecord.setName(const Value: string);
-begin
-  FName := Value;
-end;
-
-procedure TScriptRecord.update(db: TDataSet);
-begin
-   db.FieldByName('name').AsString := name;
-   db.FieldByName('designName').AsString := designName;
-   db.FieldByName('address').AsInteger := integer(Self);
-   db.FieldByName('baseMethod').asPSMethod := TMethod(FMethod);
-end;
-
-procedure TScriptRecord.upload(db: TDataSet);
-begin
-   db.Append;
-   self.update(db);
 end;
 
 initialization

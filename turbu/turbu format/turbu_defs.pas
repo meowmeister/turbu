@@ -19,7 +19,8 @@ unit turbu_defs;
 
 interface
 uses
-   Types, TypInfo;
+   Types, TypInfo,
+   turbu_constants;
 
 type
    TCharEvent = procedure(character, party: TObject) of object;
@@ -38,14 +39,14 @@ type
    TByteSet = set of byte;
    TPointArray = array of TPoint;
    TStringArray = array of string;
+   TStatArray = array[1..STAT_COUNT] of integer;
 
    TLocation = packed record
-   case boolean of
-      false: ( map: integer;
-               x: smallint;
-               y: smallint;);
-      true:  ( value: int64);
-      end;
+      map: integer;
+      x: smallint;
+      y: smallint;
+      constructor Create(map: integer; x, y: smallint);
+   end;
 
    TNameType = record
       name: string;
@@ -93,5 +94,14 @@ type
    TGameState = (gs_map, gs_message, gs_menu, gs_battle, gs_sleeping, gs_fading, gs_minigame);
 
 implementation
+
+{ TLocation }
+
+constructor TLocation.Create(map: integer; x, y: smallint);
+begin
+   self.map := map;
+   self.x := x;
+   self.y := y;
+end;
 
 end.

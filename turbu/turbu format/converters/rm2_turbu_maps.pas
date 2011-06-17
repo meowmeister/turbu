@@ -12,11 +12,6 @@ type
       procedure saveScript(const script: utf8string);
    end;
 
-   T2k2MapRegion = class helper for TMapRegion
-   public
-      constructor Convert(base: TMapTreeData; id: smallint);
-   end;
-
    TDecodeResult = record
       baseTile: word;
       neighbors: TNeighbors;
@@ -25,11 +20,14 @@ type
 
 function decode(const readID: integer): TDecodeResult;
 
+const
+   RANDOM_ENCOUNTER_SCRIPT = 'randomEncounterSteps';
+
 implementation
 uses
-   types, sysUtils, classes,
+   types, sysUtils, classes, Generics.Collections,
    turbu_tilesets, archiveInterface, turbu_constants, turbu_classes,
-   turbu_map_objects, rm2_turbu_map_objects, EB_RpgScript;
+   turbu_map_objects, rm2_turbu_map_objects, EB_RpgScript, turbu_database;
 
 type
    ETileError = class(Exception);
@@ -38,13 +36,11 @@ function decodeNeighbors(neighbors: byte): TNeighbors; forward;
 function convertDecodeResult(value: TDecodeResult): TTileRef; forward;
 
 { T2k2RpgMap }
-const
-   RANDOM_ENCOUNTER_SCRIPT = 'randomEncounterSteps';
-
 constructor T2k2RpgMap.Convert(base: TMapUnit; metadata: TMapTreeData; db: TLcfDataBase; id: smallint);
 var
    i: integer;
    nameList: TStringList;
+   pair: TPair<byte, ansiString>;
 begin
    self.Create;
    self.name := string(metadata.name);
@@ -75,9 +71,6 @@ begin
       self.battles[i] := (metadata.battle[i]);
    self.encounterScript := RANDOM_ENCOUNTER_SCRIPT;
    FEncounters[1] := metadata.encounterRate;
-   self.FRegions := TRegionList.Create;
-   self.FMapObjects := TMapObjectList.Create;
-   FScriptObject := TEBMap.Create(nil);
    nameList := TStringList.Create;
    try
       nameList.sorted := true;
@@ -92,6 +85,9 @@ begin
    finally
       nameList.Free;
    end;
+
+   for pair in base.Legacy do
+      GDatabase.addLegacy('map', id, pair.Key, pair.Value);
 end;
 
 procedure T2k2RpgMap.saveScript(const script: utf8String);
@@ -109,23 +105,6 @@ begin
    finally
       stream.Free;
    end;
-end;
-
-{ T2k2MapRegion }
-
-constructor T2k2MapRegion.Convert(base: TMapTreeData; id: smallint);
-var
-   i: integer;
-begin
-   self.Create;
-   self.name := string(base.name);
-   self.id := id;
-   self.bounds := base.BoundsRect;
-   self.battleCount := base.battles;
-   for I := 0 to battleCount - 1 do
-      self.battles[i] := (base.battle[i]);
-   self.encounterScript := RANDOM_ENCOUNTER_SCRIPT;
-   FEncounters[1] := base.encounterRate;
 end;
 
 { Classless }
@@ -475,6 +454,7 @@ begin
       end;
       else inc(result.group, 9);
    end;
+   inc(result.group);
 end;
 
 end.

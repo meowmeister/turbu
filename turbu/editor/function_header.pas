@@ -45,9 +45,6 @@ type
       property onUpdate: TStringSetProc write FSetHeader;
   end;
 
-var
-  frmFuncHeader: TfrmFuncHeader;
-
 implementation
 uses
    turbu_vartypes;

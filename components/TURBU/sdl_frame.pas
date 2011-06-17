@@ -288,6 +288,7 @@ begin
    if FRenderer.ptr <> nil then
    begin
       SDL_ShowWindow(FWindow);
+      ResetLogicalSize;
       assert(SDL_SetRenderDrawColor(FRenderer, 0, 0, 0, 255) = 0);
       SDL_RenderFillRect(FRenderer, nil);
       FFlags := SDL_GetWindowFlags(FWindow);

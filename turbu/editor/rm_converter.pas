@@ -48,31 +48,30 @@ type
       procedure tmrValidateTimer(Sender: TObject);
       procedure btnConvertClick(Sender: TObject);
       procedure dirProjectLocationClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+      procedure FormCreate(Sender: TObject);
    private
       FFormat: TProjectFormat;
+      FDbName: string;
       function validateDirectories: boolean; inline;
       procedure grabFormat;
       procedure setFormat(const Value: TProjectFormat);
    public
       function loadProject: integer;
       property format: TProjectFormat read FFormat write setFormat;
+      property dbName: string read FDbName;
    end;
 
 const
    SUCCESSFUL_IMPORT = 6100;
-var
-   frmRmConverter: TfrmRmConverter;
-
 implementation
 
 uses
-   windows, inifiles, strUtils, Generics.Collections,
+   windows, inifiles, strUtils, Generics.Collections, IOUtils,
    commons, fileIO, rm2_turbu_converter_thread,
    conversion_report_form, conversion_report,
    turbu_database, turbu_characters, turbu_constants, locate_files,
    discInterface,
-   archiveInterface, design_script_engine, logs,
+   archiveInterface, logs,
    strtok,
    uPSCompiler,
    sdl;
@@ -113,23 +112,26 @@ begin
       end else if not CreateDir(filename) then
          RaiseLastOSError;
       GArchives.clearFrom(1);
-      openArchive(PROJECT_DB, DATABASE_ARCHIVE);
       openArchive(MAP_DB, MAP_ARCHIVE);
       openArchive(IMAGE_DB, IMAGE_ARCHIVE);
       openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
       openArchive(MUSIC_DB, MUSIC_ARCHIVE);
+      openArchive(SFX_DB, SFX_ARCHIVE);
 
       GCurrentFolder := dirProjectLocation.Text;
       GProjectFolder := dirOutput.Text;
       logs.closeLog;
-{      if fileExists(logName) then
-         deleteFile(PChar(logName));}
 
       frmConversionReport := TfrmConversionReport.Create(nil);
       try
          frmConversionReport.thread := TConverterThread.Create(frmConversionReport, dirProjectLocation.Text, dirOutput.Text, FFormat);
          case frmConversionReport.ShowModal of
-            mrOk: self.ModalResult := SUCCESSFUL_IMPORT;
+            mrOk:
+            begin
+               FDbName := IncludeTrailingPathDelimiter(dirOutput.Directory) + 'turbu.tdb';
+               assert(TFile.Exists(FDbName));
+               self.ModalResult := SUCCESSFUL_IMPORT;
+            end;
             else ;
          end;
       finally
@@ -137,6 +139,7 @@ begin
       end;
    finally
       tmrValidate.Enabled := self.ModalResult = mrNone;
+      GArchives.clearFrom(1);
    end;
 end;
 

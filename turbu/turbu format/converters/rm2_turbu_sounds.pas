@@ -41,8 +41,7 @@ begin
    else self.filename := '(OFF)';
    self.fadeIn := base.fadeIn;
    self.tempo := base.tempo;
-   self.left := base.left;
-   self.right := base.right;
+   self.balance := base.left;
    self.volume := base.volume;
 end;
 

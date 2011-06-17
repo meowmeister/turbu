@@ -26,7 +26,7 @@ uses
    types, sysUtils, classes, DB,
    dm_database,
    upsCompiler, upsRuntime, upsPreProcessor, upsUtils,
-   turbu_defs, turbu_classes, commons, turbu_script_basis, turbu_unit_dictionary,
+   turbu_defs, turbu_classes, commons, turbu_script_basis,
    turbu_script_interface,
    sg_defs;
 
@@ -84,9 +84,6 @@ type
       property bounds[name: string]: TSgPoint read getBounds;
    end;
 
-var
-   GDScriptEngine: TTurbuScriptEngine;
-
 implementation
 uses
    math, TypInfo,
@@ -98,6 +95,9 @@ uses
 function scriptOnUses(Sender: TPSPascalCompiler; const Name: tbtString): Boolean; forward;
 procedure setupImportedFunctions(exec: TPSExec); forward;
 function buildProcList(Sender: TPSPascalCompiler): Boolean; forward;
+
+var
+   GDScriptEngine: TTurbuScriptEngine;
 
 { TTurbuScriptEngine }
 

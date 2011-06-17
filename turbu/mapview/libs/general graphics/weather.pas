@@ -99,6 +99,8 @@ begin
          dummy.erratic := true;
       end;
       else ;
+      //fog: cover each square with (r: 242, g:255, b: 242), with each pixel randomly set from 74-82 alpha
+      //sand: yellow-tinged fog + yellowish rain spraying downwards and outwards from top-center
    end;
 end;
 
@@ -145,7 +147,6 @@ begin
    FSize := FIntensity * WEATHER_POWER[FType];
    if value = we_none then
       self.dead;
-   //end if
 end;
 
 { TWeatherSprite }

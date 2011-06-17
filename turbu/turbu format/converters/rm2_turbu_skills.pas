@@ -72,7 +72,7 @@ begin
       sk_switch: newSkill := TVariableSkillTemplate.Convert(base);
       else newSkill := TNormalSkillTemplate.Convert(base); //RM2K3 "skill group" skills
    end;
-   GDatabase.addSkill(newSkill);
+   GDatabase.skill.Add(newSkill);
 end;
 {$WARN USE_BEFORE_DEF ON}
 
@@ -93,6 +93,8 @@ begin
       self.useString2 := string(base.usage2);
       self.failureMessage := base.failure;
    end;
+   if (GProjectFormat = pf_2k3) and (base.unk32 <> '') then
+      GDatabase.AddLegacy('Skill', self.id, 32, base.unk32);
    //fill in usableWhere later
 end;
 
@@ -165,6 +167,8 @@ begin
       //end for
    end;
    self.resistMod := base.resistMod;
+   self.inflictReversed := base.inflictReversed;
+   self.displaySprite := base.displaySprite;
 end;
 
 { T2k2SpecialSkillTemplate }
@@ -219,8 +223,6 @@ begin
    self.num[2] := 0;
    self.num[3] := 0;
    self.num[4] := 0;
-   self.method := GDatabase.scriptByName('skillSelectByLevel');
-   assert(assigned(self.method));
 end;
 
 end.

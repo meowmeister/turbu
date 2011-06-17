@@ -54,6 +54,7 @@ object frmConversionReport: TfrmConversionReport
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
+      Alignment = taCenter
       Caption = 'Conversion:'
     end
     object lblStatusLabel: TLabel
@@ -130,7 +131,6 @@ object frmConversionReport: TfrmConversionReport
         Margins.Bottom = 4
         Align = alLeft
         Caption = 'Hints:'
-        ExplicitHeight = 17
       end
       object lblHintCount: TLabel
         Left = 81
@@ -143,7 +143,6 @@ object frmConversionReport: TfrmConversionReport
         Margins.Bottom = 4
         Align = alRight
         Caption = '0'
-        ExplicitHeight = 17
       end
     end
     object pnlWarnings: TPanel
@@ -171,7 +170,6 @@ object frmConversionReport: TfrmConversionReport
         Margins.Bottom = 4
         Align = alLeft
         Caption = 'Notes:'
-        ExplicitHeight = 17
       end
       object lblWarningCount: TLabel
         Left = 92
@@ -184,7 +182,6 @@ object frmConversionReport: TfrmConversionReport
         Margins.Bottom = 4
         Align = alRight
         Caption = '0'
-        ExplicitHeight = 17
       end
     end
     object pnlErrors: TPanel
@@ -212,7 +209,6 @@ object frmConversionReport: TfrmConversionReport
         Margins.Bottom = 4
         Align = alLeft
         Caption = 'Errors'
-        ExplicitHeight = 17
       end
       object lblErrorCount: TLabel
         Left = 92
@@ -225,7 +221,6 @@ object frmConversionReport: TfrmConversionReport
         Margins.Bottom = 4
         Align = alRight
         Caption = '0'
-        ExplicitHeight = 17
       end
     end
   end

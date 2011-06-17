@@ -19,7 +19,7 @@ unit item_data;
 
 interface
 
-uses windows, classes, sysUtils, //windows libs
+uses windows, classes, sysUtils, Generics.Collections, //windows libs
      BER, commons, fileIO;
 
 type
@@ -28,6 +28,7 @@ type
                switchItem);
    TWeaponAnimType = (wa_weapon, wa_battleAnim);
    TMovementMode = (mm_none, mm_stepForward, mm_jumpTo, mm_walkTo);
+   TLegacyDict = TDictionary<integer, rawByteString>;
 
    TItemAnimData = class(TObject)
    private
@@ -107,6 +108,8 @@ type
       FUsableByClass: array of boolean;
       FAnimData: array of TItemAnimData;
       FInvokeSkill: boolean;
+      FInflictReversed: boolean;
+      FLegacy: TLegacyDict;
 
       function getStat(which: byte): word;
       function getCondition(x: word): boolean;
@@ -115,6 +118,7 @@ type
       function getAnimData(x: word): TItemAnimData;
       function getAttribute(x: word): boolean;
       function getConditions: word;
+    function GetAnimDataCount: integer;
    public
       constructor Create(theLDB: TStream; const id: word; parent: TObject);
       destructor Destroy; override;
@@ -139,7 +143,12 @@ type
       property battleAnim: word read FBattleAnim;
       property boostEvade: boolean read FBoostEvade;
       property preventCrits: boolean read FPreventCrits;
+      property toHit: byte read FToHit;
       property mpCost: word read FMPCost;
+      property critChance: byte read FCritChance;
+      property preemptive: boolean read FPreemptive;
+      property halfMP: boolean read FHalfMP;
+      property noTerrainDamage: boolean read FNoTerrainDamage;
       property conditionChance: byte read FConditionInflictChance;
       property usableBy[x: word]: boolean read isUsableBy;
       property areaMedicine: boolean read FAreaMedicine;
@@ -167,6 +176,10 @@ type
       property cursed: boolean read FCursed;
       property usableByClass[x: word]: boolean read isUsableByClass;
       property animData[x: word]: TItemAnimData read getAnimData;
+      property animDataCount: integer read GetAnimDataCount;
+      property invokeSkill: boolean read FInvokeSkill;
+      property inflictReversed: boolean read FInflictReversed;
+      property legacy: TLegacyDict read FLegacy;
    end;
 
 
@@ -190,14 +203,13 @@ begin
    inherited Create;
    assert(parent is TLcfDataBase);
 try
-with theLDB do
-begin
    FIncomplete := false;
    converter := TBerConverter.Create(theLDB);
    dummy := converter.getData;
    if dummy <> id then
       raise EParseMessage.create('Item section ' + intToStr(id) + ' of RPG_RT.LDB not found!');
    FId := id;
+   FLegacy := TLegacyDict.Create;
    if peekAhead(theLDB, 0) = false then //blank item records just contain an x00 and nothing else
    begin
       FName := getStrSec(1, theLDB, fillInBlankStr);
@@ -265,25 +277,23 @@ begin
       else assert(dummy = high(FUsableBy));
 
       setLength(FConditions, getNumSec($3F, theLDB, fillInZeroInt) + 1);
-{      if length(FConditions) = 1 then
-         setLength(FConditions, TLcfDataBase(parent).conditions + 1);}
       if length(FConditions) > 1 then
-         dummy := getArraySec($40, theLDB, FConditions[1])
+         getArraySec($40, theLDB, FConditions[1])
       else skipSec($40, theLDB);
 
       setLength(FAttributes, getNumSec($41, theLDB, fillInZeroInt) + 1);
-{      if length(FAttributes) = 1 then
-         setLength(FAttributes, TLcfDataBase(parent).conditions + 1);}
       if length(Fattributes) > 1 then
-         dummy := getArraySec($42, theLDB, Fattributes[1])
+         getArraySec($42, theLDB, Fattributes[1])
       else skipSec($42, theLDB);
 
       FConditionInflictChance := getNumSec($43, theLDB, fillInZeroInt);
 
       if GProjectFormat = pf_2k3 then
       begin
-         for i := $44 to $45 do
-            skipSec(i, theLDB);
+         FInflictReversed := getChboxSec($44, theLDB, fillInZeroInt);
+         stringData := getStrSec($45, theLDB, fillInBlankStr);
+         if stringData <> '' then
+            FLegacy.Add($45, stringData);
 
          stringData := getStrSec($46, theLDB, fillInBlankStr);
          if stringData <> '' then
@@ -307,15 +317,11 @@ begin
                FUsableByClass[i] := true;
 
          for i := $4A to $4C do
-            skipSec(i, theLDB);
-         //end FOR
+            FLegacy.Add(i, getStrSec(i, theLDB, fillInBlankStr));
       end;
-      Read(dummy, 1);
-      if dummy and $FF <> 0 then
-         raise EParseMessage.create('Item section ' + intToStr(id) + ' final 0 not found. Position: 0x' + intToHex(theLDB.Position, 2));
-      //end if
+      if not peekAhead(theLDB, 0) then
+         raise EParseMessage.createFmt('Item section %d final 0 not found. Position: 0x%s', [id, intToHex(theLDB.Position, 2)]);
    end;
-end; // end of WITH block
 except
    on E: EParseMessage do
    begin
@@ -329,6 +335,7 @@ destructor TItem.Destroy;
 var
    i: integer;
 begin
+   FLegacy.Free;
    for i := 0 to high(FAnimData) do
       FAnimData[i].free;
    inherited;
@@ -338,7 +345,12 @@ function TItem.getAnimData(x: word): TItemAnimData;
 begin
    if length(FAnimData) > 1 then
       result := FAnimData[x]
-   else result := FAnimData[1];
+   else result := FAnimData[0];
+end;
+
+function TItem.GetAnimDataCount: integer;
+begin
+   result := high(FAnimData);
 end;
 
 function TItem.getAttribute(x: word): boolean;
@@ -392,7 +404,6 @@ begin
       setLength(FConditions, size + 1);
       for I := dummy + 1 to high(FConditions) do
          FConditions[i] := false;
-      //end FOR
    end;
 end;
 
@@ -400,14 +411,12 @@ end;
 
 constructor TItemAnimData.Create(theLDB: TStream; const id: word);
 var
-   dummy: word;
    converter: intx80;
 begin
    inherited Create;
    converter := TBerConverter.Create(theLDB);
-   dummy := converter.getData;
-   if dummy <> id then
-      raise EParseMessage.create('ItemAnimData section ' + intToStr(id) + ' not found!');
+   if converter.getData <> id then
+      raise EParseMessage.CreateFmt('ItemAnimData section %d not found!', [id]);
    FAnimType := TWeaponAnimType(getNumSec(3, theLDB, fillInZeroInt));
    FWhichWeapon := getNumSec(4, theLDB, fillInZeroInt);
    FMovementMode := TMovementMode(getNumSec(5, theLDB, fillInZeroInt));
@@ -418,7 +427,7 @@ begin
    FRangedSPeed := getNumSec($C, theLDB, fillInZeroInt);
    FBattleAnim := getNumSec($D, theLDB, fillInZeroInt);
    if not peekAhead(theLDB, 0) then
-      raise EParseMessage.create('ItemAnimData section ' + intToStr(id) + ' final 0 not found. Position: 0x' + intToHex(theLDB.Position, 2));
+      raise EParseMessage.CreateFmt('ItemAnimData section %d final 0 not found. Position: 0x%s', [id, intToHex(theLDB.Position, 2)]);
 end;
 
 { Classless }

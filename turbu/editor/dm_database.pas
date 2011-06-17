@@ -21,26 +21,32 @@ interface
 
 uses
    SysUtils, Classes, DBClient, DB, Generics.Collections, RTTI,
-   turbu_database_interface;
+   SimpleDS, SqlExpr, FMTBcd,
+   turbu_database_interface, turbu_classes, FirebirdDataset;
 
 type
-   TDatasetList = class(TList<TClientDataSet>)
+   TDatasetList = class(TList<TCustomClientDataSet>)
    public
-      function FindByName(const name: string): TClientDataset;
+      function FindByName(const name: string): TCustomClientDataset;
    end;
 
    TRelationAttribute = class(TCustomAttribute);
+   VitalDatasetAttribute = class(TCustomAttribute);
 
    TdmDatabase = class(TDataModule, IRpgDatastore)
-      charClasses: TClientDataset;
+      [VitalDataset]
+      charClasses: TSimpleDataSet;
       [TRelation]
-      charClasses_skillset: TClientDataset;
+      [VitalDataset]
+      charClasses_skillset: TSimpleDataSet;
       [TRelation]
-      charClasses_Resists: TClientDataSet;
+      [VitalDataset]
+      charClasses_Resists: TSimpleDataSet;
       [TRelation]
-      charClasses_Conditions: TClientDataSet;
-      animations: TClientDataSet;
-      items: TClientDataSet;
+      [VitalDataset]
+      charClasses_Conditions: TSimpleDataSet;
+      animations: TSimpleDataSet;
+      items: TSimpleDataSet;
       items_script: TClientDataSet;
       items_armor: TClientDataSet;
       items_weapon: TClientDataSet;
@@ -50,51 +56,96 @@ type
       items_upgrade: TClientDataSet;
       items_variable: TClientDataSet;
       [TRelation]
-      items_attributes: TClientDataSet;
-      shields: TClientDataSet;
-      armors: TClientDataSet;
-      helmets: TClientDataSet;
-      accessories: TClientDataSet;
+      items_attributes: TSimpleDataSet;
       items_junk: TClientDataSet;
-      weapons: TClientDataSet;
-      commands: TClientDataSet;
-      skills: TClientDataSet;
+      [VitalDataset]
+      commands: TSimpleDataSet;
+      skills: TSimpleDataSet;
       [TRelation]
-      skills_attributes: TClientDataSet;
-      offhands: TClientDataSet;
-      attributes: TClientDataSet;
-      conditions: TClientDataSet;
+      skills_attributes: TSimpleDataSet;
+      attributes: TSimpleDataSet;
+      conditions: TSimpleDataSet;
       scriptRange: TClientDataSet;
-      metadata: TClientDataSet;
-      animations_timingSec: TClientDataSet;
-      animations_frameSec: TClientDataSet;
-      tilesets: TClientDataSet;
-      heroes: TClientDataSet;
-      heroes_Conditions: TClientDataSet;
-      heroes_Resists: TClientDataSet;
-      heroes_skillset: TClientDataSet;
-      Floats: TClientDataSet;
-      Strings: TClientDataSet;
-      Switches: TClientDataSet;
-      Variables: TClientDataSet;
-      GlobalScripts: TClientDataSet;
-      Vocab: TClientDataSet;
-      CustomVocab: TClientDataSet;
-      vehicles: TClientDataSet;
+      [TRelation]
+      animations_timingSec: TSimpleDataSet;
+      [TRelation]
+      animations_frameSec: TSimpleDataSet;
+      [VitalDataset]
+      tilesets: TSimpleDataSet;
+      [TRelation]
+      [VitalDataset]
+      tilesets_records: TSimpleDataSet;
+      [VitalDataset]
+      tilegroups: TSimpleDataSet;
+      [VitalDataset]
+      heroes: TSimpleDataSet;
+      [TRelation]
+      [VitalDataset]
+      heroes_Conditions: TSimpleDataSet;
+      [TRelation]
+      [VitalDataset]
+      heroes_Resists: TSimpleDataSet;
+      [TRelation]
+      [VitalDataset]
+      heroes_skillset: TSimpleDataSet;
+      Floats: TSimpleDataSet;
+      Strings: TSimpleDataSet;
+      Switches: TSimpleDataSet;
+      Variables: TSimpleDataSet;
+      [VitalDataset]
+      GlobalScripts: TSimpleDataSet;
+      Vocab: TSimpleDataSet;
+      CustomVocab: TSimpleDataSet;
+      [VitalDataset]
+      vehicles: TSimpleDataSet;
+      [TRelation]
+      items_AnimData: TSimpleDataSet;
+      LegacyData: TSimpleDataSet;
+      [VitalDataset]
+      syslayout: TSimpleDataSet;
+      [VitalDataset]
+      MapTree: TSimpleDataSet;
+      [VitalDataset]
+      StartLocs: TSimpleDataSet;
+      [VitalDataset]
+      metadata: TSimpleDataSet;
+      [VitalDataset]
+      [TRelation]
+      metadata_regions: TSimpleDataSet;
+      [VitalDataset]
+      dbData: TSimpleDataSet;
+      [VitalDataset]
+      boot: TSimpleDataSet;
+      monsters: TSimpleDataSet;
+      [TRelation]
+      monsters_Conditions: TSimpleDataSet;
+      [TRelation]
+      monsters_Resists: TSimpleDataSet;
+      mparties: TSimpleDataSet;
+      [TRelation]
+      mparties_monsters: TSimpleDataSet;
+      [TRelation]
+      mparties_events: TSimpleDataSet;
+      battleChars: TSimpleDataSet;
+      [TRelation]
+      battleChars_Poses: TSimpleDataSet;
+      [TRelation]
+      battleChars_Weapons: TSimpleDataSet;
 
       dsCharClasses: TDataSource;
+      ArbitraryQuery: TSQLQuery;
+      Connection: TSQLConnection;
 
-      charClassesmodified: TBooleanField;
-      metadataBgmState: TByteField;
-      items_scriptusableByHero: TBytesField;
+      charClassesstaticEq: TBooleanField;
+      itemsConditions: TBlobField;
       charClassesid: TIntegerField;
-      charClassesSp: TLargeintField;
-      metadataMapEngine: TShortintField;
-      heroesportraitShiftFColorSet1: TSingleField;
-      metadataParent: TSmallintField;
-      GlobalScriptsEventText: TWideMemoField;
+      itemsscript: TWideMemoField;
+      heroesportraitShiftFColorSet1: TFloatField;
       charClassesName: TWideStringField;
-      conditionscolor: TWordField;
+      animations_timingSecframe: TWordField;
+      charClassescommands: TByteField;
+      skillsmagnitude: TSmallintField;
+      heroesportraitShiftFHue: TShortintField;
 
       procedure DataModuleCreate(Sender: TObject);
       procedure restoreClone(DataSet: TDataSet);
@@ -102,20 +153,34 @@ type
       procedure DataModuleDestroy(Sender: TObject);
       procedure classFilter(DataSet: TDataSet; var Accept: Boolean);
       procedure SwitchesVarsCalcFields(DataSet: TDataSet);
+      procedure itemsAfterOpen(DataSet: TDataSet);
    private
       { Private declarations }
 
       FAllDatasetList: TDatasetList;
       FDatasetList: TDatasetList;
-      FViewList: TDatasetList;
-      function usableByFilter(field: TBytesField; master: TDataset): boolean;
+      FVitalList: TDatasetList;
+      function usableByFilter(field: TBlobField; master: TDataset): boolean;
+      function GetDBScript: string;
+      function FieldType(field: TField): string;
+      function IndexGen(dset: TSimpleDataset): string;
+      function MasterIndexGen(dset: TSimpleDataset): string;
+      function ScriptGen(dset: TSimpleDataset): string;
+      procedure OpenConnection(const dbname: string);
+      function GetTableCount: integer;
+    procedure ApplyUpdates(dset: TCustomClientDataset);
    public
       { Public declarations }
       procedure beginUpload;
       procedure endUpload;
       function NameLookup(const name: string; id: integer): string;
+      procedure BuildDatabase(const dbname: string; dbObj: TRpgDatafile);
+      procedure Connect(const dbname: string; const validateProc: TProc<TSqlQuery>);
+      procedure SaveAll(report: TUploadReportProc = nil);
+
+      property TableCount: integer read GetTableCount;
       property datasets: TDatasetList read FDatasetList write FDatasetList;
-      property views: TDatasetList read FViewList write FViewList;
+      property dbScript: string read GetDBScript;
    end;
 
 var
@@ -124,19 +189,20 @@ var
 implementation
 
 uses
-   Variants, Generics.Defaults,
-   turbu_skills, turbu_defs, turbu_classes, rttiHelper, EventBuilder;
+   Variants, Generics.Defaults, Windows, ZLib, DSIntf, DBXDynalink, DBXCommon,
+   commons,
+   turbu_skills, turbu_defs, rttiHelper, EventBuilder;
 
 {$R *.dfm}
 
-function CDSComparer(const Left, Right: TClientDataset): Integer;
+function CDSComparer(const Left, Right: TCustomClientDataset): Integer;
 begin
    result := StrIComp(PChar(left.name), PChar(right.name));
 end;
 
 procedure TdmDatabase.DataModuleCreate(Sender: TObject);
 var
-   clone, dataset: TClientDataset;
+   dataset: TCustomClientDataset;
    context: TRttiContext;
    instance: TRttiInstanceType;
    field: TRttiField;
@@ -145,78 +211,319 @@ begin
    instance := context.GetType(TdmDatabase) as TRttiInstanceType;
 
    FAllDatasetList := TDatasetList.Create;
-   FDatasetList := TDatasetList.Create(TComparer<TClientDataset>.Construct(CDSComparer));
+   FDatasetList := TDatasetList.Create(TComparer<TCustomClientDataset>.Construct(CDSComparer));
+   FVitalList := TDatasetList.Create;
    for field in instance.GetDeclaredFields do
-      if (field.FieldType as TRttiInstanceType).metaclassType = TClientDataset then
+      if (field.FieldType as TRttiInstanceType).metaclassType.InheritsFrom(TCustomClientDataset) then
       begin
-         dataset := field.GetValue(self).AsObject as TClientDataset;
+         dataset := field.GetValue(self).AsObject as TCustomClientDataset;
          if not assigned(field.GetAttribute(TRelationAttribute)) then
             FDatasetList.Add(dataset);
          FAllDatasetList.Add(dataset);
+         if assigned(field.GetAttribute(VitalDatasetAttribute)) then
+            FVitalList.Add(dataset);
       end;
    FDatasetList.Sort;
+end;
 
-   FViewList := TDatasetList.Create;
-   FViewList.AddRange([shields, armors, helmets, accessories, weapons, offhands]);
+procedure TdmDatabase.ApplyUpdates(dset: TCustomClientDataset);
 
-   for clone in TArray<TClientDataset>.Create(shields, armors, helmets, accessories) do
-      clone.CloneCursor(items_armor, false, true);
-   weapons.CloneCursor(items_weapon, false, true);
-   offhands.CloneCursor(items, false, true);
-   for clone in FDatasetList do
+   function hasBlobs: boolean;
+   var
+      field: TField;
    begin
-      if Pos('items_', clone.Name) = 1 then
-         clone.CloneCursor(items, false);
-      clone.tag := integer(clone.CloneSource);
+      for field in dset.Fields do
+         if field.IsBlob then
+            Exit(true);
+      result := false;
    end;
+
+begin
+   if hasBlobs then ;
+end;
+
+procedure TdmDatabase.SaveAll(report: TUploadReportProc = nil);
+var
+   dset: TCustomClientDataset;
+begin
+   for dset in FAllDatasetList do
+      if dset is TSimpleDataSet then
+      begin
+         if assigned(report) then
+            report(format('Saving data: %s', [dset.Name]));
+         dset.ApplyUpdates(0);
+      end;
+end;
+
+procedure TdmDatabase.Connect(const dbname: string; const validateProc: TProc<TSqlQuery>);
+var
+   dset: TCustomClientDataset;
+begin
+   if not Connection.Connected then
+      OpenConnection(dbname);
+   if assigned(validateProc) then
+      validateProc(ArbitraryQuery);
+
+   for dset in FAllDatasetList do
+      if dset is TSimpleDataset then
+         TSimpleDataset(dset).DataSet.CommandText := UpperCase(TSimpleDataset(dset).DataSet.CommandText);
+   for dset in FVitalList do
+      try
+         dset.Active := true;
+      except
+         OutputFormattedString('Unable to open table %s.', [dset.Name]);
+      end;
 end;
 
 procedure TdmDatabase.DataModuleDestroy(Sender: TObject);
 begin
    TEBObject.Datastore := nil;
+   FVitalList.Free;
    FDatasetList.Free;
-   FViewList.Free;
    FAllDatasetList.Free;
 end;
 
 procedure TdmDatabase.beginUpload;
 var
-   ds: TClientDataset;
+   ds: TCustomClientDataset;
 begin
    for ds in FAllDatasetList do
    begin
       ds.AutoCalcFields := false;
-      ds.LogChanges := false;
       ds.DisableControls;
    end;
 end;
 
 procedure TdmDatabase.endUpload;
 var
-   ds: TClientDataset;
+   ds: TCustomClientDataset;
 begin
    for ds in FAllDatasetList do
    begin
       ds.AutoCalcFields := true;
-      ds.LogChanges := true;
       ds.EnableControls;
    end;
 end;
 
+function TdmDatabase.FieldType(field: TField): string;
+begin
+   case field.DataType of
+      ftSmallint, ftWord, ftShortint, ftByte: result := 'SMALLINT';
+      ftInteger, ftLongWord: result := 'INTEGER';
+      ftBoolean: result := 'BOOLEAN';
+      ftCurrency: result := 'DECIMAL(18, 4)';
+      ftBytes, ftVarBytes, ftBlob: result := 'BLOB';
+      ftWideMemo: result := 'BLOB SUB_TYPE TEXT';
+      ftWideString: result := format('VARCHAR(%d) CHARACTER SET UTF8', [field.Size]);
+      ftLargeint: result := 'BIGINT';
+      ftSingle, ftFloat, ftExtended: result := 'REAL';
+      else assert(false);
+   end;
+end;
+
+function TdmDatabase.MasterIndexGen(dset: TSimpleDataset): string;
+const
+   FK = 'ALTER TABLE $SUB' + CRLF + '  ADD CONSTRAINT FK_$SUB' + CRLF +
+        '  FOREIGN KEY (MASTER)' + CRLF + '    REFERENCES $MASTER(ID);' + CRLF;
+   IX_MX = 'CREATE UNIQUE INDEX IX_$SUB' + CRLF + '  ON $SUB' + CRLF + '  (MASTER, X);';
+   IX_MID = 'ALTER TABLE $SUB' + CRLF + '  ADD CONSTRAINT PK_$SUB' + CRLF + '  PRIMARY KEY (MASTER, ID);';
+var
+   masterIdx: integer;
+   master: string;
+begin
+   result := FK;
+   if dset.FindField('X') <> nil then
+      result := result + IX_MX
+   else if dset.FindField('skill') <> nil then
+      result := result + StringReplace(IX_MID, 'ID', 'SKILL', [])
+   else begin
+      dset.FieldByName('ID');
+      result := result + IX_MID;
+   end;
+   result := StringReplace(result, '$SUB', dset.Name, [rfReplaceAll]);
+   masterIdx := Pos('_', dset.Name);
+   assert(masterIdx > 0);
+   master := Copy(dset.Name, 1, masterIdx - 1);
+   result := StringReplace(result, '$MASTER', master, []);
+end;
+
+function TdmDatabase.IndexGen(dset: TSimpleDataset): string;
+const
+   INDEX = 'ALTER TABLE %s' + CRLF + '  ADD CONSTRAINT PK_%s' + CRLF + '  PRIMARY KEY (ID);';
+   PK_LEG = 'ALTER TABLE %s' + CRLF + '  ADD CONSTRAINT PK_%s' + CRLF + '  PRIMARY KEY (NAME, ID, SECTION);';
+   PK_TG = 'ALTER TABLE %s' + CRLF + '  ADD CONSTRAINT PK_%s' + CRLF + '  PRIMARY KEY (NAME);';
+begin
+   if assigned(dset.FindField('MASTER')) then
+      result := MasterIndexGen(dset)
+   else if dset = LegacyData then
+      result := StringReplace(PK_LEG, '%s', dset.Name, [rfReplaceAll])
+   else if dset = tilegroups then
+      result := StringReplace(PK_TG, '%s', dset.Name, [rfReplaceAll])
+   else if assigned(dset.FindField('ID')) then
+      result := StringReplace(INDEX, '%s', dset.Name, [rfReplaceAll])
+   else result := '';
+   if result <> '' then
+      result := CRLF + result;
+end;
+
+procedure TdmDatabase.itemsAfterOpen(DataSet: TDataSet);
+var
+   clone: TCustomClientDataset;
+begin
+   for clone in FDatasetList do
+   begin
+      if Pos('items_', clone.Name) = 1 then
+         clone.CloneCursor(items, false);
+      clone.tag := nativeInt(clone.CloneSource);
+   end;
+end;
+
+function TdmDatabase.ScriptGen(dset: TSimpleDataset): string;
+const
+   CREATE_SCRIPT = 'CREATE TABLE %s (';
+   CREATE_FIELD = '   %s %s%s,';
+   NULLS: array[boolean] of string = ('', ' NOT NULL');
+var
+   field: TField;
+begin
+   result := format(CREATE_SCRIPT, [dset.Name]);
+   for field in dset.fields do
+      if field.FieldKind = fkData then
+         result := result + CRLF + format(CREATE_FIELD, [field.FieldName, FieldType(field), NULLS[field.Required]]);
+   delete(result, length(result), 1);
+   result := result + ');' + IndexGen(dset);
+end;
+
+function TdmDatabase.GetDBScript: string;
+const
+   VERSION = 'CREATE TABLE DB_VERSION (' + CRLF + ' ID INTEGER NOT NULL, ' + CRLF + '  NAME VARCHAR(255) NOT NULL' + CRLF + ');';
+var
+   component: TComponent;
+   output: TStringList;
+begin
+   output := TStringList.Create;
+   try
+      output.Add(VERSION);
+      for component in dmDatabase do
+      begin
+         if not (component is TSimpleDataset) then
+            continue;
+         output.Add(ScriptGen(TSimpleDataset(component)));
+      end;
+      result := output.text;
+   finally
+      output.Free;
+   end;
+end;
+
+function TdmDatabase.GetTableCount: integer;
+var
+   dset: TDataset;
+begin
+   result := 0;
+   for dset in FAllDatasetList do
+      if dset is TSimpleDataSet then
+         inc(result);
+end;
+
 function TdmDatabase.NameLookup(const name: string; id: integer): string;
 var
-   dataset: TClientDataset;
+   dataset: TCustomClientDataset;
    lResult: variant;
 begin
    dataset := FDatasetList.FindByName(name);
-   if assigned(dataset) then
+   if not assigned(dataset) then
+      exit(BAD_LOOKUP);
+
+   if dataset.Active then
    begin
       lResult := dataset.Lookup('id', id, 'name');
       if lResult = Null then
          result := BAD_LOOKUP
       else result := lResult;
    end
-   else result := BAD_LOOKUP;
+   else begin
+      ArbitraryQuery.Active := false;
+      ArbitraryQuery.SQL.Text := format('select name from %s where id = %d', [UpperCase(name), id]);
+      arbitraryQuery.Open;
+      if ArbitraryQuery.RecordCount = 0 then
+         result := BAD_LOOKUP
+      else result := ArbitraryQuery.FieldByName('name').AsString;
+   end;
+end;
+
+var
+  LSetSmallint: TDBXWritableRow_SetInt16;
+
+function DBXWritableRow_SetBoolean(Handle: TDBXWritableRowHandle;
+  Ordinal: TInt32; Value: LongBool): TDBXErrorCode; stdcall;
+begin
+  if value then
+     result := LSetSmallint(handle, ordinal, 1)
+  else result := LSetSmallint(handle, ordinal, 0);
+end;
+
+procedure TdmDatabase.OpenConnection(const dbname: string);
+var
+   ctx: TRttiContext;
+   cls: TRttitype;
+   fld: TRttiField;
+   driver: TDBXDriver;
+   table: TDBXMethodTable;
+begin
+   connection.DriverName := 'Firebird';
+   connection.Params.Values['User_Name'] := 'SYSDBA';
+   connection.Params.Values['Password'] := 'masterkey';
+   connection.Params.Values['Database'] := dbname;
+   connection.Params.Values['ServerCharSet'] := 'UTF8';
+   connection.Open;
+
+   //a little RTTI surgery so DBX won't quote all my table names
+   cls := ctx.GetType(connection.MetaData.ClassType);
+   cls.GetField('FQuotePrefix').SetValue(connection.MetaData, '');
+   cls.GetField('FQuoteSuffix').SetValue(connection.MetaData, '');
+
+   cls := ctx.GetType(connection.DBXConnection.ClassType);
+   driver := cls.GetField('FDriverDelegate').GetValue(connection.DBXConnection).AsType<TDBXDriver>;
+
+   cls := ctx.GetType(driver.classtype);
+   driver := cls.GetField('FDriver').GetValue(driver).AsType<TDBXDynalinkDriver>;
+
+   fld := ctx.GetType(TDBXDynalinkDriver).GetField('FMethodTable');
+   table := fld.GetValue(driver).AsType<TDBXMethodTable>;
+   table.FDBXWritableRow_SetBoolean := DBXWritableRow_SetBoolean;
+   LSetSmallint := table.FDBXWritableRow_SetInt16;
+end;
+
+procedure TdmDatabase.BuildDatabase(const dbname: string; dbObj: TRpgDatafile);
+const VERSION = 'INSERT INTO DB_VERSION (id, name) values (%d, %s);';
+var
+   list: TStringList;
+   extracted: string;
+   dataset: TDataset;
+begin
+   OpenConnection(dbname);
+   list := TStringList.Create;
+   try
+      list.Text := self.GetDBScript;
+      list.Add(format(VERSION, [dbObj.id, QuotedStr(dbObj.name)]));
+      while list.count > 0 do
+      begin
+         ArbitraryQuery.Active := false;
+         ArbitraryQuery.Sql.Clear;
+         repeat
+            extracted := list[0];
+            list.Delete(0);
+            ArbitraryQuery.SQL.Add(extracted);
+         until extracted[length(extracted)] = ';';
+         ArbitraryQuery.ExecSQL(true);
+      end;
+   finally
+      list.free;
+   end;
+   Connect(dbname, nil);
+   for dataset in FAllDatasetList do
+      dataset.Active := true;
 end;
 
 procedure TdmDatabase.charClasses_skillsetCalcFields(DataSet: TDataSet);
@@ -226,17 +533,17 @@ var
    args: T4IntArray;
    i: integer;
 begin
-   if dataset.FieldByName('modified').IsNull then
-      Exit;
-
-   func := TSkillGainDisplayFunc(dataset.FieldByName('method.displayAddress').asPSMethod);
+func := nil; //TODO: Fix this
+//   func := TSkillGainDisplayFunc(dataset.FieldByName('method_displayAddress').asPSMethod);
    if not assigned(TMethod(func).data) then
-      result := '?'
-   else
    begin
+      result := format('Lv. %d', [dataset.fieldByName('nums_1').AsInteger]);
+      dataset.FieldByName('name').AsString := self.nameLookup('skills', dataset.fieldByName('skill').AsInteger);
+   end
+   else begin
       for I := 1 to 4 do
-         args[i] := dataset.FieldByName(format('nums[%d]', [i])).AsInteger;
-      if dataset.FieldByName('method.arrayArgs').AsBoolean then
+         args[i] := dataset.FieldByName(format('nums_%d', [i])).AsInteger;
+      if dataset.FieldByName('method_arrayArgs').AsBoolean then
          result := TSkillGainDisplayArrayFunc(func)(args)
       else
          result := func(args[1], args[2], args[3], args[4])
@@ -247,7 +554,7 @@ end;
 
 procedure TdmDatabase.classFilter(DataSet: TDataSet; var Accept: Boolean);
 begin
-   accept := Self.usableByFilter(DataSet.FieldByName('usableByClass') as TBytesField, charClasses);
+   accept := Self.usableByFilter(DataSet.FieldByName('usableByClass') as TBlobField, charClasses);
 end;
 
 procedure TdmDatabase.restoreClone(DataSet: TDataSet);
@@ -273,14 +580,14 @@ begin
    dataset.FieldByName('DisplayName').AsString := format(DISPLAY_NAME, [idField.Value, nameField.Value]);
 end;
 
-function TdmDatabase.usableByFilter(field: TBytesField; master: TDataset): boolean;
+function TdmDatabase.usableByFilter(field: TBlobField; master: TDataset): boolean;
 begin
    result := master.FieldByName('id').AsInteger in field.asSet;
 end;
 
 { TDatasetList }
 
-function TDatasetList.FindByName(const name: string): TClientDataset;
+function TDatasetList.FindByName(const name: string): TCustomClientDataset;
 var
   L, H: Integer;
   mid, cmp: Integer;

@@ -58,6 +58,7 @@ type
       procedure FormShow(Sender: TObject);
       procedure applyChanges(Sender: TObject);
       procedure btnCancelClick(Sender: TObject);
+      procedure FormDestroy(Sender: TObject);
    private
       { Private declarations }
       FDatabase: TRpgDatabase;
@@ -66,9 +67,9 @@ type
       FUploaded: boolean;
 
       procedure GlobalScriptsAfterScroll(DataSet: TDataSet);
-      procedure GlobalScriptsBeforeScroll(DataSet: TDataSet);
    public
       { Public declarations }
+      constructor Create(AOwner: TComponent); override;
       function init(const database: TRpgDatabase): boolean;
       procedure reset;
    end;
@@ -78,14 +79,15 @@ implementation
 
 uses
    commons, sysUtils, DBClient,
-   turbu_battle_engine, eventBuilder, EB_RpgScript;
+   turbu_battle_engine, eventBuilder, EB_RpgScript, dm_databaseAux;
 
 procedure TfrmDatabase.applyChanges(Sender: TObject);
 var
    iterator: TCustomClientDataset;
 begin
    for iterator in dmDatabase.datasets do
-      iterator.MergeChangeLog;
+      if iterator.active then
+         iterator.MergeChangeLog;
 end;
 
 procedure TfrmDatabase.btnCancelClick(Sender: TObject);
@@ -93,7 +95,8 @@ var
    iterator: TCustomClientDataset;
 begin
    for iterator in dmDatabase.datasets do
-      iterator.CancelUpdates;
+      if iterator.active then
+         iterator.CancelUpdates;
 end;
 
 procedure TfrmDatabase.btnCodeViewClick(Sender: TObject);
@@ -111,10 +114,20 @@ begin
    selConditionSwitch.Enabled := chkHasSwitch.Checked;
 end;
 
+constructor TfrmDatabase.Create(AOwner: TComponent);
+begin
+   dmDatabaseAux := TdmDatabaseAux.Create(self);
+   dmDatabaseAux.EnsureVars;
+   dmDatabaseAux.EnsureSwitches;
+   dmDatabaseAux.EnsureVocab;
+   inherited Create(AOwner);
+end;
+
 procedure TfrmDatabase.FormShow(Sender: TObject);
 var
    iterator: TCustomClientDataset;
 begin
+   init(GDatabase);
    if not FUploaded then
    begin
       for iterator in dmDatabase.datasets do
@@ -133,32 +146,24 @@ begin
    frameItems1.onShow;
 
    GlobalScriptsAfterScroll(srcGlobals.DataSet);
-   srcglobals.dataset.BeforeScroll := self.GlobalScriptsBeforeScroll;
    srcglobals.dataset.AfterScroll := self.GlobalScriptsAfterScroll;
 end;
 
 procedure TfrmDatabase.GlobalScriptsAfterScroll(DataSet: TDataSet);
 begin
-   trvGlobal.proc.Free;
-   trvGlobal.proc := TEBObject.Load(dataset.FieldByName('EventText').Value) as TEBProcedure;
-end;
-
-procedure TfrmDatabase.GlobalScriptsBeforeScroll(DataSet: TDataSet);
-begin
-   dataset.Edit;
-   dataset.FieldByName('EventText').Value := trvGlobal.proc.Serialize;
-   dataset.Post;
+   trvGlobal.proc := GDatabase.scriptBlock.FindComponent(dataset.FieldByName('Name').AsString) as TEBProcedure;
 end;
 
 procedure TfrmDatabase.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-   iterator: TCustomClientDataSet;
 begin
    frmClass.onHide;
-   for iterator in dmDatabase.datasets do
-      iterator.LogChanges := false;
    srcglobals.dataset.BeforeScroll := nil;
    srcglobals.dataset.AfterScroll := nil;
+end;
+
+procedure TfrmDatabase.FormDestroy(Sender: TObject);
+begin
+   FreeAndNil(dmDatabaseAux);
 end;
 
 function TfrmDatabase.init(const database: TRpgDatabase): boolean;

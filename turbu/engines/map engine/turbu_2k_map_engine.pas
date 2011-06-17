@@ -28,6 +28,7 @@ uses
 
 type
    TTileGroupPair = TPair<TTileGroupRecord, PSdlSurface>;
+   TTransProc = reference to procedure(var location: integer);
 
    T2kMapEngine = class(TMapEngine)
    private
@@ -64,6 +65,7 @@ type
       FEnterLock: boolean;
       FDontLockEnter: boolean;
       FCutscene: integer;
+      FTransProc: TTransProc;
       procedure OnTimer(Sender: TObject);
       procedure OnProcess(Sender: TObject);
       procedure HandleEvent(event: TSdlEvent);
@@ -77,20 +79,23 @@ type
    public
       constructor Create; override;
       destructor Destroy; override;
-      procedure initialize(window: TSdlWindow; database: IRpgDatabase); override;
+      procedure initialize(window: TSdlWindow; database: string); override;
       function loadMap(map: IMapMetadata): IRpgMap; override;
       procedure Play; override;
       function Playing: boolean; override;
+      function MapTree: IMapTree; override;
+      function database: IRpgDatabase; override;
 
       property PartySprite: THeroSprite read FPartySprite;
       property State: TGameState read FGameState;
+      property TransProc: TTransProc write FTransProc;
    end;
 
 implementation
 uses
-   sysUtils, math,
+   sysUtils, math, Forms,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
-   turbu_constants, turbu_map_metadata, turbu_functional,
+   turbu_constants, turbu_map_metadata, turbu_functional, dm_database,
    turbu_map_objects, turbu_2k_map_locks, timing,
    sdlstreams, sdl_sprite, sg_utils;
 
@@ -168,13 +173,18 @@ begin
    result.BottomRight := screensize;
 end;
 
+function T2kMapEngine.database: IRpgDatabase;
+begin
+   result := FDatabase;
+end;
+
 destructor T2kMapEngine.Destroy;
 begin
    FTimer.Free;
    inherited;
 end;
 
-procedure T2kMapEngine.initialize(window: TSdlWindow; database: IRpgDatabase);
+procedure T2kMapEngine.initialize(window: TSdlWindow; database: string);
 var
    layout: TGameLayout;
    renderer: TSdlRenderer;
@@ -183,7 +193,12 @@ begin
       Exit;
 
    inherited initialize(window, database);
-   FDatabase := TRpgDatabase(database);
+   assert(dmDatabase = nil);
+   dmDatabase := TdmDatabase.Create(Application);
+   dmDatabase.Connect(database, nil);
+   FDatabase := TRpgDatabase.Load(dmDatabase);
+   GDatabase := FDatabase;
+
    if not assigned(FDatabase) then
       raise ERpgPlugin.Create('Incompatible project database');
    layout := FDatabase.layout;
@@ -200,7 +215,7 @@ begin
          raise ERpgPlugin.CreateFmt('Unable to initialize SDL window: %s%s', [LFCR, SDL_GetError]);
       renderer := SDL_CreateRenderer(window, -1, [sdlrAccelerated]);
       if renderer.ptr = nil then
-         raise ERpgPlugin.CreateFmt('Unable to initialize SDL renderer: %s%s', [LFCR, SDL_GetError]);;
+         raise ERpgPlugin.CreateFmt('Unable to initialize SDL renderer: %s%s', [LFCR, SDL_GetError]);
       SDL_RenderPresent(renderer);
    end
    else renderer := SDL_GetRenderer(window);
@@ -429,6 +444,11 @@ begin
       end);
 end;
 
+function T2kMapEngine.MapTree: IMapTree;
+begin
+   result := FDatabase.mapTree
+end;
+
 procedure T2kMapEngine.loadSprite(const filename: string);
 var
    lName: string;
@@ -444,9 +464,9 @@ begin
    //TODO: Remove commented-out code blocks when render targets, transitions and script events are implemented
    inc(FFrame);
    TRpgTimeStamp.FrameLength := max(commons.round(FTimer.latency), 1);
-{   if assigned(mapEngine.transProc) then
-      mapEngine.Draw
-   else if mapEngine.blank then
+{   if assigned(FTransProc) then
+      FCurrentMap.Draw
+   else if FCurrentMap.blank then
       //do nothing
    else begin
       GRenderTargets.RenderOn(2, standardRender, 0, true);

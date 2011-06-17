@@ -38,7 +38,7 @@ type
       constructor Convert(base: TEventMoveBlock);
    end;
 
-   function ConvertEventScript(base: TEventPage; name: string): TEBProcedure;
+   function ConvertEventScript(base: TEventCommandList; name: string): TEBProcedure;
    function ValidIdent(name: AnsiString): string;
 
 implementation
@@ -144,7 +144,7 @@ var
 begin
    dec := decode(tile + 10000);
    self.whichTile := dec.baseTile;
-   FName := '*' + intToStr(dec.group + 9); //* character can't be used in filenames
+   FName := '*' + intToStr(dec.group + 10); //* character can't be used in filenames
 end;
 
 constructor T2k2RpgEventPage.Convert(base: TEventPage; id: integer;
@@ -184,7 +184,7 @@ var
 begin
    scriptname := format(PROCNAME, [self.parent.name, self.id + 1]);
    FEventText := scriptname;
-   saveScript(ConvertEventScript(base, scriptname));
+   saveScript(ConvertEventScript(base.opcode, scriptname));
 end;
 
 { T2k2RpgEventConditions }
@@ -225,7 +225,7 @@ begin
       include(result, pc_timer2);
 end;
 
-function ConvertEventScript(base: TEventPage; name: string): TEBProcedure;
+function ConvertEventScript(base: TEventCommandList; name: string): TEBProcedure;
 const
    REMFUDGE: array[1..5] of integer = (20141, 20151, 20713, 20722, 20732);
 var
@@ -241,7 +241,7 @@ begin
    try
    try
       last := result;
-      for command in base.opcode do
+      for command in base do
       begin
          if TArray.BinarySearch<integer>(REMFUDGE, command.opcode, idx) then
             dec(fudgeFactor);

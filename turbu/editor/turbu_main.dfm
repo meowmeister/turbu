@@ -13,7 +13,6 @@ object frmTurbuMain: TfrmTurbuMain
   Menu = mnuMain
   OldCreateOrder = False
   Position = poDesigned
-  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnResize = FormResize
@@ -24,7 +23,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 218
     Top = 67
     Width = 914
-    Height = 810
+    Height = 829
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -46,14 +45,14 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 0
       Width = 888
-      Height = 784
+      Height = 803
       Align = alClient
       OnClick = imgBackgroundClick
       OnPaint = imgBackgroundPaint
     end
     object pnlHorizScroll: TPanel
       Left = 0
-      Top = 784
+      Top = 803
       Width = 910
       Height = 22
       Margins.Left = 4
@@ -95,7 +94,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 888
       Top = 0
       Width = 22
-      Height = 784
+      Height = 803
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -107,7 +106,7 @@ object frmTurbuMain: TfrmTurbuMain
         Left = 0
         Top = 0
         Width = 22
-        Height = 784
+        Height = 803
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -123,7 +122,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 0
       Width = 888
-      Height = 784
+      Height = 803
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -131,7 +130,7 @@ object frmTurbuMain: TfrmTurbuMain
       Framerate = 0
       Active = False
       LogicalWidth = 888
-      LogicalHeight = 784
+      LogicalHeight = 803
       OnAvailable = imgLogoAvailable
       OnPaint = imgLogoPaint
       Align = alClient
@@ -147,7 +146,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 0
     Top = 67
     Width = 218
-    Height = 810
+    Height = 829
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -226,7 +225,7 @@ object frmTurbuMain: TfrmTurbuMain
       Left = 0
       Top = 503
       Width = 218
-      Height = 307
+      Height = 326
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
@@ -445,46 +444,6 @@ object frmTurbuMain: TfrmTurbuMain
       OnChanged = sldZoomChanged
     end
   end
-  object pnlStatusBar: TPanel
-    Left = 0
-    Top = 877
-    Width = 1132
-    Height = 19
-    Align = alBottom
-    TabOrder = 4
-    object Panel1: TPanel
-      Left = 1
-      Top = 1
-      Width = 185
-      Height = 17
-      Align = alLeft
-      BevelOuter = bvLowered
-      TabOrder = 0
-      object lblUpload: TLabel
-        Left = 3
-        Top = 0
-        Width = 4
-        Height = 17
-      end
-    end
-    object Panel2: TPanel
-      Left = 186
-      Top = 1
-      Width = 945
-      Height = 17
-      Align = alClient
-      BevelOuter = bvLowered
-      TabOrder = 1
-      object pbUpload: TProgressBar
-        Left = 1
-        Top = 1
-        Width = 943
-        Height = 15
-        Align = alClient
-        TabOrder = 0
-      end
-    end
-  end
   object mnuMain: TMainMenu
     Left = 544
     Top = 160
@@ -552,7 +511,7 @@ object frmTurbuMain: TfrmTurbuMain
     end
   end
   object dlgOpen: TOpenDialog
-    Filter = 'TURBU Projects (project.tdb)|project.tdb'
+    Filter = 'TURBU Projects (*.tdb)|*.tdb'
     Left = 472
     Top = 96
   end
@@ -572,7 +531,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C010108004C01640114001400FFFFFF00FF10FFFFFFFFFFFFFFFF424D3600
+      494C010108004C01880114001400FFFFFF00FF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000500000003C0000000100200000000000004B
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

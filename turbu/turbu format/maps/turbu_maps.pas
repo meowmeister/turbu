@@ -20,30 +20,6 @@ type
    TFuzzy = (no, yes, either);
    TNeighbors = packed array [TDirs8] of TFuzzy;
 
-   TMapRegion = class(TRpgDatafile)
-   private
-      FBounds: TRect;
-      FEncounterScript: string;
-      function GetBattleCount: integer;
-      procedure SetBattleCount(const Value: integer);
-   protected
-      FBattles: TPWordArray;
-      FEncounters: T4IntArray;
-      class function keyChar: ansiChar; override;
-   public
-      constructor Load(savefile: TStream); override;
-      procedure save(savefile: TStream); override;
-      procedure download(ser: TDatasetSerializer; db: TDataset); override;
-
-      property bounds: TRect read FBounds write FBounds;
-      property battles: TPWordArray read FBattles write FBattles;
-      property battleCount: integer read GetBattleCount write SetBattleCount;
-      property encounterScript: string read FEncounterScript write FEncounterScript;
-      property encounterParams: T4IntArray read FEncounters write FEncounters;
-   end;
-
-   TRegionList = class(TObjectList<TMapRegion>);
-
    UploadSetAttribute = class(TDBUploadAttribute)
    protected
       procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
@@ -85,6 +61,8 @@ type
       FScriptFile: string;
       [UploadTiles]
       FEncounterScript: string;
+      [NoUpload]
+      FModified: boolean;
 
       procedure SetSize(const Value: TSgPoint);
       procedure SetDepth(const Value: byte);
@@ -104,8 +82,6 @@ type
       [NoUpload]
       FBattles: TPWordArray;
       [NoUpload]
-      FRegions: TRegionList;
-      [NoUpload]
       FMapObjects: TMapObjectList;
       [NoUpload]
       FScriptObject: TEBMap;
@@ -113,7 +89,8 @@ type
       class function keyChar: ansiChar; override;
       function ScriptFilename: string;
    public
-      constructor Create(meta: TMapMetadata); overload;
+      constructor Create; overload; override;
+      constructor Create(meta: TMapMetadata); reintroduce; overload;
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
       destructor Destroy; override;
@@ -140,11 +117,11 @@ type
       property battleCount: integer read GetBattleCount write SetBattleCount;
       property encounterScript: string read FEncounterScript write FEncounterScript;
       property encounterParams: T4IntArray read FEncounters write FEncounters;
-      property regions: TRegionList read FRegions;
       property mapObjects: TMapObjectList read FMapObjects;
       property ScriptObject: TEBMap read FScriptObject;
       property width: integer read FSize.X;
       property height: integer read FSize.y;
+      property modified: boolean read FModified write FModified;
    end;
 
 implementation
@@ -154,27 +131,30 @@ uses
 
 { TRpgMap }
 
-constructor TRpgMap.Create(meta: TMapMetadata);
+constructor TRpgMap.Create;
 const
    NEW_SIZE: TSgPoint = (X: 30; y: 25);
 begin
    inherited Create;
-   FName := meta.name;
-   FId := meta.id;
    FSize := NEW_SIZE;
    self.SetDepth(turbu_constants.LAYERS);
    FTileset := 1;
-   FRegions := TRegionList.Create;
    FMapObjects := TMapObjectList.Create;
    FScriptObject := TEBMap.Create(nil);
    FScriptfile := ScriptFileName;
    FModified := true;
 end;
 
+constructor TRpgMap.Create(meta: TMapMetadata);
+begin
+   self.Create;
+   FName := meta.name;
+   FId := meta.id;
+end;
+
 constructor TRpgMap.Load(savefile: TStream);
 var
    i: integer;
-   len: integer;
    size: TSgPoint;
    scriptStream: TStream;
 begin
@@ -205,16 +185,6 @@ begin
       savefile.ReadBuffer(FBattles[0], length(FBattles) * sizeof(word));
    FEncounterScript := savefile.readString;
    savefile.ReadBuffer(FEncounters, sizeof(T4IntArray));
-   len := savefile.readInt;
-   FRegions := TRegionList.Create;
-   FRegions.Capacity := max(len, FRegions.Capacity);
-   if FRegions.Count > 0 then
-   begin
-      lassert(savefile.readChar = TMapRegion.keyChar);
-      for i := 0 to len - 1 do
-         FRegions.Add(TMapRegion.Load(savefile));
-      lassert(savefile.readChar = UpCase(TMapRegion.keyChar));
-   end;
    FMapObjects := TMapObjectList.Create;
    lassert(savefile.readChar = TRpgMapObject.keyChar);
    FMapObjects.Add(TRpgMapObject.Create);
@@ -227,12 +197,10 @@ end;
 procedure TRpgMap.removeInvalidEvents;
 begin
    //TODO: implement TRpgMap.removeInvalidEvents
-   //TODO: Implement events ;)
 end;
 
 procedure TRpgMap.save(savefile: TStream);
 var
-   region: TMapRegion;
    tileList: TTileList;
    mapObj: TRpgMapObject;
 begin
@@ -255,14 +223,6 @@ begin
       savefile.WriteBuffer(FBattles[0], length(FBattles) * sizeof(word));
    savefile.writeString(FEncounterScript);
    savefile.WriteBuffer(FEncounters, sizeof(T4IntArray));
-   savefile.writeInt(FRegions.Count);
-   if FRegions.Count > 0 then
-   begin
-      savefile.writeChar(TMapRegion.keyChar);
-      for region in FRegions do
-         region.save(savefile);
-      savefile.writeChar(UpCase(TMapRegion.keyChar));
-   end;
    savefile.WriteChar(TRpgMapObject.keyChar);
    savefile.writeInt(FMapObjects.Count);
    for mapObj in FMapObjects do
@@ -435,7 +395,6 @@ end;
 destructor TRpgMap.Destroy;
 begin
    FScriptObject.Free;
-   FRegions.Free;
    FMapObjects.Free;
    inherited Destroy;
 end;
@@ -504,53 +463,6 @@ end;
 procedure TRpgMap.SetTileset(const Value: integer);
 begin
   FTileset := Value;
-end;
-
-{ TMapRegion }
-
-constructor TMapRegion.Load(savefile: TStream);
-begin
-   inherited Load(savefile);
-   savefile.ReadBuffer(FBounds, sizeof(TRect));
-   battleCount := savefile.ReadInt;
-   if battleCount > 0 then
-      savefile.ReadBuffer(FBattles[0], length(FBattles) * sizeof(word));
-   FEncounterScript := savefile.readString;
-   savefile.ReadBuffer(FEncounters, sizeof(T4IntArray));
-   lassert(savefile.readChar = self.keyChar);
-end;
-
-procedure TMapRegion.save(savefile: TStream);
-begin
-   inherited Save(savefile);
-   savefile.WriteBuffer(FBounds, sizeof(TRect));
-   savefile.WriteInt(battleCount);
-   if battleCount > 0 then
-      savefile.WriteBuffer(FBattles[0], length(FBattles) * sizeof(word));
-   savefile.writeString(FEncounterScript);
-   savefile.WriteBuffer(FEncounters, sizeof(T4IntArray));
-   savefile.writeChar(self.keyChar);
-end;
-
-function TMapRegion.GetBattleCount: integer;
-begin
-   result := length(FBattles);
-end;
-
-class function TMapRegion.keyChar: ansiChar;
-begin
-   result := 'r';
-end;
-
-procedure TMapRegion.SetBattleCount(const Value: integer);
-begin
-   setLength(FBattles, Value);
-end;
-
-procedure TMapRegion.download(ser: TDatasetSerializer; db: TDataset);
-begin
-   assert(false);
-   inherited;
 end;
 
 { UploadSetAttribute }

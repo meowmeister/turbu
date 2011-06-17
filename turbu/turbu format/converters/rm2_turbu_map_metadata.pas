@@ -28,6 +28,11 @@ type
       constructor Convert(base: TMapTreeData; basetree: TFullTree; id: smallint);
    end;
 
+   T2k2MapRegion = class helper for TMapRegion
+   public
+      constructor Convert(base: TMapTreeData; id: smallint);
+   end;
+
    T2k2MapTree = class helper for TMapTree
    public
       constructor Convert(base: TFullTree; compact: boolean);
@@ -36,7 +41,8 @@ type
 implementation
 uses
    Types, Math, SysUtils,
-   turbu_sounds, rm2_turbu_sounds, turbu_containers;
+   turbu_defs, turbu_sounds, rm2_turbu_sounds, turbu_containers, rm2_turbu_maps,
+   charset_data;
 
 { T2k2MapMetadata }
 
@@ -49,7 +55,7 @@ begin
    self.scrollPosition := point(base.unk05, base.unk06);
    self.treeOpen := base.treeOpen;
    self.bgmState := TInheritedDecision(base.bgmState);
-   self.bgmData := TRpgMusic.Convert(base.bgmData);
+   self.bgmData.Convert(base.bgmData);
    self.battleBgState := TInheritedDecision(base.battleBgState);
    self.battleBgName := string(base.battleBgName);
    self.canPort := TInheritedDecision(base.canPort);
@@ -58,12 +64,30 @@ begin
    self.mapEngine := 'TURBU basic map engine';
 end;
 
+{ T2k2MapRegion }
+
+constructor T2k2MapRegion.Convert(base: TMapTreeData; id: smallint);
+var
+   i: integer;
+begin
+   self.Create;
+   self.name := string(base.name);
+   self.id := id;
+   self.bounds := base.BoundsRect;
+   self.battleCount := base.battles;
+   for I := 0 to battleCount - 1 do
+      self.battles[i] := (base.battle[i]);
+   self.encounterScript := RANDOM_ENCOUNTER_SCRIPT;
+   FEncounters[1] := base.encounterRate;
+end;
+
 { T2k2MapTree }
 
 constructor T2k2MapTree.Convert(base: TFullTree; compact: boolean);
 var
    i: integer;
    current: TMapTreeData;
+   v: TVehicleSet;
 begin
    self.Create;
    self.FMapEngines.Add('TURBU basic map engine');
@@ -75,12 +99,15 @@ begin
          if ((not current.isArea) or (i = 0)) then
             self.Add(TMapMetadata.Convert(current, base, base.nodeSet[i]))
          else if current.isArea then
-         begin
-            //TODO: Handle map regions
-         end;
+            self.lookup[current.parent].Regions.Add(TMapRegion.Convert(current, base.nodeSet[i]));
       end;
    end;
-   self.currentMap := base.currentMap;
+   if base.items[base.currentMap].isArea then
+      self.currentMap := base.items[base.currentMap].parent
+   else self.currentMap := base.currentMap;
+   FStartLocs.Add(-1, TLocation.Create(base.heroStartMap, base.heroStartX, base.heroStartY));
+   for v := Low(TVehicleSet) to High(TVehicleSet) do
+      FStartLocs.Add(ord(v), TLocation.Create(base.vhStartMap[v], base.vhStartX[v], base.vhStartY[v]));
 end;
 
 end.

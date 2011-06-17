@@ -39,6 +39,7 @@ type
       procedure setCurrentFolder(const value: string);
       function getCurrentFolder: string;
       procedure deleteFile(name: string);
+      procedure createFolder(name: string);
       property currentFolder: string read getCurrentFolder write setCurrentFolder;
    end;
 
@@ -53,11 +54,12 @@ var
 const
    //archive constants
    BASE_ARCHIVE      = 0;
-   DATABASE_ARCHIVE  = 1;
-   MAP_ARCHIVE       = 2;
-   IMAGE_ARCHIVE     = 3;
-   SCRIPT_ARCHIVE    = 4;
-   MUSIC_ARCHIVE     = 5;
+   MAP_ARCHIVE       = 1;
+   IMAGE_ARCHIVE     = 2;
+   SCRIPT_ARCHIVE    = 3;
+   MUSIC_ARCHIVE     = 4;
+   SFX_ARCHIVE       = 5;
+   VIDEO_ARCHIVE     = 6;
 
 implementation
 

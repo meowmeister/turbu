@@ -2,7 +2,7 @@ unit turbu_map_metadata;
 
 interface
 uses
-   types, classes, DB, Generics.Collections,
+   types, classes, DB, Generics.Collections, RTTI,
    turbu_defs, turbu_classes, turbu_sounds, turbu_containers, archiveInterface,
    turbu_map_interface, turbu_serialization;
 
@@ -16,6 +16,44 @@ type
    TInheritedDecision = (id_yes, id_no, id_parent);
 
    TMapTree = class;
+
+   BoundsUploadAttribute = class(TDBUploadAttribute)
+   protected
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
+   BattlesUploadAttribute = class(TDBUploadAttribute)
+   protected
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
+   TMapRegion = class(TRpgDatafile)
+   private
+      [BoundsUpload]
+      FBounds: TRect;
+      FEncounterScript: string;
+      function GetBattleCount: integer;
+      procedure SetBattleCount(const Value: integer);
+   protected
+      [BattlesUpload]
+      FBattles: TPWordArray;
+      FEncounters: T4IntArray;
+      class function keyChar: ansiChar; override;
+   public
+      constructor Load(savefile: TStream); override;
+      procedure save(savefile: TStream); override;
+      procedure download(ser: TDatasetSerializer; db: TDataset); override;
+
+      property bounds: TRect read FBounds write FBounds;
+      property battles: TPWordArray read FBattles write FBattles;
+      property battleCount: integer read GetBattleCount write SetBattleCount;
+      property encounterScript: string read FEncounterScript write FEncounterScript;
+      property encounterParams: T4IntArray read FEncounters write FEncounters;
+   end;
+
+   TRegionList = class(TRpgDataList<TMapRegion>);
 
    TMapMetadata = class(TRpgDatafile, IMapMetadata)
    private
@@ -41,12 +79,13 @@ type
       function GetTreeOpen: boolean;
       procedure SetParent(const Value: smallint);
    protected
+      FRegions: TRegionList;
       class function keyChar: ansiChar; override;
       class function getDatasetName: string; override;
    public
+      constructor Create; override;
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
-      procedure download(ser: TDatasetSerializer; db: TDataset); override;
       destructor Destroy; override;
 
       property parent: smallint read FParent write SetParent;
@@ -61,9 +100,10 @@ type
       property canSave: TInheritedDecision read FCanSave write FCanSave;
       property internalFilename: TFilenameData read FInternalFilename write FInternalFilename;
       property mapEngine: string read getMapEngine write setMapEngine;
+      property Regions: TRegionList read FRegions;
    end;
 
-   TLocationList = class(TList<TLocation>);
+   TLocationList = class(TDictionary<integer, TLocation>);
 
    TMapTree = class(TObject, IMapTree)
    private type
@@ -113,8 +153,9 @@ type
       FMapEngines: TStringList;
    public
       constructor Create;
-      constructor Load(savefile: TStream);
-      procedure save(savefile: TStream);
+      constructor Load(dm: TDataModule);
+      procedure save(dm: TDataModule);
+      procedure saveAll(dm: TDataModule);
       destructor Destroy; override;
 
       procedure Add(value: TMapMetadata);
@@ -129,16 +170,18 @@ type
       property currentMap: word read FCurrentMap write FCurrentMap;
       property item[value: integer]: TMapMetadata read getMap; default;
       property lookupCount: integer read getLookupCount;
-      property location: TLocationList read FStartLocs write FStartLocs;
+      property location: TLocationList read FStartLocs;
       property Count: integer read GetCount;
    end;
 
 implementation
 uses
    SysUtils,
-   turbu_functional;
+   uDataSetHelper;
 
 constructor TMapMetadata.Load(savefile: TStream);
+var
+   i: integer;
 begin
    inherited Load(savefile);
    FParent := savefile.ReadWord;
@@ -156,10 +199,18 @@ begin
    FInternalFilename.name := savefile.readString;
    FInternalFilename.duplicates := savefile.readInt;
    FMapEngine := savefile.readByte;
+   assert(savefile.readChar = TMapRegion.keyChar);
+   FRegions := TRegionList.Create;
+   FRegions.Capacity := savefile.readInt;
+   for i := 1 to FRegions.Capacity do
+      FRegions.Add(TMapRegion.Load(savefile));
+   assert(savefile.readChar = UpCase(TMapRegion.keyChar));
    readEnd(savefile);
 end;
 
 procedure TMapMetadata.save(savefile: TStream);
+var
+   region: TMapRegion;
 begin
    inherited save(savefile);
    savefile.writeWord(FParent);
@@ -177,18 +228,25 @@ begin
    savefile.writeString(FInternalFilename.name);
    savefile.writeInt(FInternalFilename.duplicates);
    savefile.writeByte(FMapEngine);
+   savefile.WriteChar (TMapRegion.keyChar);
+   savefile.WriteInt(FRegions.Count);
+   for region in FRegions do
+      region.save(savefile);
+   savefile.WriteChar(UpCase(TMapRegion.keyChar));
    writeEnd(savefile);
+end;
+
+constructor TMapMetadata.Create;
+begin
+   inherited Create;
+   FRegions := TRegionList.Create;
+   FBgmData := TRpgMusic.Create;
 end;
 
 destructor TMapMetadata.Destroy;
 begin
+   FRegions.Free;
    FBgmData.Free;
-   inherited;
-end;
-
-procedure TMapMetadata.download(ser: TDatasetSerializer; db: TDataset);
-begin
-   assert(false);
    inherited;
 end;
 
@@ -250,58 +308,74 @@ begin
    inherited Destroy;
 end;
 
-constructor TMapTree.Load(savefile: TStream);
+constructor TMapTree.Load(dm: TDataModule);
 var
-   len, i: integer;
-   locs: array of TLocation;
+   db: TDataset;
+   rec: variant;
+   ser: TDatasetSerializer;
+   meta: TMapMetadata;
 begin
-   //if generics worked right, this top block would be unnecessary
    self.Create;
-   lassert(savefile.readChar = UpCase(TMapMetadata.keyChar));
-   for I := 0 to savefile.readInt do
-      self.Add(TMapMetadata.load(savefile));
-   lassert(savefile.readChar = TMapMetadata.keyChar);
-{   inherited Load(savefile);}
+   db := dm.FindComponent('MapTree') as TDataset;
+   db.First;
+   FCurrentMap := db.FieldByName('currentMap').AsInteger;
+   FMapEngines.text := db.FieldByName('mapEngines').AsString;
 
-   for i := 1 to savefile.readInt do
-      FMapEngines.Add(savefile.readString);
-   len := savefile.readWord;
-   setLength(locs, len);
-   if len > 0 then
-   begin
-      savefile.ReadBuffer(locs[0], len * sizeof(int64));
-      FStartLocs.AddRange(locs);
+   ser := TDatasetSerializer.Create;
+   try
+      db := dm.FindComponent('Metadata') as TDataset;
+      for rec in db do
+      begin
+         meta := TMapMetadata.Create;
+         meta.download(ser, db);
+         self.Add(meta);
+      end;
+   finally
+      ser.Free;
    end;
-   FCurrentMap := savefile.readWord;
-   lassert(savefile.readChar = 'T');
+
+   db := dm.FindComponent('StartLocs') as TDataset;
+   for rec in db do
+      FStartLocs.add(rec.id, TLocation.Create(rec.map, rec.x, rec.y));
+
    FLoaded := true;
 end;
 
-{$Q-}{$R-}
-procedure TMapTree.save(savefile: TStream);
+procedure TMapTree.save(dm: TDataModule);
 var
-   enumerator: TMapMetadata;
-   location: TLocation;
-   engine: string;
+   db: TDataset;
 begin
-   //if generics worked right, this top block would be unnecessary
-   savefile.writeChar(UpCase(TMapMetadata.keyChar));
-   savefile.writeInt(self.count - 1{High});
-   for enumerator in self do
-      enumerator.save(savefile);
-   savefile.writeChar(TMapMetadata.keyChar);
-{   inherited Save(savefile);}
-
-   savefile.writeInt(FMapEngines.Count);
-   for engine in FMapEngines do
-      savefile.writeString(engine);
-   savefile.writeWord(FStartLocs.Count);
-   for location in FStartLocs do
-      savefile.writeBuffer(location, sizeof(int64));
-   savefile.writeWord(FCurrentMap);
-   savefile.writeChar('T');
+   db := dm.FindComponent('MapTree') as TDataset;
+   assert(db.RecordCount in [0, 1]);
+   if db.RecordCount = 0 then
+      db.Append
+   else db.Edit;
+   db.FieldByName('currentMap').AsInteger := FCurrentMap;
+   db.FieldByName('mapEngines').AsString := FMapEngines.text;
+   db.Post;
 end;
-{$Q+}{$R+}
+
+procedure TMapTree.saveAll(dm: TDataModule);
+var
+   db: TDataset;
+   ser: TDatasetSerializer;
+   meta: TMapMetadata;
+   pair: TPair<integer, TLocation>;
+begin
+   save(dm);
+   ser := TDatasetSerializer.Create;
+   try
+      db := dm.FindComponent('metadata') as TDataset;
+      for meta in self do
+         meta.upload(ser, db);
+   finally
+      ser.Free;
+   end;
+
+   db := dm.FindComponent('StartLocs') as TDataset;
+   for pair in FStartLocs do
+      db.AppendRecord([pair.Key, pair.Value.map, pair.Value.x, pair.Value.y]);
+end;
 
 procedure TMapTree.NotifyMoved(map: TMapMetadata);
 var
@@ -322,7 +396,6 @@ begin
    result.Id := GetNewID;
    result.FParent := parent;
    result.FOwner := self;
-   result.FBgmData := TRpgMusic.Create;
    self.Add(result);
 end;
 
@@ -490,6 +563,115 @@ end;
 function TMapTree.TMapMetadataEnumeratorI.MoveNext: boolean;
 begin
    result := FInternalEnumerator.MoveNext;
+end;
+
+{ TMapRegion }
+
+constructor TMapRegion.Load(savefile: TStream);
+begin
+   inherited Load(savefile);
+   savefile.ReadBuffer(FBounds, sizeof(TRect));
+   battleCount := savefile.ReadInt;
+   if battleCount > 0 then
+      savefile.ReadBuffer(FBattles[0], length(FBattles) * sizeof(word));
+   FEncounterScript := savefile.readString;
+   savefile.ReadBuffer(FEncounters, sizeof(T4IntArray));
+   lassert(savefile.readChar = self.keyChar);
+end;
+
+procedure TMapRegion.save(savefile: TStream);
+begin
+   inherited Save(savefile);
+   savefile.WriteBuffer(FBounds, sizeof(TRect));
+   savefile.WriteInt(battleCount);
+   if battleCount > 0 then
+      savefile.WriteBuffer(FBattles[0], length(FBattles) * sizeof(word));
+   savefile.writeString(FEncounterScript);
+   savefile.WriteBuffer(FEncounters, sizeof(T4IntArray));
+   savefile.writeChar(self.keyChar);
+end;
+
+function TMapRegion.GetBattleCount: integer;
+begin
+   result := length(FBattles);
+end;
+
+class function TMapRegion.keyChar: ansiChar;
+begin
+   result := 'r';
+end;
+
+procedure TMapRegion.SetBattleCount(const Value: integer);
+begin
+   setLength(FBattles, Value);
+end;
+
+procedure TMapRegion.download(ser: TDatasetSerializer; db: TDataset);
+begin
+   assert(false);
+   inherited;
+end;
+
+{ BoundsUploadAttribute }
+
+procedure BoundsUploadAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   region: TMapRegion;
+begin
+   region := instance as TMapRegion;
+   region.FBounds.Left := db.FieldByName('bounds_left').AsInteger;
+   region.FBounds.right := db.FieldByName('bounds_right').AsInteger;
+   region.FBounds.top := db.FieldByName('bounds_top').AsInteger;
+   region.FBounds.bottom := db.FieldByName('bounds_bottom').AsInteger;
+end;
+
+procedure BoundsUploadAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   region: TMapRegion;
+begin
+   region := instance as TMapRegion;
+   db.FieldByName('bounds_left').AsInteger := region.FBounds.Left;
+   db.FieldByName('bounds_right').AsInteger := region.FBounds.right;
+   db.FieldByName('bounds_top').AsInteger := region.FBounds.top;
+   db.FieldByName('bounds_bottom').AsInteger := region.FBounds.bottom;
+end;
+
+{ BattlesUploadAttribute }
+
+procedure BattlesUploadAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   list: TPWordArray;
+   stream: TBytesStream;
+begin
+   stream := TBytesStream.Create((db.FieldByName('battles') as TBlobField).AsBytes);
+   try
+      list := (instance as TMapRegion).FBattles;
+      setLength(list, stream.Size div sizeof(word));
+      if length(list) > 0 then
+         stream.Read(list[0], stream.Size);
+   finally
+      stream.Free;
+   end;
+end;
+
+procedure BattlesUploadAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   list: TPWordArray;
+   stream: TBytesStream;
+begin
+   stream := TBytesStream.Create;
+   try
+      list := (instance as TMapRegion).FBattles;
+      if length(list) > 0 then
+         stream.Write(list[0], length(list) * sizeof(word));
+      (db.FieldByName('battles') as TBlobField).AsBytes := stream.Bytes;
+   finally
+      stream.Free;
+   end;
 end;
 
 end.

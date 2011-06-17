@@ -76,6 +76,7 @@ type
       procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
       procedure Notification(AComponent: TComponent;
         Operation: TOperation); override;
+      procedure ValidateContainer(AComponent: TComponent); override;
 
       class function GetLookup(id: integer; const name: string): string;
       function IndentString(level: integer): string;
@@ -271,6 +272,11 @@ begin
    for child in self do
       if not (child is TEBExpression) then
          child.NeededVariables(list);
+end;
+
+procedure TEBObject.ValidateContainer(AComponent: TComponent);
+begin
+  //this method intentionally left blank
 end;
 
 procedure TEBObject.Notification(AComponent: TComponent; Operation: TOperation);

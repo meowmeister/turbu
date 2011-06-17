@@ -19,8 +19,8 @@ unit LMU;
 
 interface
 
-uses classes, //system libraries
-     events, LDB, LMT; //modules
+uses classes, Generics.Collections,
+     events, LDB, LMT;
 
 type
 {*********************************************************************
@@ -33,6 +33,7 @@ type
       FEvents: TEventBlock;
       FMapID: smallint;
       FChipsetname: ansiString;
+      FLegacy: TDictionary<byte, AnsiString>;
 
       function FEventlen: word;
       function getEvent(x: word): TEvent;
@@ -70,6 +71,7 @@ type
       property eventBlock: TEventBlock read FEvents write FEvents;
       property mapID: smallint read FMapID;
       property chipsetName: ansiString read FChipsetName;
+      property Legacy: TDictionary<byte, AnsiString> read FLegacy;
    end;
 
    procedure fillInLmuInt(const expected: byte; out theResult: integer);
@@ -88,6 +90,7 @@ uses windows, sysUtils, //system libs
 constructor TMapUnit.Create(theLMU: TStream; database: TLcfDataBase; tree: TFullTree; id: word);
 var
    i, len: integer;
+   legacyString: ansiString;
 begin
 try
    inherited Create;
@@ -107,15 +110,14 @@ try
    len := width * height;
    setLength(lowChip, len);
    setLength(highChip, len);
+   FLegacy := TDictionary<byte, AnsiString>.Create;
    if GProjectFormat = pf_2k3 then
-   begin
-      for i := $2A to $2D do
-         skipSec(i, theLMU);
-      for i := $32 to $34 do
-         skipSec(i, theLMU);
-      for i := $3C to $3E do
-         skipSec(i, theLMU);
-   end;
+      for i := $29 to $3E do
+      begin
+         legacyString := getStrSec(i, theLMU, fillInBlankStr);
+         if legacyString <> '' then
+            FLegacy.Add(i, legacyString);
+      end;
    getArraySec($47, theLMU, lowChip[0]);
    getArraySec($48, theLMU, highChip[0]);
    eventData := getStrSec($51, theLMU, fillInLmuStr);
@@ -123,7 +125,6 @@ try
    modified := getNumSec($5b, theLMU, fillInLmuInt);
    assert(peekAhead(theLMU, 0));
    FChipsetName := database.getChipset(self.terrain).filename;
-//read chip data and event section
 except
    on E: EParseMessage do
    begin
@@ -135,6 +136,7 @@ end;
 
 destructor TMapUnit.Destroy;
 begin
+   FLegacy.Free;
    FEvents.Free;
    inherited;
 end;

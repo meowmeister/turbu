@@ -21,7 +21,7 @@ interface
 uses
    types, classes, Generics.Collections, //system libraries
    chipset, hero_data, item_data, skill_data, rm_sound, condition_data,
-   charset_data, battle_anims, turbu_defs; //modules
+   events, charset_data, monster, battle_anims, turbu_defs; //modules
 
 const
    SHOP_STYLES = 3;
@@ -43,6 +43,8 @@ type
    TBattleVocabSet = (bv_fight, bv_autobattle, bv_flee, bv_attack, bv_defend, bv_item, bv_skill);
 
    TVocabDict = TDictionary<integer, AnsiString>;
+   TLegacyDict = TVocabDict;
+   TWordArray = array of word;
 
    TAttribute = class(TObject)
    private
@@ -62,53 +64,41 @@ type
       property rate[value: byte]: smallint read getRate;
    end;
 
-   TMParty = class(TObject)
-   public
-      name: ansiString;
-      constructor Create(theLDB: TStream; const id: word);
-      function getName: ansiString;
-   end;
-
    TVarSection = class(TObject)
    private
       FLength: word;
-{$IFNDEF PRO}
       FVarNames: array of ansiString;
 
       function getName(x: word): ansiString;
       procedure setName(x: word; data: ansiString);
-{$ENDIF}
    public
       constructor create(input: TStream; size: word);
       property len: word read FLength;
-{$IFNDEF PRO}
       property name[x: word]: ansiString read getName write setname;
-{$ENDIF}
    end;
 
    TSwitchSection = class(TObject)
    private
       FLength: word;
-{$IFNDEF PRO}
       FSwitchNames: array of ansiString;
 
       function getName(x: word): ansiString;
       procedure setName(x: word; data: ansiString);
-{$ENDIF}
    public
       constructor create(input: TStream; size: word);
       property len: word read FLength;
-{$IFNDEF PRO}
       property name[x: word]: ansiString read getName write setname;
-{$ENDIF}
    end;
 
    TSystemRecord = class(TObject)
    private
       FVehicleGraphic: array[TVehicleSet] of ansiString;
       FVehicleIndex: array[TVehicleSet] of byte;
+      FTitleScreen: ansiString;
+      FGameOverScreen: ansiString;
       FSysGraphic: ansiString;
       FBattleSysGraphic: ansiString;
+      FEditorBattleBG: ansiString;
       FWallpaperStretch: boolean;
       FWhichFont: byte;
       FBgm: array[TBgmTypes] of TRmMusic;
@@ -116,6 +106,11 @@ type
       FStartingHeroes: word;
       FStartingHero: array[1..4] of word;
       FTransition: array[TTransitionTypes] of byte;
+      FCommands: TWordArray;
+      FLegacy: TLegacyDict;
+      FUsesFrame: boolean;
+      FFrame: ansiString;
+      FReverseGraphics: boolean;
 
       function getTransition(which: TTransitionTypes): byte;
       procedure setTransition(which: TTransitionTypes; const Value: byte);
@@ -135,11 +130,20 @@ type
       property vehicleIndex[which: TVehicleSet]: byte read getVehicleIndex write setVehicleIndex;
       property systemGraphic: ansiString read FSysGraphic;
       property wallpaperStretch: boolean read FWallpaperStretch;
+      property battleSysGraphic: ansiString read FBattleSysGraphic;
+      property editorBattleBG: ansiString read FEditorBattleBG;
       property bgm[which: TBgmTypes]: TRmMusic read getBgm write setBgm;
       property sfx[which: TSfxTypes]: TRmSound read getSfx write setSfx;
       property transition[which: TTransitionTypes]: byte read getTransition write setTransition;
       property startingHeroes: word read FStartingHeroes;
       property startingHero[which: word]: word read getStartingHero;
+      property titleScreen: ansiString read FTitleScreen;
+      property gameOverScreen: ansiString read FGameOverScreen;
+      property defaultCommands: TWordArray read FCommands;
+      property usesFrame: boolean read FUsesFrame;
+      property frame: ansiString read FFrame;
+      property reverseGraphics: boolean read FReverseGraphics;
+      property legacy: TLegacyDict read FLegacy;
    end;
 
    TConcealmentFactor = (cf_none, cf_low, cf_med, cf_high);
@@ -148,9 +152,7 @@ type
 
    TTerrainInfo = class(TObject)
    private
-{$IFDEF EDITOR}
       FName: ansiString;
-{$ENDIF}
       FDamage: shortint;
       FEncounterMultiplier: word;
       FBattleBg: ansiString;
@@ -158,13 +160,19 @@ type
       FAirshipLanding: boolean;
       FConcealment: TConcealmentFactor;
       FSoundEffect: TRmSound;
+      FFrame: ansiString;
+      FLegacy: TLegacyDict;
 
       function vehicleCanPass(which: TVehicleSet): boolean; inline;
    public
       constructor Create(input: TStream; const id: word);
       destructor Destroy; override;
 
+      property battleBg: ansiString read FBattleBg;
       property vehiclePass[which: TVehicleSet]: boolean read vehicleCanPass;
+      property soundEffect: TRmSound read FSoundEffect;
+      property frame: ansiString read FFrame;
+      property legacy: TLegacyDict read FLegacy;
    end;
 
    TVocabulary = array [TVocabSet] of ansiString;
@@ -196,6 +204,7 @@ type
       FTeleportOnDeath: boolean; //19
       FEscapeMap: word; //1A
       FEscapePoint: TPoint; //1B, 1C
+      FUnk1D: integer;
    public
       constructor Create(input: TStream);
       destructor Destroy; override;
@@ -203,12 +212,13 @@ type
       property autoLineup: boolean read FAutoLineup;
       property hasDeathEvent: boolean read FDeathEvent;
       property deathEvent: word read FDeathEventHandler;
-      property battleSTyle: byte read FBattleStyle;
+      property battleStyle: byte read FBattleStyle;
       property windowSize: byte read FWindowSize;
       property windowTrans: boolean read FWindowTrans;
       property teleportOnDeath: boolean read FTeleportOnDeath;
       property escapeMap: word read FEscapeMap;
       property escapePoint: TPoint read FEscapePoint;
+      property unk1D: integer read FUnk1D;
    end;
 
    TLcfDataBase = class (TObject)
@@ -218,8 +228,6 @@ type
       FSkill: array of TSkill;
       FItems: word;
       FItem: array of TItem;
-      mParties: word;
-      mParty: array of TMParty;
       FAttributes: word;
       FAttribute: array of TAttribute;
       FConditions: word;
@@ -241,32 +249,32 @@ type
       FBattleLayout: TBattleLayout;
       FClasses: word;
       FClass: array of TRm2CharClass;
+      FMonster: array of TMonster;
+      FMParty: TArray<TMonsterParty>;
+      FAnim2: TArray<TBattleAnim2>;
 
       function getTerrain(x: word): TTerrainInfo;
-      procedure setTerrain(x: word; const Value: TTerrainInfo);
       function getAttribute(x: word): TAttribute;
       function getConditionCount: word;
       function getHero(x: word): THeroRecord;
       function heroCount: word;
       function getItem(x: word): TItem;
-      procedure setItem(x: word; data: TItem);
       function getSkill(x: word): TSkill;
-      procedure setSkill(x: word; data: TSkill);
       function getSkillCount: word;
       function getCondition(x: word): TCondition;
-      procedure setCondition(x: word; data: TCondition);
       function getAnim(x: word): TBattleAnim;
-      procedure setAnim(x: word; data: TBattleAnim);
       function getClass(x: word): TRm2CharClass;
       function getClassCount: word;
       function getCommands: word;
       function getCommand(x: word): TBattleCommand;
       procedure AddVocabRange(theLDB: TStream; low, high: integer);
       procedure AddVocab(theLDB: TStream; index: integer);
+      function getMonster(x: word): TMonster;
+      function getMonsters: word;
+      function getMonsterParties: word;
    public
       constructor Create(theLDB: TStream);
       destructor Destroy; override;
-      function getMonsterParty(id: word): TMParty;
       function getMaxChipsets: word;
       function getChipset(id: word): TChipSet;
       function seekBlankChipset: word;
@@ -276,16 +284,16 @@ type
       property variables: TVarSection read FVariables write FVariables;
       property switches: TSwitchSection read FSwitches write FSwitches;
       property items: word read FItems;
-      property item[x: word]: TItem read getItem write setItem;
-      property skill[x: word]: TSkill read getSkill write setSkill;
+      property item[x: word]: TItem read getItem;
+      property skill[x: word]: TSkill read getSkill;
       property skills: word read getSkillCount;
-      property condition[x: word]: TCondition read getCondition write setCondition;
+      property condition[x: word]: TCondition read getCondition;
       property conditions: word read getConditionCount;
-      property terrain[x: word]: TTerrainInfo read getTerrain write setTerrain;
+      property terrain[x: word]: TTerrainInfo read getTerrain;
       property terrains: word read FTerrains;
       property attribute[x: word]: TAttribute read getAttribute;
       property attributes: word read FAttributes;
-      property anim[x: word]: TBattleAnim read getAnim write setAnim;
+      property anim[x: word]: TBattleAnim read getAnim;
       property anims: word read FBattleAnims;
       property SystemData: TSystemRecord read FSystemData;
       property vocabulary: TVocabulary read FVocabulary;
@@ -297,6 +305,11 @@ type
       property charClass[x: word]: TRm2CharClass read getClass;
       property commands: word read getCommands;
       property command[x: word]: TBattleCommand read getCommand;
+      property monsters: word read getMonsters;
+      property monster[x: word]: TMonster read getMonster;
+      property mparties: word read getMonsterParties;
+      property mparty: TArray<TMonsterParty> read FMparty;
+      property anim2: TArray<TBattleAnim2> read FAnim2;
    end;
 
    function globalEventBlock: TObject;
@@ -305,8 +318,7 @@ implementation
 
 uses
    sysUtils, windows, //system libs
-   commons, fileIO, BER, events, formats {$IFDEF ENGINE}, text_graphics, rs_map,
-   transitions{$ENDIF}; //turbu libs
+   commons, fileIO, BER, formats; //turbu libs
 
 var
    FGlobalEvents: TEventBlock;
@@ -315,39 +327,6 @@ procedure fillInSwitchStr(const expected: byte; out theResult: ansiString); forw
 procedure fillInAttribInt(const expected: byte; out theResult: integer); forward;
 procedure fillInTerrainInt(const expected: byte; out theResult: integer); forward;
 procedure fillInSysRecordInt(const expected: byte; out theResult: integer); forward;
-
-constructor TMParty.Create(theLDB: TStream; const id: word);
-var
-   converter: intX80;
-begin
-   inherited Create;
-try
-   converter := TBerConverter.Create(theLDB);
-   if converter.getData <> id then
-      raise EParseMessage.create('MParty section ' + intToStr(id) + ' of RPG_RT.LDB not found!');
-   name := getStrSec(1, theLDB, fillInBlankStr);
-   skipSec(2, theLDB);
-   skipSec(3, theLDB);
-   skipSec(4, theLDB);
-   skipSec(5, theLDB);
-   if GProjectFormat = pf_2k3 then
-      skipSec(6, theLDB);
-   skipSec($0b, theLDB);
-   if not PeekAhead(theLDB, 0) then
-      raise EParseMessage.create('MParty section ' + intToStr(id) + ' final 0 not found');
-except
-   on E: EParseMessage do
-   begin
-      msgBox(E.message, 'TMParty.Create says:', MB_OK);
-      raise EMessageAbort.Create
-   end
-end // end of TRY block
-end;
-
-function TMParty.getName: ansiString;
-begin
-   result := name
-end;
 
 procedure TLcfDataBase.AddVocab(theLDB: TStream; index: integer);
 begin
@@ -427,19 +406,27 @@ try
    for i := 1 to FItems do
       FItem[i] := TItem.Create(theLDB, i, self);
 
-   skipSec($0e, theLDB); //monsters section
-
-   //mparty section
-   if not peekAhead(theLDB, $0f) then
-      raise EParseMessage.create('MParty section of RPG_RT.LDB not found!');
+   //monsters section
+   if not PeekAhead(theLDB, $0e) then
+      raise EParseMessage.create('Monster section of RPG_RT.LDB not found!');
    converter.read(theLDB); // read the length statement
-   converter.read(theLDB); // this one is the number of parties
-   mParties := converter.getData;
+   converter.read(theLDB); // this one is the number of items
    //0-index array fix
-   setLength(mParty, mParties + 1);
-   mParty[0] := nil;
-   for i := 1 to mParties do
-      mParty[i] := TMParty.Create(theLDB, i);
+   setLength(FMonster, converter.getData + 1);
+   FMonster[0] := nil;
+   for i := 1 to high(FMonster) do
+      FMonster[i] := TMonster.Create(theLDB, i);
+
+   //monster parties section
+   if not PeekAhead(theLDB, $0f) then
+      raise EParseMessage.create('Monster parties section of RPG_RT.LDB not found!');
+   converter.read(theLDB); // read the length statement
+   converter.read(theLDB); // this one is the number of items
+   //0-index array fix
+   setLength(FMparty, converter.getData + 1);
+   FMParty[0] := nil;
+   for i := 1 to high(FMParty) do
+      FMParty[i] := TMonsterParty.Create(theLDB, i);
 
    if not peekAhead(theLDB, $10) then //terrain section
       raise EParseMessage.create('Terrain data section of RPG_RT.LDB not found!');
@@ -592,15 +579,11 @@ try
    converter.read(theLDB); // this one is the number of variables
    FVariables := TVarSection.create(theLDB, converter.getData);
 
-{$IFNDEF NOPARSE_EVENTS}
 //common event section
    if not PeekAhead(theLDB, $19) then
       raise EParseMessage.create('Variable section of RPG_RT.LDB not found!');
    converter.read(theLDB); // bypass the length statement
    FGlobalEvents := TEventBlock.create(theLDB);
-{$ELSE}
-   skipSec($19, theLDB);
-{$ENDIF}
 
    if GProjectFormat = pf_2k3 then
    begin
@@ -620,7 +603,16 @@ try
 
       assert(PeekAheadW(theLDB, $001F));
 
-      skipSec($20, theLDB); //what does this do? system page 2?
+      //Animations section
+      if not PeekAhead(theLDB, $20) then
+         raise EParseMessage.create('Animation section of RPG_RT.LDB not found!');
+      converter.read(theLDB); // read the length statement
+      converter.read(theLDB); // this one is the number of items
+      setLength(FAnim2, converter.getData + 1);
+      //0-index array fix
+      FAnim2[0] := nil;
+      for i := 1 to high(FAnim2) do
+         FAnim2[i] := TBattleAnim2.Create(theLDB, i);
    end;
    assert(theLDB.position = theLDB.Size);
 except
@@ -645,8 +637,6 @@ begin
       FSkill[i].Free;
    for I := 0 to high(FCondition) do
       FCondition[i].Free;
-   for I := 0 to high(mParty) do
-      mparty[i].free;
    for I := 0 to high(FBattleAnim) do
       FBattleAnim[i].free;
    for I := 0 to high(FAttribute) do
@@ -657,17 +647,18 @@ begin
       FClass[i].free;
    for I := 0 to high(chipSet) do
       chipSet[i].free;
+   for i := 0 to high(FMonster) do
+      FMonster[i].Free;
+   for i := 0 to high(FMParty) do
+      FMParty[i].Free;
+   for i := 0 to high(FAnim2) do
+      FAnim2[i].Free;
    FBattleLayout.Free;
    FVariables.Free;
    FSwitches.Free;
    FSystemData.free;
    FreeAndNil(FGlobalEvents);
    inherited;
-end;
-
-function TLcfDataBase.getMonsterParty(id: word): TMParty;
-begin
-   result := mParty[id]
 end;
 
 function TLcfDataBase.getSkill(x: word): TSkill;
@@ -695,29 +686,19 @@ begin
    result := chipSets;
 end;
 
-procedure TLcfDataBase.setAnim(x: word; data: TBattleAnim);
+function TLcfDataBase.getMonster(x: word): TMonster;
 begin
-   assert(false);
+   result := FMonster[x];
 end;
 
-procedure TLcfDataBase.setCondition(x: word; data: TCondition);
+function TLcfDataBase.getMonsterParties: word;
 begin
-   assert(false);
+   result := high(FMParty);
 end;
 
-procedure TLcfDataBase.setItem(x: word; data: TItem);
+function TLcfDataBase.getMonsters: word;
 begin
-   assert(false);
-end;
-
-procedure TLcfDataBase.setSkill(x: word; data: TSkill);
-begin
-   assert(false);
-end;
-
-procedure TLcfDataBase.setTerrain(x: word; const Value: TTerrainInfo);
-begin
-   FTerrain[x] := value;
+   result := high(FMonster);
 end;
 
 function TLcfDataBase.getAnim(x: word): TBattleAnim;
@@ -795,7 +776,6 @@ begin
 end;
 
 { TVarSection }
-{$IFNDEF PRO}
 constructor TVarSection.create(input: TStream; size: word);
 var
   I: Integer;
@@ -827,29 +807,8 @@ procedure TVarSection.setName(x: word; data: ansiString);
 begin
    FVarNames[x] := data;
 end;
-{$ELSE}
-
-constructor TVarSection.create(input: TStream; size: word);
-var
-   I: Integer;
-   converter: intX80;
-begin
-   FLength := size;
-   for I := 1 to size do
-   begin
-      converter := TBerConverter.Create(input);
-      if converter.getData <> i then
-         raise EParseMessage.create('Var value x' + intToHex(i, 2) + ' not found!');
-      skipSec(1, input);
-      if not peekAhead(input, 0) then
-         raise EParseMessage.create('Exceptional case found at LDB string x' + intToHex(i, 2) + '!');
-   end;
-
-end;
-{$ENDIF}
 
 { TSwitchSection }
-{$IFNDEF PRO}
 constructor TSwitchSection.create(input: TStream; size: word);
 var
   I: Integer;
@@ -882,26 +841,6 @@ begin
    FSwitchNames[x] := data;
 end;
 
-{$ELSE}
-
-constructor TSwitchSection.create(input: TStream; size: word);
-var
-   I: Integer;
-   converter: intX80;
-begin
-   FLength := size;
-   for I := 1 to size do
-   begin
-      converter := TBerConverter.Create(input);
-      if converter.getData <> i then
-         raise EParseMessage.create('Switch value x' + intToHex(i, 2) + ' not found!');
-      skipSec(1, input);
-      if not peekAhead(input, 0) then
-         raise EParseMessage.create('Exceptional case found at LDB string x' + intToHex(i, 2) + '!');
-   end;
-end;
-{$ENDIF}
-
 { TSystemRecord }
 
 constructor TSystemRecord.Create(input: TStream);
@@ -916,8 +855,9 @@ begin
    FVehicleIndex[vh_boat] := getNumSec($0E, input, fillInZeroInt);
    FVehicleIndex[vh_ship] := getNumSec($0F, input, fillInZeroInt);
    FVehicleIndex[vh_airship] := getNumSec($10, input, fillInZeroInt);
-   skipSec($11, input);
-   skipSec($12, input);
+   FTitleScreen := getStrSec($11, input, fillInBlankStr);
+   FGameOverScreen := getStrSec($12, input, fillInBlankStr);
+
    FSysGraphic := getStrSec($13, input, fillInBlankStr);
    if GProjectFormat = pf_2k3 then
       FBattleSysGraphic := getstrSec($14, input, fillInBlankStr);
@@ -925,8 +865,8 @@ begin
    getArraySec($16, input, FStartingHero);
    if GProjectFormat = pf_2k3 then
    begin
-      for i := $1A to $1E do
-         skipSec(i, input);
+      setLength(FCommands, GetNumSec($1A, input, fillInZeroInt));
+      getArraySec($1B, input, FCommands[0]);
    end;
    FBgm[bgmTitle] := TRmMusic.Create($1F, input);
    FBgm[bgmBattle] := TRmMusic.Create($20, input);
@@ -942,21 +882,22 @@ begin
    for i := 0 to ord(trn_BattleEndFIn) do
       FTransition[TTransitionTypes(i)] := getNumSec($3D + i, input, fillInZeroInt);
    FWallpaperStretch := getChboxSec($47, input, fillInZeroInt);
-   skipSec($47, input);
 
    FWhichFont := getNumSec($48, input, fillInZeroInt);
-{$IFDEF ENGINE}
-   text_graphics.whichFont := FWhichFont;
-{$ENDIF}
-   skipSec($51, input);
-   skipSec($52, input);
-   skipSec($54, input);
-   skipSec($55, input);
-   skipSec($5B, input);
+   FLegacy := TLegacyDict.Create;
+   FLegacy.Add($51, GetStrSec($51, input, fillInBlankStr));
+   FLegacy.Add($52, GetStrSec($52, input, fillInBlankStr));
+   FEditorBattleBG := GetStrSec($54, input, fillInBlankStr);
+   FLegacy.Add($55, GetStrSec($55, input, fillInBlankStr));
+   FLegacy.Add($5B, GetStrSec($5B, input, fillInBlankStr));
+
    if GProjectFormat = pf_2k3 then
    begin
-      for i := $5E to $65 do
-         skipSec(i, input);
+      for i := $5E to $62 do
+         FLegacy.Add(i, GetStrSec(i, input, fillInBlankStr));
+      FUsesFrame := GetChboxSec($63, input, fillInZeroInt);
+      FFrame := GetStrSec($64, input, fillInBlankStr);
+      FReverseGraphics := GetChboxSec($65, input, fillInZeroInt);
    end;
    if not peekAhead(input, 0) then
       raise EParseMessage.create('Exceptional case found at LDB system section x' + intToHex(getNext(input), 2) + '!');
@@ -967,6 +908,7 @@ var
    i: TBgmTypes;
    j: TSfxTypes;
 begin
+   FLegacy.Free;
    for i := low(TBgmTypes) to high(TBgmTypes) do
       FBgm[i].Free;
    for j := low(TSfxTypes) to high(TSfxTypes) do
@@ -1010,7 +952,6 @@ begin
    FSfx[which] := value;
 end;
 
-{$IFDEF EDITOR}
 function TSystemRecord.getTransition(which: TTransitionTypes): byte;
 begin
    result := FTransition[which];
@@ -1020,7 +961,6 @@ procedure TSystemRecord.setTransition(which: TTransitionTypes; const Value: byte
 begin
    FTransition[which] := value;
 end;
-{$ENDIF}
 
 procedure TSystemRecord.setVehicleGraphic(which: TVehicleSet; const Value: ansiString);
 begin
@@ -1037,16 +977,14 @@ end;
 constructor TTerrainInfo.Create(input: TStream; const id: word);
 var
    converter: intX80;
-  I: Integer;
+   I: Integer;
 begin
    inherited create;
    converter := TBerConverter.Create(input);
    assert(converter.getData = id, 'Terrain record' + intToStr(id) + ' of RPG_RT.LDB not found!');
-{$IFDEF EDITOR}
+   FLegacy := TLegacyDict.Create;
+
    FName := getStrSec(1, input, fillInBlankStr);
-{$ELSE}
-   skipSec(1, input);
-{$ENDIF}
    FDamage := getNumSec(2, input, fillInZeroInt);
    FEncounterMultiplier := getNumSec(3, input, fillInTerrainInt);
    FBattleBg := getStrSec(4, input, fillInBlankStr);
@@ -1058,14 +996,18 @@ begin
    if GProjectFormat = pf_2k3 then
    begin
       FSoundEffect := TRmSound.Create($F, input);
-      for I := $10 to $30 do
-         skipSec(i, input);
+      for I := $10 to $14 do
+         FLegacy.Add(i, GetStrSec(i, input, fillInBlankStr));
+      FFrame := GetStrSec($15, input, fillInBlankStr);
+      for I := $16 to $30 do
+         FLegacy.Add(i, GetStrSec(i, input, fillInBlankStr));
    end;
    assert(peekAhead(input, 0));
 end;
 
 destructor TTerrainInfo.Destroy;
 begin
+   FLegacy.Free;
    FSoundEffect.Free;
    inherited;
 end;
@@ -1148,6 +1090,7 @@ begin
    FescapeMap := getNumSec($1A, input, fillInZeroInt);
    FEscapePoint.x := getNumSec($1B, input, fillInZeroInt);
    FEscapePoint.y := getNumSec($1C, input, fillInZeroInt);
+   FUnk1D := getNumSec($1D, input, fillInZeroInt);
    assert(peekAhead(input, 0));
 end;
 

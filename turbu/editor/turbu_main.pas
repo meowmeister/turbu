@@ -24,9 +24,9 @@ uses
    Generics.Collections, ImgList, ToolWin, ActnList, ActnMan, SyncObjs, Messages,
    PlatformDefaultStyleActnCtrls,
    JvComponentBase, JvPluginManager, JvExControls, JvxSlider,
-   design_script_engine, turbu_plugin_interface, turbu_engines, turbu_map_engine,
+   turbu_plugin_interface, turbu_engines, turbu_map_engine,
    MusicSelector,
-   turbu_map_interface, turbu_map_metadata,
+   turbu_map_interface, turbu_map_metadata, turbu_database_interface,
    sdl_frame, sdl, sdl_13, sg_defs;
 
 type
@@ -56,9 +56,8 @@ type
       actPause: TAction;
       pnlZoom: TPanel;
       sldZoom: TJvxSlider;
-      pbUpload: TProgressBar;
-      lblUpload: TLabel;
       actPlayMusic: TAction;
+      Label1: TLabel;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -112,10 +111,10 @@ type
       procedure pnlZoomResize(Sender: TObject);
       procedure sldZoomChanged(Sender: TObject);
       procedure imgBackgroundPaint(Sender: TObject);
-      procedure FormClose(Sender: TObject; var Action: TCloseAction);
       procedure actPlayMusicExecute(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
+      FDatabase: IRpgDatabase;
       FCurrentLayer: integer;
       FLastGoodLayer: integer;
       FPaletteTexture: integer;
@@ -126,12 +125,10 @@ type
       FPaletteImages: TDictionary<integer, integer>;
       FIgnoreMouseDown: boolean;
       FZoom: double;
-      FLoadSignal: TSimpleEvent;
-      FDBSignal: TSimpleEvent;
       FMusicPlayer: TfrmMusicSelector;
+      FDBName: string;
       procedure loadEngine(data: TEngineData);
-      procedure loadProject;
-      procedure openProject(location: string);
+      procedure openProject(const filename: string);
       procedure closeProject;
 
       procedure loadMap(const value: word); overload;
@@ -152,8 +149,7 @@ type
       function SetMapSize(const size: TSgPoint): TSgPoint;
       procedure SetZoom(const value: double);
       procedure EnableZoom(value: boolean);
-      procedure UploadDatabase;
-      procedure DBCheck(const name: string);
+      procedure NormalizeMousePosition(image: TSdlFrame; var x, y: integer; scale: double);
    public
       { Public declarations }
    end;
@@ -164,8 +160,8 @@ var
 implementation
 
 uses
-   SysUtils, Math, Graphics, Windows, OpenGL, 
-   commons, rm_converter, skill_settings, turbu_database, archiveInterface,
+   SysUtils, Math, Graphics, Windows, OpenGL,
+   commons, rm_converter, archiveInterface, dm_ProjectBoot,
    PackageRegistry,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
    turbu_classes, turbu_versioning, turbu_tilesets, turbu_defs,
@@ -173,17 +169,6 @@ uses
    sdl_image, sdlstreams, sg_utils;
 
 {$R *.dfm}
-
-type
-   TDatabaseLoadThread = class(TThread)
-   private
-      FProgressBar: TProgressBar;
-      FSignal: TSimpleEvent;
-   protected
-      procedure Execute; override;
-   public
-      constructor Create(bar: TProgressBar; signal: TSimpleEvent);
-   end;
 
 const
    TILE_SIZE: integer = 16;
@@ -207,6 +192,7 @@ begin
 
    texture := imgPalette.images[FPaletteTexture].surface;
    height := min(height, texture.size.Y - sbPalette.pageSize);
+   FCurrPalettePos := height;
    displayRect := rect(0, height, imgPalette.width div 2, imgPalette.height div 2);
    imgPalette.drawTexture(texture, @displayRect, nil);
    drawPaletteCursor(calculatePaletteRect);
@@ -266,11 +252,12 @@ procedure TfrmTurbuMain.mnuDeleteMapClick(Sender: TObject);
 var
    deleteResult: TDeleteMapMode;
 begin
+   RequireMapEngine;
    deleteResult := delete_map.deleteMapConfirm(trvMapTree.Selected.HasChildren);
    if deleteResult <> dmNone then
    begin
       FMapEngine.DeleteMap(trvMapTree.currentMapID, deleteResult);
-      trvMapTree.buildMapTree(GDatabase.mapTree);
+      trvMapTree.buildMapTree(FMapEngine.mapTree);
    end;
 end;
 
@@ -297,7 +284,6 @@ begin
    //check for modifications first
    if assigned(FMapEngine) then
       FMapEngine.Reset;
-   FreeAndNil(GDatabase);
    GArchives.clearFrom(1);
    FPaletteTexture := -1;
 end;
@@ -318,15 +304,6 @@ begin
    configureScrollBar(sbVert, size.y, min(imgLogo.LogicalHeight, size.y), position.y);
 end;
 
-procedure TfrmTurbuMain.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-   if FLoadSignal.WaitFor(0) <> wrSignaled then
-   begin
-      self.Cursor := crHourGlass;
-      FLoadSignal.WaitFor(INFINITE);
-   end;
-end;
-
 procedure TfrmTurbuMain.FormCreate(Sender: TObject);
 begin
    if getProjectFolder = '' then
@@ -334,18 +311,12 @@ begin
    FPaletteTexture := -1;
    FPaletteImages := TDictionary<integer, integer>.Create;
    FZoom := 1;
-   FLoadSignal := TSimpleEvent.Create;
-   FDBSignal := TSimpleEvent.Create;
-   FLoadSignal.SetEvent;
 end;
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
 begin
-   FDBSignal.Free;
-   FLoadSignal.Free;
    cleanupEngines;
    FMapEngine := nil;
-   GScriptEngine := nil;
    FPaletteImages.Free;
 end;
 
@@ -381,7 +352,8 @@ begin
       try
          pluginManager.LoadPlugin(plugStr, plgPackage);
       except
-         on E: EPackageError do ; //TODO: Add code here to handle package loading errors
+         on E: EPackageError do
+            raise; //TODO: Add code here to handle package loading errors
       end;
    finally
       plugins.free;
@@ -462,6 +434,7 @@ begin
    if FIgnoreMouseDown then
       FIgnoreMouseDown := false
    else begin
+      NormalizeMousePosition(imgLogo, x, y, FZoom);
       point := pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, FZoom);
       case button of
          mbLeft: FMapEngine.draw(point, true);
@@ -476,8 +449,11 @@ procedure TfrmTurbuMain.imgLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
 begin
    RequireMapEngine;
    if (ssLeft in shift) then
+   begin
+      NormalizeMousePosition(imgLogo, x, y, FZoom);
       FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, FZoom),
                       false);
+   end;
 end;
 
 procedure TfrmTurbuMain.imgLogoMouseUp(Sender: TObject; Button: TMouseButton;
@@ -499,9 +475,16 @@ procedure TfrmTurbuMain.imgPaletteMouseDown(Sender: TObject;
 begin
    if (button = mbLeft) then
    begin
+      NormalizeMousePosition(imgPalette, x, y, FZoom);
       FPaletteSelection.TopLeft := point(x, y);
       imgPaletteMouseMove(sender, shift, x, y);
    end;
+end;
+
+procedure TfrmTurbuMain.NormalizeMousePosition(image: TSdlFrame; var x, y: integer; scale: double);
+begin
+   x := clamp(x, 0, image.Width - Ceil(scale));
+   y := clamp(y, 0, image.height - Ceil(scale));
 end;
 
 procedure TfrmTurbuMain.imgPaletteMouseMove(Sender: TObject; Shift: TShiftState;
@@ -509,6 +492,7 @@ procedure TfrmTurbuMain.imgPaletteMouseMove(Sender: TObject; Shift: TShiftState;
 begin
    if ssLeft in shift then
    begin
+      NormalizeMousePosition(imgPalette, x, y, 2);
       FPaletteSelection.BottomRight := point(x, y);
       bindPaletteCursor;
       displayPalette;
@@ -545,7 +529,7 @@ const
 begin
    FMapEngine := retrieveEngine(et_map, value.mapEngine,
                  TVersion.Create(0, 0, 0)) as IDesignMapEngine;
-   FMapEngine.initialize(imgLogo.sdlWindow, GDatabase);
+   FMapEngine.initialize(imgLogo.sdlWindow, FDBName);
    FMapEngine.SetMapResizeEvent(self.SetMapSize);
    FMapEngine.autosaveMaps := mnuAutosaveMaps.checked;
    FMapEngine.loadMap(value);
@@ -558,25 +542,24 @@ end;
 
 procedure TfrmTurbuMain.loadMap(const value: word);
 begin
-   loadMap(GDatabase.mapTree.item[value]);
-end;
-
-procedure TfrmTurbuMain.loadProject;
-begin
-   if GDatabase = nil then
-      GDatabase := TRpgDatabase.Create;
-   FLoadSignal.SetEvent;
-   trvMapTree.buildMapTree(GDatabase.mapTree);
+   loadMap(FMapEngine.mapTree.Items[value]);
 end;
 
 procedure TfrmTurbuMain.mnu2KClick(Sender: TObject);
+var
+   frmRmConverter: TFrmRmConverter;
+   filename: string;
 begin
    closeProject;
-   if frmRmConverter.loadProject = SUCCESSFUL_IMPORT then
-   begin
-      FDBSignal.SetEvent;
-      self.loadProject;
+   frmRmConverter := TFrmRmConverter.Create(nil);
+   try
+      if frmRmConverter.loadProject <> SUCCESSFUL_IMPORT then
+         Exit;
+      filename := frmRmConverter.dbName;
+   finally
+      frmRmConverter.Free;
    end;
+   self.openProject(filename);
 end;
 
 procedure TfrmTurbuMain.mnuAutosaveMapsClick(Sender: TObject);
@@ -593,10 +576,8 @@ procedure TfrmTurbuMain.mnuDatabaseClick(Sender: TObject);
 var
    frmDatabase: TfrmDatabase;
 begin
-   DBCheck('Database Editor');
    frmDatabase := TFrmDatabase.Create(nil);
    try
-      frmDatabase.init(GDatabase);
       frmDatabase.ShowModal;
    finally
       frmDatabase.Free;
@@ -615,10 +596,9 @@ begin
    dlgOpen.InitialDir := getProjectFolder;
    if dlgOpen.Execute then
    begin
-      filename := ExcludeTrailingPathDelimiter(ExtractFilePath(dlgOpen.FileName));
+      filename := dlgOpen.FileName;
       closeProject;
       openProject(filename);
-      mnuDatabase.Enabled := true;
    end;
 end;
 
@@ -640,16 +620,10 @@ begin
    trvMapTree.Selections[0].selected := true;
 end;
 
-procedure TfrmTurbuMain.UploadDatabase;
-var
-   thread: TDatabaseLoadThread;
-begin
-   thread := TDatabaseLoadThread.Create(pbUpload, FDBSignal);
-   thread.FreeOnTerminate := true;
-   thread.Start;
-end;
+procedure TfrmTurbuMain.openProject(const filename: string);
 
-procedure TfrmTurbuMain.openProject(location: string);
+var
+   location: string;
 
    procedure openArchive(folderName: string; index: integer);
    var
@@ -660,55 +634,29 @@ procedure TfrmTurbuMain.openProject(location: string);
    end;
 
 var
-   fileStream, loadStream: TStream;
-   filename: string;
+   boot: TdmProjectBoot;
 begin
-   location := IncludeTrailingPathDelimiter(location);
-   openArchive(PROJECT_DB, DATABASE_ARCHIVE);
+   location := IncludeTrailingPathDelimiter(ExtractFilePath(filename));
    openArchive(MAP_DB, MAP_ARCHIVE);
    openArchive(IMAGE_DB, IMAGE_ARCHIVE);
    openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
    openArchive(MUSIC_DB, MUSIC_ARCHIVE);
+   openArchive(SFX_DB, SFX_ARCHIVE);
+   openArchive(VIDEO_DB, VIDEO_ARCHIVE);
 
-   filename := IncludeTrailingPathDelimiter(location) + DBNAME;
-   lblUpload.caption := 'Loading Database:';
-   TThread.CreateAnonymousThread(
-      procedure
-      begin
-         FLoadSignal.ResetEvent;
-         fileStream := TFileStream.Create(filename, fmOpenRead);
-         loadStream := TMemoryStream.Create;
-         try
-            loadStream.CopyFrom(fileStream, fileStream.Size);
-            loadStream.rewind;
-            try
-               GDatabase := TRpgDatabase.Load(loadStream, true,
-                 procedure(tree: IMapTree)
-                 begin
-                   trvMapTree.buildMapTree(tree);
-                   btnLayer1Click(self);
-                 end,
-                 procedure(value: integer) begin pbUpload.Max := value + 2; end);
-            except
-               on ERpgLoadError do
-               begin
-                  GDatabase := nil;
-                  MsgBox('TDB file is using an outdated format and can''t be loaded.', 'Load error');
-                  Abort;
-               end
-               else begin
-                  GDatabase := nil;
-                  raise;
-               end;
-            end;
-         finally
-            loadStream.free;
-            fileStream.Free;
-         end;
-         GDatabase.filename := filename;
-         FLoadSignal.SetEvent;
-         self.UploadDatabase;
-      end).Start;
+   boot := TdmProjectBoot.Create(nil);
+   try
+      FMapEngine := boot.Boot(filename);
+   finally
+      boot.Free;
+   end;
+   FDbName := filename;
+OutputDebugString('SAMPLING ON');
+   FMapEngine.initialize(imgLogo.sdlWindow, FDBName);
+   FDatabase := FMapEngine.database;
+   mnuDatabase.Enabled := true;
+   trvMapTree.buildMapTree(FMapEngine.mapTree);
+OutputDebugString('SAMPLING OFF');
 end;
 
 procedure TfrmTurbuMain.pnlZoomResize(Sender: TObject);
@@ -759,7 +707,6 @@ procedure TfrmTurbuMain.sbPaletteScroll(Sender: TObject;
 begin
    if (FLastPalettePos = ScrollPos) or (FPaletteTexture = -1) then
       Exit;
-   FCurrPalettePos := ScrollPos;
    displayPalette(ScrollPos);
    FLastPalettePos := ScrollPos;
 end;
@@ -912,18 +859,8 @@ begin
       resizePalette;
 end;
 
-procedure TfrmTurbuMain.DBCheck(const name: string);
-begin
-   if FDBSignal.WaitFor(0) = wrTimeout then
-   begin
-      MsgBox(format('The %s can''t be used until database loading is complete', [name]), 'Please wait...');
-      Abort;
-   end
-end;
-
 procedure TfrmTurbuMain.btnMapObjClick(Sender: TObject);
 begin
-   DBCheck('Map Object layer');
    setLayer(-1);
 end;
 
@@ -977,49 +914,6 @@ begin
    topNode := trvMapTree.selected = trvMapTree.items[0];
    mnuDeleteMap.Enabled := not topNode;
    mnuEditMapProperties.Enabled := not topNode;
-end;
-
-{ TDatabaseLoadThread }
-
-constructor TDatabaseLoadThread.Create(bar: TProgressBar; signal: TSimpleEvent);
-begin
-   inherited Create(true);
-   FProgressBar := bar;
-   FSignal := signal;
-end;
-
-procedure TDatabaseLoadThread.Execute;
-var
-   index: TRpgDataTypes;
-begin
-   try
-      try
-         for index := Low(TRpgDataTypes) to High(TRpgDataTypes) do
-         begin
-            if self.Terminated then
-               Exit;
-            GDatabase.copyTypeToDB(dmDatabase, index);
-            self.Queue(procedure begin FProgressBar.Position := ord(index) + 1 ; end);
-         end;
-         sleep(100);
-         self.Synchronize(
-            procedure
-            begin
-               frmTurbuMain.lblUpload.caption := 'Done!';
-               FProgressBar.Max := FProgressBar.Position;
-               frmTurbuMain.mnuDatabase.Enabled := true;
-            end);
-      finally
-         FSignal.SetEvent;
-      end;
-   except
-      self.Synchronize(
-         procedure
-         begin
-            frmTurbuMain.lblUpload.caption := 'Error!';
-            FProgressBar.State := pbsError;
-         end);
-   end;
 end;
 
 initialization
