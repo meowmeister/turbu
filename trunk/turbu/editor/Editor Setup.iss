@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TURBU"
-#define MyAppVerName "TURBU Editor 0.8.8"
+#define MyAppVerName "TURBU Editor 0.9.0"
 #define MyAppPublisher "Dragon Slayers, Inc."
 #define MyAppURL "http://www.turbu-rpg.com/"
 #define MyAppExeName "Turbu.exe"
@@ -18,7 +18,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\setup
-OutputBaseFilename=TURBU_Editor_0.8.8
+OutputBaseFilename=TURBU_Editor_0.9.0
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -39,34 +39,49 @@ Source: ..\bin\map_default.tep; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\map_default_design.tep; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\Turbu.exe; DestDir: {app}; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-Source: ..\..\dlls\libogg-0.dll; DestDir: {app}
-Source: ..\..\dlls\libpng12-0.dll; DestDir: {app}
-Source: ..\..\dlls\libvorbis-0.dll; DestDir: {app}
-Source: ..\..\dlls\libvorbisfile-3.dll; DestDir: {app}
-Source: ..\..\dlls\SDL.dll; DestDir: {app}
-Source: ..\..\dlls\sdl_image.dll; DestDir: {app}
-Source: ..\..\dlls\zlib1.dll; DestDir: {app}
+Source: ..\..\dlls\dbxdrivers.ini; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\dbxfb4d15.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\fbclient.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\dbxfb4d15.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\ib_util.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\icudt30.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\icuuc30.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\libFLAC.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\libModplug.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\libogg-0.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\libpng15.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\libvorbis-0.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\libvorbisfile-3.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\msvcp80.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\msvcr80.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\SDL.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\sdl_image.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\sdl_mixer.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\Smpeg.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\zlib1.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\design\scripts\general\battle_algorithms.trs; DestDir: {app}\design\scripts\general
 Source: ..\bin\design\scripts\general\dt_algorithms.trs; DestDir: {app}\design\scripts\general
 Source: ..\bin\design\scripts\general\skill_algorithms.trs; DestDir: {app}\design\scripts\general
 Source: ..\bin\design\scripts\menu\menuscripts.trs; DestDir: {app}\design\scripts\menu
 Source: ..\bin\design\plugins; DestDir: {app}\design\
-Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvPluginSystem150.bpl; DestDir: {app}
-Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvCore150.bpl; DestDir: {app}
-Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvControls150.bpl; DestDir: {app}
-Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvCustom150.bpl; DestDir: {app}
-Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvDB150.bpl; DestDir: {app}
-Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvDlgs150.bpl; DestDir: {app}
-Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvSystem150.bpl; DestDir: {app}
-Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvStdCtrls150.bpl; DestDir: {app}
-Source: C:\Users\Public\Documents\RAD Studio\8.0\Bpl\JclVcl150.bpl; DestDir: {app}
-Source: C:\Users\Public\Documents\RAD Studio\8.0\Bpl\Jcl150.bpl; DestDir: {app}
-Source: c:\Windows\SysWOW64\rtl150.bpl; DestDir: {app}
-Source: c:\Windows\SysWOW64\vclimg150.bpl; DestDir: {app}
-Source: c:\Windows\SysWOW64\vclx150.bpl; DestDir: {app}
-Source: c:\Windows\SysWOW64\vcldb150.bpl; DestDir: {app}
-Source: c:\Windows\SysWOW64\dbrtl150.bpl; DestDir: {app}
-Source: c:\Windows\SysWOW64\vcl150.bpl; DestDir: {app}
+Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvPluginSystem150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvCore150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvControls150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvCustom150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvDB150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvDlgs150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvSystem150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: C:\Users\public\Documents\RAD Studio\8.0\bpl\JvStdCtrls150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: C:\Users\Public\Documents\RAD Studio\8.0\Bpl\JclVcl150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: C:\Users\Public\Documents\RAD Studio\8.0\Bpl\Jcl150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: c:\Windows\SysWOW64\rtl150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: c:\Windows\SysWOW64\vclimg150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: c:\Windows\SysWOW64\vclx150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: c:\Windows\SysWOW64\vcldb150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: c:\Windows\SysWOW64\dbrtl150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: c:\Windows\SysWOW64\vcl150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: c:\Windows\SysWOW64\dsnap150.bpl; DestDir: {app}; Flags: ignoreversion
+Source: c:\Windows\SysWOW64\dbxcommondriver150.bpl; DestDir: {app}; Flags: ignoreversion
 
 [Icons]
 Name: {group}\{#MyAppName}; Filename: {app}\{#MyAppExeName}
@@ -88,3 +103,5 @@ Name: {app}\design
 Name: {app}\design\scripts
 Name: {app}\design\scripts\general
 Name: {app}\design\scripts\menu
+
+
