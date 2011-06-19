@@ -630,6 +630,7 @@ var
       filename: string;
    begin
       filename := location + folderName;
+      ForceDirectories(filename);
       assert(GArchives.Add(openFolder(filename)) = index);
    end;
 
