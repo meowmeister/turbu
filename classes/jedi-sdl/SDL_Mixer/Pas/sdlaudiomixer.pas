@@ -113,6 +113,8 @@ type
     function GetPaused : boolean; virtual; abstract;
     function GetPlaying : boolean; virtual; abstract;
     procedure InitialiseFields;
+  protected
+    FRw: PSDL_RWops;
   public
     constructor Create( const aFileName : string ); overload;
     constructor Create( aStream : TStream ); overload;
@@ -586,7 +588,7 @@ var
 begin
   inherited;
   FIsMP3 := LowerCase( ExtractFileExt( aFileName ) ) = '.mp3';
-  {$IFNDEF DARWIN}
+(*  {$IFNDEF DARWIN}
   {$IFNDEF no_smpeg}
   if FIsMP3 then
   begin
@@ -612,23 +614,23 @@ begin
   end
   else
   {$ENDIF}
-  {$ENDIF}
+  {$ENDIF} *)
     FMix_Music := Mix_LoadMUS( PAnsiChar( ansiString(aFileName) ) );
 end;
 {$T+}
 
 procedure TSDLMusic.LoadFromStream( aStream : TStream );
-var
-   rw: PSdl_Rwops;
 begin
   inherited;
-  rw := sdlstreams.SDLStreamSetup(aStream);
+  FRw := sdlstreams.SDLStreamSetup(aStream);
   try
-    FMix_Music := Mix_LoadMUS_RW(rw);
+    FMix_Music := Mix_LoadMUS_RW(FRw);
     if FMix_Music = nil then
       raise EBadHandle.Create(string(AnsiString(SDL_GetError)));
-  finally
-     sdlstreams.SDLStreamCloseRWops(rw);
+  except
+     sdlstreams.SDLStreamCloseRWops(FRw);
+     aStream.Free;
+     raise;
   end;
 end;
 
@@ -746,6 +748,12 @@ begin
   {$ENDIF}
   {$ENDIF}
     Mix_FreeMusic( FMix_Music );
+  if assigned(FRw) then
+  begin
+     TObject(FRw.unknown.data1).Free;
+     SDLStreamCloseRWops(FRw);
+     FRw := nil;
+  end;
 end;
 
 { TSDLSoundEffectManager }

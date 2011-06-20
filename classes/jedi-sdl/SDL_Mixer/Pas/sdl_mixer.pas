@@ -460,7 +460,9 @@ type
       4 : ( ogg : POGG_music );
       {$IFNDEF DARWIN}
       {$IFNDEF SKYOS}
+      {$IFNDEF no_smpeg}
       5 : ( mp3 : PSMPEG );
+      {$ENDIF}
       {$ENDIF}
       {$ENDIF}
   end;

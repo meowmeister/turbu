@@ -27,7 +27,7 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
-			<DCC_Define>PS_USESSUPPORT;$(DCC_Define)</DCC_Define>
+			<DCC_Define>PS_USESSUPPORT;no_smpeg;$(DCC_Define)</DCC_Define>
 			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
 			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
 			<DCC_BplOutput>..\..\bin\</DCC_BplOutput>
@@ -37,7 +37,6 @@
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
 			<DCC_Optimize>false</DCC_Optimize>
-			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
 			<GenDll>true</GenDll>
 			<GenPackage>true</GenPackage>

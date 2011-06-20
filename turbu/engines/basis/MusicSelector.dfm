@@ -14,6 +14,7 @@ object frmMusicSelector: TfrmMusicSelector
   OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   DesignSize = (
     411
     381)

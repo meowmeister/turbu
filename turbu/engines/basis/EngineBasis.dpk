@@ -25,6 +25,7 @@ package EngineBasis;
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 {$DEFINE PS_USESSUPPORT}
+{$DEFINE no_smpeg}
 
 requires
   dbrtl,
