@@ -105,12 +105,14 @@ end;
 
 procedure TfrmMusicSelector.sldPanningChange(Sender: TObject);
 begin
-   FCurrentSound.Panning := sldPanning.Value;
+   if assigned(FCurrentSound) then
+      FCurrentSound.Panning := sldPanning.Value;
 end;
 
 procedure TfrmMusicSelector.sldVolumeChange(Sender: TObject);
 begin
-   (FCurrentSound.Volume := round(sldVolume.Value * 1.28));
+   if assigned(FCurrentSound) then
+      (FCurrentSound.Volume := round(sldVolume.Value * 1.28));
 end;
 
 procedure TfrmMusicSelector.btnStopClick(Sender: TObject);
@@ -137,7 +139,7 @@ begin
       stream.Free;
    end;
    FCurrentSound.Channel := 0;
-   FCurrentSound.FadeIn(FFadeInTime * 10, 1);
+   FCurrentSound.FadeIn(FFadeInTime * 10, -1);
    sldVolumeChange(self);
    sldPanningChange(self);
 end;
