@@ -79,7 +79,7 @@ object frmMusicSelector: TfrmMusicSelector
       Top = 79
       Width = 176
       Height = 61
-      Caption = 'Panning (Not Implemented)'
+      Caption = 'Panning'
       TabOrder = 1
       object sldPanning: TJvxSlider
         Left = 2
