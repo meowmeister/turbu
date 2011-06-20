@@ -45,10 +45,12 @@ type
       procedure sldPanningChange(Sender: TObject);
       procedure sldFadeInChange(Sender: TObject);
       procedure btnCloseClick(Sender: TObject);
+      procedure FormShow(Sender: TObject);
    private
       FCurrentSound: TSDLAudio;
       FFadeInTime: integer;
       FManager: TSDLAudioManager;
+      procedure Clear;
    public
 //      function Choose: boolean;
    end;
@@ -63,12 +65,6 @@ uses
 
 {$R *.dfm}
 
-type
-   TBoxedString = class
-      data: string;
-      constructor Create(const data: string);
-   end;
-
 var
    LSelector: TfrmMusicSelector;
 
@@ -80,22 +76,23 @@ begin
 end;
 
 procedure TfrmMusicSelector.FormCreate(Sender: TObject);
-var
-   filename: string;
 begin
    FManager := TSDLAudioManager.Create;
-   for filename in GArchives[MUSIC_ARCHIVE].allFiles do
-      lstFilename.AddItem(ChangeFileExt(ExtractFileName(filename), ''), TBoxedString.Create(filename));
 end;
 
 procedure TfrmMusicSelector.FormDestroy(Sender: TObject);
-var
-   i: Integer;
 begin
-   for i := 0 to lstFilename.Items.Count - 1 do
-      lstFilename.Items.Objects[i].Free;
    FCurrentSound.Free;
    FManager.Free;
+end;
+
+procedure TfrmMusicSelector.FormShow(Sender: TObject);
+var
+   filename: string;
+begin
+   Clear;
+   for filename in GArchives[MUSIC_ARCHIVE].allFiles do
+      lstFilename.AddItem(filename, nil);
 end;
 
 procedure TfrmMusicSelector.sldFadeInChange(Sender: TObject);
@@ -120,6 +117,14 @@ begin
    FreeAndNil(FCurrentSound);
 end;
 
+procedure TfrmMusicSelector.Clear;
+var
+   i: Integer;
+begin
+   for i := 0 to lstFilename.Items.Count - 1 do
+      lstFilename.Items.Objects[i].Free;
+end;
+
 procedure TfrmMusicSelector.btnCloseClick(Sender: TObject);
 begin
    self.Close;
@@ -131,24 +136,23 @@ var
    stream: TStream;
 begin
    btnStopClick(sender);
-   filename := (lstFilename.Items.Objects[lstFilename.ItemIndex] as TBoxedString).data;
+   filename := lstFilename.Items[lstFilename.ItemIndex];
+   if UpperCase(ExtractFileExt(filename)) = '.MP3' then
+   begin
+      Application.MessageBox('The current version of TURBU does not support MP3 music', 'MP3s not supported');
+      Exit;
+   end;
+
    stream := GArchives[MUSIC_ARCHIVE].getFile(filename);
    try
       FCurrentSound := TSDLMusic.Create(stream);
    finally
-      stream.Free;
+//      stream.Free;
    end;
    FCurrentSound.Channel := 0;
    FCurrentSound.FadeIn(FFadeInTime * 10, -1);
    sldVolumeChange(self);
    sldPanningChange(self);
-end;
-
-{ TBoxedString }
-
-constructor TBoxedString.Create(const data: string);
-begin
-   self.data := data;
 end;
 
 initialization
