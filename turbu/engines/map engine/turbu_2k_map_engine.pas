@@ -138,6 +138,8 @@ begin
    for I := 0 to high(FMaps) do
       FMaps[i].Free;
    setLength(FMaps, 0);
+   FDatabase.Free;
+   GDatabase := nil;
    inherited Cleanup;
 end;
 
