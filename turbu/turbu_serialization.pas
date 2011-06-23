@@ -518,6 +518,7 @@ begin
       tkInteger: result := db.FieldByName(fieldname).asInteger;
       tkInt64: result := db.FieldByName(fieldname).AsLargeInt;
       tkUString: result := downloadString(db, fieldname);
+      tkFloat: result := db.FieldByName(fieldname).AsExtended;
       else assert(false);
    end;
 end;
@@ -599,6 +600,7 @@ begin
       tkInteger: db.FieldByName(fieldname).asInteger := value.AsInteger;
       tkInt64: db.FieldByName(fieldname).AsLargeInt := value.AsInt64;
       tkUString: uploadString;
+      tkFloat: db.FieldByName(fieldname).AsExtended := value.AsExtended;
       else uploadVariant;
    end;
 end;

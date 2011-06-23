@@ -71,8 +71,7 @@ uses
   dm_ProjectBoot in 'dm_ProjectBoot.pas' {dmProjectBoot: TDataModule},
   frame_class in 'frame_class.pas' {frameClass: TFrame},
   monster in '..\monster.pas',
-  rm2_turbu_monsters in '..\turbu format\converters\rm2_turbu_monsters.pas',
-  dm_databaseAux in 'dm_databaseAux.pas' {dmDatabaseAux: TDataModule};
+  rm2_turbu_monsters in '..\turbu format\converters\rm2_turbu_monsters.pas';
 
 {$R *.res}
 

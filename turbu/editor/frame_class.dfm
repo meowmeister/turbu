@@ -275,7 +275,7 @@ object frameClass: TframeClass
         Top = 16
         Width = 196
         Height = 186
-        ActivePage = tshRepertoire
+        ActivePage = tshEquipment
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 0
         object tshEquipment: TTabSheet
@@ -636,12 +636,12 @@ object frameClass: TframeClass
     Top = 456
   end
   object dsResist: TDataSource
-    DataSet = dmDatabase.charClasses_Resists
+    DataSet = dmDatabaseAux.charClasses_Resists
     Left = 232
     Top = 456
   end
   object dsCondition: TDataSource
-    DataSet = dmDatabase.charClasses_Conditions
+    DataSet = dmDatabaseAux.charClasses_Conditions
     Left = 304
     Top = 456
   end

@@ -124,6 +124,11 @@
 			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdl_mixer.pas"/>
 			<DCCReference Include="..\..\..\classes\jedi-sdl\smpeg\Pas\smpeg.pas"/>
 			<DCCReference Include="..\..\..\classes\uDataSetHelper.pas"/>
+			<DCCReference Include="..\..\..\classes\DSharp\Core\DSharp.Core.Variants.pas"/>
+			<DCCReference Include="..\..\..\classes\DSharp\Core\DSharp.Linq.QueryProvider.pas"/>
+			<DCCReference Include="..\..\..\classes\DSharp\Core\DSharp.Linq.QueryProvider.SQL.pas"/>
+			<DCCReference Include="..\..\..\classes\DSharp\Core\DSharp.Core.Expressions.pas"/>
+			<DCCReference Include="..\..\..\classes\DSharp\Core\DSharp.Core.Lambda.pas"/>
 			<None Include="..\..\..\classes\DeHL\DeHL.Defines.inc"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>

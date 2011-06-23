@@ -182,10 +182,6 @@
 			</DCCReference>
 			<DCCReference Include="..\monster.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_monsters.pas"/>
-			<DCCReference Include="dm_databaseAux.pas">
-				<Form>dmDatabaseAux</Form>
-				<DesignClass>TDataModule</DesignClass>
-			</DCCReference>
 			<RcCompile Include="..\turbures.rc">
 				<ContainerId>RC</ContainerId>
 				<Form>turbures.res</Form>

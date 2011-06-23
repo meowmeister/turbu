@@ -161,7 +161,7 @@ var
    newstat: IStatBlock;
 begin
    self.Create;
-   self.id := base.id + idBase;
+   self.id := idBase;
    if (base.charClass <> '') and (base.charClass <> 'None') then
       self.clsName := unicodeString(base.charClass)
    else self.clsName := unicodeString(base.name) + ' Class';
@@ -245,7 +245,7 @@ end;
 
 constructor T2k2Hero.convert(base: THeroRecord; classTable: TConversionTable; baseDB: TLcfDataBase; statSet: TStatSet);
 begin
-   inherited convert(base, baseDB, statSet, 0);
+   inherited convert(base, baseDB, statSet, base.id);
    self.name := string(base.name);
    self.title := string(base.charClass);
    self.minLevel := base.startLevel;

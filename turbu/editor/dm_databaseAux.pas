@@ -28,8 +28,11 @@ type
     srcShields: TDataSource;
     srcWeapons: TDataSource;
     srcOffhands: TDataSource;
+    charClasses_Resists: TClientDataSet;
+    charClasses_Conditions: TClientDataSet;
 
     procedure itemNamesAfterOpen(DataSet: TDataSet);
+    procedure DataModuleCreate(Sender: TObject);
   public
     procedure EnsureItems;
     procedure EnsureAnims;
@@ -44,6 +47,12 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TdmDatabaseAux.DataModuleCreate(Sender: TObject);
+begin
+   charClasses_Resists.cloneCursor(dmDatabase.charClasses_Resists, false, true);
+   charClasses_Conditions.cloneCursor(dmDatabase.charClasses_Conditions, false, true);
+end;
 
 procedure TdmDatabaseAux.EnsureAnims;
 begin

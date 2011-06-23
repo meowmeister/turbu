@@ -84,7 +84,7 @@ type
 constructor TRpgItem.create(const item, quantity: word);
 begin
    inherited Create;
-   FTemplate := GDatabase.findItemById(item);
+   FTemplate := GDatabase.FindItem(item);
    FQuantity := quantity;
 end;
 
@@ -167,7 +167,7 @@ begin
    I := 0;
    while (dummy = nil) and (i < count) do
    begin
-      if TRpgItem(self[i]).FTemplate = GDatabase.findItemById(id) then
+      if TRpgItem(self[i]).FTemplate = GDatabase.FindItem(id) then
          dummy := TRpgItem(self[i]);
       inc(i);
    end;
@@ -252,7 +252,7 @@ begin
    I := 0;
    while (dummy = nil) and (i < count) do
    begin
-      if TRpgItem(self[i]).FTemplate = GDatabase.findItemById(id) then
+      if TRpgItem(self[i]).FTemplate = GDatabase.findItem(id) then
          dummy := TRpgItem(self[i]);
       inc(i);
    end;

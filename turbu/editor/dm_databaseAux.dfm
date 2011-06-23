@@ -1,5 +1,6 @@
 object dmDatabaseAux: TdmDatabaseAux
   OldCreateOrder = False
+  OnCreate = DataModuleCreate
   Height = 422
   Width = 465
   object shields: TClientDataSet
@@ -509,5 +510,121 @@ object dmDatabaseAux: TdmDatabaseAux
     DataSet = attribNames
     Left = 323
     Top = 170
+  end
+  object charClasses_Resists: TClientDataSet
+    Aggregates = <>
+    Filtered = True
+    FieldDefs = <
+      item
+        Name = 'master'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'x'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'y'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end>
+    IndexDefs = <
+      item
+        Name = 'DEFAULT_ORDER'
+      end
+      item
+        Name = 'CHANGEINDEX'
+      end>
+    IndexFieldNames = 'master'
+    MasterFields = 'id'
+    MasterSource = dmDatabase.dsCharClasses
+    ObjectView = False
+    PacketRecords = 0
+    Params = <>
+    StoreDefs = True
+    Left = 256
+    Top = 256
+    object charClasses_Resistsmaster: TIntegerField
+      FieldName = 'master'
+      Required = True
+    end
+    object charClasses_Resistsx: TIntegerField
+      FieldName = 'x'
+      Required = True
+    end
+    object charClasses_Resistsy: TIntegerField
+      FieldName = 'y'
+      Required = True
+    end
+    object charClasses_Resistsname: TWideStringField
+      FieldKind = fkLookup
+      FieldName = 'name'
+      LookupDataSet = attribNames
+      LookupKeyFields = 'id'
+      LookupResultField = 'name'
+      KeyFields = 'x'
+      Size = 32
+      Lookup = True
+    end
+  end
+  object charClasses_Conditions: TClientDataSet
+    Aggregates = <>
+    Filtered = True
+    FieldDefs = <
+      item
+        Name = 'master'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'x'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'y'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end>
+    IndexDefs = <
+      item
+        Name = 'DEFAULT_ORDER'
+      end
+      item
+        Name = 'CHANGEINDEX'
+      end>
+    IndexFieldNames = 'master'
+    MasterFields = 'id'
+    MasterSource = dmDatabase.dsCharClasses
+    ObjectView = False
+    PacketRecords = 0
+    Params = <>
+    StoreDefs = True
+    Left = 256
+    Top = 312
+    object IntegerField1: TIntegerField
+      FieldName = 'master'
+      Required = True
+    end
+    object IntegerField2: TIntegerField
+      FieldName = 'x'
+      Required = True
+    end
+    object IntegerField3: TIntegerField
+      FieldName = 'y'
+      Required = True
+    end
+    object charClasses_Conditionsname: TWideStringField
+      FieldKind = fkLookup
+      FieldName = 'name'
+      LookupDataSet = condNames
+      LookupKeyFields = 'id'
+      LookupResultField = 'name'
+      KeyFields = 'x'
+      Size = 32
+      Lookup = True
+    end
   end
 end

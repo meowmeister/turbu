@@ -23,7 +23,7 @@ interface
 uses
    Classes, Forms, DB, DBClient, StdCtrls, ExtCtrls, ComCtrls, DBCtrls,
    Messages, DBIndexComboBox, Mask, Controls,
-   sdl_frame, EBListView,
+   sdl_frame, EBListView, dm_databaseAux,
    turbu_tilesets, turbu_map_objects, turbu_serialization, turbu_constants,
    turbu_maps, frame_conditions, dataset_viewer, sdl_frame_helper,
    SDL_ImageManager;
@@ -109,6 +109,7 @@ type
     FMapObject: TRpgMapObject;
     FMap: TRpgMap;
     FRenameProc: TRenameProc;
+    FDbAux: TDmDatabaseAux;
 
     procedure UploadMapObject(obj: TRpgMapObject);
     procedure DownloadMapObject(obj: TRpgMapObject);
@@ -133,6 +134,7 @@ type
 implementation
 uses
    Windows, Clipbrd, SysUtils,
+   DSharp.Core.Lambda,
    sprite_selector, ClipboardWatcher,
    commons, turbu_tbi_lib, dm_database, turbu_database, archiveInterface,
    turbu_sdl_image, EB_RpgScript, EventBuilder,
@@ -334,6 +336,7 @@ begin
         dsPagesName.Value := name;
         dsPages.Post;
      end;
+   FDbAux := TDmDatabaseAux.Create(self);
 end;
 
 procedure TfrmObjectEditor.FormDestroy(Sender: TObject);
@@ -422,7 +425,13 @@ begin
    dsPages.DisableControls;
    frameConditions.dsConditions.DisableControls;
    try
-      GDatabase.copyToDB(dmDatabase, [rd_switch, rd_int, rd_hero, rd_item]);
+      FDbAux.EnsureSwitches;
+      FDbAux.EnsureVars;
+      FDbAux.EnsureItems;
+      if not dsPages.Active then
+         dsPages.CreateDataSet;
+      if not frameConditions.dsConditions.Active then
+         frameConditions.dsConditions.CreateDataSet;
       for page in obj.pages do
       begin
          FSerializer.upload(page, dsPages);
@@ -549,11 +558,7 @@ function TfrmObjectEditor.DoEdit(obj: TRpgMapObject; const tilesetName: string):
 begin
    self.trvEvents.map := FMap;
    UploadMapObject(obj);
-   FTileset := GDatabase.tileset.firstWhere(
-      function(arg1: TTileset): boolean
-      begin
-         result := arg1.name = tilesetName;
-      end);
+   FTileset := GDatabase.tileset.firstWhere(TLambda.Make<TTileset, boolean>(arg1.name = tilesetName));
 
    result := self.ShowModal;
    if result = mrOK then

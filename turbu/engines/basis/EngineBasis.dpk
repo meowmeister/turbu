@@ -95,6 +95,11 @@ contains
   sdlaudiomixer in '..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdlaudiomixer.pas',
   sdl_mixer in '..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdl_mixer.pas',
   smpeg in '..\..\..\classes\jedi-sdl\smpeg\Pas\smpeg.pas',
-  uDataSetHelper in '..\..\..\classes\uDataSetHelper.pas';
+  uDataSetHelper in '..\..\..\classes\uDataSetHelper.pas',
+  DSharp.Core.Variants in '..\..\..\classes\DSharp\Core\DSharp.Core.Variants.pas',
+  DSharp.Linq.QueryProvider in '..\..\..\classes\DSharp\Core\DSharp.Linq.QueryProvider.pas',
+  DSharp.Linq.QueryProvider.SQL in '..\..\..\classes\DSharp\Core\DSharp.Linq.QueryProvider.SQL.pas',
+  DSharp.Core.Expressions in '..\..\..\classes\DSharp\Core\DSharp.Core.Expressions.pas',
+  DSharp.Core.Lambda in '..\..\..\classes\DSharp\Core\DSharp.Core.Lambda.pas';
 
 end.

@@ -19,7 +19,8 @@ unit turbu_classes;
 
 interface
 uses
-   classes, sysUtils, generics.collections, DB, RTTI,
+   classes, sysUtils, generics.collections, DB, RTTI, SimpleDS,
+   DSharp.Core.Lambda,
    turbu_containers, turbu_defs, turbu_constants, turbu_serialization;
 
 type
@@ -177,6 +178,22 @@ type
       function GetEnumerator: TEnumerator; reintroduce;
    end;
 
+   TRpgDataDict<T: TRpgDatafile, constructor> = class(TObjectDictionary<integer, T>)
+   private
+      FDataset: TSimpleDataset;
+      FSerializer: TDatasetSerializer;
+      procedure Load;
+      function GetItem(const Key: integer): T;
+   public
+      constructor Create(dataset: TSimpleDataset; serializer: TDatasetSerializer);
+      procedure Add(value: T); overload;
+      procedure upload;
+      procedure download;
+      function GetCount: integer;
+      function FirstWhere(filter: TFunc<T, boolean>): T;
+      property Items[const Key: integer]: T read GetItem; default;
+   end;
+
    TNameTypeList = TList<TNameType>;
 
    TRpgDecl = class(TEnumerable<TNameType> {TObject})
@@ -249,7 +266,8 @@ type
 implementation
 uses
 windows,
-   Generics.Defaults, TypInfo, Math, Clipbrd,
+   Generics.Defaults, TypInfo, Math, Clipbrd, SqlExpr, DBClient, RtlConsts,
+   DSharp.Core.Expressions, DSharp.Linq.QueryProvider.SQL,
    commons, turbu_decl_utils, turbu_functional,
    ps_pointer, rttiHelper;
 
@@ -953,6 +971,124 @@ end;
 constructor EventTypeAttribute.Create(const name: string);
 begin
    FName := name;
+end;
+
+{ TRpgDataDict<T> }
+
+procedure TRpgDataDict<T>.Add(value: T);
+begin
+   self.Add(value.id, value);
+end;
+
+constructor TRpgDataDict<T>.Create(dataset: TSimpleDataset; serializer: TDatasetSerializer);
+begin
+   inherited Create([doOwnsValues]);
+   self.Add(T.Create);
+   FDataset := dataset;
+   FSerializer := serializer;
+end;
+
+procedure TRpgDataDict<T>.download;
+var
+   new: T;
+begin
+   FDataset.First;
+   while not FDataset.Eof do
+   begin
+      new := T.Create;
+      new.download(FSerializer, FDataset);
+      self.Add(new);
+      FDataset.Next;
+   end;
+end;
+
+function TRpgDataDict<T>.FirstWhere(filter: TFunc<T, boolean>): T;
+var
+   ds: TClientDataset;
+begin
+   self.Load;
+   try
+      ds := TClientDataset.Create(nil);
+      ds.CloneCursor(FDataset, true);
+      ds.Filtered := true;
+      ds.Filter := TExpression(TLambda.GetExpression(filter)).ToSql;
+      ds.IndexFieldNames := 'id';
+      ds.First;
+      if ds.RecordCount = 0 then
+         Exit(nil);
+      result := self[ds.FieldByName('id').AsInteger];
+   finally
+      ds.Free;
+   end;
+end;
+
+function TRpgDataDict<T>.GetCount: integer;
+const SQL = 'select count(*) result from %s';
+var
+   ds: TCustomSqlDataset;
+begin
+   if FDataset.Active then
+      result := FDataset.RecordCount
+   else if not FDataset.Connection.Connected then
+      result := self.Count
+   else begin
+      FDataset.Connection.Execute(format(SQL, [UpperCase(FDataset.Name)]), nil, @ds);
+      try
+         assert(ds.RecordCount = 1);
+         result := ds.FieldByName('result').AsInteger;
+      finally
+         ds.Free;
+      end;
+   end;
+end;
+
+function TRpgDataDict<T>.GetItem(const Key: integer): T;
+begin
+   if TryGetValue(key, result) then
+      Exit;
+   try
+      if not FDataset.Active then
+      begin
+         FDataset.Filtered := true;
+         FDataset.Filter := format('id = %d', [key]);
+         FDataset.Open;
+      end;
+      if not FDataset.Locate('id', key, []) then
+         raise EListError.CreateRes(@SGenericItemNotFound);
+      result := T.Create;
+      try
+         result.download(FSerializer, FDataset);
+         self.Add(result);
+      except
+         result.free;
+         raise;
+      end;
+   finally
+      if FDataset.Filtered then
+      begin
+         FDataset.Active := false;
+         FDataset.Filtered := false;
+      end;
+   end;
+end;
+
+procedure TRpgDataDict<T>.Load;
+begin
+   FDataset.Active := true;
+end;
+
+procedure TRpgDataDict<T>.upload;
+var
+   iterator: T;
+begin
+   for iterator in self.Values do
+   begin
+      if iterator.id = 0 then
+         Continue
+      else iterator.upload(FSerializer, FDataset);
+   end;
+   if self.Count > 1 then
+      FDataset.postSafe;
 end;
 
 end.
