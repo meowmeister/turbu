@@ -171,6 +171,7 @@ begin
   if ( stream = nil ) then
     raise EInvalidContainer.Create( 'SDLStreamClose on nil' );
   stream.Free;
+  context.unknown.data1 := nil;
   Result := 1;
 end;
 

@@ -127,6 +127,7 @@ var
    battleEngine: TBattleEngineData;
    defMoveMatrix: TMoveMatrix;
    moveArray: ^TMoveMatrixArray;
+   newcmd: TBattleCommand;
 begin
    // setup
    self.Create;
@@ -170,7 +171,6 @@ begin
 
       ConversionReport.newStep('Converting heroes');
       // COMMANDS
-      self.command.add(TBattleCommand.Create);
       if GProjectFormat = pf_2k3 then
       begin
          for i := 1 to base.commands do
@@ -182,24 +182,24 @@ begin
          for i := 1 to base.heroes do
             if base.hero[i].hasSkillName then
             begin
-               command.add(TBattleCommand.Create);
-               command.Last.id := command.High;
-               command.Last.name := (string(base.hero[i].skillName));
-               command.Last.style := cs_skillgroup;
-               command.Last.value := command. High;
+               newcmd := TBattleCommand.Create;
+               newcmd.id := command.Count;
+               newcmd.name := (string(base.hero[i].skillName));
+               newcmd.style := cs_skillgroup;
+               newcmd.value := command.Count;
+               command.add(newcmd);
             end;
       end;
 
       // CLASS RECORDS
       if GProjectFormat = pf_2k3 then
       begin
-         self.charClasses := base.charClasses;
          counter := 0;
          for i := 1 to base.charClasses do
          begin
             if not isEmpty(base.charClass[i]) then
             begin
-               charClass[i] := TClassTemplate.convert(base.charClass[i], self.statSet);
+               charClass.Add(TClassTemplate.convert(base.charClass[i], self.statSet));
                classTable.add(i, i - counter);
             end
             else
@@ -216,8 +216,8 @@ begin
       begin
          if (not isEmpty(base.hero[i])) and (base.hero[i].classNum = 0) then
          begin
-            GDatabase.charClass.Add(TClassTemplate.convert(base.hero[i], base, self.statSet, classes));
             inc(counter);
+            GDatabase.charClass.Add(TClassTemplate.convert(base.hero[i], base, self.statSet, counter));
             heroClassTable.add(i, counter);
          end;
       end;
