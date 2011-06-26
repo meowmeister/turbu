@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TURBU"
-#define MyAppVerName "TURBU Editor 0.9.0"
+#define MyAppVerName "TURBU Editor 0.9.1"
 #define MyAppPublisher "Dragon Slayers, Inc."
 #define MyAppURL "http://www.turbu-rpg.com/"
 #define MyAppExeName "Turbu.exe"
@@ -18,7 +18,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\setup
-OutputBaseFilename=TURBU_Editor_0.9.0
+OutputBaseFilename=TURBU_Editor_0.9.1
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -48,9 +48,7 @@ Source: ..\..\dlls\icudt30.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\icuuc30.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\libFLAC.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\libModplug.dll; DestDir: {app}; Flags: ignoreversion
-Source: ..\..\dlls\libogg-0.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\libpng15.dll; DestDir: {app}; Flags: ignoreversion
-Source: ..\..\dlls\libvorbis-0.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\libvorbisfile-3.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\msvcp80.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\msvcr80.dll; DestDir: {app}; Flags: ignoreversion
@@ -103,5 +101,6 @@ Name: {app}\design
 Name: {app}\design\scripts
 Name: {app}\design\scripts\general
 Name: {app}\design\scripts\menu
+
 
 
