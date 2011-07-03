@@ -34,9 +34,6 @@ requires
   DbxCommonDriver;
 
 contains
-  upsCompiler in '..\..\..\components\PascalScript\upsCompiler.pas',
-  uPSRuntime in '..\..\..\components\PascalScript\uPSRuntime.pas',
-  uPSUtils in '..\..\..\components\PascalScript\uPSUtils.pas',
   turbu_versioning in '..\..\turbu format\turbu_versioning.pas',
   turbu_battle_engine in '..\..\turbu format\turbu_battle_engine.pas',
   turbu_map_engine in '..\..\turbu format\turbu_map_engine.pas',
@@ -55,7 +52,6 @@ contains
   turbu_sdl_image in '..\..\turbu format\turbu_sdl_image.pas',
   turbu_engines in '..\..\turbu format\turbu_engines.pas',
   sg_utils in '..\..\..\classes\sdl custom\sg_utils.pas',
-  ps_pointer in 'ps_pointer.pas',
   archiveInterface in '..\..\archiveInterface.pas',
   SqlConst,
   SqlExpr,
@@ -94,7 +90,6 @@ contains
   StringListComp in '..\..\..\..\ListCompare\StringListComp.pas',
   sdlaudiomixer in '..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdlaudiomixer.pas',
   sdl_mixer in '..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdl_mixer.pas',
-  smpeg in '..\..\..\classes\jedi-sdl\smpeg\Pas\smpeg.pas',
   uDataSetHelper in '..\..\..\classes\uDataSetHelper.pas',
   DSharp.Core.Variants in '..\..\..\classes\DSharp\Core\DSharp.Core.Variants.pas',
   DSharp.Linq.QueryProvider in '..\..\..\classes\DSharp\Core\DSharp.Linq.QueryProvider.pas',

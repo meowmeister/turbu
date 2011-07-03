@@ -27,7 +27,7 @@ uses
 implementation
 uses
    classes, sysUtils, Windows, Generics.Collections,
-   findfile, strtok;
+   findfile;
 
 type
    TFileCollection = class(TEnumerable<string>)
@@ -306,9 +306,9 @@ var
 begin
    pos := theFile.Position;
    filename := FRoot + key;
-   if inString(key, PathDelim) <> -1 then
+   if system.pos(key, PathDelim) <> -1 then
    begin
-      foldername := strtok.stripLastToken(filename, PathDelim);
+      foldername := ExtractFilePath(filename);
       if not ForceDirectories(foldername) then
          raise EArchiveError.Create('Unable to create folder ' + foldername);
    end;

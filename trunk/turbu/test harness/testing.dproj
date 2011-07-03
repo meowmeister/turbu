@@ -136,7 +136,6 @@
 			<DCCReference Include="..\logs.pas"/>
 			<DCCReference Include="..\rm_sound.pas"/>
 			<DCCReference Include="..\skill_data.pas"/>
-			<DCCReference Include="..\strtok.pas"/>
 			<DCCReference Include="..\editor\attributes_editor.pas">
 				<Form>frmAttributesEditor</Form>
 			</DCCReference>
@@ -177,7 +176,6 @@
 			<DCCReference Include="test_map_tree.pas">
 				<Form>frmMapTree</Form>
 			</DCCReference>
-			<DCCReference Include="..\engines\basis\ps_pointer.pas"/>
 			<DCCReference Include="..\engines\map engine\design\turbu_2k_map_engine_D.pas"/>
 			<DCCReference Include="..\engines\map engine\design\eval.pas">
 				<Form>frmMapProperties</Form>

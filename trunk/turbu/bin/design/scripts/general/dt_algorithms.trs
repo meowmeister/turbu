@@ -7,7 +7,7 @@ const
 [DesignName('RM2K level algorithm')]
 function calcExp2k(currentLevel: integer; const stdIncrease, addIncrease, correction: integer; dummy: integer): integer;
 var
-   standard, additional: double;
+   standard, additional: real;
    i: integer;
 begin
    result := 0;

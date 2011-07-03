@@ -106,7 +106,7 @@ uses
    turbu_tbi_lib, turbu_sdl_image, EventBuilder,
    MapObject_Editor,
    sdl_canvas, sdl_13, SG_defs,
-   strtok, test_map_size;
+   test_map_size;
 
 {$R *.dfm}
 
@@ -310,8 +310,7 @@ begin
   folder := IncludeTrailingPathDelimiter(GetRegistryValue('\Software\TURBU', 'TURBU Test Project'));
   if folder <> '\' then
   begin
-    dummy := ExcludeTrailingPathDelimiter(folder);
-    dummy := strtok.getLastToken(dummy, PathDelim);
+    dummy := ExtractFileName(ExcludeTrailingPathDelimiter(folder));
     outFolder := getProjectFolder + dummy;
   end;
 end;

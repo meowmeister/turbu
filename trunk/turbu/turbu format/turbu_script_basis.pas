@@ -22,7 +22,6 @@ uses
    sysUtils, db, rtti,
    turbu_classes, turbu_containers, turbu_defs, turbu_serialization,
    turbu_decl_utils,
-   uPSCompiler,
    sg_defs;
 
 type
@@ -42,7 +41,6 @@ type
       FSignature: TScriptSignature;
    public
       constructor Create(name, designName: string; point: TSgPoint); reintroduce;
-      procedure SetSignature(compiler: TPSPascalCompiler);
 
       property scriptUnitName: string read FUnit write FUnit;
       property range: TSgPoint read FRange write FRange;
@@ -59,29 +57,24 @@ type
 
 implementation
 uses
-   strtok;
+   strUtils;
 
 { TScriptRange }
 
 constructor TScriptRange.Create(name, designName: string; point: TSgPoint);
 var
-   index: integer;
+   index, index2: integer;
 begin
    inherited Create;
-   index := 1;
-   FUnit := strtok.GetNextToken(name, '.', index);
-   Self.name := GetNextToken(name, ' ', index);
+   index := pos(name, '.');
+   assert(index > 0);
+   FUnit := Copy(name, 1, index - 1);
+
+   index2 := PosEx(name, ' ', index);
+   Self.name := copy(name, index + 1, index2 - 1);
    FRange := point;
    FDesignName := designName;
    FSignature := ssNone;
-end;
-
-procedure TScriptRange.SetSignature(compiler: TPSPascalCompiler);
-var
-   procIndex: cardinal;
-begin
-   procIndex := compiler.FindProc(ansiString(self.name));
-   asm int 3 end;
 end;
 
 { TScriptList }

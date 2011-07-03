@@ -181,8 +181,7 @@ const
 
 implementation
 uses
-   turbu_database, commons,
-   upsRuntime;
+   turbu_database, commons;
 
 { TRpgHero }
 

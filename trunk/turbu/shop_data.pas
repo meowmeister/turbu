@@ -37,9 +37,8 @@ type
 
 implementation
 uses
-   sysUtils,
-   commons, script_engine, turbu_database,
-   strtok;
+   sysUtils, Classes,
+   commons, script_engine, turbu_database;
 
 { TStoreInventory }
 
@@ -47,19 +46,26 @@ constructor TStoreInventory.Create(merchandise: string);
 var
    i, j: integer;
    dummy: string;
+   parser: TStringList;
 begin
    inherited Create;
    FString := merchandise;
    i := 1;
-   while i <= system.length(merchandise) do
-   begin
-      dummy := strtok.GetNextToken(merchandise, ' ', i);
-      j := strToInt(dummy);
-      if (dummy <> '') and (between(j, 0, GDatabase.items) = j) then
+   parser := TStringList.Create;
+   try
+      parser.Delimiter := ' ';
+      parser.DelimitedText := merchandise;
+      for dummy in parser do
       begin
-         setLength(FInventory, system.length(FInventory) + 1);
-         FInventory[high(FInventory)] := strToInt(dummy);
+         j := strToInt(dummy);
+         if (dummy <> '') and (between(j, 0, GDatabase.items) = j) then
+         begin
+            setLength(FInventory, system.length(FInventory) + 1);
+            FInventory[high(FInventory)] := strToInt(dummy);
+         end;
       end;
+   finally
+      parser.Free;
    end;
 end;
 

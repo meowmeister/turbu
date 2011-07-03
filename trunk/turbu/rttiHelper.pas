@@ -12,6 +12,7 @@ type
       function GetContext: TRttiContext;
    public
       function GetAttribute(const classType: TAttributeClass): TCustomAttribute;
+      function FilterAttributes<T: TCustomAttribute>: TArray<T>;
       property Context: TRttiContext read GetContext;
    end;
 
@@ -52,6 +53,24 @@ begin
    if (not (self is TRttiType)) or (TRttiType(self).baseType = nil) then
       result := nil
    else result := TRttiType(self).baseType.GetAttribute(classType);
+end;
+
+function TRttiObjectHelper.FilterAttributes<T>: TArray<T>;
+var
+   enumerator: TCustomAttribute;
+   origs: TArray<TCustomAttribute>;
+   counter: integer;
+begin
+   origs := self.GetAttributes;
+   setLength(result, length(origs));
+   counter := 0;
+   for enumerator in origs do
+      if enumerator is T then
+      begin
+         result[counter] := T(enumerator);
+         inc(counter);
+      end;
+   setLength(result, counter);
 end;
 
 function TRttiObjectHelper.GetContext: TRttiContext;
