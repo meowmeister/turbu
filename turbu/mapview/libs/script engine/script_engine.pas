@@ -193,7 +193,7 @@ implementation
 uses
      sysUtils, windows, //windows
      {LMT, chipset_graphics,} rpg_list, uPSI_script_interface,
-     {console, rs_system, rs_message, rs_menu, rs_map, locate_files, strtok,
+     {console, rs_system, rs_message, rs_menu, rs_map, locate_files,
      png_routines,//turbu}
      sdl,
      uPSUtils;

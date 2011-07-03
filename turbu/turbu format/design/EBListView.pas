@@ -76,7 +76,7 @@ implementation
 uses
    Windows, SysUtils, Controls, Generics.Collections, DBClient{$IFNDEF COMPONENT},
    EbEdit, EbSelector, turbu_vartypes, turbu_constants, turbu_script_interface,
-   turbu_database, uPSCompiler, array_editor{$ENDIF};
+   turbu_database, array_editor{$ENDIF};
 
 procedure Register;
 begin
@@ -266,12 +266,12 @@ end;
 
 procedure TEBTreeView.AddObjectContext(context: TDataset; const base: string; const name, vartype: string);
 {$IFNDEF COMPONENT}
-var
+{var
    objtype: TPSCompileTimeClass;
    prop: TPSDelphiClassItemProperty;
-   i: integer;
+   i: integer;}
 begin
-   objtype := (GScriptEngine.compiler.FindType(AnsiString(base)) as TPSClassType).CL;
+{   objtype := (GScriptEngine.compiler.FindType(AnsiString(base)) as TPSClassType).CL;
    if objtype = nil then
       raise ERPGScriptError.CreateFmt('Variable type %s not found in script engine.', [VarType]);
    for i := 0 to objtype.Count do
@@ -280,7 +280,7 @@ begin
          prop := TPSDelphiClassItemProperty(objtype.Items[i]);
          asm int 3 end; //figure out how to get type information once I encounter this
          prop.decl.ParamCount;
-      end;
+      end; }
 {$ELSE}
 begin
 {$ENDIF}

@@ -72,8 +72,6 @@ uses
    turbu_database, turbu_characters, turbu_constants, locate_files,
    discInterface,
    archiveInterface, logs,
-   strtok,
-   uPSCompiler,
    sdl;
 
 {$R *.dfm}
@@ -235,8 +233,7 @@ begin
    assert(dirProjectLocation.Text <> '');
    if DirectoryExists(dirProjectLocation.Text) then
       result := (FileExists(dirProjectLocation.Text + '\RPG_RT.lmt')) and (FileExists(dirProjectLocation.Text + '\RPG_RT.ldb'));
-   dummy := ExcludeTrailingPathDelimiter(dirProjectLocation.Text);
-   dummy := strtok.getLastToken(dummy, PathDelim);
+   dummy := ExtractFileName(ExcludeTrailingPathDelimiter(dirProjectLocation.Text));
    dirOutput.Text := getProjectFolder + dummy;
 end;
 

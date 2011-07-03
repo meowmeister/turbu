@@ -233,11 +233,8 @@ type
    private
       function getByteSet: TByteSet;
       procedure setByteSet(const Value: TByteSet);
-      function getPSMethod: TMethod;
-      procedure setPSMethod(const Value: TMethod);
    public
       property asSet: TByteSet read getByteSet write setByteSet;
-      property asPSMethod: TMethod read getPSMethod write setPSMethod;
    end;
 
    TSafeDataset = class helper for TDataset
@@ -269,7 +266,7 @@ windows,
    Generics.Defaults, TypInfo, Math, Clipbrd, SqlExpr, DBClient, RtlConsts,
    DSharp.Core.Expressions, DSharp.Linq.QueryProvider.SQL,
    commons, turbu_decl_utils, turbu_functional,
-   ps_pointer, rttiHelper;
+   rttiHelper;
 
 type
    TSetSaver = record
@@ -792,18 +789,6 @@ begin
    finally
       stream.Free;
    end;
-end;
-
-function TFieldExt.getPSMethod: TMethod;
-begin
-   result.Code := ps_pointer.mamhLoc;
-   result.Data := pointer(Self.AsInteger);
-end;
-
-procedure TFieldExt.setPSMethod(const Value: TMethod);
-begin
-   assert(value.Code = ps_pointer.mamhLoc);
-   self.asInteger := integer(Value.Data);
 end;
 
 { TSafeDataset }

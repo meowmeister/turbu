@@ -30,8 +30,7 @@ var
 implementation
 
 uses
-   commons,
-   strtok;
+   commons;
 
 {$R *.dfm}
 
@@ -69,8 +68,7 @@ begin
       Exit;
    if DirectoryExists(dirProjectLocation.Text) then
       result := (FileExists(dirProjectLocation.Text + '\RPG_RT.lmt')) and (FileExists(dirProjectLocation.Text + '\RPG_RT.ldb'));
-   dummy := ExcludeTrailingPathDelimiter(dirProjectLocation.Text);
-   dummy := strtok.getLastToken(dummy, PathDelim);
+   dummy := ExtractFileName(ExcludeTrailingPathDelimiter(dirProjectLocation.Text));
    dirOutput.Text := getProjectFolder + dummy;
 end;
 

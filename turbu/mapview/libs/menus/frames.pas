@@ -208,7 +208,7 @@ implementation
 
 uses
    windows, sysUtils, contnrs, math,
-   chipset_graphics, locate_files, script_engine, strtok,
+   chipset_graphics, locate_files, script_engine,
    text_graphics, turbu_defs;
 
 const
@@ -617,20 +617,21 @@ begin
    FParsedText.Clear;
    if inString(input, #3) = -1 then
    begin
-      strtok.Split(input, ' ', tempList);
+      tempList.Delimiter := ' ';
+      tempList.DelimitedText := input;
       i := 0;
-      case FPortrait.Visible of
-         true: maxWidth := 240;
-         false: maxWidth := 300
-         else maxWidth := 0;
-      end;
+      if FPortrait.Visible then
+         maxWidth := 240
+      else maxWidth := 300;
       repeat
          dummy := '';
-{         while (i < tempList.count) and
+         while (i < tempList.count) {and
                (TGameMap(Engine).fontEngine[whichFont].TextWidth(dummy) +
-                TGameMap(Engine).fontEngine[whichFont].TextWidth(tempList[i]) <= maxWidth) do}
+                TGameMap(Engine).fontEngine[whichFont].TextWidth(tempList[i]) <= maxWidth)} do
          begin
-            dummy := strtok.AddToken(tempList[i], dummy, ' ', MAXINT);
+            if dummy = '' then
+               dummy := templist[i]
+            else dummy := format('%s %s', [dummy, templist[i]]);
             inc(i);
          end;
          FParsedText.Add(dummy);
@@ -1070,7 +1071,8 @@ end;
 
 procedure TCustomMessageBox.parseText(input: string);
 begin
-   strtok.Split(input, #3, FParsedText);
+   FParsedText.Delimiter := #3;
+   FParsedText.DelimitedText := input;
 end;
 
 function TCustomMessageBox.columnWidth: word;
