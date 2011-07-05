@@ -50,7 +50,7 @@ var
 
 implementation
 uses
-   sysUtils, StrUtils, Generics.Collections,
+   sysUtils, StrUtils, Generics.Collections, Math,
    charset_data,
    turbu_characters, turbu_items, turbu_skills, turbu_animations, conversion_table,
    turbu_resists, turbu_map_metadata,
@@ -235,7 +235,7 @@ begin
 
       // LOAD ITEMS INTO CLASS/HERO RECORDS
       j := classes;
-      for i := j + 1 to self.charClasses do
+      for i := j + 1 to min(self.charClasses, counter - 1) do
          if (not isEmpty(base.hero[i - classes])) and (base.hero[i - classes].classNum = 0) then
          begin
             inc(j);
