@@ -315,6 +315,7 @@ end;
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
 begin
+   FDatabase := nil;
    cleanupEngines;
    FMapEngine := nil;
    FPaletteImages.Free;
@@ -652,12 +653,10 @@ begin
       boot.Free;
    end;
    FDbName := filename;
-OutputDebugString('SAMPLING ON');
    FMapEngine.initialize(imgLogo.sdlWindow, FDBName);
    FDatabase := FMapEngine.database;
    mnuDatabase.Enabled := true;
    trvMapTree.buildMapTree(FMapEngine.mapTree);
-OutputDebugString('SAMPLING OFF');
 end;
 
 procedure TfrmTurbuMain.pnlZoomResize(Sender: TObject);
