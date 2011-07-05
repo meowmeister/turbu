@@ -580,11 +580,6 @@ end;
 
 {$T-}
 procedure TSDLMusic.LoadFromFile( const aFileName : string );
-var
-  // Audio Specs
-  aspec : TSDL_AudioSpec;
-  format : Uint16;
-  freq, chan : integer;
 begin
   inherited;
   FIsMP3 := LowerCase( ExtractFileExt( aFileName ) ) = '.mp3';
