@@ -24,6 +24,7 @@ uses
 
 type
    TBattleResult = (br_victory, br_escaped, br_defeated);
+   TBattleResultSet = set of TBattleResult;
    TBattleView = (bv_firstPerson = 1, bv_side, bv_top);
    TBattleTiming = (bt_turns = 1, bt_atb, bt_counter);
    TBattleConditions = class;

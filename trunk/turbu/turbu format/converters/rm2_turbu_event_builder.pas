@@ -13,7 +13,7 @@ uses
    SysUtils, Generics.Defaults, Generics.Collections, TypInfo,
    turbu_defs, commons, move_data, turbu_pathing, rm2_turbu_map_objects, formats,
    EB_RpgScript, EB_Messages, EB_Expressions, EB_System, EB_Maps, EB_Characters,
-   EB_Settings, EB_Media, EB_Battle;
+   EB_Settings, EB_Media, EB_Battle, turbu_battle_engine;
 
 type
    TConvertRoutine = function (opcode: TEventCommand; parent: TEBObject): TEBObject;
@@ -331,56 +331,51 @@ begin
    result := nil;
 end;
 
-type
-   TBattleFormation = (bf_normal, bf_initiative, bf_surprised, bf_surrounded, bf_pincer, bf_firstStrike);
-procedure MakeBattleTPCall(call: TEBCall; opcode: TEventCommand);
-var
-   formation: integer;
-begin
-   if opcode.data[5] = 1 then
-      formation := 5
-   else formation := opcode.data[6];
-   call.Add(TEBEnumValue.Create(GetEnumName(TypeInfo(TBattleFormation), formation)));
-   call.Add(TEBBooleanValue.Create(boolean(opcode.data[7])));
-   call.Text := 'BattleEx';
-end;
-
 function ConvertBattle(opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
-   call: TEBCall;
    block: TEBEnumCaseBlock;
+   battleResults: TBattleResultSet;
 begin
-   call := TEBCall.Create('battle');
-   if boolean(opcode.data[0]) then
-      call.add(TEBIntsValue.Create(opcode.Data[1]))
-   else call.add(TEBLookupValue.Create(opcode.data[1], 'mparties'));
-   call.add(TEBStringValue.Create(string(opcode.Name)));
-   call.add(TEBBooleanValue.Create(boolean(opcode.data[3])));
    if high(opcode.data) > 5 then
-      MakeBattleTPCall(call, opcode)
-   else call.add(TEBBooleanValue.Create(boolean(opcode.data[5])));
-
-   if (opcode.Data[3] = 0) and (opcode.Data[4] = 0) then
-      result := TEBFunctionCall.Create(parent, call)
-   else if (boolean(opcode.Data[4]) = true) or (opcode.Data[3] = 2) then
+      result := TEBBattle.Create(parent)
+   else result := TEBBattleEx.Create(parent);
+   result.Values.Add(opcode.data[0]);
+   result.Values.Add(opcode.data[1]);
+   if opcode.data[2] = 1 then
+      result.Text := string(opcode.name);
+   if high(opcode.data) > 5 then
    begin
-      result := TEBCase.Create(parent, call);
-      if opcode.data[3] = 1 then
-      begin
-         block := TEBEnumCaseBlock.Create(result);
-         block.Text := 'br_escaped';
-         block.Add(TEBExit.Create(nil));
+      if opcode.data[5] = 1 then
+         result.Values.Add(5)
+      else result.Values.Add(opcode.data[6]);
+      result.Values.Add(opcode.data[2]);
+      case opcode.data[2] of
+         0: result.Values.Add(0);
+         1: result.Values.Add(opcode.data[7]);
+         2: result.Values.Add(opcode.data[8]);
       end;
    end
-   else if opcode.data[3] = 1 then
+   else result.Values.Add(opcode.data[5]);
+
+   battleResults := [];
+   (result as TEBMaybeCase).CaseBlock := (opcode.Data[3] <> 0) or (opcode.Data[4] <> 0);
+   if (opcode.Data[3] > 0) then
    begin
-      result := TEBIf.Create(parent, call, TEBEnumValue.Create('br_escaped'), co_equals);
-      result.add(TEBExit.Create(nil));
-   end
-   else begin
-      call.Free;
-      raise ERPGScriptError.Create('Unknown battle opcode configuration!');
+      include(battleResults, br_escaped);
+      block := TEBEnumCaseBlock.Create(result);
+      block.Text := 'br_escaped';
+      if opcode.data[3] = 1 then
+         block.Add(TEBExit.Create(nil));
    end;
+   if (boolean(opcode.Data[4]) = true) then
+   begin
+      include(battleResults, br_defeated);
+      block := TEBEnumCaseBlock.Create(result);
+      block.Text := 'br_defeated';
+      if opcode.data[3] = 1 then
+         block.Add(TEBExit.Create(nil));
+   end;
+   (result as TEBBattleBase).results := battleResults;
 end;
 
 function ConvertVictory(opcode: TEventCommand; parent: TEBObject): TEBObject;

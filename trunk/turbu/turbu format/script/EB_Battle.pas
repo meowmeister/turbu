@@ -20,11 +20,30 @@ unit EB_Battle;
 
 interface
 uses
-   EventBuilder;
+   EventBuilder, EB_RpgScript, turbu_battle_engine;
 
 type
    [UsesUnit('Battle')]
    TEBBattleObject = class(TEBObject);
+
+   TEBBattleBase = class(TEBMaybeCase)
+   private
+      FResults: TBattleResultSet;
+   published
+      property results: TBattleResultSet read FResults write FResults;
+   end;
+
+   TEBBattle = class(TEBBattleBase)
+   public
+      function GetNodeText: string; override;
+      function GetScriptBase: string; override;
+   end;
+
+   TEBBattleEx = class(TEBBattleBase)
+   public
+      function GetNodeText: string; override;
+      function GetScriptBase: string; override;
+   end;
 
    TEBMonsterHP = class(TEBBattleObject)
    public
@@ -82,8 +101,8 @@ type
 
 implementation
 uses
-   SysUtils, Classes,
-   EB_RpgScript;
+   SysUtils, Classes, TypInfo,
+   turbu_defs;
 
 { TEBMonsterHP }
 
@@ -268,7 +287,72 @@ begin
    result := format(LINE, [values[0], BOOL_STR[values[1]], values[2], BOOL_STR[values[3]]]);
 end;
 
+{ TEBBattle }
+
+function TEBBattle.GetNodeText: string;
+const
+   LINE = 'Enter Battle: %s';
+   ADDON = '%s, %s';
+var
+   first: string;
+begin
+   if boolean(values[0]) then
+      first := format('Ints[%d]', [Values[1]])
+   else first := self.GetLookup(values[1], 'mparties');
+   result := format(LINE, [first]);
+   if self.Text <> '' then
+      result := format(ADDON, [result, self.Text]);
+   if boolean(self.Values[3]) then
+      result := format(ADDON, [result, 'First Strike']);
+end;
+
+function TEBBattle.GetScriptBase: string;
+const LINE = 'battle(%s, %s, %s, %s)';
+var
+   first, resultsStr: string;
+begin
+   if boolean(Values[0]) then
+      first := format('ints[%d]', [Values[1]])
+   else first := IntToStr(values[1]);
+   resultsStr := SetToString(TypeInfo(TBattleResultSet), byte(self.results), true);
+   result := format(LINE, [first, self.Name, resultsStr, BOOL_STR[values[2]]]);
+end;
+
+{ TEBBattleEx }
+
+function TEBBattleEx.GetNodeText: string;
+const
+   LINE = 'Enter Battle: %s, %s';
+   ADDON = '%s, %s';
+var
+   party, formation: string;
+begin
+   if boolean(values[0]) then
+      party := format('Ints[%d]', [Values[1]])
+   else party := self.GetLookup(values[1], 'mparties');
+   formation := CleanEnum(GetEnumName(TypeInfo(TBattleFormation), values[5]));
+   result := format(LINE, [formation, party]);
+   if (self.Values[4] = 1) and (self.Text <> '') then
+      result := format(ADDON, [result, self.Text])
+   else if self.Values[4] = 2 then
+      result := format(ADDON, [result, self.GetLookup(Values[5], 'terrain')]);
+end;
+
+function TEBBattleEx.GetScriptBase: string;
+const LINE = 'battleEx(%s, %s, %s, %s, %d, %d)';
+var
+   first, formation, resultsStr: string;
+begin
+   if boolean(Values[0]) then
+      first := format('ints[%d]', [Values[1]])
+   else first := IntToStr(values[1]);
+   resultsStr := SetToString(TypeInfo(TBattleResultSet), byte(self.results), true);
+   formation := GetEnumName(TypeInfo(TBattleFormation), values[2]);
+   result := format(LINE, [first, self.Name, formation, resultsStr, values[3], values[4]]);
+end;
+
 initialization
    RegisterClasses([TEBMonsterHP, TEBMonsterMP, TEBMonsterStatus, TEBShowMonster,
-   TEBBattleBG, TEBEnableCombo, TEBForceFlee, TEBEndBattle, TEBBattleAnimation]);
+   TEBBattleBG, TEBEnableCombo, TEBForceFlee, TEBEndBattle, TEBBattleAnimation,
+   TEBBattle, TEBBattleEx]);
 end.
