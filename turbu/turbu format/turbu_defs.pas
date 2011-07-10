@@ -93,6 +93,8 @@ type
 
    TGameState = (gs_map, gs_message, gs_menu, gs_battle, gs_sleeping, gs_fading, gs_minigame);
 
+   TBattleFormation = (bf_normal, bf_initiative, bf_surprised, bf_surrounded, bf_pincer, bf_firstStrike);
+
 implementation
 
 { TLocation }

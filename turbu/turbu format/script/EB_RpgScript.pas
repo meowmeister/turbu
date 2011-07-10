@@ -85,6 +85,16 @@ type
       function GetElseBlock: TEbElseBlock;
    end;
 
+   TEBMaybeCase = class(TEBCase)
+   private
+      FCaseBlock: boolean;
+   public
+      function GetScript(indent: integer): string; override;
+      function GetScriptText: string; override; final;
+      function GetScriptBase: string; virtual; abstract;
+      property CaseBlock: boolean read FCaseBlock write FCaseBlock;
+   end;
+
    TEBCodeBlock = class(TEBBlock)
    public
       function GetScriptText: string; override;
@@ -905,6 +915,23 @@ function TEbAssignment.GetScriptText: string;
 const LINE = '%s := %s;';
 begin
    result := format(LINE, [ChildScript[0], ChildScript[1]]);
+end;
+
+{ TEBMaybeCase }
+
+function TEBMaybeCase.GetScript(indent: integer): string;
+begin
+   if FCaseBlock then
+      result := inherited GetScript(indent)
+   else result := GetScriptText;
+end;
+
+function TEBMaybeCase.GetScriptText: string;
+begin
+   result := GetScriptBase;
+   if FCaseBlock then
+      result := format('case %s of', [result])
+   else result := result + ';';
 end;
 
 initialization
