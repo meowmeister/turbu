@@ -866,7 +866,9 @@ begin
    if GProjectFormat = pf_2k3 then
    begin
       setLength(FCommands, GetNumSec($1A, input, fillInZeroInt));
-      getArraySec($1B, input, FCommands[0]);
+      if length(FCommands) > 0 then
+         getArraySec($1B, input, FCommands[0])
+      else skipSec($1B, input);
    end;
    FBgm[bgmTitle] := TRmMusic.Create($1F, input);
    FBgm[bgmBattle] := TRmMusic.Create($20, input);
