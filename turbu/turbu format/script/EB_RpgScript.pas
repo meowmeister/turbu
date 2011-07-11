@@ -38,14 +38,22 @@ type
    end;
 
    TEBProcedure = class(TEBRoutine)
+   private
+      FVarBlock: TStringList;
+      FLabelBlock: TStringList;
+      procedure ScanHeader;
    protected
       function ParamList: string;
       function varBlock: string;
       function constBlock: string;
+      function labelBlock: string;
       function HasVar: boolean;
       function HasConst: boolean;
+      function HasLabels: boolean;
       function AlwaysBlock: boolean; override;
    public
+      constructor Create(AOwner: TComponent); override;
+      destructor Destroy; override;
       function AddParam(const name, &type: string): TEBParam;
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
@@ -56,6 +64,7 @@ type
    public
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
+      function MustBlock: boolean; override;
    end;
 
    TEBUnit = class(TEBBlock)
@@ -128,6 +137,7 @@ type
    TEBIf = class(TEBObject)
    private
       FElseSet: boolean;
+      function StripTrailingSem(const value: string): string;
    public
       constructor Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp); reintroduce;
       procedure Add(aObject: TEBObject); override;
@@ -166,8 +176,10 @@ type
    protected
       procedure NeededVariables(list: TStringList); override;
    public
+      function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
       function GetNodeText: string; override;
+      function NeededVariableType: THeaderItems; override;
    end;
 
    TEBWhileLoop = class(TEBBlock)
@@ -192,6 +204,8 @@ type
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
+      procedure NeededVariables(list: TStringList); override;
+      function NeededVariableType: THeaderItems; override;
    end;
 
    TEBComment = class(TEBObject)
@@ -228,6 +242,7 @@ const
 
 implementation
 uses
+   StrUtils,
    StringListComp;
 
 { TEBUntranslated }
@@ -270,25 +285,66 @@ end;
 
 { TEBProcedure }
 
+constructor TEBProcedure.Create(AOwner: TComponent);
+begin
+   inherited Create(AOwner);
+   FVarBlock := TStringList.Create;
+   FLabelBlock := TStringList.Create;
+end;
+
+destructor TEBProcedure.Destroy;
+begin
+   FVarBlock.Free;
+   FLabelBlock.Free;
+   inherited Destroy;
+end;
+
 function TEBProcedure.GetScript(indent: integer): string;
+var
+   list: TStringList;
 begin
    assert(indent = 0);
-   result := GetScriptText + inherited GetScript(0);
+   list := TStringList.Create;
+   try
+      list.add(GetScriptText);
+      ScanHeader;
+      if HasLabels then
+      begin
+         list.Add('label');
+         list.Add(Self.labelBlock);
+      end;
+      if HasVar then
+      begin
+         list.Add('var');
+         list.Add(Self.varBlock);
+      end;
+      list.Add(inherited GetScript(0));
+      result := list.Text;
+   finally
+      list.Free;
+   end;
 end;
 
 function TEBProcedure.GetScriptText: string;
-const HEADER = 'procedure %s%s;' + CRLF;
+const HEADER = 'procedure %s%s;';
 begin
    result := format(HEADER, [self.name, self.paramList]);
 end;
 
 function TEBProcedure.GetVarBlock: TStringList;
+begin
+   result := FVarBlock;
+end;
+
+procedure TEBProcedure.ScanHeader;
 var
    header: TEBHeader;
    comp: TComponent;
    counter: integer;
    inbuilt: TArray<TEBVariable>;
    variable: TEBVariable;
+   reqs: TStringList;
+   i: integer;
 begin
    header := EnsureHeader;
    SetLength(inbuilt, header.ComponentCount);
@@ -299,11 +355,25 @@ begin
          inbuilt[counter] := TEBVariable(comp);
          inc(counter);
       end;
-   result := RequiredVariables;
-   for variable in inbuilt do
-      if result.IndexOfName(variable.Text) <> -1 then
-         //remove inbuilt
-      else result.Values[variable.text] := variable.VarType;
+   FVarBlock.Clear;
+   FLabelBlock.Clear;
+   reqs := RequiredVariables;
+   try
+      for variable in inbuilt do
+         if reqs.IndexOfName(variable.Text) <> -1 then
+            reqs.Delete(reqs.IndexOfName(variable.Text))
+         else reqs.Values[variable.text] := variable.VarType;
+      for i := 0 to reqs.Count - 1 do
+      begin
+         case (reqs.Objects[i] as TEBObject).NeededVariableType of
+            hi_none, hi_const: assert(false);
+            hi_var: FVarBlock.Add('  ' + stringReplace(reqs[i], '=', ': ', []) + ';');
+            hi_label: FLabelBlock.Add(reqs[i]);
+         end;
+      end;
+   finally
+      reqs.Free;
+   end;
 end;
 
 function TEBProcedure.ParamList: string;
@@ -318,7 +388,12 @@ end;
 
 function TEBProcedure.HasVar: boolean;
 begin
-   result := false;
+   result := FVarBlock.Count > 0;
+end;
+
+function TEBProcedure.labelBlock: string;
+begin
+   result := '  ' + FLabelBlock.CommaText + ';';
 end;
 
 function TEBProcedure.HasConst: boolean;
@@ -326,9 +401,16 @@ begin
    result := false;
 end;
 
+function TEBProcedure.HasLabels: boolean;
+begin
+   result := FLabelBlock.Count > 0;
+end;
+
 function TEBProcedure.varBlock: string;
 begin
-   result := '';
+   result := FVarBlock.Text;
+   if AnsiEndsText(#13#10, result) then
+      result := copy(result, 1, length(result) - 2);
 end;
 
 function TEBProcedure.AddParam(const name, &type: string): TEBParam;
@@ -556,6 +638,7 @@ begin
          list.add((Components[1] as TEBCodeBlock).GetScript(indent));
          if ComponentCount = 3 then
          begin
+            list[list.Count - 1] := StripTrailingSem(list[list.Count - 1]);
             list.add(IndentString(indent) + 'else');
             list.add((Components[2] as TEBCodeBlock).GetScript(indent));
          end;
@@ -580,6 +663,12 @@ begin
    assert(not FElseSet);
    FElseSet := true;
    TEBCodeBlock.Create(self);
+end;
+
+function TEBIf.StripTrailingSem(const value: string): string;
+begin
+   assert(value[length(value)] = ';');
+   result := Copy(value, 1, length(value) - 1);
 end;
 
 { TEBFunctionCall }
@@ -630,6 +719,11 @@ function TEBForLoop.GetNodeText: string;
 const LINE = 'For each %s from %d to %d:';
 begin
    result := format(LINE, [Text, Values[0], Values[1]]);
+end;
+
+function TEBForLoop.GetScript(indent: integer): string;
+begin
+   result := IndentString(indent) + GetScriptText + CRLF + inherited GetScript(indent);
 end;
 
 function TEBForLoop.GetScriptText: string;
@@ -686,6 +780,11 @@ begin
    finally
       sublist.free;
    end;
+end;
+
+function TEBForLoop.NeededVariableType: THeaderItems;
+begin
+   result := hi_var;
 end;
 
 { TEBObjectHelper }
@@ -806,6 +905,20 @@ begin
    result := format('Goto L%d;', [Values[0]]);
 end;
 
+function TEBGoto.NeededVariableType: THeaderItems;
+begin
+   result := hi_label;
+end;
+
+procedure TEBGoto.NeededVariables(list: TStringList);
+var
+   labeltext: string;
+begin
+   labeltext := 'L' + intToStr(values[0]);
+   if list.IndexOf(labeltext) = -1 then
+      list.AddObject(labeltext, self);
+end;
+
 { TEBWhileLoop }
 
 function TEBWhileLoop.GetNodeText: string;
@@ -845,7 +958,7 @@ function TEBComment.GetScript(indent: integer): string;
 begin
    if ComponentCount = 0 then
       result := '// ' + Text
-   else result := '{' + MultilineText(indent, 3) + ')';
+   else result := '{' + MultilineText(indent, 3) + '}';
    result := IndentString(indent) + result;
 end;
 
@@ -855,22 +968,26 @@ var
    child: TEBObject;
 begin
    result := self.Text;
+   wrap := #13#10 + IndentString(indent) + StringOfChar(' ', overhang);
    for child in self do
-      result := result + #13#10 + child.Text;
-   wrap := '+ CRLF +' + #13#10 + IndentString(indent) + StringOfChar(' ', overhang);
-   result := StringReplace(self.Text, #13#10, wrap, [rfReplaceAll]);
+      result := result + wrap + child.Text;
 end;
 
 { TEBProgram }
 
 function TEBProgram.GetScript(indent: integer): string;
 begin
-   result := GetScriptText + CRLF + inherited GetScript(0) + CRLF + 'end.'
+   result := GetScriptText + CRLF + inherited GetScript(-1) + CRLF + 'begin' + CRLF + 'end.'
 end;
 
 function TEBProgram.GetScriptText: string;
 begin
    result := format('program %s;', [self.name]);
+end;
+
+function TEBProgram.MustBlock: boolean;
+begin
+   result := false;
 end;
 
 { TEBUnit }

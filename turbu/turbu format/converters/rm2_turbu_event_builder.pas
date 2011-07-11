@@ -337,8 +337,8 @@ var
    battleResults: TBattleResultSet;
 begin
    if high(opcode.data) > 5 then
-      result := TEBBattle.Create(parent)
-   else result := TEBBattleEx.Create(parent);
+      result := TEBBattleEx.Create(parent)
+   else result := TEBBattle.Create(parent);
    result.Values.Add(opcode.data[0]);
    result.Values.Add(opcode.data[1]);
    if opcode.data[2] = 1 then
@@ -362,19 +362,15 @@ begin
    if (opcode.Data[3] > 0) then
    begin
       include(battleResults, br_escaped);
-      block := TEBEnumCaseBlock.Create(result);
-      block.Text := 'br_escaped';
       if opcode.data[3] = 1 then
+      begin
+         block := TEBEnumCaseBlock.Create(result);
+         block.Text := 'br_escaped';
          block.Add(TEBExit.Create(nil));
+      end;
    end;
    if (boolean(opcode.Data[4]) = true) then
-   begin
       include(battleResults, br_defeated);
-      block := TEBEnumCaseBlock.Create(result);
-      block.Text := 'br_defeated';
-      if opcode.data[3] = 1 then
-         block.Add(TEBExit.Create(nil));
-   end;
    (result as TEBBattleBase).results := battleResults;
 end;
 
@@ -471,7 +467,7 @@ begin
       else raise ERPGScriptError.CreateFmt('Unknown variable data 4 value: %d!', [opcode.Data[4]]);
    end;
    if opcode.data[3] > 0 then
-      rValue := TEBBinaryOp.Create(CreateSubscript(opcode.data[0], opcode.data[1]),
+      rValue := TEBBinaryOp.Create(TEBIntsValue.Create(CreateSubscript(opcode.data[0], opcode.data[1])),
                                    rValue, OPS[opcode.data[3]]);
    result := TEBGlobalInt.Create(parent, lValue, rValue);
    if opcode.data[0] = 1 then

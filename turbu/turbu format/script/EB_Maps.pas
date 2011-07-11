@@ -730,7 +730,7 @@ end;
 
 function TEBImageErase.GetScriptText: string;
 begin
-   result := format('image[%d].Erase', [Values[0]]);
+   result := format('image[%d].Erase;', [Values[0]]);
 end;
 
 { TEBShowAnim }
@@ -857,9 +857,17 @@ end;
 
 function TEBChangeBG.GetScriptText: string;
 const LINE = 'SetBGImage(%s, %d, %d, %s, %s);';
+var
+   x, y: integer;
 begin
-   result := format(LINE, [QuotedStr(Text), Values[0], Values[1],
-                           BOOL_STR[Values[2]], BOOL_STR[Values[3]]]);
+   if values[0] = 1 then
+      x := values[3]
+   else x := 0;
+   if values[1] = 1 then
+      y := values[5]
+   else y := 0;
+   result := format(LINE, [QuotedStr(Text), x, y,
+                           BOOL_STR[Values[2]], BOOL_STR[Values[4]]]);
 end;
 
 { TEBEncounterRate }
