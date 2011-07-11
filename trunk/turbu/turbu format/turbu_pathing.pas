@@ -236,12 +236,11 @@ begin
    if parser.CurrTokenID = CSTI_OpenRound then
    begin
       parser.Next;
-      if result.opcode in CODES_WITH_PARAMS then
-         case result.opcode of
-            $20, $21: parseOneInt(parser, result);
-            $22: parseNameAndInt(parser, result);
-            $23: parseFull(parser, result);
-         end;
+      case result.opcode of
+         $22: parseNameAndInt(parser, result);
+         $23: parseFull(parser, result);
+         else parseOneInt(parser, result);
+      end;
       parseAssert(parser, CSTI_CloseRound);
    end;
    parseAssert(parser, CSTI_SemiColon);
