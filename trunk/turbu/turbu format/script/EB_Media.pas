@@ -124,7 +124,7 @@ begin
 end;
 
 function TEBPlaySFX.GetScriptText: string;
-const LINE = 'PlaySound(%s, %d, %d, %d)';
+const LINE = 'PlaySound(%s, %d, %d, %d);';
 begin
    result := format(LINE, [QuotedStr(Text), Values[0], Values[1], Values[2]]);
 end;

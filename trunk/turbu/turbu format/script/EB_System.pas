@@ -44,6 +44,7 @@ type
       procedure NeededVariables(list: TStringList); override;
    public
       constructor Create(parent: TEBObject; switch: TEBExpression; op: integer); reintroduce;
+      function NeededVariableType: THeaderItems; override;
    end;
 
    TEBLocalSwitch = class(TEBSwitch)
@@ -165,6 +166,11 @@ begin
    inherited NeededVariables(list);
 end;
 
+function TEBGlobalSwitch.NeededVariableType: THeaderItems;
+begin
+   result := hi_var;
+end;
+
 { TEBLocalSwitch }
 
 function TEBLocalSwitch.GetSwitchName: string;
@@ -283,7 +289,7 @@ end;
 
 function TEBDeleteObj.GetScriptText: string;
 begin
-   result := format('DeleteObject(%s)', [BOOL_STR[Values[0]]]);
+   result := format('DeleteObject(%s);', [BOOL_STR[Values[0]]]);
 end;
 
 { TEBCallEvent }

@@ -50,6 +50,7 @@ type
    end;
 
    TEBVariable = class;
+   THeaderItems = (hi_none, hi_var, hi_const, hi_label);
 
    TEBObject = class(TComponent)
    private
@@ -100,6 +101,7 @@ type
       function RequiredVariables: TStringList;
       function Clone: TEBObject;
       procedure Clear;
+      function NeededVariableType: THeaderItems; virtual;
 
       property Values: TList<integer> read FValues write FValues;
       property InUnit: string read GetUnit;
@@ -111,11 +113,10 @@ type
    TEBClass = class of TEBObject;
 
    TEBBlock = class(TEBObject)
-   private
-      function MustBlock: boolean;
    protected
       function AlwaysBlock: boolean; virtual;
       function AlwaysEndBlock: boolean; virtual;
+      function MustBlock: boolean; virtual;
    public
       function GetScript(indent: integer): string; override;
       function GetNode: TEBNode; override;
@@ -274,6 +275,11 @@ begin
          child.NeededVariables(list);
 end;
 
+function TEBObject.NeededVariableType: THeaderItems;
+begin
+   result := hi_none;
+end;
+
 procedure TEBObject.ValidateContainer(AComponent: TComponent);
 begin
   //this method intentionally left blank
@@ -424,6 +430,8 @@ end;
 function TEBObject.RequiredVariables: TStringList;
 begin
    result := TStringList.Create;
+   result.Sorted := true;
+   result.Duplicates := dupError;
    NeededVariables(result);
 end;
 

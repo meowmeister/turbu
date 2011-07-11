@@ -27,7 +27,7 @@ type
    TEBBattleObject = class(TEBObject);
 
    TEBBattleBase = class(TEBMaybeCase)
-   private
+   protected
       FResults: TBattleResultSet;
    published
       property results: TBattleResultSet read FResults write FResults;
@@ -314,7 +314,7 @@ begin
    if boolean(Values[0]) then
       first := format('ints[%d]', [Values[1]])
    else first := IntToStr(values[1]);
-   resultsStr := SetToString(TypeInfo(TBattleResultSet), byte(self.results), true);
+   resultsStr := SetToString(PTypeInfo(TypeInfo(TBattleResultSet)), byte(self.results), true);
    result := format(LINE, [first, self.Name, resultsStr, BOOL_STR[values[2]]]);
 end;
 
@@ -330,12 +330,12 @@ begin
    if boolean(values[0]) then
       party := format('Ints[%d]', [Values[1]])
    else party := self.GetLookup(values[1], 'mparties');
-   formation := CleanEnum(GetEnumName(TypeInfo(TBattleFormation), values[5]));
+   formation := CleanEnum(GetEnumName(TypeInfo(TBattleFormation), values[2]));
    result := format(LINE, [formation, party]);
-   if (self.Values[4] = 1) and (self.Text <> '') then
+   if (self.Values[3] = 1) and (self.Text <> '') then
       result := format(ADDON, [result, self.Text])
-   else if self.Values[4] = 2 then
-      result := format(ADDON, [result, self.GetLookup(Values[5], 'terrain')]);
+   else if self.Values[3] = 2 then
+      result := format(ADDON, [result, self.GetLookup(Values[4], 'terrain')]);
 end;
 
 function TEBBattleEx.GetScriptBase: string;
@@ -346,7 +346,7 @@ begin
    if boolean(Values[0]) then
       first := format('ints[%d]', [Values[1]])
    else first := IntToStr(values[1]);
-   resultsStr := SetToString(TypeInfo(TBattleResultSet), byte(self.results), true);
+   resultsStr := SetToString(PTypeInfo(TypeInfo(TBattleResultSet)), byte(self.results), true);
    formation := GetEnumName(TypeInfo(TBattleFormation), values[2]);
    result := format(LINE, [first, self.Name, formation, resultsStr, values[3], values[4]]);
 end;

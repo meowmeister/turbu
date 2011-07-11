@@ -31,6 +31,7 @@ type
       constructor Create(name: string; subscript: integer); reintroduce; overload;
       constructor Create(name: string; subscript: TEBExpression); reintroduce; overload;
       function GetNodeText: string; override;
+      function GetScriptText: string; override;
    published
       property Global: boolean read FIsGlobal write FIsGlobal stored FIsGlobal;
    end;
@@ -45,6 +46,7 @@ type
       constructor Create(subscript: integer); overload;
       constructor Create(subscript: TEBExpression); overload;
       function GetNodeText: string; override;
+      function GetScriptText: string; override;
    end;
 
    TEBIntsValue = class(TEBVariableValue)
@@ -162,8 +164,12 @@ type
    TEBBinaryOp = class(TEBExpression)
    private
       FOp: TBinaryOp;
+      const
+         OPS: array[TBinaryOp] of string = ('+', '-', '*', 'div', 'mod', '=');
+         LINE = '%s %s %s';
    public
       constructor Create(left, right: TEBExpression; op: TBinaryOp); reintroduce;
+      function GetScriptText: string; override;
       function GetNodeText: string; override;
    published
       property op: TBinaryOp read FOp write FOp;
@@ -228,7 +234,16 @@ end;
 function TEBVariableValue.GetNodeText: string;
 begin
    if ComponentCount > 0 then
-      result := StringReplace(self.Text, '[]', format('[%s]', [(components[0] as TEBExpression).GetNodeText]), [])
+      result := StringReplace(self.Text, '[]', format('[%s]', [ChildNode[0]]), [])
+   else if values.Count > 0 then
+      result := StringReplace(self.Text, '[]', format('[%d]', [Values[0]]), [])
+   else result := self.Text;
+end;
+
+function TEBVariableValue.GetScriptText: string;
+begin
+   if ComponentCount > 0 then
+      result := StringReplace(self.Text, '[]', format('[%s]', [ChildScript[0]]), [])
    else if values.Count > 0 then
       result := StringReplace(self.Text, '[]', format('[%d]', [Values[0]]), [])
    else result := self.Text;
@@ -294,8 +309,15 @@ end;
 function TEBSwitchesValue.GetNodeText: string;
 begin
    if values.count > 0 then
-      result := format('Switches[%s]', [SwitchName(values[0])])
+      result := format('Switch[%s]', [SwitchName(values[0])])
    else result := inherited GetNodeText;
+end;
+
+function TEBSwitchesValue.GetScriptText: string;
+begin
+   if values.count > 0 then
+      result := format('Switch[%d]', [values[0]])
+   else result := inherited GetScriptText;
 end;
 
 { TEBIntsValue }
@@ -578,11 +600,13 @@ begin
 end;
 
 function TEBBinaryOp.GetNodeText: string;
-const
-   OPS: array[TBinaryOp] of string = ('+', '-', '*', 'div', 'mod', '=');
-   LINE = '%s %s %s';
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetNodeText, OPS[FOp], (Components[1] as TEBExpression).GetNodeText]);
+   result := format(LINE, [ChildNode[0], OPS[FOp], ChildNode[1]]);
+end;
+
+function TEBBinaryOp.GetScriptText: string;
+begin
+   result := format(LINE, [ChildScript[0], OPS[FOp], ChildScript[1]]);
 end;
 
 { TEBIntArray }
