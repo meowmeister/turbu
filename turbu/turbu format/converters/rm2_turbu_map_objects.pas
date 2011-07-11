@@ -32,7 +32,7 @@ type
    T2k2Path = class helper for TPath
    private
       class function CalculateParamList(const rec: TMoveRecord): string;
-      class function CalculateMoveCommand(const rec: TMoveRecord): string;
+      class function CalculateMoveCommand(const base: TMoveOrder; var index: integer): string;
    public
       class function CalculateMoveBaseString(base: TMoveOrder): string;
       constructor Convert(base: TEventMoveBlock);
@@ -79,19 +79,35 @@ var
    i: Integer;
 begin
    result := '';
-   for i := 0 to base.last do
-      result := result + CalculateMoveCommand(base.command[i]) + SEM;
+   i := 0;
+   while i < base.last do
+      result := result + CalculateMoveCommand(base, i) + SEM;
    if result <> '' then
       delete(result, length(result), 1);
 end;
 
-class function T2k2Path.CalculateMoveCommand(const rec: TMoveRecord): string;
-const
-   PARAM_CODE = '%s(%s)';
+class function T2k2Path.CalculateMoveCommand(const base: TMoveOrder; var index: integer): string;
+var
+   next: string;
+   rec: TMoveRecord;
+   op: byte;
+   iterations: integer;
 begin
-   result := MOVE_CODES[rec.opcode];
+   rec := base.command[index];
+   op := rec.opcode;
+   next := MOVE_CODES[op];
+   inc(index);
+   iterations := 1;
    if rec.opcode in CODES_WITH_PARAMS then
-      result := format(PARAM_CODE, [result, CalculateParamList(rec)]);
+      Exit(format('%s(%s)', [next, CalculateParamList(rec)]))
+   else while (index < base.last) and (base.command[index].opcode = op) do
+   begin
+      inc(iterations);
+      inc(index);
+   end;
+   if iterations > 1 then
+      result := format('%s(%d)', [next, iterations])
+   else result := next;
 end;
 
 class function T2k2Path.CalculateParamList(const rec: TMoveRecord): string;
