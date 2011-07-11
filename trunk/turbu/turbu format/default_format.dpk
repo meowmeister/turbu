@@ -63,7 +63,8 @@ contains
   EB_Media in 'script\EB_Media.pas',
   FirebirdDataset in '..\..\components\TURBU\FirebirdDataset.pas',
   turbu_monsters in 'database\turbu_monsters.pas',
-  EB_Battle in 'script\EB_Battle.pas';
+  EB_Battle in 'script\EB_Battle.pas',
+  uPSUtils in '..\..\components\PascalScript\uPSUtils.pas';
 
 end.
 
