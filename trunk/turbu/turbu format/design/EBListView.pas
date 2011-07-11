@@ -315,12 +315,8 @@ begin
    for param in proc.paramList do
       AddToContext(ctx, param.text, param.vartype);
    locals := proc.GetVarBlock;
-   try
-      for i := 0 to locals.count - 1 do
-         AddToContext(ctx, locals.Names[i], locals.ValueFromIndex[i]);
-   finally
-      locals.free;
-   end;
+   for i := 0 to locals.count - 1 do
+      AddToContext(ctx, locals.Names[i], locals.ValueFromIndex[i]);
 end;
 
 procedure TEBTreeView.WMChar(var Message: TWMChar);
