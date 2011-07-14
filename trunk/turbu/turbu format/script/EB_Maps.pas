@@ -779,6 +779,9 @@ var
    list: TStringList;
    i: integer;
 begin
+   if self.text = '' then
+      Exit('');
+
    list := TStringList.Create;
    try
       list.StrictDelimiter := true;
