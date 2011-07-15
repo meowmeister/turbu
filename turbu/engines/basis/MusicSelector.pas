@@ -50,7 +50,6 @@ type
       FCurrentSound: TSDLAudio;
       FFadeInTime: integer;
       FManager: TSDLAudioManager;
-      procedure Clear;
    public
 //      function Choose: boolean;
    end;
@@ -90,7 +89,6 @@ procedure TfrmMusicSelector.FormShow(Sender: TObject);
 var
    filename: string;
 begin
-   Clear;
    for filename in GArchives[MUSIC_ARCHIVE].allFiles do
       lstFilename.AddItem(filename, nil);
 end;
@@ -115,14 +113,6 @@ end;
 procedure TfrmMusicSelector.btnStopClick(Sender: TObject);
 begin
    FreeAndNil(FCurrentSound);
-end;
-
-procedure TfrmMusicSelector.Clear;
-var
-   i: Integer;
-begin
-   for i := 0 to lstFilename.Items.Count - 1 do
-      lstFilename.Items.Objects[i].Free;
 end;
 
 procedure TfrmMusicSelector.btnCloseClick(Sender: TObject);
