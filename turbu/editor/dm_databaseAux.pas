@@ -30,6 +30,14 @@ type
     srcOffhands: TDataSource;
     charClasses_Resists: TClientDataSet;
     charClasses_Conditions: TClientDataSet;
+    MPartyNames: TSimpleDataSet;
+    IntegerField5: TIntegerField;
+    WideStringField1: TWideStringField;
+    srcMPartyNames: TDataSource;
+    terrainNames: TSimpleDataSet;
+    IntegerField6: TIntegerField;
+    WideStringField2: TWideStringField;
+    srcTerrainNames: TDataSource;
 
     procedure itemNamesAfterOpen(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
@@ -39,6 +47,8 @@ type
     procedure EnsureVars;
     procedure EnsureSwitches;
     procedure EnsureVocab;
+    procedure EnsureMParties;
+    procedure EnsureTerrain;
   end;
 
 var
@@ -64,9 +74,19 @@ begin
    itemNames.active := true;
 end;
 
+procedure TdmDatabaseAux.EnsureMParties;
+begin
+   mpartyNames.Active := true;
+end;
+
 procedure TdmDatabaseAux.EnsureSwitches;
 begin
    dmDatabase.Switches.Active := true;
+end;
+
+procedure TdmDatabaseAux.EnsureTerrain;
+begin
+   terrainNames.Active := true;
 end;
 
 procedure TdmDatabaseAux.EnsureVars;

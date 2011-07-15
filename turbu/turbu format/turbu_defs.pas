@@ -32,6 +32,7 @@ type
    TStringSetProc = procedure (header: string) of object;
 
    TIntArray = array of integer;
+   TBoolArray = array of boolean;
    T4IntArray = array[1..4] of integer;
    T4StrArray = array[1..4] of string;
    TPByteArray = packed array of byte;
@@ -94,6 +95,8 @@ type
    TGameState = (gs_map, gs_message, gs_menu, gs_battle, gs_sleeping, gs_fading, gs_minigame);
 
    TBattleFormation = (bf_normal, bf_initiative, bf_surprised, bf_surrounded, bf_pincer, bf_firstStrike);
+
+   TConcealmentFactor = (cf_none, cf_low, cf_med, cf_high);
 
 implementation
 

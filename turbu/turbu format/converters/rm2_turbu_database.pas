@@ -58,7 +58,7 @@ uses
    rm2_turbu_resists, rm2_turbu_map_metadata, rm2_turbu_tilesets, turbu_sprites,
    turbu_versioning, turbu_plugin_interface, turbu_constants, turbu_sdl_image,
    turbu_tbi_lib, turbu_tilesets, rm2_turbu_map_objects, turbu_map_objects,
-   locate_files, turbu_maps, turbu_monsters,
+   locate_files, turbu_maps, turbu_monsters, turbu_terrain, rm2_turbu_terrain,
    archiveInterface, commons, turbu_battle_engine, turbu_engines, logs,
    turbu_map_engine, EB_RpgScript,
    SDL, SDL_13, sdl_image, sg_defs;
@@ -297,6 +297,10 @@ begin
       self.layout.physHeight := PHYSICAL_SIZE.Y;
 
       ConvertVehicles(base.SystemData);
+
+      ConversionReport.NewStep('Converting terrain');
+      for i := 1 to base.terrains do
+         self.terrains.add(TRpgTerrain.Convert(base.terrain[i], i));
 
       ConversionReport.newStep('Converting map tree');
       self.mapTree := TMapTree.convert(tree, true);

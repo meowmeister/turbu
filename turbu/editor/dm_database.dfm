@@ -1941,7 +1941,7 @@ object dmDatabase: TdmDatabase
     StoreDefs = True
     OnCalcFields = SwitchesVarsCalcFields
     Left = 752
-    Top = 128
+    Top = 120
     object IntegerField20: TIntegerField
       FieldName = 'id'
       Required = True
@@ -1971,7 +1971,7 @@ object dmDatabase: TdmDatabase
     StoreDefs = True
     OnCalcFields = SwitchesVarsCalcFields
     Left = 752
-    Top = 192
+    Top = 184
     object IntegerField21: TIntegerField
       FieldName = 'id'
       Required = True
@@ -2396,7 +2396,7 @@ object dmDatabase: TdmDatabase
     StoreDefs = True
     OnCalcFields = SwitchesVarsCalcFields
     Left = 752
-    Top = 248
+    Top = 232
     object IntegerField5: TIntegerField
       FieldName = 'id'
       Required = True
@@ -2426,7 +2426,7 @@ object dmDatabase: TdmDatabase
     StoreDefs = True
     OnCalcFields = SwitchesVarsCalcFields
     Left = 752
-    Top = 304
+    Top = 288
     object IntegerField8: TIntegerField
       FieldName = 'id'
       Required = True
@@ -4729,6 +4729,75 @@ object dmDatabase: TdmDatabase
     end
     object IntegerField56: TIntegerField
       FieldName = 'unk05'
+      Required = True
+    end
+  end
+  object terrain: TSimpleDataSet
+    Aggregates = <>
+    Connection = Connection
+    DataSet.CommandText = 'TERRAIN'
+    DataSet.CommandType = ctTable
+    DataSet.MaxBlobSize = -1
+    DataSet.Params = <>
+    FieldDefs = <>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 431
+    Top = 198
+    object IntegerField4: TIntegerField
+      FieldName = 'id'
+      Required = True
+    end
+    object WideStringField20: TWideStringField
+      FieldName = 'name'
+      Required = True
+    end
+    object terrainDamage: TIntegerField
+      FieldName = 'Damage'
+      Required = True
+    end
+    object terrainEncounterMultiplier: TIntegerField
+      FieldName = 'EncounterMultiplier'
+      Required = True
+    end
+    object terrainBattleBg: TWideStringField
+      FieldName = 'BattleBg'
+      Required = True
+    end
+    object terrainAirshipLanding: TBooleanField
+      FieldName = 'AirshipLanding'
+      Required = True
+    end
+    object terrainFrame: TWideStringField
+      FieldName = 'Frame'
+      Required = True
+    end
+    object terrainsoundEffect_id: TIntegerField
+      FieldName = 'soundEffect_id'
+    end
+    object terrainsoundEffect_name: TWideStringField
+      FieldName = 'soundEffect_name'
+      Size = 255
+    end
+    object terrainsoundEffect_fadeIn: TIntegerField
+      FieldName = 'soundEffect_fadeIn'
+    end
+    object terrainsoundEffect_tempo: TIntegerField
+      FieldName = 'soundEffect_tempo'
+    end
+    object terrainsoundEffect_volume: TIntegerField
+      FieldName = 'soundEffect_volume'
+    end
+    object terrainsoundEffect_Balance: TIntegerField
+      FieldName = 'soundEffect_Balance'
+    end
+    object terrainConcealment: TByteField
+      FieldName = 'Concealment'
+      Required = True
+    end
+    object terrainVehiclePass: TBlobField
+      FieldName = 'VehiclePass'
       Required = True
     end
   end
