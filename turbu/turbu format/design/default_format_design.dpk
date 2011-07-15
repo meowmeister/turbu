@@ -72,6 +72,7 @@ contains
   EditHeroSprite in 'EB Editors\Characters\EditHeroSprite.pas' {frmEBEditHeroSprite},
   EditPortrait in 'EB Editors\Characters\EditPortrait.pas' {frmEBEditPortrait},
   sound_edit in '..\..\..\components\TURBU\sound_edit.pas',
-  dm_databaseAux in '..\..\editor\dm_databaseAux.pas';
+  dm_databaseAux in '..\..\editor\dm_databaseAux.pas',
+  EditBattleEx in 'EB Editors\Battle\EditBattleEx.pas' {frmBattleEx};
 
 end.
