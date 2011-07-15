@@ -140,6 +140,7 @@ begin
    setLength(FMaps, 0);
    FDatabase.Free;
    GDatabase := nil;
+   FreeAndNil(dmDatabase);
    inherited Cleanup;
 end;
 
@@ -196,7 +197,7 @@ begin
 
    inherited initialize(window, database);
    assert(dmDatabase = nil);
-   dmDatabase := TdmDatabase.Create(Application);
+   dmDatabase := TdmDatabase.Create(nil);
    dmDatabase.Connect(database, nil);
    FDatabase := TRpgDatabase.Load(dmDatabase);
    GDatabase := FDatabase;

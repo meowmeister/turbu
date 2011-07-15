@@ -116,7 +116,7 @@ end;
 
 constructor TfrmDatabase.Create(AOwner: TComponent);
 begin
-   dmDatabaseAux := TdmDatabaseAux.Create(self);
+   dmDatabaseAux := TdmDatabaseAux.Create(nil);
    dmDatabaseAux.EnsureVars;
    dmDatabaseAux.EnsureSwitches;
    dmDatabaseAux.EnsureVocab;
