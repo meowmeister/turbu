@@ -38,7 +38,8 @@ contains
   EBListView in '..\..\turbu\turbu format\design\EBListView.pas',
   EventBuilder in '..\..\turbu\turbu format\EventBuilder.pas',
   variable_selector in 'variable_selector.pas',
-  IDLookupCombo in 'IDLookupCombo.pas';
+  IDLookupCombo in 'IDLookupCombo.pas',
+  pic_edit in 'pic_edit.pas';
 
 end.
 
