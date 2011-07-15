@@ -23,7 +23,7 @@ uses
    dm_database, turbu_database_interface, turbu_map_interface, EB_RpgScript,
    turbu_characters, turbu_items, turbu_skills, turbu_classes, turbu_resists,
    turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations,
-   turbu_containers, turbu_script_interface, turbu_game_data,
+   turbu_containers, turbu_script_interface, turbu_game_data, turbu_terrain,
    turbu_map_metadata, turbu_tilesets, turbu_maps, turbu_monsters,
    turbu_serialization;
 
@@ -45,12 +45,13 @@ type
    TMonsterList = TRpgDataDict<TRpgMonster>;
    TMonsterPartyList = TRpgDataDict<TRpgMonsterParty>;
    TBattleCharList = TRpgDataDict<TBattleCharAnim>;
+   TTerrainlist = TRpgDataDict<TRpgTerrain>;
 
    TRpgDataTypes = (rd_class, rd_hero, rd_command, rd_item, rd_skill, rd_anim,
                     rd_attrib, rd_condition, rd_tileset, rd_switch, rd_int,
                     rd_float, rd_string, rd_vocab, rd_tilegroup, rd_script,
                     rd_vehicles, rd_monster, rd_mparty, rd_battleChar, rd_layout,
-                    rd_legacy);
+                    rd_terrain, rd_legacy);
    TRpgDataTypeSet = set of TRpgDataTypes;
 
    TBattleCommandList = class(TRpgDataDict<TBattleCommand>)
@@ -88,8 +89,9 @@ type
       FMonsters: TMonsterList;
       FMonsterParties: TMonsterPartyList;
       FBattleChars: TBattleCharList;
+      FTerrains: TTerrainList;
 
-      //I need terrains and system data
+      //I need system data
       //and a battle layout section
 
       FGlobalEvents: TMapObjectList;
@@ -197,6 +199,7 @@ type
       property monsters: TMonsterList read FMonsters;
       property monsterParties: TMonsterPartyList read FMonsterParties;
       property battleChars: TBattleCharList read FBattleChars;
+      property terrains: TTerrainList read FTerrains;
 
       property projectName: string read getProjectName;
       property uploadedTypes: TRpgDataTypeSet read FUploadedTypes;
@@ -232,8 +235,8 @@ begin
 end;
 
 const
-   MIN_DBVERSION = 40;
-   DBVERSION = 40;
+   MIN_DBVERSION = 41;
+   DBVERSION = 42;
 
 class function TLegacyData.keyChar: ansiChar;
 begin
@@ -278,6 +281,7 @@ begin
    FMonsters := TMonsterList.Create(dmDatabase.monsters, FSerializer);
    FMonsterParties := TMonsterPartyList.Create(dmDatabase.mparties, FSerializer);
    FBattleChars := TBattleCharList.Create(dmDatabase.battleChars, FSerializer);
+   FTerrains := TTerrainList.Create(dmDatabase.terrain, FSerializer);
    FScriptLoaded := TSimpleEvent.Create;
    FScriptLoaded.ResetEvent;
 end;
@@ -492,6 +496,7 @@ var
 begin
    FScriptLoaded.Free;
    FLegacyData.Free;
+   FTerrains.Free;
    FBattleChars.Free;
    FMonsterParties.Free;
    FMonsters.Free;
@@ -689,6 +694,7 @@ begin
       rd_script: UploadGlobalEvents(db);
       rd_tilegroup: UploadTileGroups(db);
       rd_layout: FLayout.upload(FSerializer, db.syslayout);
+      rd_terrain: FTerrains.upload;
       rd_legacy:
       begin
          for enumerator in FLegacyData do

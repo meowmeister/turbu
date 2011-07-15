@@ -366,7 +366,7 @@ begin
                datafile.Free;
             end;
 
-            FReport.setCurrentTask('Converting Database', 14);
+            FReport.setCurrentTask('Converting Database', 15);
 
             //gathering resources
             for i := 1 to FLdb.terrains do

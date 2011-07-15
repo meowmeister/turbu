@@ -64,7 +64,8 @@ contains
   FirebirdDataset in '..\..\components\TURBU\FirebirdDataset.pas',
   turbu_monsters in 'database\turbu_monsters.pas',
   EB_Battle in 'script\EB_Battle.pas',
-  uPSUtils in '..\..\components\PascalScript\uPSUtils.pas';
+  uPSUtils in '..\..\components\PascalScript\uPSUtils.pas',
+  turbu_terrain in 'database\turbu_terrain.pas';
 
 end.
 

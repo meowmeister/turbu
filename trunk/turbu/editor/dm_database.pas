@@ -131,6 +131,7 @@ type
       battleChars_Poses: TSimpleDataSet;
       [TRelation]
       battleChars_Weapons: TSimpleDataSet;
+      terrain: TSimpleDataSet;
 
       dsCharClasses: TDataSource;
       ArbitraryQuery: TSQLQuery;

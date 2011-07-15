@@ -1,7 +1,7 @@
 object dmDatabaseAux: TdmDatabaseAux
   OldCreateOrder = False
   OnCreate = DataModuleCreate
-  Height = 422
+  Height = 426
   Width = 465
   object shields: TClientDataSet
     Active = True
@@ -396,6 +396,7 @@ object dmDatabaseAux: TdmDatabaseAux
       'd, slot from items where itemType in (1, 2)'
     DataSet.MaxBlobSize = -1
     DataSet.Params = <>
+    IndexFieldNames = 'id'
     Params = <>
     AfterOpen = itemNamesAfterOpen
     Left = 24
@@ -414,6 +415,7 @@ object dmDatabaseAux: TdmDatabaseAux
     DataSet.CommandText = 'select id, name from animations'
     DataSet.MaxBlobSize = -1
     DataSet.Params = <>
+    IndexFieldNames = 'id'
     Params = <>
     Left = 267
     Top = 94
@@ -427,7 +429,7 @@ object dmDatabaseAux: TdmDatabaseAux
   end
   object srcAnimName: TDataSource
     DataSet = animNames
-    Left = 331
+    Left = 339
     Top = 110
   end
   object srcWeapons: TDataSource
@@ -468,6 +470,7 @@ object dmDatabaseAux: TdmDatabaseAux
     DataSet.Params = <>
     FieldDefs = <>
     IndexDefs = <>
+    IndexFieldNames = 'id'
     Params = <>
     StoreDefs = True
     Left = 264
@@ -493,6 +496,7 @@ object dmDatabaseAux: TdmDatabaseAux
     DataSet.CommandText = 'select name, id from attributes'
     DataSet.MaxBlobSize = -1
     DataSet.Params = <>
+    IndexFieldNames = 'id'
     Params = <>
     Left = 264
     Top = 152
@@ -508,7 +512,7 @@ object dmDatabaseAux: TdmDatabaseAux
   end
   object srcAttribNames: TDataSource
     DataSet = attribNames
-    Left = 323
+    Left = 339
     Top = 170
   end
   object charClasses_Resists: TClientDataSet
@@ -626,5 +630,58 @@ object dmDatabaseAux: TdmDatabaseAux
       Size = 32
       Lookup = True
     end
+  end
+  object MPartyNames: TSimpleDataSet
+    Aggregates = <>
+    Connection = dmDatabase.Connection
+    DataSet.CommandText = 'select name, id from mparties'
+    DataSet.MaxBlobSize = -1
+    DataSet.Params = <>
+    IndexFieldNames = 'id'
+    Params = <>
+    Left = 264
+    Top = 208
+    object IntegerField5: TIntegerField
+      FieldName = 'id'
+      Required = True
+    end
+    object WideStringField1: TWideStringField
+      FieldName = 'name'
+      Required = True
+      Size = 32
+    end
+  end
+  object srcMPartyNames: TDataSource
+    DataSet = MPartyNames
+    Left = 339
+    Top = 226
+  end
+  object terrainNames: TSimpleDataSet
+    Aggregates = <>
+    Connection = dmDatabase.Connection
+    DataSet.CommandText = 'select name, id from terrain'
+    DataSet.MaxBlobSize = -1
+    DataSet.Params = <>
+    FieldDefs = <>
+    IndexDefs = <>
+    IndexFieldNames = 'id'
+    Params = <>
+    StoreDefs = True
+    Left = 256
+    Top = 368
+    object IntegerField6: TIntegerField
+      FieldName = 'id'
+      Required = True
+    end
+    object WideStringField2: TWideStringField
+      FieldName = 'name'
+      Required = True
+      Size = 32
+    end
+  end
+  object srcTerrainNames: TDataSource
+    DataSet = terrainNames
+    Left = 339
+    Top = 354
   end
 end

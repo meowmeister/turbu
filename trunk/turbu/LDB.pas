@@ -146,7 +146,6 @@ type
       property legacy: TLegacyDict read FLegacy;
    end;
 
-   TConcealmentFactor = (cf_none, cf_low, cf_med, cf_high);
    TCommandStyle = (cs_weapon, cs_anyskill, cs_skillgroup, cs_defend, cs_item, cs_flee, cs_special);
    TVehiclePassSet = array[TVehicleSet] of boolean;
 
@@ -168,8 +167,13 @@ type
       constructor Create(input: TStream; const id: word);
       destructor Destroy; override;
 
+      property name: ansiString read FName;
+      property damage: shortint read FDamage;
+      property encounterMultiplier: word read FEncounterMultiplier;
       property battleBg: ansiString read FBattleBg;
       property vehiclePass[which: TVehicleSet]: boolean read vehicleCanPass;
+      property airshipLanding: boolean read FAirshipLanding;
+      property Concealment: TConcealmentFactor read FConcealment;
       property soundEffect: TRmSound read FSoundEffect;
       property frame: ansiString read FFrame;
       property legacy: TLegacyDict read FLegacy;
