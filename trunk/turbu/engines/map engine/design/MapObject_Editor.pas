@@ -109,7 +109,7 @@ type
     FMapObject: TRpgMapObject;
     FMap: TRpgMap;
     FRenameProc: TRenameProc;
-    FDbAux: TDmDatabaseAux;
+    FOwnsAux: boolean;
 
     procedure UploadMapObject(obj: TRpgMapObject);
     procedure DownloadMapObject(obj: TRpgMapObject);
@@ -336,7 +336,11 @@ begin
         dsPagesName.Value := name;
         dsPages.Post;
      end;
-   FDbAux := TDmDatabaseAux.Create(self);
+   if dmDatabaseAux = nil then
+   begin
+      dmDatabaseAux := TDmDatabaseAux.Create(self);
+      FOwnsAux := true;
+   end;
 end;
 
 procedure TfrmObjectEditor.FormDestroy(Sender: TObject);
@@ -344,6 +348,8 @@ begin
    ClipboardWatcher.UnregisterClipboardViewer(self.OnClipboardChange);
    FSerializer.Free;
    trvEvents.proc.Free;
+   if FOwnsAux then
+      FreeAndNil(dmDatabaseAux);
 end;
 
 procedure TfrmObjectEditor.FormShow(Sender: TObject);
@@ -425,9 +431,9 @@ begin
    dsPages.DisableControls;
    frameConditions.dsConditions.DisableControls;
    try
-      FDbAux.EnsureSwitches;
-      FDbAux.EnsureVars;
-      FDbAux.EnsureItems;
+      dmDatabaseAux.EnsureSwitches;
+      dmDatabaseAux.EnsureVars;
+      dmDatabaseAux.EnsureItems;
       if not dsPages.Active then
          dsPages.CreateDataSet;
       if not frameConditions.dsConditions.Active then
