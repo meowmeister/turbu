@@ -73,6 +73,8 @@ contains
   EditPortrait in 'EB Editors\Characters\EditPortrait.pas' {frmEBEditPortrait},
   sound_edit in '..\..\..\components\TURBU\sound_edit.pas',
   dm_databaseAux in '..\..\editor\dm_databaseAux.pas',
-  EditBattleEx in 'EB Editors\Battle\EditBattleEx.pas' {frmBattleEx};
+  EditBattleEx in 'EB Editors\Battle\EditBattleEx.pas' {frmBattleEx},
+  pic_edit in '..\..\..\components\TURBU\pic_edit.pas',
+  ImageSelector in '..\..\engines\basis\ImageSelector.pas' {frmImageSelector};
 
 end.
