@@ -117,15 +117,20 @@ end;
 
 procedure TfrmImageSelector.Setup(const archive: IArchive; const path: string; nullable: boolean);
 var
-   filename: string;
+   filename, oldpath: string;
 begin
    FArchive := archive;
    FPath := path;
    lstFilename.Clear;
    if nullable then
       lstFilename.AddItem(NULL_ITEM, nil);
-   for filename in FArchive.allFiles(path) do
-      lstFilename.AddItem(ChangeFileExt(ExtractFileName(filename), ''), nil);
+   oldpath := FArchive.currentFolder;
+   try
+      for filename in FArchive.allFiles(path) do
+         lstFilename.AddItem(ChangeFileExt(ExtractFileName(filename), ''), nil);
+   finally
+      FArchive.CurrentFolder := oldpath;
+   end;
    lstFilename.ItemIndex := 0;
    lstFilenameClick(self);
 end;
