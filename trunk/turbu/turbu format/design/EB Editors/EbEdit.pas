@@ -61,11 +61,15 @@ type
       procedure UploadValuePtrSelection(expr: TEBExpression; r1, r2: TRadioButton;
         valueBox: TJvSpinEdit; ptrBox: TIntSelector); overload;
       procedure UploadLookupPtrSelection(expr: TEBExpression; r1, r2: TRadioButton;
-        valueBox: TIDLookupCombo; ptrBox: TIntSelector);
+        valueBox: TIDLookupCombo; ptrBox: TIntSelector); overload;
+      procedure UploadLookupPtrSelection(v1, v2: integer; r1, r2: TRadioButton;
+        valueBox: TIDLookupCombo; ptrBox: TIntSelector); overload;
       function DownloadValuePtrSelection(r1, r2: TRadioButton;
         valueBox: TJvSpinEdit; ptrBox: TIntSelector): TIntPair;
       function DownloadLookupPtrSelection(r1, r2: TRadioButton;
         valueBox: TIDLookupCombo; ptrBox: TIntSelector; const lookupName: string): TEBExpression;
+      function DownloadLookupPtrSelectionInts(r1, r2: TRadioButton;
+        valueBox: TIDLookupCombo; ptrBox: TIntSelector): TIntPair;
       procedure EnableControl(control: TControl; controller: TRadioButton); overload;
       procedure EnableControl(control: TControl; controller: TCheckBox); overload;
       procedure EnableGroupBox(box: TGroupBox; value: boolean);
@@ -228,6 +232,20 @@ begin
    end;
 end;
 
+procedure TfrmEBEditBase.UploadLookupPtrSelection(v1, v2: integer; r1,
+  r2: TRadioButton; valueBox: TIDLookupCombo; ptrBox: TIntSelector);
+begin
+   if v1 = 0 then
+   begin
+      r1.Checked := true;
+      valueBox.ID := v2;
+   end
+   else begin
+      r2.Checked := true;
+      ptrBox.ID := v2;
+   end;
+end;
+
 function TfrmEBEditBase.DownloadLookupPtrSelection(r1, r2: TRadioButton;
   valueBox: TIDLookupCombo; ptrBox: TIntSelector; const lookupName: string): TEBExpression;
 begin
@@ -235,6 +253,21 @@ begin
    if r1.Checked then
       result := TEBLookupValue.Create(valueBox.id, lookupName)
    else result := TEBIntsValue.Create(ptrBox.id);
+end;
+
+function TfrmEBEditBase.DownloadLookupPtrSelectionInts(r1, r2: TRadioButton;
+  valueBox: TIDLookupCombo; ptrBox: TIntSelector): TIntPair;
+begin
+   assert(r1.Checked or r2.Checked);
+   if r1.Checked then
+   begin
+      result[1] := 0;
+      result[2] := valueBox.id;
+   end
+   else begin
+      result [1] := 1;
+      result [2] := ptrBox.ID;
+   end;
 end;
 
 procedure TfrmEBEditBase.UploadValuePtrSelection(v1, v2: integer; r1,
