@@ -42,6 +42,7 @@ type
       FSoundEffect: TRpgSound;
       FFrame: string;
    public
+      destructor Destroy; override;
       property damage: integer read FDamage;
       property encounterMultiplier: integer read FEncounterMultiplier;
       property battleBg: string read FBattleBG;
@@ -94,6 +95,14 @@ begin
    finally
       stream.Free;
    end;
+end;
+
+{ TRpgTerrain }
+
+destructor TRpgTerrain.Destroy;
+begin
+   FSoundEffect.Free;
+   inherited;
 end;
 
 end.
