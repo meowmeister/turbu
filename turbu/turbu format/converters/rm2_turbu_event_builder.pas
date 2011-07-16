@@ -351,7 +351,7 @@ begin
       result.Values.Add(opcode.data[2]);
       case opcode.data[2] of
          0: result.Values.Add(0);
-         1: result.Values.Add(opcode.data[7]);
+         1: result.Values.Add(opcode.data[7] - 1);
          2: result.Values.Add(opcode.data[8]);
       end;
    end
