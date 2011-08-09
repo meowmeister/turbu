@@ -22,7 +22,7 @@ interface
 
 uses
    Forms, StdCtrls, Classes, Controls, JvExControls, JvxSlider, ExtCtrls,
-   SdlAudioMixer;
+   ArchiveInterface, SdlAudioMixer;
 
 type
    TfrmMusicSelector = class(TForm)
@@ -50,29 +50,22 @@ type
       FCurrentSound: TSDLAudio;
       FFadeInTime: integer;
       FManager: TSDLAudioManager;
+      FArchive: IArchive;
+      FFilename: string;
+      procedure BuildList;
+      procedure SetFilename(const Value: string);
    public
-//      function Choose: boolean;
+      procedure Setup(const archive: IArchive);
+      function Choose: boolean;
+      property Filename: string read FFilename write SetFilename;
    end;
-
-function GetMusicSelector: TfrmMusicSelector;
 
 implementation
 uses
-   SysUtils,
-   ArchiveInterface,
+   SysUtils, Math, StrUtils,
    SDL_mixer;
 
 {$R *.dfm}
-
-var
-   LSelector: TfrmMusicSelector;
-
-function GetMusicSelector: TfrmMusicSelector;
-begin
-   if not assigned(LSelector) then
-      LSelector := TfrmMusicSelector.Create(nil);
-   result := LSelector;
-end;
 
 procedure TfrmMusicSelector.FormCreate(Sender: TObject);
 begin
@@ -86,11 +79,35 @@ begin
 end;
 
 procedure TfrmMusicSelector.FormShow(Sender: TObject);
-var
-   filename: string;
 begin
-   for filename in GArchives[MUSIC_ARCHIVE].allFiles do
-      lstFilename.AddItem(filename, nil);
+   BuildList;
+   if FFilename = '' then
+      FFilename := '(OFF)';
+   SetFilename(FFilename);
+end;
+
+procedure TfrmMusicSelector.SetFilename(const Value: string);
+var
+   i: Integer;
+   tFilename: string;
+begin
+   FFilename := Value;
+   lstFilename.ItemIndex := max(lstFilename.Items.IndexOf(FFilename), 0);
+   if (lstFilename.ItemIndex = 0) and (lstFilename.items[lstFilename.ItemIndex] <> FFilename) then
+   begin
+      tFilename := FFilename + '.';
+      for i := 0 to lstFilename.Items.Count - 1 do
+         if AnsiStartsText(tFilename, lstFilename.Items[i]) then
+         begin
+            lstFilename.ItemIndex := i;
+            break;
+         end;
+   end;
+end;
+
+procedure TfrmMusicSelector.Setup(const archive: IArchive);
+begin
+   FArchive := archive;
 end;
 
 procedure TfrmMusicSelector.sldFadeInChange(Sender: TObject);
@@ -115,6 +132,26 @@ begin
    FreeAndNil(FCurrentSound);
 end;
 
+procedure TfrmMusicSelector.BuildList;
+var
+   filename: string;
+begin
+   lstFilename.Clear;
+   lstFilename.AddItem('(OFF)', nil);
+   for filename in FArchive.allFiles do
+      lstFilename.AddItem(filename, nil);
+end;
+
+function TfrmMusicSelector.Choose: boolean;
+begin
+   btnSelect.Visible := true;
+   try
+      result := self.ShowModal = mrOK;
+   finally
+      btnSelect.Visible := false;
+   end;
+end;
+
 procedure TfrmMusicSelector.btnCloseClick(Sender: TObject);
 begin
    self.Close;
@@ -133,7 +170,7 @@ begin
       Exit;
    end;
 
-   stream := GArchives[MUSIC_ARCHIVE].getFile(filename);
+   stream := FArchive.getFile(filename);
    try
       FCurrentSound := TSDLMusic.Create(stream);
    finally
@@ -145,7 +182,4 @@ begin
    sldPanningChange(self);
 end;
 
-initialization
-finalization
-   FreeAndNil(LSelector);
 end.

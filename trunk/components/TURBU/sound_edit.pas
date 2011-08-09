@@ -21,33 +21,82 @@ unit sound_edit;
 interface
 uses
    Classes,
-   button_edit, MusicSelector;
+   button_edit {$IFNDEF COMPONENT}, MusicSelector, ArchiveInterface, turbu_sounds{$ENDIF};
 
 type
    TSoundEdit = class(TRpgCustomButtonEdit)
+   private
+      {$IFNDEF COMPONENT}
+      FSelector: TfrmMusicSelector;
+      FSound: TSoundTemplate;
+      {$ENDIF}
    protected
       procedure ButtonClick(Sender: TObject); override;
    public
+      {$IFNDEF COMPONENT}
       constructor Create(AOwner: TComponent); override;
+      destructor Destroy; override;
+      procedure Setup(const archive: IArchive; sound: TSoundTemplate);
+      property sound: TSoundTemplate read FSound;
+      {$ENDIF}
    end;
+
+procedure Register;
 
 implementation
 uses
    Controls;
 
+procedure Register;
+begin
+   RegisterComponents('TURBU', [TSoundEdit]);
+end;
+
 { TSoundEdit }
 
 procedure TSoundEdit.ButtonClick(Sender: TObject);
 begin
-{   if GetMusicSelector.Choose then
+{$IFNDEF COMPONENT}
+   if FSelector.Choose then
    begin
-   end; }
+      FSound.filename := FSelector.filename;
+      FSound.volume := FSelector.sldVolume.Value;
+      FSound.fadeIn := FSelector.sldFadeIn.Value * 10;
+      FSound.balance := FSelector.sldPanning.Value;
+      FSound.tempo := FSelector.sldTempo.Value;
+      self.Text := FSound.filename;
+   end;
+{$ENDIF}
 end;
 
+{$IFNDEF COMPONENT}
 constructor TSoundEdit.Create(AOwner: TComponent);
 begin
    inherited Create(AOwner);
-
+   FSelector := TfrmMusicSelector.Create(self);
 end;
+
+destructor TSoundEdit.Destroy;
+begin
+   FSound.Free;
+   inherited;
+end;
+
+procedure TSoundEdit.Setup(const archive: IArchive; sound: TSoundTemplate);
+begin
+   FSound.Free;
+   FSound := sound;
+   FSelector.Setup(archive);
+   if assigned(FSound) then
+   begin
+      FSelector.Filename := sound.filename;
+      FSelector.sldVolume.Value := sound.volume;
+      FSelector.sldFadeIn.Value := sound.fadeIn div 10;
+      FSelector.sldPanning.Value := sound.balance;
+      FSelector.sldTempo.Value := sound.tempo;
+   end;
+   self.Text := sound.filename;
+end;
+{$ENDIF}
 
 end.

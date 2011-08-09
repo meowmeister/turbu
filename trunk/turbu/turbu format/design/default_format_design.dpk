@@ -75,6 +75,8 @@ contains
   dm_databaseAux in '..\..\editor\dm_databaseAux.pas',
   EditBattleEx in 'EB Editors\Battle\EditBattleEx.pas' {frmBattleEx},
   pic_edit in '..\..\..\components\TURBU\pic_edit.pas',
-  ImageSelector in '..\..\engines\basis\ImageSelector.pas' {frmImageSelector};
+  ImageSelector in '..\..\engines\basis\ImageSelector.pas' {frmImageSelector},
+  EditSysBGM in 'EB Editors\Settings\EditSysBGM.pas' {frmEditSysBGM},
+  EditBattle in 'EB Editors\Battle\EditBattle.pas' {frmBattle};
 
 end.

@@ -67,10 +67,9 @@ type
 
    TSfxTypes = (sfxCursor, sfxAccept, sfxCancel, sfxBuzzer, sfxBattleStart,
                 sfxEscape, sfxEnemyAttack, sfxEnemyDamage, sfxAllyDamage,
-                sfxEvade, sfxEnemyDies, sfxItemUsed, sfxNil);
+                sfxEvade, sfxEnemyDies, sfxItemUsed);
 
-   TBgmTypes = (bgm_Battle, bgm_Victory, bgm_Inn, bgm_Boat, bgm_Ship,
-                bgm_Airship, bgm_GameOver, bgm_Title, bgm_BossBattle);
+   TBgmTypes = (bgmBattle, bgmVictory, bgmInn, bgmGameOver, bgmTitle, bgmBossBattle);
 
    TTransitionTypes = (trn_MapEnter, trn_MapExit, trn_BattleStartFOut, trn_BattleStartFIn,
                 trn_BattleEndFOut, trn_BattleEndFIn);

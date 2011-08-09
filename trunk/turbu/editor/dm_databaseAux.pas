@@ -14,10 +14,15 @@ type
     accessories: TClientDataSet;
     weapons: TClientDataSet;
     offhands: TClientDataSet;
+    charClasses_Resists: TClientDataSet;
+    charClasses_Conditions: TClientDataSet;
+
     condNames: TSimpleDataSet;
     attribNames: TSimpleDataSet;
     itemNames: TSimpleDataSet;
     animNames: TSimpleDataSet;
+    MPartyNames: TSimpleDataSet;
+    terrainNames: TSimpleDataSet;
 
     shieldsid: TIntegerField;
     shieldsname: TWideStringField;
@@ -28,15 +33,7 @@ type
     srcShields: TDataSource;
     srcWeapons: TDataSource;
     srcOffhands: TDataSource;
-    charClasses_Resists: TClientDataSet;
-    charClasses_Conditions: TClientDataSet;
-    MPartyNames: TSimpleDataSet;
-    IntegerField5: TIntegerField;
-    WideStringField1: TWideStringField;
     srcMPartyNames: TDataSource;
-    terrainNames: TSimpleDataSet;
-    IntegerField6: TIntegerField;
-    WideStringField2: TWideStringField;
     srcTerrainNames: TDataSource;
 
     procedure itemNamesAfterOpen(DataSet: TDataSet);

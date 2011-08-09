@@ -26,19 +26,25 @@ type
    [UsesUnit('Settings')]
    TEBSettingsObject = class(TEBObject);
 
-   TEBSysBGM = class(TEBObject)
+   TEBSysBGM = class(TEBSettingsObject)
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
    end;
 
-   TEBSysSFX = class(TEBObject)
+   TEBVehicleBGM = class(TEBSettingsObject)
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
    end;
 
-   TEBSysSkin = class(TEBObject)
+   TEBSysSFX = class(TEBSettingsObject)
+   public
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
+   TEBSysSkin = class(TEBSettingsObject)
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
@@ -60,6 +66,22 @@ end;
 function TEBSysBGM.GetScriptText: string;
 const
    LINE = 'SetSystemMusic(%s, %s, %d, %d, %d, %d);';
+begin
+   result := format(LINE, [GetEnumName(TypeInfo(TBgmTypes), Values[0]), QuotedStr(Text),
+                           Values[1], Values[2], Values[3], Values[4]]);
+end;
+
+{ TEBVehicleBGM }
+
+function TEBVehicleBGM.GetNodeText: string;
+const LINE = 'Set Vehicle Music: %s, %s';
+begin
+   result := format(LINE, [Self.GetLookup(values[0], 'Vehicles'), Text]);
+end;
+
+function TEBVehicleBGM.GetScriptText: string;
+const
+   LINE = 'Vehicles[%d].SetMusic(%s, %d, %d, %d, %d);';
 begin
    result := format(LINE, [GetEnumName(TypeInfo(TBgmTypes), Values[0]), QuotedStr(Text),
                            Values[1], Values[2], Values[3], Values[4]]);
@@ -93,5 +115,5 @@ begin
 end;
 
 initialization
-   RegisterClasses([TEBSysBGM, TEBSysSFX, TEBSysSkin]);
+   RegisterClasses([TEBSysBGM, TEBSysSFX, TEBSysSkin, TEBVehicleBGM]);
 end.

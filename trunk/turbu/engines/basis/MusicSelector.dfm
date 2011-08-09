@@ -159,5 +159,6 @@ object frmMusicSelector: TfrmMusicSelector
     Default = True
     ModalResult = 1
     TabOrder = 5
+    Visible = False
   end
 end
