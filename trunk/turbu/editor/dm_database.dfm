@@ -3639,6 +3639,31 @@ object dmDatabase: TdmDatabase
       FieldName = 'altitude'
       Required = True
     end
+    object vehiclesmusic_id: TIntegerField
+      FieldName = 'music_id'
+      Required = True
+    end
+    object vehiclesmusic_FadeIn: TIntegerField
+      FieldName = 'music_FadeIn'
+      Required = True
+    end
+    object vehiclesmusic_tempo: TIntegerField
+      FieldName = 'music_tempo'
+      Required = True
+    end
+    object vehiclesmusic_volume: TIntegerField
+      FieldName = 'music_volume'
+      Required = True
+    end
+    object vehiclesmusic_balance: TIntegerField
+      FieldName = 'music_balance'
+      Required = True
+    end
+    object vehiclesmusic_name: TWideStringField
+      FieldName = 'music_name'
+      Required = True
+      Size = 255
+    end
   end
   object LegacyData: TSimpleDataSet
     Aggregates = <>
@@ -4799,6 +4824,50 @@ object dmDatabase: TdmDatabase
     object terrainVehiclePass: TBlobField
       FieldName = 'VehiclePass'
       Required = True
+    end
+  end
+  object SysSound: TSimpleDataSet
+    Aggregates = <>
+    Connection = Connection
+    DataSet.CommandText = 'SysSound'
+    DataSet.CommandType = ctTable
+    DataSet.MaxBlobSize = -1
+    DataSet.Params = <>
+    FieldDefs = <>
+    IndexDefs = <
+      item
+        Name = 'SysSoundIndexPK'
+        Fields = 'id;ismusic'
+        Options = [ixPrimary, ixUnique]
+      end>
+    IndexName = 'SysSoundIndexPK'
+    Params = <>
+    StoreDefs = True
+    Left = 432
+    Top = 368
+    object IntegerField52: TIntegerField
+      FieldName = 'id'
+      Required = True
+    end
+    object SysSoundisMusic: TBooleanField
+      FieldName = 'isMusic'
+      Required = True
+    end
+    object SysSoundFadeIn: TIntegerField
+      FieldName = 'FadeIn'
+    end
+    object SysSoundTempo: TIntegerField
+      FieldName = 'tempo'
+    end
+    object SysSoundVolume: TIntegerField
+      FieldName = 'volume'
+    end
+    object SysSoundBalance: TIntegerField
+      FieldName = 'balance'
+    end
+    object SysSoundName: TWideStringField
+      FieldName = 'name'
+      Size = 255
     end
   end
 end

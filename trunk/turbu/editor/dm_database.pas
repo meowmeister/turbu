@@ -132,6 +132,8 @@ type
       [TRelation]
       battleChars_Weapons: TSimpleDataSet;
       terrain: TSimpleDataSet;
+      [VitalDataset]
+      SysSound: TSimpleDataSet;
 
       dsCharClasses: TDataSource;
       ArbitraryQuery: TSQLQuery;
@@ -169,7 +171,6 @@ type
       function ScriptGen(dset: TSimpleDataset): string;
       procedure OpenConnection(const dbname: string);
       function GetTableCount: integer;
-    procedure ApplyUpdates(dset: TCustomClientDataset);
    public
       { Public declarations }
       procedure beginUpload;
@@ -225,22 +226,6 @@ begin
             FVitalList.Add(dataset);
       end;
    FDatasetList.Sort;
-end;
-
-procedure TdmDatabase.ApplyUpdates(dset: TCustomClientDataset);
-
-   function hasBlobs: boolean;
-   var
-      field: TField;
-   begin
-      for field in dset.Fields do
-         if field.IsBlob then
-            Exit(true);
-      result := false;
-   end;
-
-begin
-   if hasBlobs then ;
 end;
 
 procedure TdmDatabase.SaveAll(report: TUploadReportProc = nil);
@@ -351,6 +336,7 @@ end;
 function TdmDatabase.IndexGen(dset: TSimpleDataset): string;
 const
    INDEX = 'ALTER TABLE %s' + CRLF + '  ADD CONSTRAINT PK_%s' + CRLF + '  PRIMARY KEY (ID);';
+   PK_MUS = 'ALTER TABLE %s' + CRLF + '  ADD CONSTRAINT PK_%s' + CRLF + '  PRIMARY KEY (ID, ISMUSIC);';
    PK_LEG = 'ALTER TABLE %s' + CRLF + '  ADD CONSTRAINT PK_%s' + CRLF + '  PRIMARY KEY (NAME, ID, SECTION);';
    PK_TG = 'ALTER TABLE %s' + CRLF + '  ADD CONSTRAINT PK_%s' + CRLF + '  PRIMARY KEY (NAME);';
 begin
@@ -360,6 +346,8 @@ begin
       result := StringReplace(PK_LEG, '%s', dset.Name, [rfReplaceAll])
    else if dset = tilegroups then
       result := StringReplace(PK_TG, '%s', dset.Name, [rfReplaceAll])
+   else if dset = SysSound then
+      result := StringReplace(PK_MUS, '%s', dset.Name, [rfReplaceAll])
    else if assigned(dset.FindField('ID')) then
       result := StringReplace(INDEX, '%s', dset.Name, [rfReplaceAll])
    else result := '';

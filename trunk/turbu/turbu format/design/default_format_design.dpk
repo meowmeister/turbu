@@ -77,6 +77,7 @@ contains
   pic_edit in '..\..\..\components\TURBU\pic_edit.pas',
   ImageSelector in '..\..\engines\basis\ImageSelector.pas' {frmImageSelector},
   EditSysBGM in 'EB Editors\Settings\EditSysBGM.pas' {frmEditSysBGM},
-  EditBattle in 'EB Editors\Battle\EditBattle.pas' {frmBattle};
+  EditBattle in 'EB Editors\Battle\EditBattle.pas' {frmBattle},
+  EditVehicleBGM in 'EB Editors\Settings\EditVehicleBGM.pas' {frmEditVehicleBGM};
 
 end.
