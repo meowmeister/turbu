@@ -32,7 +32,7 @@ type
                 bgmBoat, bgmShip, bgmAirship, bgmGameOver);
    TSfxTypes = (sfxCursor, sfxAccept, sfxCancel, sfxBuzzer, sfxBattleStart,
                 sfxEscape, sfxEnemyAttack, sfxEnemyDamage, sfxAllyDamage,
-                sfxEvade, sfxEnemyDies, sfxItemUsed, sfxNil);
+                sfxEvade, sfxEnemyDies, sfxItemUsed);
    TVocabSet = (ownedItems, equippedItems, moneyUnit, normalStatus, expShort,
                 lvShort, hpShort, mpShort, mpCost, attack, defense, mind, speed,
                 weapon, shield, armor, helmet, relic);

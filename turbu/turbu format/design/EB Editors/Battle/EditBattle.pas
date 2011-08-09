@@ -25,6 +25,7 @@ uses
   EbEdit, EventBuilder, variable_selector, IDLookupCombo, pic_edit, button_edit;
 
 type
+   [EditorCategory('Battles', 'Enter Battle (Simple)')]
    TfrmBattle = class(TfrmEbEditBase)
       grpMParty: TGroupBox;
       cboMpartyID: TIDLookupCombo;
@@ -58,7 +59,6 @@ uses
 
 procedure TfrmBattle.FormCreate(Sender: TObject);
 begin
-   inherited FormCreate(sender);
    dmDatabaseAux.EnsureMParties;
    selFilename.setup(GArchives[IMAGE_ARCHIVE], 'Battle BG');
 end;

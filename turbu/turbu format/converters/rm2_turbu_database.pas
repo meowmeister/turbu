@@ -38,6 +38,7 @@ type
         index: integer; cond: TProjectFormat);
       procedure ConvertVehicles(base: TSystemRecord);
       procedure ScanAnimSounds(base: TBattleAnim; list: TStringList);
+      procedure ConvertSysSounds(base: TSystemRecord);
    public
       constructor convert(base: TLcfDatabase; tree: TFullTree;
                           ConversionReport: IConversionReport; scanner: TEventScanner;
@@ -53,14 +54,14 @@ uses
    sysUtils, StrUtils, Generics.Collections, Math,
    charset_data,
    turbu_characters, turbu_items, turbu_skills, turbu_animations, conversion_table,
-   turbu_resists, turbu_map_metadata,
+   turbu_resists, turbu_map_metadata, turbu_sounds, rm2_turbu_sounds,
    rm2_turbu_items, rm2_turbu_characters, rm2_turbu_skills, rm2_turbu_animations,
    rm2_turbu_resists, rm2_turbu_map_metadata, rm2_turbu_tilesets, turbu_sprites,
    turbu_versioning, turbu_plugin_interface, turbu_constants, turbu_sdl_image,
    turbu_tbi_lib, turbu_tilesets, rm2_turbu_map_objects, turbu_map_objects,
    locate_files, turbu_maps, turbu_monsters, turbu_terrain, rm2_turbu_terrain,
    archiveInterface, commons, turbu_battle_engine, turbu_engines, logs,
-   turbu_map_engine, EB_RpgScript,
+   turbu_map_engine, EB_RpgScript, turbu_defs,
    SDL, SDL_13, sdl_image, sg_defs;
 
 const
@@ -297,6 +298,7 @@ begin
       self.layout.physHeight := PHYSICAL_SIZE.Y;
 
       ConvertVehicles(base.SystemData);
+      ConvertSysSounds(base.SystemData);
 
       ConversionReport.NewStep('Converting terrain');
       for i := 1 to base.terrains do
@@ -498,7 +500,7 @@ function ConvertVehicle(base: TSystemRecord; vehicle: TVehicleSet): TVehicleTemp
 begin
    result := TVehicleTemplate.Create;
    result.id := ord(vehicle) + 1;
-   result.mapSprite :=  format('%s %d', [string(base.vehicleGraphic[vehicle]), base.vehicleIndex[vehicle]]);
+   result.mapSprite := format('%s %d', [string(base.vehicleGraphic[vehicle]), base.vehicleIndex[vehicle]]);
    result.translucent := false;
    case vehicle of
       vh_boat:
@@ -506,6 +508,8 @@ begin
          result.name := 'Boat';
          result.shallowWater := true;
          result.movementStyle := msSurface;
+         result.music.Free;
+         result.music := TRpgMusic.Convert(base.bgm[bgmBoat]);
       end;
       vh_ship:
       begin
@@ -513,12 +517,16 @@ begin
          result.shallowWater := true;
          result.deepWater := true;
          result.movementStyle := msSurface;
+         result.music.Free;
+         result.music := TRpgMusic.Convert(base.bgm[bgmShip]);
       end;
       vh_airship:
       begin
          result.name := 'Airship';
          result.movementStyle := msFly;
          result.altitude := 16;
+         result.music.Free;
+         result.music := TRpgMusic.Convert(base.bgm[bgmAirship]);
       end;
    end;
 end;
@@ -529,6 +537,25 @@ var
 begin
    for vehicle := Low(TVehicleSet) to High(TVehicleSet) do
       self.vehicles.add(ConvertVehicle(base, vehicle));
+end;
+
+procedure T2k2Database.ConvertSysSounds(base: TSystemRecord);
+const TABLE: array[TBgmTypes] of LDB.TBgmTypes =
+  (LDB.bgmBattle, LDB.bgmVictory, LDB.bgmInn, LDB.bgmGameOver, LDB.bgmTitle, LDB.bgmBossBattle);
+var
+   bgm: TBgmTypes;
+   sfx: TSfxTypes;
+begin
+  for bgm := Low(TBgmTypes) to High(TBgmTypes) do
+  begin
+    FBgm[bgm] := (TRpgMusic.Convert(base.bgm[TABLE[bgm]]));
+    FBgm[bgm].id := ord(bgm);
+  end;
+  for sfx := Low(TSfxTypes) to High(TSfxTypes) do
+  begin
+    FSfx[sfx] := (TRpgSound.Convert(base.sfx[LDB.TSfxTypes(sfx)]));
+    FSfx[sfx].id := ord(sfx);
+  end;
 end;
 
 end.

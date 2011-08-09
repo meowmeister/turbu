@@ -56,6 +56,7 @@ type
       procedure ScanMove(block: TEventMoveBlock);
       procedure ScanPageCommands(list: TEventCommandList);
       procedure setNewStep(value: string);
+    procedure GatherResources;
    protected
       procedure Execute; override;
    public
@@ -70,7 +71,7 @@ implementation
 uses
    SysUtils, StrUtils,
    fileIO, discInterface, logs, locate_files, rm2_turbu_event_builder, dm_database,
-   turbu_constants, turbu_database, turbu_engines, db_create,
+   turbu_constants, turbu_database, turbu_engines, db_create, turbu_defs,
    turbu_functional, turbu_maps, turbu_classes, turbu_pathing, turbu_tbi_lib,
    rm2_turbu_database, rm2_turbu_maps, rm2_turbu_map_metadata, rm2_turbu_map_objects,
    sdl, sdl_13, sdlStreams, sdl_image, sg_defs;
@@ -306,6 +307,31 @@ begin
   inherited;
 end;
 
+procedure TConverterThread.GatherResources;
+var
+  i: Integer;
+  bgm: LDB.TBgmTypes;
+  sfx: LDB.TSfxTypes;
+begin
+  //gathering resources
+  for i := 1 to FLdb.terrains do
+  begin
+    FBattleBackgrounds.Add(string(FLdb.terrain[i].battleBg));
+    if assigned(FLdb.terrain[i].soundEffect) then
+      FSounds.Add(string(FLdb.terrain[i].soundEffect.filename));
+    FFrames.Add(string(FLdb.terrain[i].frame));
+  end;
+  FBattleBackgrounds.Add(string(FLdb.systemData.editorBattleBG));
+  FSysTiles.add(string(FLdb.SystemData.systemGraphic));
+  for i := 1 to FLdb.monsters do
+    FMonsters.Add(string(FLdb.monster[i].filename));
+  FFrames.Add(string(FLdb.SystemData.frame));
+  for bgm := Low(LDB.TBgmTypes) to High(LDB.TBgmTypes) do
+    FSongs.Add(FLdb.SystemData.bgm[bgm].filename);
+  for sfx := Low(LDB.TSfxTypes) to High(LDB.TSfxTypes) do
+    FSounds.Add(FLdb.SystemData.sfx[sfx].filename);
+end;
+
 type
    TLegacySections = class(TDictionary<word, rawbytestring>);
 
@@ -322,7 +348,6 @@ var
    key: byte;
    list: TStringList;
    op: string;
-   i: integer;
 begin
    legacy := nil;
    try
@@ -367,20 +392,7 @@ begin
             end;
 
             FReport.setCurrentTask('Converting Database', 15);
-
-            //gathering resources
-            for i := 1 to FLdb.terrains do
-            begin
-               FBattleBackgrounds.Add(string(FLdb.terrain[i].battleBg));
-               if assigned(FLdb.terrain[i].soundEffect) then
-                  FSounds.Add(string(FLdb.terrain[i].soundEffect.filename));
-               FFrames.Add(string(FLdb.terrain[i].frame));
-            end;
-            FBattleBackgrounds.Add(string(FLdb.systemData.editorBattleBG));
-            FSysTiles.add(string(FLdb.SystemData.systemGraphic));
-            for i := 1 to FLdb.monsters do
-               FMonsters.Add(string(FLdb.monster[i].filename));
-            FFrames.Add(string(FLdb.SystemData.frame));
+            GatherResources;
 
             FreeAndNil(GDatabase);
             dmDatabase := TdmDatabase.Create(nil);

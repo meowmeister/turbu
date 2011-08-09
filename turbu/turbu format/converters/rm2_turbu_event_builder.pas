@@ -857,15 +857,31 @@ begin
    result.Values.AddRange([0, opcode.Data[0]]);
 end;
 
+function ConvertSysBGM(opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   case opcode.data[0] of
+      0..2: result := ObjectFactory(TEBSysBGM, opcode, parent);
+      3..5: begin
+         opcode.data[0] := opcode.data[0] - 2;
+         result := ObjectFactory(TEBVehicleBGM, opcode, parent);
+      end;
+      6: begin
+         opcode.data[0] := 3;
+         result := ObjectFactory(TEBSysBGM, opcode, parent);
+      end;
+      else raise EParseMessage.CreateFmt('Unknown BGM index %d', [opcode.data[0]]);
+   end;
+end;
+
 const
-   OPCODES_IMPLEMENTED = 68;
+   OPCODES_IMPLEMENTED = 67;
    OPCODE_LIST: array[1..OPCODES_IMPLEMENTED] of TOpcodePair =
      ((K: 10; V: nil), (K: 20713; v: nil), (K: 20720; V: nil), (K: 20730; V: nil),
       (K: 10110; V: TEBShowMessage), (K: 20110; V: TEBExtension), (K: 10130; V: TEBPortrait),
       (K: 11410; V: TEBWait), (K: 10150; V: TEBInputNumber), (K: 10230; V: TEBTimer),
       (K: 10310; V: TEBMoney), (K: 10410; V: TEBExperience), (K: 10420; V: TEBLevel),
       (K: 10500; V: TEBTakeDamage), (K: 10610; V: TEBHeroName), (K: 10620; V: TEBHeroTitle),
-      (K: 10660; V: TEBSysBGM), (K: 10670; V: TEBSysSFX), (K: 10680; V: TEBSysSkin),
+      (K: 10670; V: TEBSysSFX), (K: 10680; V: TEBSysSkin),
       (K: 10690; V: TEBTransition), (K: 10740; V: TEBInputHeroName), (K: 10810; V: TEBTeleport),
       (K: 10820; V: TEBMemorizeLocation), (K: 10830; V: TEBMemoTeleport), (K: 10840; V: TEBRideVehicle),
       (K: 10910; V: TEBTerrainID), (K: 10920; V: TEBMapObjID), (K: 11010; V: TEBEraseScreen),
@@ -884,7 +900,7 @@ const
       (K: 13410; V: TEBEndBattle), (K: 1006; V: TEBForceFlee), (K: 1007; V: TEBEnableCombo),
       (K: 13260; V: TEBBattleAnimation));
 
-   COMPLEX_OPCODES = 56;
+   COMPLEX_OPCODES = 57;
    COMPLEX: array[1..COMPLEX_OPCODES] of TComplexOpcodePair =
      ((K: 0; V: Cleanup), (K: 10120; v: ConvertMessageOptions), (K: 20140; v: ConvertCaseExtension),
       (K: 10140; V: ConvertCase), (K: 20141; V: ConvertEndCase), (K: 12010; V: ConvertIf),
@@ -902,7 +918,7 @@ const
       (K: 11310; V: ConvertTranslucency), (K: 11320; V: ConvertFlash), (K: 11330; V: ConvertMove),
       (K: 11740; V: ConvertEncounterRate), (K: 12210; V: ConvertWhileLoop), (K: 22210; V: LoopEnd),
       (K: 12220; V: ConvertBreak), (K: 12320; V: ConvertDelete), (K: 1008; V: ConvertClassChange),
-      (K: 1009; V: ConvertBattleCommand),
+      (K: 1009; V: ConvertBattleCommand), (K: 10660; V: ConvertSysBGM),
       (K: 13110; V: ConvertMonsterHP), (K: 13120; V: ConvertMonsterMP), (K: 13130; V: ConvertMonsterStatus),
       (K: 13150; V: ConvertShowMonster), (K: 1005; V: ConvertBattleGlobalEvent),
       (K: 13310; V: ConvertBattleIf), (K: 23310; V: ConvertIfElse), (K: 23311; V: ConvertEndIf));

@@ -24,8 +24,8 @@ uses
    turbu_characters, turbu_items, turbu_skills, turbu_classes, turbu_resists,
    turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations,
    turbu_containers, turbu_script_interface, turbu_game_data, turbu_terrain,
-   turbu_map_metadata, turbu_tilesets, turbu_maps, turbu_monsters,
-   turbu_serialization;
+   turbu_map_metadata, turbu_tilesets, turbu_maps, turbu_monsters, turbu_sounds,
+   turbu_serialization, turbu_defs;
 
 type
    TCharClassList = TRpgDataDict<TClassTemplate>;
@@ -51,7 +51,7 @@ type
                     rd_attrib, rd_condition, rd_tileset, rd_switch, rd_int,
                     rd_float, rd_string, rd_vocab, rd_tilegroup, rd_script,
                     rd_vehicles, rd_monster, rd_mparty, rd_battleChar, rd_layout,
-                    rd_terrain, rd_legacy);
+                    rd_terrain, rd_sound, rd_legacy);
    TRpgDataTypeSet = set of TRpgDataTypes;
 
    TBattleCommandList = class(TRpgDataDict<TBattleCommand>)
@@ -136,10 +136,15 @@ type
       procedure SaveScripts;
       procedure SaveToDB(db: TdmDatabase);
       procedure DownloadTileGroups(db: TdmDatabase);
+      procedure LoadSounds;
+      procedure SaveSounds;
    protected
       FGlobalScriptBlock: TEBUnit;
       FSysVocab: TStringList;
       FCustomVocab: TStringList;
+      FBgm: array[TBgmTypes] of TRpgMusic;
+      FSfx: array[TSfxTypes] of TRpgSound;
+
       class function keyChar: ansiChar; override;
    public
       constructor Create; override;
@@ -215,8 +220,8 @@ var
 
 implementation
 uses
-   Windows,
-   zlib, math, TypInfo,
+   Windows, Variants,
+   math, TypInfo,
    archiveInterface, commons,
    turbu_constants, turbu_engines, turbu_versioning, turbu_plugin_interface,
    turbu_functional, turbu_map_objects,
@@ -369,6 +374,7 @@ begin
       stream.Free;
    end;
 
+   LoadSounds;
    DownloadTileGroups(dm);
    FTileset.download;
 end;
@@ -493,7 +499,13 @@ end;
 destructor TRpgDatabase.Destroy;
 var
    i: TItemType;
+   bgm: TBgmTypes;
+   sfx: TSfxTypes;
 begin
+  for bgm := Low(TBgmTypes) to High(TBgmTypes) do
+    FBgm[bgm].Free;
+  for sfx := Low(TSfxTypes) to High(TSfxTypes) do
+    FSfx[sfx].Free;
    FScriptLoaded.Free;
    FLegacyData.Free;
    FTerrains.Free;
@@ -695,6 +707,7 @@ begin
       rd_tilegroup: UploadTileGroups(db);
       rd_layout: FLayout.upload(FSerializer, db.syslayout);
       rd_terrain: FTerrains.upload;
+      rd_sound: SaveSounds;
       rd_legacy:
       begin
          for enumerator in FLegacyData do
@@ -818,6 +831,45 @@ end;
 procedure TRpgDatabase.addTileset;
 begin
    FTileset.Add(TTileset.Create);
+end;
+
+procedure TRpgDatabase.LoadSounds;
+var
+   bgm: TBgmTypes;
+   sfx: TSfxTypes;
+begin
+   for bgm := Low(TBgmTypes) to High(TBgmTypes) do
+   begin
+      dmDatabase.SysSound.Locate('id;isMusic', VarArrayOf([ord(bgm), true]), []);
+      FBgm[bgm] := TRpgMusic.Create;
+      FBgm[bgm].Download(FSerializer, dmDatabase.SysSound);
+   end;
+   for sfx := Low(TSfxTypes) to High(TSfxTypes) do
+   begin
+      dmDatabase.SysSound.Locate('id;isMusic', VarArrayOf([ord(sfx), false]), []);
+      FSfx[sfx] := TRpgSound.Create;
+      FSfx[sfx].Download(FSerializer, dmDatabase.SysSound);
+   end;
+end;
+
+procedure TRpgDatabase.SaveSounds;
+var
+   bgm: TBgmTypes;
+   sfx: TSfxTypes;
+   isMusic: TBooleanField;
+begin
+   isMusic := dmDatabase.SysSound.FieldByName('isMusic') as TBooleanField;
+   for bgm := Low(TBgmTypes) to High(TBgmTypes) do
+   begin
+      FBgm[bgm].Upload(FSerializer, dmDatabase.SysSound);
+      isMusic.Value := true;
+   end;
+   for sfx := Low(TSfxTypes) to High(TSfxTypes) do
+   begin
+      FSfx[sfx].Upload(FSerializer, dmDatabase.SysSound);
+      isMusic.Value := false;
+   end;
+   dmDatabase.SysSound.Post;
 end;
 
 function TRpgDatabase.countItems: integer;

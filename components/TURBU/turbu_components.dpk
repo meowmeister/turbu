@@ -39,7 +39,8 @@ contains
   EventBuilder in '..\..\turbu\turbu format\EventBuilder.pas',
   variable_selector in 'variable_selector.pas',
   IDLookupCombo in 'IDLookupCombo.pas',
-  pic_edit in 'pic_edit.pas';
+  pic_edit in 'pic_edit.pas',
+  sound_edit in 'sound_edit.pas';
 
 end.
 

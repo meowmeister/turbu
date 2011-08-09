@@ -265,7 +265,10 @@ procedure TfrmTurbuMain.actPlayMusicExecute(Sender: TObject);
 begin
    RequireMapEngine;
    if FMusicPlayer = nil then
+   begin
       FMusicPlayer := TFrmMusicSelector.Create(self);
+      FMusicPlayer.Setup(GArchives[MUSIC_ARCHIVE]);
+   end;
    FMusicPlayer.ShowModal;
 end;
 

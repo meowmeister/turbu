@@ -21,7 +21,7 @@ interface
 uses
    types, classes, DB, Generics.Collections, rtti,
    turbu_constants, turbu_defs, turbu_classes, turbu_skills, turbu_containers,
-   turbu_script_interface, turbu_serialization;
+   turbu_script_interface, turbu_serialization, turbu_sounds;
 
 type
    TExpCalcFunc = function(int1, int2, int3, int4, int5: integer): integer of object;
@@ -216,7 +216,7 @@ type
    TMovementStyle = (msSurface, msHover, msFly);
 
    TVehicleTemplate = class(TRpgDatafile)
-   private
+   protected
       FMapSprite: string;
       FTranslucent: boolean;
       FShallowWater: boolean;
@@ -224,12 +224,15 @@ type
       FLowLand: boolean;
       FMovementStyle: TMovementStyle;
       FAltitude: byte;
+      FMusic: TRpgMusic;
    protected
       class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
+      constructor Create; override;
+      destructor Destroy; override;
 
       property mapSprite: string read FMapSprite write FMapSprite;
       property translucent: boolean read FTranslucent write FTranslucent;
@@ -238,6 +241,7 @@ type
       property lowLand: boolean read FLowLand write FLowLand;
       property movementStyle: TMovementStyle read FMovementStyle write FMovementStyle;
       property altitude: byte read FAltitude write FAltitude;
+      property music: TRpgMusic read FMusic write FMusic;
    end;
 
 implementation
@@ -636,6 +640,18 @@ begin
 end;
 
 { TVehicleTemplate }
+
+constructor TVehicleTemplate.Create;
+begin
+   inherited Create;
+   FMusic := TRpgMusic.Create;
+end;
+
+destructor TVehicleTemplate.Destroy;
+begin
+   FMusic.Free;
+   inherited;
+end;
 
 class function TVehicleTemplate.getDatasetName: string;
 begin
