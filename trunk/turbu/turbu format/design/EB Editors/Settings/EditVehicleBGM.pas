@@ -37,7 +37,10 @@ uses
 
 procedure TfrmEditVehicleBGM.FormCreate(Sender: TObject);
 begin
-   cdsVehicles.CloneCursor(dmDatabase.vehicles, false, true);
+   //TODO: fix when QC 97406 is fixed
+   cdsVehicles.CloneCursor(dmDatabase.vehicles, false);
+   cdsVehicles.IndexFieldNames := 'id';
+
    cdsVehicles.First;
    while not cdsVehicles.Eof do
    begin
