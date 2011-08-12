@@ -79,6 +79,8 @@ contains
   EditSysBGM in 'EB Editors\Settings\EditSysBGM.pas' {frmEditSysBGM},
   EditBattle in 'EB Editors\Battle\EditBattle.pas' {frmBattle},
   EditVehicleBGM in 'EB Editors\Settings\EditVehicleBGM.pas' {frmEditVehicleBGM},
-  EditSysSFX in 'EB Editors\Settings\EditSysSFX.pas' {frmEditSysSFX};
+  EditSysSFX in 'EB Editors\Settings\EditSysSFX.pas' {frmEditSysSFX},
+  imageSelectorFrame in '..\..\engines\basis\imageSelectorFrame.pas' {frameImageSelector: TFrame},
+  EditSkin in 'EB Editors\Settings\EditSkin.pas' {frmSkinSelector};
 
 end.

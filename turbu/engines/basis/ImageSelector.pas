@@ -22,21 +22,13 @@ interface
 
 uses
   StdCtrls, Classes, Controls, ExtCtrls, Forms,
-  ArchiveInterface;
+  ArchiveInterface, imageSelectorFrame;
 
 type
    TfrmImageSelector = class(TForm)
-      lstFilename: TListBox;
       btnClose: TButton;
       btnSelect: TButton;
-      imgSelection: TImage;
-      procedure lstFilenameClick(Sender: TObject);
-   private
-      FArchive: IArchive;
-      FPath: string;
-      FSelection: string;
-      procedure LoadImage(stream: TStream);
-      procedure SetSelection(const Value: string);
+      frameImageSelector: TframeImageSelector;
    public
       procedure Setup(const archive: IArchive; const path: string; nullable: boolean = false);
       function Select(const value: string): string;
@@ -52,87 +44,17 @@ const NULL_ITEM = '*NONE';
 
 { TfrmImageSelector }
 
-procedure TfrmImageSelector.LoadImage(stream: TStream);
-var
-  NewGraphic: TGraphic;
-begin
-  NewGraphic := TPngImage.Create;
-  try
-     try
-       NewGraphic.LoadFromStream(stream);
-       imgSelection.Picture.Graphic := NewGraphic;
-     except
-       FreeAndNil(NewGraphic);
-       raise;
-     end;
-  finally
-     NewGraphic.Free;
-  end;
-end;
-
-procedure TfrmImageSelector.lstFilenameClick(Sender: TObject);
-var
-   filename: string;
-   oldpath: string;
-   stream: TStream;
-begin
-   filename := lstFilename.Items[lstFilename.ItemIndex];
-   if filename = NULL_ITEM then
-   begin
-      imgSelection.Picture := nil;
-      FSelection := '';
-   end
-   else begin
-      FSelection := filename;
-      stream := nil;
-      oldpath := FArchive.currentFolder;
-      try
-         FArchive.currentFolder := FPath;
-         stream := FArchive.getFile(ChangeFileExt(filename, '.png'));
-         LoadImage(stream);
-      finally
-         FArchive.currentFolder := oldpath;
-         stream.Free;
-      end;
-   end;
-end;
-
 function TfrmImageSelector.Select(const value: string): string;
 begin
-   self.SetSelection(value);
+   frameImageSelector.Selection := value;
    if self.ShowModal = mrCancel then
       result := value
-   else result := FSelection;
-end;
-
-procedure TfrmImageSelector.SetSelection(const Value: string);
-begin
-   FSelection := Value;
-   if value = '' then
-      lstFilename.ItemIndex := 0
-   else lstFilename.ItemIndex := lstFilename.Items.IndexOf(value);
-   if lstFilename.ItemIndex = -1 then
-      lstFilename.ItemIndex := 0;
+   else result := frameImageSelector.Selection;
 end;
 
 procedure TfrmImageSelector.Setup(const archive: IArchive; const path: string; nullable: boolean);
-var
-   filename, oldpath: string;
 begin
-   FArchive := archive;
-   FPath := path;
-   lstFilename.Clear;
-   if nullable then
-      lstFilename.AddItem(NULL_ITEM, nil);
-   oldpath := FArchive.currentFolder;
-   try
-      for filename in FArchive.allFiles(path) do
-         lstFilename.AddItem(ChangeFileExt(ExtractFileName(filename), ''), nil);
-   finally
-      FArchive.CurrentFolder := oldpath;
-   end;
-   lstFilename.ItemIndex := 0;
-   lstFilenameClick(self);
+   frameImageSelector.Setup(archive, path, nullable);
 end;
 
 end.

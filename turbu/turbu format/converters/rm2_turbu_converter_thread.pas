@@ -245,7 +245,7 @@ begin
       begin
          specialsList.Clear;
          specialsList.Add(string(FLdb.systemData.battleSysGraphic));
-         processImageList('System2', 'System', '', specialsList, processImage);
+         processImageList('System2', 'System2', '', specialsList, processImage);
       end;
    finally
       specialsList.Free;
