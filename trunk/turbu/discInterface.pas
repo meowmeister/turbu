@@ -229,6 +229,7 @@ begin
       fileStream := TFileStream.Create(key, fmOpenRead);
       try
          result := TMemoryStream.Create;
+         TMemoryStream(result).SetSize(filestream.Size);
          result.CopyFrom(fileStream, fileStream.Size);
          result.seek(0, soFromBeginning);
       finally
