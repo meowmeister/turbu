@@ -288,7 +288,7 @@ implementation
 uses sysUtils, windows, //system libs
      fileIO, BER, commons, formats;
 
-const
+{const
    TRANSITION_TYPE_LIST: array[0..5] of ansiString = ('Teleport--Erase', 'Teleport--Show',
                     'Battle Start--Erase', 'Battle Start--Show', 'Battle End--Erase',
                     'Battle End--Show');
@@ -331,7 +331,7 @@ const
    C_WEATHER: array[0..4] of ansiString = ('we_off', 'we_rain', 'we_snow', 'we_fog', 'we_sand');
    C_IMAGE_EFFECTS: array[0..2] of ansiString = ('ie_none', 'ie_rotate', 'ie_wave');
 
-   END_BLOCK: array[1..2] of integer = (20713, 20141);
+   END_BLOCK: array[1..2] of integer = (20713, 20141); }
 
 procedure fillInEventInt(const expected: byte; out theResult: integer); forward;
 procedure fillInEPageInt(const expected: byte; out theResult: integer); forward;
