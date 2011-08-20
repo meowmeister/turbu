@@ -218,10 +218,10 @@ const INDENT_SIZE = 2;
 
 procedure TEBObject.Add(aObject: TEBObject);
 begin
-   FChildren.Add(aObject);
    if aObject.FOwner <> nil then
       AObject.FOwner.children.Extract(aObject);
    aObject.FOwner := self;
+   FChildren.Add(aObject);
    if aObject.name <> '' then
    begin
       EnsureNameDic;
