@@ -153,6 +153,6 @@ begin
 end;
 
 initialization
-   RegisterClasses([TEBPlayBGM, TEBFadeBGM, TEBMemBGM, TEBPlayMemBGM,
+   TEBObject.RegisterClasses([TEBPlayBGM, TEBFadeBGM, TEBMemBGM, TEBPlayMemBGM,
                     TEBPlaySFX, TEBPlayMovie]);
 end.

@@ -978,7 +978,7 @@ begin
 end;
 
 initialization
-   RegisterClasses([TEBTransition, TEBTeleport, TEBMemorizeLocation, TEBMemoTeleport,
+   TEBObject.RegisterClasses([TEBTransition, TEBTeleport, TEBMemorizeLocation, TEBMemoTeleport,
                     TEBRideVehicle, TEBTeleportVehicle, TEBSwapObjects, TEBTerrainID,
                     TEBMapObjID, TEBEraseScreen, TEBShowScreen, TEBTintScreen, TEBFlashScreen,
                     TEBShakeScreen, TEBPanScreen, TEBWeather, TEBNewImage, TEBImageColor,

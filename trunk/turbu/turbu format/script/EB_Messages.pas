@@ -276,6 +276,6 @@ begin
 end;
 
 initialization
-   RegisterClasses([TEBShowMessage, TEBMessageOptions, TEBPortrait, TEBChoiceMessage,
+   TEBObject.RegisterClasses([TEBShowMessage, TEBMessageOptions, TEBPortrait, TEBChoiceMessage,
                     TEBInputNumber, TEBInputHeroName, TEBSave, TEBMenu, TEBMenuEnable]);
 end.

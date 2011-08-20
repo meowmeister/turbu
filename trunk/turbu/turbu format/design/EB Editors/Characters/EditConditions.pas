@@ -5,7 +5,7 @@ interface
 uses
    DBClient, Classes, Controls, ExtCtrls, DB, StdCtrls, DBCtrls,
    EventBuilder, variable_selector, ebPartyBase, IDLookupCombo, EBEdit,
-   dm_database;
+   dm_database, button_edit;
 
 type
    TfrmEBEditConditions = class(TfrmEBPartyBase)
@@ -31,7 +31,7 @@ procedure TfrmEBEditConditions.UploadObject(obj: TEbObject);
 begin
    inherited UploadObject(obj);
    grpOperation.ItemIndex := obj.Values[0];
-   cboCondition.id := (obj.Components[1] as TEBLookupValue).values[0];
+   cboCondition.id := (obj.Children[1] as TEBLookupValue).values[0];
 end;
 
 procedure TfrmEBEditConditions.DownloadObject(obj: TEbObject);

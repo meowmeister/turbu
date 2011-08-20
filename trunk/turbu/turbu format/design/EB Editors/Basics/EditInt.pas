@@ -23,7 +23,8 @@ interface
 uses
    SysUtils, Controls, Forms, Classes, Dialogs, ExtCtrls, StdCtrls, Mask,
    JvExMask, JvSpin,
-   EventBuilder, EbEdit, EB_Expressions, variable_selector, turbu_classes;
+   EventBuilder, EbEdit, EB_Expressions, variable_selector, turbu_classes,
+  button_edit;
 
 type
    [EditorCategory('Basics', 'Set Integer')]
@@ -128,7 +129,7 @@ var
    lValue, rValue: TEBExpression;
 begin
    assert(obj is TEBGlobalInt);
-   lValue := obj.components[0] as TEBExpression;
+   lValue := obj.Children[0] as TEBExpression;
    if lValue is TEBIntegerValue then
    begin
       radVariable.Checked := true;
@@ -140,12 +141,12 @@ begin
          selLhsValue.ID := lValue.Values[0]
       else selLhsValue.ID := ContextLookup((lValue as TEBVariableValue).GetNodeText);
    end;
-   rValue := obj.components[1] as TEBExpression;
+   rValue := obj.Children[1] as TEBExpression;
    if rValue is TEBBinaryOp then
    begin
-      assert(lValue.GetScriptText = (rValue.Components[1] as TEBExpression).GetScriptText);
+      assert(lValue.GetScriptText = (rValue.Children[1] as TEBExpression).GetScriptText);
       grpOperation.ItemIndex := ord(TEBBinaryOp(rValue).op) + 1;
-      rValue := rValue.Components[1] as TEBExpression;
+      rValue := rValue.Children[1] as TEBExpression;
    end;
    if rValue is TEBIntegerValue then
    begin
@@ -154,13 +155,13 @@ begin
    end
    else if rValue is TEBIntsValue then
    begin
-      if rValue.ComponentCount = 0 then
+      if rValue.ChildCount = 0 then
       begin
          radValue.Checked := true;
          selValue.ID := rValue.Values[0];
       end
       else begin
-         rValue := rValue.Components[0] as TEBIntsValue;
+         rValue := rValue.Children[0] as TEBIntsValue;
          radRefValue.Checked := true;
          selIndex.ID := rValue.Values[0];
       end;

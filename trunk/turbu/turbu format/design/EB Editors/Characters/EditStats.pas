@@ -4,7 +4,8 @@ interface
 
 uses
    ExtCtrls, DB, StdCtrls, DBCtrls, Classes, Controls, Mask, JvExMask, JvSpin,
-   EBEdit, ebPartyBase, variable_selector, EventBuilder, IDLookupCombo;
+   EBEdit, ebPartyBase, variable_selector, EventBuilder, IDLookupCombo,
+  button_edit;
 
 type
    [EditorCategory('Characters', 'Change Stats')]
@@ -64,7 +65,7 @@ var
    i: integer;
 begin
    inherited UploadObject(obj);
-   prop := (obj.Components[0] as TEBChainable).chain as TEBPropExpr;
+   prop := (obj.Children[0] as TEBChainable).chain as TEBPropExpr;
    assert(assigned(prop));
    cboStat.ItemIndex := -1;
    for i := 0 to High(STATS) do
@@ -75,7 +76,7 @@ begin
       end;
    assert(cboStat.ItemIndex <> -1);
    grpOperation.ItemIndex := obj.Values[0];
-   UploadValuePtrSelection(obj.Components[1] as TEBExpression, radExactAmount,
+   UploadValuePtrSelection(obj.Children[1] as TEBExpression, radExactAmount,
      radPointer, spnExactValue, selValue);
 end;
 
@@ -84,7 +85,7 @@ var
    value: TEBExpression;
 begin
    inherited DownloadObject(obj);
-   (obj.Components[0] as TEBChainable).chain := TEBPropExpr.Create(STATS[cboStat.ItemIndex]);
+   (obj.Children[0] as TEBChainable).chain := TEBPropExpr.Create(STATS[cboStat.ItemIndex]);
    obj.Values.Add(grpOperation.ItemIndex);
    if radExactAmount.Checked then
       value := TEBIntegerValue.Create(spnExactValue.AsInteger)

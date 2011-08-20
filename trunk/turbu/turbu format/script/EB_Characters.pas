@@ -327,17 +327,13 @@ const
    LINE = 'Change Skill: %s, %s %s';
    ACTION: array[0..1] of string = ('Learn', 'Forget');
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetNodeText,
-                           ACTION[values[0]],
-                           (Components[1] as TEBExpression).GetNodeText]);
+   result := format(LINE, [ChildNode[0], ACTION[values[0]], ChildNode[1]]);
 end;
 
 function TEBSkills.GetScriptText: string;
 const LINE = '%s.skill[%s] := %s;';
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetScript(0),
-                           (Components[1] as TEBExpression).GetScript(0),
-                           BOOL_STR[values[0]]]);
+   result := format(LINE, [ChildScript[0], ChildScript[1], BOOL_STR[values[0]]]);
 end;
 
 { TEBEquipment }
@@ -347,9 +343,7 @@ const
    LINE = 'Change Equipment: %s, %s %s';
    ACTION: array[0..1] of string = ('Equip', 'Unequip');
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetNodeText,
-                           ACTION[values[0]],
-                           (Components[1] as TEBExpression).GetNodeText]);
+   result := format(LINE, [ChildNode[0], ACTION[values[0]], ChildNode[1]]);
 end;
 
 function TEBEquipment.GetScriptText: string;
@@ -363,8 +357,7 @@ begin
       line := UNEQUIP_LINE
    else
       line := EQUIP_LINE;
-   result := format(line, [(Components[0] as TEBExpression).GetScript(0),
-                           (Components[1] as TEBExpression).GetScript(0)]);
+   result := format(line, [ChildScript[0], ChildScript[1]]);
 end;
 
 { TEBChangeHP }
@@ -374,9 +367,7 @@ const
    LINE = 'Change HP: %s, %s %s';
    ACTION: array[0..1] of string = ('Gain', 'Lose');
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetNodeText,
-                           ACTION[values[0]],
-                           (Components[1] as TEBExpression).GetNodeText]);
+   result := format(LINE, [ChildNode[0], ACTION[values[0]], ChildNode[1]]);
    if boolean(Values[1]) then
       result := result + ', Death Possible';
 end;
@@ -386,10 +377,7 @@ const
    LINE = '%s.ChangeHP(%s%s, %s);';
    SIGN: array[0..1] of string = ('', '-');
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetScript(0),
-                           SIGN[values[0]],
-                           (Components[1] as TEBExpression).GetScript(0),
-                           BOOL_STR[values[1]]]);
+   result := format(LINE, [ChildScript[0], SIGN[values[0]], ChildScript[1], BOOL_STR[values[1]]]);
 end;
 
 { TEBChangeMP }
@@ -399,9 +387,7 @@ const
    LINE = 'Change MP: %s, %s %s';
    ACTION: array[0..1] of string = ('Gain', 'Lose');
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetNodeText,
-                           ACTION[values[0]],
-                           (Components[1] as TEBExpression).GetNodeText]);
+   result := format(LINE, [ChildNode[0], ACTION[values[0]], ChildNode[1]]);
 end;
 
 function TEBChangeMP.GetScriptText: string;
@@ -409,9 +395,7 @@ const
    LINE = '%s.ChangeMP(%s%s);';
    SIGN: array[0..1] of string = ('', '-');
 begin
-   result := format(LINE, [(Components[0] as TEBExpression).GetScript(0),
-                           SIGN[values[0]],
-                           (Components[1] as TEBExpression).GetScript(0)]);
+   result := format(LINE, [ChildScript[0], SIGN[values[0]], ChildScript[1]]);
 end;
 
 { TEBChangeStatus }
@@ -600,7 +584,7 @@ begin
 end;
 
 initialization
-   RegisterClasses([TEBMoney, TEBInventory, TEBChangeParty, TEBExperience,
+   TEBObject.RegisterClasses([TEBMoney, TEBInventory, TEBChangeParty, TEBExperience,
                     TEBLevel, TEBStats,TEBSkills, TEBEquipment, TEBChangeHP,
                     TEBChangeStatus, TEBFullHeal, TEBTakeDamage, TEBHeroName,
                     TEBHeroTitle, TEBHeroSprite, TEBHeroPortrait, TEBClassChange,

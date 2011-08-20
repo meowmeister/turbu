@@ -28,12 +28,13 @@ type
    TEBUntranslated = class(TEBObject)
    private
       FOpcode: integer;
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
    public
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
       function GetNode: TEBNode; override;
       function GetNodeText: string; override;
-   published
       property opcode: integer read FOpcode write FOpcode;
    end;
 
@@ -52,7 +53,7 @@ type
       function HasLabels: boolean;
       function AlwaysBlock: boolean; override;
    public
-      constructor Create(AOwner: TComponent); override;
+      constructor Create(AOwner: TEBObject); override;
       destructor Destroy; override;
       function AddParam(const name, &type: string): TEBParam;
       function GetScript(indent: integer): string; override;
@@ -283,9 +284,14 @@ begin
    result := '// ' + GetNodeText;
 end;
 
+procedure TEBUntranslated.SerializeProps(list: TStringList; depth: integer);
+begin
+   assert(false);
+end;
+
 { TEBProcedure }
 
-constructor TEBProcedure.Create(AOwner: TComponent);
+constructor TEBProcedure.Create(AOwner: TEBObject);
 begin
    inherited Create(AOwner);
    FVarBlock := TStringList.Create;
@@ -339,7 +345,7 @@ end;
 procedure TEBProcedure.ScanHeader;
 var
    header: TEBHeader;
-   comp: TComponent;
+   child: TEBObject;
    counter: integer;
    inbuilt: TArray<TEBVariable>;
    variable: TEBVariable;
@@ -347,12 +353,12 @@ var
    i: integer;
 begin
    header := EnsureHeader;
-   SetLength(inbuilt, header.ComponentCount);
+   SetLength(inbuilt, header.ChildCount);
    counter := 0;
-   for comp in header do
-      if (comp is TEBVariable) and not (comp is TEBParam) then
+   for child in header do
+      if (child is TEBVariable) and not (child is TEBParam) then
       begin
-         inbuilt[counter] := TEBVariable(comp);
+         inbuilt[counter] := TEBVariable(child);
          inc(counter);
       end;
    FVarBlock.Clear;
@@ -381,7 +387,7 @@ var
    header: TEBHeader;
 begin
    header := self.EnsureHeader;
-   if header.ComponentCount = 0 then
+   if header.ChildCount = 0 then
       Exit('');
    result := header.GetScriptText;
 end;
@@ -488,8 +494,8 @@ end;
 
 function TEBCase.GetElseBlock: TEbElseBlock;
 begin
-   if self.Components[self.ComponentCount - 1] is TEbElseBlock then
-      result := TEbElseBlock(self.Components[self.ComponentCount - 1])
+   if self.Children[self.ChildCount - 1] is TEbElseBlock then
+      result := TEbElseBlock(self.Children[self.ChildCount - 1])
    else result := nil;
 end;
 
@@ -579,15 +585,15 @@ procedure TEBIf.Add(aObject: TEBObject);
 var
    block: TEBCodeBlock;
 begin
-   if (ComponentCount = 0) or (aObject is TEBCodeBlock) then
+   if (ChildCount = 0) or (aObject is TEBCodeBlock) then
    begin
       inherited Add(aObject);
       Exit;
    end;
    if FElseSet then
-      block := self.Components[2] as TEBCodeBlock
+      block := self.Children[2] as TEBCodeBlock
    else
-      block := self.Components[1] as TEBCodeBlock;
+      block := self.Children[1] as TEBCodeBlock;
    block.Add(aObject);
 end;
 
@@ -603,15 +609,15 @@ const LINE = 'IF %s ';
 var
    node: TEBNode;
 begin
-   assert(self.ComponentCount in [1..3]);
+   assert(self.ChildCount in [1..3]);
    result := inherited GetNode;
-   if ComponentCount > 1 then
+   if ChildCount > 1 then
    begin
-      result.add((Components[1] as TEBCodeBlock).GetNode);
-      if ComponentCount = 3 then
+      result.add((Children[1] as TEBCodeBlock).GetNode);
+      if ChildCount = 3 then
       begin
          node := TEBNode.Create(self, 'else');
-         node.add((Components[2] as TEBCodeBlock).GetNode);
+         node.add((Children[2] as TEBCodeBlock).GetNode);
          result.add(node);
       end;
    end
@@ -628,19 +634,19 @@ var
    list: TStringList;
    i: integer;
 begin
-   assert(self.ComponentCount in [1..3]);
+   assert(self.ChildCount in [1..3]);
    list := TStringList.Create;
    try
       list.add(IndentString(indent) + GetScriptText);
-      if ComponentCount = 1 then
+      if ChildCount = 1 then
          list.add(indentString(indent + 1) + ';')
       else begin
-         list.add((Components[1] as TEBCodeBlock).GetScript(indent));
-         if ComponentCount = 3 then
+         list.add((Children[1] as TEBCodeBlock).GetScript(indent));
+         if ChildCount = 3 then
          begin
             list[list.Count - 1] := StripTrailingSem(list[list.Count - 1]);
             list.add(IndentString(indent) + 'else');
-            list.add((Components[2] as TEBCodeBlock).GetScript(indent));
+            list.add((Children[2] as TEBCodeBlock).GetScript(indent));
          end;
       end;
       for I := List.Count - 1 downto 0 do
@@ -686,7 +692,7 @@ end;
 
 function TEBFunctionCall.GetScriptText: string;
 begin
-   result := (components[0] as TEBCall).GetScript(0);
+   result := (Children[0] as TEBCall).GetScript(0);
 end;
 
 { TEBExit }
@@ -923,14 +929,14 @@ end;
 
 function TEBWhileLoop.GetNodeText: string;
 begin
-   if (ComponentCount > 0) and (Components[0] is TEBExpression) then
+   if (ChildCount > 0) and (Children[0] is TEBExpression) then
       result := format('Loop While (%s):', [ChildNode[0]])
    else result := 'Loop Indefinitely:';
 end;
 
 function TEBWhileLoop.GetScriptText: string;
 begin
-   if (ComponentCount > 0) and (Components[0] is TEBExpression) then
+   if (ChildCount > 0) and (Children[0] is TEBExpression) then
       result := format('while %s do', [ChildScript[0]])
    else result := 'while true do';
 end;
@@ -956,7 +962,7 @@ end;
 
 function TEBComment.GetScript(indent: integer): string;
 begin
-   if ComponentCount = 0 then
+   if ChildCount = 0 then
       result := '// ' + Text
    else result := '{' + MultilineText(indent, 3) + '}';
    result := IndentString(indent) + result;
@@ -1052,7 +1058,7 @@ begin
 end;
 
 initialization
-   RegisterClasses([TEBUntranslated, TEBProcedure, TEBExtension,
+   TEBObject.RegisterClasses([TEBUntranslated, TEBProcedure, TEBExtension,
                     TEBCase, TEBCaseBlock, TEBElseBlock, TEBEndCase, TEBIf,
                     TEBCodeBlock, TEBEnumCaseBlock, TEBForLoop, TEBLabel, TEBGoto,
                     TEBWhileLoop, TEBBreak, TEBComment, TEBProgram, TEBMap,

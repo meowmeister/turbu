@@ -4,7 +4,8 @@ interface
 
 uses
    ExtCtrls, DB, StdCtrls, DBCtrls, Classes, Controls, Mask, JvExMask, JvSpin,
-   EBEdit, ebPartyBase, variable_selector, EventBuilder, IDLookupCombo, dm_database;
+   EBEdit, ebPartyBase, variable_selector, EventBuilder, IDLookupCombo, dm_database,
+  button_edit;
 
 type
    [EditorCategory('Characters', 'Change Skills')]
@@ -49,7 +50,7 @@ var
 begin
    inherited UploadObject(Obj);
    grpOperation.ItemIndex := obj.Values[0];
-   skill := obj.Components[1] as TEBLookupObjExpr;
+   skill := obj.Children[1] as TEBLookupObjExpr;
    if skill.Values.Count > 0 then
    begin
       radSpecificItem.Checked := true;
@@ -57,7 +58,7 @@ begin
    end
    else begin
       radItemPtr.Checked := true;
-      selSkillID.ID := (skill.Components[0] as TEBIntsValue).Values[0];
+      selSkillID.ID := (skill.Children[0] as TEBIntsValue).Values[0];
    end;
 end;
 

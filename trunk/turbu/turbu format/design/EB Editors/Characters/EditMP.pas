@@ -5,7 +5,8 @@ interface
 uses
   DBClient, Classes, Controls, ExtCtrls, DB, StdCtrls, DBCtrls,  Mask,
   JvExMask, JvSpin,
-  EventBuilder, variable_selector, ebPartyBase, IDLookupCombo, EBEdit;
+  EventBuilder, variable_selector, ebPartyBase, IDLookupCombo, EBEdit,
+  button_edit;
 
 type
    [EditorCategory('Characters', 'Change MP')]
@@ -35,7 +36,7 @@ procedure TfrmEBEditMP.UploadObject(obj: TEbObject);
 begin
    inherited UploadObject(obj);
    grpOperation.ItemIndex := obj.Values[0];
-   UploadValuePtrSelection(obj.Components[1] as TEBExpression, radExactAmount,
+   UploadValuePtrSelection(obj.Children[1] as TEBExpression, radExactAmount,
                            radPointer, spnExactValue, selValue);
 end;
 

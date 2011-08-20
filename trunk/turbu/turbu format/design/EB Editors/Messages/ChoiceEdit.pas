@@ -121,21 +121,21 @@ begin
    obj.Values.Add(grpCancel.ItemIndex);
    ElseBlock := (obj as TEbCase).GetElseBlock;
    if assigned(ElseBlock) then
-      obj.RemoveComponent(ElseBlock);
+      obj.Children.Extract(ElseBlock);
    for I := 1 to GetMaxAnswers do
    begin
       if i > 1 then
          text := text + '/'
       else text := '';
       text := text + FEdits[i].Text;
-      if i <= obj.ComponentCount then
-         caseBlock := obj.Components[i - 1] as TEbCaseBlock
+      if i <= obj.ChildCount then
+         caseBlock := obj.Children[i - 1] as TEbCaseBlock
       else caseBlock := TEbCaseBlock.Create(obj);
       caseBlock.Text := FEdits[i].Text;
    end;
    obj.Text := text;
-   for I := GetMaxAnswers + 1 to obj.ComponentCount - 1 do
-      obj.RemoveComponent(obj.Components[i]);
+   for I := GetMaxAnswers + 1 to obj.ChildCount - 1 do
+      obj.Children.Extract(obj.Children[i]);
    if grpCancel.ItemIndex = CANCEL_ELSE then
    begin
       if not assigned(ElseBlock) then

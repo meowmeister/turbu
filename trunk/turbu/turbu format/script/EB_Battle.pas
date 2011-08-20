@@ -20,6 +20,7 @@ unit EB_Battle;
 
 interface
 uses
+   Classes,
    EventBuilder, EB_RpgScript, turbu_battle_engine;
 
 type
@@ -29,7 +30,10 @@ type
    TEBBattleBase = class(TEBMaybeCase)
    protected
       FResults: TBattleResultSet;
-   published
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
+   public
       property results: TBattleResultSet read FResults write FResults;
    end;
 
@@ -101,7 +105,7 @@ type
 
 implementation
 uses
-   SysUtils, Classes, TypInfo,
+   SysUtils, TypInfo,
    turbu_defs;
 
 { TEBMonsterHP }
@@ -351,8 +355,24 @@ begin
    result := format(LINE, [first, self.Name, formation, resultsStr, values[3], values[4]]);
 end;
 
+{ TEBBattleBase }
+
+procedure TEBBattleBase.AssignProperty(const key, value: string);
+begin
+   if key = 'Results' then
+      byte(FResults) := StringToSet(PTypeInfo(TypeInfo(TBattleResultSet)), value)
+   else inherited;
+end;
+
+procedure TEBBattleBase.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   if results <> [] then
+      list.Add(IndentString(depth) + 'Results = ' + SetToString(PTypeInfo(TypeInfo(TBattleResultSet)), byte(FResults), true));
+end;
+
 initialization
-   RegisterClasses([TEBMonsterHP, TEBMonsterMP, TEBMonsterStatus, TEBShowMonster,
-   TEBBattleBG, TEBEnableCombo, TEBForceFlee, TEBEndBattle, TEBBattleAnimation,
-   TEBBattle, TEBBattleEx]);
+   TEBObject.RegisterClasses([TEBMonsterHP, TEBMonsterMP, TEBMonsterStatus,
+                    TEBShowMonster, TEBBattleBG, TEBEnableCombo, TEBForceFlee,
+                    TEBEndBattle, TEBBattleAnimation, TEBBattle, TEBBattleEx]);
 end.

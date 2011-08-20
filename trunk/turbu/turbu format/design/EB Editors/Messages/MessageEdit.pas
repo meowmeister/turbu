@@ -73,8 +73,8 @@ end;
 
 procedure TfrmMessageEdit.DownloadObject(obj: TEbObject);
 begin
-   while obj.ComponentCount > 0 do
-      obj.RemoveComponent(obj.components[0]);
+   while obj.ChildCount > 0 do
+      obj.Children.Extract(obj.children[0]);
    if Memo1.lines.count > 0 then
    begin
       obj.Text := Memo1.Lines[0];
