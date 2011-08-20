@@ -261,6 +261,7 @@ end;
 
 destructor TEBObject.Destroy;
 begin
+   FNameDic.Free;
    FChildren.Free;
    FValues.Free;
    inherited Destroy;

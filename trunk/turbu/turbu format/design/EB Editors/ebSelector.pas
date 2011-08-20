@@ -108,15 +108,20 @@ begin
   result := BobJenkinsHash(Value, SizeOf(Value), 0);
 end;
 
+var
+   treeData: TTreeDataType;
+
 class constructor TfrmEBSelector.Create;
 begin
+   treeData := TTreeDataType.Create;
    FMap := TTreeTemplate.Create(TRules<string>.Default,
-      TRules<TTreeData>.Custom(TTreeDataType.create));
+      TRules<TTreeData>.Custom(treeData));
 end;
 
 class destructor TfrmEBSelector.Destroy;
 begin
    FMap.free;
+   treeData.Free;
 end;
 
 procedure TfrmEBSelector.FormCreate(Sender: TObject);
