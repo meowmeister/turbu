@@ -50,7 +50,6 @@ uses
   rpg_list in '..\mapview\libs\script engine\rpg_list.pas',
   script_backend in '..\mapview\libs\script engine\script_backend.pas',
   script_interface in '..\mapview\libs\script engine\script_interface.pas',
-  uPSI_script_interface in '..\mapview\libs\script engine\uPSI_script_interface.pas',
   findfile in '..\..\classes\findfile\findfile.pas',
   function_header in 'function_header.pas' {frmFuncHeader},
   rm2_turbu_map_metadata in '..\turbu format\converters\rm2_turbu_map_metadata.pas',
