@@ -4,7 +4,7 @@ interface
 
 uses
   SysUtils, Windows, Classes,
-  DeHL.Collections.List, DeHL.Collections.DistinctMultiMap;
+  Collections.Lists, Collections.MultiMaps;
 
 type
   PPackageInfo = ^TPackageInfo;

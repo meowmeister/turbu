@@ -49,6 +49,7 @@
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -94,26 +95,6 @@
 			<DCCReference Include="..\..\rttiHelper.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_containers.pas"/>
 			<DCCReference Include="..\..\turbu_functional.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.Dictionary.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.List.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.Abstract.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.Base.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\DeHL.Exceptions.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\DeHL.Types.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\DeHL.Base.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Extensions\DeHL.KeyValuePair.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Extensions\DeHL.Arrays.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\DeHL.StrConsts.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Math\DeHL.Math.Primes.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Serialization\DeHL.Serialization.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Extensions\DeHL.Converter.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Extensions\DeHL.Nullable.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.HashSet.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.DistinctMultiMap.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedList.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedMultiMap.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.DoubleSortedMultiMap.pas"/>
-			<DCCReference Include="..\..\..\classes\DeHL\Collections\DeHL.Collections.SortedDictionary.pas"/>
 			<DCCReference Include="finalizer_hack.pas"/>
 			<DCCReference Include="..\..\..\..\ListCompare\StringListComp.pas"/>
 			<DCCReference Include="..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdlaudiomixer.pas"/>
@@ -124,6 +105,13 @@
 			<DCCReference Include="..\..\..\classes\DSharp\Core\DSharp.Linq.QueryProvider.SQL.pas"/>
 			<DCCReference Include="..\..\..\classes\DSharp\Core\DSharp.Core.Expressions.pas"/>
 			<DCCReference Include="..\..\..\classes\DSharp\Core\DSharp.Core.Lambda.pas"/>
+			<DCCReference Include="..\..\..\..\delphi-coll\src\Library\Collections.MultiMaps.pas"/>
+			<DCCReference Include="..\..\..\..\delphi-coll\src\Library\Collections.Base.pas"/>
+			<DCCReference Include="..\..\..\..\delphi-coll\src\Library\Collections.Dictionaries.pas"/>
+			<DCCReference Include="..\..\..\..\delphi-coll\src\Library\Collections.Lists.pas"/>
+			<DCCReference Include="..\..\..\..\delphi-coll\src\Library\Collections.Sets.pas"/>
+			<DCCReference Include="..\..\..\..\delphi-coll\src\Library\Collections.Dynamic.pas"/>
+			<DCCReference Include="..\..\..\..\delphi-coll\src\Library\Collections.Serialization.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

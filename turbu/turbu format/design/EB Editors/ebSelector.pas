@@ -22,7 +22,7 @@ interface
 
 uses
    Controls, Forms, ComCtrls, StdCtrls, Classes, ExtCtrls,
-   DeHL.Collections.DoubleSortedMultiMap, DeHL.Types,
+   Collections.Base, Collections.MultiMaps,
    EbEdit;
 
 type
@@ -30,12 +30,6 @@ type
       key: EditorCategoryAttribute;
       value: TEbEditorClass;
       constructor Create(k: EditorCategoryAttribute; v: TEbEditorClass);
-   end;
-
-   TTreeDataType = class(TType<TTreeData>)
-   public
-      { Comparator }
-      function Compare(const AValue1, AValue2: TTreeData): Integer; override;
    end;
 
    TfrmEBSelector = class(TfrmEbEditBase)
@@ -60,8 +54,7 @@ type
 
 implementation
 uses
-   Math, SysUtils,
-   DeHL.Collections.Base, DeHL.KeyValuePair,
+   Math, SysUtils, Generics.Defaults, Generics.Collections,
    EventBuilder;
 
 {$R *.dfm}
@@ -93,22 +86,43 @@ begin
    FMapCount := AllEditors.Count;
 end;
 
+type
+   TTreeDataType = class(TCustomComparer<TTreeData>)
+      function Compare(const Left, Right: TTreeData): Integer; override;
+      function Equals(const Left, Right: TTreeData): Boolean; overload; override;
+      function GetHashCode(const Value: TTreeData): Integer; overload; override;
+   end;
+
+function TTreeDataType.Compare(const Left, Right: TTreeData): Integer;
+begin
+   result := StrComp(PChar(Left.Key.name), PChar(Right.Key.name));
+end;
+
+function TTreeDataType.Equals(const Left, Right: TTreeData): Boolean;
+begin
+  result := (left.key = right.key) and (left.value = right.value);
+end;
+
+function TTreeDataType.GetHashCode(const Value: TTreeData): Integer;
+begin
+  result := BobJenkinsHash(Value, SizeOf(Value), 0);
+end;
+
 class constructor TfrmEBSelector.Create;
 begin
-   TType<TTreeData>.Register(TTreeDataType);
-   FMap := TTreeTemplate.Create(TStringType.Default, TTreeDataType.Default);
+   FMap := TTreeTemplate.Create(TRules<string>.Default,
+      TRules<TTreeData>.Custom(TTreeDataType.create));
 end;
 
 class destructor TfrmEBSelector.Destroy;
 begin
    FMap.free;
-   TTreeDataType.UnRegister;
 end;
 
 procedure TfrmEBSelector.FormCreate(Sender: TObject);
 var
    category: TTreeNode;
-   pair: TKeyValuePair<string, IList<TTreeData>>;
+   pair: TPair<string, IOperableCollection<TTreeData>>;
    data: TTreeData;
 begin
    inherited;
@@ -137,13 +151,6 @@ begin
    result := trvList.selected.Data;
    if assigned(result) then
       assert(TClass(result).InheritsFrom(TfrmEBEditBase));
-end;
-
-{ TTreeDataType }
-
-function TTreeDataType.Compare(const AValue1, AValue2: TTreeData): Integer;
-begin
-   result := StrComp(PChar(AValue1.Key.name), PChar(AValue2.Key.name));
 end;
 
 { TTreeData }
