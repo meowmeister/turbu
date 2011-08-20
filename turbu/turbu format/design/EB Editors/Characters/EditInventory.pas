@@ -5,7 +5,8 @@ interface
 uses
    StdCtrls, Classes, Controls, ExtCtrls, DB, DBCtrls, Mask,
    JvExMask, JvSpin,
-   EventBuilder, EbEdit, dm_database, variable_selector, IDLookupCombo;
+   EventBuilder, EbEdit, dm_database, variable_selector, IDLookupCombo,
+  button_edit;
 
 type
    [EditorCategory('Characters', 'Change Inventory')]
@@ -67,7 +68,7 @@ end;
 procedure TfrmEBEditInventory.UploadObject(obj: TEbObject);
 begin
    grpOperation.ItemIndex := obj.Values[0];
-   UploadLookupPtrSelection(obj.Components[0] as TEBExpression, radSpecificItem,
+   UploadLookupPtrSelection(obj.Children[0] as TEBExpression, radSpecificItem,
      radItemPtr, cboItemID, selItemID);
    if grpOperation.ItemIndex <> 2 then
       UploadValuePtrSelection(obj.Values[1], obj.Values[2], radExactAmount, radPointer,

@@ -4,7 +4,8 @@ interface
 
 uses
   DB, StdCtrls, DBCtrls, Classes, Controls, ExtCtrls,
-  EventBuilder, dm_database, EbEdit, variable_selector, IDLookupCombo;
+  EventBuilder, dm_database, EbEdit, variable_selector, IDLookupCombo,
+  button_edit;
 
 type
    [EditorCategory('Characters', 'Change Party')]
@@ -52,7 +53,7 @@ end;
 procedure TfrmEBEditParty.UploadObject(obj: TEbObject);
 begin
    grpOperation.ItemIndex := obj.Values[0];
-   UploadLookupPtrSelection(obj.Components[0] as TEBExpression, radSpecificItem,
+   UploadLookupPtrSelection(obj.Children[0] as TEBExpression, radSpecificItem,
      radItemPtr, cboHeroID, selItemID);
 end;
 

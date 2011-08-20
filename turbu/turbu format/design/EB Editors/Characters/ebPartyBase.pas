@@ -4,7 +4,7 @@ interface
 
 uses
    Controls, Classes, ExtCtrls, DB, StdCtrls, DBCtrls,
-   EventBuilder, EbEdit, variable_selector, IDLookupCombo;
+   EventBuilder, EbEdit, variable_selector, IDLookupCombo, button_edit;
 
 type
    TfrmEBPartyBase = class(TfrmEbEditBase)
@@ -69,7 +69,7 @@ var
    i: integer;
    found: boolean;
 begin
-   sub := obj.Components[0] as TEBExpression;
+   sub := obj.Children[0] as TEBExpression;
    if sub.classtype = TEBObjArrayValue then
       radAllParty.checked := true
    else begin
@@ -80,12 +80,11 @@ begin
          cboHeroID.id := sub.Values[0];
       end
       else begin
-         //*grumble* Stupid serializer treating Components[] and TPersistent properties differently
          found := false;
-         for I := 0 to sub.ComponentCount - 1 do
-            if sub.Components[i] is TEBIntsValue then
+         for I := 0 to sub.ChildCount - 1 do
+            if sub.Children[i] is TEBIntsValue then
             begin
-               sub := TEBIntsValue(sub.Components[i]);
+               sub := TEBIntsValue(sub.Children[i]);
                radHeroPtr.Checked := true;
                selHeroID.ID := sub.Values[0];
                found := true;

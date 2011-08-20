@@ -23,7 +23,7 @@ interface
 uses
    Classes, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
    variable_selector,
-   EventBuilder, EbEdit;
+   EventBuilder, EbEdit, button_edit;
 
 type
    [EditorCategory('Basics', 'Set Switch')]
@@ -68,9 +68,9 @@ begin
    assert(obj is NewClassType);
    obj.Values.Clear;
    obj.Values.Add(grpSetTo.ItemIndex);
-   if (obj.ComponentCount > 0) then
-      (obj.Components[0] as TEBExpression).Free;
-   assert(obj.ComponentCount = 0);
+   if (obj.ChildCount > 0) then
+      (obj.Children[0] as TEBExpression).Free;
+   assert(obj.ChildCount = 0);
    if NewClassType = TEBLocalSwitch then
       obj.Text := selGlobalSwitch.varname
    else begin
@@ -89,7 +89,7 @@ begin
    assert(obj is TEBSwitch);
    if obj is TEBGlobalSwitch then
    begin
-      expr := obj.components[0] as TEBExpression;
+      expr := obj.Children[0] as TEBExpression;
       if expr is TEBIntegerValue then
       begin
          radSwitch.Checked := true;

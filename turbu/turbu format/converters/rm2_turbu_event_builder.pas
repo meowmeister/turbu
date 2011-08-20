@@ -643,7 +643,7 @@ begin
    call := TEBCall.Create('OpenShop');
    call.Add(TEBEnumValue.Create(GetEnumName(TypeInfo(TShopTypes), opcode.data[0])));
    call.Add(TEBIntegerValue.Create(opcode.data[1]));
-   TEBExpression(Call.Components[1]).silent := true;
+   TEBExpression(Call.Children[1]).silent := true;
    assert(opcode.data[3] = 0);
    arr := TEBIntArray.Create(call);
    arr.Lookup := 'items';
@@ -658,7 +658,7 @@ var
 begin
    call := TEBCall.Create('OpenInn');
    call.Add(TEBIntegerValue.Create(opcode.data[0]));
-   TEBExpression(Call.Components[0]).silent := true;
+   TEBExpression(Call.Children[0]).silent := true;
    call.Add(TEBIntegerValue.Create(opcode.data[1]));
    result := WrapCall(call, opcode, parent);
 end;

@@ -442,7 +442,7 @@ begin
       begin
          FSerializer.upload(page, dsPages);
          FSerializer.upload(page.conditionBlock, frameConditions.dsConditions);
-         proc := FMap.ScriptObject.FindComponent(page.scriptName) as TEBProcedure;
+         proc := FMap.ScriptObject.ChildByName[page.scriptName] as TEBProcedure;
          dsPages.Edit;
          if assigned(proc) then
             dsPagesEventText.Value := proc.Serialize
@@ -483,9 +483,9 @@ begin
          page := obj.pages[last];
          FSerializer.download(page, dsPages);
          FSerializer.download(page.conditionBlock, frameConditions.dsConditions);
-         FMap.ScriptObject.FindComponent(page.scriptName).Free;
+         FMap.ScriptObject.FreeChild(page.scriptName);
          proc := TEBObject.Load(dsPagesEventText.Value) as TEBProcedure;
-         if proc.ComponentCount > 0 then
+         if proc.ChildCount > 0 then
          begin
             proc.Name := procname(page.id);
             FMap.ScriptObject.Add(proc);

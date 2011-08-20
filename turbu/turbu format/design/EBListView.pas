@@ -110,7 +110,7 @@ begin
          {$IFNDEF COMPONENT}
          if assigned(obj) then
          begin
-            if EbEdit.EditEbObject(obj, map) and ((obj.ComponentCount > 0) or (node.HasChildren)) then
+            if EbEdit.EditEbObject(obj, map) and ((obj.ChildCount > 0) or (node.HasChildren)) then
                self.ReconcilePostEdit(obj, node);
             node.Text := obj.GetNodeText;
          end;
@@ -169,16 +169,11 @@ begin
    if assigned(parent) then
    begin
       if assigned(selected.Data) then
-         index := (TObject(selected.Data) as TEBObject).ComponentIndex
-      else index := -1;
-      (TObject(parent.Data) as TEBObject).Add(obj);
-      if index <> -1 then
-         obj.ComponentIndex := index;
+         index := (TObject(parent.Data) as TEBObject).children.IndexOf(TObject(selected.Data) as TEBObject)
+      else index := 0;
+      (TObject(parent.Data) as TEBObject).Children.Insert(index, obj);
    end
-   else begin
-      FProc.Add(obj);
-      obj.ComponentIndex := 0;
-   end;
+   else FProc.Add(obj);
 end;
 
 {$WARN CONSTRUCTING_ABSTRACT OFF}

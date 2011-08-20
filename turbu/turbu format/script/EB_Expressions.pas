@@ -20,25 +20,28 @@ unit EB_Expressions;
 
 interface
 uses
+   Classes,
    EventBuilder, turbu_defs;
 
 type
    TEBVariableValue = class(TEBExpression)
    private
       FIsGlobal: boolean;
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
    public
       constructor Create(name: string); reintroduce; overload;
       constructor Create(name: string; subscript: integer); reintroduce; overload;
       constructor Create(name: string; subscript: TEBExpression); reintroduce; overload;
       function GetNodeText: string; override;
       function GetScriptText: string; override;
-   published
       property Global: boolean read FIsGlobal write FIsGlobal stored FIsGlobal;
    end;
 
    TEBNilValue = class(TEBVariableValue)
    public
-      constructor Create(parent: TEBObject);
+      constructor Create(parent: TEBObject); override;
    end;
 
    TEBSwitchesValue = class(TEBVariableValue)
@@ -85,11 +88,13 @@ type
    TEBLookupValue = class(TEBIntegerValue)
    private
       FLookup: string;
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
    public
       constructor Create(value: integer; name: string);
       function GetNodeText: string; override;
       function GetScriptText: string; override;
-   published
       property lookup: string read FLookup write FLookup;
    end;
 
@@ -107,12 +112,13 @@ type
       function GetChain: TEBChainable; virtual;
       procedure SetChain(const Value: TEBChainable); virtual;
       function GetLink: string; virtual;
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
    public
       constructor Create(value: string; next: TEBChainable = nil); reintroduce;
       function GetNodeText: string; override;
       property chain: TEBChainable read GetChain write SetChain;
       function GetScriptText: string; override;
-   published
       property hint: integer read FHint write FHint;
    end;
 
@@ -131,11 +137,13 @@ type
    TEBLookupObjExpr = class(TEBObjArrayValue)
    private
       FLookup: string;
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
    public
       constructor Create(value: string; subscript: integer; name: string; next: TEBChainable = nil); overload;
       constructor Create(value: string; subscript: TEBExpression; name: string; next: TEBChainable = nil); overload;
       function GetLink: string; override;
-   published
       property lookup: string read FLookup write FLookup;
    end;
 
@@ -167,18 +175,23 @@ type
       const
          OPS: array[TBinaryOp] of string = ('+', '-', '*', 'div', 'mod', '=');
          LINE = '%s %s %s';
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
    public
       constructor Create(left, right: TEBExpression; op: TBinaryOp); reintroduce;
       function GetScriptText: string; override;
       function GetNodeText: string; override;
-   published
       property op: TBinaryOp read FOp write FOp;
    end;
 
    TEBIntArray = class(TEBExpression)
    private
       FLookup: string;
-   published
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
+   public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
       property lookup: string read FLookup write FLookup;
@@ -198,7 +211,7 @@ const
 
 implementation
 uses
-   SysUtils, Classes, Variants, Math,
+   SysUtils, Variants, Math, TypInfo,
    EB_RPGScript;
 
 function CreateSubscript(mode, data: integer): TEBExpression;
@@ -225,6 +238,13 @@ begin
    Values.Add(subscript);
 end;
 
+procedure TEBVariableValue.AssignProperty(const key, value: string);
+begin
+   if (key = 'Global') and (value = 'True') then
+      Global := true
+   else inherited;
+end;
+
 constructor TEBVariableValue.Create(name: string; subscript: TEBExpression);
 begin
    self.Create(name + '[]');
@@ -233,7 +253,7 @@ end;
 
 function TEBVariableValue.GetNodeText: string;
 begin
-   if ComponentCount > 0 then
+   if ChildCount > 0 then
       result := StringReplace(self.Text, '[]', format('[%s]', [ChildNode[0]]), [])
    else if values.Count > 0 then
       result := StringReplace(self.Text, '[]', format('[%d]', [Values[0]]), [])
@@ -242,11 +262,18 @@ end;
 
 function TEBVariableValue.GetScriptText: string;
 begin
-   if ComponentCount > 0 then
+   if ChildCount > 0 then
       result := StringReplace(self.Text, '[]', format('[%s]', [ChildScript[0]]), [])
    else if values.Count > 0 then
       result := StringReplace(self.Text, '[]', format('[%d]', [Values[0]]), [])
    else result := self.Text;
+end;
+
+procedure TEBVariableValue.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   if Global then
+      List.Add(IndentString(depth) + 'Global = True');
 end;
 
 { TEBComparison }
@@ -264,18 +291,17 @@ function TEBComparison.GetNodeText: string;
 const
    LINE = '%s %s %s';
 begin
-   assert(self.ComponentCount = 2);
+   assert(self.ChildCount = 2);
    assert(self.Values.Count = 1);
-   result := format(LINE, [(components[0] as TEBExpression).GetNodeText,
-                           COMPARISONS[TComparisonOp(Values[0])],
-                           (components[1] as TEBExpression).GetNodeText]);
+   result := format(LINE, [ChildNode[0], COMPARISONS[TComparisonOp(Values[0])],
+                           ChildNode[1]]);
 end;
 
 function TEBComparison.GetScriptText: string;
 const
    LINE = '%s %s %s';
 begin
-   assert(self.ComponentCount = 2);
+   assert(self.ChildCount = 2);
    assert(self.Values.Count = 1);
    result := format(LINE, [ChildScript[0], COMPARISONS[TComparisonOp(Values[0])],
                            ChildScript[1]]);
@@ -371,8 +397,8 @@ end;
 
 function TEBChainable.GetChain: TEBChainable;
 begin
-   if ComponentCount > 0 then
-      result := self.Components[0] as TEBChainable
+   if ChildCount > 0 then
+      result := self.Children[0] as TEBChainable
    else result := nil;
 end;
 
@@ -397,9 +423,22 @@ begin
    result := self.Text;
 end;
 
+procedure TEBChainable.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   list.Add(IndentString(depth) + 'Hint = ' + IntToStr(hint));
+end;
+
+procedure TEBChainable.AssignProperty(const key, value: string);
+begin
+   if key = 'Hint' then
+      self.hint := StrToInt(value)
+   else inherited;
+end;
+
 procedure TEBChainable.SetChain(const Value: TEBChainable);
 begin
-   assert(self.ComponentCount = 0);
+   assert(self.ChildCount = 0);
    self.Add(value);
 end;
 
@@ -419,6 +458,19 @@ end;
 function TEBLookupValue.GetScriptText: string;
 begin
    result := IntToStr(values[0]);
+end;
+
+procedure TEBLookupValue.AssignProperty(const key, value: string);
+begin
+   if key = 'Lookup' then
+      Lookup := value
+   else inherited;
+end;
+
+procedure TEBLookupValue.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   list.Add(IndentString(depth) + 'Lookup = ' + FLookup);
 end;
 
 { TEBLookupObjExpr }
@@ -442,6 +494,19 @@ begin
    if Values.Count > 0 then
       result := GetLookup(values[0], FLookup)
    else result := inherited GetLink;
+end;
+
+procedure TEBLookupObjExpr.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   List.Add(IndentString(depth) + 'Lookup = ' + lookup);
+end;
+
+procedure TEBLookupObjExpr.AssignProperty(const key, value: string);
+begin
+   if key = 'Lookup' then
+      Lookup := value
+   else inherited;
 end;
 
 { TEBStringValue }
@@ -493,7 +558,7 @@ end;
 
 function TEBObjArrayValue.GetChain: TEBChainable;
 begin
-   if (ComponentCount > 0) and (Components[0] is TEBChainable) then
+   if (ChildCount > 0) and (Children[0] is TEBChainable) then
       result := inherited GetChain
    else result := nil;
 end;
@@ -505,9 +570,9 @@ begin
    if Values.Count > 0 then
       result := format('%s[%d]', [Text, Values[0]])
    else begin
-      if Components[0] is TEBChainable then
-         subscript := components[1] as TEBExpression
-      else subscript := components[0] as TEBExpression;
+      if Children[0] is TEBChainable then
+         subscript := Children[1] as TEBExpression
+      else subscript := Children[0] as TEBExpression;
       result := format('%s[%s]', [Text, subscript.GetNodeText]);
    end;
 end;
@@ -516,10 +581,10 @@ procedure TEBObjArrayValue.SetChain(const Value: TEBChainable);
 var
    subscript: TEBExpression;
 begin
-   if ComponentCount > 0 then
+   if ChildCount > 0 then
    begin
-      subscript := Components[0] as TEBExpression;
-      RemoveComponent(subscript);
+      subscript := Children[0] as TEBExpression;
+      Children.Extract(subscript);
    end
    else subscript := nil;
    inherited SetChain(value);
@@ -531,8 +596,8 @@ end;
 
 function TEBCall.GetChain: TEBChainable;
 begin
-   if (self.ComponentCount > 0) and (Components[0] is TEBChainable) then
-      result := TEBChainable(Components[0])
+   if (self.ChildCount > 0) and (Children[0] is TEBChainable) then
+      result := TEBChainable(Children[0])
    else result := nil;
 end;
 
@@ -545,7 +610,7 @@ var
    expr: TEBExpression;
 begin
    result := self.CleanEnum(self.Text);
-   if self.ComponentCount = 0 then
+   if self.ChildCount = 0 then
       Exit;
 
    list := TStringList.Create;
@@ -572,7 +637,7 @@ var
    expr: TEBExpression;
 begin
    result := self.Text;
-   if self.ComponentCount = 0 then
+   if self.ChildCount = 0 then
       Exit;
 
    list := TStringList.Create;
@@ -609,7 +674,27 @@ begin
    result := format(LINE, [ChildScript[0], OPS[FOp], ChildScript[1]]);
 end;
 
+procedure TEBBinaryOp.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   list.Add(IndentString(depth) + 'Op = ' + GetEnumName(TypeInfo(TBinaryOp), ord(op)));
+end;
+
+procedure TEBBinaryOp.AssignProperty(const key, value: string);
+begin
+   if key = 'Op' then
+      Op := TBinaryOp(GetEnumValue(TypeInfo(TBinaryOp), value))
+   else inherited;
+end;
+
 { TEBIntArray }
+
+procedure TEBIntArray.AssignProperty(const key, value: string);
+begin
+   if key = 'Lookup' then
+      Lookup := value
+   else inherited;
+end;
 
 function TEBIntArray.GetNodeText: string;
 var
@@ -643,6 +728,12 @@ begin
    end;
 end;
 
+procedure TEBIntArray.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   list.Add(IndentString(depth) + 'Lookup = ' + lookup);
+end;
+
 { TEBNilValue }
 
 constructor TEBNilValue.Create(parent: TEBObject);
@@ -662,15 +753,15 @@ var
    selfptr: string;
 begin
    result := self.Text;
-   if self.ComponentCount = 0 then
+   if self.ChildCount = 0 then
       Exit;
 
    list := TStringList.Create;
    try
       list.StrictDelimiter := true;
-      selfptr := (Components[0] as TEBExpression).GetScriptText;
-      for i := 1 to self.ComponentCount - 1 do
-         list.add(' ' + (Components[i] as TEBExpression).GetScriptText);
+      selfptr := (Children[0] as TEBExpression).GetScriptText;
+      for i := 1 to self.ChildCount - 1 do
+         list.add(' ' + (Children[i] as TEBExpression).GetScriptText);
       result := format(LINE, [result, TrimLeft(list.commaList)]);
       if AnsiSameText(selfptr, 'self') then
          Delete(result, 1, 5);
@@ -708,7 +799,7 @@ begin
 end;
 
 initialization
-   RegisterClasses([TEBVariableValue, TEBSwitchesValue, TEBIntsValue,
+   TEBObject.RegisterClasses([TEBVariableValue, TEBSwitchesValue, TEBIntsValue,
                     TEBBooleanValue, TEBIntegerValue, TEBStringValue, TEBEnumValue,
                     TEBLookupValue, TEBComparison, TEBObjExpr, TEBObjArrayValue,
                     TEBLookupObjExpr, TEBPropExpr, TEBCall, TEBBinaryOp,

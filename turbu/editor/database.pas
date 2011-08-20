@@ -23,7 +23,8 @@ uses
    Classes, Controls, Forms, StdCtrls, ExtCtrls, ComCtrls, DB, Grids, DBGrids,
    Mask, DBCtrls,
    turbu_database, events, frame_commands, frame_class, dm_database, frame_items,
-   EBListView, turbu_listGrid, variable_selector, DBIndexComboBox, frame_vocab;
+   EBListView, turbu_listGrid, variable_selector, DBIndexComboBox, frame_vocab,
+  button_edit;
 
 type
    TfrmDatabase = class(TForm)
@@ -151,7 +152,7 @@ end;
 
 procedure TfrmDatabase.GlobalScriptsAfterScroll(DataSet: TDataSet);
 begin
-   trvGlobal.proc := GDatabase.scriptBlock.FindComponent(dataset.FieldByName('Name').AsString) as TEBProcedure;
+   trvGlobal.proc := GDatabase.scriptBlock.ChildByName[dataset.FieldByName('Name').AsString] as TEBProcedure;
 end;
 
 procedure TfrmDatabase.FormClose(Sender: TObject; var Action: TCloseAction);

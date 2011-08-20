@@ -4,7 +4,8 @@ interface
 
 uses
   DBClient, Classes, Controls, ExtCtrls, DB, StdCtrls, DBCtrls,
-  EventBuilder, variable_selector, ebPartyBase, IDLookupCombo, EBEdit;
+  EventBuilder, variable_selector, ebPartyBase, IDLookupCombo, EBEdit,
+  button_edit;
 
 type
    [EditorCategory('Characters', 'Change Equipment')]
@@ -62,10 +63,10 @@ begin
    inherited UploadObject(Obj);
    grpOperation.ItemIndex := obj.Values[0];
    if grpOperation.ItemIndex = 0 then
-      UploadLookupPtrSelection(obj.Components[1] as TEBExpression, radSpecificItem,
+      UploadLookupPtrSelection(obj.Children[1] as TEBExpression, radSpecificItem,
                                radItemPtr, cboItemID, selItemID)
    else begin
-      expr := obj.Components[1] as TEBEnumValue;
+      expr := obj.Children[1] as TEBEnumValue;
       radSlot.ItemIndex := -1;
       for i := 0 to High(SLOTS) do
          if SLOTS[i] = expr.Text then

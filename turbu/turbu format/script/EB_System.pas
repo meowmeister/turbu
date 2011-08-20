@@ -157,9 +157,9 @@ procedure TEBGlobalSwitch.NeededVariables(list: TStringList);
 var
    subscript: TEBVariableValue;
 begin
-   if (Components[0] is TEBVariableValue) then
+   if (Children[0] is TEBVariableValue) then
    begin
-      subscript := TEbVariableValue(components[0]);
+      subscript := TEbVariableValue(Children[0]);
       if not subscript.Global then
          list.Values[subscript.Text] := 'integer';
    end;
@@ -193,8 +193,8 @@ const
 var
    int, value: TEBExpression;
 begin
-   int := self.components[0] as TEBExpression;
-   value := self.components[1] as TEBExpression;
+   int := self.Children[0] as TEBExpression;
+   value := self.Children[1] as TEBExpression;
    result := format(LINE, [int.GetNodeText, value.GetNodeText]);
 end;
 
@@ -204,8 +204,8 @@ const
 var
    int, value: TEBExpression;
 begin
-   int := self.components[0] as TEBExpression;
-   value := self.components[1] as TEBExpression;
+   int := self.Children[0] as TEBExpression;
+   value := self.Children[1] as TEBExpression;
    result := format(LINE, [int.GetScript(0), value.GetScript(0)]);
 end;
 
@@ -357,7 +357,7 @@ begin
 end;
 
 initialization
-   RegisterClasses([TEBWait, TEBGlobalSwitch, TEBGlobalInt, TEBTimer,
+   TEBObject.RegisterClasses([TEBWait, TEBGlobalSwitch, TEBGlobalInt, TEBTimer,
                     TEBInput, TEBDeleteObj, TEBCallEvent, TEBGameOver,
                     TEBTitleScreen, TEBLocalSwitch]);
 end.

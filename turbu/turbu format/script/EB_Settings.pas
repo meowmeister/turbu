@@ -115,5 +115,5 @@ begin
 end;
 
 initialization
-   RegisterClasses([TEBSysBGM, TEBSysSFX, TEBSysSkin, TEBVehicleBGM]);
+   TEBObject.RegisterClasses([TEBSysBGM, TEBSysSFX, TEBSysSkin, TEBVehicleBGM]);
 end.

@@ -15,6 +15,7 @@ type
    end;
 
    TEBObject = class;
+   TEBObjectClass = class of TEBObject;
 
    TEBEnumerator = class
    private
@@ -52,18 +53,32 @@ type
    TEBVariable = class;
    THeaderItems = (hi_none, hi_var, hi_const, hi_label);
 
-   TEBObject = class(TComponent)
+   TEBObject = class
    private
+      class var Registry: TDictionary<string, TEBObjectClass>;
+   private
+      FName: string;
       FText: string;
       FValues: TList<integer>;
-      procedure ReadValueList(Reader: TReader);
-      procedure WriteValueList(Writer: TWriter);
+      FChildren: TObjectList<TEBObject>;
+      FNameDic: TStringList;
+      FOwner: TEBObject;
+
       function HasText: Boolean;
       function GetArgList: string;
       procedure SetArgList(const Value: string);
       function GetUnit: string;
       function GetChildText(index: integer): string;
       function GetChildNode(index: integer): string;
+      procedure EnsureNameDic;
+      class function CreateNew(const line: string; parent: TEBObject): TEBObject;
+      procedure LoadProperties(list: TStringList; var index: integer);
+      procedure ValidateAssignment(const line: string; out name, value: string);
+      procedure SetText(const line: string);
+      procedure SetValues(const line: string);
+      procedure ParseAssignment(const line: string);
+      function GetChildCount: integer;
+      function LookupName(const name: string): TEBObject;
    protected
       type TVarDesc = record
          name: string;
@@ -71,13 +86,14 @@ type
          write: boolean;
       end;
 
+      class function Deserialize(list: TStringList; var index: integer; parent: TEBObject): TEBObject;
+      procedure SerializeTo(list: TStringList; depth: integer);
+      procedure SerializeProps(list: TStringList; depth: integer); virtual;
+      function Empty: boolean; virtual;
+      procedure AddNamed(aObject: TEBObject); virtual;
+      procedure AssignProperty(const key, value: string); virtual;
+
       class var FDatastore: IRpgDatastore;
-      procedure DefineProperties(Filer: TFiler); override;
-      function GetChildOwner: TComponent; override;
-      procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
-      procedure Notification(AComponent: TComponent;
-        Operation: TOperation); override;
-      procedure ValidateContainer(AComponent: TComponent); override;
 
       class function GetLookup(id: integer; const name: string): string;
       function IndentString(level: integer): string;
@@ -86,10 +102,12 @@ type
       property ChildNode[index: integer]: string read GetChildNode;
       property ArgList: string read GetArgList write SetArgList;
    public
-      constructor Create(AParent: TComponent); override;
+      constructor Create(AParent: TEBObject); virtual;
       class function Load(const Value: string): TEBObject;
       class function LoadFromStream(stream: TStream): TEBObject;
       destructor Destroy; override;
+      class procedure RegisterClasses(classes: array of TEBObjectClass);
+
       function GetScriptText: string; virtual;
       function GetNodeText: string; virtual; abstract;
       function GetNode: TEBNode; virtual;
@@ -102,11 +120,17 @@ type
       function Clone: TEBObject;
       procedure Clear;
       function NeededVariableType: THeaderItems; virtual;
+      procedure FreeChild(const name: string);
 
-      property Values: TList<integer> read FValues write FValues;
+      property Values: TList<integer> read FValues;
       property InUnit: string read GetUnit;
+      property ChildCount: integer read GetChildCount;
+      property children: TObjectList<TEBObject> read FChildren;
+      property ChildByName[const name: string]: TEBObject read LookupName;
+      property Owner: TEBObject read FOwner;
       class property Datastore: IRpgDatastore read FDatastore write FDatastore;
-   published
+
+      property Name: string read FName write FName;
       property Text: string read FText write FText stored HasText;
    end;
 
@@ -126,19 +150,23 @@ type
    TEBExpression = class(TEBObject)
    private
       FSilent: boolean;
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
    public
       function GetScriptText: string; override;
       function GetNode: TEBNode; override;
-   published
       property Silent: boolean read FSilent write FSilent stored FSilent;
    end;
 
    TEBVariable = class(TEBExpression)
    private
       FType: string;
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
    public
       function GetNodeText: string; override;
-   published
       property VarType: string read FType write FType;
    end;
 
@@ -147,7 +175,10 @@ type
       FFlags: TParamFlags;
       function HasFlags: Boolean;
       function FlagsName: string;
-   published
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
+   public
       property Flags: TParamFlags read FFlags write FFlags stored HasFlags;
    end;
 
@@ -158,11 +189,15 @@ type
 
    TEBRoutine = class(TEBBlock)
    private
+      FHeader: TEBHeader;
       procedure CreateHeader;
       function GetParams: TArray<TEBParam>;
    protected
       function EnsureHeader: TEBHeader;
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AddNamed(obj: TEBObject); override;
    public
+      destructor Destroy; override;
       procedure RemoveParam(const name: string);
       function GetVarBlock: TStringList; virtual; abstract;
       property ParamList: TArray<TEBParam> read GetParams;
@@ -183,16 +218,31 @@ const INDENT_SIZE = 2;
 
 procedure TEBObject.Add(aObject: TEBObject);
 begin
-   self.InsertComponent(aObject);
+   FChildren.Add(aObject);
+   if aObject.FOwner <> nil then
+      AObject.FOwner.children.Extract(aObject);
+   aObject.FOwner := self;
+   if aObject.name <> '' then
+   begin
+      EnsureNameDic;
+      FNameDic.AddObject(aObject.Name, aObject);
+   end;
+end;
+
+procedure TEBObject.AddNamed(aObject: TEBObject);
+begin
+   Add(aObject);
+end;
+
+procedure TEBObject.AssignProperty(const key, value: string);
+begin
+   raise ERPGScriptError.CreateFmt('Invalid property %s, value %s for object of type %s', [key, value, self.ClassName]);
 end;
 
 procedure TEBObject.Clear;
-var
-   sub: TComponent;
 begin
    values.Clear;
-   for sub in self do
-      sub.Free;
+   FChildren.Clear;
 end;
 
 function TEBObject.Clone: TEBObject;
@@ -200,25 +250,181 @@ begin
    result := TEBObject.Load(self.Serialize);
 end;
 
-constructor TEBObject.Create(AParent: TComponent);
+constructor TEBObject.Create(AParent: TEBObject);
 begin
-   inherited Create(nil);
-   include(FComponentStyle, csSubComponent);
+   inherited Create;
    if assigned(AParent) then
-      (AParent as TEBObject).Add(self);
+      AParent.Add(self);
    FValues := TList<integer>.Create;
+   FChildren := TObjectList<TEBObject>.Create;
 end;
 
 destructor TEBObject.Destroy;
 begin
+   FChildren.Free;
    FValues.Free;
    inherited Destroy;
 end;
 
-procedure TEBObject.DefineProperties(Filer: TFiler);
+class function TEBObject.CreateNew(const line: string; parent: TEBObject): TEBObject;
+var
+   name, clsName: string;
+   newclass: TEBObjectClass;
+   colonPos: integer;
 begin
-   inherited DefineProperties(Filer);
-   Filer.DefineProperty('Values', ReadValueList, WriteValueList, FValues.Count > 0);
+   colonPos := pos(':', line);
+   if colonPos = 0 then
+   begin
+      name := '';
+      clsName := copy(line, 8, MAXINT);
+   end
+   else begin
+      name := copy(line, 8, colonPos - 8);
+      clsName := copy(line, colonPos + 1, MAXINT);
+   end;
+   name := trim(name);
+   clsName := trim(clsName);
+   if not Registry.TryGetValue(clsName, newClass) then
+      raise ERPGScriptError.CreateFmt('Class %s is not registered', [clsName]);
+   result := newclass.Create(nil);
+   if name = '' then
+      parent.Add(result)
+   else begin
+      result.Name := name;
+      if assigned(parent) then
+         parent.addNamed(result);
+   end;
+end;
+
+procedure TEBObject.ValidateAssignment(const line: string; out name, value: string);
+var
+   eqPos: integer;
+begin
+   eqPos := pos('=', line);
+   if eqPos = 0 then
+      raise ERPGScriptError.CreateFmt('Expected property assignment but found "%s"', [line]);
+   name := trim(Copy(line, 1, eqPos - 1));
+   value := trim(copy(line, eqPos + 1, MAXINT));
+end;
+
+procedure TEBObject.SetText(const line: string);
+var
+   dummy, lText: string;
+begin
+   ValidateAssignment(line, dummy, lText);
+   self.Text := AnsiDequotedStr(lText, '''');
+end;
+
+procedure TEBObject.SetValues(const line: string);
+var
+   dummy, lValues: string;
+begin
+   ValidateAssignment(line, dummy, lValues);
+   if not (lValues[1] = '(') and(lValues[length(lValues)] = ')') then
+      raise ERPGScriptError.CreateFmt('Invalid Values list "%s"', [lValues]);
+   self.SetArgList(copy(lValues, 2, length(lValues) - 2));
+end;
+
+procedure TEBObject.ParseAssignment(const line: string);
+var
+   key, value: string;
+begin
+   ValidateAssignment(line, key, value);
+   self.AssignProperty(key, value);
+end;
+
+procedure TEBObject.LoadProperties(list: TStringList; var index: integer);
+var
+   line, token: string;
+   spacePos: integer;
+begin
+   while true do
+   begin
+      inc(index);
+      if index >= list.Count then
+         raise ERPGScriptError.Create('Unexpected end of file');
+      line := TrimLeft(list[index]);
+      spacePos := pos(' ', line);
+      if spacePos = 0 then
+      begin
+         if line = 'end' then
+            Break;
+         raise ERPGScriptError.CreateFmt('Unknown token "%s"', [line]);
+      end;
+      token := copy(line, 1, spacePos - 1);
+      if Token = 'object' then
+         Deserialize(list, index, self)
+      else if Token = 'Values' then
+         SetValues(line)
+      else if token = 'Text' then
+         SetText(line)
+      else begin
+         ParseAssignment(line);
+      end;
+   end;
+end;
+
+function TEBObject.LookupName(const name: string): TEBObject;
+var
+   idx: integer;
+begin
+   idx := FNameDic.IndexOf(name);
+   if idx = -1 then
+      result := nil
+   else result := FNameDic.Objects[idx] as TEBObject;
+end;
+
+procedure TEBObject.FreeChild(const name: string);
+var
+   idx: integer;
+   child: TEBObject;
+begin
+   idx := FNameDic.IndexOf(name);
+   if idx <> -1 then
+   begin
+      child := FNameDic.Objects[idx] as TEBObject;
+      FNameDic.Delete(idx);
+      FChildren.Remove(child);
+   end;
+end;
+
+class function TEBObject.Deserialize(list: TStringList;
+  var index: integer; parent: TEBObject): TEBObject;
+var
+   line: string;
+   sem: boolean;
+begin
+   if index >= list.Count then
+      raise ERPGScriptError.Create('Unexpected end of file');
+   line := TrimLeft(list[index]);
+   if Pos('object ', line) = 0 then
+      raise ERPGScriptError.CreateFmt('Object token expected but found "%s"', [line]);
+   sem := line[length(line)] = ';';
+   if sem then
+      delete(line, length(line), 1);
+   result := CreateNew(line, parent);
+   if not sem then
+   try
+      result.LoadProperties(list, index);
+   except
+      result.Free;
+      raise;
+   end;
+end;
+
+function TEBObject.Empty: boolean;
+begin
+   result := (FText = '') and (FValues.Count = 0) and (ChildCount = 0);
+end;
+
+procedure TEBObject.EnsureNameDic;
+begin
+   if FNameDic = nil then
+   begin
+      FNameDic := TStringList.Create;
+      FNameDic.Sorted := true;
+      FNameDic.Duplicates := dupError;
+   end;
 end;
 
 function TEBObject.HasText: Boolean;
@@ -244,24 +450,16 @@ end;
 
 class function TEBObject.Load(const Value: string): TEBObject;
 var
-   StrStream:TStringStream;
-   BinStream: TMemoryStream;
+   list: TStringList;
+   i: integer;
 begin
-   result := nil;
-   StrStream := TStringStream.Create(Value);
-   BinStream := TMemoryStream.Create;
+   list := TStringList.Create;
    try
-      ObjectTextToBinary(StrStream, BinStream);
-      BinStream.Seek(0, soFromBeginning);
-      try
-         Result:= BinStream.ReadComponent(nil) as TEBObject;
-      except
-         result.Free;
-         raise;
-      end;
+      list.Text := value;
+      i := 0;
+      result := TEBObject.Deserialize(list, i, nil);
    finally
-      BinStream.Free;
-      StrStream.Free;
+      list.Free;
    end;
 //   assert(result.Serialize = value);
 end;
@@ -278,16 +476,6 @@ end;
 function TEBObject.NeededVariableType: THeaderItems;
 begin
    result := hi_none;
-end;
-
-procedure TEBObject.ValidateContainer(AComponent: TComponent);
-begin
-  //this method intentionally left blank
-end;
-
-procedure TEBObject.Notification(AComponent: TComponent; Operation: TOperation);
-begin
-   //suppress this, because it's very slow and not needed for Event Builder
 end;
 
 procedure TEBObject.SaveScript;
@@ -307,21 +495,48 @@ end;
 
 function TEBObject.Serialize: string;
 var
-   BinStream:TMemoryStream;
-   StrStream: TStringStream;
+   list: TStringList;
 begin
-   BinStream := TMemoryStream.Create;
-   StrStream := TStringStream.Create;
+   list := TStringList.Create;
    try
-      BinStream.WriteComponent(self);
-      BinStream.Seek(0, soFromBeginning);
-      ObjectBinaryToText(BinStream, StrStream);
-      StrStream.Seek(0, soFromBeginning);
-      Result:= StrStream.DataString;
+      self.SerializeTo(list, 0);
+      result := list.Text;
    finally
-      StrStream.Free;
-      BinStream.Free
+      list.Free;
    end;
+end;
+
+procedure TEBObject.SerializeProps(list: TStringList; depth: integer);
+begin
+   //intentionally left blank;
+end;
+
+procedure TEBObject.SerializeTo(list: TStringList; depth: integer);
+var
+   nameline: string;
+   isEmpty: boolean;
+   indent, indent2: string;
+   child: TEBObject;
+begin
+   if self.Name = '' then
+      nameline := format('object %s', [self.ClassName])
+   else nameline := format('object %s: %s', [self.Name, self.ClassName]);
+   indent := IndentString(depth);
+   isEmpty := self.Empty;
+   if isEmpty then
+      nameline := nameline + ';';
+   list.add(indent + nameline);
+   if isEmpty then
+      Exit;
+   indent2 := indent + '  ';
+   if HasText then
+      list.Add(indent2 + format('Text = %s', [QuotedStr(Text)]));
+   if Values.Count > 0 then
+      list.Add(indent2 + format('Values = (%s)', [GetArgList]));
+   SerializeProps(list, depth + 1);
+   for child in FChildren do
+      child.SerializeTo(list, depth + 1);
+   list.Add(indent + 'end');
 end;
 
 procedure TEBObject.SetArgList(const Value: string);
@@ -355,27 +570,19 @@ begin
    end;
 end;
 
-function TEBObject.GetChildOwner: TComponent;
+function TEBObject.GetChildCount: integer;
 begin
-   result := self;
-end;
-
-procedure TEBObject.GetChildren(Proc: TGetChildProc; Root: TComponent);
-var
-   enumerator: TEBObject;
-begin
-   for enumerator in self do
-      proc(enumerator);
+   result := FChildren.Count;
 end;
 
 function TEBObject.GetChildNode(index: integer): string;
 begin
-   result := (Components[index] as TEBObject).GetNodeText;
+   result := FChildren[index].GetNodeText;
 end;
 
 function TEBObject.GetChildText(index: integer): string;
 begin
-   result := (Components[index] as TEBObject).GetScriptText;
+   result := FChildren[index].GetScriptText;
 end;
 
 function TEBObject.GetEnumerator: TEBEnumerator;
@@ -417,14 +624,12 @@ begin
    else result := '';
 end;
 
-procedure TEBObject.WriteValueList(Writer: TWriter);
+class procedure TEBObject.RegisterClasses(classes: array of TEBObjectClass);
+var
+   cls: TEBObjectClass;
 begin
-   Writer.WriteString(self.ArgList);
-end;
-
-procedure TEBObject.ReadValueList(Reader: TReader);
-begin
-   self.ArgList := reader.ReadString;
+   for cls in classes do
+      Registry.Add(cls.ClassName, cls);
 end;
 
 function TEBObject.RequiredVariables: TStringList;
@@ -452,13 +657,13 @@ end;
 
 function TEBEnumerator.GetCurrent: TEBObject;
 begin
-   result := FObject.Components[FIndex] as TEBObject;
+   result := FObject.FChildren[FIndex];
 end;
 
 function TEBEnumerator.MoveNext: Boolean;
 begin
    inc(FIndex);
-   result := FIndex < FObject.ComponentCount;
+   result := FIndex < FObject.ChildCount;
 end;
 
 { TEBNodeData }
@@ -575,7 +780,7 @@ end;
 
 function TEBBlock.MustBlock: boolean;
 begin
-   result := (self.ComponentCount > 1) or AlwaysBlock;
+   result := (self.ChildCount > 1) or AlwaysBlock;
 end;
 
 { TEBExpression }
@@ -585,6 +790,20 @@ begin
    result := GetNodeText;
 end;
 
+procedure TEBExpression.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   if FSilent then
+      list.Add(IndentString(depth) + 'Silent = True');
+end;
+
+procedure TEBExpression.AssignProperty(const key, value: string);
+begin
+   if (key = 'Silent') and (value = 'True') then
+      FSilent := true
+   else inherited;
+end;
+
 function TEBExpression.GetNode: TEBNode;
 begin
    raise ERPGScriptError.Create('Expressions don''t get their own tree nodes!');
@@ -592,33 +811,47 @@ end;
 
 { TEBRoutine }
 
+destructor TEBRoutine.Destroy;
+begin
+   FHeader.Free;
+   inherited Destroy;
+end;
+
 {$WARN CONSTRUCTING_ABSTRACT OFF}
+procedure TEBRoutine.AddNamed(obj: TEBObject);
+begin
+   if (obj.Name <> 'Header') or assigned(FHeader) or not (obj is TEBHeader) then
+      raise ERPGScriptError.Create('Invalid header assignment');
+   FHeader := TEBHeader(obj);
+end;
+
 procedure TEBRoutine.CreateHeader;
 begin
-   TEBHeader.Create(self).ComponentIndex := 0;
+   FHeader := TEBHeader.Create(nil);
+   FHeader.Name := 'Header';
 end;
 {$WARN CONSTRUCTING_ABSTRACT ON}
 
 function TEBRoutine.EnsureHeader: TEbHeader;
 begin
-   if (self.ComponentCount = 0) or not (self.Components[0] is TEBHeader) then
+   if FHeader = nil then
       CreateHeader;
-   result := self.components[0] as TEBHeader;
+   result := FHeader;
 end;
 
 function TEBRoutine.GetParams: TArray<TEBParam>;
 var
    header: TEBHeader;
-   comp: TComponent;
+   child: TEBObject;
    counter: integer;
 begin
    header := EnsureHeader;
-   SetLength(result, header.ComponentCount);
+   SetLength(result, header.ChildCount);
    counter := 0;
-   for comp in header do
-      if comp is TEBParam then
+   for child in header do
+      if child is TEBParam then
       begin
-         result[counter] := TEBParam(comp);
+         result[counter] := TEBParam(child);
          inc(counter);
       end;
    SetLength(result, counter);
@@ -636,6 +869,13 @@ begin
          obj.free;
          Break;
       end;
+end;
+
+procedure TEBRoutine.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   if assigned(FHeader) then
+      FHeader.SerializeTo(list, depth);
 end;
 
 { TEBHeader }
@@ -670,7 +910,7 @@ var
    end;
 
 begin
-   if self.ComponentCount = 0 then
+   if ChildCount = 0 then
       Exit('');
    fragment := TStringList.Create;
    try
@@ -689,6 +929,13 @@ end;
 
 { TEBParam }
 
+procedure TEBParam.AssignProperty(const key, value: string);
+begin
+   if key = 'Flags' then
+      byte(FFlags) := StringToSet(PTypeInfo(TypeInfo(TParamFlags)), value)
+   else inherited;
+end;
+
 function TEBParam.FlagsName: string;
 begin
    result := TypInfo.SetToString(PTypeInfo(TypeInfo(TParamFlags)), byte(FFlags * [pfVar, pfConst, pfOut]));
@@ -699,13 +946,36 @@ begin
    result := FFlags <> [];
 end;
 
+procedure TEBParam.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   if FFlags <> [] then
+      List.Add(IndentString(depth) + 'Flags = ' + self.FlagsName);
+end;
+
 { TEBVariable }
+
+procedure TEBVariable.AssignProperty(const key, value: string);
+begin
+   if key = 'Vartype' then
+      FType := value
+   else inherited;
+end;
 
 function TEBVariable.GetNodeText: string;
 begin
    result := FText;
 end;
 
+procedure TEBVariable.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   list.Add(IndentString(depth) + 'Vartype = ' + FType);
+end;
+
 initialization
-   RegisterClasses([TEBObject, TEBHeader, TEBParam]);
+   TEBObject.Registry := TDictionary<string, TEBObjectClass>.Create;
+   TEBObject.RegisterClasses([TEBObject, TEBHeader, TEBParam]);
+finalization
+   TEBObject.Registry.Free;
 end.
