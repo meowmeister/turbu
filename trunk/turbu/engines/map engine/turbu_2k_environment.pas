@@ -2,7 +2,7 @@ unit turbu_2k_environment;
 
 interface
 uses
-   DeHl.Collections.Base,
+   Collections.Base,
    turbu_heroes, turbu_database;
 
 type
@@ -22,7 +22,7 @@ var
 
 implementation
 uses
-   DeHL.Collections.List,
+   Collections.Lists,
    turbu_characters;
 
 type
@@ -54,7 +54,7 @@ begin
    inherited Destroy;
 end;
 
-initialization
+{initialization
 finalization
-   THeroList.CleanupTypes;
+   THeroList.CleanupTypes; }
 end.

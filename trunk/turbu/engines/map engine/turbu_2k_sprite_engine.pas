@@ -88,7 +88,7 @@ var
 implementation
 uses
    SysUtils,
-   DeHL.Collections.Base,
+   Collections.Base,
    commons, turbu_constants, archiveInterface, charset_data;
 
 { T2kSpriteEngine }
@@ -200,7 +200,7 @@ end;
 
 procedure T2kSpriteEngine.LeaveLocation(const position: TSgPoint; character: TMapSprite);
 begin
-   FSpriteLocations.Remove(position, character);
+   FSpriteLocations.RemovePair(position, character);
 end;
 
 function T2kSpriteEngine.AddMapObject(obj: TRpgMapObject): TMapSprite;
@@ -216,7 +216,7 @@ end;
 
 procedure T2kSpriteEngine.DeleteMapObject(obj: TMapSprite);
 begin
-   FSpriteLocations.Remove(obj.location, obj);
+   FSpriteLocations.RemovePair(obj.location, obj);
    FMapObjects.Remove(obj);
 end;
 
@@ -256,7 +256,7 @@ begin
    FMapObjects := TMapSpriteList.Create;
    for mapObj in map.mapObjects do
       addMapObject(mapObj);
-   FSpriteLocations := TSpriteLocations.Create(FMapObjects.count);
+   FSpriteLocations := TSpriteLocations.Create;
    GSpriteEngine := self;
 end;
 
