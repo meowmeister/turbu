@@ -68,6 +68,7 @@ type
       FUploaded: boolean;
 
       procedure GlobalScriptsAfterScroll(DataSet: TDataSet);
+      procedure GlobalScriptsBeforeScroll(DataSet: TDataSet);
    public
       { Public declarations }
       constructor Create(AOwner: TComponent); override;
@@ -148,11 +149,31 @@ begin
 
    GlobalScriptsAfterScroll(srcGlobals.DataSet);
    srcglobals.dataset.AfterScroll := self.GlobalScriptsAfterScroll;
+   srcglobals.dataset.BeforeScroll := self.GlobalScriptsBeforeScroll;
+end;
+
+procedure TfrmDatabase.GlobalScriptsBeforeScroll(DataSet: TDataSet);
+var
+   proc: TEBProcedure;
+begin
+   proc := trvGlobal.proc as TEBProcedure;
+   if proc.ChildCount = 0 then
+      GDatabase.scriptBlock.children.Remove(proc);
 end;
 
 procedure TfrmDatabase.GlobalScriptsAfterScroll(DataSet: TDataSet);
+var
+   procname: string;
+   proc: TEBProcedure;
 begin
-   trvGlobal.proc := GDatabase.scriptBlock.ChildByName[dataset.FieldByName('Name').AsString] as TEBProcedure;
+   procname := dataset.FieldByName('Name').AsString;
+   proc := GDatabase.scriptBlock.ChildByName[procname] as TEBProcedure;
+   if proc = nil then
+   begin
+      proc := TEBProcedure.Create(GDatabase.scriptBlock);
+      proc.Name := procname;
+   end;
+   trvGlobal.proc := proc;
 end;
 
 procedure TfrmDatabase.FormClose(Sender: TObject; var Action: TCloseAction);

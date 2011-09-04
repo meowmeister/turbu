@@ -114,7 +114,6 @@ type
       procedure actPlayMusicExecute(Sender: TObject);
    private
       FMapEngine: IDesignMapEngine;
-      FDatabase: IRpgDatabase;
       FCurrentLayer: integer;
       FLastGoodLayer: integer;
       FPaletteTexture: integer;
@@ -318,7 +317,6 @@ end;
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
 begin
-   FDatabase := nil;
    cleanupEngines;
    FMapEngine := nil;
    FPaletteImages.Free;
@@ -657,7 +655,6 @@ begin
    end;
    FDbName := filename;
    FMapEngine.initialize(imgLogo.sdlWindow, FDBName);
-   FDatabase := FMapEngine.database;
    mnuDatabase.Enabled := true;
    trvMapTree.buildMapTree(FMapEngine.mapTree);
 end;
