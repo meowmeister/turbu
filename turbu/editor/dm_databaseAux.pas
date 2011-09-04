@@ -23,6 +23,7 @@ type
     animNames: TSimpleDataSet;
     MPartyNames: TSimpleDataSet;
     terrainNames: TSimpleDataSet;
+    allVocab: TSimpleDataSet;
 
     shieldsid: TIntegerField;
     shieldsname: TWideStringField;
@@ -95,6 +96,7 @@ procedure TdmDatabaseAux.EnsureVocab;
 begin
    dmDatabase.Vocab.Active := true;
    dmDatabase.CustomVocab.Active := true;
+   AllVocab.Active := true;
 end;
 
 procedure TdmDatabaseAux.itemNamesAfterOpen(DataSet: TDataSet);

@@ -188,7 +188,7 @@ begin
    self.isBarrier := base.is_barrier;
    self.animType := TAnimType(base.animType);
    self.moveSpeed := base.moveSpeed;
-   if base.opcode.count > 0 then
+   if base.opcode.count > 1 then //a blank script has a single "end" opcode
       CreateEventScript(base, saveScript);
 end;
 

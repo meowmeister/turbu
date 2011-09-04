@@ -636,20 +636,15 @@ end;
 
 function ConvertShop(opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
-   arr: TEBIntArray;
    i: integer;
-   call: TEBCall;
 begin
-   call := TEBCall.Create('OpenShop');
-   call.Add(TEBEnumValue.Create(GetEnumName(TypeInfo(TShopTypes), opcode.data[0])));
-   call.Add(TEBIntegerValue.Create(opcode.data[1]));
-   TEBExpression(Call.Children[1]).silent := true;
+   result := TEBShop.Create(parent);
+   result.Values.Add(opcode.data[0]);
+   result.Values.Add(opcode.data[1]);
    assert(opcode.data[3] = 0);
-   arr := TEBIntArray.Create(call);
-   arr.Lookup := 'items';
    for I := 4 to high(opcode.data) do
-      arr.values.add(opcode.data[i]);
-   result := WrapCall(call, opcode, parent);
+      result.values.add(opcode.data[i]);
+   TEBShop(result).IfBlock := boolean(opcode.data[2]);
 end;
 
 function ConvertInn(opcode: TEventCommand; parent: TEBObject): TEBObject;

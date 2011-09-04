@@ -386,6 +386,7 @@ end;
 function TdmDatabase.GetDBScript: string;
 const
    VERSION = 'CREATE TABLE DB_VERSION (' + CRLF + ' ID INTEGER NOT NULL, ' + CRLF + '  NAME VARCHAR(255) NOT NULL' + CRLF + ');';
+   ALLVOCAB = 'CREATE VIEW ALLVOCAB ("KEY", VAL) AS ' + CRLF + 'SELECT "KEY", VAL FROM CUSTOMVOCAB ' + CRLF + 'union all ' + CRLF + 'SELECT "KEY", VAL FROM VOCAB;';
 var
    component: TComponent;
    output: TStringList;
@@ -399,6 +400,7 @@ begin
             continue;
          output.Add(ScriptGen(TSimpleDataset(component)));
       end;
+      output.Add(ALLVOCAB);
       result := output.text;
    finally
       output.Free;

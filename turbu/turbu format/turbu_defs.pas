@@ -80,7 +80,7 @@ type
                    trn_DivHiLow, trn_DivLR, trn_DivQuarters, trn_Zoom, trn_Mosaic,
                    trn_Ripple, trn_None);
 
-   TShopTypes = (st_BuyAndSell, st_Buy, st_Sell);
+   TShopTypes = (st_BuySell, st_Buy, st_Sell);
 
    TFacing = (facing_up, facing_right, facing_down, facing_left);
    TFacingSet = set of TFacing;

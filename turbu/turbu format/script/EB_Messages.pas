@@ -85,10 +85,17 @@ type
       function GetNodeText: string; override;
    end;
 
+   [UsesUnit('Messages')]
+   TEBShop = class(TEBMaybeIf)
+   public
+      function GetScriptBase: string; override;
+      function GetNodeText: string; override;
+   end;
+
 implementation
 uses
-   SysUtils,
-   EB_Expressions;
+   SysUtils, TypInfo,
+   turbu_defs, EB_Expressions;
 
 { TEBShowMessage }
 
@@ -275,7 +282,44 @@ begin
    result := format(LINE, [BOOL_STR[Values[0]]]);
 end;
 
+{ TEBShop }
+
+function TEBShop.GetNodeText: string;
+const LINE = 'Open Shop: %s, (%s)';
+var
+   shoptype: string;
+   list: TStringList;
+   i: integer;
+begin
+   shoptype := CleanEnum(GetEnumName(TypeInfo(TShopTypes), values[0]));
+   list := TStringList.Create;
+   try
+      for i := 2 to self.Values.Count - 1 do
+         list.Add(GetLookup(Values[i], 'Items'));
+      result := format(LINE, [shoptype, list.CommaText]);
+   finally
+      list.Free;
+   end;
+end;
+
+function TEBShop.GetScriptBase: string;
+const LINE = 'Shop(%s, %d, [%s])';
+var
+   list: TStringList;
+   i: integer;
+begin
+   list := TStringList.Create;
+   try
+      for i := 2 to self.Values.Count - 1 do
+         list.Add(IntToStr(Values[i]));
+      result := format(LINE, [GetEnumName(TypeInfo(TShopTypes), values[0]), Values[1], list.CommaText]);
+   finally
+      list.Free;
+   end;
+end;
+
 initialization
    TEBObject.RegisterClasses([TEBShowMessage, TEBMessageOptions, TEBPortrait, TEBChoiceMessage,
-                    TEBInputNumber, TEBInputHeroName, TEBSave, TEBMenu, TEBMenuEnable]);
+                    TEBInputNumber, TEBInputHeroName, TEBSave, TEBMenu, TEBMenuEnable,
+                    TEBShop]);
 end.

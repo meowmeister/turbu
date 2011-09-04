@@ -1,7 +1,7 @@
 object dmDatabaseAux: TdmDatabaseAux
   OldCreateOrder = False
   OnCreate = DataModuleCreate
-  Height = 426
+  Height = 461
   Width = 465
   object shields: TClientDataSet
     Active = True
@@ -392,14 +392,14 @@ object dmDatabaseAux: TdmDatabaseAux
     Aggregates = <>
     Connection = dmDatabase.Connection
     DataSet.CommandText = 
-      'select id, name, itemType, usableByHero, usableByClass, twoHande' +
-      'd, slot from items where itemType in (1, 2)'
+      'select id, name, cost, itemType, usableByHero, usableByClass, tw' +
+      'oHanded, slot from items where itemType in (1, 2)'
     DataSet.MaxBlobSize = -1
     DataSet.Params = <>
     IndexFieldNames = 'id'
     Params = <>
     AfterOpen = itemNamesAfterOpen
-    Left = 24
+    Left = 16
     Top = 336
     object IntegerField57: TIntegerField
       FieldName = 'id'
@@ -407,6 +407,26 @@ object dmDatabaseAux: TdmDatabaseAux
     object WideStringField20: TWideStringField
       FieldName = 'name'
       Size = 32
+    end
+    object itemNamesitemType: TIntegerField
+      FieldName = 'itemType'
+      Required = True
+    end
+    object IntegerField31: TIntegerField
+      FieldName = 'cost'
+      Required = True
+    end
+    object itemNamesusableByHero: TBlobField
+      FieldName = 'usableByHero'
+    end
+    object itemNamesusableByClass: TBlobField
+      FieldName = 'usableByClass'
+    end
+    object itemNamestwoHanded: TBooleanField
+      FieldName = 'twoHanded'
+    end
+    object itemNamesslot: TIntegerField
+      FieldName = 'slot'
     end
   end
   object animNames: TSimpleDataSet
@@ -418,7 +438,7 @@ object dmDatabaseAux: TdmDatabaseAux
     IndexFieldNames = 'id'
     Params = <>
     Left = 267
-    Top = 94
+    Top = 62
     object animNamesid: TIntegerField
       FieldName = 'id'
     end
@@ -430,7 +450,7 @@ object dmDatabaseAux: TdmDatabaseAux
   object srcAnimName: TDataSource
     DataSet = animNames
     Left = 339
-    Top = 110
+    Top = 78
   end
   object srcWeapons: TDataSource
     DataSet = weapons
@@ -474,7 +494,7 @@ object dmDatabaseAux: TdmDatabaseAux
     Params = <>
     StoreDefs = True
     Left = 264
-    Top = 40
+    Top = 8
     object condNamesId: TIntegerField
       FieldName = 'id'
       Required = True
@@ -488,7 +508,7 @@ object dmDatabaseAux: TdmDatabaseAux
   object srcCondNames: TDataSource
     DataSet = condNames
     Left = 339
-    Top = 62
+    Top = 30
   end
   object attribNames: TSimpleDataSet
     Aggregates = <>
@@ -499,7 +519,7 @@ object dmDatabaseAux: TdmDatabaseAux
     IndexFieldNames = 'id'
     Params = <>
     Left = 264
-    Top = 152
+    Top = 120
     object attribNamesid: TIntegerField
       FieldName = 'id'
       Required = True
@@ -513,7 +533,7 @@ object dmDatabaseAux: TdmDatabaseAux
   object srcAttribNames: TDataSource
     DataSet = attribNames
     Left = 339
-    Top = 170
+    Top = 138
   end
   object charClasses_Resists: TClientDataSet
     Aggregates = <>
@@ -549,7 +569,7 @@ object dmDatabaseAux: TdmDatabaseAux
     Params = <>
     StoreDefs = True
     Left = 256
-    Top = 256
+    Top = 224
     object charClasses_Resistsmaster: TIntegerField
       FieldName = 'master'
       Required = True
@@ -607,7 +627,7 @@ object dmDatabaseAux: TdmDatabaseAux
     Params = <>
     StoreDefs = True
     Left = 256
-    Top = 312
+    Top = 280
     object IntegerField1: TIntegerField
       FieldName = 'master'
       Required = True
@@ -640,7 +660,7 @@ object dmDatabaseAux: TdmDatabaseAux
     IndexFieldNames = 'id'
     Params = <>
     Left = 264
-    Top = 208
+    Top = 176
     object IntegerField5: TIntegerField
       FieldName = 'id'
       Required = True
@@ -654,7 +674,7 @@ object dmDatabaseAux: TdmDatabaseAux
   object srcMPartyNames: TDataSource
     DataSet = MPartyNames
     Left = 339
-    Top = 226
+    Top = 194
   end
   object terrainNames: TSimpleDataSet
     Aggregates = <>
@@ -668,7 +688,7 @@ object dmDatabaseAux: TdmDatabaseAux
     Params = <>
     StoreDefs = True
     Left = 256
-    Top = 368
+    Top = 336
     object IntegerField6: TIntegerField
       FieldName = 'id'
       Required = True
@@ -682,6 +702,29 @@ object dmDatabaseAux: TdmDatabaseAux
   object srcTerrainNames: TDataSource
     DataSet = terrainNames
     Left = 339
-    Top = 354
+    Top = 322
+  end
+  object allVocab: TSimpleDataSet
+    Aggregates = <>
+    Connection = dmDatabase.Connection
+    DataSet.CommandText = 'select key, val from allVocab'
+    DataSet.MaxBlobSize = -1
+    DataSet.Params = <>
+    FieldDefs = <>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 256
+    Top = 396
+    object allVocabKey: TWideStringField
+      FieldName = 'Key'
+      Required = True
+      Size = 32
+    end
+    object allVocabVal: TWideStringField
+      FieldName = 'Val'
+      Required = True
+      Size = 255
+    end
   end
 end
