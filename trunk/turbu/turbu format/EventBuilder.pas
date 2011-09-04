@@ -92,6 +92,7 @@ type
       function Empty: boolean; virtual;
       procedure AddNamed(aObject: TEBObject); virtual;
       procedure AssignProperty(const key, value: string); virtual;
+      procedure Loaded; virtual;
 
       class var FDatastore: IRpgDatastore;
 
@@ -289,7 +290,10 @@ begin
       raise ERPGScriptError.CreateFmt('Class %s is not registered', [clsName]);
    result := newclass.Create(nil);
    if name = '' then
-      parent.Add(result)
+   begin
+      if assigned(parent) then
+         parent.Add(result)
+   end
    else begin
       result.Name := name;
       if assigned(parent) then
@@ -369,7 +373,9 @@ function TEBObject.LookupName(const name: string): TEBObject;
 var
    idx: integer;
 begin
-   idx := FNameDic.IndexOf(name);
+   if assigned(fNameDic) then
+      idx := FNameDic.IndexOf(name)
+   else idx := -1;
    if idx = -1 then
       result := nil
    else result := FNameDic.Objects[idx] as TEBObject;
@@ -411,6 +417,7 @@ begin
       result.Free;
       raise;
    end;
+   result.Loaded;
 end;
 
 function TEBObject.Empty: boolean;
@@ -463,6 +470,11 @@ begin
       list.Free;
    end;
 //   assert(result.Serialize = value);
+end;
+
+procedure TEBObject.Loaded;
+begin
+   //this virtual method intentionally left blank
 end;
 
 procedure TEBObject.NeededVariables(list: TStringList);

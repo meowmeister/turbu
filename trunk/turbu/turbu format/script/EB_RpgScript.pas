@@ -98,6 +98,9 @@ type
    TEBMaybeCase = class(TEBCase)
    private
       FCaseBlock: boolean;
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
    public
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override; final;
@@ -139,14 +142,33 @@ type
    private
       FElseSet: boolean;
       function StripTrailingSem(const value: string): string;
+   protected
+      procedure Loaded; override;
    public
-      constructor Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp); reintroduce;
+      constructor Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp); overload;
+      constructor Create(AParent: TEBObject); overload; override;
       procedure Add(aObject: TEBObject); override;
       procedure SetElse;
+      function ClearElse: TEBCodeBlock;
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
       function GetNode: TEBNode; override;
       function GetNodeText: string; override;
+
+      property ElseSet: boolean read FElseSet;
+   end;
+
+   TEBMaybeIf = class(TEBIf)
+   private
+      FIfBlock: boolean;
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
+   public
+      function GetScript(indent: integer): string; override;
+      function GetScriptText: string; override; final;
+      function GetScriptBase: string; virtual; abstract;
+      property IfBlock: boolean read FIfBlock write FIfBlock;
    end;
 
    TEBFunctionCall = class(TEBObject)
@@ -581,6 +603,20 @@ end;
 
 { TEBIf }
 
+constructor TEBIf.Create(AParent: TEBObject);
+begin
+   inherited Create(AParent);
+   Add(TEBBooleanValue.Create(true));
+   TEBCodeBlock.Create(self);
+end;
+
+constructor TEBIf.Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp);
+begin
+   inherited Create(parent);
+   Add(TEBComparison.Create(left, right, op));
+   TEBCodeBlock.Create(self);
+end;
+
 procedure TEBIf.Add(aObject: TEBObject);
 var
    block: TEBCodeBlock;
@@ -592,16 +628,15 @@ begin
    end;
    if FElseSet then
       block := self.Children[2] as TEBCodeBlock
-   else
-      block := self.Children[1] as TEBCodeBlock;
+   else block := self.Children[1] as TEBCodeBlock;
    block.Add(aObject);
 end;
 
-constructor TEBIf.Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp);
+function TEBIf.ClearElse: TEBCodeBlock;
 begin
-   inherited Create(parent);
-   Add(TEBComparison.Create(left, right, op));
-   TEBCodeBlock.Create(self);
+   assert(FElseSet);
+   FElseSet := false;
+   result := self.children.Extract(self.children[2]) as TEBCodeBlock;
 end;
 
 function TEBIf.GetNode: TEBNode;
@@ -662,6 +697,11 @@ end;
 function TEBIf.GetScriptText: string;
 begin
   result := format('if %s then ', [ChildScript[0]]);
+end;
+
+procedure TEBIf.Loaded;
+begin
+   FElseSet := ChildCount > 2;
 end;
 
 procedure TEBIf.SetElse;
@@ -1055,6 +1095,51 @@ begin
    if FCaseBlock then
       result := format('case %s of', [result])
    else result := result + ';';
+end;
+
+procedure TEBMaybeCase.AssignProperty(const key, value: string);
+begin
+   if (key = 'CaseBlock') and (value = 'True') then
+      FCaseBlock := true
+   else inherited;
+end;
+
+procedure TEBMaybeCase.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   if FCaseBlock then
+      list.Add('CaseBlock = True');
+end;
+
+{ TEBMaybeIf }
+
+function TEBMaybeIf.GetScript(indent: integer): string;
+begin
+   if FIfBlock then
+      result := inherited GetScript(indent)
+   else result := GetScriptText;
+end;
+
+function TEBMaybeIf.GetScriptText: string;
+begin
+   result := GetScriptBase;
+   if FIfBlock then
+      result := format('if %s then', [result])
+   else result := result + ';';
+end;
+
+procedure TEBMaybeIf.AssignProperty(const key, value: string);
+begin
+   if (key = 'IfBlock') and (value = 'True') then
+      FIfBlock := true
+   else inherited;
+end;
+
+procedure TEBMaybeIf.SerializeProps(list: TStringList; depth: integer);
+begin
+   inherited;
+   if FIfBlock then
+      list.Add('IfBlock = True');
 end;
 
 initialization

@@ -81,6 +81,8 @@ contains
   EditVehicleBGM in 'EB Editors\Settings\EditVehicleBGM.pas' {frmEditVehicleBGM},
   EditSysSFX in 'EB Editors\Settings\EditSysSFX.pas' {frmEditSysSFX},
   imageSelectorFrame in '..\..\engines\basis\imageSelectorFrame.pas' {frameImageSelector: TFrame},
-  EditSkin in 'EB Editors\Settings\EditSkin.pas' {frmSkinSelector};
+  EditSkin in 'EB Editors\Settings\EditSkin.pas' {frmSkinSelector},
+  EditTransitions in 'EB Editors\Settings\EditTransitions.pas' {frmEditTransitions},
+  EditShop in 'EB Editors\Menus\EditShop.pas' {frmEBEditBase1};
 
 end.
