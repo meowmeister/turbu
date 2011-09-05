@@ -146,7 +146,6 @@ type
       procedure Loaded; override;
    public
       constructor Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp); overload;
-      constructor Create(AParent: TEBObject); overload; override;
       procedure Add(aObject: TEBObject); override;
       procedure SetElse;
       function ClearElse: TEBCodeBlock;
@@ -168,6 +167,7 @@ type
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override; final;
       function GetScriptBase: string; virtual; abstract;
+      function GetNode: TEBNode; override;
       property IfBlock: boolean read FIfBlock write FIfBlock;
    end;
 
@@ -602,14 +602,6 @@ begin
 end;
 
 { TEBIf }
-
-constructor TEBIf.Create(AParent: TEBObject);
-begin
-   inherited Create(AParent);
-   Add(TEBBooleanValue.Create(true));
-   TEBCodeBlock.Create(self);
-end;
-
 constructor TEBIf.Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp);
 begin
    inherited Create(parent);
@@ -1112,6 +1104,13 @@ begin
 end;
 
 { TEBMaybeIf }
+
+function TEBMaybeIf.GetNode: TEBNode;
+begin
+   if IfBlock then
+      result := inherited GetNode
+   else result := TEBNode.Create(self, GetNodeText);
+end;
 
 function TEBMaybeIf.GetScript(indent: integer): string;
 begin

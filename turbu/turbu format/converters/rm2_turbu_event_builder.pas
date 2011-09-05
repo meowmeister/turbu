@@ -634,6 +634,18 @@ begin
       result := TEBFunctionCall.Create(parent, call);
 end;
 
+procedure SetupMif(mif: TEBMaybeIf; opcode: TEventCommand; const blockName: string);
+begin
+   mif.IfBlock := boolean(opcode.data[2]);
+   mif.add(TEBBooleanValue.Create(true));
+   TEBCodeBlock.Create(mif).Name := blockName;
+   if boolean(opcode.data[2]) then
+   begin
+      blockStack.push(-1);
+      ifStack.Push(mif);
+   end;
+end;
+
 function ConvertShop(opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    i: integer;
@@ -644,7 +656,7 @@ begin
    assert(opcode.data[3] = 0);
    for I := 4 to high(opcode.data) do
       result.values.add(opcode.data[i]);
-   TEBShop(result).IfBlock := boolean(opcode.data[2]);
+   SetupMif(result as TEBMaybeIf, opcode, 'Transaction');
 end;
 
 function ConvertInn(opcode: TEventCommand; parent: TEBObject): TEBObject;

@@ -756,7 +756,7 @@ end;
 
 function TEBBlock.GetNodeText: string;
 begin
-   result := '';
+   result := self.name;
 end;
 
 function TEBBlock.GetNode: TEBNode;
