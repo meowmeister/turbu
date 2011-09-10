@@ -92,6 +92,13 @@ type
       function GetNodeText: string; override;
    end;
 
+   [UsesUnit('Messages')]
+   TEBInn = class(TEBMaybeIf)
+   public
+      function GetScriptBase: string; override;
+      function GetNodeText: string; override;
+   end;
+
 implementation
 uses
    SysUtils, TypInfo,
@@ -318,8 +325,22 @@ begin
    end;
 end;
 
+{ TEBInn }
+
+function TEBInn.GetNodeText: string;
+const LINE = 'Show Inn, Price: %d';
+begin
+   result := format(LINE, [Values[1]]);
+end;
+
+function TEBInn.GetScriptBase: string;
+const LINE = 'Inn(%d, %d)';
+begin
+   result := format(LINE, [values[0], Values[1]]);
+end;
+
 initialization
    TEBObject.RegisterClasses([TEBShowMessage, TEBMessageOptions, TEBPortrait, TEBChoiceMessage,
                     TEBInputNumber, TEBInputHeroName, TEBSave, TEBMenu, TEBMenuEnable,
-                    TEBShop]);
+                    TEBShop, TEBInn]);
 end.

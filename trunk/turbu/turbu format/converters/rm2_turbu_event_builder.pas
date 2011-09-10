@@ -622,23 +622,10 @@ begin
    result.Values.Add(0);
 end;
 
-function WrapCall(call: TEBCall; opcode: TEventCommand; parent: TEBObject): TEBObject;
-begin
-   if boolean(opcode.Data[2]) then
-   begin
-      result := TEBIF.Create(parent, call, TEBBooleanValue.Create(true), co_equals);
-      blockStack.push(-1);
-      ifStack.Push(TEBIf(result));
-   end
-   else
-      result := TEBFunctionCall.Create(parent, call);
-end;
-
 procedure SetupMif(mif: TEBMaybeIf; opcode: TEventCommand; const blockName: string);
 begin
    mif.IfBlock := boolean(opcode.data[2]);
-   mif.add(TEBBooleanValue.Create(true));
-   TEBCodeBlock.Create(mif).Name := blockName;
+   mif.Setup(blockName);
    if boolean(opcode.data[2]) then
    begin
       blockStack.push(-1);
@@ -660,14 +647,11 @@ begin
 end;
 
 function ConvertInn(opcode: TEventCommand; parent: TEBObject): TEBObject;
-var
-   call: TEBCall;
 begin
-   call := TEBCall.Create('OpenInn');
-   call.Add(TEBIntegerValue.Create(opcode.data[0]));
-   TEBExpression(Call.Children[0]).silent := true;
-   call.Add(TEBIntegerValue.Create(opcode.data[1]));
-   result := WrapCall(call, opcode, parent);
+   result := TEBInn.Create(parent);
+   result.Values.Add(opcode.data[0]);
+   result.Values.Add(opcode.data[1]);
+   SetupMif(result as TEBMaybeIf, opcode, 'Stay');
 end;
 
 function ConvertTeleportVehicle(opcode: TEventCommand; parent: TEBObject): TEBObject;

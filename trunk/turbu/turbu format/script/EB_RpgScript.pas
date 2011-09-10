@@ -164,6 +164,7 @@ type
       procedure SerializeProps(list: TStringList; depth: integer); override;
       procedure AssignProperty(const key, value: string); override;
    public
+      procedure Setup(const blockName: string = '');
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override; final;
       function GetScriptBase: string; virtual; abstract;
@@ -1139,6 +1140,12 @@ begin
    inherited;
    if FIfBlock then
       list.Add('IfBlock = True');
+end;
+
+procedure TEBMaybeIf.Setup(const blockName: string);
+begin
+   self.add(TEBBooleanValue.Create(true));
+   TEBCodeBlock.Create(self).Name := blockName;
 end;
 
 initialization

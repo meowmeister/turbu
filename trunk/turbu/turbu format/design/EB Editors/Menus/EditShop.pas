@@ -57,7 +57,7 @@ implementation
 uses
    SysUtils, StrUtils,
    uDataSetHelper,
-   EB_Messages, turbu_defs,
+   EB_Messages, EB_RpgScript, turbu_defs,
    dm_databaseAux;
 
 {$R *.dfm}
@@ -126,6 +126,8 @@ var
    item: TListItem;
    shop: TEBShop;
 begin
+   if obj.ChildCount = 0 then
+      (obj as TEBShop).Setup('Transaction');
    obj.Values.Clear;
    obj.Values.Add(radTransactions.ItemIndex);
    obj.Values.Add(integer(cboStyles.Items.Objects[cboStyles.ItemIndex]));

@@ -393,7 +393,7 @@ object dmDatabaseAux: TdmDatabaseAux
     Connection = dmDatabase.Connection
     DataSet.CommandText = 
       'select id, name, cost, itemType, usableByHero, usableByClass, tw' +
-      'oHanded, slot from items where itemType in (1, 2)'
+      'oHanded, slot from items'
     DataSet.MaxBlobSize = -1
     DataSet.Params = <>
     IndexFieldNames = 'id'
