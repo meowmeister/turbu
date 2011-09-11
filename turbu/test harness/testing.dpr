@@ -11,7 +11,6 @@ uses
   turbu_database in '..\turbu format\database\turbu_database.pas',
   turbu_skills in '..\turbu format\database\turbu_skills.pas',
   turbu_constants in '..\turbu format\turbu_constants.pas',
-  uPSI_script_interface in '..\mapview\libs\script engine\uPSI_script_interface.pas',
   turbu_2k3_battle_engine in '..\engines\turbu_2k3_battle_engine.pas',
   turbu_2k_battle_engine in '..\engines\turbu_2k_battle_engine.pas',
   turbu_decl_utils in '..\turbu format\turbu_decl_utils.pas',
@@ -141,7 +140,8 @@ uses
   monster in '..\monster.pas',
   turbu_monsters in '..\turbu format\database\turbu_monsters.pas',
   rm2_turbu_monsters in '..\turbu format\converters\rm2_turbu_monsters.pas',
-  EB_Battle in '..\turbu format\script\EB_Battle.pas';
+  EB_Battle in '..\turbu format\script\EB_Battle.pas',
+  dm_databaseAux in '..\editor\dm_databaseAux.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
