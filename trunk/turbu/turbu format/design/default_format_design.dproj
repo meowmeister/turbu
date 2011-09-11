@@ -202,7 +202,10 @@
 				<Form>frmEditTransitions</Form>
 			</DCCReference>
 			<DCCReference Include="EB Editors\Menus\EditShop.pas">
-				<Form>frmEBEditBase1</Form>
+				<Form>frmEBEditShop</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Menus\EditInn.pas">
+				<Form>frmEBEditInn</Form>
 			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
