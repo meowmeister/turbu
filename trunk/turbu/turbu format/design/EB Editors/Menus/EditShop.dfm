@@ -1,5 +1,5 @@
-inherited frmEBEditBase1: TfrmEBEditBase1
-  Caption = 'frmEBEditBase1'
+inherited frmEBEditShop: TfrmEBEditShop
+  Caption = 'Open Shop'
   ClientHeight = 539
   ClientWidth = 493
   OnCreate = FormCreate

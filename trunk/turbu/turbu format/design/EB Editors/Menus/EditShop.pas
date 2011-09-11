@@ -26,7 +26,7 @@ uses
 
 type
    [EditorCategory('Menus', 'Open Shop')]
-   TfrmEBEditBase1 = class(TfrmEBEditBase)
+   TfrmEBEditShop = class(TfrmEbEditBase)
       radTransactions: TRadioGroup;
       grpMessage: TGroupBox;
       shopVocab: TClientDataSet;
@@ -62,7 +62,7 @@ uses
 
 {$R *.dfm}
 
-procedure TfrmEBEditBase1.FormCreate(Sender: TObject);
+procedure TfrmEBEditShop.FormCreate(Sender: TObject);
 var
    rec: variant;
 begin
@@ -76,7 +76,7 @@ begin
    cboStyles.ItemIndex := 0;
 end;
 
-procedure TfrmEBEditBase1.btnAddClick(Sender: TObject);
+procedure TfrmEBEditShop.btnAddClick(Sender: TObject);
 var
    new: TListItem;
    source: TDataset;
@@ -88,12 +88,12 @@ begin
    new.Data := pointer(source.FieldByName('Id').AsInteger);
 end;
 
-procedure TfrmEBEditBase1.btnRemoveClick(Sender: TObject);
+procedure TfrmEBEditShop.btnRemoveClick(Sender: TObject);
 begin
    lstShopContents.Selected.Free;
 end;
 
-procedure TfrmEBEditBase1.shopVocabCalcFields(DataSet: TDataSet);
+procedure TfrmEBEditShop.shopVocabCalcFields(DataSet: TDataSet);
 var
    key: string;
 begin
@@ -101,7 +101,7 @@ begin
    shopVocabid.Value := StrToIntDef(Trim(Copy(key, 5, length(key) - 10)), -1);
 end;
 
-procedure TfrmEBEditBase1.shopVocabFilterRecord(DataSet: TDataSet; var Accept: Boolean);
+procedure TfrmEBEditShop.shopVocabFilterRecord(DataSet: TDataSet; var Accept: Boolean);
 var
    key: string;
    subkey: string;
@@ -116,12 +116,12 @@ begin
    end;
 end;
 
-function TfrmEBEditBase1.NewClassType: TEbClass;
+function TfrmEBEditShop.NewClassType: TEbClass;
 begin
    result := TEBShop;
 end;
 
-procedure TfrmEBEditBase1.DownloadObject(obj: TEbObject);
+procedure TfrmEBEditShop.DownloadObject(obj: TEbObject);
 var
    item: TListItem;
    shop: TEBShop;
@@ -140,14 +140,14 @@ begin
       shop.setElse;
 end;
 
-procedure TfrmEBEditBase1.UploadObject(obj: TEbObject);
+procedure TfrmEBEditShop.UploadObject(obj: TEbObject);
 var
    i: integer;
 begin
    radTransactions.ItemIndex := obj.Values[0];
    cboStyles.ItemIndex := 0;
    for i := 0 to cboStyles.Items.Count - 1 do
-      if integer(cboStyles.Items.Objects[i]) = obj.Values[2] then
+      if integer(cboStyles.Items.Objects[i]) = obj.Values[1] then
       begin
          cboStyles.ItemIndex := i;
          break;
@@ -164,7 +164,7 @@ begin
    chkElseBlock.Checked := (obj as TEBShop).ElseSet;
 end;
 
-function TfrmEBEditBase1.ValidateForm: boolean;
+function TfrmEBEditShop.ValidateForm: boolean;
 begin
    if (lstShopContents.Items.Count = 0) and (TShopTypes(radTransactions.ItemIndex) <> st_Buy) then
       ValidateError(lstItems, 'Please select at least one item for the shop to sell.');
@@ -172,7 +172,7 @@ begin
 end;
 
 initialization
-   RegisterEbEditor(TEBShop, TfrmEBEditBase1);
+   RegisterEbEditor(TEBShop, TfrmEBEditShop);
 finalization
    UnRegisterEbEditor(TEBShop);
 end.
