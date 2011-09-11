@@ -20,7 +20,7 @@ unit EBListView;
 
 interface
 uses
-   ComCtrls, Messages, Classes, DB, DBCtrls,
+   ComCtrls, Messages, Classes, DB, DBCtrls, Generics.Collections,
    EventBuilder{$IFNDEF COMPONENT}, turbu_map_interface{$ENDIF};
 
 type
@@ -37,13 +37,16 @@ type
       {$ENDIF}
       procedure SetProc(const Value: TEBRoutine);
       procedure EndLoading;
-      procedure ReconcilePostEdit(obj: TEbObject; node: TTreeNode);
+      procedure ReconcilePostEdit(obj: TEbObject; node: TTreeNode; list: TList<TEBObject>);
       procedure InsertObject;
       procedure Orphan(obj: TEbObject);
       procedure SetupContext;
       procedure AddObjectContext(context: TDataset; const base: string; const name, vartype: string);
       procedure AddVariable(context: TDataset; const name, vartype: string);
       procedure AddToContext(context: TDataset; const name, vartype: string);
+      function GetEBChildren(obj: TEBObject): TList<TEBObject>;
+      function ValidateList(obj: TEbObject; list: TList<TEBObject>): boolean;
+      function BuildTree(base: TEBObject; parent: TTreeNode; isNew: boolean): TTreeNode;
    private
       function GetDataSet: TDataSet;
       procedure SetDataSet(const Value: TDataSet);
@@ -74,7 +77,7 @@ procedure Register;
 
 implementation
 uses
-   Windows, SysUtils, Controls, Generics.Collections, DBClient{$IFNDEF COMPONENT},
+   Windows, SysUtils, Controls, DBClient{$IFNDEF COMPONENT},
    EbEdit, EbSelector, turbu_vartypes, turbu_constants, turbu_script_interface,
    turbu_database, array_editor{$ENDIF};
 
@@ -95,10 +98,24 @@ begin
    FDatalink.DataSource := TDataSource.Create(self);
 end;
 
+function TEBTreeView.GetEBChildren(obj: TEBObject): TList<TEBObject>;
+var
+   subObj: TEBObject;
+begin
+   if obj.ChildCount = 0 then
+      Exit(nil);
+   result := TList<TEBObject>.Create;
+   for subobj in obj do
+      if not (subObj is TEBExpression) then
+         result.add(subObj);
+   assert(result.Count > 0);
+end;
+
 procedure TEBTreeView.DblClick;
 var
    node: TTreeNode;
    obj: TEbObject;
+   list: TList<TEBObject>;
 begin
    node := self.Selected;
    if assigned(node) then
@@ -110,9 +127,21 @@ begin
          {$IFNDEF COMPONENT}
          if assigned(obj) then
          begin
-            if EbEdit.EditEbObject(obj, map) and ((obj.ChildCount > 0) or (node.HasChildren)) then
-               self.ReconcilePostEdit(obj, node);
-            node.Text := obj.GetNodeText;
+            if node.HasChildren then
+               list := GetEBChildren(obj)
+            else list := nil;
+            try
+               if EbEdit.EditEbObject(obj, map) and
+                 ((obj.ChildCount > 0) or (node.HasChildren) or assigned(list)) then
+               begin
+                  if assigned(node.Parent) and (node.Parent.Data = obj) then
+                     node := node.Parent;
+                  self.ReconcilePostEdit(obj, node, list)
+               end
+               else node.Text := obj.GetNodeText;
+            finally
+               list.Free;
+            end;
          end;
          {$ENDIF}
       end;
@@ -208,46 +237,53 @@ end;
 {$ENDIF}
 {$WARN CONSTRUCTING_ABSTRACT ON}
 
-procedure TEBTreeView.SetProc(const Value: TEBRoutine);
+function TEBTreeView.BuildTree(base: TEBObject; parent: TTreeNode; isNew: boolean): TTreeNode;
 var
-   tree: TEBNode;
    node, last: TEBNodeData;
+   tree: TEBNode;
    stack: TStack<TEBNodeData>;
    dict: TDictionary<TEBNodeData, TTreeNode>;
 begin
+   tree := base.GetNode;
+   stack := TStack<TEBNodeData>.Create;
+   dict := TDictionary<TEBNodeData, TTreeNode>.Create;
    Items.BeginUpdate;
    try
-      Items.Clear;
-      FProc := Value;
-      tree := FProc.GetNode;
-      stack := TStack<TEBNodeData>.Create;
-      dict := TDictionary<TEBNodeData, TTreeNode>.Create;
-      try
-         last := tree.Data;
-         stack.push(tree.Data);
-         dict.add(last, nil);
-         for node in tree do
-         begin
-            if (node = last) or (node.line = '') then
-               Continue;
-            if (last <> stack.Peek) then
-               if (node.FindParent = last) then
-                  stack.Push(last)
-               else while node.FindParent <> stack.Peek do
-                  stack.Pop;
-            dict.Add(node, items.AddChildObject(dict[stack.Peek], node.line, node.obj));
-            last := node;
-         end;
-         EndLoading;
-         SetupContext;
-      finally
-         stack.free;
-         dict.Free;
-         tree.free;
+      if isNew then
+         last := tree.Data
+      else last := tree.Data.parent;
+      stack.push(last);
+      dict.add(last, parent);
+      for node in tree do
+      begin
+         if (node = last) or (node.line = '') then
+            Continue;
+         if (last <> stack.Peek) then
+            if (node.FindParent = last) then
+               stack.Push(last)
+            else while node.FindParent <> stack.Peek do
+               stack.Pop;
+         dict.Add(node, items.AddChildObject(dict[stack.Peek], node.line, node.obj));
+         last := node;
       end;
+      EndLoading;
+      SetupContext;
+      result := dict[tree.Data];
    finally
       items.EndUpdate;
+      stack.free;
+      dict.Free;
+      tree.free;
    end;
+   if not isNew then
+      assert(assigned(result));
+end;
+
+procedure TEBTreeView.SetProc(const Value: TEBRoutine);
+begin
+   Items.Clear;
+   FProc := Value;
+   BuildTree(value, nil, true);
 end;
 
 procedure TEBTreeView.AddVariable(context: TDataset; const name, vartype: string);
@@ -349,45 +385,59 @@ begin
    else FOnOrphan(self, obj);
 end;
 
-procedure TEBTreeView.ReconcilePostEdit(obj: TEbObject; node: TTreeNode);
-
-   function FindSubnode(nodelist: TObjectList<TTreeNode>; subObj: TEbObject): TTreeNode;
+function TEBTreeView.ValidateList(obj: TEbObject; list: TList<TEBObject>): boolean;
+var
+   i, j: integer;
+begin
+   result := true;
+   j := 0;
+   for i := 0 to obj.children.Count - 1 do
    begin
-      for result in nodelist do
-         if result.Data = subObj then
-            Exit;
-      result := nil;
+      if obj.children[i] is TEBExpression then
+         Continue;
+      if (j >= list.Count) or (list[j] <> obj.children[i]) then
+      begin
+         result := false;
+         break;
+      end;
+      inc(j);
    end;
+   result := result and (j = list.count);
+end;
 
+procedure TEBTreeView.ReconcilePostEdit(obj: TEbObject; node: TTreeNode; list: TList<TEBObject>);
 var
    subObj: TEbObject;
-   subnode: TTreeNode;
-   nodelist: TObjectList<TTreeNode>;
+   subnode, newnode: TTreeNode;
+   valid: boolean;
 begin
-   nodelist := nil;
    Items.BeginUpdate;
    try
-      nodelist := TObjectList<TTreeNode>.Create;
-      subnode := node.getFirstChild;
-      while assigned(subnode) do
+      if assigned(list) then
+         valid := validateList(obj, list)
+      else valid := false;
+      if valid then
       begin
-         nodelist.add(subnode);
-         subnode := node.GetNextChild(subnode);
+         subnode := node.getFirstChild;
+         while assigned(subnode) do
+         begin
+            if subnode.Data <> obj then
+               subnode.Text := (TObject(subnode.Data) as TEBObject).GetNodeText;
+            subnode := node.GetNextChild(subnode);
+         end;
+         node.Text := obj.GetNodeText;
+      end
+      else begin
+         if assigned(list) then
+            for subObj in list do
+               if not obj.children.Contains(subObj) then
+                  Orphan(subObj);
+         newnode := BuildTree(obj, node.Parent, false);
+         newnode.MoveTo(node, naInsert);
+         newnode.Expand(true);
+         node.Free;
       end;
-      for subObj in obj do
-      begin
-         if subObj is TEBExpression then
-            Continue;
-         subnode := findSubnode(nodelist, subObj);
-         if assigned(subnode) then
-            nodelist.Extract(subnode)
-         else subnode := Items.AddChildObject(node, subObj.GetNodeText, subObj);
-         subnode.MoveTo(node, naAddChild);
-      end;
-      for subnode in nodelist do
-         self.Orphan(TObject(subnode.Data) as TEbObject);
    finally
-      nodelist.free;
       Items.EndUpdate;
    end;
 end;
