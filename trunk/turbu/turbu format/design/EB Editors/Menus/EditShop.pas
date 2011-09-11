@@ -126,24 +126,27 @@ var
    item: TListItem;
    shop: TEBShop;
 begin
+   shop := obj as TEBShop;
    if obj.ChildCount = 0 then
-      (obj as TEBShop).Setup('Transaction');
+      shop.Setup('Transaction');
    obj.Values.Clear;
    obj.Values.Add(radTransactions.ItemIndex);
    obj.Values.Add(integer(cboStyles.Items.Objects[cboStyles.ItemIndex]));
    for item in lstShopContents.Items do
       obj.Values.Add(integer(item.Data));
-   shop := obj as TEBShop;
    if shop.elseSet and not chkElseBlock.Checked then
       shop.clearElse
    else if (not shop.elseSet) and chkElseBlock.Checked then
       shop.setElse;
+   shop.IfBlock := chkElseBlock.Checked;
 end;
 
 procedure TfrmEBEditShop.UploadObject(obj: TEbObject);
 var
    i: integer;
+   shop: TEBShop;
 begin
+   shop := obj as TEBShop;
    radTransactions.ItemIndex := obj.Values[0];
    cboStyles.ItemIndex := 0;
    for i := 0 to cboStyles.Items.Count - 1 do
@@ -161,7 +164,8 @@ begin
    finally
       srcItems.DataSet.EnableControls;
    end;
-   chkElseBlock.Checked := (obj as TEBShop).ElseSet;
+   chkElseBlock.Checked := shop.ElseSet;
+   assert(shop.IfBlock = shop.ElseSet);
 end;
 
 function TfrmEBEditShop.ValidateForm: boolean;
