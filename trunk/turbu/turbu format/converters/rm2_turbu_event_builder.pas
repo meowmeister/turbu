@@ -882,16 +882,22 @@ begin
    result := ObjectFactory(TEBTransition, opcode, parent);
 end;
 
+function ConvertInputHeroName(opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   result := TEBInputHeroName.Create(parent);
+   result.Values.Add(opcode.data[0]);
+   result.Values.Add(opcode.data[2]);
+end;
+
 const
-   OPCODES_IMPLEMENTED = 64;
+   OPCODES_IMPLEMENTED = 63;
    OPCODE_LIST: array[1..OPCODES_IMPLEMENTED] of TOpcodePair =
      ((K: 10; V: nil), (K: 20713; v: nil), (K: 20720; V: nil), (K: 20730; V: nil),
       (K: 10110; V: TEBShowMessage), (K: 20110; V: TEBExtension), (K: 10130; V: TEBPortrait),
       (K: 11410; V: TEBWait), (K: 10150; V: TEBInputNumber), (K: 10230; V: TEBTimer),
       (K: 10310; V: TEBMoney), (K: 10410; V: TEBExperience), (K: 10420; V: TEBLevel),
       (K: 10500; V: TEBTakeDamage), (K: 10610; V: TEBHeroName), (K: 10620; V: TEBHeroTitle),
-      (K: 10670; V: TEBSysSFX), (K: 10680; V: TEBSysSkin),
-      (K: 10740; V: TEBInputHeroName), (K: 10810; V: TEBTeleport),
+      (K: 10670; V: TEBSysSFX), (K: 10680; V: TEBSysSkin), (K: 10810; V: TEBTeleport),
       (K: 10820; V: TEBMemorizeLocation), (K: 10830; V: TEBMemoTeleport), (K: 10840; V: TEBRideVehicle),
       (K: 10910; V: TEBTerrainID), (K: 10920; V: TEBMapObjID),
       (K: 11030; V: TEBTintScreen), (K: 11040; V: TEBFlashScreen),
@@ -909,7 +915,7 @@ const
       (K: 13410; V: TEBEndBattle), (K: 1006; V: TEBForceFlee), (K: 1007; V: TEBEnableCombo),
       (K: 13260; V: TEBBattleAnimation));
 
-   COMPLEX_OPCODES = 60;
+   COMPLEX_OPCODES = 61;
    COMPLEX: array[1..COMPLEX_OPCODES] of TComplexOpcodePair =
      ((K: 0; V: Cleanup), (K: 10120; v: ConvertMessageOptions), (K: 20140; v: ConvertCaseExtension),
       (K: 10140; V: ConvertCase), (K: 20141; V: ConvertEndCase), (K: 12010; V: ConvertIf),
@@ -932,7 +938,7 @@ const
       (K: 13150; V: ConvertShowMonster), (K: 1005; V: ConvertBattleGlobalEvent),
       (K: 13310; V: ConvertBattleIf), (K: 23310; V: ConvertIfElse), (K: 23311; V: ConvertEndIf),
       (K: 11010; V: ConvertEraseScreen), (K: 11020; V: ConvertShowScreen),
-      (K: 10690; V: ConvertTransition));
+      (K: 10690; V: ConvertTransition), (K: 10740; V: ConvertInputHeroName));
 
 var
    i: integer;
