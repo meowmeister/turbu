@@ -105,6 +105,7 @@ type
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override; final;
       function GetScriptBase: string; virtual; abstract;
+
       property CaseBlock: boolean read FCaseBlock write FCaseBlock;
    end;
 
@@ -169,6 +170,7 @@ type
       function GetScriptText: string; override; final;
       function GetScriptBase: string; virtual; abstract;
       function GetNode: TEBNode; override;
+
       property IfBlock: boolean read FIfBlock write FIfBlock;
    end;
 
