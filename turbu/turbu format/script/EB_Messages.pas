@@ -245,7 +245,7 @@ var
    heroname: string;
 begin
    heroname := format('hero[%d].name', [values[0]]);
-   if boolean(values[2]) then
+   if boolean(values[1]) then
       result := format(LINE, [heroname, heroname, values[0]])
    else result := format(LINE, [heroname, QuotedStr(''), values[0]]);
 end;
