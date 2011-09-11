@@ -185,6 +185,7 @@ type
 
 implementation
 uses
+   Math,
    LDB, formats;
 
 procedure fillInItemInt(const expected: byte; out theResult: integer); forward;
@@ -309,12 +310,14 @@ try
             end;
          end;
          FInvokeSkill := getChboxSec($47, theLDB, fillInZeroInt);
-         incompleteSection := getNumSec($48, theLDB, fillInZeroInt) < TLcfDataBase(parent).charClasses;
-         setLength(FUsableByClass, TLcfDataBase(parent).charClasses + 1);
+         dummy := getNumSec($48, theLDB, fillInZeroInt);
+         incompleteSection := dummy < TLcfDataBase(parent).charClasses;
+         setLength(FUsableByClass, max(dummy, TLcfDataBase(parent).charClasses + 1));
          dummy := getArraySec($49, theLDB, FUsableByClass[0]);
          if incompleteSection then
             for I := dummy + 1 to high(FUsableByClass) do
                FUsableByClass[i] := true;
+         setLength(FUsableByClass, TLcfDataBase(parent).charClasses + 1);
 
          for i := $4A to $4C do
             FLegacy.Add(i, getStrSec(i, theLDB, fillInBlankStr));

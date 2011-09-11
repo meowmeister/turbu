@@ -3800,8 +3800,9 @@ object dmDatabase: TdmDatabase
       FieldName = 'terrain'
     end
     object tilesets_recordstilegroup: TWideStringField
+      DisplayWidth = 32
       FieldName = 'tilegroup'
-      Size = 32
+      Size = 255
     end
   end
   object tilegroups: TSimpleDataSet
