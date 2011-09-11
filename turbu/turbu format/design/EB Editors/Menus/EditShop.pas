@@ -25,7 +25,7 @@ uses
    EventBuilder, EbEdit, Grids, DBGrids, turbu_listGrid, ComCtrls;
 
 type
-   [EditorCategory('Menus', 'Open Shop')]
+   [EditorCategory('Messages', 'Open Shop')]
    TfrmEBEditShop = class(TfrmEbEditBase)
       radTransactions: TRadioGroup;
       grpMessage: TGroupBox;

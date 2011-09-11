@@ -26,7 +26,7 @@ uses
   JvExMask, JvSpin;
 
 type
-   [EditorCategory('Menus', 'Call Inn')]
+   [EditorCategory('Messages', 'Call Inn')]
    TfrmEBEditInn = class(TfrmEbEditBase)
       grpMessage: TGroupBox;
       innVocab: TClientDataSet;
