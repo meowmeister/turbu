@@ -706,6 +706,8 @@ end;
 
 function TEBIf.StripTrailingSem(const value: string): string;
 begin
+   if value = '' then
+      exit('');
    assert(value[length(value)] = ';');
    result := Copy(value, 1, length(value) - 1);
 end;
