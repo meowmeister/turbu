@@ -192,9 +192,10 @@ var
    parent, current: TTreeNode;
    index: integer;
 begin
-   current := self.Selected;
-   parent := current.Parent;
-   items.InsertObject(current, obj.GetNodeText, obj);
+   parent := self.Selected.Parent;
+   current := BuildTree(obj, parent, false);
+   current.MoveTo(self.Selected, naInsert);
+   current.Expand(true);
    if assigned(parent) then
    begin
       if assigned(selected.Data) then
