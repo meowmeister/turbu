@@ -72,6 +72,7 @@
 			<DCCReference Include="..\..\..\components\TURBU\IDLookupCombo.pas"/>
 			<DCCReference Include="MusicSelector.pas"/>
 			<DCCReference Include="..\..\..\components\TURBU\button_edit.pas"/>
+			<DCCReference Include="..\..\editor\map_tree_controller.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
