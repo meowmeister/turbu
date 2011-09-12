@@ -27,7 +27,9 @@ type
       function GetTileset: integer;
       procedure SetTileset(const Value: integer);
       function GetMapObjects: TStrings;
+      function GetID: integer;
       property tileset: integer read GetTileset write SetTileset;
+      property ID: integer read GetID;
    end;
 
    IMapMetadata = interface(IInterface)
