@@ -327,9 +327,9 @@ begin
     FMonsters.Add(string(FLdb.monster[i].filename));
   FFrames.Add(string(FLdb.SystemData.frame));
   for bgm := Low(LDB.TBgmTypes) to High(LDB.TBgmTypes) do
-    FSongs.Add(FLdb.SystemData.bgm[bgm].filename);
+    FSongs.Add(string(FLdb.SystemData.bgm[bgm].filename));
   for sfx := Low(LDB.TSfxTypes) to High(LDB.TSfxTypes) do
-    FSounds.Add(FLdb.SystemData.sfx[sfx].filename);
+    FSounds.Add(string(FLdb.SystemData.sfx[sfx].filename));
 end;
 
 type
