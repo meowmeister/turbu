@@ -163,6 +163,7 @@ type
       FAllDatasetList: TDatasetList;
       FDatasetList: TDatasetList;
       FVitalList: TDatasetList;
+      FDBName: string;
       function usableByFilter(field: TBlobField; master: TDataset): boolean;
       function GetDBScript: string;
       function FieldType(field: TField): string;
@@ -183,6 +184,7 @@ type
       property TableCount: integer read GetTableCount;
       property datasets: TDatasetList read FDatasetList write FDatasetList;
       property dbScript: string read GetDBScript;
+      property dbName: string read FDBName;
    end;
 
 var
@@ -216,7 +218,10 @@ begin
    FDatasetList := TDatasetList.Create(TComparer<TCustomClientDataset>.Construct(CDSComparer));
    FVitalList := TDatasetList.Create;
    for field in instance.GetDeclaredFields do
-      if (field.FieldType as TRttiInstanceType).metaclassType.InheritsFrom(TCustomClientDataset) then
+   begin
+      if not (field.FieldType is TRttiInstanceType) then
+         Continue;
+      if TRttiInstanceType(field.FieldType).metaclassType.InheritsFrom(TCustomClientDataset) then
       begin
          dataset := field.GetValue(self).AsObject as TCustomClientDataset;
          if not assigned(field.GetAttribute(TRelationAttribute)) then
@@ -225,6 +230,7 @@ begin
          if assigned(field.GetAttribute(VitalDatasetAttribute)) then
             FVitalList.Add(dataset);
       end;
+   end;
    FDatasetList.Sort;
 end;
 
@@ -468,6 +474,8 @@ begin
    connection.Params.Values['Database'] := dbname;
    connection.Params.Values['ServerCharSet'] := 'UTF8';
    connection.Open;
+
+   FDBName := dbname;
 
    //a little RTTI surgery so DBX won't quote all my table names
    cls := ctx.GetType(connection.MetaData.ClassType);
