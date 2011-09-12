@@ -21,9 +21,9 @@ interface
 
 uses
    Controls, Classes, Forms, Menus, ExtCtrls, StdCtrls, ComCtrls, Dialogs,
-   Generics.Collections, ImgList, ToolWin, ActnList, ActnMan, SyncObjs, Messages,
+   Generics.Collections, ImgList, ToolWin, ActnList, ActnMan, SyncObjs,
    PlatformDefaultStyleActnCtrls,
-   JvComponentBase, JvPluginManager, JvExControls, JvxSlider,
+   JvPluginManager, JvExControls, JvxSlider,
    turbu_plugin_interface, turbu_engines, turbu_map_engine,
    MusicSelector,
    turbu_map_interface, turbu_map_metadata, turbu_database_interface,
@@ -34,7 +34,6 @@ type
       mnuMain: TMainMenu;
       mnuDatabase: TMenuItem;
       dlgOpen: TOpenDialog;
-      pluginManager: TJvPluginManager;
       sbxPallette: TScrollBox;
       splSidebar: TSplitter;
       imgPalette: TSdlFrame;
@@ -101,11 +100,6 @@ type
         Shift: TShiftState);
       procedure imgLogoKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
       procedure imgBackgroundClick(Sender: TObject);
-      procedure pluginManagerAfterLoad(Sender: TObject; FileName: string;
-        const ALibHandle: {HMODULE} cardinal; var AllowLoad: Boolean);
-      procedure pluginManagerBeforeUnload(Sender: TObject; FileName: string;
-        const ALibHandle: Cardinal);
-      procedure pluginManagerAfterUnload(Sender: TObject; FileName: string);
       procedure imgLogoPaint(Sender: TObject);
       procedure FormResize(Sender: TObject);
       procedure pnlZoomResize(Sender: TObject);
@@ -113,6 +107,7 @@ type
       procedure imgBackgroundPaint(Sender: TObject);
       procedure actPlayMusicExecute(Sender: TObject);
    private
+      pluginManager: TJvPluginManager;
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
       FLastGoodLayer: integer;
@@ -160,8 +155,7 @@ implementation
 
 uses
    SysUtils, Math, Graphics, Windows, OpenGL,
-   commons, rm_converter, archiveInterface, dm_ProjectBoot,
-   PackageRegistry,
+   commons, rm_converter, archiveInterface, dm_ProjectBoot, engine_manager,
    turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
    turbu_classes, turbu_versioning, turbu_tilesets, turbu_defs,
    dm_database, discInterface, formats, map_tree_controller, delete_map,
@@ -313,6 +307,7 @@ begin
    FPaletteTexture := -1;
    FPaletteImages := TDictionary<integer, integer>.Create;
    FZoom := 1;
+   self.pluginManager := dmEngineManager.pluginManager;
 end;
 
 procedure TfrmTurbuMain.FormDestroy(Sender: TObject);
@@ -676,24 +671,6 @@ begin
       if (ctrl.tag <> 0) and (ctrl is TLabel) then
          CenterControl(ctrl, ctrl.tag);
    end;
-end;
-
-procedure TfrmTurbuMain.pluginManagerAfterLoad(Sender: TObject;
-  FileName: string; const ALibHandle: {HMODULE} cardinal; var AllowLoad: Boolean);
-begin
-   Packages.AddPackage(FileName, ALibHandle);
-end;
-
-procedure TfrmTurbuMain.pluginManagerAfterUnload(Sender: TObject;
-  FileName: string);
-begin
-   Packages.Verify;
-end;
-
-procedure TfrmTurbuMain.pluginManagerBeforeUnload(Sender: TObject;
-  FileName: string; const ALibHandle: Cardinal);
-begin
-   Packages.RemovePackage(FileName);
 end;
 
 procedure TfrmTurbuMain.RequireMapEngine;

@@ -515,15 +515,6 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 472
     Top = 96
   end
-  object pluginManager: TJvPluginManager
-    Extension = 'TEP'
-    PluginKind = plgPackage
-    OnAfterLoad = pluginManagerAfterLoad
-    OnBeforeUnload = pluginManagerBeforeUnload
-    OnAfterUnload = pluginManagerAfterUnload
-    Left = 352
-    Top = 88
-  end
   object ilToolbarIcons: TImageList
     BkColor = clWhite
     Height = 20

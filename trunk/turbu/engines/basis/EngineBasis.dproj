@@ -69,6 +69,9 @@
 			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="dsnap.dcp"/>
 			<DCCReference Include="DbxCommonDriver.dcp"/>
+			<DCCReference Include="vclimg.dcp"/>
+			<DCCReference Include="Jcl.dcp"/>
+			<DCCReference Include="JvCore.dcp"/>
 			<DCCReference Include="..\..\turbu format\turbu_versioning.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_battle_engine.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_map_engine.pas"/>
@@ -112,6 +115,11 @@
 			<DCCReference Include="..\..\..\..\delphi-coll\src\Library\Collections.Sets.pas"/>
 			<DCCReference Include="..\..\..\..\delphi-coll\src\Library\Collections.Dynamic.pas"/>
 			<DCCReference Include="..\..\..\..\delphi-coll\src\Library\Collections.Serialization.pas"/>
+			<DCCReference Include="..\..\..\classes\PackageRegistry.pas"/>
+			<DCCReference Include="engine_manager.pas">
+				<Form>dmEngineManager</Form>
+				<DesignClass>TDataModule</DesignClass>
+			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
