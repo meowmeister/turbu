@@ -25,7 +25,7 @@ uses
    PlatformDefaultStyleActnCtrls,
    JvPluginManager, JvExControls, JvxSlider,
    turbu_plugin_interface, turbu_engines, turbu_map_engine,
-   MusicSelector,
+   MusicSelector, scrollbox_manager,
    turbu_map_interface, turbu_map_metadata, turbu_database_interface,
    sdl_frame, sdl, sdl_13, sg_defs;
 
@@ -108,6 +108,7 @@ type
       procedure actPlayMusicExecute(Sender: TObject);
    private
       pluginManager: TJvPluginManager;
+      FScrollboxManager: TScrollboxManager;
       FMapEngine: IDesignMapEngine;
       FCurrentLayer: integer;
       FLastGoodLayer: integer;
@@ -118,7 +119,7 @@ type
       FCurrPalettePos: integer;
       FPaletteImages: TDictionary<integer, integer>;
       FIgnoreMouseDown: boolean;
-      FZoom: double;
+      FZoom: single;
       FMusicPlayer: TfrmMusicSelector;
       FDBName: string;
       procedure loadEngine(data: TEngineData);
@@ -137,13 +138,11 @@ type
 
       procedure setLayer(const value: integer);
 
-      procedure configureScrollBars(const size, position: TSgPoint);
       procedure RequireMapEngine;
       procedure enableRunButtons(running: boolean);
-      function SetMapSize(const size: TSgPoint): TSgPoint;
-      procedure SetZoom(const value: double);
+      procedure SetZoom(const value: single);
       procedure EnableZoom(value: boolean);
-      procedure NormalizeMousePosition(image: TSdlFrame; var x, y: integer; scale: double);
+      procedure NormalizeMousePosition(image: TSdlFrame; var x, y: integer; scale: single);
    public
       { Public declarations }
    end;
@@ -284,22 +283,6 @@ begin
    FPaletteTexture := -1;
 end;
 
-procedure TfrmTurbuMain.configureScrollBars(const size, position: TSgPoint);
-
-   procedure configureScrollBar(scrollbar: TScrollBar; size, pageSize, position: integer);
-   begin
-      scrollBar.PageSize := 1;
-      scrollBar.Max := size;
-      scrollBar.PageSize := pageSize;
-      scrollBar.LargeChange := scrollBar.PageSize - TILE_SIZE;
-      scrollBar.Position := min(position, scrollBar.Max - scrollBar.PageSize);
-   end;
-
-begin
-   configureScrollBar(sbHoriz, size.x, min(imgLogo.LogicalWidth, size.x), position.x);
-   configureScrollBar(sbVert, size.y, min(imgLogo.LogicalHeight, size.y), position.y);
-end;
-
 procedure TfrmTurbuMain.FormCreate(Sender: TObject);
 begin
    if getProjectFolder = '' then
@@ -315,6 +298,7 @@ begin
    cleanupEngines;
    FMapEngine := nil;
    FPaletteImages.Free;
+   FScrollboxManager.Free;
 end;
 
 procedure TfrmTurbuMain.FormResize(Sender: TObject);
@@ -395,6 +379,10 @@ begin
    convert1.Free;
 
    imgLogo.DrawTexture(index);
+   FScrollboxManager := TScrollboxManager.Create(imgBackground, imgLogo, sbHoriz, sbVert,
+      function: single begin result := FZoom end,
+      function: integer begin result := TILE_SIZE end,
+      function: TSgPoint begin result := FMapEngine.mapPosition end);
 end;
 
 procedure TfrmTurbuMain.imgLogoDblClick(Sender: TObject);
@@ -402,7 +390,7 @@ begin
    RequireMapEngine;
    FMapEngine.doubleClick;
 
-   //Needed because of the order of Windows messages: the Double Click message
+   //Needed because of the order of Windows messages: the single Click message
    //posts first, then the MouseDown after it, and this can do strange
    //things to the engine.
    FIgnoreMouseDown := true;
@@ -478,7 +466,7 @@ begin
    end;
 end;
 
-procedure TfrmTurbuMain.NormalizeMousePosition(image: TSdlFrame; var x, y: integer; scale: double);
+procedure TfrmTurbuMain.NormalizeMousePosition(image: TSdlFrame; var x, y: integer; scale: single);
 begin
    x := clamp(x, 0, image.Width - Ceil(scale));
    y := clamp(y, 0, image.height - Ceil(scale));
@@ -527,7 +515,7 @@ begin
    FMapEngine := retrieveEngine(et_map, value.mapEngine,
                  TVersion.Create(0, 0, 0)) as IDesignMapEngine;
    FMapEngine.initialize(imgLogo.sdlWindow, FDBName);
-   FMapEngine.SetMapResizeEvent(self.SetMapSize);
+   FMapEngine.SetMapResizeEvent(FScrollboxManager.SetMapSize);
    FMapEngine.autosaveMaps := mnuAutosaveMaps.checked;
    FMapEngine.loadMap(value);
    FMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
@@ -714,33 +702,6 @@ begin
    FMapEngine.SetCurrentLayer(value);
 end;
 
-procedure GetColorsForDate(var bg, fg: TColor);
-const clOrange = $0045C9;
-var
-   year, month, day: word;
-begin
-   DecodeDate(date, year, month, day);
-   if (month = 10) and (day = 31) then
-   begin
-      bg := clBlack;
-      fg := clOrange;
-   end
-   else if (month = 12) and (day in [24, 25]) then
-   begin
-      bg := clGreen;
-      fg := clRed;
-   end
-   else if (month = 7) and (day = 4) then
-   begin
-      bg := clRed;
-      fg := clBlue;
-   end
-   else begin
-      bg := clGray;
-      fg := clWhite;
-   end;
-end;
-
 procedure TfrmTurbuMain.imgBackgroundPaint(Sender: TObject);
 var
    bg, fg: TColor;
@@ -754,30 +715,7 @@ begin
    box.canvas.FillRect(box.ClientRect);
 end;
 
-function TfrmTurbuMain.SetMapSize(const size: TSgPoint): TSgPoint;
-var
-   pSize: TSgPoint;
-begin
-   pSize := size * FZoom;
-   if (pSize.x >= imgBackground.ClientWidth) and (pSize.y >= imgBackground.ClientHeight) then
-   begin
-      imgLogo.Align := alClient;
-   end
-   else begin
-      imgLogo.Align := alNone;
-      imgLogo.Width := min(imgBackground.ClientWidth, pSize.x);
-      imgLogo.Height := min(imgBackground.ClientHeight, pSize.y);
-      imgLogo.Left := (imgBackground.ClientWidth - imgLogo.width) div 2;
-      imgLogo.Top := (imgBackground.ClientHeight - imgLogo.height) div 2;
-   end;
-   if (imgLogo.Width < imgBackground.ClientWidth) and (imgLogo.Height < imgBackground.ClientHeight) then
-      result := size
-   else result := sgPoint(imgLogo.Width, imgLogo.Height) / FZoom;
-   imgLogo.LogicalSize := result;
-   configureScrollBars(size, FMapEngine.mapPosition);
-end;
-
-procedure TfrmTurbuMain.SetZoom(const value: double);
+procedure TfrmTurbuMain.SetZoom(const value: single);
 begin
    if abs(value - FZoom) < 0.01 then //comparing floats with = doesn't always work
       Exit;

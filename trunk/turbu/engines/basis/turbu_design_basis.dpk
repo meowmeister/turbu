@@ -44,6 +44,7 @@ contains
   IDLookupCombo in '..\..\..\components\TURBU\IDLookupCombo.pas',
   MusicSelector in 'MusicSelector.pas',
   button_edit in '..\..\..\components\TURBU\button_edit.pas',
-  map_tree_controller in '..\..\editor\map_tree_controller.pas';
+  map_tree_controller in '..\..\editor\map_tree_controller.pas',
+  scrollbox_manager in '..\..\editor\scrollbox_manager.pas';
 
 end.
