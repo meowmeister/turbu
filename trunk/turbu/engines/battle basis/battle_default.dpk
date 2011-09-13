@@ -26,7 +26,6 @@ package battle_default;
 {$IMPLICITBUILD ON}
 
 requires
-  JvPluginSystem,
   EngineBasis;
 
 contains

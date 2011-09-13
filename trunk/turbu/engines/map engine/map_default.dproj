@@ -66,7 +66,6 @@
 			<DelphiCompile Include="map_default.dpk">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="JvPluginSystem.dcp"/>
 			<DCCReference Include="default_format.dcp"/>
 			<DCCReference Include="map_default_plugin.pas"/>
 			<DCCReference Include="turbu_2k_map_engine.pas"/>
