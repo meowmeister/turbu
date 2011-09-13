@@ -26,7 +26,6 @@ package map_default;
 {$IMPLICITBUILD ON}
 
 requires
-  JvPluginSystem,
   default_format;
 
 contains
