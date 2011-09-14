@@ -14,7 +14,7 @@ inherited frmEBEditTeleport: TfrmEBEditTeleport
       Top = 10
       Width = 570
       Height = 223
-      Align = alTop
+      Align = alClient
       TabOrder = 0
       object trvMapTree: TTreeView
         Left = 1
@@ -154,7 +154,7 @@ inherited frmEBEditTeleport: TfrmEBEditTeleport
       Top = 233
       Width = 570
       Height = 46
-      Align = alClient
+      Align = alBottom
       Caption = 'Facing After Teleport'
       Columns = 5
       ItemIndex = 0
