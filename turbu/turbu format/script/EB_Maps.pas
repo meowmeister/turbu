@@ -346,7 +346,7 @@ end;
 { TEBMemoTeleport }
 
 function TEBMemoTeleport.GetNodeText: string;
-const LINE = 'Teleport to memorized location: Ints[%s], (Ints[%s], Ints[%s])';
+const LINE = 'Teleport to Memorized Location: Ints[%s], (Ints[%s], Ints[%s])';
 begin
    result := format(LINE, [IntName(Values[0]), IntName(Values[1]), IntName(Values[2])]);
 end;

@@ -22,11 +22,10 @@ interface
 
 uses
    Forms, StdCtrls, ExtCtrls, Classes, Controls,
-   EventBuilder, EbEdit, button_edit, variable_selector;
+   EventBuilder, EbEdit, button_edit, variable_selector, EB_Maps;
 
 type
-   [EditorCategory('Map', 'Memorize Location')]
-   TfrmMemorizeLocation = class(TfrmEbEditBase)
+   TfrmMemorizedLocation = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       Label1: TLabel;
       cboMapID: TIntSelector;
@@ -35,23 +34,35 @@ type
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
+   end;
+
+   TfrmMemorizedLocation<T: TEBObject> = class(TfrmMemorizedLocation)
+   protected
       function NewClassType: TEbClass; override;
    end;
 
+   [EditorCategory('Map', 'Memorize Location')]
+   TfrmMemorizeLocation = class(TfrmMemorizedLocation<TEBMemorizeLocation>)
+      procedure FormShow(Sender: TObject);
+   end;
+
+   [EditorCategory('Map', 'Teleport To Memorized Location')]
+   TfrmMemoTeleport = class(TfrmMemorizedLocation<TEBMemoTeleport>)
+      procedure FormShow(Sender: TObject);
+   end;
+
 implementation
-uses
-   EB_Maps;
 
 {$R *.dfm}
 
-{ TfrmMemorizeLocation }
+{ TfrmMemorizedLocation<T> }
 
-function TfrmMemorizeLocation.NewClassType: TEbClass;
+function TfrmMemorizedLocation<T>.NewClassType: TEbClass;
 begin
-   result := TEBMemorizeLocation;
+   result := T;
 end;
 
-procedure TfrmMemorizeLocation.DownloadObject(obj: TEbObject);
+procedure TfrmMemorizedLocation.DownloadObject(obj: TEbObject);
 begin
    obj.Clear;
    obj.Values.Add(cboMapID.ID);
@@ -59,15 +70,31 @@ begin
    obj.Values.Add(cboYVar.ID);
 end;
 
-procedure TfrmMemorizeLocation.UploadObject(obj: TEbObject);
+procedure TfrmMemorizedLocation.UploadObject(obj: TEbObject);
 begin
    cboMapID.ID := obj.Values[0];
    cboXVar.ID := obj.Values[1];
    cboYVar.ID := obj.Values[2];
 end;
 
+{ TfrmMemorizeLocation }
+
+procedure TfrmMemorizeLocation.FormShow(Sender: TObject);
+begin
+   self.Caption := 'Memorize Location';
+end;
+
+{ TfrmMemoTeleport }
+
+procedure TfrmMemoTeleport.FormShow(Sender: TObject);
+begin
+   self.Caption := 'Teleport To Memorized Location';
+end;
+
 initialization
    RegisterEbEditor(TEBMemorizeLocation, TfrmMemorizeLocation);
+   RegisterEbEditor(TEBMemoTeleport, TfrmMemoTeleport);
 finalization
    UnRegisterEbEditor(TEBMemorizeLocation);
+   UnRegisterEbEditor(TEBMemoTeleport);
 end.
