@@ -36,7 +36,23 @@ type
       property Enabled;
    end;
 
+   TRpgButtonEdit = class(TRpgCustomButtonEdit)
+   private
+      FOnClick: TNotifyEvent;
+   protected
+      procedure ButtonClick(Sender: TObject); override;
+   published
+      property OnButtonClick: TNotifyEvent read FOnClick write FOnClick;
+   end;
+
+procedure Register;
+
 implementation
+
+procedure Register;
+begin
+   RegisterComponents('TURBU', [TRpgButtonEdit]);
+end;
 
 { TRpgCustomButtonEdit }
 
@@ -65,6 +81,14 @@ begin
       FButton.Caption := '...';
       FButton.OnClick := self.ButtonClick;
    end;
+end;
+
+{ TRpgButtonEdit }
+
+procedure TRpgButtonEdit.ButtonClick(Sender: TObject);
+begin
+   if assigned(FOnClick) then
+      FOnClick(sender);
 end;
 
 end.

@@ -40,7 +40,8 @@ contains
   variable_selector in 'variable_selector.pas',
   IDLookupCombo in 'IDLookupCombo.pas',
   pic_edit in 'pic_edit.pas',
-  sound_edit in 'sound_edit.pas';
+  sound_edit in 'sound_edit.pas',
+  button_edit in 'button_edit.pas';
 
 end.
 
