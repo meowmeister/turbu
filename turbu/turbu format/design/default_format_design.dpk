@@ -85,6 +85,7 @@ contains
   EditTransitions in 'EB Editors\Settings\EditTransitions.pas' {frmEditTransitions},
   EditShop in 'EB Editors\Menus\EditShop.pas' {frmEBEditShop},
   EditInn in 'EB Editors\Menus\EditInn.pas' {frmEBEditInn},
-  HeroName in 'EB Editors\Messages\HeroName.pas' {frmInputHeroName};
+  HeroName in 'EB Editors\Messages\HeroName.pas' {frmInputHeroName},
+  EditTeleport in 'EB Editors\Map\EditTeleport.pas' {frmEBEditTeleport};
 
 end.

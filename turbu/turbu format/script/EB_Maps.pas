@@ -317,14 +317,16 @@ end;
 { TEBTeleport }
 
 function TEBTeleport.GetNodeText: string;
-const LINE = 'Teleport: %s, (%.3d,%.3d)';
+const
+   LINE = 'Teleport: %s, (%.3d,%.3d), %s';
+   FACING: array[0..4] of string = ('Retain Facing', 'Up', 'Right', 'Down', 'Left');
 begin
-   result := format(LINE, [MapName(Values[0]), Values[1], Values[2]]);
+   result := format(LINE, [MapName(Values[0]), Values[1], Values[2], FACING[Values[3]]]);
 end;
 
 function TEBTeleport.GetScriptText: string;
 begin
-   result := format('Teleport(%d, %d, %d);', [Values[0], Values[1], Values[2]]);
+   result := format('Teleport(%d, %d, %d, %d);', [Values[0], Values[1], Values[2], Values[3]]);
 end;
 
 { TEBMemorizeLocation }
