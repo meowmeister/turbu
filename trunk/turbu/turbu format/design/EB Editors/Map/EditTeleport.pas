@@ -52,7 +52,7 @@ type
          Y: Integer);
       procedure imgViewMouseUp(Sender: TObject; Button: TMouseButton;
          Shift: TShiftState; X, Y: Integer);
-    procedure imgViewAvailable(Sender: TObject);
+      procedure imgViewAvailable(Sender: TObject);
    private
       FCurrentMap: integer;
       FPosition: TsgPoint;

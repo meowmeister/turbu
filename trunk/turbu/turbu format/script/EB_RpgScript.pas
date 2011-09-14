@@ -249,8 +249,8 @@ type
    end;
 
    TEBObjectHelper = class helper for TEBObject
-  private
-    class function VarName(id: integer; const group: string): string; static;
+   private
+      class function VarName(id: integer; const group: string): string; static;
    public
       function HeroName(id: integer): string;
       function CleanEnum(const name: string): string;
