@@ -1,5 +1,5 @@
-inherited frmMemorizeLocation: TfrmMemorizeLocation
-  Caption = 'Memorize Location'
+inherited frmMemorizedLocation: TfrmMemorizedLocation
+  Caption = 'frmMemorizedLocation'
   ClientHeight = 214
   PixelsPerInch = 120
   TextHeight = 16
