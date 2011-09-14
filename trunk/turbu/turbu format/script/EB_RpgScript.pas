@@ -249,6 +249,8 @@ type
    end;
 
    TEBObjectHelper = class helper for TEBObject
+  private
+    class function VarName(id: integer; const group: string): string; static;
    public
       function HeroName(id: integer): string;
       function CleanEnum(const name: string): string;
@@ -900,14 +902,21 @@ begin
    result := self.GetLookup(id, 'heroes');
 end;
 
+class function TEBObjectHelper.VarName(id: integer; const group: string): string;
+var
+   name: string;
+begin
+   name := GetLookup(id, group);
+   if name = '' then
+      result := intToStr(id)
+   else result := format('%d: %s', [id, name]);
+end;
+
 class function TEBObjectHelper.IntName(id: integer): string;
 var
    name: string;
 begin
-   name := GetLookup(id, 'Variables');
-   if name = '' then
-      result := intToStr(id)
-   else result := format('%d: %s', [id, GetLookup(id, 'Variables')]);
+   result := VarName(id, 'Variables');
 end;
 
 function TEBObjectHelper.SecondFraction(count: integer): string;
@@ -917,7 +926,7 @@ end;
 
 function TEBObjectHelper.SwitchName(id: integer): string;
 begin
-   result := format('%d: %s', [id, GetLookup(id, 'Switches')]);
+   result := VarName(id, 'Switches');
 end;
 
 { TStringsHelper }
