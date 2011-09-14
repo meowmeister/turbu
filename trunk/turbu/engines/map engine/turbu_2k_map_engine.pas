@@ -66,6 +66,7 @@ type
       FDontLockEnter: boolean;
       FCutscene: integer;
       FTransProc: TTransProc;
+      FDatabaseOwner: boolean;
       procedure OnTimer(Sender: TObject);
       procedure OnProcess(Sender: TObject);
       procedure HandleEvent(event: TSdlEvent);
@@ -138,9 +139,12 @@ begin
    for I := 0 to high(FMaps) do
       FMaps[i].Free;
    setLength(FMaps, 0);
-   FDatabase.Free;
-   GDatabase := nil;
-   FreeAndNil(dmDatabase);
+   if FDatabaseOwner then
+   begin
+      FDatabase.Free;
+      GDatabase := nil;
+      FreeAndNil(dmDatabase);
+   end;
    inherited Cleanup;
 end;
 
@@ -196,14 +200,18 @@ begin
       Exit;
 
    inherited initialize(window, database);
-   assert(dmDatabase = nil);
-   dmDatabase := TdmDatabase.Create(nil);
-   dmDatabase.Connect(database, nil);
-   FDatabase := TRpgDatabase.Load(dmDatabase);
-   GDatabase := FDatabase;
+   if dmDatabase = nil then
+   begin
+      dmDatabase := TdmDatabase.Create(nil);
+      dmDatabase.Connect(database, nil);
+      FDatabase := TRpgDatabase.Load(dmDatabase);
+      GDatabase := FDatabase;
+      FDatabaseOwner := true;
+      if not assigned(FDatabase) then
+         raise ERpgPlugin.Create('Incompatible project database');
+   end
+   else FDatabase := GDatabase;
 
-   if not assigned(FDatabase) then
-      raise ERpgPlugin.Create('Incompatible project database');
    layout := FDatabase.layout;
    if window.ptr = nil then
    begin
