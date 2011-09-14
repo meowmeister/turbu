@@ -901,8 +901,13 @@ begin
 end;
 
 class function TEBObjectHelper.IntName(id: integer): string;
+var
+   name: string;
 begin
-   result := format('%d: %s', [id, GetLookup(id, 'Variables')]);
+   name := GetLookup(id, 'Variables');
+   if name = '' then
+      result := intToStr(id)
+   else result := format('%d: %s', [id, GetLookup(id, 'Variables')]);
 end;
 
 function TEBObjectHelper.SecondFraction(count: integer): string;
