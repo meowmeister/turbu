@@ -22,7 +22,7 @@ interface
 
 uses
   Forms, Messages, StdCtrls, ExtCtrls, Classes, Controls,
-  EventBuilder, EbEdit, EB_System;
+  EventBuilder, EbEdit, EB_System, EB_Maps;
 
 const WM_HIDE = WM_USER + 1;
 
@@ -48,6 +48,9 @@ type
 
    [EditorCategory('Basics', 'Title Screen')]
    TFrmTitleScreen = class(TfrmEBEditNull<TEBTitleScreen>);
+
+   [EditorCategory('Map', 'Ride Vehicle')]
+   TFrmRideVehicle = class(TfrmEBEditNull<TEBRideVehicle>);
 
 implementation
 uses
@@ -89,7 +92,9 @@ end;
 initialization
    RegisterEbEditor(TEBGameOver, TFrmGameOver);
    RegisterEbEditor(TEBTitleScreen, TFrmTitleScreen);
+   RegisterEbEditor(TEBRideVehicle, TFrmRideVehicle);
 finalization
    UnRegisterEbEditor(TEBGameOver);
    UnRegisterEbEditor(TEBTitleScreen);
+   UnRegisterEbEditor(TEBRideVehicle);
 end.
