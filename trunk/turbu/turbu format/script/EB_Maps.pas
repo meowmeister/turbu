@@ -376,19 +376,16 @@ begin
    if boolean(Values[0]) then
    begin
       result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
-      result := format(LINE, [ChildNode[0], MapName(Values[1]), IntName(Values[2]), IntName(Values[3])]);
+      result := format(result, [ChildNode[0], MapName(Values[1]), IntName(Values[2]), IntName(Values[3])]);
    end
-   else begin
-      result := LINE;
-      result := format(LINE, [ChildNode[0], MapName(Values[1]), Values[2], Values[3]]);
-   end;
+   else result := format(LINE, [ChildNode[0], MapName(Values[1]), Values[2], Values[3]]);
 end;
 
 function TEBTeleportVehicle.GetScriptText: string;
 const LINE = 'TeleportVehicle(%s, %d, %d, %d);';
 begin
    if boolean(Values[0]) then
-      result := stringReplace(LINE, '%d', 'Ints[%s]', [rfReplaceAll])
+      result := stringReplace(LINE, '%d', 'Ints[%d]', [rfReplaceAll])
    else result := LINE;
    result := format(result, [ChildScript[0], Values[1], Values[2], Values[3]]);
 end;
