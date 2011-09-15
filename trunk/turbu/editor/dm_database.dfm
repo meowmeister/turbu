@@ -3597,6 +3597,7 @@ object dmDatabase: TdmDatabase
     DataSet.Params = <>
     FieldDefs = <>
     IndexDefs = <>
+    IndexFieldNames = 'id'
     Params = <>
     StoreDefs = True
     Left = 311

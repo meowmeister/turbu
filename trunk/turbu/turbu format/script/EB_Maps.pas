@@ -371,23 +371,27 @@ end;
 { TEBTeleportVehicle }
 
 function TEBTeleportVehicle.GetNodeText: string;
-const LINE = 'Teleport Vehicle %s: %s, (%.3d,%.3d));';
+const
+   LINE = 'Teleport Vehicle %s: %s, (%.3d,%.3d));';
+   LINE2 = 'Teleport Vehicle %s: Ints[%s], (Ints[%s], Ints[%s]));';
+var
+   vname: string;
 begin
-   if boolean(Values[0]) then
-   begin
-      result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
-      result := format(result, [ChildNode[0], MapName(Values[1]), IntName(Values[2]), IntName(Values[3])]);
-   end
-   else result := format(LINE, [ChildNode[0], MapName(Values[1]), Values[2], Values[3]]);
+   vname := VehicleName(values[0]);
+   if boolean(Values[1]) then
+      result := format(LINE2, [vname, IntName(Values[2]), IntName(Values[3]), IntName(Values[4])])
+   else result := format(LINE, [vname, MapName(Values[2]), Values[3], Values[4]]);
 end;
 
 function TEBTeleportVehicle.GetScriptText: string;
-const LINE = 'TeleportVehicle(%s, %d, %d, %d);';
+const
+   LINE = 'TeleportVehicle(%d, %d, %d, %d);';
+   LINE2 = 'TeleportVehicle(%d, ints[%d], ints[%d], ints[%d]);';
 begin
-   if boolean(Values[0]) then
-      result := stringReplace(LINE, '%d', 'Ints[%d]', [rfReplaceAll])
+   if boolean(Values[1]) then
+      result := LINE2
    else result := LINE;
-   result := format(result, [ChildScript[0], Values[1], Values[2], Values[3]]);
+   result := format(result, [Values[0], Values[2], Values[3], Values[4]]);
 end;
 
 { TEBTeleportMapObj }
