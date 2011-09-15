@@ -253,6 +253,7 @@ type
       class function VarName(id: integer; const group: string): string; static;
    public
       function HeroName(id: integer): string;
+      function VehicleName(id: integer): string;
       function CleanEnum(const name: string): string;
       function SecondFraction(count: integer): string;
       class function IntName(id: integer): string;
@@ -902,6 +903,11 @@ begin
    result := self.GetLookup(id, 'heroes');
 end;
 
+function TEBObjectHelper.VehicleName(id: integer): string;
+begin
+   result := self.GetLookup(id, 'vehicles');
+end;
+
 class function TEBObjectHelper.VarName(id: integer; const group: string): string;
 var
    name: string;
@@ -913,8 +919,6 @@ begin
 end;
 
 class function TEBObjectHelper.IntName(id: integer): string;
-var
-   name: string;
 begin
    result := VarName(id, 'Variables');
 end;

@@ -237,9 +237,7 @@ function eventDeref(const data: integer): TEBObjExpr;
 begin
    case data of
       10001: result := TEBObjExpr.Create('Party');
-      10002: result := TEBObjExpr.Create('Boat');
-      10003: result := TEBObjExpr.Create('Ship');
-      10004: result := TEBObjExpr.Create('Airship');
+      10002..10002: result := TEBLookupObjExpr.Create('vehicle', data - 10001, 'vehicles');
       10005: result := TEBObjExpr.Create('ThisEvent');
       else result := TEBObjArrayValue.Create('Event', data);
    end;
@@ -657,7 +655,7 @@ end;
 function ConvertTeleportVehicle(opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBTeleportVehicle.Create(parent);
-   result.Add(eventDeref(opcode.data[0]));
+   result.Values.Add(opcode.data[0] + 1);
    result.Values.AddRange([opcode.data[1], opcode.data[2], opcode.data[3], opcode.data[4]]);
 end;
 

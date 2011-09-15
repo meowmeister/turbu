@@ -87,6 +87,7 @@ contains
   EditInn in 'EB Editors\Menus\EditInn.pas' {frmEBEditInn},
   HeroName in 'EB Editors\Messages\HeroName.pas' {frmInputHeroName},
   EditTeleport in 'EB Editors\Map\EditTeleport.pas' {frmEBEditTeleport},
-  EditMemorizeLocation in 'EB Editors\Map\EditMemorizeLocation.pas' {frmMemorizeLocation};
+  EditMemorizeLocation in 'EB Editors\Map\EditMemorizeLocation.pas' {frmMemorizedLocation},
+  EditTeleportVehicle in 'EB Editors\Map\EditTeleportVehicle.pas' {frmTeleportVehicle};
 
 end.
