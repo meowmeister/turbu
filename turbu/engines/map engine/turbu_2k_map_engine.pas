@@ -66,7 +66,6 @@ type
       FDontLockEnter: boolean;
       FCutscene: integer;
       FTransProc: TTransProc;
-      FDatabaseOwner: boolean;
       procedure OnTimer(Sender: TObject);
       procedure OnProcess(Sender: TObject);
       procedure HandleEvent(event: TSdlEvent);
@@ -75,6 +74,7 @@ type
       procedure PressButton(button: TButtonCode);
       procedure PartyButton(button: TButtonCode);
    protected
+      FDatabaseOwner: boolean;
       procedure cleanup; override;
       procedure AfterPaint; virtual;
    public

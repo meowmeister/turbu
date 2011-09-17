@@ -22,6 +22,17 @@ uses
    Types, Classes;
 
 type
+   IRpgMapObject = interface(IInterface)
+   ['{911EE905-1E43-4B26-9F7B-DE094F59EF9B}']
+      function GetID: integer;
+      function GetName: string;
+      function GetPageCount: integer;
+
+      property ID: integer read GetID;
+      property name: string read GetName;
+      property PageCount: integer read GetPageCount;
+   end;
+
    IRpgMap = interface(IInterface)
    ['{8B9CDCC2-AFB6-408C-88C3-2E50D145C901}']
       function GetTileset: integer;

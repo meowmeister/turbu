@@ -4,7 +4,7 @@ interface
 uses
    Classes, DB, RTTI,
    turbu_defs, turbu_classes, turbu_containers, charset_data, turbu_pathing,
-   turbu_serialization,
+   turbu_serialization, turbu_map_interface,
    SG_defs;
 
 type
@@ -204,7 +204,7 @@ type
 
    TPageList = class(TRpgObjectList<TRpgEventPage>);
 
-   TRpgMapObject = class(TRpgDatafile)
+   TRpgMapObject = class(TRpgDatafile, IRpgMapObject)
    private
       FLocation: TSgPoint;
       FPages: TPageList;
@@ -214,6 +214,7 @@ type
       FPageChanged: boolean;
       FLocked: boolean;
       function getCurrentPage: TRpgEventPage;
+      function GetPageCount: integer;
    public //no idea why, but marking this protected generates a bad VMT.
       class function keyChar: ansiChar; override;
    public
@@ -317,6 +318,11 @@ end;
 function TRpgMapObject.getPage(x: integer): TRpgEventPage;
 begin
    result := FPages[x];
+end;
+
+function TRpgMapObject.GetPageCount: integer;
+begin
+   result := FPages.Count;
 end;
 
 function TRpgMapObject.isTile: boolean;
