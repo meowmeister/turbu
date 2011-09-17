@@ -34,6 +34,7 @@ type
       FDataLink: TFieldDataLink;
       {$IFNDEF COMPONENT}
       FMap: IRpgMap;
+      FMapObject: IRpgMapObject;
       {$ENDIF}
       procedure SetProc(const Value: TEBRoutine);
       procedure EndLoading;
@@ -63,6 +64,7 @@ type
       property proc: TEBRoutine read FProc write SetProc;
       {$IFNDEF COMPONENT}
       property map: IRpgMap read FMap write FMap;
+      property mapObj: IRpgMapObject read FMapObject write FMapObject;
       {$ENDIF}
    published
       property DoubleClickExpand: boolean read FDblClickExpand write FDblClickExpand stored FDblClickExpand;
@@ -131,7 +133,7 @@ begin
                list := GetEBChildren(obj)
             else list := nil;
             try
-               if EbEdit.EditEbObject(obj, map) and
+               if EbEdit.EditEbObject(obj, map, mapObj) and
                  ((obj.ChildCount > 0) or (node.HasChildren) or assigned(list)) then
                begin
                   if assigned(node.Parent) and (node.Parent.Data = obj) then
@@ -221,6 +223,7 @@ begin
          editor := selector.Current.Create(nil);
          try
             editor.SetupMap(FMap);
+            editor.SetupEvent(FMapObject);
             obj := editor.NewObj;
          finally
             editor.free;

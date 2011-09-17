@@ -894,8 +894,15 @@ begin
       result.Values.Add(0);
 end;
 
+function ConvertCallEvent(opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   result := ObjectFactory(TEBCallEvent, opcode, parent);
+   if (result.values[0] = 1) and (result.values[1] = 10005) then
+      result.values[1] := 0;
+end;
+
 const
-   OPCODES_IMPLEMENTED = 62;
+   OPCODES_IMPLEMENTED = 61;
    OPCODE_LIST: array[1..OPCODES_IMPLEMENTED] of TOpcodePair =
      ((K: 10; V: nil), (K: 20713; v: nil), (K: 20720; V: nil), (K: 20730; V: nil),
       (K: 10110; V: TEBShowMessage), (K: 20110; V: TEBExtension), (K: 10130; V: TEBPortrait),
@@ -915,12 +922,12 @@ const
       (K: 11830; V: TEBEscapeLoc), (K: 11840; V: TEBEscapeEnable), (K: 11910; V: TEBSave),
       (K: 11930; V: TEBSaveEnable), (K: 11950; V: TEBMenu), (K: 11960; V: TEBMenuEnable),
       (K: 12110; V: TEBLabel), (K: 12120; V: TEBGoto), (K: 12310; V: TEBExit),
-      (K: 12330; V: TEBCallEvent), (K: 12410; V: TEBComment), (K: 22410; V: TEBExtension),
+      (K: 12410; V: TEBComment), (K: 22410; V: TEBExtension),
       (K: 12420; V: TEBGameOver), (K: 12510; V: TEBTitleScreen), (K: 13210; V: TEBBattleBG),
       (K: 13410; V: TEBEndBattle), (K: 1006; V: TEBForceFlee), (K: 1007; V: TEBEnableCombo),
       (K: 13260; V: TEBBattleAnimation));
 
-   COMPLEX_OPCODES = 62;
+   COMPLEX_OPCODES = 63;
    COMPLEX: array[1..COMPLEX_OPCODES] of TComplexOpcodePair =
      ((K: 0; V: Cleanup), (K: 10120; v: ConvertMessageOptions), (K: 20140; v: ConvertCaseExtension),
       (K: 10140; V: ConvertCase), (K: 20141; V: ConvertEndCase), (K: 12010; V: ConvertIf),
@@ -943,7 +950,8 @@ const
       (K: 13150; V: ConvertShowMonster), (K: 1005; V: ConvertBattleGlobalEvent),
       (K: 13310; V: ConvertBattleIf), (K: 23310; V: ConvertIfElse), (K: 23311; V: ConvertEndIf),
       (K: 11010; V: ConvertEraseScreen), (K: 11020; V: ConvertShowScreen),
-      (K: 10690; V: ConvertTransition), (K: 10740; V: ConvertInputHeroName), (K: 10810; V: ConvertTeleport));
+      (K: 10690; V: ConvertTransition), (K: 10740; V: ConvertInputHeroName),
+      (K: 10810; V: ConvertTeleport), (K: 12330; V: ConvertCallEvent));
 
 var
    i: integer;

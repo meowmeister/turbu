@@ -4872,4 +4872,17 @@ object dmDatabase: TdmDatabase
       Size = 255
     end
   end
+  object MapObjects: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 752
+    Top = 64
+    object MapObjectsid: TIntegerField
+      FieldName = 'id'
+    end
+    object MapObjectsname: TWideStringField
+      FieldName = 'name'
+      Size = 255
+    end
+  end
 end

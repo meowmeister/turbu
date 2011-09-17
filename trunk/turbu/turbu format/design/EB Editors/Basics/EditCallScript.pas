@@ -24,7 +24,7 @@ uses
    Forms, StdCtrls, Classes, Controls, ExtCtrls, DB, DBCtrls, DBIndexComboBox,
    Mask, DBClient, JvExMask, JvSpin,
    dm_database, EbEdit, EventBuilder, variable_selector, turbu_map_interface,
-   IDLookupCombo;
+   IDLookupCombo, button_edit;
 
 type
    [EditorCategory('Basics', 'Call Script')]
@@ -50,6 +50,7 @@ type
       procedure EnableControlsProperly; override;
    public
       procedure SetupMap(const map: IRpgMap); override;
+      procedure SetupEvent(const obj: IRpgMapObject); override;
    end;
 
 implementation
@@ -132,6 +133,11 @@ end;
 function TfrmEBEditCall.NewClassType: TEbClass;
 begin
    result := TEBCallEvent;
+end;
+
+procedure TfrmEBEditCall.SetupEvent(const obj: IRpgMapObject);
+begin
+   cbxMapObject.Items.InsertObject(0, 'This Object', obj as TRpgMapObject);
 end;
 
 procedure TfrmEBEditCall.SetupMap(const map: IRpgMap);

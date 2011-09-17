@@ -305,7 +305,7 @@ begin
       0: result := format('Global Script #%d', [Values[1]]);
       1:
       begin
-         if Values[1] <> 10005 then
+         if Values[1] <> 0 then
             result := format('%s, Page %d', [EventName(Values[1]), Values[2]])
          else
             result := format('This Object, Page %d', [Values[2]]);
@@ -322,7 +322,7 @@ begin
       0: result := format('globalScript%.4d;', [Values[1]]);
       1:
       begin
-         if Values[1] <> 10005 then
+         if Values[1] <> 0 then
             result := format('callScript(%d, %d);', [Values[1], Values[2]])
          else
             result := format('callScript(thisEvent.id, %d);', [Values[2]]);

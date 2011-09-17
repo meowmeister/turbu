@@ -562,13 +562,18 @@ end;
 
 function TfrmObjectEditor.DoEdit(obj: TRpgMapObject; const tilesetName: string): integer;
 begin
-   self.trvEvents.map := FMap;
+   trvEvents.map := FMap;
    UploadMapObject(obj);
-   FTileset := GDatabase.tileset.firstWhere(TLambda.Make<TTileset, boolean>(arg1.name = tilesetName));
+   try
+      trvEvents.mapObj := FMapObject;
+      FTileset := GDatabase.tileset.firstWhere(TLambda.Make<TTileset, boolean>(arg1.name = tilesetName));
 
-   result := self.ShowModal;
-   if result = mrOK then
-      DownloadMapObject(obj);
+      result := self.ShowModal;
+      if result = mrOK then
+         DownloadMapObject(obj);
+   finally
+      trvEvents.mapObj := nil;
+   end;
 end;
 
 class procedure TfrmObjectEditor.EditMapObject(obj: TRpgMapObject; map: TRpgMap; const tilesetName: string);

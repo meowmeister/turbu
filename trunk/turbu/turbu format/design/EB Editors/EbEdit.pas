@@ -75,14 +75,15 @@ type
       procedure EnableGroupBox(box: TGroupBox; value: boolean);
    public
       procedure SetupMap(const map: IRpgMap); dynamic;
+      procedure SetupEvent(const obj: IRpgMapObject); dynamic;
       function NewObj: TEbObject; dynamic;
       class function Category: EditorCategoryAttribute;
    end;
 
    procedure RegisterEbEditor(ebType: TEbClass; editor: TEbEditorClass);
    procedure UnregisterEbEditor(ebType: TEbClass);
-   function NewEbObject(ebType: TEbClass; const context: IRpgMap): TEbObject;
-   function EditEbObject(obj: TEbObject; const context: IRpgMap): boolean;
+   function NewEbObject(ebType: TEbClass; const context: IRpgMap; const mapObj: IRpgMapObject): TEbObject;
+   function EditEbObject(obj: TEbObject; const context: IRpgMap; const mapObj: IRpgMapObject): boolean;
 
 implementation
 uses
@@ -104,7 +105,7 @@ begin
    dic.Remove(ebType);
 end;
 
-function NewEbObject(ebType: TEbClass; const context: IRpgMap): TEbObject;
+function NewEbObject(ebType: TEbClass; const context: IRpgMap; const mapObj: IRpgMapObject): TEbObject;
 var
    editorCls: TEbEditorClass;
    editor: TfrmEBEditBase;
@@ -115,13 +116,14 @@ begin
    editor := editorCls.Create(nil);
    try
       editor.SetupMap(context);
+      editor.SetupEvent(mapObj);
       result := editor.NewObj;
    finally
       editor.Release;
    end;
 end;
 
-function EditEbObject(obj: TEbObject; const context: IRpgMap): boolean;
+function EditEbObject(obj: TEbObject; const context: IRpgMap; const mapObj: IRpgMapObject): boolean;
 var
    editorCls: TEbEditorClass;
    editor: TfrmEBEditBase;
@@ -132,6 +134,7 @@ begin
    editor := editorCls.Create(nil);
    try
       editor.SetupMap(context);
+      editor.SetupEvent(mapObj);
       result := editor.EditObj(obj);
    finally
       editor.Release;
@@ -210,6 +213,11 @@ begin
       end;
    end
    else result := nil;
+end;
+
+procedure TfrmEBEditBase.SetupEvent(const obj: IRpgMapObject);
+begin
+  //this method intentionally left blank
 end;
 
 procedure TfrmEBEditBase.SetupMap(const map: IRpgMap);

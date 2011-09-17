@@ -31,6 +31,7 @@ type
    end;
 
    TRelationAttribute = class(TCustomAttribute);
+   ExclusionAttribute = class(TCustomAttribute);
    VitalDatasetAttribute = class(TCustomAttribute);
 
    TdmDatabase = class(TDataModule, IRpgDatastore)
@@ -134,6 +135,8 @@ type
       terrain: TSimpleDataSet;
       [VitalDataset]
       SysSound: TSimpleDataSet;
+      [Exclusion]
+      MapObjects: TClientDataSet;
 
       dsCharClasses: TDataSource;
       ArbitraryQuery: TSQLQuery;
@@ -226,7 +229,8 @@ begin
          dataset := field.GetValue(self).AsObject as TCustomClientDataset;
          if not assigned(field.GetAttribute(TRelationAttribute)) then
             FDatasetList.Add(dataset);
-         FAllDatasetList.Add(dataset);
+         if not assigned(field.GetAttribute(ExclusionAttribute)) then
+            FAllDatasetList.Add(dataset);
          if assigned(field.GetAttribute(VitalDatasetAttribute)) then
             FVitalList.Add(dataset);
       end;
