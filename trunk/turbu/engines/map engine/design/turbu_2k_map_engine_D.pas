@@ -53,6 +53,7 @@ type
       function GetCurrentMapObject: TMapSprite;
       procedure DoDelete;
       function DoResize(map: TRpgMap; viewport: TRect): TRect;
+      procedure UploadMapObjects;
    private //IBreakable
       procedure BreakSomething;
    private //IDesignMapEngine
@@ -98,7 +99,7 @@ uses
    sysUtils, commons, math, windows,
    turbu_map_metadata, archiveInterface, turbu_constants, turbu_sdl_image,
    turbu_functional, turbu_plugin_interface, turbu_containers, turbu_map_objects,
-   eval, MapObject_Editor,
+   eval, MapObject_Editor, dm_database,
    sdl, sg_utils, sdlstreams;
 
 const
@@ -221,6 +222,19 @@ begin
    end;
 end;
 
+procedure T2kMapEngineD.UploadMapObjects;
+var
+   obj: TRpgMapObject;
+begin
+   if FDatabaseOwner then
+   begin
+      dmDatabase.MapObjects.Active := false;
+      dmDatabase.MapObjects.CreateDataset;
+      for obj in FWaitingMap.mapObjects do
+         dmDatabase.MapObjects.AppendRecord([obj.id, obj.name]);
+   end;
+end;
+
 function T2kMapEngineD.DesignLoadMap(map: IMapMetadata): IRpgMap;
 var
    viewport: TRect;
@@ -252,6 +266,7 @@ begin
                                 FImages);
    end;
    FCurrentLayer := 0;
+   UploadMapObjects;
    if doneLoadingMap then
       result := FCurrentMap.mapObj
    else result := nil;
