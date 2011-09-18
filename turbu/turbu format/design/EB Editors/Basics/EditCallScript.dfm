@@ -1,12 +1,10 @@
 inherited frmEBEditCall: TfrmEBEditCall
   Caption = 'Call Script'
   ClientHeight = 269
-  ExplicitHeight = 304
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 216
-    ExplicitHeight = 216
     object grpMain: TGroupBox
       Left = 10
       Top = 10
@@ -54,6 +52,7 @@ inherited frmEBEditCall: TfrmEBEditCall
         Top = 71
         Width = 212
         Height = 24
+        Style = csDropDownList
         TabOrder = 2
         OnClick = cbxMapObjectClick
       end
@@ -103,15 +102,12 @@ inherited frmEBEditCall: TfrmEBEditCall
   end
   inherited btnOK: TButton
     Top = 226
-    ExplicitTop = 226
   end
   inherited btnCancel: TButton
     Top = 226
-    ExplicitTop = 226
   end
   inherited btnHelp: TButton
     Top = 226
-    ExplicitTop = 226
   end
   object srcGlobals: TDataSource
     DataSet = dmDatabase.GlobalScripts
