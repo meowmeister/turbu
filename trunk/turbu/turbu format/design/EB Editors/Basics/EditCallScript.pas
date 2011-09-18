@@ -160,6 +160,7 @@ begin
       radMapObject.Enabled := false;
       radMapObjectPtr.Enabled := false;
    end;
+   cbxMapObject.ItemIndex := 0;
 end;
 
 procedure TfrmEBEditCall.UploadObject(obj: TEbObject);
