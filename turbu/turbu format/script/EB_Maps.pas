@@ -138,6 +138,8 @@ type
    end;
 
    TEBImageBlock = class(TEBMapObject)
+   protected
+      function GetScriptEnd(indent: integer): string; virtual;
    public
       function GetScript(indent: integer): string; override;
    end;
@@ -163,8 +165,9 @@ type
    end;
 
    TEBImageMove = class(TEBImageBlock)
+   protected
+      function GetScriptEnd(indent: integer): string; override;
    public
-      function GetScript(indent: integer): string; override;
       function GetNodeText: string; override;
       function GetScriptText: string; override;
    end;
@@ -353,7 +356,7 @@ end;
 
 function TEBMemoTeleport.GetScriptText: string;
 begin
-   result := format('Teleport(Ints[%d], Ints[%d], Ints[%d]);', [Values[0], Values[1], Values[2]]);
+   result := format('Teleport(Ints[%d], Ints[%d], Ints[%d], 0);', [Values[0], Values[1], Values[2]]);
 end;
 
 { TEBRideVehicle }
@@ -554,7 +557,7 @@ end;
 function TEBShakeScreen.GetScriptText: string;
 const LINE = 'ShakeScreen(%d, %d, %d, %s);';
 begin
-   result := format(LINE, [Values[0], Values[1], Values[2], BOOL_STR[Values[5]]]);
+   result := format(LINE, [Values[0], Values[1], Values[2], BOOL_STR[Values[3]]]);
 end;
 
 { TEBPanScreen }
@@ -616,17 +619,33 @@ function TEBImageBlock.GetScript(indent: integer): string;
 var
    list: TStringList;
    obj: TEBObject;
+   tail: string;
+   i: Integer;
 begin
    list := TStringList.Create;
    try
       list.Add(inherited GetScript(indent));
       for obj in self do
-         if not (obj is TEBExpression) then
-            List.Add(obj.GetScript(indent));
+         list.Add(obj.GetScript(indent));
+      tail := self.GetScriptEnd(indent);
+      if tail <> '' then
+         list.Add(tail);
+      if list.Count > 1 then
+      begin
+         for i := 0 to list.Count - 1 do
+            list[i] := '  ' + list[i];
+         list.insert(0, indentString(indent) + 'begin');
+         list.add(indentString(indent) + 'end;');
+      end;
       result := TrimRight(list.Text);
    finally
       list.free;
    end;
+end;
+
+function TEBImageBlock.GetScriptEnd(indent: integer): string;
+begin
+   result := '';
 end;
 
 { TEBNewImage }
@@ -708,11 +727,11 @@ begin
       result := result + ' (Wait)';
 end;
 
-function TEBImageMove.GetScript(indent: integer): string;
+function TEBImageMove.GetScriptEnd(indent: integer): string;
 begin
-   result := inherited GetScript(indent);
    if boolean(values[7]) then
-      result := result + CRLF + IndentString(indent) + format('Image[%d].WaitFor;', [Values[0]]);
+      result := IndentString(indent) + format('Image[%d].WaitFor;', [Values[0]])
+   else result := '';
 end;
 
 function TEBImageMove.GetScriptText: string;
@@ -834,7 +853,7 @@ end;
 
 function TEBStopMove.GetScriptText: string;
 begin
-   result := 'StopMoveScripts';
+   result := 'StopMoveScripts;';
 end;
 
 { TEBChangeTileset }

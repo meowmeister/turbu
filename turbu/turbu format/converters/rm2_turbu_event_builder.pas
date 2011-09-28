@@ -497,8 +497,8 @@ begin
    result := TEBInventory.Create(parent);
    result.Values.AddRange([opcode.Data[0], opcode.Data[1], opcode.Data[4]]);
    if boolean(opcode.data[3]) then
-      expr := TEBLookupValue.Create(opcode.Data[2], 'Items')
-   else expr := TEBIntsValue.Create(opcode.Data[2]);
+      expr := TEBIntsValue.Create(opcode.Data[2])
+   else expr := TEBLookupValue.Create(opcode.Data[2], 'Items');
    result.add(expr);
 end;
 

@@ -214,7 +214,7 @@ end;
 
 function TEBInputNumber.GetScriptText: string;
 const
-   LINE = 'variable[%d] := inputNumber(%d);';
+   LINE = 'Ints[%d] := inputNumber(%d);';
 begin
    result := format(LINE, [Values[1], Values[0]]);
 end;
@@ -227,9 +227,9 @@ begin
 end;
 
 function TEBChoiceMessage.GetScriptText: string;
-const LINE = 'case ShowChoice(%s) of';
+const LINE = 'case ShowChoice(%s, %d) of';
 begin
-   result := format(LINE, [QuotedStr(Text)]);
+   result := format(LINE, [QuotedStr(Text), Values[0]]);
 end;
 
 { TEBInputHeroName }
