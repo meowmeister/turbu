@@ -132,6 +132,7 @@ type
    public
       constructor Create(value: string; subscript: integer; next: TEBChainable = nil); overload;
       constructor Create(value: string; subscript: TEBExpression; next: TEBChainable = nil); overload;
+      function GetScriptText: string; override;
    end;
 
    TEBLookupObjExpr = class(TEBObjArrayValue)
@@ -144,6 +145,7 @@ type
       constructor Create(value: string; subscript: integer; name: string; next: TEBChainable = nil); overload;
       constructor Create(value: string; subscript: TEBExpression; name: string; next: TEBChainable = nil); overload;
       function GetLink: string; override;
+      function GetScriptText: string; override;
       property lookup: string read FLookup write FLookup;
    end;
 
@@ -325,11 +327,13 @@ end;
 constructor TEBSwitchesValue.Create(subscript: integer);
 begin
    inherited Create('Switch', subscript);
+   FIsGlobal := true;
 end;
 
 constructor TEBSwitchesValue.Create(subscript: TEBExpression);
 begin
    inherited Create('Switch', subscript);
+   FIsGlobal := true;
 end;
 
 function TEBSwitchesValue.GetNodeText: string;
@@ -351,11 +355,13 @@ end;
 constructor TEBIntsValue.Create(subscript: integer);
 begin
    inherited Create('Ints', subscript);
+   FIsGlobal := true;
 end;
 
 constructor TEBIntsValue.Create(subscript: TEBExpression);
 begin
    inherited Create('Ints', subscript);
+   FIsGlobal := true;
 end;
 
 function TEBIntsValue.GetNodeText: string;
@@ -496,6 +502,19 @@ begin
    else result := inherited GetLink;
 end;
 
+function TEBLookupObjExpr.GetScriptText: string;
+const
+   BASE = '%s[%d]';
+   LINE = '%s.%s';
+begin
+   if Values.Count > 0 then
+      result := format(BASE, [self.Text, values[0]])
+   else result := inherited GetScriptText;
+
+   if assigned(self.chain) then
+      result := format(LINE, [result, chain.GetScript(0)]);
+end;
+
 procedure TEBLookupObjExpr.SerializeProps(list: TStringList; depth: integer);
 begin
    inherited;
@@ -574,6 +593,20 @@ begin
          subscript := Children[1] as TEBExpression
       else subscript := Children[0] as TEBExpression;
       result := format('%s[%s]', [Text, subscript.GetNodeText]);
+   end;
+end;
+
+function TEBObjArrayValue.GetScriptText: string;
+var
+   subscript: TEBExpression;
+begin
+   if Values.Count > 0 then
+      result := format('%s[%d]', [Text, Values[0]])
+   else begin
+      if Children[0] is TEBChainable then
+         subscript := Children[1] as TEBExpression
+      else subscript := Children[0] as TEBExpression;
+      result := format('%s[%s]', [Text, subscript.GetScriptText]);
    end;
 end;
 

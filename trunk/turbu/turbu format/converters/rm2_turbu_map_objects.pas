@@ -80,7 +80,7 @@ var
 begin
    result := '';
    i := 0;
-   while i < base.last do
+   while i <= base.last do
       result := result + CalculateMoveCommand(base, i) + SEM;
    if result <> '' then
       delete(result, length(result), 1);

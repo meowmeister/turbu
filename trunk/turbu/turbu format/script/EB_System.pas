@@ -319,7 +319,7 @@ end;
 function TEBCallEvent.GetScriptText: string;
 begin
    case Values[0] of
-      0: result := format('globalScript%.4d;', [Values[1]]);
+      0: result := GetLookup(Values[1], 'GlobalScripts') + ';';
       1:
       begin
          if Values[1] <> 0 then

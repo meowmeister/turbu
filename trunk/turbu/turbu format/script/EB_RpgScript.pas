@@ -121,7 +121,7 @@ type
       function GetNodeText: string; override;
    end;
 
-   TEBEnumCaseBlock = class(TEBCodeBlock)
+   TEBEnumCaseBlock = class(TEBCaseBlock)
    public
       function GetScriptText: string; override;
       function GetNodeText: string; override;
@@ -129,6 +129,7 @@ type
 
    TEBElseBlock = class(TEBCodeBlock)
    public
+      function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
       function GetNodeText: string; override;
    end;
@@ -143,6 +144,7 @@ type
    private
       FElseSet: boolean;
       function StripTrailingSem(const value: string): string;
+      function StripTrailingSemCommented(const value: string): string;
    protected
       procedure Loaded; override;
    public
@@ -208,7 +210,7 @@ type
       function NeededVariableType: THeaderItems; override;
    end;
 
-   TEBWhileLoop = class(TEBBlock)
+   TEBWhileLoop = class(TEBLoop)
    public
       function GetScriptText: string; override;
       function GetNodeText: string; override;
@@ -218,6 +220,8 @@ type
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
+      procedure NeededVariables(list: TStringList); override;
+      function NeededVariableType: THeaderItems; override;
    end;
 
    TEBBreak = class(TEBObject)
@@ -534,6 +538,11 @@ begin
    result := 'Cancel Case';
 end;
 
+function TEBElseBlock.GetScript(indent: integer): string;
+begin
+   result := IndentString(indent) + 'else ' + CRLF + inherited GetScript(indent);
+end;
+
 function TEBElseBlock.GetScriptText: string;
 begin
    result := 'else ' + inherited GetScriptText;
@@ -581,9 +590,7 @@ end;
 
 function TEBEnumCaseBlock.GetScriptText: string;
 begin
-   result := Text + ':' + inherited GetScriptText;
-   if pos(CRLF, result) <> 0 then
-      result := CRLF + result;
+   result := Text + ':';
 end;
 
 { TEBCodeBlock }
@@ -666,6 +673,7 @@ function TEBIf.GetScript(indent: integer): string;
 var
    list: TStringList;
    i: integer;
+   ifScript, elseScript: string;
 begin
    assert(self.ChildCount in [1..3]);
    list := TStringList.Create;
@@ -674,12 +682,18 @@ begin
       if ChildCount = 1 then
          list.add(indentString(indent + 1) + ';')
       else begin
-         list.add((Children[1] as TEBCodeBlock).GetScript(indent));
+         ifScript := (Children[1] as TEBCodeBlock).GetScript(indent);
+         if (children[1].ChildCount = 1) and (children[0] is TEBIf) then
+            ifScript := IndentString(indent) + 'begin' + CRLF + ifScript + indentString(indent) + 'end;';
+         list.add(ifScript);
          if ChildCount = 3 then
          begin
             list[list.Count - 1] := StripTrailingSem(list[list.Count - 1]);
             list.add(IndentString(indent) + 'else');
-            list.add((Children[2] as TEBCodeBlock).GetScript(indent));
+            elseScript := (Children[2] as TEBCodeBlock).GetScript(indent);
+            if elseScript = '' then
+               elseScript := indentString(indent + 1) + ';';
+            list.add(elseScript);
          end;
       end;
       for I := List.Count - 1 downto 0 do
@@ -689,7 +703,6 @@ begin
    finally
       list.free;
    end;
-
 end;
 
 function TEBIf.GetScriptText: string;
@@ -709,12 +722,52 @@ begin
    TEBCodeBlock.Create(self);
 end;
 
+function TEBIf.StripTrailingSemCommented(const value: string): string;
+var
+   list: TStringList;
+   line: string;
+   i: Integer;
+   inComment: boolean;
+begin
+   //find the last line that's not a comment and strip a sem from it
+   //this relies on EventBuilder not mixing code and comments in the same line
+   list := TStringList.Create;
+   try
+      list.text := value;
+      inComment := false;
+      for i := list.count - 1 downto 0 do
+      begin
+         line := list[i];
+         if InComment then
+         begin
+            if AnsiStartsStr('{', TrimLeft(line)) then
+               InComment := false;
+            Continue;
+         end;
+         if line[length(line)] = '}' then
+         begin
+            InComment := true;
+            Continue;
+         end;
+         if AnsiStartsStr('//', TrimLeft(line)) then
+            Continue;
+         assert(line[length(line)] = ';');
+         list[i] := Copy(line, 1, length(line) - 1);
+         break;
+      end;
+      result := list.Text;
+   finally
+      list.free;
+   end;
+end;
+
 function TEBIf.StripTrailingSem(const value: string): string;
 begin
    if value = '' then
       exit('');
-   assert(value[length(value)] = ';');
-   result := Copy(value, 1, length(value) - 1);
+   if value[length(value)] <> ';' then
+      result := stripTrailingSemCommented(value)
+   else result := Copy(value, 1, length(value) - 1);
 end;
 
 { TEBFunctionCall }
@@ -954,6 +1007,27 @@ begin
    result := format('L%d:', [Values[0]]);
 end;
 
+procedure TEBLabel.NeededVariables(list: TStringList);
+var
+   idx: integer;
+   labeltext: string;
+begin
+   labeltext := 'L' + intToStr(values[0]);
+   idx := list.IndexOf(labeltext);
+   if idx = -1 then
+      list.AddObject(labeltext, self)
+   else begin
+      if list.objects[idx] is TEBLabel then
+         raise ERPGScriptError.CreateFmt('Label %d declared multiple times', [Values[0]])
+      else list.Objects[idx] := self;
+   end;
+end;
+
+function TEBLabel.NeededVariableType: THeaderItems;
+begin
+   result := hi_label;
+end;
+
 { TEBGoto }
 
 function TEBGoto.GetNodeText: string;
@@ -1100,8 +1174,8 @@ end;
 function TEBMaybeCase.GetScript(indent: integer): string;
 begin
    if FCaseBlock then
-      result := inherited GetScript(indent)
-   else result := GetScriptText;
+      result := inherited GetScript(indent) + CRLF + indentString(indent) + 'end;'
+   else result := IndentString(indent) + GetScriptText;
 end;
 
 function TEBMaybeCase.GetScriptText: string;
@@ -1139,7 +1213,7 @@ function TEBMaybeIf.GetScript(indent: integer): string;
 begin
    if FIfBlock then
       result := inherited GetScript(indent)
-   else result := GetScriptText;
+   else result := IndentString(indent) + GetScriptText;
 end;
 
 function TEBMaybeIf.GetScriptText: string;

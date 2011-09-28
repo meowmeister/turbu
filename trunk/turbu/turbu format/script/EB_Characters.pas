@@ -164,10 +164,17 @@ uses
    SysUtils, Classes,
    EB_RpgScript;
 
-function GetIntScript(decider, value: integer): string;
+function GetIntText(decider, value: integer): string;
 begin
    if boolean(decider) then
       result := format('Ints[%s]', [TEBObject.IntName(value)])
+   else result := intToStr(Value);
+end;
+
+function GetIntScript(decider, value: integer): string;
+begin
+   if boolean(decider) then
+      result := format('Ints[%d]', [value])
    else result := intToStr(Value);
 end;
 
@@ -178,7 +185,7 @@ const
    LINE = 'Change Money: %s $%s';
    SIGNS: array[0..2] of string = ('Add', 'Subtract', 'Set to');
 begin
-   result := format(LINE, [SIGNS[Values[0]], GetIntScript(values[1], values[2])]);
+   result := format(LINE, [SIGNS[Values[0]], GetIntText(values[1], values[2])]);
 end;
 
 function TEBMoney.GetScriptText: string;
@@ -198,7 +205,7 @@ function TEBInventory.GetNodeText: string;
 const LINE = 'Change Inventory: %s %s of %s';
 begin
    if values[0] < 2 then
-      result := format(LINE, [ADDREM[Values[0]], GetIntScript(Values[1], Values[2]),
+      result := format(LINE, [ADDREM[Values[0]], GetIntText(Values[1], Values[2]),
                               ChildNode[0]])
    else result := format(LINE, [ADDREM[1], 'all', ChildNode[0]]);
 end;
@@ -207,9 +214,9 @@ function TEBInventory.GetScriptText: string;
 const LINE = '%sItem(%s, %s);';
 begin
    if values[0] < 2 then
-      result := format(LINE, [ADDREM[Values[0]], GetIntScript(Values[1], Values[2]),
-                              ChildScript[0]])
-   else result := format(LINE, [ADDREM[1], '-1', ChildNode[0]]);
+      result := format(LINE, [ADDREM[Values[0]], ChildScript[0],
+                              GetIntScript(Values[1], Values[2])])
+   else result := format(LINE, [ADDREM[1], ChildScript[0], '-1']);
 end;
 
 { TEBChangeParty }
@@ -245,13 +252,13 @@ begin
    if boolean(Values[2]) then
       param2 := 'Subtract'
    else param2 := 'Add';
-   result := format(LINE, [param1, param2, GetIntScript(Values[3], Values[4])]);
+   result := format(LINE, [param1, param2, GetIntText(Values[3], Values[4])]);
 end;
 
 function TEBExperience.GetScriptText: string;
 const
-   ADD_LINE = 'AddExp(%s, %s, %s)';
-   REM_LINE = 'RemoveExp(%s, %s)';
+   ADD_LINE = 'AddExp(%s, %s, %s);';
+   REM_LINE = 'RemoveExp(%s, %s);';
 var
    param1, param2: string;
 begin
@@ -279,13 +286,13 @@ begin
    if boolean(Values[2]) then
       result := result + 'Subtract '
    else result := result + 'Add ';
-   result := result + GetIntScript(Values[3], Values[4]);
+   result := result + GetIntText(Values[3], Values[4]);
 end;
 
 function TEBLevel.GetScriptText: string;
 const
-   ADD_LINE = 'AddLevels(%s, %s, %s)';
-   REM_LINE = 'RemoveLevels(%s, %s)';
+   ADD_LINE = 'AddLevels(%s, %s, %s);';
+   REM_LINE = 'RemoveLevels(%s, %s);';
 var
    param1, param2: string;
 begin

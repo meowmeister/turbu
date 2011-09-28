@@ -81,9 +81,9 @@ end;
 
 function TEBVehicleBGM.GetScriptText: string;
 const
-   LINE = 'Vehicles[%d].SetMusic(%s, %d, %d, %d, %d);';
+   LINE = 'Vehicle[%d].SetMusic(%s, %d, %d, %d, %d);';
 begin
-   result := format(LINE, [GetEnumName(TypeInfo(TBgmTypes), Values[0]), QuotedStr(Text),
+   result := format(LINE, [Values[0], QuotedStr(Text),
                            Values[1], Values[2], Values[3], Values[4]]);
 end;
 
