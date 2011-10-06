@@ -78,7 +78,7 @@ type
                    trn_Blinds, trn_StripeHiLo, trn_StripeLR, trn_OutIn, trn_InOut,
                    trn_ScrollUp, trn_ScrollDn, trn_ScrollLeft, trn_ScrollRight,
                    trn_DivHiLow, trn_DivLR, trn_DivQuarters, trn_Zoom, trn_Mosaic,
-                   trn_Ripple, trn_None);
+                   trn_Ripple, trn_Instant, trn_None);
 
    TShopTypes = (st_BuySell, st_Buy, st_Sell);
 
