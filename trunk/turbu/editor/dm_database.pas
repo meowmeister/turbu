@@ -542,8 +542,13 @@ begin
       list.free;
    end;
    Connect(dbname, nil);
-   for dataset in FAllDatasetList do
-      dataset.Active := true;
+   TMonitor.Enter(tilegroups);
+   try
+      for dataset in FAllDatasetList do
+         dataset.Active := true;
+   finally
+      TMonitor.Exit(tilegroups);
+   end;
 end;
 
 procedure TdmDatabase.charClasses_skillsetCalcFields(DataSet: TDataSet);
