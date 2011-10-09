@@ -203,6 +203,7 @@ end;
 //it into its own routine for readability purposes.
 procedure PrepareHeroIf(d2, d3: integer; name: string; out left, right: TEBExpression; out op: TComparisonOp);
 begin
+   right := nil;
    case d2 of
       0:
       begin
@@ -214,20 +215,26 @@ begin
          left := TEBPropExpr.Create('name');
          right := TEBStringValue.Create(name);
       end;
-      2: left := TEBPropExpr.Create('level');
-      3: left := TEBPropExpr.Create('HP');
-      4: left := TEBLookupValue.Create(d3, 'skills');
+      2:
+      begin
+         left := TEBPropExpr.Create('level');
+         right := TEBIntegerValue.Create(d3);
+      end;
+      3:
+      begin
+         left := TEBPropExpr.Create('HP');
+         right:= TEBIntegerValue.Create(d3);
+      end;
+      4: left := TEBObjArrayValue.Create('skills', d3);
       5:
       begin
          left := TEBCall.Create('Equipped');
          left.Add(TEBLookupValue.Create(d3, 'items'));
          TEBCall(left).hint := 3;
       end;
-      6: left := TEBLookupValue.Create(d3, 'conditions');
+      6: left := TEBLookupObjExpr.Create('condition', d3, 'conditions');
    end;
 
-   if d2 <> 1 then
-      right := nil;
    if d2 in [2, 3] then
       op := co_gtE
    else op := co_equals;
@@ -237,7 +244,7 @@ function eventDeref(const data: integer): TEBObjExpr;
 begin
    case data of
       10001: result := TEBObjExpr.Create('Party');
-      10002..10002: result := TEBLookupObjExpr.Create('vehicle', data - 10001, 'vehicles');
+      10002..10004: result := TEBLookupObjExpr.Create('vehicle', data - 10001, 'vehicles');
       10005: result := TEBObjExpr.Create('ThisEvent');
       else result := TEBObjArrayValue.Create('Event', data);
    end;
@@ -288,7 +295,7 @@ begin
       5:
       begin
          PrepareHeroIf(opcode.Data[2], opcode.Data[3], string(opcode.name), left, right, op);
-         left := TEBLookupObjExpr.Create('hero', opcode.Data[1], 'heroes', TEBChainable(left));
+         left := TEBLookupObjExpr.Create('hero', opcode.Data[1], 'heroes', left as TEBChainable);
       end;
       6:
       begin
@@ -427,7 +434,7 @@ function ConvertVar(opcode: TEventCommand; parent: TEBObject): TEBObject;
 const
    OPS: array[1..5] of TBinaryOp = (bo_add, bo_sub, bo_mult, bo_div, bo_mod);
    HEROPROPS: array[0..5] of string = ('level', 'exp', 'hp', 'mp', 'maxHP', 'maxMP');
-   EVENTPROPS: array[0..5] of string = ('MapID', 'xPos', 'yPos', 'facing', 'ScreenX', 'ScreenY');
+   EVENTPROPS: array[0..5] of string = ('MapID', 'xPos', 'yPos', 'facingValue', 'ScreenX', 'ScreenY');
    MISCPROPS: array[0..9] of string = ('money', 'timer.time', 'partySize', 'saveCount',
                                        'battles', 'victories', 'losses', 'flees',
                                        'bgm.position', 'timer2.time');
