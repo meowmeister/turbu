@@ -66,6 +66,7 @@ type
       procedure deleteFile(name: string);
       function FileExists(key: string): boolean;
       procedure createFolder(name: string);
+      function getRoot: string;
    public
       constructor Create(root: string);
       destructor Destroy; override;
@@ -239,6 +240,11 @@ begin
       on E: Exception do
          raise EArchiveError.Create(E.Message);
    end;
+end;
+
+function TDiscArchive.GetRoot: string;
+begin
+   result := FRoot;
 end;
 
 procedure TDiscArchive.deleteFile(name: string);

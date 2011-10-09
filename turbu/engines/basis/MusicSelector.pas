@@ -22,7 +22,7 @@ interface
 
 uses
    Forms, StdCtrls, Classes, Controls, JvExControls, JvxSlider, ExtCtrls,
-   ArchiveInterface, SdlAudioMixer;
+   Disharmony;
 
 type
    TfrmMusicSelector = class(TForm)
@@ -30,7 +30,7 @@ type
       btnPlay: TButton;
       btnStop: TButton;
       Panel1: TPanel;
-      GroupBox1: TGroupBox;
+      grpFadeIn: TGroupBox;
       sldVolume: TJvxSlider;
       sldPanning: TJvxSlider;
       sldTempo: TJvxSlider;
@@ -46,36 +46,48 @@ type
       procedure sldFadeInChange(Sender: TObject);
       procedure btnCloseClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
+      procedure sldTempoChange(Sender: TObject);
    private
-      FCurrentSound: TSDLAudio;
       FFadeInTime: integer;
-      FManager: TSDLAudioManager;
-      FArchive: IArchive;
+      FManager: IDisharmony;
+      FArchive: string;
       FFilename: string;
+      FIsMusic: boolean;
+      procedure ClearFilenames;
       procedure BuildList;
       procedure SetFilename(const Value: string);
+      function GetVolume: integer; inline;
    public
-      procedure Setup(const archive: IArchive);
+      procedure Setup(const archive: string; isMusic: boolean);
       function Choose: boolean;
       property Filename: string read FFilename write SetFilename;
    end;
 
 implementation
 uses
-   SysUtils, Math, StrUtils,
-   SDL_mixer;
+   SysUtils, Math, StrUtils, IOUtils;
 
 {$R *.dfm}
 
+type
+   TBoxedString = class
+   private
+      FValue: string;
+   public
+      constructor Create(const value: string);
+      property value: string read FValue;
+   end;
+
+
 procedure TfrmMusicSelector.FormCreate(Sender: TObject);
 begin
-   FManager := TSDLAudioManager.Create;
+   FManager := Disharmony.LoadDisharmony;
 end;
 
 procedure TfrmMusicSelector.FormDestroy(Sender: TObject);
 begin
-   FCurrentSound.Free;
-   FManager.Free;
+   FManager := nil;
+   ClearFilenames;
 end;
 
 procedure TfrmMusicSelector.FormShow(Sender: TObject);
@@ -105,9 +117,11 @@ begin
    end;
 end;
 
-procedure TfrmMusicSelector.Setup(const archive: IArchive);
+procedure TfrmMusicSelector.Setup(const archive: string; isMusic: boolean);
 begin
    FArchive := archive;
+   FIsMusic := isMusic;
+   grpFadeIn.Visible := IsMusic;
 end;
 
 procedure TfrmMusicSelector.sldFadeInChange(Sender: TObject);
@@ -117,29 +131,42 @@ end;
 
 procedure TfrmMusicSelector.sldPanningChange(Sender: TObject);
 begin
-   if assigned(FCurrentSound) then
-      FCurrentSound.Panning := sldPanning.Value;
+   if FIsMusic then
+      FManager.SetPanPos(sldPanning.Value);
+end;
+
+procedure TfrmMusicSelector.sldTempoChange(Sender: TObject);
+begin
+   if FIsMusic then
+      FManager.SetMusicSpeed(sldTempo.Value);
+end;
+
+function TfrmMusicSelector.GetVolume: integer;
+begin
+   result := round(sldVolume.Value * 1.28);
 end;
 
 procedure TfrmMusicSelector.sldVolumeChange(Sender: TObject);
 begin
-   if assigned(FCurrentSound) then
-      (FCurrentSound.Volume := round(sldVolume.Value * 1.28));
+   if FIsMusic then
+      FManager.SetMusicVolume(GetVolume);
 end;
 
 procedure TfrmMusicSelector.btnStopClick(Sender: TObject);
 begin
-   FreeAndNil(FCurrentSound);
+   if FIsMusic then
+      FManager.StopMusic
+   else FManager.StopSound;
 end;
 
 procedure TfrmMusicSelector.BuildList;
 var
    filename: string;
 begin
-   lstFilename.Clear;
+   ClearFilenames;
    lstFilename.AddItem('(OFF)', nil);
-   for filename in FArchive.allFiles do
-      lstFilename.AddItem(filename, nil);
+   for filename in TDirectory.GetFiles(FArchive, '*.*') do
+      lstFilename.AddItem(ExtractFileName(filename), TBoxedString.Create(filename));
 end;
 
 function TfrmMusicSelector.Choose: boolean;
@@ -152,6 +179,15 @@ begin
    end;
 end;
 
+procedure TfrmMusicSelector.ClearFilenames;
+var
+   i: integer;
+begin
+   for i := 0 to lstFilename.Items.Count - 1 do
+      lstFilename.Items.Objects[i].Free;
+   lstFilename.Clear;
+end;
+
 procedure TfrmMusicSelector.btnCloseClick(Sender: TObject);
 begin
    self.Close;
@@ -159,27 +195,30 @@ end;
 
 procedure TfrmMusicSelector.btnPlayClick(Sender: TObject);
 var
-   filename: string;
-   stream: TStream;
+   filename: TBoxedString;
 begin
    btnStopClick(sender);
-   filename := lstFilename.Items[lstFilename.ItemIndex];
-   if UpperCase(ExtractFileExt(filename)) = '.MP3' then
+   filename := (lstFilename.Items.Objects[lstFilename.ItemIndex] as TBoxedString);
+   if assigned(filename) then
    begin
-      Application.MessageBox('The current version of TURBU does not support MP3 music', 'MP3s not supported');
-      Exit;
-   end;
+      if FIsMusic then
+      begin
+         FManager.PlayMusic(filename.value);
+         sldPanningChange(self);
+         sldVolumeChange(self);
+         sldTempoChange(self);
+         FManager.FadeInMusic(FFadeInTime * 10);
+      end
+      else FManager.PlaySoundEx(filename.value, GetVolume, sldTempo.Value, sldPanning.Value);
+   end
+   else FManager.StopMusic;
+end;
 
-   stream := FArchive.getFile(filename);
-   try
-      FCurrentSound := TSDLMusic.Create(stream);
-   finally
-//      stream.Free;
-   end;
-   FCurrentSound.Channel := 0;
-   FCurrentSound.FadeIn(FFadeInTime * 10, -1);
-   sldVolumeChange(self);
-   sldPanningChange(self);
+{ TBoxedString }
+
+constructor TBoxedString.Create(const value: string);
+begin
+   FValue := value;
 end;
 
 end.
