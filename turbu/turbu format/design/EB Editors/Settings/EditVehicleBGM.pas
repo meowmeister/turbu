@@ -1,3 +1,21 @@
+{*****************************************************************************
+* The contents of this file are used with permission, subject to
+* the Mozilla Public License Version 1.1 (the "License"); you may
+* not use this file except in compliance with the License. You may
+* obtain a copy of the License at
+* http://www.mozilla.org/MPL/MPL-1.1.html
+*
+* Software distributed under the License is distributed on an
+* "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+* implied. See the License for the specific language governing
+* rights and limitations under the License.
+*
+*****************************************************************************
+*
+* This file was created by Mason Wheeler.  He can be reached for support at
+* www.turbu-rpg.com.
+*****************************************************************************}
+
 unit EditVehicleBGM;
 
 interface
@@ -66,7 +84,7 @@ begin
       music.volume := obj.Values[2];
       music.tempo := obj.Values[3];
       music.balance := obj.Values[4];
-      selMusic.setup(GArchives[MUSIC_ARCHIVE], music);
+      selMusic.setup(GArchives[MUSIC_ARCHIVE].root, true, music);
    except
       music.Free;
       raise;
@@ -85,7 +103,7 @@ begin
    music.tempo := cdsVehiclesmusic_tempo.Value;
    music.balance := cdsVehiclesmusic_balance.Value;
    music.volume := cdsVehiclesmusic_volume.Value;
-   selMusic.setup(GArchives[MUSIC_ARCHIVE], music);
+   selMusic.setup(GArchives[MUSIC_ARCHIVE].root, true, music);
 end;
 
 procedure TfrmEditVehicleBGM.DownloadObject(obj: TEbObject);
