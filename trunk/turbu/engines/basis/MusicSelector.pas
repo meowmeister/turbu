@@ -132,7 +132,7 @@ end;
 procedure TfrmMusicSelector.sldPanningChange(Sender: TObject);
 begin
    if FIsMusic then
-      FManager.SetPanPos(sldPanning.Value);
+      FManager.SetPanPos(round(sldPanning.Value / 2.55));
 end;
 
 procedure TfrmMusicSelector.sldTempoChange(Sender: TObject);
@@ -143,7 +143,7 @@ end;
 
 function TfrmMusicSelector.GetVolume: integer;
 begin
-   result := round(sldVolume.Value * 1.28);
+   result := sldVolume.Value;
 end;
 
 procedure TfrmMusicSelector.sldVolumeChange(Sender: TObject);
