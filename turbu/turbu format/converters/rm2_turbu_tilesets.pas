@@ -143,7 +143,7 @@ begin
       else newGroup.tileType := [];
    end;
    newGroup.dimensions := TILE_SIZE[(i in MINI_SIZE)];
-   GDatabase.tileGroup.Add(lFilename, newGroup);
+   GDatabase.AddTileGroup(lFilename, newGroup);
 end;
 
 function convertGroup(filename: string): boolean;
@@ -192,7 +192,7 @@ var
    newRecord: TTileGroupRecord;
    i, j: integer;
 begin
-   if not GDatabase.tileGroup.ContainsKey(format(KEYNAME, [filename, TILESET_NAME[0]])) then
+   if not GDatabase.HasTileGroup(format(KEYNAME, [filename, TILESET_NAME[0]])) then
       if not convertGroup(filename) then
          Exit;
    for i := low(TILESET_MAP) to high(TILESET_MAP) do
