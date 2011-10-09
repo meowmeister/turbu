@@ -245,8 +245,8 @@ begin
    case data of
       10001: result := TEBObjExpr.Create('Party');
       10002..10004: result := TEBLookupObjExpr.Create('vehicle', data - 10001, 'vehicles');
-      10005: result := TEBObjExpr.Create('ThisEvent');
-      else result := TEBObjArrayValue.Create('Event', data);
+      10005: result := TEBObjExpr.Create('ThisObject');
+      else result := TEBObjArrayValue.Create('MapObject', data);
    end;
 end;
 
