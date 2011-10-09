@@ -411,7 +411,7 @@ begin
 end;
 
 function TEBTeleportMapObj.GetScriptText: string;
-const LINE = 'TeleportMapObj(%s, %d, %d);';
+const LINE = 'TeleportMapObject(%s, %d, %d);';
 begin
    if boolean(Values[0]) then
       result := stringReplace(LINE, '%d', 'Ints[%d]', [rfReplaceAll])
