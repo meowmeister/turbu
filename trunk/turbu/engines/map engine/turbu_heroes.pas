@@ -181,7 +181,7 @@ const
 
 implementation
 uses
-   turbu_database, commons;
+   turbu_database, dm_database, commons;
 
 { TRpgHero }
 
@@ -197,7 +197,7 @@ begin
       Exit;
 
    FName := template.name;
-   FClass := GDatabase.charClass[template.charClass].clsName;
+   FClass := dmDatabase.NameLookup('charClasses', template.charClass);
    FSprite := template.MapSprite;
    FTransparent := template.translucent;
    FExpTable[1] := 0;
