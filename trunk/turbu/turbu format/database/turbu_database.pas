@@ -135,9 +135,9 @@ type
       FSerializer: TDatasetSerializer;
       procedure SaveScripts;
       procedure SaveToDB(db: TdmDatabase);
-      procedure DownloadTileGroups(db: TdmDatabase);
       procedure LoadSounds;
       procedure SaveSounds;
+      function GetTileGroup(const key: string): TTileGroup;
    protected
       FGlobalScriptBlock: TEBUnit;
       FSysVocab: TStringList;
@@ -171,6 +171,8 @@ type
       procedure addAttribute;
       procedure addCondition;
       procedure addTileset;
+      procedure AddTileGroup(const Filename: string; newGroup: TTileGroup);
+      function HasTileGroup(const filename: string): boolean;
 
       procedure AddLegacy(const name: string; id, section: integer; const data: RawByteString);
 
@@ -196,7 +198,7 @@ type
       property moveMatrix: TMoveMatrixArray read FMoveMatrix write FMoveMatrix;
       property mapTree: TMapTree read FMapTree write FMapTree;
       property statSet: TStatSet read FStatSet write FStatSet;
-      property tileGroup: TTileDictionary read FTileGroup;
+      property tileGroup[const key: string]: TTileGroup read GetTileGroup;
       property scriptFormat: TScriptFormat read FScriptFormat write SetScriptFormat;
       property scriptFile: string read FScriptFile write FScriptFile;
       property scriptBlock: TEBUnit read FGlobalScriptBlock;
@@ -375,8 +377,6 @@ begin
    end;
 
    LoadSounds;
-   DownloadTileGroups(dm);
-   FTileset.download;
 end;
 
 procedure TRpgDatabase.save(dm: TDmDatabase);
@@ -639,19 +639,6 @@ begin
       grp.upload(FSerializer, db.tilegroups);
 end;
 
-procedure TRpgDatabase.DownloadTileGroups(db: TdmDatabase);
-var
-   grp: TTileGroup;
-   row: variant;
-begin
-   for row in db.tilegroups do
-   begin
-      grp := TTileGroup.Create;
-      grp.download(FSerializer, db.tilegroups);
-      FTileGroup.Add(grp.filename, grp);
-   end;
-end;
-
 procedure TRpgDatabase.UploadVocab(db: TdmDatabase);
 var
    i: integer;
@@ -754,6 +741,23 @@ begin
    result := FMapTree[0].name;
 end;
 
+function TRpgDatabase.GetTileGroup(const key: string): TTileGroup;
+begin
+   if not FTileGroup.TryGetValue(key, result) then
+   begin
+      if not dmDatabase.tilegroups.Locate('name', key, []) then
+         raise EDatabaseError.CreateFmt('Tilegroup %s not found in database', [key]);
+      result := TTileGroup.Create;
+      result.download(FSerializer, dmDatabase.tilegroups);
+      FTileGroup.Add(result.filename, result);
+   end;
+end;
+
+function TRpgDatabase.HasTileGroup(const filename: string): boolean;
+begin
+   result := FTileGroup.ContainsKey(filename);
+end;
+
 class function TRpgDatabase.keyChar: ansiChar;
 begin
    result := #0;
@@ -826,6 +830,12 @@ end;
 procedure TRpgDatabase.addSkill;
 begin
    FSkills.Add(TSkillTemplate.Create);
+end;
+
+procedure TRpgDatabase.AddTileGroup(const Filename: string;
+  newGroup: TTileGroup);
+begin
+   FTileGroup.Add(filename, newGroup);
 end;
 
 procedure TRpgDatabase.addTileset;

@@ -2,7 +2,7 @@ unit turbu_maps;
 
 interface
 uses
-   types, classes, generics.collections, DB, RTTI,
+   types, classes, generics.collections, DB, RTTI, SyncObjs,
    turbu_defs, turbu_classes, turbu_map_interface, turbu_tilesets, EventBuilder,
    EB_RpgScript, turbu_serialization, turbu_map_metadata, turbu_containers,
    turbu_map_objects,
@@ -63,6 +63,10 @@ type
       FEncounterScript: string;
       [NoUpload]
       FModified: boolean;
+      [NoUpload]
+      FScriptSignal: TSimpleEvent;
+      [NoUpload]
+      FScriptError: string;
 
       procedure SetSize(const Value: TSgPoint);
       procedure SetDepth(const Value: byte);
@@ -77,6 +81,8 @@ type
       function calcGridDelta(const size: TSgPoint; position: byte): TRect;
       procedure saveScript;
       function GetMapObjects: TStrings;
+      procedure LoadScripts(const scriptFile: string);
+      function GetScriptObject: TEBMap;
    protected
       FEncounters: T4IntArray;
       [NoUpload]
@@ -118,7 +124,7 @@ type
       property encounterScript: string read FEncounterScript write FEncounterScript;
       property encounterParams: T4IntArray read FEncounters write FEncounters;
       property mapObjects: TMapObjectList read FMapObjects;
-      property ScriptObject: TEBMap read FScriptObject;
+      property ScriptObject: TEBMap read GetScriptObject;
       property width: integer read FSize.X;
       property height: integer read FSize.y;
       property modified: boolean read FModified write FModified;
@@ -126,7 +132,7 @@ type
 
 implementation
 uses
-   math,
+   math, Sysutils,
    commons, turbu_constants, ArchiveInterface;
 
 { TRpgMap }
@@ -156,7 +162,6 @@ constructor TRpgMap.Load(savefile: TStream);
 var
    i: integer;
    size: TSgPoint;
-   scriptStream: TStream;
 begin
    inherited Load(savefile);
    FTileset := savefile.readInt;
@@ -173,13 +178,7 @@ begin
    savefile.ReadBuffer(FScrollSpeed, sizeof(TSgPoint));
    savefile.ReadBuffer(FScriptFormat, sizeof(TScriptFormat));
    assert(FScriptFormat = sfEvents); //TODO: Fix this later.
-   scriptFile := savefile.readString;
-   scriptStream := GArchives[SCRIPT_ARCHIVE].GetFile(scriptFile);
-   try
-      FScriptObject := TEBObject.LoadFromStream(scriptStream) as TEBMap;
-   finally
-      ScriptStream.Free;
-   end;
+   LoadScripts(savefile.readString);
    battleCount := savefile.ReadInt;
    if battleCount > 0 then
       savefile.ReadBuffer(FBattles[0], length(FBattles) * sizeof(word));
@@ -192,6 +191,29 @@ begin
       FMapObjects.Add(TRpgMapObject.Load(savefile));
    lassert(savefile.readChar = UpCase(TRpgMapObject.keyChar));
    self.readEnd(savefile);
+end;
+
+procedure TRpgMap.LoadScripts(const scriptFile: string);
+var
+   scriptStream: TStream;
+begin
+   FScriptSignal := TSimpleEvent.Create;
+   TThread.CreateAnonymousThread(
+      procedure
+      begin
+         scriptStream := GArchives[SCRIPT_ARCHIVE].GetFile(scriptFile);
+         try
+            try
+               FScriptObject := TEBObject.LoadFromStream(scriptStream) as TEBMap;
+            except
+               on E: Exception do
+                  FScriptError := format('%s: %s', [E.ClassName, E.Message]);
+            end;
+         finally
+            ScriptStream.Free;
+            FScriptSignal.SetEvent;
+         end;
+      end).Start;
 end;
 
 procedure TRpgMap.removeInvalidEvents;
@@ -394,6 +416,7 @@ end;
 
 destructor TRpgMap.Destroy;
 begin
+   FScriptSignal.Free;
    FScriptObject.Free;
    FMapObjects.Free;
    inherited Destroy;
@@ -416,6 +439,14 @@ begin
       result.Free;
       raise;
    end;
+end;
+
+function TRpgMap.GetScriptObject: TEBMap;
+begin
+   assert(assigned(FScriptSignal) and (FScriptSignal.WaitFor(INFINITE) = wrSignaled));
+   if FScriptError <> '' then
+      raise ERPGScriptError.CreateFmt('Error loading script file:', [FScriptError])
+   else result := FScriptObject;
 end;
 
 function TRpgMap.GetTileset: integer;
