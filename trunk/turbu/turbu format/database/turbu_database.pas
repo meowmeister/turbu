@@ -745,6 +745,7 @@ function TRpgDatabase.GetTileGroup(const key: string): TTileGroup;
 begin
    if not FTileGroup.TryGetValue(key, result) then
    begin
+      dmDatabase.EnsureTileGroups;
       if not dmDatabase.tilegroups.Locate('name', key, []) then
          raise EDatabaseError.CreateFmt('Tilegroup %s not found in database', [key]);
       result := TTileGroup.Create;
