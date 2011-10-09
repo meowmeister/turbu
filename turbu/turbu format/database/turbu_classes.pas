@@ -976,10 +976,14 @@ end;
 procedure TRpgDataDict<T>.download;
 var
    new: T;
+   idField: TIntegerField;
 begin
+   idField := FDataset.FieldByName('id') as TIntegerField;
    FDataset.First;
    while not FDataset.Eof do
    begin
+      if self.ContainsKey(idField.Value) then
+         Continue;
       new := T.Create;
       new.download(FSerializer, FDataset);
       self.Add(new);
