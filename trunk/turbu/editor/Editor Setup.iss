@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TURBU"
-#define MyAppVerName "TURBU Editor 0.9.1"
+#define MyAppVerName "TURBU Editor 0.9.2"
 #define MyAppPublisher "Dragon Slayers, Inc."
 #define MyAppURL "http://www.turbu-rpg.com/"
 #define MyAppExeName "Turbu.exe"
@@ -18,7 +18,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\setup
-OutputBaseFilename=TURBU_Editor_0.9.1
+OutputBaseFilename=TURBU_Editor_0.9.2
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -46,16 +46,13 @@ Source: ..\..\dlls\dbxfb4d15.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\ib_util.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\icudt30.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\icuuc30.dll; DestDir: {app}; Flags: ignoreversion
-Source: ..\..\dlls\libFLAC.dll; DestDir: {app}; Flags: ignoreversion
-Source: ..\..\dlls\libModplug.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\disharmony.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\libdiscord.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\libpng15.dll; DestDir: {app}; Flags: ignoreversion
-Source: ..\..\dlls\libvorbisfile-3.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\msvcp80.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\msvcr80.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\SDL.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\sdl_image.dll; DestDir: {app}; Flags: ignoreversion
-Source: ..\..\dlls\sdl_mixer.dll; DestDir: {app}; Flags: ignoreversion
-Source: ..\..\dlls\Smpeg.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\zlib1.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\design\scripts\general\battle_algorithms.trs; DestDir: {app}\design\scripts\general
 Source: ..\bin\design\scripts\general\dt_algorithms.trs; DestDir: {app}\design\scripts\general
@@ -101,6 +98,4 @@ Name: {app}\design
 Name: {app}\design\scripts
 Name: {app}\design\scripts\general
 Name: {app}\design\scripts\menu
-
-
 
