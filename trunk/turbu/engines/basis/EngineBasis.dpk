@@ -73,8 +73,6 @@ contains
   turbu_functional in '..\..\turbu_functional.pas',
   finalizer_hack in 'finalizer_hack.pas',
   StringListComp in '..\..\..\..\ListCompare\StringListComp.pas',
-  sdlaudiomixer in '..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdlaudiomixer.pas',
-  sdl_mixer in '..\..\..\classes\jedi-sdl\SDL_Mixer\Pas\sdl_mixer.pas',
   uDataSetHelper in '..\..\..\classes\uDataSetHelper.pas',
   DSharp.Core.Variants in '..\..\..\classes\DSharp\Core\DSharp.Core.Variants.pas',
   DSharp.Linq.QueryProvider in '..\..\..\classes\DSharp\Core\DSharp.Linq.QueryProvider.pas',
@@ -89,6 +87,7 @@ contains
   Collections.Dynamic in '..\..\..\..\delphi-coll\src\Library\Collections.Dynamic.pas',
   Collections.Serialization in '..\..\..\..\delphi-coll\src\Library\Collections.Serialization.pas',
   PackageRegistry in '..\..\..\classes\PackageRegistry.pas',
-  engine_manager in 'engine_manager.pas' {dmEngineManager: TDataModule};
+  engine_manager in 'engine_manager.pas' {dmEngineManager: TDataModule},
+  disharmony in 'disharmony.pas';
 
 end.

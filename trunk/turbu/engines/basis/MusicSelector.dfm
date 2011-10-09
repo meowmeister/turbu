@@ -101,7 +101,7 @@ object frmMusicSelector: TfrmMusicSelector
       Top = 146
       Width = 176
       Height = 61
-      Caption = 'Tempo (Not Implemented)'
+      Caption = 'Tempo'
       TabOrder = 2
       object sldTempo: TJvxSlider
         Left = 2
@@ -114,9 +114,10 @@ object frmMusicSelector: TfrmMusicSelector
         Options = [soShowPoints, soSmooth]
         TabOrder = 0
         Value = 100
+        OnChange = sldTempoChange
       end
     end
-    object GroupBox4: TGroupBox
+    object grpFadeIn: TGroupBox
       Left = 9
       Top = 213
       Width = 176

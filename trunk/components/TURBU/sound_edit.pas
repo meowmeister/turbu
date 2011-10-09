@@ -21,7 +21,7 @@ unit sound_edit;
 interface
 uses
    Classes,
-   button_edit {$IFNDEF COMPONENT}, MusicSelector, ArchiveInterface, turbu_sounds{$ENDIF};
+   button_edit {$IFNDEF COMPONENT}, MusicSelector, turbu_sounds{$ENDIF};
 
 type
    TSoundEdit = class(TRpgCustomButtonEdit)
@@ -36,7 +36,7 @@ type
       {$IFNDEF COMPONENT}
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
-      procedure Setup(const archive: IArchive; sound: TSoundTemplate);
+      procedure Setup(const archive: string; isMusic: boolean; sound: TSoundTemplate);
       property sound: TSoundTemplate read FSound;
       {$ENDIF}
    end;
@@ -82,11 +82,11 @@ begin
    inherited;
 end;
 
-procedure TSoundEdit.Setup(const archive: IArchive; sound: TSoundTemplate);
+procedure TSoundEdit.Setup(const archive: string; isMusic: boolean; sound: TSoundTemplate);
 begin
    FSound.Free;
    FSound := sound;
-   FSelector.Setup(archive);
+   FSelector.Setup(archive, isMusic);
    if assigned(FSound) then
    begin
       FSelector.Filename := sound.filename;
