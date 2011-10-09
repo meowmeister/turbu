@@ -76,7 +76,7 @@ type
       [TRelation]
       [VitalDataset]
       tilesets_records: TSimpleDataSet;
-      [VitalDataset]
+//      [VitalDataset]
       tilegroups: TSimpleDataSet;
       [VitalDataset]
       heroes: TSimpleDataSet;
@@ -183,6 +183,7 @@ type
       procedure BuildDatabase(const dbname: string; dbObj: TRpgDatafile);
       procedure Connect(const dbname: string; const validateProc: TProc<TSqlQuery>);
       procedure SaveAll(report: TUploadReportProc = nil);
+      procedure EnsureTileGroups;
 
       property TableCount: integer read GetTableCount;
       property datasets: TDatasetList read FDatasetList write FDatasetList;
@@ -269,6 +270,16 @@ begin
       except
          OutputFormattedString('Unable to open table %s.', [dset.Name]);
       end;
+   TThread.CreateAnonymousThread(
+      procedure
+      begin
+         TMonitor.Enter(tilegroups);
+         try
+            tilegroups.Active := true;
+         finally
+            TMonitor.Exit(tilegroups);
+         end;
+      end).Start;
 end;
 
 procedure TdmDatabase.DataModuleDestroy(Sender: TObject);
@@ -299,6 +310,12 @@ begin
       ds.AutoCalcFields := true;
       ds.EnableControls;
    end;
+end;
+
+procedure TdmDatabase.EnsureTileGroups;
+begin
+   TMonitor.Enter(tilegroups, INFINITE);
+   TMonitor.Exit(tilegroups);
 end;
 
 function TdmDatabase.FieldType(field: TField): string;
