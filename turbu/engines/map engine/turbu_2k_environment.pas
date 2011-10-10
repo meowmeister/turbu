@@ -43,6 +43,7 @@ begin
    list := THeroList.Create;
    list.OwnsObjects := true;
    FHeroes := list;
+   database.hero.download;
    for hero in database.hero.Values do
       FHeroes.Add(TRpgHero.Create(hero));
    setLength(GSwitches, database.switch.count + 1);
