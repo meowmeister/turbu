@@ -62,9 +62,9 @@ procedure TfrmEditTeleportObject.SetupMap(const map: IRpgMap);
 var
    list: TStrings;
 begin
-   FCurrentMap := map.id;
    if assigned(map) then
    begin
+      FCurrentMap := map.id;
       list := map.GetMapObjects;
       try
          list.Delete(0);
@@ -72,7 +72,8 @@ begin
       finally
          list.Free;
       end;
-   end;
+   end
+   else FCurrentMap := -1;
 end;
 
 type
