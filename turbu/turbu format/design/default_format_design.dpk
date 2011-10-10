@@ -89,6 +89,7 @@ contains
   EditTeleport in 'EB Editors\Map\EditTeleport.pas' {frmEBEditTeleport},
   EditMemorizeLocation in 'EB Editors\Map\EditMemorizeLocation.pas' {frmMemorizedLocation},
   EditTeleportVehicle in 'EB Editors\Map\EditTeleportVehicle.pas' {frmTeleportVehicle},
-  EditTeleportObject in 'EB Editors\Map\EditTeleportObject.pas' {frmEditTeleportObject};
+  EditTeleportObject in 'EB Editors\Map\EditTeleportObject.pas' {frmEditTeleportObject},
+  EditSwapObjects in 'EB Editors\Map\EditSwapObjects.pas' {frmEditSwapObjects};
 
 end.
