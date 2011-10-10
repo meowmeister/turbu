@@ -424,13 +424,13 @@ end;
 function TEBSwapObjects.GetNodeText: string;
 const LINE = 'Swap Map Objects: %s, %s';
 begin
-   result := format(result, [ChildNode[0], ChildNode[1]]);
+   result := format(LINE, [ChildNode[0], ChildNode[1]]);
 end;
 
 function TEBSwapObjects.GetScriptText: string;
 const LINE = 'SwapMapObjects(%s, %s);';
 begin
-   result := format(result, [ChildScript[0], ChildScript[1]]);
+   result := format(LINE, [ChildScript[0], ChildScript[1]]);
 end;
 
 { TEBTerrainID }

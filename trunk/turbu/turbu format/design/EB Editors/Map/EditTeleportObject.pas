@@ -105,16 +105,8 @@ begin
 end;
 
 procedure TfrmEditTeleportObject.UploadObject(obj: TEbObject);
-var
-   base: TEBObjExpr;
 begin
-   base := obj.children[0] as TEBObjExpr;
-   if base.Text = 'ThisObject' then
-      cboObject.ItemIndex := 0
-   else begin
-      assert(base.Text = 'MapObject');
-      cboObject.ItemIndex := base.Values[0];
-   end;
+   UploadObjectRef(obj.children[0] as TEBObjExpr, cboObject);
    if obj.Values[0] = 0 then
    begin
       radPosition.checked := true;
@@ -131,9 +123,7 @@ end;
 procedure TfrmEditTeleportObject.DownloadObject(obj: TEbObject);
 begin
    obj.Clear;
-   if cboObject.ItemIndex = 0 then
-      obj.Add(TEBObjExpr.Create('ThisObject'))
-   else obj.Add(TEBObjArrayValue.Create('MapObject', cboObject.ItemIndex));
+   obj.Add(DownloadObjectRef(cboObject));
    if radPosition.Checked then
       obj.Values.AddRange([0, FPosition.x, FPosition.y])
    else obj.Values.AddRange([1, cboXVar.ID, cboYVar.ID]);

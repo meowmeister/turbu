@@ -222,6 +222,9 @@
 			<DCCReference Include="EB Editors\Map\EditTeleportObject.pas">
 				<Form>frmEditTeleportObject</Form>
 			</DCCReference>
+			<DCCReference Include="EB Editors\Map\EditSwapObjects.pas">
+				<Form>frmEditSwapObjects</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

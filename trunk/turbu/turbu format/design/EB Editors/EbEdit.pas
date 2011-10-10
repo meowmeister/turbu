@@ -24,7 +24,7 @@ uses
    SysUtils, Classes, Controls, Forms, StdCtrls, ExtCtrls, Generics.Collections,
    DB, JVSpin,
    EventBuilder, finalizer_hack, turbu_map_interface, variable_selector,
-   IDLookupCombo;
+   IDLookupCombo, EB_Expressions;
 
 type
    EditorCategoryAttribute = finalizer_hack.EditorCategoryAttribute;
@@ -70,6 +70,8 @@ type
         valueBox: TIDLookupCombo; ptrBox: TIntSelector; const lookupName: string): TEBExpression;
       function DownloadLookupPtrSelectionInts(r1, r2: TRadioButton;
         valueBox: TIDLookupCombo; ptrBox: TIntSelector): TIntPair;
+      procedure UploadObjectRef(base: TEBObjExpr; box: TComboBox);
+      function DownloadObjectRef(box: TComboBox): TEBObjExpr;
       procedure EnableControl(control: TControl; controller: TRadioButton); overload;
       procedure EnableControl(control: TControl; controller: TCheckBox); overload;
       procedure EnableGroupBox(box: TGroupBox; value: boolean);
@@ -88,7 +90,7 @@ type
 implementation
 uses
    RTTI,
-   rttiHelper, array_editor, EB_Expressions;
+   rttiHelper, array_editor;
 
 {$R *.dfm}
 
@@ -276,6 +278,23 @@ begin
       result [1] := 1;
       result [2] := ptrBox.ID;
    end;
+end;
+
+procedure TfrmEBEditBase.UploadObjectRef(base: TEBObjExpr; box: TComboBox);
+begin
+   if base.Text = 'ThisObject' then
+      box.ItemIndex := 0
+   else begin
+      assert(base.Text = 'MapObject');
+      box.ItemIndex := base.Values[0];
+   end;
+end;
+
+function TfrmEBEditBase.DownloadObjectRef(box: TComboBox): TEBObjExpr;
+begin
+   if box.ItemIndex = 0 then
+      result := TEBObjExpr.Create('ThisObject')
+   else result := TEBObjArrayValue.Create('MapObject', box.ItemIndex);
 end;
 
 procedure TfrmEBEditBase.UploadValuePtrSelection(v1, v2: integer; r1,
