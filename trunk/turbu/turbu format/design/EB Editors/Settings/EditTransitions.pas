@@ -7,7 +7,7 @@ uses
   EventBuilder, EbEdit;
 
 type
-   [EditorCategory('Settings', 'Change System Skin')]
+   [EditorCategory('Settings', 'Change Default Transitions')]
    TfrmEditTransitions = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       cboEvent: TComboBox;
