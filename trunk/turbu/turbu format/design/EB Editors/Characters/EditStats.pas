@@ -44,6 +44,7 @@ var
    i: integer;
    stat: string;
 begin
+   dmDatabase.Vocab.Active := true;
    for i := 0 to 5 do
    begin
       stat := statLookup(i);
