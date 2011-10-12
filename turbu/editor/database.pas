@@ -24,7 +24,7 @@ uses
    Mask, DBCtrls,
    turbu_database, events, frame_commands, frame_class, dm_database, frame_items,
    EBListView, turbu_listGrid, variable_selector, DBIndexComboBox, frame_vocab,
-  button_edit;
+   button_edit;
 
 type
    TfrmDatabase = class(TForm)
@@ -40,7 +40,7 @@ type
       grpName: TGroupBox;
       txtName: TDBEdit;
       grpStartCondition: TGroupBox;
-      cbxStartCondition: TDBIndexComboBox;
+      cbxStartCondition: TComboBox;
       grpConditionSwitch: TGroupBox;
       chkHasSwitch: TDBCheckBox;
       grpEventCommands: TGroupBox;
@@ -146,6 +146,7 @@ begin
    end;
    frmClass.onShow;
    frameItems1.onShow;
+   GDatabase.ScriptLoaded.WaitFor(INFINITE);
 
    GlobalScriptsAfterScroll(srcGlobals.DataSet);
    srcglobals.dataset.AfterScroll := self.GlobalScriptsAfterScroll;
@@ -155,10 +156,18 @@ end;
 procedure TfrmDatabase.GlobalScriptsBeforeScroll(DataSet: TDataSet);
 var
    proc: TEBProcedure;
+   StartCondition: TIntegerField;
 begin
    proc := trvGlobal.proc as TEBProcedure;
    if proc.ChildCount = 0 then
       GDatabase.scriptBlock.children.Remove(proc);
+   startCondition := dataset.FieldByName('StartCondition') As TIntegerField;
+   if StartCondition.Value <> cbxStartCondition.ItemIndex + 3 then
+   begin
+      dataset.Edit;
+      startCondition.Value := cbxStartCondition.ItemIndex + 3;
+      dataset.Post;
+   end;
 end;
 
 procedure TfrmDatabase.GlobalScriptsAfterScroll(DataSet: TDataSet);
@@ -174,6 +183,7 @@ begin
       proc.Name := procname;
    end;
    trvGlobal.proc := proc;
+   cbxStartCondition.ItemIndex := dataset.FieldByName('StartCondition').AsInteger - 3;
 end;
 
 procedure TfrmDatabase.FormClose(Sender: TObject; var Action: TCloseAction);

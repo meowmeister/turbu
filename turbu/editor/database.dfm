@@ -192,7 +192,7 @@ object frmDatabase: TfrmDatabase
             end
             inherited chkEqLocked: TDBCheckBox
               Left = 10
-              Top = 133
+              Top = 109
               Width = 159
               Height = 23
               Margins.Left = 4
@@ -202,13 +202,17 @@ object frmDatabase: TfrmDatabase
             end
             inherited chkStrongDef: TDBCheckBox
               Left = 10
-              Top = 158
+              Top = 134
               Width = 127
               Height = 22
               Margins.Left = 4
               Margins.Top = 4
               Margins.Right = 4
               Margins.Bottom = 4
+            end
+            inherited chkGuest: TDBCheckBox
+              Left = 10
+              Top = 160
             end
           end
           inherited grpClassExp: TGroupBox
@@ -907,7 +911,7 @@ object frmDatabase: TfrmDatabase
           Margins.Bottom = 4
           Caption = 'Event Start Condition'
           TabOrder = 1
-          object cbxStartCondition: TDBIndexComboBox
+          object cbxStartCondition: TComboBox
             Left = 10
             Top = 17
             Width = 221
@@ -916,13 +920,12 @@ object frmDatabase: TfrmDatabase
             Margins.Top = 4
             Margins.Right = 4
             Margins.Bottom = 4
-            DataField = 'StartCondition'
-            DataSource = srcGlobals
-            Items.Strings = (
-              'Call'
-              'Auto Start'
-              'Parallel Process')
+            Style = csDropDownList
             TabOrder = 0
+            Items.Strings = (
+              'Auto Start'
+              'Parallel Process'
+              'Call')
           end
         end
         object grpConditionSwitch: TGroupBox
