@@ -2,7 +2,7 @@ object frameClass: TframeClass
   Left = 0
   Top = 0
   Width = 785
-  Height = 527
+  Height = 600
   TabOrder = 0
   TabStop = True
   object lblClasses: TLabel
@@ -27,7 +27,7 @@ object frameClass: TframeClass
     Left = 159
     Top = 16
     Width = 610
-    Height = 425
+    Height = 445
     BevelInner = bvLowered
     BevelOuter = bvLowered
     TabOrder = 0
@@ -83,7 +83,7 @@ object frameClass: TframeClass
       Left = 199
       Top = 141
       Width = 185
-      Height = 108
+      Height = 122
       Caption = 'Special Options'
       TabOrder = 2
       object radWeaponStyle: TDBIndexComboBox
@@ -122,6 +122,18 @@ object frameClass: TframeClass
         DataField = 'strongDef'
         DataSource = dsCharClass
         TabOrder = 1
+        ValueChecked = 'True'
+        ValueUnchecked = 'False'
+      end
+      object chkGuest: TDBCheckBox
+        Left = 8
+        Top = 102
+        Width = 129
+        Height = 17
+        Caption = 'AI Controlled'
+        DataField = 'guest'
+        DataSource = dsCharClass
+        TabOrder = 3
         ValueChecked = 'True'
         ValueUnchecked = 'False'
       end
@@ -431,7 +443,7 @@ object frameClass: TframeClass
     end
     object grpScriptEvents: TGroupBox
       Left = 199
-      Top = 255
+      Top = 279
       Width = 185
       Height = 162
       Caption = 'Script Events'
@@ -573,7 +585,7 @@ object frameClass: TframeClass
     Left = 16
     Top = 37
     Width = 137
-    Height = 404
+    Height = 424
     DataSource = dsCharClass
     TabOrder = 1
     TitleFont.Charset = DEFAULT_CHARSET
