@@ -31,6 +31,7 @@ type
       cboWhich: TComboBox;
       selMusic: TSoundEdit;
       procedure cboWhichChange(Sender: TObject);
+      procedure FormShow(Sender: TObject);
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
@@ -92,6 +93,12 @@ begin
    obj.Values.Add(music.volume);
    obj.Values.Add(music.tempo);
    obj.Values.Add(music.balance);
+end;
+
+procedure TfrmEditSysBGM.FormShow(Sender: TObject);
+begin
+   inherited FormShow(sender);
+   cboWhichChange(self);
 end;
 
 initialization

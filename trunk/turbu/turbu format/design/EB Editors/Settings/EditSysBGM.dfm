@@ -7,8 +7,6 @@ inherited frmEditSysBGM: TfrmEditSysBGM
   inherited Panel1: TPanel
     Width = 290
     Height = 65
-    ExplicitWidth = 290
-    ExplicitHeight = 65
     object StaticText1: TStaticText
       Left = 7
       Top = 8
@@ -53,19 +51,13 @@ inherited frmEditSysBGM: TfrmEditSysBGM
   inherited btnOK: TButton
     Left = 7
     Top = 75
-    ExplicitLeft = 7
-    ExplicitTop = 75
   end
   inherited btnCancel: TButton
     Left = 101
     Top = 75
-    ExplicitLeft = 101
-    ExplicitTop = 75
   end
   inherited btnHelp: TButton
     Left = 194
     Top = 75
-    ExplicitLeft = 194
-    ExplicitTop = 75
   end
 end
