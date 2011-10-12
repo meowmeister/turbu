@@ -49,6 +49,7 @@ procedure TfrmEBEditEquipment.FormCreate(Sender: TObject);
 var
    i: integer;
 begin
+   dmDatabase.Vocab.Active := true;
    radSlot.Items.Clear;
    for i := 0 to 4 do
       radSlot.Items.Add(slotLookup(i));
