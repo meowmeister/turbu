@@ -526,7 +526,7 @@ end;
 
 function TEBCase.GetElseBlock: TEbElseBlock;
 begin
-   if self.Children[self.ChildCount - 1] is TEbElseBlock then
+   if (self.ChildCount > 0) and  (self.Children[self.ChildCount - 1] is TEbElseBlock) then
       result := TEbElseBlock(self.Children[self.ChildCount - 1])
    else result := nil;
 end;
