@@ -185,7 +185,7 @@ begin
    texture := imgPalette.images[FPaletteTexture].surface;
    height := min(height, texture.size.Y - sbPalette.pageSize);
    FCurrPalettePos := height;
-   displayRect := rect(0, height, imgPalette.width div 2, imgPalette.height div 2);
+   displayRect := rect(0, height, imgPalette.logicalWidth, imgPalette.Logicalheight);
    imgPalette.drawTexture(texture, @displayRect, nil);
    drawPaletteCursor(calculatePaletteRect);
    imgPalette.Flip;
@@ -270,6 +270,8 @@ var
 begin
    FPaletteTexture := imgPalette.AddTexture(surface);
    texture := imgPalette.images[FPaletteTexture].surface;
+   imgPalette.LogicalWidth := texture.size.X;
+   imgPalette.LogicalHeight := round(imgPalette.LogicalWidth * (imgPalette.Height / imgPalette.Width));
    bindPaletteCursor;
    resizePalette;
 end;
@@ -606,7 +608,6 @@ begin
 end;
 
 procedure TfrmTurbuMain.openProject(const filename: string);
-
 var
    location: string;
 
@@ -640,6 +641,8 @@ begin
    FMapEngine.initialize(imgLogo.sdlWindow, FDBName);
    mnuDatabase.Enabled := true;
    trvMapTree.buildMapTree(FMapEngine.mapTree);
+   if trvMapTree.Selected.IsFirstNode then
+      trvMapTree.Select(trvMapTree.Selected.getFirstChild);
 end;
 
 procedure TfrmTurbuMain.pnlZoomResize(Sender: TObject);
@@ -730,16 +733,18 @@ var
    height, width: integer;
    i, j: integer;
    list: TList<integer>;
+   ratio: single;
 begin
    RequireMapEngine;
+   ratio := imgPalette.Width / imgPalette.LogicalWidth;
    FPaletteSelectionTiles.TopLeft := pointToGridLoc(
      sgPoint(min(FPaletteSelection.left, FPaletteSelection.right),
              min(FPaletteSelection.top, FPaletteSelection.bottom)),
-     sgPoint(16, 16), 0, FCurrPalettePos, 2);
+     sgPoint(16, 16), 0, FCurrPalettePos, ratio);
    FPaletteSelectionTiles.BottomRight := pointToGridLoc(
      sgPoint(max(FPaletteSelection.left, FPaletteSelection.right),
              max(FPaletteSelection.top, FPaletteSelection.bottom)),
-     sgPoint(16, 16), 0, FCurrPalettePos, 2);
+     sgPoint(16, 16), 0, FCurrPalettePos, ratio);
 
    width := (FPaletteSelectionTiles.right - FPaletteSelectionTiles.left) + 1;
    height := (FPaletteSelectionTiles.bottom - FPaletteSelectionTiles.top) + 1;
@@ -754,11 +759,11 @@ end;
 
 function TfrmTurbuMain.calculatePaletteRect: TRect;
 begin
-   result := multiplyRect(FPaletteSelectionTiles, 32);
-   dec(result.top, FCurrPalettePos * 2);
-   dec(result.bottom, FCurrPalettePos * 2);
-   inc(result.right, 31);
-   inc(result.bottom, 31);
+   result := multiplyRect(FPaletteSelectionTiles, 16);
+   dec(result.top, FCurrPalettePos * 1);
+   dec(result.bottom, FCurrPalettePos * 1);
+   inc(result.right, 15);
+   inc(result.bottom, 15);
 end;
 
 procedure TfrmTurbuMain.sldZoomChanged(Sender: TObject);
