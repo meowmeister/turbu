@@ -43,7 +43,7 @@ end;
 procedure TfrmEBEditHeroName.DownloadObject(obj: TEbObject);
 begin
    obj.Clear;
-   obj.Values[0] := cboHero.id;
+   obj.Values.Add(cboHero.id);
    obj.Text := txtName.Text;
 end;
 
