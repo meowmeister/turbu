@@ -57,6 +57,7 @@ type
       procedure BuildList;
       procedure SetFilename(const Value: string);
       function GetVolume: integer; inline;
+      function GetPanning: integer; inline;
    public
       procedure Setup(const archive: string; isMusic: boolean);
       function Choose: boolean;
@@ -132,13 +133,18 @@ end;
 procedure TfrmMusicSelector.sldPanningChange(Sender: TObject);
 begin
    if FIsMusic then
-      FManager.SetPanPos(round(sldPanning.Value / 2.55));
+      FManager.SetPanPos(GetPanning);
 end;
 
 procedure TfrmMusicSelector.sldTempoChange(Sender: TObject);
 begin
    if FIsMusic then
       FManager.SetMusicSpeed(sldTempo.Value);
+end;
+
+function TfrmMusicSelector.GetPanning: integer;
+begin
+   result := round(sldPanning.Value / 2.55);
 end;
 
 function TfrmMusicSelector.GetVolume: integer;
@@ -209,7 +215,7 @@ begin
          sldTempoChange(self);
          FManager.FadeInMusic(FFadeInTime * 10);
       end
-      else FManager.PlaySoundEx(filename.value, GetVolume, sldTempo.Value, sldPanning.Value);
+      else FManager.PlaySoundEx(filename.value, GetVolume, sldTempo.Value, GetPanning);
    end
    else FManager.StopMusic;
 end;
