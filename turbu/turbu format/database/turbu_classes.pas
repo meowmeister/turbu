@@ -982,11 +982,12 @@ begin
    FDataset.First;
    while not FDataset.Eof do
    begin
-      if self.ContainsKey(idField.Value) then
-         Continue;
-      new := T.Create;
-      new.download(FSerializer, FDataset);
-      self.Add(new);
+      if not self.ContainsKey(idField.Value) then
+      begin
+         new := T.Create;
+         new.download(FSerializer, FDataset);
+         self.Add(new);
+      end;
       FDataset.Next;
    end;
 end;
