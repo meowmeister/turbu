@@ -3,33 +3,23 @@ inherited frmBattle: TfrmBattle
   ClientHeight = 400
   ClientWidth = 378
   OnCreate = FormCreate
-  ExplicitWidth = 384
-  ExplicitHeight = 435
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Width = 378
     Height = 347
-    ExplicitWidth = 378
-    ExplicitHeight = 401
   end
   inherited btnOK: TButton
     Left = 95
     Top = 357
-    ExplicitLeft = 95
-    ExplicitTop = 411
   end
   inherited btnCancel: TButton
     Left = 189
     Top = 357
-    ExplicitLeft = 189
-    ExplicitTop = 411
   end
   inherited btnHelp: TButton
     Left = 282
     Top = 357
-    ExplicitLeft = 282
-    ExplicitTop = 411
   end
   object grpMParty: TGroupBox
     Left = 8
@@ -54,7 +44,9 @@ inherited frmBattle: TfrmBattle
       Width = 72
       Height = 17
       Caption = 'Specific:'
+      Checked = True
       TabOrder = 1
+      TabStop = True
       OnClick = RadioButtonClick
     end
     object radMPartyPtr: TRadioButton
@@ -86,7 +78,9 @@ inherited frmBattle: TfrmBattle
       Width = 136
       Height = 17
       Caption = 'Map/Terrain Default'
+      Checked = True
       TabOrder = 0
+      TabStop = True
       OnClick = RadioButtonClick
     end
     object radFromFile: TRadioButton
