@@ -31,7 +31,9 @@ inherited frmBattleEx: TfrmBattleEx
         Width = 72
         Height = 17
         Caption = 'Specific:'
+        Checked = True
         TabOrder = 1
+        TabStop = True
         OnClick = RadioButtonClick
       end
       object radMPartyPtr: TRadioButton
@@ -63,7 +65,9 @@ inherited frmBattleEx: TfrmBattleEx
         Width = 136
         Height = 17
         Caption = 'Map/Terrain Default'
+        Checked = True
         TabOrder = 0
+        TabStop = True
         OnClick = RadioButtonClick
       end
       object radFromFile: TRadioButton
