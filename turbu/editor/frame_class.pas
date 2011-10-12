@@ -86,6 +86,7 @@ type
       cbxExpAlgorithm: TDBLookupComboBox;
       imgMapSprite: TSdlFrame;
       dsCondition: TDataSource;
+      chkGuest: TDBCheckBox;
 
       procedure tabGraphicsChange(Sender: TObject);
       procedure tmrAnimTimer(Sender: TObject);
