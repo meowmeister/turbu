@@ -47,6 +47,7 @@ type
       procedure btnCloseClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure sldTempoChange(Sender: TObject);
+      procedure lstFilenameClick(Sender: TObject);
    private
       FFadeInTime: integer;
       FManager: IDisharmony;
@@ -150,6 +151,11 @@ end;
 function TfrmMusicSelector.GetVolume: integer;
 begin
    result := sldVolume.Value;
+end;
+
+procedure TfrmMusicSelector.lstFilenameClick(Sender: TObject);
+begin
+   setFilename(lstFilename.Items[lstFilename.ItemIndex]);
 end;
 
 procedure TfrmMusicSelector.sldVolumeChange(Sender: TObject);
