@@ -105,12 +105,12 @@ end;
 
 procedure TframeConditions.btnVar1Click(Sender: TObject);
 begin
-   SetFieldValue(dsConditionsVariable1, EditSwitches(dsConditionsVariable1.Value));
+   SetFieldValue(dsConditionsVariable1, EditVars(dsConditionsVariable1.Value));
 end;
 
 procedure TframeConditions.btnVar2Click(Sender: TObject);
 begin
-   SetFieldValue(dsConditionsVariable2, EditSwitches(dsConditionsVariable2.Value));
+   SetFieldValue(dsConditionsVariable2, EditVars(dsConditionsVariable2.Value));
 end;
 
 procedure TframeConditions.chkHeroClick(Sender: TObject);
