@@ -27,6 +27,7 @@ object frmMusicSelector: TfrmMusicSelector
     Height = 319
     Anchors = [akLeft, akTop, akBottom]
     TabOrder = 0
+    OnClick = lstFilenameClick
     OnDblClick = btnPlayClick
   end
   object btnPlay: TButton
