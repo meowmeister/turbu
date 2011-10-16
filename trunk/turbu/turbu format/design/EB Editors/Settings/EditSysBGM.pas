@@ -45,7 +45,7 @@ uses
 
 {$R *.dfm}
 
-{ TfrmEBEditBase1 }
+{ TfrmEditSysBGM }
 
 function TfrmEditSysBGM.NewClassType: TEbClass;
 begin
