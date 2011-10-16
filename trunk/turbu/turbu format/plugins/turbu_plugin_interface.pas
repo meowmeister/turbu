@@ -21,8 +21,7 @@ interface
 
 uses
    SysUtils, Generics.Collections,
-   turbu_versioning,
-   sdl_13;
+   turbu_versioning;
 
 type
    TEngineStyle = (et_map, et_battle, et_menu, et_minigame);
