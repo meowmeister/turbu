@@ -50,6 +50,7 @@ var
    oFilename: string;
    image: TSdlImage;
    size: TSgPoint;
+   tSize: integer;
 begin
    oFilename := filename;
    if not imgSelector.ContainsName(oFilename) then
@@ -60,8 +61,9 @@ begin
    end;
 
    EnsureCanvas;
-   size := sgPoint(imgSelector.width, imgSelector.height);
    image := imgSelector.Images.Image[oFilename];
+   tSize := image.textureSize.x * 4;
+   size := sgPoint(tSize, round(tSize * (imgSelector.Height / imgSelector.Width)));
    finishLoading(image, size, size,
       procedure
          var

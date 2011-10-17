@@ -27,6 +27,7 @@ uses
 
 type
    TfrmSpriteSelector = class(TfrmBaseSelector)
+      procedure FormShow(Sender: TObject);
       procedure lstFilenamesClick(Sender: TObject); override;
    private
       FTileset: TTileset;
@@ -57,6 +58,13 @@ begin
       loadTileGroups;
 end;
 
+procedure TfrmSpriteSelector.FormShow(Sender: TObject);
+begin
+   if FFilename[1] = '*' then
+      FFilename := StringReplace(FFilename, '*', '*Tile group ', []);
+   inherited FormShow(sender);
+end;
+
 procedure TfrmSpriteSelector.loadSprite(filename: string);
 var
    oFilename: string;
@@ -73,8 +81,8 @@ begin
 
    EnsureCanvas;
    image := imgSelector.Images.Image[oFilename];
-   logicalSize := image.TextureSize * SgPoint(3, 4);
-   finishLoading(image, logicalSize, logicalSize * SELECTOR_SCALE,
+   logicalSize := image.TextureSize * SgPoint(3, 4) * SELECTOR_SCALE;
+   finishLoading(image, logicalSize, logicalSize,
       procedure
          var
             i: integer;

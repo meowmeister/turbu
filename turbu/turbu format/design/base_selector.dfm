@@ -33,6 +33,19 @@ object frmBaseSelector: TfrmBaseSelector
       TabOrder = 0
       OnClick = lstFilenamesClick
     end
+    object imgSelector: TSdlFrame
+      Left = 192
+      Top = 12
+      Width = 256
+      Height = 341
+      Framerate = 0
+      Active = False
+      LogicalWidth = 256
+      LogicalHeight = 341
+      OnAvailable = imgSelectorAvailable
+      OnMouseDown = imgSelectorMouseDown
+      OnMouseMove = imgSelectorMouseMove
+    end
   end
   object btnOK: TButton
     Left = 263
@@ -53,18 +66,5 @@ object frmBaseSelector: TfrmBaseSelector
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
-  end
-  object imgSelector: TSdlFrame
-    Left = 201
-    Top = 20
-    Width = 256
-    Height = 341
-    Framerate = 0
-    Active = False
-    LogicalWidth = 256
-    LogicalHeight = 341
-    OnAvailable = imgSelectorAvailable
-    OnMouseDown = imgSelectorMouseDown
-    OnMouseMove = imgSelectorMouseMove
   end
 end
