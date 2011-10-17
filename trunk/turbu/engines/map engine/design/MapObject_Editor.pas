@@ -296,6 +296,7 @@ var
 begin
    filename := dsPagesName.Value;
    frame := GetDrawFrame;
+   imgEventSprite.ClearTextures;
    TfrmSpriteSelector.SelectSpriteInto(imgEventSprite, filename, frame, FTileset, FRenameProc);
    dsPages.Edit;
    dsPagesName.Value := filename;

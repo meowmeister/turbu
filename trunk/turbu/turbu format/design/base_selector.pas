@@ -78,7 +78,7 @@ const
 
 implementation
 uses
-   Windows, Generics.Collections, OpenGL,
+   Windows, Generics.Collections, OpenGL, Math,
    ArchiveInterface, turbu_containers, turbu_tbi_lib, turbu_sdl_image,
    sg_utils;
 
@@ -151,7 +151,7 @@ procedure TfrmBaseSelector.BindCursor(x, y: integer);
 var
    gridLoc: TSgPoint;
 begin
-   gridLoc:= pointToGridLoc(imgSelector.LogicalCoordinates(x, y), FTextureSize, 0, 0, 1);
+   gridLoc:= pointToGridLoc(imgSelector.LogicalCoordinates(x, y), FTextureSize, 0, 0, imgSelector.Width / imgSelector.LogicalWidth);
    if gridLoc <> FGridLoc then
    begin
       FGridLoc := gridLoc;
@@ -161,19 +161,22 @@ end;
 
 procedure TfrmBaseSelector.FinishLoading(image: TSdlImage; size,
   logicalSize: TSgPoint; redrawProc: TProc);
+var
+   maxWidth: integer;
 begin
-   FTextureSize := image.textureSize;
+   FTextureSize := image.textureSize * (logicalSize.x / size.x);
    FBackground := image.Colorkey;
-   if (imgSelector.width <> logicalSize.x) or (imgSelector.height <> logicalSize.y) then
+   if (imgSelector.LogicalWidth <> logicalSize.x) or (imgSelector.LogicalHeight <> logicalSize.y) then
    begin
-      imgSelector.Width := logicalSize.x;
-      imgSelector.Height := logicalSize.y;
+      maxWidth := panel1.Width - (imgSelector.Left + 12);
+      imgSelector.Width := min(logicalSize.x, maxWidth);
+      imgSelector.Height := round(logicalSize.y * (imgSelector.Width / imgSelector.LogicalWidth));
       imgSelector.Clear;
       imgSelector.Update;
       GlLineWidth(SELECTOR_SCALE);
    end;
-   imgSelector.LogicalWidth := size.x;
-   imgSelector.LogicalHeight := size.y;
+   imgSelector.LogicalWidth := logicalSize.x;
+   imgSelector.LogicalHeight := logicalSize.y;
    FRedrawProc := redrawProc;
 end;
 
