@@ -161,7 +161,7 @@ type
       FArchiveLoader: TArchiveLoader;
       FArchiveCallback: TArchiveCallback;
       FUpdateMutex: PSDL_Mutex;
-      FHash: TDictionary<string, TSdlImage>;
+      FHash: TDictionary<string, integer>;
 
       function GetCount: Integer; inline;
       function GetItem(Num: Integer): TSdlImage;
@@ -264,6 +264,7 @@ type
 
 implementation
 uses
+   Math,
    SDL_rwStream, sdl_canvas,
    sdl_image;
 
@@ -282,7 +283,7 @@ begin
    FArchiveLoader := loader;
    FArchiveCallback := callback;
    FUpdateMutex := SDL_CreateMutex;
-   FHash := TDictionary<string, TSdlImage>.Create;
+   FHash := TDictionary<string, integer>.Create;
 end;
 
 //---------------------------------------------------------------------------
@@ -311,36 +312,24 @@ end;
 //---------------------------------------------------------------------------
 function TSdlImages.GetImage(const Name: string): TSdlImage;
 var
-   Index: Integer;
+   index: integer;
 begin
-   Index := IndexOf(Name);
-   if Index <> -1 then
-      Result := FData[Index]
-   else Result:= nil;
+   if FHash.TryGetValue(name, index) then
+      result := FData[index]
+   else result := nil;
 end;
 
 //---------------------------------------------------------------------------
 function TSdlImages.IndexOf(Element: TSdlImage): Integer;
-var
-   i: Integer;
 begin
-   Result := -1;
-   for i := 0 to Length(FData) - 1 do
-      if FData[i] = Element then
-      begin
-         Result := i;
-         Break;
-      end;
+   result := IndexOf(element.name);
 end;
 
 //---------------------------------------------------------------------------
 function TSdlImages.IndexOf(const Name: string): Integer;
-var
-   image: TSdlImage;
 begin
-   if FHash.TryGetValue(name, image) then
-      result := IndexOf(image)
-   else result := -1;
+   if not FHash.TryGetValue(name, result) then
+      result := -1;
 end;
 
 //---------------------------------------------------------------------------
@@ -353,6 +342,7 @@ end;
 procedure TSdlImages.Pack;
 var
    Lo, Hi: integer;
+  I: Integer;
 begin
    Lo := -1;
    Hi := high(FData);
@@ -373,7 +363,10 @@ begin
 
    if FData[Hi] = nil then
       dec(Hi);
-   setLength(FData, Hi + 1);
+   setLength(FData, Hi * 2);
+   FHash.Clear;
+   for I := 0 to Hi do
+      FHash.Add(FData[i].name, i);
 end;
 
 //---------------------------------------------------------------------------
@@ -395,15 +388,15 @@ function TSdlImages.Insert(Element: TSdlImage): Integer;
 var
    Slot: Integer;
 begin
-   FHash.Add(element.name, element);
    Slot := FindEmptySlot;
    if Slot = -1 then
    begin
       Slot := Length(FData);
-      SetLength(FData, Slot + 1);
+      SetLength(FData, max(Slot * 2, 16));
    end;
    FData[Slot] := Element;
    Result := Slot;
+   FHash.Add(element.name, result);
 end;
 
 //---------------------------------------------------------------------------
@@ -411,9 +404,9 @@ function TSdlImages.Add(Element: TSdlImage): Integer;
 begin
    SDL_LockMutex(FUpdateMutex);
    try
-      Result := IndexOf(Element);
-      if Result = -1 then
-         Result := Insert(Element);
+      if FHash.ContainsKey(element.name) then
+         Result := IndexOf(Element)
+      else Result := Insert(Element);
    finally
       SDL_UnlockMutex(FUpdateMutex);
    end;
