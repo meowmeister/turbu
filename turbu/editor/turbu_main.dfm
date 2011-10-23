@@ -201,6 +201,7 @@ object frmTurbuMain: TfrmTurbuMain
         Active = False
         LogicalWidth = 192
         LogicalHeight = 496
+        OnPaint = imgPalettePaint
         Align = alClient
         OnMouseDown = imgPaletteMouseDown
         OnMouseMove = imgPaletteMouseMove
