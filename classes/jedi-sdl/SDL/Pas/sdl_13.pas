@@ -704,6 +704,8 @@ function SDL_RenderTargetSupported(renderer: TSDLRenderer): SDL_bool; cdecl; ext
 function SDL_SetTargetTexture(renderer: TSdlRenderer; texture: TSDLTexture): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_SetTargetTexture}
 
+function SDL_ClearTargetTexture(renderer: TSdlRenderer): integer;
+
 function SDL_GetRendererInfo(renderer: TSdlRenderer; var info: TSDL_RendererInfo): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetRenderDriverInfo}
 
@@ -1379,6 +1381,12 @@ end;
 function SDL_GetEventState(type_:cardinal): byte; inline;
 begin
    result := SDL_EventState(type_, SDL_QUERY);
+end;
+
+function SDL_ClearTargetTexture(renderer: TSdlRenderer): integer;
+const CLEAR_TEXTURE: TSdlTexture = (FPtr: nil);
+begin
+   result := SDL_SetTargetTexture(renderer, CLEAR_TEXTURE);
 end;
 
 { TSdlWindow }

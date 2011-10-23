@@ -253,7 +253,8 @@ end;
 
 procedure TSdlCanvas.DrawRectTo(image: TSdlImage; dest, source: TRect);
 begin
-   assert(SDL_RenderCopy(FRenderer, image.surface, @source, @dest) = 0);
+   if SDL_RenderCopy(FRenderer, image.surface, @source, @dest) <> 0 then
+      raise Exception.CreateFmt('SDL_RenderCopy failed: %s', [AnsiString(SDL_GetError)]);
 end;
 
 procedure TSdlCanvas.Flip;
@@ -294,6 +295,7 @@ end;
 procedure TSdlCanvas.SetRenderer;
 begin
    SetRenderTarget(nil);
+   SDL_ClearTargetTexture(FRenderer);
 end;
 
 procedure TSdlCanvas.SetRenderTarget(const Value: TSdlRenderSurface);
