@@ -151,7 +151,7 @@ procedure TfrmBaseSelector.BindCursor(x, y: integer);
 var
    gridLoc: TSgPoint;
 begin
-   gridLoc:= pointToGridLoc(imgSelector.LogicalCoordinates(x, y), FTextureSize, 0, 0, imgSelector.Width / imgSelector.LogicalWidth);
+   gridLoc:= pointToGridLoc(sgPoint(x, y), FTextureSize, 0, 0, imgSelector.Width / imgSelector.LogicalWidth);
    if gridLoc <> FGridLoc then
    begin
       FGridLoc := gridLoc;
@@ -176,7 +176,7 @@ begin
       GlLineWidth(SELECTOR_SCALE);
    end;
    imgSelector.LogicalWidth := logicalSize.x;
-   imgSelector.LogicalHeight := logicalSize.y;
+   imgSelector.LogicalHeight := round(imgSelector.Height * (imgSelector.LogicalWidth / imgSelector.Width));
    FRedrawProc := redrawProc;
 end;
 
