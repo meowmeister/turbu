@@ -106,6 +106,7 @@ type
       procedure sldZoomChanged(Sender: TObject);
       procedure imgBackgroundPaint(Sender: TObject);
       procedure actPlayMusicExecute(Sender: TObject);
+    procedure imgPalettePaint(Sender: TObject);
    private
       pluginManager: TJvPluginManager;
       FScrollboxManager: TScrollboxManager;
@@ -219,7 +220,7 @@ var
 begin
    texture := imgPalette.images[FPaletteTexture].surface;
    sbPalette.Max := texture.size.y;
-   sbPalette.PageSize := imgPalette.height div 2;
+   sbPalette.PageSize := imgPalette.LogicalHeight;
    sbPalette.LargeChange := sbPalette.PageSize - TILE_SIZE;
    displayPalette;
 end;
@@ -484,6 +485,11 @@ begin
       bindPaletteCursor;
       displayPalette;
    end;
+end;
+
+procedure TfrmTurbuMain.imgPalettePaint(Sender: TObject);
+begin
+   displayPalette;
 end;
 
 procedure TfrmTurbuMain.loadEngine(data: TEngineData);
