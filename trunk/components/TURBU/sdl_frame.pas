@@ -41,6 +41,7 @@ type
       FOnPaint: TNotifyEvent;
 
       function CreateWindow: boolean;
+      procedure DestroyWindow;
       procedure CreateRenderer;
       procedure InternalOnTimer(Sender: TObject);
       procedure SetFramerate(Value: word);
@@ -150,6 +151,8 @@ destructor TSdlFrame.Destroy;
 begin
    FImageManager.Free;
    FTimer.Free;
+   if assigned(FRenderer.ptr) then
+      DestroyWindow;
    inherited;
 end;
 
@@ -161,11 +164,7 @@ end;
 
 procedure TSdlFrame.DestroyWnd;
 begin
-   FTimer.OnTimer := nil;
-   SDL_DestroyRenderer(FRenderer);
-   FWindow.Free;
-   FFlags := [];
-   self.Framerate := 0;
+   DestroyWindow;
    inherited;
 end;
 
@@ -263,6 +262,15 @@ begin
       OutputDebugStringA(SDL_GetError);
 end;
 
+procedure TSdlFrame.DestroyWindow;
+begin
+   FTimer.OnTimer := nil;
+   FRenderer.Free;
+   FWindow.Free;
+   FFlags := [];
+   self.Framerate := 0;
+end;
+
 procedure TSdlFrame.CreateRenderer;
 const
    pf: tagPIXELFORMATDESCRIPTOR = (nSize: sizeof(pf); nVersion: 1;
@@ -273,31 +281,39 @@ const
    RENDERERS: array[TRendererType] of AnsiString = ('software', 'gdi', 'opengl', 'd3d');
 var
    pFormat: integer;
+   glContext: cardinal;
 begin
    if (FRendererAvailable) then
       Exit;
-   if FRendererType = rtOpenGL then
-   begin
-      pFormat := ChoosePixelFormat(canvas.Handle, @pf);
-      if not SetPixelFormat(canvas.Handle, pFormat, @pf) then
-         outputDebugString(PChar(SysErrorMessage(GetLastError)));
-      if wglCreateContext(canvas.Handle) = 0 then
-         outputDebugString(PChar(SysErrorMessage(GetLastError)));
+   glContext := 0;
+   try
+      if FRendererType = rtOpenGL then
+      begin
+         pFormat := ChoosePixelFormat(canvas.Handle, @pf);
+         if not SetPixelFormat(canvas.Handle, pFormat, @pf) then
+            outputDebugString(PChar(SysErrorMessage(GetLastError)));
+         glContext := wglCreateContext(canvas.Handle);
+         if glContext = 0 then
+            outputDebugString(PChar(SysErrorMessage(GetLastError)));
+      end;
+      FRenderer := SDL_CreateRenderer(FWindow, SDL_RendererIndex(RENDERERS[FRendererType]), [sdlrAccelerated]);
+      if FRenderer.ptr <> nil then
+      begin
+         SDL_ShowWindow(FWindow);
+         ResetLogicalSize;
+         assert(SDL_SetRenderDrawColor(FRenderer, 0, 0, 0, 255) = 0);
+         SDL_RenderFillRect(FRenderer, nil);
+         FFlags := SDL_GetWindowFlags(FWindow);
+         FRendererAvailable := true;
+         if assigned(FOnAvailable) then
+            FOnAvailable(self);
+         FImageManager.SetRenderer(FRenderer);
+      end
+      else outputDebugString(pChar(format('SDL_CreateRenderer failed: %s', [sdl_GetError])));
+   finally
+      if glContext <> 0 then
+         wglDeleteContext(glContext);
    end;
-   FRenderer := SDL_CreateRenderer(FWindow, SDL_RendererIndex(RENDERERS[FRendererType]), [sdlrAccelerated]);
-   if FRenderer.ptr <> nil then
-   begin
-      SDL_ShowWindow(FWindow);
-      ResetLogicalSize;
-      assert(SDL_SetRenderDrawColor(FRenderer, 0, 0, 0, 255) = 0);
-      SDL_RenderFillRect(FRenderer, nil);
-      FFlags := SDL_GetWindowFlags(FWindow);
-      FRendererAvailable := true;
-      if assigned(FOnAvailable) then
-         FOnAvailable(self);
-      FImageManager.SetRenderer(FRenderer);
-   end
-   else outputDebugString(pChar(format('SDL_CreateRenderer failed: %s', [sdl_GetError])));
 end;
 
 function TSdlFrame.IndexOfName(const name: string): integer;
