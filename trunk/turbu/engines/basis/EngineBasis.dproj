@@ -50,7 +50,6 @@
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_UnitSearchPath>..\..\..\classes\jedi-sdl\SDL\Pas;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_MapFile>3</DCC_MapFile>
@@ -144,7 +143,7 @@
 			<BorlandProject>
 				<Delphi.Personality>
 					<Parameters>
-						<Parameters Name="HostApplication">C:\Users\mason\Documents\RAD Studio Weaver\Projects\turbu\turbu\bin\Turbu.exe</Parameters>
+						<Parameters Name="HostApplication">C:\Users\mason\Documents\RAD Studio Fulcrum\Projects\turbu\turbu\bin\Turbu.exe</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
