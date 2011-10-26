@@ -16,7 +16,8 @@ unit sdl_sprite;
 
 interface
 uses
-   Types, SysUtils, Generics.Collections,
+   Types, SysUtils, Generics.Collections, OpenGL,
+   Collections.multimaps,
    SDL_ImageManager, SDL_canvas, SG_defs;
 
 type
@@ -85,6 +86,7 @@ type
    protected
       FEngine: TSpriteEngine;
       FParent: TParentSprite;
+      FRenderSpecial: boolean;
 
       function GetDrawRect: TRect; virtual;
       procedure SetDrawRect(const Value: TRect); virtual;
@@ -244,6 +246,8 @@ type
       property LifeTime: Real read FLifeTime write FLifeTime;
    end;
 
+   TSpriteRenderer = class;
+
    TSpriteEngine = class(TParentSprite)
    private
       FAllCount: Integer;
@@ -254,7 +258,7 @@ type
       FImages: TSdlImages;
       FCanvas: TSdlCanvas;
       FDestroying: boolean;
-
+      FRenderer: TSpriteRenderer;
    public
       constructor Create(const AParent: TSpriteEngine; const ACanvas: TSdlCanvas); reintroduce;
       destructor Destroy; override;
@@ -269,9 +273,36 @@ type
       property Canvas: TSdlCanvas read FCanvas;
    end;
 
+   TRenderList = class
+   private
+      FName: string;
+      FVertices: TArray<smallint>;
+      FTexCoords: TArray<smallint>;
+      FVerticesValid: boolean;
+      FTexturesValid: boolean;
+   public
+   end;
+
+   TSpriteRenderer = class
+   private type TDrawMap = class(TMultimap<TSdlImage, TSprite>);
+   private
+      FDrawmap: TDrawMap;
+      FEngine: TSpriteEngine;
+      FVertexBuffer: GLUint;
+      FTextureCoords: GLUint;
+      procedure InternalRender(const vertices, texCoords: TArray<smallint>; image: TSdlImage);
+   public
+      constructor Create(engine: TSpriteEngine);
+      destructor Destroy; override;
+
+      procedure Draw(sprite: TSprite);
+      procedure Reset;
+      procedure Render;
+   end;
+
 implementation
 uses
-   Generics.Defaults;
+   Generics.Defaults, SDL;
 
 {  TSprite }
 
@@ -381,20 +412,24 @@ begin
          Exit;
    end;
 
-   if FPinned then
-   begin
-      followX := 0;
-      followY := 0;
-   end else begin
-      followX := FEngine.WorldX;
-      followY := FEngine.worldY;
-   end;
-   topleft := point(trunc(FX + FOffsetX - followX), trunc(FY + FOffsetY - followY));
+   if FRenderSpecial = false then
+      FEngine.FRenderer.Draw(self)
+   else begin
+      if FPinned then
+      begin
+         followX := 0;
+         followY := 0;
+      end else begin
+         followX := FEngine.WorldX;
+         followY := FEngine.worldY;
+      end;
+      topleft := point(trunc(FX + FOffsetX - followX), trunc(FY + FOffsetY - followY));
 
-   case FImageType of
-      itSingleImage: FImage.Draw(topleft);
-      itSpriteSheet: FImage.DrawSprite(topleft, FPatternIndex);
-      itRectSet: FImage.DrawRect(topleft, Self.DrawRect);
+      case FImageType of
+         itSingleImage: FImage.Draw(topleft);
+         itSpriteSheet: FImage.DrawSprite(topleft, FPatternIndex);
+         itRectSet: FImage.DrawRect(topleft, Self.DrawRect);
+      end;
    end;
 end;
 
@@ -769,10 +804,12 @@ begin
    FVisibleHeight := 600;
    FCanvas := ACanvas;
    FEngine := self;
+   FRenderer := TSpriteRenderer.Create(self);
 end;
 
 destructor TSpriteEngine.Destroy;
 begin
+   FRenderer.Free;
    FDeadList.Free;
    FDestroying := true;
    inherited Destroy;
@@ -791,12 +828,19 @@ end;
 procedure TSpriteEngine.Draw;
 var
    list: TSpriteList;
-   i: integer;
+   i, z: integer;
 begin
-   for list in FSpriteList.FSprites do
+   for z := 0 to high(FSpriteList.FSprites) do
+   begin
+      list := FSpriteList.FSprites[z];
       if assigned(list) then
+      begin
+         FRenderer.Reset;
          for I := 0 to List.Count - 1 do
             list[i].Draw;
+         FRenderer.Render;
+      end;
+   end;
 end;
 
 { TSpriteComparer }
@@ -985,6 +1029,191 @@ begin
       self.x := FFillArea.Left;
       self.y := FFillArea.Top;
    end;
+end;
+
+{ TSpriteRenderer }
+
+const
+   GL_VERTEX_ARRAY = $8074;
+   GL_ARRAY_BUFFER = $8892;
+   GL_DYNAMIC_DRAW = $88E8;
+   GL_STREAM_DRAW = $88E0;
+   GL_TEXTURE_RECTANGLE_ARB = $84F5;
+   GL_TEXTURE_COORD_ARRAY = $8078;
+   GL_CURRENT_PROGRAM = $8B8D;
+
+type
+   TGLsizei = Integer;
+   TGLenum = Cardinal;
+   TGLuint = Cardinal;
+   TGLint = Integer;
+   PGLvoid = Pointer;
+   GLHandle = Integer;
+
+var
+   glGenBuffers: procedure(n: TGLsizei; buffers: PGLuint); stdcall;
+   glBindBuffer: procedure(target: TGLenum; buffer: TGLuint); stdcall;
+   glBufferData: procedure(target: TGLenum; size: TGLsizei; const data: PGLvoid; usage: TGLenum); stdcall;
+   glEnableClientState: procedure(_array: TGLenum); stdcall;
+   glDisableClientState: procedure(_array: TGLenum); stdcall;
+   glVertexPointer: procedure(size: TGLint; _type: TGLenum; stride: TGLsizei; const _pointer: PGLvoid); stdcall;
+   glTexCoordPointer: procedure(size: TGLint; _type: TGLenum; stride: TGLsizei; const _pointer: PGLvoid); stdcall;
+   glDrawArrays: procedure(mode: TGLenum; first: TGLint; count: TGLsizei); stdcall;
+   glBindTexture: procedure(target: TGLenum; texture: TGLuint); stdcall;
+   glUseProgram: procedure(programObj: GLhandle); stdcall;
+   ImplementationRead: boolean;
+
+procedure InitOpenGL;
+begin
+   glGenBuffers := SDL_GL_GetProcAddress('glGenBuffers');
+   glBindBuffer := SDL_GL_GetProcAddress('glBindBuffer');
+   glBufferData := SDL_GL_GetProcAddress('glBufferData');
+   glEnableClientState := SDL_GL_GetProcAddress('glEnableClientState');
+   glDisableClientState := SDL_GL_GetProcAddress('glDisableClientState');
+   glVertexPointer := SDL_GL_GetProcAddress('glVertexPointer');
+   glTexCoordPointer := SDL_GL_GetProcAddress('glTexCoordPointer');
+   glDrawArrays := SDL_GL_GetProcAddress('glDrawArrays');
+   glBindTexture := SDL_GL_GetProcAddress('glBindTexture');
+   glUseProgram := SDL_GL_GetProcAddress('glUseProgram');
+end;
+
+constructor TSpriteRenderer.Create(engine: TSpriteEngine);
+begin
+   if not ImplementationRead then
+   begin
+      InitOpenGL;
+      glEnable(GL_VERTEX_ARRAY);
+      ImplementationRead := true;
+   end;
+   FDrawMap := TDrawMap.Create;
+   FEngine := engine;
+   glGenBuffers(1, @FVertexBuffer);
+   glGenBuffers(1, @FTextureCoords);
+end;
+
+destructor TSpriteRenderer.Destroy;
+begin
+   FDrawMap.Free;
+   inherited;
+end;
+
+procedure TSpriteRenderer.Draw(sprite: TSprite);
+begin
+   FDrawmap.Add(sprite.FImage, sprite);
+end;
+
+procedure AddVertexCoords(var vertices: TArray<smallint>; sprite: TSprite; counter: integer);
+var
+   followX, followY: single;
+   top, left, bottom, right: integer;
+begin
+   if sprite.FPinned then
+   begin
+      followX := 0;
+      followY := 0;
+   end else begin
+      followX := sprite.FEngine.WorldX;
+      followY := sprite.FEngine.worldY;
+   end;
+   left := trunc(sprite.FX + sprite.FOffsetX - followX);
+   top := trunc(sprite.FY + sprite.FOffsetY - followY);
+
+   case sprite.FImageType of
+      itSingleImage, itSpriteSheet:
+      begin
+         right := left + sprite.FImage.textureSize.x;
+         bottom := top + sprite.FImage.textureSize.Y;
+      end;
+      itRectSet: asm int 3 end;
+   end;
+   vertices[counter] := left; vertices[counter + 1] := top;
+   vertices[counter + 2] := left; vertices[counter + 3] := bottom;
+   vertices[counter + 4] := right; vertices[counter + 5] := bottom;
+   vertices[counter + 6] := right; vertices[counter + 7] := top;
+end;
+
+procedure AddTextureCoords(var vertices: TArray<smallint>; sprite: TSprite; counter: integer);
+var
+   rect: TRect;
+   top, left, bottom, right: integer;
+begin
+   case sprite.FImageType of
+      itSingleImage:
+      begin
+         rect.TopLeft := ORIGIN;
+         rect.BottomRight := sprite.Image.surface.size;
+      end;
+      itSpriteSheet: rect := sprite.Image.spriteRect[sprite.FPatternIndex];
+      itRectSet: rect := sprite.DrawRect;
+   end;
+   left := rect.Left;
+   right := rect.Left + rect.Right;
+   top := rect.Top;
+   bottom := rect.Top + rect.Bottom;
+
+   vertices[counter] := left; vertices[counter + 1] := top;
+   vertices[counter + 2] := left; vertices[counter + 3] := bottom;
+   vertices[counter + 4] := right; vertices[counter + 5] := bottom;
+   vertices[counter + 6] := right; vertices[counter + 7] := top;
+end;
+
+procedure TSpriteRenderer.InternalRender(const vertices,
+  texCoords: TArray<smallint>; image: TSdlImage);
+var
+   current: GLint;
+begin
+   glGetIntegerv(GL_CURRENT_PROGRAM, @current);
+   glColor4f(1, 1, 1, 1);
+   glEnable(GL_TEXTURE_RECTANGLE_ARB);
+   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, image.handle);
+   glEnableClientState(GL_VERTEX_ARRAY);
+   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+   glUseProgram(4); //Forgive me, Wirth, for I have sinned
+
+   glBindBuffer(GL_ARRAY_BUFFER, FVertexBuffer);
+   glBufferData(GL_ARRAY_BUFFER, length(vertices) * sizeof(smallint), @vertices[0], GL_STREAM_DRAW);
+   glVertexPointer(2, GL_SHORT, 0, nil);
+
+   glBindBuffer(GL_ARRAY_BUFFER, FTextureCoords);
+   glBufferData(GL_ARRAY_BUFFER, length(texCoords) * sizeof(smallint), @texCoords[0], GL_STREAM_DRAW);
+   glTexCoordPointer(2, GL_SHORT, 0, nil);
+
+   glDrawArrays(GL_QUADS, 0, length(texCoords) div 2);
+
+   glBindBuffer(GL_ARRAY_BUFFER, 0);
+   glDisableClientState(GL_VERTEX_ARRAY);
+   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+   glUseProgram(current);
+end;
+
+procedure TSpriteRenderer.Render;
+var
+   image: TSdlImage;
+   sprite: TSprite;
+   vertices, texCoords: TArray<smallint>;
+   counter: integer;
+begin
+   for image in FDrawmap.Keys do
+   begin
+      if FDrawMap[image].Count = 0 then
+         Continue;
+      setLength(vertices, FDrawMap[image].Count * 8);
+      setLength(texCoords, length(vertices));
+      counter := 0;
+      for sprite in FDrawmap[image] do
+      begin
+         AddVertexCoords(vertices, sprite, counter);
+         AddTextureCoords(texCoords, sprite, counter);
+         inc(counter, 8);
+      end;
+      InternalRender(vertices, texCoords, FDrawMap[image].First.image);
+   end;
+end;
+
+procedure TSpriteRenderer.Reset;
+begin
+   FDrawMap.Clear;
 end;
 
 end.
