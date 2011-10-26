@@ -21,7 +21,7 @@ unit sdl_canvas;
 
 interface
 uses
-   types, classes, Generics.Collections,
+   types, classes, Generics.Collections, SysUtils,
    SDL_ImageManager, SG_Defs,
    SDL, SDL_13;
 
@@ -135,11 +135,11 @@ type
 //      property Fullscreen: boolean read IsFullscreen write SetFullscreen;
    end;
 
+   ECanvas = class(Exception);
+
 function currentRenderTarget: TSdlRenderSurface;
 
 implementation
-uses
-   sysUtils;
 
 var
    lCurrentRenderTarget: TSdlRenderSurface;
@@ -254,7 +254,7 @@ end;
 procedure TSdlCanvas.DrawRectTo(image: TSdlImage; dest, source: TRect);
 begin
    if SDL_RenderCopy(FRenderer, image.surface, @source, @dest) <> 0 then
-      raise Exception.CreateFmt('SDL_RenderCopy failed: %s', [AnsiString(SDL_GetError)]);
+      raise ECanvas.CreateFmt('SDL_RenderCopy failed: %s', [AnsiString(SDL_GetError)]);
 end;
 
 procedure TSdlCanvas.Flip;

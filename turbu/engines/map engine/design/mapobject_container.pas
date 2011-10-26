@@ -52,6 +52,7 @@ begin
    self.Z := 11;
    FCanvas := canvas;
    FBase := base;
+   FRenderSpecial := true;
 end;
 
 destructor TMapObjectContainer.Destroy;

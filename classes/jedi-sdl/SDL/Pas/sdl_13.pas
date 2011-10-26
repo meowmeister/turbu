@@ -324,6 +324,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     function GetSize: TPoint;
     function GetAlpha: byte;
     procedure SetAlpha(const Value: byte);
+    function GetHandle: integer;
   public
     constructor Create(renderer: TSdlRenderer; format: Uint32; access: TSdlTextureAccess; w, h: integer); overload;
     constructor Create(renderer: TSdlRenderer; format: Uint32; surface: PSdlSurface); overload;
@@ -332,6 +333,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     property ptr: pointer read FPtr;
     property size: TPoint read GetSize;
     property alpha: byte read GetAlpha write SetAlpha;
+    property handle: integer read GetHandle;
   end;
 
 {$HINTS ON}
@@ -777,6 +779,8 @@ external SDLLibName;
 function SDL_GetTextureAlphaMod(textureID: TSdlTexture; var alpha: byte): integer; cdecl;
 external SDLLibName;
 {$EXTERNALSYM SDL_GetTextureAlphaMod}
+
+function SDL_GetTextureHandle(texture: TSdlTexture): integer; cdecl; external SDLLibName;
 
 (**
  * SDL_SetTextureBlendMode
@@ -1327,6 +1331,13 @@ function TSdlTexture.GetAlpha: byte;
 begin
    if SDL_GetTextureAlphaMod(self, result) <> 0 then
       raise EBadHandle.Create('Alpha not supported for this texture.');
+end;
+
+function TSdlTexture.GetHandle: integer;
+begin
+   result := SDL_GetTextureHandle(self);
+   if result = -1 then
+      raise EBadHandle.CreateFmt('Unable to retrieve the handle for this texture: %s', [AnsiString(SDL_GetError)]);
 end;
 
 procedure TSdlTexture.SetAlpha(const Value: byte);
