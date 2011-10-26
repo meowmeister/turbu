@@ -1,0 +1,16 @@
+{DONE 2 : Implement movement between maps}
+{DONE 3 : Implement a menu system}
+{DONE 5 : Update tiles to block movement}
+{DONE 5 : Combine the two event types into one functionality}
+{TODO 1 :
+Optimize: Reduce ifs in inner loops
+Make tiles not get placed before they're viewed}
+{TODO 2 : Save files}
+{DONE 3 :Create vehicles, weather effects, and miscellaneous clean-up}
+{TODO 2 : Write the battle system}
+{DONE 2 : Implement start location}
+{DONE 3 : Implement event functionality}
+{DONE 4 : Implement hero movement on the map.}
+{DONE 5 : Implement event viewing}
+{DONE 5 : Implement all upper and lower chip viewing}
+{TODO 1 : ULTIMATE GOAL:  Create a fully-functional RM2K engine clone.}

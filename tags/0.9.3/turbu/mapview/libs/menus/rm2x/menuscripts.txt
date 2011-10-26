@@ -1,0 +1,128 @@
+procedure standard_item_button(which: TButtonCode; theMenu: TGameMenuBox; theOwner: TMenuPage); //normal version
+var
+   thisMenu: TGameItemMenu;
+   owner: TItemMenuPage;
+begin
+   thisMenu := TGameItemMenu(theMenu);
+   owner := TItemMenuPage(theOwner);
+
+   with thisMenu do
+   begin
+      if inventory.count = 0 then Exit;
+      
+      if (which = btn_enter) and (optionEnabled[cursorPosition]) then
+      begin
+         if inventory[cursorPosition] is TAppliedItem then
+         begin
+            focusPage(GPartyTargetPage);
+            GPartyTargetPage.setup(cursorPosition * -1);
+            if TAppliedItem(inventory[cursorPosition]).areaItem then
+               parent.placeCursor(-1)
+            else parent.placeCursor(0);
+         end else if inventory[cursorPosition] is TSwitchItem then
+         begin
+            TSwitchItem(inventory[cursorPosition]).use;
+            parent.leave(false);
+         end;
+      end;
+   end;
+end;
+
+procedure standard_item_cursor(position: smallint; theMenu: TGameMenuBox; theOwner: TMenuPage);
+var
+   thisMenu: TGameItemMenu;
+   owner: TItemMenuPage;
+begin
+   thisMenu := TGameItemMenu(theMenu);
+   owner := TItemMenuPage(theOwner);
+
+   with thisMenu do
+   begin
+      if inventory.Count > 0 then
+         owner.descBox.text := inventory[position].desc;
+      //end if
+   end;
+end;
+
+procedure standard_item_setup(position: smallint; theMenu: TGameMenuBox; theOwner: TMenuPage);
+var
+   i: smallint;
+   thisMenu: TGameItemMenu;
+   owner: TItemMenuPage;
+begin
+   thisMenu := TGameItemMenu(theMenu);
+   owner := TItemMenuPage(theOwner);
+
+   with thisMenu do
+   begin
+      for i := 0 to inventory.Count - 1 do
+         optionEnabled[i] := inventory[i].usableOnField;
+      //end for
+   end;
+end;
+
+procedure shop_item_setup(position: smallint; theMenu: TGameMenuBox; theOwner: TMenuPage);
+var
+   i: smallint;
+   thisMenu: TGameItemMenu;
+   owner: TShopMenuPage;
+begin
+   thisMenu := TGameItemMenu(theMenu);
+   owner := TShopMenuPage(theOwner);
+
+   with thisMenu do
+   begin
+      if inventory = nil then
+        Exit;
+
+      for i := 0 to inventory.Count - 1 do
+         optionEnabled[i] := inventory[i].cost > 0;
+      //end for
+   end;
+end;
+
+procedure shop_item_cursor(position: smallint; theMenu: TGameMenuBox; theOwner: TMenuPage);
+var
+   thisMenu: TGameItemMenu;
+   owner: TShopMenuPage;
+begin
+   thisMenu := TGameItemMenu(theMenu);
+   owner := TShopMenuPage(theOwner);
+
+   with thisMenu do
+   begin
+      if inventory.Count > 0 then
+         owner.descBox.text := inventory[position].desc;
+      //end if
+   end;
+end;
+
+procedure shop_item_button(which: TButtonCode; theMenu: TGameMenuBox; theOwner: TMenuPage); //normal version
+var
+   thisMenu: TGameItemMenu;
+   owner: TShopMenuPage;
+begin
+   thisMenu := TGameItemMenu(theMenu);
+   owner := TShopMenuPage(theOwner);
+
+   with thisMenu do
+   begin
+      if (inventory.count = 0) and (which <> btn_cancel) then Exit;
+
+      if (which = btn_enter) and (optionEnabled[cursorPosition]) then
+      begin
+         owner.transactionBox.state := ts_selling;
+         owner.transactionBox.item := inventory[cursorPosition];
+         focusMenu(owner.transactionBox);
+         owner.state := ss_transaction;
+         owner.transactionBox.setup($DEADBEEF);
+      end else if which = btn_cancel then
+      begin
+         inventory := nil;
+         owner.descBox.text := '';         
+      end;
+   end;
+end;
+
+begin
+end.

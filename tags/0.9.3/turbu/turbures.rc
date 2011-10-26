@@ -1,0 +1,3 @@
+turbudoc ICON turbudoc.ico
+logo RCDATA ".\editor\shield render.png"
+db_template RCDATA "..\turbu format\design\turbu.cdb"

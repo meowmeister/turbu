@@ -1,0 +1,289 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{8054F96A-2CF4-4EBE-8443-89059CDE5E80}</ProjectGuid>
+			<MainSource>default_format_design.dpk</MainSource>
+			<ProjectVersion>12.3</ProjectVersion>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+			<Base>True</Base>
+			<Platform>Win32</Platform>
+			<AppType>Package</AppType>
+			<FrameworkType>None</FrameworkType>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_DcuOutput>..\..\dcus\</DCC_DcuOutput>
+			<DCC_BplOutput>..\..\bin\</DCC_BplOutput>
+			<DCC_DcpOutput>..\..\dcus\</DCC_DcpOutput>
+			<DCC_DependencyCheckOutputName>..\..\bin\default_format_design.bpl</DCC_DependencyCheckOutputName>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DesignOnlyPackage>false</DesignOnlyPackage>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_Platform>x86</DCC_Platform>
+			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+			<GenPackage>true</GenPackage>
+			<DCC_N>false</DCC_N>
+			<DCC_S>false</DCC_S>
+			<GenDll>true</GenDll>
+			<DCC_E>false</DCC_E>
+			<DCC_F>false</DCC_F>
+			<DCC_K>false</DCC_K>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_StringChecks>off</DCC_StringChecks>
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="default_format_design.dpk">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="default_format.dcp"/>
+			<DCCReference Include="turbu_design_basis.dcp"/>
+			<DCCReference Include="vclimg.dcp"/>
+			<DCCReference Include="Jcl.dcp"/>
+			<DCCReference Include="JvCore.dcp"/>
+			<DCCReference Include="JvStdCtrls.dcp"/>
+			<DCCReference Include="base_selector.pas">
+				<Form>frmBaseSelector</Form>
+			</DCCReference>
+			<DCCReference Include="EBListView.pas"/>
+			<DCCReference Include="EB Editors\ebSelector.pas">
+				<Form>frmEBSelector</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\EbEdit.pas">
+				<Form>frmEBEditBase</Form>
+			</DCCReference>
+			<DCCReference Include="sprite_selector.pas">
+				<Form>frmSpriteSelector</Form>
+			</DCCReference>
+			<DCCReference Include="portrait_selector.pas">
+				<Form>frmPortraitSelector</Form>
+			</DCCReference>
+			<DCCReference Include="sdl_frame_helper.pas"/>
+			<DCCReference Include="..\..\..\components\TURBU\variable_selector.pas"/>
+			<DCCReference Include="..\..\engines\map engine\design\array_editor.pas">
+				<Form>frmArrayEdit</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\PortraitEdit.pas">
+				<Form>frmSelectPortrait</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\MessageOptions.pas">
+				<Form>frmMessageOptions</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\MessageEdit.pas">
+				<Form>frmMessageEdit</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\InputNumber.pas">
+				<Form>frmInputNumber</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\ChoiceEdit.pas">
+				<Form>frmShowChoice</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Basics\EditInt.pas">
+				<Form>frmEBSetInteger</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Basics\EditSwitch.pas">
+				<Form>frmEbSetSwitch</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Basics\EditTimer.pas">
+				<Form>frmTimerEdit</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Basics\EditInput.pas">
+				<Form>frmInputEdit</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Basics\EditDeleteObject.pas">
+				<Form>frmEBDeleteObject</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Basics\EditCallScript.pas">
+				<Form>frmEBEditCall</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Basics\EditNull.pas">
+				<Form>frmEBEditNull</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditMoney.pas">
+				<Form>frmEBEditMoney</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditInventory.pas">
+				<Form>frmEBEditInventory</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditParty.pas">
+				<Form>frmEBEditParty</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditExp.pas">
+				<Form>frmEBEditExp</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\ebPartyBase.pas">
+				<Form>frmEBPartyBase</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditStats.pas">
+				<Form>frmEBEditStats</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditSkills.pas">
+				<Form>frmEBEditSkills</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditEquipment.pas">
+				<Form>frmEBEditEquipment</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditHP.pas">
+				<Form>frmEBEditHP</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditMP.pas">
+				<Form>frmEBEditMP</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditConditions.pas">
+				<Form>frmEBEditConditions</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditFullHeal.pas">
+				<Form>frmEBEditFullHeal</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditTakeDamage.pas">
+				<Form>frmEBEditTakeDamage</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditHeroName.pas">
+				<Form>frmEBEditHeroName</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditHeroSprite.pas">
+				<Form>frmEBEditHeroSprite</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Characters\EditPortrait.pas">
+				<Form>frmEBEditPortrait</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\components\TURBU\sound_edit.pas"/>
+			<DCCReference Include="..\..\editor\dm_databaseAux.pas"/>
+			<DCCReference Include="EB Editors\Battle\EditBattleEx.pas">
+				<Form>frmBattleEx</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\..\components\TURBU\pic_edit.pas"/>
+			<DCCReference Include="..\..\engines\basis\ImageSelector.pas">
+				<Form>frmImageSelector</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Settings\EditSysBGM.pas">
+				<Form>frmEditSysBGM</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Battle\EditBattle.pas">
+				<Form>frmBattle</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Settings\EditVehicleBGM.pas">
+				<Form>frmEditVehicleBGM</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Settings\EditSysSFX.pas">
+				<Form>frmEditSysSFX</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\engines\basis\imageSelectorFrame.pas">
+				<Form>frameImageSelector</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Settings\EditSkin.pas">
+				<Form>frmSkinSelector</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Settings\EditTransitions.pas">
+				<Form>frmEditTransitions</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Menus\EditShop.pas">
+				<Form>frmEBEditShop</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Menus\EditInn.pas">
+				<Form>frmEBEditInn</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Messages\HeroName.pas">
+				<Form>frmInputHeroName</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Map\EditTeleport.pas">
+				<Form>frmEBEditTeleport</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Map\EditMemorizeLocation.pas">
+				<Form>frmMemorizedLocation</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Map\EditTeleportVehicle.pas">
+				<Form>frmTeleportVehicle</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Map\EditTeleportObject.pas">
+				<Form>frmEditTeleportObject</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Map\EditSwapObjects.pas">
+				<Form>frmEditSwapObjects</Form>
+			</DCCReference>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
+		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
+		<PropertyGroup>
+			<PostBuildEvent><![CDATA[copy "$(OUTPUTPATH)" "$(OUTPUTDIR)$(OUTPUTNAME).tep" /Y]]></PostBuildEvent>
+		</PropertyGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType>Package</Borland.ProjectType>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">default_format_design.dpk</Source>
+					</Source>
+					<Parameters/>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
+						<VersionInfo Name="CodePage">1252</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<Excluded_Packages/>
+				</Delphi.Personality>
+				<Platforms>
+					<Platform value="Win32">True</Platform>
+				</Platforms>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

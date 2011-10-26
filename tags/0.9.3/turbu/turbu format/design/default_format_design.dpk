@@ -1,0 +1,95 @@
+package default_format_design;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  default_format,
+  turbu_design_basis,
+  vclimg,
+  Jcl,
+  JvCore,
+  JvStdCtrls;
+
+contains
+  base_selector in 'base_selector.pas' {frmBaseSelector},
+  EBListView in 'EBListView.pas',
+  ebSelector in 'EB Editors\ebSelector.pas' {frmEBSelector},
+  EbEdit in 'EB Editors\EbEdit.pas' {frmEBEditBase},
+  sprite_selector in 'sprite_selector.pas' {frmSpriteSelector},
+  portrait_selector in 'portrait_selector.pas' {frmPortraitSelector},
+  sdl_frame_helper in 'sdl_frame_helper.pas',
+  variable_selector in '..\..\..\components\TURBU\variable_selector.pas',
+  array_editor in '..\..\engines\map engine\design\array_editor.pas' {frmArrayEdit},
+  PortraitEdit in 'EB Editors\Messages\PortraitEdit.pas' {frmSelectPortrait},
+  MessageOptions in 'EB Editors\Messages\MessageOptions.pas' {frmMessageOptions},
+  MessageEdit in 'EB Editors\Messages\MessageEdit.pas' {frmMessageEdit},
+  InputNumber in 'EB Editors\Messages\InputNumber.pas' {frmInputNumber},
+  ChoiceEdit in 'EB Editors\Messages\ChoiceEdit.pas' {frmShowChoice},
+  EditInt in 'EB Editors\Basics\EditInt.pas' {frmEBSetInteger},
+  EditSwitch in 'EB Editors\Basics\EditSwitch.pas' {frmEbSetSwitch},
+  EditTimer in 'EB Editors\Basics\EditTimer.pas' {frmTimerEdit},
+  EditInput in 'EB Editors\Basics\EditInput.pas' {frmInputEdit},
+  EditDeleteObject in 'EB Editors\Basics\EditDeleteObject.pas' {frmEBDeleteObject},
+  EditCallScript in 'EB Editors\Basics\EditCallScript.pas' {frmEBEditCall},
+  EditNull in 'EB Editors\Basics\EditNull.pas' {frmEBEditNull},
+  EditMoney in 'EB Editors\Characters\EditMoney.pas' {frmEBEditMoney},
+  EditInventory in 'EB Editors\Characters\EditInventory.pas' {frmEBEditInventory},
+  EditParty in 'EB Editors\Characters\EditParty.pas' {frmEBEditParty},
+  EditExp in 'EB Editors\Characters\EditExp.pas' {frmEBEditExp},
+  ebPartyBase in 'EB Editors\Characters\ebPartyBase.pas' {frmEBPartyBase},
+  EditStats in 'EB Editors\Characters\EditStats.pas' {frmEBEditStats},
+  EditSkills in 'EB Editors\Characters\EditSkills.pas' {frmEBEditSkills},
+  EditEquipment in 'EB Editors\Characters\EditEquipment.pas' {frmEBEditEquipment},
+  EditHP in 'EB Editors\Characters\EditHP.pas' {frmEBEditHP},
+  EditMP in 'EB Editors\Characters\EditMP.pas' {frmEBEditMP},
+  EditConditions in 'EB Editors\Characters\EditConditions.pas' {frmEBEditConditions},
+  EditFullHeal in 'EB Editors\Characters\EditFullHeal.pas' {frmEBEditFullHeal},
+  EditTakeDamage in 'EB Editors\Characters\EditTakeDamage.pas' {frmEBEditTakeDamage},
+  EditHeroName in 'EB Editors\Characters\EditHeroName.pas' {frmEBEditHeroName},
+  EditHeroSprite in 'EB Editors\Characters\EditHeroSprite.pas' {frmEBEditHeroSprite},
+  EditPortrait in 'EB Editors\Characters\EditPortrait.pas' {frmEBEditPortrait},
+  sound_edit in '..\..\..\components\TURBU\sound_edit.pas',
+  dm_databaseAux in '..\..\editor\dm_databaseAux.pas',
+  EditBattleEx in 'EB Editors\Battle\EditBattleEx.pas' {frmBattleEx},
+  pic_edit in '..\..\..\components\TURBU\pic_edit.pas',
+  ImageSelector in '..\..\engines\basis\ImageSelector.pas' {frmImageSelector},
+  EditSysBGM in 'EB Editors\Settings\EditSysBGM.pas' {frmEditSysBGM},
+  EditBattle in 'EB Editors\Battle\EditBattle.pas' {frmBattle},
+  EditVehicleBGM in 'EB Editors\Settings\EditVehicleBGM.pas' {frmEditVehicleBGM},
+  EditSysSFX in 'EB Editors\Settings\EditSysSFX.pas' {frmEditSysSFX},
+  imageSelectorFrame in '..\..\engines\basis\imageSelectorFrame.pas' {frameImageSelector: TFrame},
+  EditSkin in 'EB Editors\Settings\EditSkin.pas' {frmSkinSelector},
+  EditTransitions in 'EB Editors\Settings\EditTransitions.pas' {frmEditTransitions},
+  EditShop in 'EB Editors\Menus\EditShop.pas' {frmEBEditShop},
+  EditInn in 'EB Editors\Menus\EditInn.pas' {frmEBEditInn},
+  HeroName in 'EB Editors\Messages\HeroName.pas' {frmInputHeroName},
+  EditTeleport in 'EB Editors\Map\EditTeleport.pas' {frmEBEditTeleport},
+  EditMemorizeLocation in 'EB Editors\Map\EditMemorizeLocation.pas' {frmMemorizedLocation},
+  EditTeleportVehicle in 'EB Editors\Map\EditTeleportVehicle.pas' {frmTeleportVehicle},
+  EditTeleportObject in 'EB Editors\Map\EditTeleportObject.pas' {frmEditTeleportObject},
+  EditSwapObjects in 'EB Editors\Map\EditSwapObjects.pas' {frmEditSwapObjects};
+
+end.

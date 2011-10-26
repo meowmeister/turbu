@@ -1,0 +1,47 @@
+package turbu_components;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$IMPLICITBUILD ON}
+{$DEFINE COMPONENT}
+
+requires
+  rtl,
+  vcl,
+  dbrtl,
+  vcldb,
+  dsnap;
+
+contains
+  turbu_listGrid in 'turbu_listGrid.pas',
+  DBIndexComboBox in 'DBIndexComboBox.pas',
+  EBListView in '..\..\turbu\turbu format\design\EBListView.pas',
+  EventBuilder in '..\..\turbu\turbu format\EventBuilder.pas',
+  variable_selector in 'variable_selector.pas',
+  IDLookupCombo in 'IDLookupCombo.pas',
+  pic_edit in 'pic_edit.pas',
+  sound_edit in 'sound_edit.pas',
+  button_edit in 'button_edit.pas';
+
+end.
+

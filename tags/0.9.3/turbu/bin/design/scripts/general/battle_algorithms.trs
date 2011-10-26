@@ -1,0 +1,47 @@
+unit battle_algorithms;
+
+[DesignName('Standard steps per encounter algorithm')]
+function randomEncounterSteps(party: TRpgParty; minSteps, maxSteps, unused3, unused4: integer): integer;
+begin
+   result := random(minSteps, maxSteps);
+end;
+
+[DesignName('RPG Maker 2000 skill damage algorithm')]
+function calcSkillDamage(character, target: TObject; var1, var2, var3, var4: integer; offensive: boolean): integer;
+begin
+{
+--- Formula for skill damage.
+
+Get ready, this is a long one...
+(Base damage) = ((Attacker's strength) x (Hit chance) / 20) + ((Attacker's mental) x (Mind chance) / 40) + (Base effect)
+
+Now, if the skill does not ignore the defender's defense, we have to take that into consideration.
+(Adjusted damage) = (Base damage) - (((Defender's defense) x (Hit chance) / 40) + ((Defender's mental) x (Mind chance) / 80))
+
+And finally, take the variance into effect. This affects the value anywhere from 0% (for 0 variance) to ±50% (for 10 variance), in steps of 5%.
+}
+   result := 0;
+end;
+
+[DesignName('RPG Maker 2000 to-hit algorithm')]
+function calcToHit(character, target: TObject; effectiveness: integer; offensive: boolean): boolean;
+begin
+{-- Formula for to-hit percentage
+
+First off is the good ol' standard attack. This'd be the one that's used most often. But before damage is dealt, one must be able to HIT the enemy...
+
+If attacker is unequipped:
+(Chance to hit) = 90 + ((Attacker's agility) / (Defender's agility) / 2)
+
+If attacker has a weapon:
+(Chance to hit) = (Attacker's weapon hit%) + ((Attacker's agility) / (Defender's agility) / 2)
+
+That 90% for unequipped is a rough estimation there. The hit rate is further modified if the attacker is inflicted with a condition that affects the chance to hit. If the defender is fortunate enough to have equipment with "Increased evasion rate" (Rise avoidance of phys. attack), the chance to hit is cut by 25%.
+
+Finally, special incidences. If an equipped weapon has "Ignore evasion", then the to-hit rate of the weapon is used straight instead of by going through the formula. Finally, if the defender is unable to act (asleep, paralyzed, etc...) then the chance to hit is 100%. Period.
+
+Of course, both these conditions can be affected by abnormal status. =)}
+   result := true;
+end;
+
+end.
