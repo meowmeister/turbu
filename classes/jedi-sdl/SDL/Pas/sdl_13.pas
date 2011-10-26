@@ -315,6 +315,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     FPtr: pointer;
   public
     constructor Create(window: TSdlWindow; index: integer; flags: TSdlRendererFlags);
+    procedure Free;
     property ptr: pointer read FPtr;
   end;
 
@@ -1435,6 +1436,12 @@ begin
    self := SDL_CreateRenderer(window, index, flags);
    if FPtr = nil then
       raise EBadHandle.Create(string(SDL_GetError));
+end;
+
+procedure TSdlRenderer.Free;
+begin
+   SDL_DestroyRenderer(self);
+   FPtr := nil;
 end;
 
 initialization
