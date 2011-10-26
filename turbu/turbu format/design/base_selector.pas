@@ -238,8 +238,6 @@ end;
 
 procedure TfrmBaseSelector.lstFilenamesClick(Sender: TObject);
 begin
-{   FRedrawProc;
-   imgSelector.Flip;}
    if FFrame <> -1 then
    begin
       self.CurrentFrame := FFrame;
