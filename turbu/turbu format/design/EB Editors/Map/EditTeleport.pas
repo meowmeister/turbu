@@ -23,7 +23,7 @@ interface
 uses
    Forms, StdCtrls, ExtCtrls, ComCtrls, Controls, Classes, Generics.Collections,
    Windows, Messages,
-   EventBuilder, EbEdit, sdl_frame, turbu_map_interface, turbu_map_engine,
+   EventBuilder, EbEdit, sdl_frame, turbu_map_interface, turbu_map_engine, EB_Maps,
    scrollbox_manager,
    sg_defs;
 
@@ -69,12 +69,13 @@ type
       function NewClassType: TEbClass; override;
    public
       procedure SetupMap(const map: IRpgMap); override;
+      function EditExternal(value: TEBTeleport; hideMapTree: boolean = false): boolean;
    end;
 
 implementation
 uses
    Math, Graphics,
-   EB_Maps, dm_database,
+   dm_database,
    turbu_database, map_tree_controller, turbu_engines, turbu_plugin_interface,
    turbu_versioning, commons,
    sg_utils;
@@ -123,6 +124,17 @@ begin
    NormalizeMousePosition(imgView, x, y, 1);
    FPosition := pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, 1);
    FMapEngine.draw(FPosition, new);
+end;
+
+function TfrmEBEditTeleport.EditExternal(value: TEBTeleport; hideMapTree: boolean): boolean;
+begin
+   radFacing.Visible := false;
+   if hideMapTree then
+      trvMapTree.Visible := false;
+   UploadObject(value);
+   result := self.ShowModal = mrOk;
+   if result then
+      DownloadObject(value);
 end;
 
 procedure TfrmEBEditTeleport.imgViewAvailable(Sender: TObject);
