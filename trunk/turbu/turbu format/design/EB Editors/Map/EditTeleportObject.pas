@@ -76,9 +76,6 @@ begin
    else FCurrentMap := -1;
 end;
 
-type
-   THackTeleport = class(TfrmEBEditTeleport);
-
 procedure TfrmEditTeleportObject.txtPositionButtonClick(Sender: TObject);
 var
    editor: TfrmEBEditTeleport;
@@ -87,13 +84,9 @@ begin
    tel := TEBTeleport.Create(nil);
    editor := TfrmEBEditTeleport.Create(nil);
    try
-      editor.radFacing.Visible := false;
-      editor.trvMapTree.Visible := false;
       tel.Values.AddRange([FCurrentMap, FPosition.x, FPosition.y, 0]);
-      THackTeleport(editor).UploadObject(tel);
-      if editor.ShowModal = mrOk then
+      if editor.EditExternal(tel, true) then
       begin
-         THackTeleport(editor).DownloadObject(tel);
          FCurrentMap := tel.Values[0];
          FPosition := sgPoint(tel.Values[1], tel.Values[2]);
          EnableControlsProperly;

@@ -59,9 +59,6 @@ uses
 
 {$R *.dfm}
 
-type
-   THackTeleport = class(TfrmEBEditTeleport);
-
 procedure TfrmTeleportVehicle.SetupMap(const map: IRpgMap);
 begin
    FCurrentMap := map.id;
@@ -75,12 +72,9 @@ begin
    tel := TEBTeleport.Create(nil);
    editor := TfrmEBEditTeleport.Create(nil);
    try
-      editor.radFacing.Visible := false;
       tel.Values.AddRange([FCurrentMap, FPosition.x, FPosition.y, 0]);
-      THackTeleport(editor).UploadObject(tel);
-      if editor.ShowModal = mrOk then
+      if editor.EditExternal(tel) then
       begin
-         THackTeleport(editor).DownloadObject(tel);
          FCurrentMap := tel.Values[0];
          FPosition := sgPoint(tel.Values[1], tel.Values[2]);
          EnableControlsProperly;
