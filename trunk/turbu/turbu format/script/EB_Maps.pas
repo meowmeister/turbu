@@ -441,11 +441,11 @@ begin
    if boolean(Values[0]) then
    begin
       result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
-      result := format(result, [IntName(Values[0]), IntName(Values[1])]);
+      result := format(result, [IntName(Values[1]), IntName(Values[2])]);
    end
    else begin
       result := LINE;
-      result := format(result, [Values[0], Values[1]]);
+      result := format(result, [Values[1], Values[2]]);
    end;
    result := format('%s, Ints[%s]', [result, IntName(Values[3])]);
 end;
@@ -456,7 +456,7 @@ begin
    if boolean(Values[0]) then
       result := stringReplace(LINE, '%d', 'Ints[%d]', [rfReplaceAll])
    else result := LINE;
-   result := format(result, [Values[0], Values[1]]);
+   result := format(result, [Values[1], Values[2]]);
    result := format('Ints[%d] := %s', [Values[3], result]);
 end;
 
@@ -468,11 +468,11 @@ begin
    if boolean(Values[0]) then
    begin
       result := stringReplace(LINE, '%.3d', 'Ints[%s]', [rfReplaceAll]);
-      result := format(result, [IntName(Values[0]), IntName(Values[1])]);
+      result := format(result, [IntName(Values[1]), IntName(Values[2])]);
    end
    else begin
       result := LINE;
-      result := format(result, [Values[0], Values[1]]);
+      result := format(result, [Values[1], Values[2]]);
    end;
    result := format('%s, Ints[%d]', [result, Values[3]]);
 end;
@@ -483,7 +483,7 @@ begin
    if boolean(Values[0]) then
       result := stringReplace(LINE, '%d', 'Ints[%d]', [rfReplaceAll])
    else result := LINE;
-   result := format(result, [Values[0], Values[1]]);
+   result := format(result, [Values[1], Values[2]]);
    result := format('Ints[%d] := %s', [Values[3], result]);
 end;
 
