@@ -64,6 +64,7 @@ inherited frmGetID: TfrmGetID
         Checked = True
         TabOrder = 2
         TabStop = True
+        OnClick = RadioButtonClick
       end
       object radPtr: TRadioButton
         Left = 8
@@ -72,6 +73,7 @@ inherited frmGetID: TfrmGetID
         Height = 17
         Caption = 'From Variables'
         TabOrder = 3
+        OnClick = RadioButtonClick
       end
     end
     object GroupBox1: TGroupBox
