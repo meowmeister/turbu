@@ -226,7 +226,10 @@
 				<Form>frmEditSwapObjects</Form>
 			</DCCReference>
 			<DCCReference Include="EB Editors\Map\EditGetTerrainID.pas">
-				<Form>frmStoreTerrainID</Form>
+				<Form>frmGetID</Form>
+			</DCCReference>
+			<DCCReference Include="EB Editors\Map\EditEraseScreen.pas">
+				<Form>frmEBEditShowTransition</Form>
 			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>

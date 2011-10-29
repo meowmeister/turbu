@@ -91,6 +91,7 @@ contains
   EditTeleportVehicle in 'EB Editors\Map\EditTeleportVehicle.pas' {frmTeleportVehicle},
   EditTeleportObject in 'EB Editors\Map\EditTeleportObject.pas' {frmEditTeleportObject},
   EditSwapObjects in 'EB Editors\Map\EditSwapObjects.pas' {frmEditSwapObjects},
-  EditGetTerrainID in 'EB Editors\Map\EditGetTerrainID.pas' {frmStoreTerrainID};
+  EditGetTerrainID in 'EB Editors\Map\EditGetTerrainID.pas' {frmGetID},
+  EditEraseScreen in 'EB Editors\Map\EditEraseScreen.pas' {frmEBEditShowTransition};
 
 end.
