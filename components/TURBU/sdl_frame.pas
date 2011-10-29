@@ -149,10 +149,10 @@ end;
 
 destructor TSdlFrame.Destroy;
 begin
-   FImageManager.Free;
-   FTimer.Free;
    if assigned(FRenderer.ptr) then
       DestroyWindow;
+   FImageManager.Free;
+   FTimer.Free;
    inherited;
 end;
 
