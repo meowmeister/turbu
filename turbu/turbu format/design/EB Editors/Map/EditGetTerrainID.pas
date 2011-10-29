@@ -124,6 +124,7 @@ end;
 
 procedure TfrmGetID.DownloadObject(obj: TEbObject);
 begin
+   obj.Clear;
    if radPosition.Checked then
    begin
       obj.Values.Add(0);
