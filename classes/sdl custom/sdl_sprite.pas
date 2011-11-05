@@ -17,7 +17,7 @@ unit sdl_sprite;
 interface
 uses
    Types, SysUtils, Generics.Collections, OpenGL,
-   Collections.multimaps,
+   turbu_multimaps,
    SDL_ImageManager, SDL_canvas, SG_defs;
 
 type
