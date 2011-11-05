@@ -4,7 +4,7 @@ interface
 
 uses
   SysUtils, Windows, Classes,
-  Collections.Lists, Collections.MultiMaps;
+  Generics.Collections, turbu_MultiMaps;
 
 type
   PPackageInfo = ^TPackageInfo;
@@ -188,14 +188,17 @@ end;
 procedure TPackageList.RemovePackage(const FileName: string);
 var
    info, subInfo: PPackageInfo;
+   list: TList<PPackageInfo>;
+   i: integer;
 begin
   OutputDebugString(PChar('Removing package ' + filename));
 
   info := FindPackage(FileName);
   try
     // Reversed to finalize in reverse order of initialization
-    for subInfo in FInitCounter[info.PackageHandle].Reversed do
-      FinalizePackage(subInfo);
+    list := FInitCounter[info.PackageHandle];
+    for i := list.Count - 1 downto 0 do
+      FinalizePackage(list[i]);
   finally
     FList.Remove(info);
     FInitCounter.Remove(info.PackageHandle);
@@ -211,7 +214,7 @@ begin
     if GetModuleHandle(PChar(FList[i].PackageFileName)) = 0 then
     begin
       Dispose(FList[i]);
-      FList.RemoveAt(i);
+      FList.Delete(i);
     end;
 end;
 
