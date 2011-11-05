@@ -92,6 +92,7 @@ contains
   EditTeleportObject in 'EB Editors\Map\EditTeleportObject.pas' {frmEditTeleportObject},
   EditSwapObjects in 'EB Editors\Map\EditSwapObjects.pas' {frmEditSwapObjects},
   EditGetTerrainID in 'EB Editors\Map\EditGetTerrainID.pas' {frmGetID},
-  EditEraseScreen in 'EB Editors\Map\EditEraseScreen.pas' {frmEBEditShowTransition};
+  EditEraseScreen in 'EB Editors\Map\EditEraseScreen.pas' {frmEBEditShowTransition},
+  EditTintScreen in 'EB Editors\Map\EditTintScreen.pas' {frmEBEditTintScreen};
 
 end.
