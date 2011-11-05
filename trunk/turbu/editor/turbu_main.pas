@@ -106,7 +106,7 @@ type
       procedure sldZoomChanged(Sender: TObject);
       procedure imgBackgroundPaint(Sender: TObject);
       procedure actPlayMusicExecute(Sender: TObject);
-    procedure imgPalettePaint(Sender: TObject);
+      procedure imgPalettePaint(Sender: TObject);
    private
       pluginManager: TJvPluginManager;
       FScrollboxManager: TScrollboxManager;
