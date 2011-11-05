@@ -64,6 +64,7 @@ contains
   crtl,
   JvPlugin,
   JvPluginManager,
+  JvStringHolder,
   AsphyreTimer in '..\..\..\classes\Asphyre\AsphyreTimer.pas',
   turbu_tbi_lib in '..\..\turbu format\turbu_tbi_lib.pas',
   EventBuilder in '..\..\turbu format\EventBuilder.pas',
@@ -88,6 +89,8 @@ contains
   Collections.Serialization in '..\..\..\..\delphi-coll\src\Library\Collections.Serialization.pas',
   PackageRegistry in '..\..\..\classes\PackageRegistry.pas',
   engine_manager in 'engine_manager.pas' {dmEngineManager: TDataModule},
-  disharmony in 'disharmony.pas';
+  disharmony in 'disharmony.pas',
+  dm_shaders in '..\..\turbu format\database\dm_shaders.pas',
+  turbu_multimaps in '..\..\turbu_multimaps.pas';
 
 end.
