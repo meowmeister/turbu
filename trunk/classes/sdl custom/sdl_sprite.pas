@@ -302,7 +302,8 @@ type
 
 implementation
 uses
-   Generics.Defaults, SDL;
+   Generics.Defaults,
+   SDL, SDL_13;
 
 {  TSprite }
 
@@ -1161,9 +1162,10 @@ procedure TSpriteRenderer.InternalRender(const vertices,
   texCoords: TArray<smallint>; image: TSdlImage);
 var
    current: GLint;
+   r, g, b, a: byte;
 begin
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
-   glColor4f(1, 1, 1, 1);
+   glColor4f(1, 1, 1, image.surface.alpha / 255);
    glEnable(GL_ALPHA_TEST);
    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
    glEnable(GL_BLEND);
@@ -1192,6 +1194,8 @@ begin
    glDisable(GL_BLEND);
    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
    glUseProgram(current);
+   SDL_GetRenderDrawColor(FEngine.Canvas.Renderer, r, g, b, a);
+   glColor4f(r / 255, g / 255, b / 255, a / 255);
 end;
 
 procedure TSpriteRenderer.Render;
