@@ -1164,6 +1164,11 @@ var
 begin
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    glColor4f(1, 1, 1, 1);
+   glEnable(GL_ALPHA_TEST);
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, image.handle);
    glEnableClientState(GL_VERTEX_ARRAY);
@@ -1183,6 +1188,8 @@ begin
    glBindBuffer(GL_ARRAY_BUFFER, 0);
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+   glDisable(GL_ALPHA_TEST);
+   glDisable(GL_BLEND);
    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
    glUseProgram(current);
 end;
