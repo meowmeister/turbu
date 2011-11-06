@@ -128,6 +128,12 @@ type
       function GetScriptText: string; override;
    end;
 
+   TEBEndShake = class(TEBMapObject)
+   public
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
    TEBPanScreen = class(TEBMapObject)
    public
       function GetNodeText: string; override;
@@ -562,7 +568,7 @@ end;
 
 function TEBEndFlash.GetScriptText: string;
 begin
-   result := 'EndFlashScreen';
+   result := 'EndFlashScreen;';
 end;
 
 { TEBShakeScreen }
@@ -573,12 +579,26 @@ begin
    result := format(LINE, [Values[0], Values[1], SecondFraction(Values[2])]);
    if boolean(Values[3]) then
       result := result + ' (Wait)';
+   if boolean(Values[4]) then
+      result := result + ' (Continual)';
 end;
 
 function TEBShakeScreen.GetScriptText: string;
-const LINE = 'ShakeScreen(%d, %d, %d, %s);';
+const LINE = 'ShakeScreen(%d, %d, %d, %s, %s);';
 begin
-   result := format(LINE, [Values[0], Values[1], Values[2], BOOL_STR[Values[3]]]);
+   result := format(LINE, [Values[0], Values[1], Values[2], BOOL_STR[Values[3]], BOOL_STR[Values[4]]]);
+end;
+
+{ TEBEndShake }
+
+function TEBEndShake.GetNodeText: string;
+begin
+   result := 'End Shake Screen';
+end;
+
+function TEBEndShake.GetScriptText: string;
+begin
+   result := 'EndShakeScreen;';
 end;
 
 { TEBPanScreen }
@@ -611,7 +631,7 @@ begin
       1: result := 'UnlockScreen;';
       2: result := format(PANLINE, [FacingName(Values[1]), Values[2], Values[3], BOOL_STR[Values[4]]]);
       3: result := format(RETLINE, [Values[3], BOOL_STR[Values[4]]]);
-   end; //end of CASE block
+   end;
 end;
 
 { TEBWeather }
@@ -1029,5 +1049,5 @@ initialization
                     TEBMoveMapObj, TEBWaitMove, TEBStopMove, TEBChangeTileset,
                     TEBChangeBG, TEBEncounterRate, TEBTileSub, TEBTeleLoc, TEBTeleEnable,
                     TEBEscapeLoc, TEBEscapeEnable, TEBSaveEnable, TEBTeleportMapObj,
-                    TEBEndFlash]);
+                    TEBEndFlash, TEBEndShake]);
 end.

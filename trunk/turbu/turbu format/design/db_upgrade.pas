@@ -154,9 +154,19 @@ begin
       obj := TEBEndFlash.Create(nil);
 end;
 
+procedure UpdateShakeScreen(var obj: TEBObject);
+begin
+   assert(obj.ClassType = TEBShakeScreen);
+   if obj.Values.Count < 5 then
+      obj.Values.Add(0)
+   else if obj.Values[4] = 2 then
+      obj := TEBEndShake.Create(nil);
+end;
+
 procedure Update42(database: TdmDatabase; const path: string);
 begin
    ScanEvents(database, TEBFlashScreen, UpdateFlashScreen, path);
+   ScanEvents(database, TEBShakeScreen, UpdateShakeScreen, path);
 end;
 
 initialization
