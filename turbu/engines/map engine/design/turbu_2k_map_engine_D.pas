@@ -20,7 +20,7 @@ unit turbu_2k_map_engine_D;
 
 interface
 uses
-   Generics.Collections, types, classes,
+   Generics.Collections, types, classes, SqlExpr, sysUtils,
    turbu_map_engine, turbu_2k_map_engine, turbu_database_interface,
    turbu_map_interface, turbu_tilesets, turbu_maps, turbu_2k_sprite_engine,
    turbu_map_sprites, mapobject_container,
@@ -40,6 +40,7 @@ type
       FHookedObject: TMapSprite;
       FOnResize: TMapResizeEvent;
       FTopLeft: TSgPoint;
+      FDBFilename: string;
 
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
       procedure saveMap(value: TRpgMap);
@@ -54,6 +55,7 @@ type
       procedure DoDelete;
       function DoResize(map: TRpgMap; viewport: TRect): TRect;
       procedure UploadMapObjects;
+      procedure Validate(query: TSqlQuery);
    private //IBreakable
       procedure BreakSomething;
    private //IDesignMapEngine
@@ -90,16 +92,17 @@ type
    protected
       procedure cleanup; override;
       procedure AfterPaint; override;
+      function GetValidateProc: TProc<TSqlQuery>; override;
    public
       function IsDesign: boolean; override;
    end;
 
 implementation
 uses
-   sysUtils, commons, math, windows,
-   turbu_map_metadata, archiveInterface, turbu_constants, turbu_sdl_image,
+   commons, math, windows, Dialogs, Controls,
+   turbu_map_metadata, archiveInterface, turbu_constants, turbu_sdl_image, turbu_database,
    turbu_functional, turbu_plugin_interface, turbu_containers, turbu_map_objects,
-   eval, MapObject_Editor, dm_database,
+   eval, MapObject_Editor, dm_database, db_upgrade,
    sdl, sg_utils, sdlstreams;
 
 const
@@ -146,10 +149,18 @@ end;
 
 procedure T2kMapEngineD.initializeDesigner(window: TSdlWindow; database: string);
 begin
-   self.initialize(window, database);
-   FObjectContainers.Free;
-   FObjectContainers := TMapObjectContainerList.Create;
-   //do more
+   try
+      FDBFilename := database;
+      self.initialize(window, database);
+      FObjectContainers.Free;
+      FObjectContainers := TMapObjectContainerList.Create;
+
+      //do more
+   except
+      if FInitialized then
+         cleanup;
+      raise;
+   end;
 end;
 
 procedure T2kMapEngineD.AfterPaint;
@@ -641,6 +652,11 @@ begin
    result := FTilesize * sgPoint(MAX_WIDTH, Ceil(tileCount / MAX_WIDTH));
 end;
 
+function T2kMapEngineD.GetValidateProc: TProc<TSqlQuery>;
+begin
+   result := self.Validate;
+end;
+
 function T2kMapEngineD.GetCurrentLayer: shortint;
 begin
    result := FCurrentLayer;
@@ -755,6 +771,27 @@ begin
    FCurrentMap.WorldX := newPosition.x;
    FCurrentMap.WorldY := newPosition.y;
    self.repaint;
+end;
+
+procedure T2kMapEngineD.Validate(query: TSqlQuery);
+var
+   version: integer;
+begin
+   query.SQL.Text := 'select ID from DBDATA';
+   query.Open;
+   if query.RecordCount <> 1 then
+      raise EBadDB.CreateFmt('Invalid DBDATA record count: %d. The database may be corrupted', [query.RecordCount]);
+   version := query.FieldByName('ID').AsInteger;
+   if version < DBVERSION then
+   begin
+      if version >= MIN_DBVERSION then
+      begin
+         if (MessageDlg('This project is using an out-of-date database and can''t be loaded with the current map engine.  Would you like to upgrade the project now?', mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+            db_upgrade.UpgradeDatabase(dmDatabase, FDBFilename)
+         else Abort;
+      end
+      else MessageDlg('This project is using an out-of-date database and can''t be loaded.', mtError, [mbOK], 0);
+   end;
 end;
 
 end.

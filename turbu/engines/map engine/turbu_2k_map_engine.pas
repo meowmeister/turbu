@@ -19,7 +19,7 @@ unit turbu_2k_map_engine;
 
 interface
 uses
-   types, syncObjs, Generics.Collections, classes,
+   types, syncObjs, Generics.Collections, classes, sysUtils, SqlExpr,
    turbu_map_engine, turbu_versioning, turbu_map_sprites, turbu_classes, turbu_heroes,
    turbu_database_interface, turbu_map_interface, turbu_sdl_image, turbu_2k_char_sprites,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine, turbu_defs,
@@ -73,10 +73,12 @@ type
       procedure KeyUp(key: TSdlKeySym);
       procedure PressButton(button: TButtonCode);
       procedure PartyButton(button: TButtonCode);
+      procedure Validate(query: TSqlQuery);
    protected
       FDatabaseOwner: boolean;
       procedure cleanup; override;
       procedure AfterPaint; virtual;
+      function GetValidateProc: TProc<TSqlQuery>; virtual;
    public
       constructor Create; override;
       destructor Destroy; override;
@@ -94,7 +96,7 @@ type
 
 implementation
 uses
-   sysUtils, math, Forms,
+   math, Forms, Dialogs,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
    turbu_constants, turbu_map_metadata, turbu_functional, dm_database,
    turbu_map_objects, turbu_2k_map_locks, timing,
@@ -130,7 +132,8 @@ procedure T2kMapEngine.cleanup;
 var i: integer;
 begin
    assert(FInitialized);
-   FGameEnvironment.Free;
+   FInitialized := false;
+   FreeAndNil(FGameEnvironment);
    FParty := nil; //owned by FPartySprite
    FreeAndNil(FPartySprite);
    FreeAndNil(FCanvas);
@@ -196,52 +199,56 @@ var
    layout: TGameLayout;
    renderer: TSdlRenderer;
 begin
-   if FInitialized then
-      Exit;
+   try
+      if FInitialized then
+         Exit;
 
-   inherited initialize(window, database);
-   if dmDatabase = nil then
-   begin
-      dmDatabase := TdmDatabase.Create(nil);
-      dmDatabase.Connect(database, nil);
-      FDatabase := TRpgDatabase.Load(dmDatabase);
-      GDatabase := FDatabase;
-      FDatabaseOwner := true;
-      if not assigned(FDatabase) then
-         raise ERpgPlugin.Create('Incompatible project database');
-   end
-   else FDatabase := GDatabase;
+      FInitialized := true;
+      inherited initialize(window, database);
+      if dmDatabase = nil then
+      begin
+         FDatabaseOwner := true;
+         dmDatabase := TdmDatabase.Create(nil);
+         dmDatabase.Connect(database, self.GetValidateProc());
+         FDatabase := TRpgDatabase.Load(dmDatabase);
+         GDatabase := FDatabase;
+         if not assigned(FDatabase) then
+            raise ERpgPlugin.Create('Incompatible project database');
+      end
+      else FDatabase := GDatabase;
 
-   layout := FDatabase.layout;
-   if window.ptr = nil then
-   begin
-      //In RM2K, project title is stored in the LMT.  I'll need to convert that
-      //to grab a project title. This will do for now.
-      window :=  SDL_CreateWindow(PAnsiChar(ansiString(format('TURBU engine - %s', [FDatabase.mapTree[0].name]))),
-                        SDL_WINDOWPOS_CENTERED_MASK, SDL_WINDOWPOS_CENTERED_MASK,
-                        layout.physWidth, layout.physHeight,
-                        [sdlwOpenGl, sdlwShown {,sdlwResizable, sdlwInputGrabbed}]);
-
+      layout := FDatabase.layout;
       if window.ptr = nil then
-         raise ERpgPlugin.CreateFmt('Unable to initialize SDL window: %s%s', [LFCR, SDL_GetError]);
-      renderer := SDL_CreateRenderer(window, -1, [sdlrAccelerated]);
-      if renderer.ptr = nil then
-         raise ERpgPlugin.CreateFmt('Unable to initialize SDL renderer: %s%s', [LFCR, SDL_GetError]);
-      SDL_RenderPresent(renderer);
-   end
-   else renderer := SDL_GetRenderer(window);
-   FCanvas := TSdlCanvas.CreateFrom(window);
-   FStretchRatio.x := layout.physWidth / layout.width;
-   FStretchRatio.y := layout.physHeight / layout.height;
-   FImages := TSdlImages.Create(renderer);
-   FImages.ArchiveCallback := aCallback;
-   FImages.ArchiveLoader := aLoader;
-   setLength(FMaps, FDatabase.mapTree.lookupCount);
-   FSignal := TSimpleEvent.Create;
-   FSignal.SetEvent;
-   FGameEnvironment := T2kEnvironment.Create(FDatabase);
+      begin
+         //In RM2K, project title is stored in the LMT.  I'll need to convert that
+         //to grab a project title. This will do for now.
+         window :=  SDL_CreateWindow(PAnsiChar(ansiString(format('TURBU engine - %s', [FDatabase.mapTree[0].name]))),
+                           SDL_WINDOWPOS_CENTERED_MASK, SDL_WINDOWPOS_CENTERED_MASK,
+                           layout.physWidth, layout.physHeight,
+                           [sdlwOpenGl, sdlwShown {,sdlwResizable, sdlwInputGrabbed}]);
 
-   FInitialized := true;
+         if window.ptr = nil then
+            raise ERpgPlugin.CreateFmt('Unable to initialize SDL window: %s%s', [LFCR, SDL_GetError]);
+         renderer := SDL_CreateRenderer(window, -1, [sdlrAccelerated]);
+         if renderer.ptr = nil then
+            raise ERpgPlugin.CreateFmt('Unable to initialize SDL renderer: %s%s', [LFCR, SDL_GetError]);
+         SDL_RenderPresent(renderer);
+      end
+      else renderer := SDL_GetRenderer(window);
+      FCanvas := TSdlCanvas.CreateFrom(window);
+      FStretchRatio.x := layout.physWidth / layout.width;
+      FStretchRatio.y := layout.physHeight / layout.height;
+      FImages := TSdlImages.Create(renderer);
+      FImages.ArchiveCallback := aCallback;
+      FImages.ArchiveLoader := aLoader;
+      setLength(FMaps, FDatabase.mapTree.lookupCount);
+      FSignal := TSimpleEvent.Create;
+      FSignal.SetEvent;
+      FGameEnvironment := T2kEnvironment.Create(FDatabase);
+   except
+      cleanup;
+      raise;
+   end;
 end;
 
 procedure T2kMapEngine.initializeParty;
@@ -423,6 +430,31 @@ begin
    if not FImages.contains(filename) then
       FImages.AddFromFile(format('%s\%s.png', [folder,filename]), filename);
    result := FImages.Image[filename] as TRpgSdlImage;
+end;
+
+procedure T2kMapEngine.Validate(query: TSqlQuery);
+var
+   version: integer;
+begin
+   query.SQL.Text := 'select ID from DBDATA';
+   query.Open;
+   if query.RecordCount <> 1 then
+      raise EBadDB.CreateFmt('Invalid DBDATA record count: %d. The database may be corrupted', [query.RecordCount]);
+   version := query.FieldByName('ID').AsInteger;
+   if version < DBVERSION then
+   begin
+      if version >= MIN_DBVERSION then
+         MessageDlg('This project is using an out-of-date database and can''t be'+
+            ' loaded with the current map engine.  Please open it in the TURBU editor to upgrade the project.', mtWarning, [mbOK], 0)
+      else MessageDlg('This project is using an out-of-date database and can''t be loaded.', mtError, [mbOK], 0);
+      Application.Terminate;
+      Abort;
+   end;
+end;
+
+function T2kMapEngine.GetValidateProc: TProc<TSqlQuery>;
+begin
+   result := self.Validate;
 end;
 
 function T2kMapEngine.doneLoadingMap: boolean;
