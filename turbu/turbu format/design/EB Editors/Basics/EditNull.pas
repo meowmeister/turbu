@@ -55,6 +55,9 @@ type
    [EditorCategory('Map', 'End Flash Screen')]
    TFrmEndFlashScreen = class(TfrmEBEditNull<TEBEndFlash>);
 
+   [EditorCategory('Map', 'End Shake Screen')]
+   TFrmEndShakeScreen = class(TfrmEBEditNull<TEBEndShake>);
+
 implementation
 uses
    Windows;
@@ -96,10 +99,11 @@ initialization
    RegisterEbEditor(TEBGameOver, TFrmGameOver);
    RegisterEbEditor(TEBTitleScreen, TFrmTitleScreen);
    RegisterEbEditor(TEBRideVehicle, TFrmRideVehicle);
-   RegisterEBEditor(TEBEndFlash, TFrmEndFlashScreen);
+   RegisterEBEditor(TEBEndShake, TFrmEndShakeScreen);
 finalization
    UnRegisterEbEditor(TEBGameOver);
    UnRegisterEbEditor(TEBTitleScreen);
    UnRegisterEbEditor(TEBRideVehicle);
    UnRegisterEBEditor(TEBEndFlash);
+   UnRegisterEBEditor(TEBEndShake);
 end.
