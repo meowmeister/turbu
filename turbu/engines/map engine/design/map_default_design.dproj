@@ -115,7 +115,7 @@
 						<Source Name="MainSource">map_default_design.dpk</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="HostApplication">C:\Users\Mason\Documents\RAD Studio Weaver\Projects\turbu\turbu\bin\Turbu.exe</Parameters>
+						<Parameters Name="HostApplication">C:\Users\Mason\Documents\RAD Studio Fulcrum\Projects\turbu\turbu\bin\Turbu.exe</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

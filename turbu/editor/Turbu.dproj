@@ -219,7 +219,7 @@
 			<BorlandProject>
 				<Delphi.Personality>
 					<Parameters>
-						<Parameters Name="DebugSourceDirs">C:\Program Files\Borland\BDS\4.0\source\Win32\rtl\common\;C:\Program Files\Borland\BDS\4.0\source\Win32\rtl\sys\;C:\Program Files\CodeGear\RAD Studio\5.0\source\Win32\Samples\Source\;C:\Users\mason\Documents\RAD Studio Weaver\Projects\turbu\turbu\turbu format\design\EB Editors\Messages\</Parameters>
+						<Parameters Name="DebugSourceDirs">C:\Program Files\Borland\BDS\4.0\source\Win32\rtl\common\;C:\Program Files\Borland\BDS\4.0\source\Win32\rtl\sys\;C:\Program Files\CodeGear\RAD Studio\5.0\source\Win32\Samples\Source\</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
