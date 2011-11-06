@@ -244,7 +244,7 @@ var
    dset: TCustomClientDataset;
 begin
    for dset in FAllDatasetList do
-      if dset is TSimpleDataSet then
+      if (dset is TSimpleDataSet) and (dset.Active) then
       begin
          if assigned(report) then
             report(format('Saving data: %s', [dset.Name]));
