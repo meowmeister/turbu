@@ -644,7 +644,15 @@ begin
       boot.Free;
    end;
    FDbName := filename;
-   FMapEngine.initialize(imgLogo.sdlWindow, FDBName);
+   try
+      FMapEngine.initialize(imgLogo.sdlWindow, FDBName);
+   except
+      on EAbort do
+      begin
+         FMapEngine := nil;
+         Exit;
+      end;
+   end;
    mnuDatabase.Enabled := true;
    trvMapTree.buildMapTree(FMapEngine.mapTree);
    if trvMapTree.Selected.IsFirstNode then

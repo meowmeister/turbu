@@ -216,9 +216,15 @@ type
       property scriptLoadError: string read FScriptLoadError;
    end;
 
+   EBadDB = class(Exception);
+
 var
    GDatabase: TRpgDatabase;
    GScriptEngine: IScriptEngine;
+
+const
+   MIN_DBVERSION = 42;
+   DBVERSION = 43;
 
 implementation
 uses
@@ -241,14 +247,13 @@ begin
    FData:= data;
 end;
 
-const
-   MIN_DBVERSION = 41;
-   DBVERSION = 42;
-
 class function TLegacyData.keyChar: ansiChar;
 begin
    result := 'l';
 end;
+
+const
+   DBNAME = 'TURBU RPG Database';
 
 { TRpgDatabase }
 
@@ -258,7 +263,7 @@ var
 begin
    inherited Create;
    GDatabase := self;
-   FName := 'TURBU RPG Database';
+   FName := DBNAME;
    FID := DBVERSION;
    FSerializer := TDatasetSerializer.Create;
 
@@ -305,6 +310,9 @@ begin
    ds := dm.dbData;
    FName := ds.FieldByName('name').AsString;
    FID := ds.FieldByName('id').AsInteger;
+   if FID < MIN_DBVERSION then
+      raise EBadDB.Create('This project is using an out-of-date database and can''t be loaded.');
+
    FScriptFormat := TScriptFormat(ds.FieldByName('scriptFormat').AsInteger);
    FScriptFile := ds.FieldByName('scriptFile').AsString;
 
