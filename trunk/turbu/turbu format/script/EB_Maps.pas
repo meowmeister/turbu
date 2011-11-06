@@ -117,6 +117,12 @@ type
       function GetScriptText: string; override;
    end;
 
+   TEBEndFlash = class(TEBMapObject)
+   public
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
    TEBShakeScreen = class(TEBMapObject)
    public
       function GetNodeText: string; override;
@@ -530,18 +536,32 @@ end;
 { TEBFlashScreen }
 
 function TEBFlashScreen.GetNodeText: string;
-const LINE = 'Tint Screen: RGB(%d,%d,%d), Str: %d, %s';
+const LINE = 'Flash Screen: RGB(%d,%d,%d), Str: %d, %s';
 begin
    result := format(LINE, [Values[0], Values[1], Values[2], Values[3], SecondFraction(Values[4])]);
    if boolean(Values[5]) then
       result := result + ' (Wait)';
+   if boolean(Values[6]) then
+      result := result + ' (Continual)';
 end;
 
 function TEBFlashScreen.GetScriptText: string;
-const LINE = 'FlashScreen(%d, %d, %d, %d, %d, %s);';
+const LINE = 'FlashScreen(%d, %d, %d, %d, %d, %s, %s);';
 begin
    result := format(LINE, [RGB32(Values[0]), RGB32(Values[1]), RGB32(Values[2]),
-                           RGB32(Values[3]), Values[4], BOOL_STR[Values[5]]]);
+                           RGB32(Values[3]), Values[4], BOOL_STR[Values[5]], BOOL_STR[Values[6]]]);
+end;
+
+{ TEBEndFlash }
+
+function TEBEndFlash.GetNodeText: string;
+begin
+   result := 'End Flash Screen';
+end;
+
+function TEBEndFlash.GetScriptText: string;
+begin
+   result := 'EndFlashScreen';
 end;
 
 { TEBShakeScreen }
@@ -1007,5 +1027,6 @@ initialization
                     TEBImageEffect, TEBImageMove, TEBImageErase, TEBShowAnim, TEBFlashObj,
                     TEBMoveMapObj, TEBWaitMove, TEBStopMove, TEBChangeTileset,
                     TEBChangeBG, TEBEncounterRate, TEBTileSub, TEBTeleLoc, TEBTeleEnable,
-                    TEBEscapeLoc, TEBEscapeEnable, TEBSaveEnable, TEBTeleportMapObj]);
+                    TEBEscapeLoc, TEBEscapeEnable, TEBSaveEnable, TEBTeleportMapObj,
+                    TEBEndFlash]);
 end.

@@ -908,8 +908,23 @@ begin
       result.values[1] := 0;
 end;
 
+function ConvertFlashScreen(opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   if opcode.data.length <> 7 then
+   begin
+      assert(opcode.data.length = 6);
+      result := ObjectFactory(TEBFlashScreen, opcode, parent);
+      result.Values.Add(0);
+   end
+   else begin
+      if opcode.data[6] = 2 then
+         result := TEBEndFlash.Create(parent)
+      else result := ObjectFactory(TEBFlashScreen, opcode, parent);
+   end;
+end;
+
 const
-   OPCODES_IMPLEMENTED = 61;
+   OPCODES_IMPLEMENTED = 60;
    OPCODE_LIST: array[1..OPCODES_IMPLEMENTED] of TOpcodePair =
      ((K: 10; V: nil), (K: 20713; v: nil), (K: 20720; V: nil), (K: 20730; V: nil),
       (K: 10110; V: TEBShowMessage), (K: 20110; V: TEBExtension), (K: 10130; V: TEBPortrait),
@@ -918,8 +933,7 @@ const
       (K: 10500; V: TEBTakeDamage), (K: 10610; V: TEBHeroName), (K: 10620; V: TEBHeroTitle),
       (K: 10670; V: TEBSysSFX), (K: 10680; V: TEBSysSkin),
       (K: 10820; V: TEBMemorizeLocation), (K: 10830; V: TEBMemoTeleport), (K: 10840; V: TEBRideVehicle),
-      (K: 10910; V: TEBTerrainID), (K: 10920; V: TEBMapObjID),
-      (K: 11030; V: TEBTintScreen), (K: 11040; V: TEBFlashScreen),
+      (K: 10910; V: TEBTerrainID), (K: 10920; V: TEBMapObjID), (K: 11030; V: TEBTintScreen),
       (K: 11050; V: TEBShakeScreen), (K: 11060; V: TEBPanScreen), (K: 11070; V: TEBWeather),
       (K: 11340; V: TEBWaitMove), (K: 11350; V: TEBStopMove), (K: 11510; V: TEBPlayBGM),
       (K: 11520; V: TEBFadeBGM), (K: 11530; V: TEBMemBGM), (K: 11540; V: TEBPlayMemBGM),
@@ -934,7 +948,7 @@ const
       (K: 13410; V: TEBEndBattle), (K: 1006; V: TEBForceFlee), (K: 1007; V: TEBEnableCombo),
       (K: 13260; V: TEBBattleAnimation));
 
-   COMPLEX_OPCODES = 63;
+   COMPLEX_OPCODES = 64;
    COMPLEX: array[1..COMPLEX_OPCODES] of TComplexOpcodePair =
      ((K: 0; V: Cleanup), (K: 10120; v: ConvertMessageOptions), (K: 20140; v: ConvertCaseExtension),
       (K: 10140; V: ConvertCase), (K: 20141; V: ConvertEndCase), (K: 12010; V: ConvertIf),
@@ -947,7 +961,7 @@ const
       (K: 10640; V: ConvertSetPortrait), (K: 10650; V: ConvertVSprite), (K: 10720; V: ConvertShop),
       (K: 20721; V: ConvertIfElse), (K: 20722; V: ConvertEndIf), (K: 10730; V: ConvertInn),
       (K: 20731; V: ConvertIfElse), (K: 20732; V: ConvertEndIf), (K: 10850; V: ConvertTeleportVehicle),
-      (K: 10860; V: ConvertTeleportEvent), (K: 10870; V: ConvertSwapObjects),
+      (K: 10860; V: ConvertTeleportEvent), (K: 10870; V: ConvertSwapObjects), (K: 11040; V: ConvertFlashScreen),
       (K: 11110; V: ConvertNewImage), (K: 11120; V: ConvertMoveImage), (K: 11210; V: ConvertShowAnim),
       (K: 11310; V: ConvertTranslucency), (K: 11320; V: ConvertFlash), (K: 11330; V: ConvertMove),
       (K: 11740; V: ConvertEncounterRate), (K: 12210; V: ConvertWhileLoop), (K: 22210; V: LoopEnd),
