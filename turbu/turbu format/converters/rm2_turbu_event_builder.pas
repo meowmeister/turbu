@@ -910,9 +910,9 @@ end;
 
 function ConvertFlashScreen(opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
-   if opcode.data.length <> 7 then
+   if length(opcode.data) <> 7 then
    begin
-      assert(opcode.data.length = 6);
+      assert(length(opcode.data) = 6);
       result := ObjectFactory(TEBFlashScreen, opcode, parent);
       result.Values.Add(0);
    end

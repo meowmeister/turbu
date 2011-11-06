@@ -9,7 +9,7 @@ procedure UpgradeDatabase(database: TdmDatabase; const filename: string);
 implementation
 uses
    DB, SimpleDS, Generics.collections, SysUtils, IOUtils, Classes,
-   EventBuilder, EB_Maps, turbu_classes;
+   EventBuilder, EB_Maps;
 
 type
    TDBUpgradeProc = procedure(database: TdmDatabase; const path: string);
@@ -44,6 +44,7 @@ begin
    path := ExtractFilePath(filename);
    repeat
    until UpgradeStep(database, path) = false;
+   database.SaveAll;
 end;
 
 type
@@ -76,27 +77,48 @@ procedure InternalScanEvents(cls: TEBObjectClass; handler: TEBUpdateProc; const 
 var
    stream: TStream;
    obj: TEBObject;
-   script: string;
+   script: utf8String;
 begin
     stream := TFile.OpenRead(filename);
     obj := nil;
     try
        obj := TEBObject.LoadFromStream(stream);
        rScan(obj, nil, cls, handler);
-       script := obj.Serialize;
+       script := utf8String(obj.Serialize);
        stream.Free;
        stream := TFile.Open(filename, TFileMode.fmCreate);
-       stream.writeString(script);
+       stream.write(script[1], length(script));
     finally
        stream.Free;
        obj.Free;
     end;
 end;
 
-procedure ScanEvents(cls: TEBObjectClass; handler: TEBUpdateProc; const path: string);
+procedure InternalScanField(cls: TEBObjectClass; handler: TEBUpdateProc; field: TWideMemoField);
+var
+   stream: TStream;
+   obj: TEBObject;
+begin
+    stream := TStringStream.Create(field.AsString);
+    obj := nil;
+    try
+       obj := TEBObject.LoadFromStream(stream);
+       rScan(obj, nil, cls, handler);
+       field.DataSet.Edit;
+       field.AsString := obj.Serialize;
+       field.DataSet.Post;
+    finally
+       stream.Free;
+       obj.Free;
+    end;
+end;
+
+procedure ScanEvents(database: TdmDatabase; cls: TEBObjectClass; handler: TEBUpdateProc; const path: string);
 var
    name, filename: string;
    list: TStringList;
+   events: TSimpleDataset;
+   field: TWideMemoField;
 begin
    name := cls.ClassName;
    list := TStringList.Create;
@@ -106,6 +128,18 @@ begin
             list.add(filename);
       for filename in list do
          InternalScanEvents(cls, handler, filename);
+
+      events := database.mparties_events as TSimpleDataset;
+      events.DataSet.CommandText := UpperCase(events.DataSet.CommandText);
+      events.Active := true;
+      field := events.FieldByName('eventText') as TWideMemoField;
+      events.First;
+      while not events.Eof do
+      begin
+         if pos(name, field.AsString) <> 0 then
+            InternalScanField(cls, handler, field);
+         events.Next;
+      end;
    finally
       list.free;
    end;
@@ -122,7 +156,7 @@ end;
 
 procedure Update42(database: TdmDatabase; const path: string);
 begin
-   ScanEvents(TEBFlashScreen, UpdateFlashScreen, path);
+   ScanEvents(database, TEBFlashScreen, UpdateFlashScreen, path);
 end;
 
 initialization
