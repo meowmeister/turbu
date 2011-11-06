@@ -94,6 +94,7 @@ contains
   EditGetTerrainID in 'EB Editors\Map\EditGetTerrainID.pas' {frmGetID},
   EditEraseScreen in 'EB Editors\Map\EditEraseScreen.pas' {frmEBEditShowTransition},
   EditTintScreen in 'EB Editors\Map\EditTintScreen.pas' {frmEBEditTintScreen},
-  db_upgrade in 'db_upgrade.pas';
+  db_upgrade in 'db_upgrade.pas',
+  EditFlashScreen in 'EB Editors\Map\EditFlashScreen.pas' {frmEBEditFlashScreen};
 
 end.
