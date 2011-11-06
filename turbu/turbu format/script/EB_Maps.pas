@@ -29,7 +29,6 @@ type
       function MapName(id: integer): string;
       function TransitionName(id: integer): string;
       function TransitionTypeName(id: integer): string;
-      function RGB32(value: integer): integer;
       function FacingName(id: integer): string;
    end;
 
@@ -274,10 +273,17 @@ type
       function GetScriptText: string; override;
    end;
 
+   function RGB32(value: integer): integer;
+
 implementation
 uses
    Classes, SysUtils, TypInfo,
    EB_RPGScript;
+
+function RGB32(value: integer): integer;
+begin
+   result := round(value * (255 / 31));
+end;
 
 { TEBMapObject }
 
@@ -289,11 +295,6 @@ end;
 function TEBMapObject.MapName(id: integer): string;
 begin
    result := GetLookup(id, 'metadata');
-end;
-
-function TEBMapObject.RGB32(value: integer): integer;
-begin
-   result := round(value * (255 / 31));
 end;
 
 function TEBMapObject.TransitionName(id: integer): string;

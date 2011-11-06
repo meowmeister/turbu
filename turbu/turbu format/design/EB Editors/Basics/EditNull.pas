@@ -52,6 +52,9 @@ type
    [EditorCategory('Map', 'Ride Vehicle')]
    TFrmRideVehicle = class(TfrmEBEditNull<TEBRideVehicle>);
 
+   [EditorCategory('Map', 'End Flash Screen')]
+   TFrmEndFlashScreen = class(TfrmEBEditNull<TEBEndFlash>);
+
 implementation
 uses
    Windows;
@@ -93,8 +96,10 @@ initialization
    RegisterEbEditor(TEBGameOver, TFrmGameOver);
    RegisterEbEditor(TEBTitleScreen, TFrmTitleScreen);
    RegisterEbEditor(TEBRideVehicle, TFrmRideVehicle);
+   RegisterEBEditor(TEBEndFlash, TFrmEndFlashScreen);
 finalization
    UnRegisterEbEditor(TEBGameOver);
    UnRegisterEbEditor(TEBTitleScreen);
    UnRegisterEbEditor(TEBRideVehicle);
+   UnRegisterEBEditor(TEBEndFlash);
 end.
