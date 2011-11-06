@@ -319,7 +319,6 @@ begin
       FEvent := baseEvent;
       update(baseEvent.currentPage);
    end;
-   FRenderSpecial := true;
 end;
 
 destructor TEventTile.Destroy;
