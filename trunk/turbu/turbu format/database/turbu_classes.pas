@@ -82,7 +82,7 @@ type
       FOnDestroy: TScriptEvent;
 
       class function getSetLength(mySet: TByteSet): byte;
-      class function keyChar: ansiChar; virtual; abstract; //this should be a lower-case letter
+      class function keyChar: ansiChar; virtual; //this should be a lower-case letter
       class procedure readEnd(savefile: TStream);
       class procedure writeEnd(savefile: TStream);
       class function getDatasetName: string; virtual;
@@ -445,6 +445,11 @@ begin
       name := typename.name
    else name := prop.PropertyType.Name;
    result := turbu_decl_utils.GetSignature(name);
+end;
+
+class function TRpgDatafile.keyChar: ansiChar;
+begin
+   raise EAbstractError.CreateFmt('No keyChar implemented for %s', [self.ClassName]);
 end;
 
 class procedure TRpgDatafile.writeEnd(savefile: TStream);
