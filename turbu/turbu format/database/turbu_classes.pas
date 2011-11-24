@@ -178,20 +178,54 @@ type
       function GetEnumerator: TEnumerator; reintroduce;
    end;
 
-   TRpgDataDict<T: TRpgDatafile, constructor> = class(TObjectDictionary<integer, T>)
+   TRpgDataDict = class(TObjectDictionary<integer, TRpgDatafile>)
    private
+      procedure Load;
+      function GetItem(const Key: integer): TRpgDatafile;
+   protected
       FDataset: TSimpleDataset;
       FSerializer: TDatasetSerializer;
-      procedure Load;
-      function GetItem(const Key: integer): T;
+      function GetNewItem: TRpgDatafile; virtual; abstract;
+      procedure Add(value: TRpgDatafile); overload;
    public
       constructor Create(dataset: TSimpleDataset; serializer: TDatasetSerializer);
-      procedure Add(value: T); overload;
       procedure upload;
       procedure download;
       function GetCount: integer;
+   end;
+
+   TRpgDataDict<T: TRpgDatafile, constructor> = class(TRpgDataDict)
+   private
+      function GetItem(const Key: integer): T;
+   private type
+      TValueEnumerator = class(TEnumerator<T>)
+      private
+        FValues: TArray<TRpgDatafile>;
+        FIndex: Integer;
+        function GetCurrent: T;
+      public
+        constructor Create(const values: TArray<TRpgDatafile>);
+        property Current: T read GetCurrent;
+        function MoveNext: Boolean;
+      end;
+
+      TValueCollection = record
+      private
+         FValues: TArray<TRpgDatafile>;
+      public
+         constructor Create(const values: TArray<TRpgDatafile>);
+         function GetEnumerator: TValueEnumerator; reintroduce;
+      end;
+
+      function GetValues: TValueCollection;
+   protected
+      function GetNewItem: TRpgDatafile; override;
+   public
+      constructor Create(dataset: TSimpleDataset; serializer: TDatasetSerializer);
+      procedure Add(value: T); overload;
       function FirstWhere(filter: TFunc<T, boolean>): T;
       property Items[const Key: integer]: T read GetItem; default;
+      property Values: TValueCollection read GetValues;
    end;
 
    TNameTypeList = TList<TNameType>;
@@ -963,24 +997,37 @@ begin
    FName := name;
 end;
 
-{ TRpgDataDict<T> }
+{ TRpgDataDict }
 
-procedure TRpgDataDict<T>.Add(value: T);
-begin
-   self.Add(value.id, value);
-end;
-
-constructor TRpgDataDict<T>.Create(dataset: TSimpleDataset; serializer: TDatasetSerializer);
+constructor TRpgDataDict.Create(dataset: TSimpleDataset; serializer: TDatasetSerializer);
 begin
    inherited Create([doOwnsValues]);
-   self.Add(T.Create);
    FDataset := dataset;
    FSerializer := serializer;
 end;
 
-procedure TRpgDataDict<T>.download;
+procedure TRpgDataDict.Add(value: TRpgDatafile);
+begin
+   self.Add(value.id, value);
+end;
+
+procedure TRpgDataDict.upload;
 var
-   new: T;
+   iterator: TRpgDatafile;
+begin
+   for iterator in self.Values do
+   begin
+      if iterator.id = 0 then
+         Continue
+      else iterator.upload(FSerializer, FDataset);
+   end;
+   if self.Count > 1 then
+      FDataset.postSafe;
+end;
+
+procedure TRpgDataDict.download;
+var
+   new: TRpgDatafile;
    idField: TIntegerField;
 begin
    idField := FDataset.FieldByName('id') as TIntegerField;
@@ -989,12 +1036,80 @@ begin
    begin
       if not self.ContainsKey(idField.Value) then
       begin
-         new := T.Create;
+         new := GetNewItem;
          new.download(FSerializer, FDataset);
          self.Add(new);
       end;
       FDataset.Next;
    end;
+end;
+
+procedure TRpgDataDict.Load;
+begin
+   FDataset.Active := true;
+end;
+
+function TRpgDataDict.GetCount: integer;
+const SQL = 'select count(*) result from %s';
+var
+   ds: TCustomSqlDataset;
+begin
+   if FDataset.Active then
+      result := FDataset.RecordCount
+   else if not FDataset.Connection.Connected then
+      result := self.Count
+   else begin
+      FDataset.Connection.Execute(format(SQL, [UpperCase(FDataset.Name)]), nil, @ds);
+      try
+         assert(ds.RecordCount = 1);
+         result := ds.FieldByName('result').AsInteger;
+      finally
+         ds.Free;
+      end;
+   end;
+end;
+
+function TRpgDataDict.GetItem(const Key: integer): TRpgDatafile;
+begin
+   if TryGetValue(key, result) then
+      Exit;
+   try
+      if not FDataset.Active then
+      begin
+         FDataset.Filtered := true;
+         FDataset.Filter := format('id = %d', [key]);
+         FDataset.Open;
+      end;
+      if not FDataset.Locate('id', key, []) then
+         raise EListError.CreateRes(@SGenericItemNotFound);
+      result := GetNewItem;
+      try
+         result.download(FSerializer, FDataset);
+         self.Add(result);
+      except
+         result.free;
+         raise;
+      end;
+   finally
+      if FDataset.Filtered then
+      begin
+         FDataset.Active := false;
+         FDataset.Filtered := false;
+      end;
+   end;
+end;
+
+{ TRpgDataDict<T> }
+
+procedure TRpgDataDict<T>.Add(value: T);
+begin
+   inherited Add(value);
+end;
+
+constructor TRpgDataDict<T>.Create(dataset: TSimpleDataset; serializer: TDatasetSerializer);
+begin
+   inherited Create(dataset, serializer);
+   self.Add(T.Create);
 end;
 
 function TRpgDataDict<T>.FirstWhere(filter: TFunc<T, boolean>): T;
@@ -1017,73 +1132,50 @@ begin
    end;
 end;
 
-function TRpgDataDict<T>.GetCount: integer;
-const SQL = 'select count(*) result from %s';
-var
-   ds: TCustomSqlDataset;
-begin
-   if FDataset.Active then
-      result := FDataset.RecordCount
-   else if not FDataset.Connection.Connected then
-      result := self.Count
-   else begin
-      FDataset.Connection.Execute(format(SQL, [UpperCase(FDataset.Name)]), nil, @ds);
-      try
-         assert(ds.RecordCount = 1);
-         result := ds.FieldByName('result').AsInteger;
-      finally
-         ds.Free;
-      end;
-   end;
-end;
-
 function TRpgDataDict<T>.GetItem(const Key: integer): T;
 begin
-   if TryGetValue(key, result) then
-      Exit;
-   try
-      if not FDataset.Active then
-      begin
-         FDataset.Filtered := true;
-         FDataset.Filter := format('id = %d', [key]);
-         FDataset.Open;
-      end;
-      if not FDataset.Locate('id', key, []) then
-         raise EListError.CreateRes(@SGenericItemNotFound);
-      result := T.Create;
-      try
-         result.download(FSerializer, FDataset);
-         self.Add(result);
-      except
-         result.free;
-         raise;
-      end;
-   finally
-      if FDataset.Filtered then
-      begin
-         FDataset.Active := false;
-         FDataset.Filtered := false;
-      end;
-   end;
+   result := T(inherited GetItem(key));
 end;
 
-procedure TRpgDataDict<T>.Load;
+function TRpgDataDict<T>.GetNewItem: TRpgDatafile;
 begin
-   FDataset.Active := true;
+   result := T.Create;
 end;
 
-procedure TRpgDataDict<T>.upload;
-var
-   iterator: T;
+function TRpgDataDict<T>.GetValues: TValueCollection;
 begin
-   for iterator in self.Values do
-   begin
-      if iterator.id = 0 then
-         Continue
-      else iterator.upload(FSerializer, FDataset);
-   end;
-   if self.Count > 1 then
-      FDataset.postSafe;
+   result := TValueCollection.Create(inherited Values.ToArray);
+end;
+
+{ TRpgDataDict<T>.TValueCollection }
+
+constructor TRpgDataDict<T>.TValueCollection.Create(const values: TArray<TRpgDatafile>);
+begin
+   FValues := values;
+end;
+
+function TRpgDataDict<T>.TValueCollection.GetEnumerator: TValueEnumerator;
+begin
+   result := TValueEnumerator.Create(FValues);
+end;
+
+{ TRpgDataDict<T>.TValueEnumerator }
+
+constructor TRpgDataDict<T>.TValueEnumerator.Create(const values: TArray<TRpgDatafile>);
+begin
+   FValues := values;
+   FIndex := -1;
+end;
+
+function TRpgDataDict<T>.TValueEnumerator.GetCurrent: T;
+begin
+   result := T(FValues[FIndex]);
+end;
+
+function TRpgDataDict<T>.TValueEnumerator.MoveNext: Boolean;
+begin
+   inc(FIndex);
+   result := FIndex >= length(FValues);
 end;
 
 end.
