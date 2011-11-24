@@ -137,6 +137,7 @@ type
       SysSound: TSimpleDataSet;
       [Exclusion]
       MapObjects: TClientDataSet;
+      script_cache: TSimpleDataSet;
 
       dsCharClasses: TDataSource;
       ArbitraryQuery: TSQLQuery;

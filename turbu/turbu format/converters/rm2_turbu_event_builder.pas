@@ -225,7 +225,7 @@ begin
          left := TEBPropExpr.Create('HP');
          right:= TEBIntegerValue.Create(d3);
       end;
-      4: left := TEBObjArrayValue.Create('skills', d3);
+      4: left := TEBObjArrayValue.Create('skill', d3);
       5:
       begin
          left := TEBCall.Create('Equipped');
