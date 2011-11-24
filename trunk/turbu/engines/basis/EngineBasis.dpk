@@ -84,6 +84,7 @@ contains
   engine_manager in 'engine_manager.pas' {dmEngineManager: TDataModule},
   disharmony in 'disharmony.pas',
   dm_shaders in '..\..\turbu format\database\dm_shaders.pas',
-  turbu_multimaps in '..\..\turbu_multimaps.pas';
+  turbu_multimaps in '..\..\turbu_multimaps.pas',
+  turbu_script_interface in '..\..\turbu format\turbu_script_interface.pas';
 
 end.
