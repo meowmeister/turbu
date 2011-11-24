@@ -65,7 +65,23 @@ contains
   turbu_monsters in 'database\turbu_monsters.pas',
   EB_Battle in 'script\EB_Battle.pas',
   uPSUtils in '..\..\components\PascalScript\uPSUtils.pas',
-  turbu_terrain in 'database\turbu_terrain.pas';
+  turbu_terrain in 'database\turbu_terrain.pas',
+  rsDefsBackend in '..\..\classes\RPG Script\rsDefsBackend.pas',
+  rsEnex in '..\..\classes\RPG Script\rsEnex.pas',
+  rsExec in '..\..\classes\RPG Script\rsExec.pas',
+  rsImport in '..\..\classes\RPG Script\rsImport.pas',
+  rsLexer in '..\..\classes\RPG Script\rsLexer.pas',
+  rsLinker in '..\..\classes\RPG Script\rsLinker.pas',
+  rsParser in '..\..\classes\RPG Script\rsParser.pas',
+  rsSystemUnit in '..\..\classes\RPG Script\rsSystemUnit.pas',
+  rsCodegen in '..\..\classes\RPG Script\rsCodegen.pas',
+  rsCompiler in '..\..\classes\RPG Script\rsCompiler.pas',
+  rsDefs in '..\..\classes\RPG Script\rsDefs.pas',
+  vmtBuilder in '..\..\classes\RPG Script\RTTI Creation\vmtBuilder.pas',
+  vmtStructure in '..\..\classes\RPG Script\RTTI Creation\vmtStructure.pas',
+  newClass in '..\..\classes\RPG Script\RTTI Creation\newClass.pas',
+  rttiPackage in '..\..\classes\RPG Script\RTTI Creation\rttiPackage.pas',
+  PrivateHeap;
 
 end.
 
