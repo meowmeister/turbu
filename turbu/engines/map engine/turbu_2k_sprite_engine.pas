@@ -88,7 +88,6 @@ var
 implementation
 uses
    SysUtils,
-   Collections.Base,
    commons, turbu_constants, archiveInterface, charset_data;
 
 { T2kSpriteEngine }

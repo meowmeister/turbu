@@ -22,8 +22,7 @@ interface
 
 uses
    Controls, Forms, ComCtrls, StdCtrls, Classes, ExtCtrls,
-   Collections.Base, Collections.MultiMaps,
-   EbEdit;
+   turbu_MultiMaps, EbEdit;
 
 type
    TTreeData = record //because generic KV pairs are broken
@@ -39,7 +38,7 @@ type
     procedure trvListDblClick(Sender: TObject);
    private
       type
-         TTreeTemplate = class(TDoubleSortedMultiMap<string, TTreeData>);
+         TTreeTemplate = class(TMultiMap<string, TTreeData>);
       class var
          FMap: TTreeTemplate;
          FMapCount: integer;
@@ -55,7 +54,7 @@ type
 implementation
 uses
    Math, SysUtils, Generics.Defaults, Generics.Collections,
-   EventBuilder;
+   EventBuilder, turbu_functional;
 
 {$R *.dfm}
 
@@ -75,11 +74,12 @@ begin
       if assigned(cat) then
       begin
          if (not FMap.ContainsKey(cat.category)) or
-            (FMap[cat.category].Where(
+            (TFunctional.countWhere<TTreeData>
+            (FMap[cat.category],
             function(data: TTreeData): boolean
             begin
                result := data.value = cls;
-            end).Count = 0) then
+            end) = 0) then
             FMap.Add(cat.category, TTreeData.Create(cat, cls))
       end;
    end;
@@ -114,8 +114,7 @@ var
 class constructor TfrmEBSelector.Create;
 begin
    treeData := TTreeDataType.Create;
-   FMap := TTreeTemplate.Create(TRules<string>.Default,
-      TRules<TTreeData>.Custom(treeData));
+   FMap := TTreeTemplate.Create;
 end;
 
 class destructor TfrmEBSelector.Destroy;
@@ -127,15 +126,21 @@ end;
 procedure TfrmEBSelector.FormCreate(Sender: TObject);
 var
    category: TTreeNode;
-   pair: TPair<string, IOperableCollection<TTreeData>>;
    data: TTreeData;
+   keys: TArray<string>;
+   key: string;
+   list: TArray<TTreeData>;
 begin
    inherited;
    BuildMap;
-   for pair in FMap.Dictionary do
+   keys := FMap.Keys.ToArray;
+   TArray.Sort<string>(keys);
+   for key in keys do
    begin
-      category := trvList.Items.AddChild(nil, pair.key);
-      for data in pair.Value do
+      category := trvList.Items.AddChild(nil, key);
+      list := FMap[key].ToArray;
+      TArray.Sort<TTreeData>(list, TreeData);
+      for data in list do
          trvList.Items.AddChildObject(category, data.key.name, data.Value);
    end;
 end;

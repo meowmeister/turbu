@@ -17,6 +17,7 @@ type
    public
       constructor Create; overload;
       procedure Add(const key: TKey; const value: TValue); virtual;
+      procedure RemovePair(const key: TKey; const value: TValue);
       procedure Clear;
       function KeyHasValue(const key: TKey; const value: TValue): boolean;
    end;
@@ -79,6 +80,13 @@ function TMultimap<TKey, TValue>.KeyHasValue(const key: TKey;
   const value: TValue): boolean;
 begin
    result := self.ContainsKey(key) and self[key].Contains(value);
+end;
+
+procedure TMultimap<TKey, TValue>.RemovePair(const key: TKey;
+  const value: TValue);
+begin
+   EnsureComparer;
+   self[key].Remove(value);
 end;
 
 { TDistinctMultimap<TKey, TValue> }

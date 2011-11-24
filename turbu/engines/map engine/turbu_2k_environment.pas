@@ -18,19 +18,19 @@
 
 interface
 uses
-   Collections.Base,
+   Generics.Collections,
    turbu_heroes, turbu_database;
 
 type
    T2kEnvironment = class
    private
       FDatabase: TRpgDatabase;
-      FHeroes: IList<TRpgHero>;
+      FHeroes: TList<TRpgHero>;
    public
       constructor Create(database: TRpgDatabase);
       destructor Destroy; override;
 
-      property heroes: IList<TRpgHero> read FHeroes;
+      property heroes: TList<TRpgHero> read FHeroes;
    end;
 
 var
@@ -38,7 +38,6 @@ var
 
 implementation
 uses
-   Collections.Lists,
    turbu_characters;
 
 type
@@ -67,6 +66,7 @@ end;
 
 destructor T2kEnvironment.Destroy;
 begin
+   FHeroes.Free;
    GEnvironment := nil;
    inherited Destroy;
 end;
