@@ -59,7 +59,7 @@ type
    private //IBreakable
       procedure BreakSomething;
    private //IDesignMapEngine
-      procedure initializeDesigner(window: TSdlWindow; database: string);
+      function initialize(window: TSdlWindow; const database: string): TSdlWindow; override;
       function GetTilesetImageSize(const index: byte): TSgPoint;
       function GetTilesetImage(const index: byte): PSdlSurface;
       function DesignLoadMap(map: IMapMetadata): IRpgMap;
@@ -87,7 +87,6 @@ type
       procedure Pause;
       procedure Stop;
 
-      procedure IDesignMapEngine.initialize = initializeDesigner;
       function IDesignMapEngine.loadMap = DesignLoadMap;
    protected
       procedure cleanup; override;
@@ -147,11 +146,11 @@ begin
    draw(position, true);
 end;
 
-procedure T2kMapEngineD.initializeDesigner(window: TSdlWindow; database: string);
+function T2kMapEngineD.initialize(window: TSdlWindow; const database: string): TSdlWindow;
 begin
    try
       FDBFilename := database;
-      self.initialize(window, database);
+      result := inherited initialize(window, database);
       FObjectContainers.Free;
       FObjectContainers := TMapObjectContainerList.Create;
 

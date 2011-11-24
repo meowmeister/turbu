@@ -82,12 +82,13 @@ type
    public
       constructor Create; override;
       destructor Destroy; override;
-      procedure initialize(window: TSdlWindow; database: string); override;
+      function initialize(window: TSdlWindow; const database: string): TSdlWindow; override;
       function loadMap(map: IMapMetadata): IRpgMap; override;
       procedure Play; override;
       function Playing: boolean; override;
       function MapTree: IMapTree; override;
       function database: IRpgDatabase; override;
+      procedure NewGame; override;
 
       property PartySprite: THeroSprite read FPartySprite;
       property State: TGameState read FGameState;
@@ -194,7 +195,7 @@ begin
    inherited;
 end;
 
-procedure T2kMapEngine.initialize(window: TSdlWindow; database: string);
+function T2kMapEngine.initialize(window: TSdlWindow; const database: string): TSdlWindow;
 var
    layout: TGameLayout;
    renderer: TSdlRenderer;
@@ -220,8 +221,6 @@ begin
       layout := FDatabase.layout;
       if window.ptr = nil then
       begin
-         //In RM2K, project title is stored in the LMT.  I'll need to convert that
-         //to grab a project title. This will do for now.
          window :=  SDL_CreateWindow(PAnsiChar(ansiString(format('TURBU engine - %s', [FDatabase.mapTree[0].name]))),
                            SDL_WINDOWPOS_CENTERED_MASK, SDL_WINDOWPOS_CENTERED_MASK,
                            layout.physWidth, layout.physHeight,
@@ -229,7 +228,7 @@ begin
 
          if window.ptr = nil then
             raise ERpgPlugin.CreateFmt('Unable to initialize SDL window: %s%s', [LFCR, SDL_GetError]);
-         renderer := SDL_CreateRenderer(window, -1, [sdlrAccelerated]);
+         renderer := SDL_CreateRenderer(window, SDL_RendererIndex('opengl'), [sdlrAccelerated]);
          if renderer.ptr = nil then
             raise ERpgPlugin.CreateFmt('Unable to initialize SDL renderer: %s%s', [LFCR, SDL_GetError]);
          SDL_RenderPresent(renderer);
@@ -249,6 +248,7 @@ begin
       cleanup;
       raise;
    end;
+   result := window;
 end;
 
 procedure T2kMapEngine.initializeParty;
@@ -490,6 +490,21 @@ end;
 function T2kMapEngine.MapTree: IMapTree;
 begin
    result := FDatabase.mapTree
+end;
+
+procedure T2kMapEngine.NewGame;
+var
+   loc: TLocation;
+   metadata: IMapMetadata;
+begin
+   loc := FDatabase.mapTree.location[0];
+   metadata := FDatabase.mapTree[loc.map];
+   self.loadMap(metadata);
+   InitializeParty;
+   FPartySprite.leaveTile;
+   FCurrentMap.CurrentParty := FPartySprite;
+   FPartySprite.location := sgPoint(loc.x, loc.y);
+   self.Play;
 end;
 
 procedure T2kMapEngine.loadSprite(const filename: string);
