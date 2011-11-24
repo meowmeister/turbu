@@ -8,8 +8,8 @@ procedure UpgradeDatabase(database: TdmDatabase; const filename: string);
 
 implementation
 uses
-   DB, SimpleDS, Generics.collections, SysUtils, IOUtils, Classes,
-   EventBuilder, EB_Maps;
+   DB, SimpleDS, DBXCommon, Generics.collections, SysUtils, IOUtils, Classes,
+   EventBuilder, EB_Maps, EB_Expressions;
 
 type
    TDBUpgradeProc = procedure(database: TdmDatabase; const path: string);
@@ -33,6 +33,7 @@ begin
       ds.FieldByName('id').AsInteger := version + 1;
       ds.Post;
       result := true;
+      database.SaveAll;
    end
    else result := false;
 end;
@@ -44,7 +45,6 @@ begin
    path := ExtractFilePath(filename);
    repeat
    until UpgradeStep(database, path) = false;
-   database.SaveAll;
 end;
 
 type
@@ -163,15 +163,91 @@ begin
       obj := TEBEndShake.Create(nil);
 end;
 
+procedure UpdateArraySkillsName(var obj: TEBObject);
+begin
+   assert(obj.ClassType = TEBObjArrayValue);
+   if obj.text = 'skills' then
+      obj.Text := 'skill';
+end;
+
 procedure Update42(database: TdmDatabase; const path: string);
 begin
    ScanEvents(database, TEBFlashScreen, UpdateFlashScreen, path);
    ScanEvents(database, TEBShakeScreen, UpdateShakeScreen, path);
 end;
 
+procedure Update43(database: TdmDatabase; const path: string);
+begin
+   ScanEvents(database, TEBObjArrayValue, UpdateArraySkillsName, path);
+end;
+
+function Update44id(const maps, filename: string): integer;
+var
+   baseFilename: string;
+   stream: TStream;
+   id: word;
+begin
+   if filename = 'globalevents' then
+      Exit(0);
+   baseFilename := TPath.Combine(maps, filename)+ '.tmf';
+   if not FileExists(baseFilename) then
+      Exit(-1);
+
+   stream := TFile.OpenRead(baseFilename);
+   stream.Read(id, sizeof(word));
+   stream.Free;
+   result := id;
+end;
+
+procedure Update44(database: TdmDatabase; const path: string);
+const
+   SQL = 'CREATE TABLE SCRIPT_CACHE (ID INTEGER NOT NULL, SCRIPT BLOB SUB_TYPE TEXT NOT NULL)';
+   SQL2 = 'ALTER TABLE SCRIPT_CACHE ADD CONSTRAINT PK_SCRIPT_CACHE PRIMARY KEY (ID)';
+   SQL3 = 'DROP TABLE SCRIPT_CACHE';
+var
+   filename, maps: string;
+   id: integer;
+   obj: TEBObject;
+   tran: TdbxTransaction;
+begin
+   tran := database.Connection.BeginTransaction;
+   database.connection.ExecuteDirect(SQL);
+   try
+      database.connection.ExecuteDirect(SQL2);
+      database.Connection.CommitFreeAndNil(tran);
+      database.script_cache.DataSet.CommandText := UpperCase(database.script_cache.DataSet.CommandText);
+      database.script_cache.Active := true;
+      maps := TPath.Combine(path, 'maps');
+      for filename in TDirectory.GetFiles(TPath.Combine(path, 'scripts')) do
+      begin
+         id := Update44id(maps, TPath.GetFileNameWithoutExtension(filename));
+         if id = -1 then
+            Continue;
+         obj := TEBObject.Load(TFile.ReadAllText(filename));
+         try
+            database.script_cache.append;
+            try
+               database.script_cache.FieldByName('id').AsInteger := id;
+               database.script_cache.FieldByName('script').Asstring := obj.GetScript(0);
+               database.script_cache.Post;
+            except
+               database.script_cache.cancel;
+            end;
+         finally
+            obj.Free;
+         end;
+      end;
+   except
+      database.connection.ExecuteDirect(SQL3);
+      raise;
+   end;
+end;
+
 initialization
    table := TDictionary<integer, TDBUpgradeProc>.Create;
    table.Add(42, Update42);
+   table.Add(43, Update43);
+   table.Add(44, Update44);
 finalization
    table.Free;
 end.

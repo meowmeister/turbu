@@ -220,11 +220,11 @@ type
 
 var
    GDatabase: TRpgDatabase;
-   GScriptEngine: IScriptEngine;
+//   GScriptEngine: IScriptEngine;
 
 const
    MIN_DBVERSION = 42;
-   DBVERSION = 43;
+   DBVERSION = 45;
 
 implementation
 uses
@@ -384,6 +384,8 @@ begin
       stream.Free;
    end;
 
+   FLayout := TGameLayout.Create;
+   FLayout.download(FSerializer, dm.syslayout);
    LoadSounds;
 end;
 
@@ -912,14 +914,10 @@ begin
 end;
 
 initialization
-begin
-   GDatabase := nil;
-end;
-
 finalization
 begin
    GDatabase.Free;
-   GScriptEngine := nil;
+//   GScriptEngine := nil;
 end;
 
 end.

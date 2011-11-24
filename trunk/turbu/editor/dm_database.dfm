@@ -4886,4 +4886,28 @@ object dmDatabase: TdmDatabase
       Size = 255
     end
   end
+  object script_cache: TSimpleDataSet
+    Aggregates = <>
+    Connection = Connection
+    DataSet.CommandText = 'script_cache'
+    DataSet.CommandType = ctTable
+    DataSet.MaxBlobSize = -1
+    DataSet.Params = <>
+    FieldDefs = <>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    OnCalcFields = SwitchesVarsCalcFields
+    Left = 752
+    Top = 344
+    object IntegerField57: TIntegerField
+      FieldName = 'id'
+      Required = True
+    end
+    object script_cachescript: TWideMemoField
+      FieldName = 'script'
+      Required = True
+      BlobType = ftWideMemo
+    end
+  end
 end

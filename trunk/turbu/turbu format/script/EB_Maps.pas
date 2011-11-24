@@ -780,7 +780,8 @@ const LINE = 'image[%d].MoveTo(%d,  %d,  %d, %d, %d);';
 begin
    result := LINE;
    if boolean(Values[1]) then //replace only the first two
-      result := StringReplace(result, '%d,  ', 'Ints[%d], ', [rfReplaceAll]);
+      result := StringReplace(result, '%d,  ', 'Ints[%d], ', [rfReplaceAll])
+   else result := StringReplace(result, '%d,  ', '%d, ', [rfReplaceAll]);
    result := format(result, [Values[0], Values[2], Values[3], Values[4], Values[5], Values[6]]);
 end;
 
