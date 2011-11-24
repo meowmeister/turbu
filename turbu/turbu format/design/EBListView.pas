@@ -80,7 +80,7 @@ procedure Register;
 implementation
 uses
    Windows, SysUtils, Controls, DBClient{$IFNDEF COMPONENT},
-   EbEdit, EbSelector, turbu_vartypes, turbu_constants, turbu_script_interface,
+   EbEdit, EbSelector, turbu_vartypes, turbu_constants,
    turbu_database, array_editor{$ENDIF};
 
 procedure Register;

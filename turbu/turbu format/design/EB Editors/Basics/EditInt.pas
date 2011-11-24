@@ -62,7 +62,7 @@ type
 
 implementation
 uses
-   turbu_database, turbu_script_interface, turbu_vartypes, turbu_defs, turbu_constants,
+   turbu_database, turbu_vartypes, turbu_defs, turbu_constants,
    EB_System;
 
 {$R *.dfm}
@@ -70,17 +70,17 @@ uses
 procedure TfrmEBSetInteger.BuildFunctionList;
 const FUNCTIONS: array[1..2] of string = ('random', 'heldItems');
 var
-   engine: IDesignScriptEngine;
+//   engine: IDesignScriptEngine;
    name: string;
    decl: TRpgDecl;
    param: TNameType;
 begin
 //   TODO: Implement this way eventually
 //   FFunctionList := (GScriptEngine as IDesignScriptEngine).GetFunctions(turbu_vartypes.lookupType('integer'));
-   engine := GScriptEngine as IDesignScriptEngine;
+//   engine := GScriptEngine as IDesignScriptEngine;
    FFunctionList := TDeclList.Create;
-   for name in FUNCTIONS do
-      FFunctionList.Add(engine.FindFunction(name).Clone);
+{   for name in FUNCTIONS do
+      FFunctionList.Add(engine.FindFunction(name).Clone);}
    for decl in FFunctionList do
    begin
       for param in decl do //verification

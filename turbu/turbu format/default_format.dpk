@@ -48,7 +48,6 @@ contains
   turbu_maps in 'maps\turbu_maps.pas',
   turbu_tilesets in 'database\turbu_tilesets.pas',
   timing in '..\mapview\libs\timing.pas',
-  turbu_script_interface in 'turbu_script_interface.pas',
   commons in '..\commons.pas',
   turbu_map_objects in 'maps\turbu_map_objects.pas',
   charset_data in '..\charset_data.pas',
@@ -81,7 +80,8 @@ contains
   vmtStructure in '..\..\classes\RPG Script\RTTI Creation\vmtStructure.pas',
   newClass in '..\..\classes\RPG Script\RTTI Creation\newClass.pas',
   rttiPackage in '..\..\classes\RPG Script\RTTI Creation\rttiPackage.pas',
-  PrivateHeap;
+  PrivateHeap,
+  turbu_script_engine in 'script\engine\turbu_script_engine.pas';
 
 end.
 

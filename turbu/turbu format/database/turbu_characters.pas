@@ -21,7 +21,7 @@ interface
 uses
    types, classes, DB, Generics.Collections, rtti,
    turbu_constants, turbu_defs, turbu_classes, turbu_skills, turbu_containers,
-   turbu_script_interface, turbu_serialization, turbu_sounds;
+   turbu_serialization, turbu_sounds;
 
 type
    TExpCalcFunc = function(int1, int2, int3, int4, int5: integer): integer of object;
