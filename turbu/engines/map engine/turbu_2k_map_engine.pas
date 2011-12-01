@@ -259,7 +259,7 @@ begin
    if FParty = nil then
       FParty := TRpgParty.Create;
    party := FParty as TRpgParty;
-   for I := 0 to FGameEnvironment.Heroes.Count - 1 do
+   for I := 0 to FGameEnvironment.HeroCount do
    begin
       party.hero[1] := FGameEnvironment.heroes[i];
       if FGameEnvironment.heroes[i].sprite <> '' then
