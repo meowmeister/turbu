@@ -147,6 +147,10 @@
 			</DCCReference>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_map_metadata.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_maps.pas"/>
+			<DCCReference Include="..\turbu format\converters\conversion_report_form.pas">
+				<Form>frmConversionReport</Form>
+			</DCCReference>
+			<DCCReference Include="..\turbu format\converters\conversion_report.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_converter_thread.pas"/>
 			<DCCReference Include="..\turbu_functional.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_tilesets.pas"/>
@@ -154,6 +158,9 @@
 				<Form>dlgDeleteMap</Form>
 			</DCCReference>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_map_objects.pas"/>
+			<DCCReference Include="..\turbu format\converters\conversion_output.pas">
+				<Form>frmConversionOutput</Form>
+			</DCCReference>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_event_builder.pas"/>
 			<DCCReference Include="frame_vocab.pas">
 				<Form>frameVocab</Form>
