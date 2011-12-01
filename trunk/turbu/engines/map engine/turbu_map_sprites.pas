@@ -611,16 +611,8 @@ begin
       $1D: FMoveRate := max(0, FMoveRate - 1);
       $1E: FMoveFreq := min(8, FMoveFreq + 1);
       $1F: FMoveFreq := min(0, FMoveFreq - 1);
-      $20:
-      begin
-         if clamp(FOrder.data[1], 0, system.high(GSwitches)) = FOrder.data[1] then
-            GSwitches[FOrder.data[1]] := true;
-      end;
-      $21:
-      begin
-         if clamp(FOrder.data[1], 0, high(GSwitches)) = FOrder.data[1] then
-            GSwitches[FOrder.data[1]] := false;
-      end;
+      $20: GEnvironment.Switch[FOrder.data[1]] := true;
+      $21: GEnvironment.Switch[FOrder.data[1]] := false;
       $22: FCharacter.changeSprite(FOrder.name, FOrder.data[1]);
 {$MESSAGE WARN 'Commented-out code in live unit'}
       $23: {GCurrentEngine.mediaPlayer.playAndFreeSfx(TRmSound.Create(FOrder.name, 0, FOrder.data[1],

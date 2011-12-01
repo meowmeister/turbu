@@ -14,7 +14,8 @@
 *
 * This file was created by Mason Wheeler.  He can be reached for support at
 * www.turbu-rpg.com.
-*****************************************************************************}unit turbu_2k_environment;
+*****************************************************************************}
+unit turbu_2k_environment;
 
 interface
 uses
@@ -26,25 +27,30 @@ type
    private
       FDatabase: TRpgDatabase;
       FHeroes: TList<TRpgHero>;
+      FSwitches: TArray<boolean>;
+      function GetSwitch(const i: integer): boolean;
+      procedure SetSwitch(const i: integer; const Value: boolean);
+      function GetHero(const i: integer): TRpgHero;
+      function GetHeroCount: integer;
    public
       constructor Create(database: TRpgDatabase);
       destructor Destroy; override;
 
-      property heroes: TList<TRpgHero> read FHeroes;
+      property Heroes[const i: integer]: TRpgHero read GetHero;
+      property HeroCount: integer read GetHeroCount;
+      property Switch[const i: integer]: boolean read GetSwitch write SetSwitch;
    end;
 
 var
-   GSwitches: TArray<boolean>;
+   GEnvironment: T2kEnvironment;
 
 implementation
 uses
+   Commons,
    turbu_characters;
 
 type
    THeroList = class(TObjectList<TRpgHero>);
-
-var
-   GEnvironment: T2kEnvironment;
 
 { T2kEnvironment }
 
@@ -61,7 +67,7 @@ begin
    database.hero.download;
    for hero in database.hero.Values do
       FHeroes.Add(TRpgHero.Create(hero));
-   setLength(GSwitches, database.switch.count + 1);
+   setLength(FSwitches, database.switch.count + 1);
 end;
 
 destructor T2kEnvironment.Destroy;
@@ -69,6 +75,31 @@ begin
    FHeroes.Free;
    GEnvironment := nil;
    inherited Destroy;
+end;
+
+function T2kEnvironment.GetHero(const i: integer): TRpgHero;
+begin
+   if clamp(i, 0, FHeroes.Count) = i then
+      result := FHeroes[i]
+   else result := FHeroes[0];
+end;
+
+function T2kEnvironment.GetHeroCount: integer;
+begin
+   result := FHeroes.Count - 1;
+end;
+
+function T2kEnvironment.GetSwitch(const i: integer): boolean;
+begin
+   if clamp(i, 0, high(FSwitches)) = i then
+      result := FSwitches[i]
+   else result := false;
+end;
+
+procedure T2kEnvironment.SetSwitch(const i: integer; const Value: boolean);
+begin
+   if clamp(i, 0, high(FSwitches)) = i then
+      FSwitches[i] := value;
 end;
 
 end.
