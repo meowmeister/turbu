@@ -436,7 +436,7 @@ const
    HEROPROPS: array[0..5] of string = ('level', 'exp', 'hp', 'mp', 'maxHP', 'maxMP');
    EVENTPROPS: array[0..5] of string = ('MapID', 'xPos', 'yPos', 'facingValue', 'ScreenX', 'ScreenY');
    MISCPROPS: array[0..9] of string = ('money', 'timer.time', 'partySize', 'saveCount',
-                                       'battles', 'victories', 'losses', 'flees',
+                                       'battleCount', 'victories', 'losses', 'flees',
                                        'bgm.position', 'timer2.time');
 var
    lValue, rValue: TEBExpression;
@@ -541,8 +541,8 @@ begin
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
       begin
          if boolean(opcode.Data[3]) then
-            expr := TEBLookupObjExpr.Create('skill', TEBIntsValue.Create(opcode.Data[4]), 'skills')
-         else expr := TEBLookupObjExpr.Create('skill', opcode.Data[4], 'skills');
+            expr := TEBIntsValue.Create(opcode.Data[4])
+         else expr := TEBIntegerValue.Create(opcode.Data[4]);
          result := TEBSkills.Create(parent);
       end);
 end;
