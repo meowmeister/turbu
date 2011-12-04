@@ -650,7 +650,12 @@ begin
    result := TStringList.Create;
    result.Sorted := true;
    result.Duplicates := dupError;
-   NeededVariables(result);
+   try
+      NeededVariables(result);
+   except
+      result.Free;
+      raise;
+   end;
 end;
 
 { UsesUnitAttribute }
