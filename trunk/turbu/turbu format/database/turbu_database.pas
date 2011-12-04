@@ -384,7 +384,6 @@ begin
       stream.Free;
    end;
 
-   FLayout := TGameLayout.Create;
    FLayout.download(FSerializer, dm.syslayout);
    LoadSounds;
 end;
