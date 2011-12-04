@@ -97,6 +97,10 @@ type
 
    TConcealmentFactor = (cf_none, cf_low, cf_med, cf_high);
 
+   TMboxLocation = (mb_top, mb_middle, mb_bottom);
+
+   TSlot = (eq_weapon, eq_shield, eq_armor, eq_helmet, eq_relic, eq_all);
+
 implementation
 
 { TLocation }
