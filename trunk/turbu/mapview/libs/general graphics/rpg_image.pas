@@ -81,9 +81,9 @@ const
 procedure TRpgImage.applyColor;
 begin
 //fixme
-{   self.Red := min(commons.round(FColor.rgba[1] * 1.275), 255);
+   self.Red := min(commons.round(FColor.rgba[1] * 1.275), 255);
    self.Green := min(commons.round(FColor.rgba[2] * 1.275), 255);
-   self.Blue := min(commons.round(FColor.rgba[3] * 1.275), 255);}
+   self.Blue := min(commons.round(FColor.rgba[3] * 1.275), 255);
    self.FSaturation := min(commons.round(FColor.rgba[4] * 1.275), 255);
 end;
 

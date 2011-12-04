@@ -65,13 +65,7 @@ begin
 end;
 
 initialization
-begin
    logOpen := false;
-end;
-
 finalization
-begin
    closeLog;
-end;
-
 end.
