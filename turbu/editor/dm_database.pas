@@ -250,6 +250,8 @@ begin
          if assigned(report) then
             report(format('Saving data: %s', [dset.Name]));
          dset.ApplyUpdates(0);
+         if not FVitalList.Contains(dset) then
+            dset.Close;
       end;
 end;
 
