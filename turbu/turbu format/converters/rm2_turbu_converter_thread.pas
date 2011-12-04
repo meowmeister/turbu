@@ -19,7 +19,7 @@ unit rm2_turbu_converter_thread;
 
 interface
 uses
-   classes, windows, Generics.Collections,
+   Types, classes, windows, Generics.Collections,
    commons, conversion_report, formats, turbu_map_metadata, archiveInterface,
    LDB, LMT, LMU, events;
 
@@ -56,7 +56,8 @@ type
       procedure ScanMove(block: TEventMoveBlock);
       procedure ScanPageCommands(list: TEventCommandList);
       procedure setNewStep(value: string);
-    procedure GatherResources;
+      procedure GatherResources;
+      procedure UploadScriptCache;
    protected
       procedure Execute; override;
    public
@@ -69,15 +70,16 @@ var
 
 implementation
 uses
-   SysUtils, StrUtils,
+   SysUtils, StrUtils, DB,
    fileIO, discInterface, logs, locate_files, rm2_turbu_event_builder, dm_database,
-   turbu_constants, turbu_database, turbu_engines, db_create, turbu_defs,
+   turbu_constants, turbu_database, turbu_engines, db_create, turbu_defs, EventBuilder,
    turbu_functional, turbu_maps, turbu_classes, turbu_pathing, turbu_tbi_lib,
+   IOUtils,
    rm2_turbu_database, rm2_turbu_maps, rm2_turbu_map_metadata, rm2_turbu_map_objects,
    sdl, sdl_13, sdlStreams, sdl_image, sg_defs;
 
 const
-   CONVERSION_TASKS = 6;
+   CONVERSION_TASKS = 8;
 
 type
    TImageProcessor = function (archive: IArchive; outFolderName, filename: string; dirty: boolean): boolean;
@@ -450,6 +452,7 @@ begin
             dmDatabase.BuildDatabase(filename, GDatabase);
             GDatabase.copyToDB(dmDatabase, [], self.setNewStep);
             dmDatabase.SaveAll(self.setNewStep);
+            UploadScriptCache;
             FReport.newStep('Finished');
          finally
             conversionArchive := -1
@@ -469,6 +472,65 @@ end;
 procedure TConverterThread.setNewStep(value: string);
 begin
    FReport.newStep(value);
+end;
+
+function Scanid(const maps, filename: string): integer;
+var
+   baseFilename: string;
+   stream: TStream;
+   id: word;
+begin
+   if filename = 'globalevents' then
+      Exit(0);
+   baseFilename := TPath.Combine(maps, filename)+ '.tmf';
+   if not FileExists(baseFilename) then
+      Exit(-1);
+
+   stream := TFile.OpenRead(baseFilename);
+   stream.Read(id, sizeof(word));
+   stream.Free;
+   result := id;
+end;
+
+procedure LoadScriptCache(const path: string; const report: IConversionReport);
+var
+   filename, maps: string;
+   filenames: TStringDynArray;
+   id: integer;
+   obj: TEBObject;
+   ds: TDataset;
+begin
+   ds := dmDatabase.script_cache;
+   ds.Active := true;
+   maps := TPath.Combine(path, 'maps');
+   filenames := TDirectory.GetFiles(TPath.Combine(path, 'scripts'));
+   report.setCurrentTask('Preparing script cache', length(filenames));
+   for filename in filenames do
+   begin
+      report.newStep(TPath.GetFileNameWithoutExtension(filename));
+      id := ScanID(maps, TPath.GetFileNameWithoutExtension(filename));
+      if id = -1 then
+         Continue;
+      obj := TEBObject.Load(TFile.ReadAllText(filename));
+      try
+         try
+            ds.appendRecord([id, obj.GetScript(0)]);
+         except
+            on E: Exception do
+               report.makeError(E.Message);
+         end;
+      finally
+         obj.Free;
+      end;
+   end;
+end;
+
+procedure TConverterThread.UploadScriptCache;
+begin
+   LoadScriptCache(FToLoc, FReport);
+   FReport.setCurrentTask('Saving script cache');
+   dmDatabase.script_cache.ApplyUpdates(0);
+   dmDatabase.script_cache.Close;
 end;
 
 procedure TConverterThread.ScanCommands(list: TList<TEventCommand>);
@@ -509,10 +571,10 @@ end;
 
 procedure TConverterThread.ScanMove(block: TEventMoveBlock);
 var
-   path: TPath;
+   path: turbu_pathing.TPath;
    step: TMoveStep;
 begin
-   path := TPath.convert(block);
+   path := turbu_pathing.TPath.convert(block);
    try
       for step in path.opcodes do
          if (step.opcode = MOVECODE_CHANGE_SPRITE) then

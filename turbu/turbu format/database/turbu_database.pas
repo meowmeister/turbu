@@ -220,11 +220,10 @@ type
 
 var
    GDatabase: TRpgDatabase;
-//   GScriptEngine: IScriptEngine;
 
 const
-   MIN_DBVERSION = 42;
-   DBVERSION = 45;
+   MIN_DBVERSION = 46;
+   DBVERSION = 46;
 
 implementation
 uses

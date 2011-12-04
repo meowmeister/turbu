@@ -29,6 +29,7 @@ type
       procedure FormShow(Sender: TObject);
       procedure FormCreate(Sender: TObject);
       procedure btnDoneClick(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
    private
       { Private declarations }
       FRunning: boolean;
@@ -58,7 +59,7 @@ var
 
 implementation
 uses
-   commons, logs;
+   commons;
 
 {$R *.dfm}
 
@@ -86,6 +87,12 @@ procedure TfrmConversionReport.fatal(error: Exception);
 begin
    Fatal(format('Unhandled conversion exception %s:'#13#10'"%s"', [error.ClassName, error.Message]));
    ReleaseExceptionObject;
+end;
+
+procedure TfrmConversionReport.FormCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+begin
+   canClose := FFinished;
 end;
 
 procedure TfrmConversionReport.FormCreate(Sender: TObject);
@@ -149,6 +156,7 @@ begin
       lblCurrentStatus.Caption := 'Complete';
       btnDone.ModalResult := mrOk;
       btnDone.Caption := '&OK';
+      btnDone.Visible := true;
       self.FocusControl(btnDone);
       FFinished := true;
    end;
