@@ -13,6 +13,7 @@ object frmConversionReport: TfrmConversionReport
   Font.Style = []
   OldCreateOrder = False
   PopupMode = pmAuto
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 120
