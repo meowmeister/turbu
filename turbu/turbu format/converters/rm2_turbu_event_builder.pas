@@ -720,22 +720,33 @@ var
 begin
    assert(opcode.Data[4] = 0);
    assert(opcode.Data[7] = 0);
+   assert(high(opcode.Data) in [15, 16]);
    result := TEBImageMove.Create(parent);
    result.Text := string(opcode.Name);
    result.Values.AddRange([opcode.data[0], opcode.data[1], opcode.data[2],
                           opcode.data[3], opcode.data[5], opcode.data[6],
                           opcode.data[14], opcode.data[15]]);
-   sub := TEBImageColor.Create(result);
-   sub.Values.AddRange([opcode.data[0], opcode.data[8], opcode.data[9],
-                       opcode.data[10], opcode.data[11]]);
-   sub := TEBImageEffect.Create(result);
-   sub.Values.AddRange([opcode.data[0], opcode.data[12], opcode.data[13]]);
+   if high(opcode.data) = 16 then
+      result.Values.Add(opcode.data[16])
+   else result.Values.Add(-1);
+   if (opcode.data[8] <> 0) or (opcode.data[9] <> 0) or (opcode.data[10] <> 0)
+      or (opcode.data[11] <> 100) then
+   begin
+      sub := TEBImageColor.Create(result);
+      sub.Values.AddRange([opcode.data[0], opcode.data[8], opcode.data[9],
+                          opcode.data[10], opcode.data[11]]);
+   end;
+   if opcode.data[12] <> 0 then
+   begin
+      sub := TEBImageEffect.Create(result);
+      sub.Values.AddRange([opcode.data[0], opcode.data[12], opcode.data[13]]);
+   end;
 end;
 
 function ConvertShowAnim(opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBShowAnim.Create(parent);
-   result.Values.AddRange([opcode.Data[0], opcode.Data[2]]);
+   result.Values.AddRange([opcode.Data[0], opcode.Data[2], opcode.Data[3]]);
    if boolean(opcode.Data[3]) then
       TEBNilValue.Create(result)
    else result.Add(eventDeref(opcode.Data[1]));

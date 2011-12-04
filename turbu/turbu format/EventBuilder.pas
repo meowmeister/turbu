@@ -99,6 +99,7 @@ type
       class function GetLookup(id: integer; const name: string): string;
       function IndentString(level: integer): string;
       procedure NeededVariables(list: TStringList); virtual;
+      procedure ScanUsesList(list: TStringList);
       property ChildScript[index: integer]: string read GetChildText;
       property ChildNode[index: integer]: string read GetChildNode;
       property ArgList: string read GetArgList write SetArgList;
@@ -118,6 +119,7 @@ type
       procedure Add(aObject: TEBObject); virtual;
       procedure SaveScript;
       function RequiredVariables: TStringList;
+      function UsesList: TStringList;
       function Clone: TEBObject;
       procedure Clear;
       function NeededVariableType: THeaderItems; virtual;
@@ -328,6 +330,32 @@ begin
    if not (lValues[1] = '(') and(lValues[length(lValues)] = ')') then
       raise ERPGScriptError.CreateFmt('Invalid Values list "%s"', [lValues]);
    self.SetArgList(copy(lValues, 2, length(lValues) - 2));
+end;
+
+function TEBObject.UsesList: TStringList;
+begin
+   result := TStringList.Create;
+   try
+      result.Duplicates := dupIgnore;
+      result.Sorted := true;
+      self.ScanUsesList(result);
+   except
+      result.Free;
+      raise;
+   end;
+end;
+
+procedure TEBObject.ScanUsesList(list: TStringList);
+var
+   child: TEBObject;
+   unitName: string;
+begin
+   for child in self do
+      if not (child is TEBExpression) then
+         child.ScanUsesList(list);
+   unitName := self.InUnit;
+   if unitName <> '' then
+      list.Add(unitName);
 end;
 
 procedure TEBObject.ParseAssignment(const line: string);

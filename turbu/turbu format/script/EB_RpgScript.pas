@@ -344,20 +344,28 @@ begin
    assert(indent = 0);
    list := TStringList.Create;
    try
-      list.add(GetScriptText);
-      ScanHeader;
-      if HasLabels then
-      begin
-         list.Add('label');
-         list.Add(Self.labelBlock);
+      try
+         list.add(GetScriptText);
+         ScanHeader;
+         if HasLabels then
+         begin
+            list.Add('label');
+            list.Add(Self.labelBlock);
+         end;
+         if HasVar then
+         begin
+            list.Add('var');
+            list.Add(Self.varBlock);
+         end;
+         list.Add(inherited GetScript(0));
+         result := list.Text;
+      except
+         on E: ERpgScriptError do
+         begin
+            E.Message := format('Error building script %s: %s', [self.Name, E.Message]);
+            raise;
+         end;
       end;
-      if HasVar then
-      begin
-         list.Add('var');
-         list.Add(Self.varBlock);
-      end;
-      list.Add(inherited GetScript(0));
-      result := list.Text;
    finally
       list.Free;
    end;
@@ -1111,8 +1119,33 @@ end;
 { TEBProgram }
 
 function TEBProgram.GetScript(indent: integer): string;
+var
+   list, uList: TStringList;
 begin
-   result := GetScriptText + CRLF + inherited GetScript(-1) + CRLF + 'begin' + CRLF + 'end.'
+   list := TStringList.Create;
+   try
+      list.Add(GetScriptText);
+      list.Add('');
+      uList := self.UsesList;
+      try
+         if uList.Count > 0 then
+         begin
+            list.Add('uses');
+               list.Add(format('  %s;', [uList.CommaText]));
+            list.Add('');
+         end;
+      finally
+         uList.Free;
+      end;
+      list.Add(inherited GetScript(-1));
+      list.Add('');
+      list.Add('begin');
+      list.Add('');
+      list.Add('end.');
+      result := list.Text;
+   finally
+      list.Free;
+   end;
 end;
 
 function TEBProgram.GetScriptText: string;
@@ -1130,12 +1163,23 @@ end;
 function TEBUnit.GetScript(indent: integer): string;
 var
    list: TStringList;
+   uList: TStringList;
    child: TEBObject;
 begin
    list := TStringList.Create;
    try
       list.add(GetScriptText);
       list.add('interface');
+      uList := self.UsesList;
+      try
+         if uList.Count > 0 then
+         begin
+            list.Add('uses');
+               list.Add(format('  %s;', [uList.CommaText]));
+         end;
+      finally
+         uList.Free;
+      end;
       list.add('');
       for child in self do
          list.add(child.GetScriptText);
