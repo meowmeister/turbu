@@ -24,9 +24,10 @@ uses
    EventBuilder, EB_RpgScript, turbu_battle_engine;
 
 type
-   [UsesUnit('Battle')]
+   [UsesUnit('Battles')]
    TEBBattleObject = class(TEBObject);
 
+   [UsesUnit('Battles')]
    TEBBattleBase = class(TEBMaybeCase)
    protected
       FResults: TBattleResultSet;

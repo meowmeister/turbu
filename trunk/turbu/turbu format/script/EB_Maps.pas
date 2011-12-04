@@ -813,9 +813,9 @@ begin
 end;
 
 function TEBShowAnim.GetScriptText: string;
-const LINE = 'ShowBattleAnim(%d, %s, %s);';
+const LINE = 'ShowBattleAnim(%d, %s, %s, %s);';
 begin
-   result := format(LINE, [Values[0], ChildScript[0], BOOL_STR[Values[1]]]);
+   result := format(LINE, [Values[0], ChildScript[0], BOOL_STR[Values[1]], BOOL_STR[Values[2]]]);
 end;
 
 { TEBFlashObj }
