@@ -4897,7 +4897,6 @@ object dmDatabase: TdmDatabase
     IndexDefs = <>
     Params = <>
     StoreDefs = True
-    OnCalcFields = SwitchesVarsCalcFields
     Left = 752
     Top = 344
     object IntegerField57: TIntegerField
