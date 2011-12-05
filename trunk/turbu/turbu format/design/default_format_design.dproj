@@ -241,6 +241,13 @@
 			<DCCReference Include="EB Editors\Map\EditShakeScreen.pas">
 				<Form>frmEBEditShakeScreen</Form>
 			</DCCReference>
+			<DCCReference Include="..\converters\conversion_report_form.pas">
+				<Form>frmConversionReport</Form>
+			</DCCReference>
+			<DCCReference Include="..\converters\conversion_report.pas"/>
+			<DCCReference Include="..\converters\conversion_output.pas">
+				<Form>frmConversionOutput</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
