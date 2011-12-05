@@ -59,7 +59,7 @@ type
    private //IBreakable
       procedure BreakSomething;
    private //IDesignMapEngine
-      function initialize(window: TSdlWindow; const database: string): TSdlWindow; override;
+      function initializeDesigner(window: TSdlWindow; const database: string): TSdlWindow;
       function GetTilesetImageSize(const index: byte): TSgPoint;
       function GetTilesetImage(const index: byte): PSdlSurface;
       function DesignLoadMap(map: IMapMetadata): IRpgMap;
@@ -88,6 +88,7 @@ type
       procedure Stop;
 
       function IDesignMapEngine.loadMap = DesignLoadMap;
+      function IDesignMapEngine.Initialize = InitializeDesigner;
    protected
       procedure cleanup; override;
       procedure AfterPaint; override;
@@ -99,6 +100,7 @@ type
 implementation
 uses
    commons, math, windows, Dialogs, Controls,
+   logs,
    turbu_map_metadata, archiveInterface, turbu_constants, turbu_sdl_image, turbu_database,
    turbu_functional, turbu_plugin_interface, turbu_containers, turbu_map_objects,
    eval, MapObject_Editor, dm_database, db_upgrade,
@@ -146,14 +148,21 @@ begin
    draw(position, true);
 end;
 
-function T2kMapEngineD.initialize(window: TSdlWindow; const database: string): TSdlWindow;
+function T2kMapEngineD.InitializeDesigner(window: TSdlWindow; const database: string): TSdlWindow;
+var
+   script: string;
 begin
+   if FInitialized then
+      Exit(window);
    try
       FDBFilename := database;
       result := inherited initialize(window, database);
       FObjectContainers.Free;
       FObjectContainers := TMapObjectContainerList.Create;
 
+      script := dmDatabase.ScriptLookup(0);
+      logs.logText(script);
+      FObjectManager.ScriptEngine.LoadLibrary(script);
       //do more
    except
       if FInitialized then
@@ -781,6 +790,7 @@ begin
    if query.RecordCount <> 1 then
       raise EBadDB.CreateFmt('Invalid DBDATA record count: %d. The database may be corrupted', [query.RecordCount]);
    version := query.FieldByName('ID').AsInteger;
+   query.Close;
    if version < DBVERSION then
    begin
       if version >= MIN_DBVERSION then

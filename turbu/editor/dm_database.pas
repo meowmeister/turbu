@@ -181,6 +181,7 @@ type
       procedure beginUpload;
       procedure endUpload;
       function NameLookup(const name: string; id: integer): string;
+      function ScriptLookup(id: integer): string;
       procedure BuildDatabase(const dbname: string; dbObj: TRpgDatafile);
       procedure Connect(const dbname: string; const validateProc: TProc<TSqlQuery>);
       procedure SaveAll(report: TUploadReportProc = nil);
@@ -470,6 +471,27 @@ begin
       if ArbitraryQuery.RecordCount = 0 then
          result := BAD_LOOKUP
       else result := ArbitraryQuery.FieldByName('name').AsString;
+   end;
+end;
+
+function TdmDatabase.ScriptLookup(id: integer): string;
+var
+   lResult: variant;
+begin
+   if script_cache.Active then
+   begin
+      lResult := script_cache.Lookup('id', id, 'script');
+      if lResult = Null then
+         result := BAD_LOOKUP
+      else result := lResult;
+   end
+   else begin
+      ArbitraryQuery.Active := false;
+      ArbitraryQuery.SQL.Text := format('select SCRIPT from SCRIPT_CACHE where ID = %d', [id]);
+      arbitraryQuery.Open;
+      if ArbitraryQuery.RecordCount = 0 then
+         result := BAD_LOOKUP
+      else result := ArbitraryQuery.FieldByName('script').AsString;
    end;
 end;
 

@@ -98,7 +98,12 @@ begin
    next := MOVE_CODES[op];
    inc(index);
    iterations := 1;
-   if rec.opcode in CODES_WITH_PARAMS then
+   if rec.opcode = $22 then
+   begin
+      next := QuotedStr(format('%s %d', [rec.name, rec.data[1]]));
+      Exit(format('ChangeSprite(%s, 0)', [next]));
+   end
+   else if rec.opcode in CODES_WITH_PARAMS then
       Exit(format('%s(%s)', [next, CalculateParamList(rec)]))
    else while (index < base.last) and (base.command[index].opcode = op) do
    begin

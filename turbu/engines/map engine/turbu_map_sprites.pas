@@ -2,6 +2,7 @@ unit turbu_map_sprites;
 
 interface
 uses
+   rsImport,
    tiles, charset_data, timing,
    turbu_pathing, turbu_sprites, turbu_map_objects, turbu_defs, turbu_containers,
    sg_defs, sdl_sprite;
@@ -10,7 +11,7 @@ type
    TMapSprite = class;
 
    IRpgCharacter = interface
-      procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite = nil);
+      procedure ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite = nil);
    end;
 
    TMapSprite = class(TObject)
@@ -28,6 +29,7 @@ type
       FTransparencyFactor: byte;
       FPaused: boolean;
       FInitialized: boolean;
+      FMoveLoop: boolean;
 
       function tryMove(where: TFacing): boolean; inline;
       function tryMoveDiagonal(one, two: TFacing): boolean; inline;
@@ -82,6 +84,7 @@ type
       property moveQueue: TPath read FMoveQueue write FMoveQueue;
       property moveAssign: TPath read FMoveAssignment;
    public
+      [NoImport]
       constructor Create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); virtual;
       destructor Destroy; override;
       function move(whichDir: TFacing): boolean; virtual;
@@ -109,6 +112,7 @@ type
       property facing: TFacing read FFacing write setFacing;
       property moveOrder: TPath read FMoveAssignment write setMoveOrder;
       property canSkip: boolean read getCanSkip write FCanSkip;
+      property moveLoop: boolean read FMoveLoop write FMoveLoop;
       property character: IRpgCharacter read FCharacter write FCharacter;
       property translucency: byte read FTransparencyFactor write setTranslucency;
       property tiles[x: byte]: TTile read GetTile;
@@ -613,7 +617,7 @@ begin
       $1F: FMoveFreq := min(0, FMoveFreq - 1);
       $20: GEnvironment.Switch[FOrder.data[1]] := true;
       $21: GEnvironment.Switch[FOrder.data[1]] := false;
-      $22: FCharacter.changeSprite(FOrder.name, FOrder.data[1]);
+      $22: FCharacter.changeSprite(FOrder.name, boolean(FOrder.data[1]));
 {$MESSAGE WARN 'Commented-out code in live unit'}
       $23: {GCurrentEngine.mediaPlayer.playAndFreeSfx(TRmSound.Create(FOrder.name, 0, FOrder.data[1],
                                                                      FOrder.data[2], FOrder.data[3]))};

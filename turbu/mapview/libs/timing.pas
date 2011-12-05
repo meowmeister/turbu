@@ -44,6 +44,7 @@ type
    procedure moveTowards(timer: cardinal; var current: extended; const goal: extended); overload;
    procedure moveTowards(timer: cardinal; var current: single; const goal: single); overload;
    procedure moveTowards(timer: cardinal; var current: byte; const goal: byte); overload;
+   procedure moveTowards(timer: cardinal; var current: integer; const goal: integer); overload;
 
 implementation
 uses
@@ -184,6 +185,16 @@ begin
    timefactor := max(timer div TRpgTimeStamp.FrameLength, 1);
    diff := commons.round((current - goal) / timefactor);
    assert(abs(diff) < 256);
+   current := current - diff;
+end;
+
+procedure moveTowards(timer: cardinal; var current: integer; const goal: integer);
+var
+   diff: smallint;
+   timefactor: integer;
+begin
+   timefactor := max(timer div TRpgTimeStamp.FrameLength, 1);
+   diff := commons.round((current - goal) / timefactor);
    current := current - diff;
 end;
 

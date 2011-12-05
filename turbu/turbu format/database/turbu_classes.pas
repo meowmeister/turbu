@@ -21,6 +21,7 @@ interface
 uses
    classes, sysUtils, generics.collections, DB, RTTI, SimpleDS,
    DSharp.Core.Lambda,
+   rsImport,
    turbu_containers, turbu_defs, turbu_constants, turbu_serialization;
 
 type
@@ -52,6 +53,7 @@ type
       class function templateClass: TDatafileClass; virtual; abstract;
    public
       //marked as overload to allow access to TObject.Create
+      [NoImport]
       constructor Create(base: TRpgDatafile); overload;
    published
       property OnCreate: TScriptEvent read FOnCreate write FOnCreate;
