@@ -492,6 +492,13 @@ begin
    result := id;
 end;
 
+type
+   //UTF8 encoding with no BOM
+   TUtf8EncodingN = class(TUtf8Encoding)
+   public
+      function GetPreamble: TBytes; override;
+   end;
+
 procedure LoadScriptCache(const path: string; const report: IConversionReport);
 var
    filename, maps: string;
@@ -499,29 +506,35 @@ var
    id: integer;
    obj: TEBObject;
    ds: TDataset;
+   encoding: TUtf8EncodingN;
 begin
    ds := dmDatabase.script_cache;
    ds.Active := true;
-   maps := TPath.Combine(path, 'maps');
-   filenames := TDirectory.GetFiles(TPath.Combine(path, 'scripts'));
-   report.setCurrentTask('Preparing script cache', length(filenames));
-   for filename in filenames do
-   begin
-      report.newStep(TPath.GetFileNameWithoutExtension(filename));
-      id := ScanID(maps, TPath.GetFileNameWithoutExtension(filename));
-      if id = -1 then
-         Continue;
-      obj := TEBObject.Load(TFile.ReadAllText(filename));
-      try
+   encoding := TUtf8EncodingN.Create;
+   try
+      maps := TPath.Combine(path, 'maps');
+      filenames := TDirectory.GetFiles(TPath.Combine(path, 'scripts'));
+      report.setCurrentTask('Preparing script cache', length(filenames));
+      for filename in filenames do
+      begin
+         report.newStep(TPath.GetFileNameWithoutExtension(filename));
+         id := ScanID(maps, TPath.GetFileNameWithoutExtension(filename));
+         if id = -1 then
+            Continue;
+         obj := TEBObject.Load(TFile.ReadAllText(filename, encoding));
          try
-            ds.appendRecord([id, obj.GetScript(0)]);
-         except
-            on E: Exception do
-               report.makeError(E.Message);
+            try
+               ds.appendRecord([id, obj.GetScript(0)]);
+            except
+               on E: Exception do
+                  report.makeError(E.Message);
+            end;
+         finally
+            obj.Free;
          end;
-      finally
-         obj.Free;
       end;
+   finally
+      encoding.Free;
    end;
 end;
 
@@ -927,6 +940,13 @@ begin
    finally
       aFile.Free;
    end;
+end;
+
+{ TUtf8EncodingN }
+
+function TUtf8EncodingN.GetPreamble: TBytes;
+begin
+   SetLength(result, 0);
 end;
 
 end.

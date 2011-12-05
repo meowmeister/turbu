@@ -125,7 +125,7 @@ type
    private
       FOpcode: integer;
       FDepth: byte;
-      FName: ansiString;
+      FName: utf8String;
       FData: TArray<integer>;
       function getScript: ansiString;
    public
@@ -133,7 +133,7 @@ type
       constructor Create(opcode, value: integer); overload;
       property script: ansiString read getScript;
       property opcode: integer read FOpcode;
-      property name: ansiString read FName;
+      property name: utf8String read FName;
       property data: TArray<integer> read FData;
       property indent: byte read FDepth;
    end;
