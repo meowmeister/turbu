@@ -104,7 +104,7 @@ end;
 function ObjectFactory(newClass: TEBClass; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := newClass.Create(parent);
-   result.Text := string(opcode.name);
+   result.Text := TrimRight(string(opcode.name));
    result.Values.AddRange(opcode.data);
 end;
 
