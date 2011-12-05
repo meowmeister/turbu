@@ -23,7 +23,7 @@ uses
    turbu_map_engine, turbu_versioning, turbu_map_sprites, turbu_classes, turbu_heroes,
    turbu_database_interface, turbu_map_interface, turbu_sdl_image, turbu_2k_char_sprites,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine, turbu_defs,
-   turbu_2k_environment,
+   turbu_2k_environment, turbu_script_engine,
    AsphyreTimer, SG_defs, SDL_ImageManager, sdl_canvas, SDL, sdl_13;
 
 type
@@ -46,8 +46,8 @@ type
       FScrollPosition: TSgPoint;
       FTimer: TAsphyreTimer;
       FPartySprite: THeroSprite;
-      FParty: IRpgCharacter;
       FGameEnvironment: T2kEnvironment;
+      FObjectManager: TMapObjectManager;
 
       function retrieveImage(const folder, filename: string): TRpgSdlImage;
 
@@ -135,7 +135,6 @@ begin
    assert(FInitialized);
    FInitialized := false;
    FreeAndNil(FGameEnvironment);
-   FParty := nil; //owned by FPartySprite
    FreeAndNil(FPartySprite);
    FreeAndNil(FCanvas);
    FreeAndNil(FImages);
@@ -148,6 +147,7 @@ begin
       FDatabase.Free;
       GDatabase := nil;
       FreeAndNil(dmDatabase);
+      FObjectManager.Free;
    end;
    inherited Cleanup;
 end;
@@ -200,10 +200,9 @@ var
    layout: TGameLayout;
    renderer: TSdlRenderer;
 begin
+   if FInitialized then
+      Exit(window);
    try
-      if FInitialized then
-         Exit;
-
       FInitialized := true;
       inherited initialize(window, database);
       if dmDatabase = nil then
@@ -215,8 +214,12 @@ begin
          GDatabase := FDatabase;
          if not assigned(FDatabase) then
             raise ERpgPlugin.Create('Incompatible project database');
+         FObjectManager := TMapObjectManager.Create;
       end
-      else FDatabase := GDatabase;
+      else begin
+         FDatabase := GDatabase;
+         FObjectManager := GMapObjectManager;
+      end;
 
       layout := FDatabase.layout;
       if window.ptr = nil then
@@ -244,6 +247,7 @@ begin
       FSignal := TSimpleEvent.Create;
       FSignal.SetEvent;
       FGameEnvironment := T2kEnvironment.Create(FDatabase);
+      FObjectManager.ScriptEngine.LoadEnvironment(@turbu_2k_environment.RegisterEnvironment)
    except
       cleanup;
       raise;
@@ -256,9 +260,7 @@ var
    i: integer;
    party: TRpgParty;
 begin
-   if FParty = nil then
-      FParty := TRpgParty.Create;
-   party := FParty as TRpgParty;
+   party := FGameEnvironment.Party;
    for I := 0 to FGameEnvironment.HeroCount do
    begin
       party.hero[1] := FGameEnvironment.heroes[i];
@@ -462,6 +464,7 @@ begin
    FCurrentMap := FMaps[FWaitingMap.id];
    GSpriteEngine := FCurrentMap;
    LoadMapSprites(FCurrentMap.mapObj);
+   FObjectManager.LoadMap(FWaitingMap);
    result := FSignal.WaitFor(INFINITE) = wrSignaled;
    if result then
       self.repaint;

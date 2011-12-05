@@ -84,7 +84,7 @@ type
    THeroSprite = class(TCharSprite)
    private
       FTemplate: TRpgHero;
-      FParty: TRpgParty;
+      FParty: IRpgCharacter;
       FNextMove: TFacing;
       FMoveQueued: boolean;
       FMoveTick: boolean;

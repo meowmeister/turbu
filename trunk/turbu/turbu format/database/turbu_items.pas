@@ -29,6 +29,14 @@ type
    TWeaponAnimType = (wa_weapon, wa_battleAnim);
    TMovementMode = (mm_none, mm_stepForward, mm_jumpTo, mm_walkTo);
 
+   ItemTypeAttribute = class(TCustomAttribute)
+   private
+      FType: TItemType;
+   public
+      constructor Create(it: TitemType);
+      property itemType: TItemType read FType;
+   end;
+
    TWeaponAnimData = class(TRpgDatafile)
    protected
        FAnimType: TWeaponAnimType;
@@ -61,17 +69,20 @@ type
       FDescription: string;
       FCost: integer;
       FTag: T4IntArray;
+      function GetItemType: TItemType;
    protected
       class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
+      property itemType: TItemType read GetItemType;
       property desc: string read FDescription write FDescription;
       property cost: integer read FCost write FCost;
       property tag: T4IntArray read FTag write FTag;
    end;
 
+   [ItemType(it_junk)]
    TJunkTemplate = class(TItemTemplate);
 
    TUsableItemTemplate = class abstract(TItemTemplate)
@@ -135,6 +146,7 @@ type
       property inflictReversed: boolean read FInflictReversed write FInflictReversed;
    end;
 
+   [ItemType(it_weapon)]
    TWeaponTemplate = class(TEquipmentTemplate)
    private
       FTwoHanded: boolean;
@@ -159,6 +171,7 @@ type
       property animData: TAnimDataList read FAnimData;
    end;
 
+   [ItemType(it_armor)]
    TArmorTemplate = class(TEquipmentTemplate)
    private
       FSlot: byte;
@@ -169,6 +182,7 @@ type
       property slot: byte read FSlot write FSlot;
    end;
 
+   [ItemType(it_medicine)]
    TMedicineTemplate = class(TUsableItemTemplate)
    private
       FAreaMedicine: boolean;
@@ -185,7 +199,8 @@ type
       property deadOnly: boolean read FDeadHeroesOnly write FDeadHeroesOnly;
    end;
 
-   TSkillBookTemplate = class(TUsableItemTemplate)
+   [ItemType(it_book)]
+   TSkillBookTemplate =class(TUsableItemTemplate)
    private
       FSkill: word;
    public
@@ -195,6 +210,7 @@ type
       property skill: word read FSkill write FSkill;
    end;
 
+   [ItemType(it_skill)]
    TSkillItemTemplate = class(TSkillBookTemplate)
    private
       FCustomSkillMessage: boolean;
@@ -205,8 +221,10 @@ type
       property customSkillMessage: boolean read FCustomSkillMessage write FCustomSkillMessage;
    end;
 
-   TStatItemTemplate = class(TUsableItemTemplate); //it_upgrade
+   [ItemType(it_upgrade)]
+   TStatItemTemplate = class(TUsableItemTemplate);
 
+   [ItemType(it_variable)]
    TVariableItemTemplate = class(TUsableItemTemplate)
    private
       FWhich: word;
@@ -223,6 +241,7 @@ type
       property operation: TBinaryOp read FOperation write FOperation;
    end;
 
+   [ItemType(it_script)]
    TScriptItemTemplate = class(TUsableItemTemplate)
    private
       FEvent: string;
@@ -235,9 +254,20 @@ type
 
 implementation
 uses
+   RTTI,
+   rttiHelper,
    types;
 
 { TItemTemplate }
+
+function TItemTemplate.GetItemType: TItemType;
+var
+   att: ItemTypeAttribute;
+begin
+   att := ItemTypeAttribute(TRttiContext.Create.GetType(self.ClassInfo).GetAttribute(ItemTypeAttribute));
+   assert(assigned(att));
+   result := att.itemType;
+end;
 
 class function TItemTemplate.keyChar: ansiChar;
 begin
@@ -510,6 +540,13 @@ end;
 class function TWeaponAnimData.keyChar: ansiChar;
 begin
    result := 'w';
+end;
+
+{ ItemTypeAttribute }
+
+constructor ItemTypeAttribute.Create(it: TitemType);
+begin
+   FType := it;
 end;
 
 end.

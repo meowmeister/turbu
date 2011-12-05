@@ -14,13 +14,15 @@
 *
 * This file was created by Mason Wheeler.  He can be reached for support at
 * www.turbu-rpg.com.
-*****************************************************************************}unit turbu_heroes;
+*****************************************************************************}
+unit turbu_heroes;
 
 interface
 uses
    types,
+   rsImport,
    turbu_classes, turbu_containers, turbu_defs, turbu_mapchars,
-   turbu_characters, turbu_map_sprites;
+   turbu_characters, turbu_map_sprites, turbu_2k_items;
 
 const
    MAXPARTYSIZE = 4;
@@ -49,7 +51,7 @@ type
       FExpTable: array[1..50] of integer;
       FExpTotal: integer;
 //      FEquipment: array[1..5] of TRpgItem;
-      FStat: array[TStatComponents, 1..4] of smallint;
+      FStat: array[TStatComponents, 1..4] of integer;
       FConditionModifier: array of integer;
       FCondition: array of boolean;
       FDtypeModifiers: array of integer;
@@ -62,20 +64,20 @@ type
       FSkill: array of boolean;
 
       FLevelUpdated: boolean;
-      function countSkills: word;
+      function countSkills: integer;
       procedure die;
       procedure gainLevel;
       function getCondition(x: integer): boolean;
-      function getEquipment(which: byte): word;
+      function getEquipment(which: integer): integer;
       function getExpNeeded: integer;
-      function getHighCondition: byte;
+      function getHighCondition: integer;
       function getLevelUpdatedStatus: boolean;
       function getMHp: integer;
       function getMMp: integer;
-      function getSkill(id: word): boolean;
-      function getStat(which: integer): smallint;
-      procedure levelAdjustDown(before: byte);
-      procedure levelAdjustUp(before: byte);
+      function getSkill(id: integer): boolean;
+      function getStat(which: integer): integer;
+      procedure levelAdjustDown(before: integer);
+      procedure levelAdjustUp(before: integer);
       procedure levelStatAdjust;
       procedure loseLevel;
       procedure setCondition(x: integer; const value: boolean);
@@ -85,52 +87,58 @@ type
       procedure setMaxHp(const Value: integer);
       procedure setMaxMp(const Value: integer);
       procedure setMP(value: integer);
-      procedure setSkill(id: word; value: boolean);
-      procedure setStat(which: integer; value: smallint);
+      procedure setSkill(id: integer; value: boolean);
+      procedure setStat(which: integer; value: integer);
       procedure setTransparent(const Value: boolean);
       procedure updateLevel(const gain: boolean);
 
    protected
       class function templateClass: TDatafileClass; override;
    public
+      [NoImport]
       constructor Create(base: TClassTemplate);
       destructor Destroy; override;
 
-      procedure equip(id: word); overload;
-      procedure equip(id, slot: word); overload;
-      procedure unequip(id: byte);
-      function equipped(id: smallint): boolean;
+      procedure equip(id: integer);
+      procedure equipSlot(id, slot: integer);
+      procedure Unequip(slot: TSlot);
+      function equipped(id: integer): boolean;
       procedure fullheal;
-      function takeDamage(power: word; defense, mDefense, variance: byte): word;
-      procedure setSprite(filename: string; index: byte; translucent: boolean);
-      procedure setPortrait(filename: string; index: byte);
+      function takeDamage(power: integer; defense, mDefense, variance: integer): integer;
+      procedure setSprite(filename: string; translucent: boolean);
+      procedure setPortrait(filename: string; index: integer);
       function inParty: boolean;
-      function potentialStat(item, slot, whichStat: word): word;
+      function potentialStat(item, slot, whichStat: integer): integer;
+      procedure ChangeHP(quantity: integer; deathPossible: boolean);
+      procedure ChangeMP(quantity: integer);
+      procedure ChangeClass(id: integer; retainLevel: boolean; skillChange, statChange: integer; showMessage: boolean);
+      procedure AddBattleCommand(which: integer);
+      procedure RemoveBattleCommand(which: integer);
 
       property name: string read FName write FName;
       property sprite: string read FSprite;
       property transparent: boolean read FTransparent write setTransparent;
-      property charClass: string read FClass write FClass;
+      property title: string read FClass write FClass;
       property level: integer read FLevel write setLevel;
       property exp: longint read FExpTotal write setExp;
       property hp: integer read FHitPoints write setHP;
       property mp: integer read FManaPoints write setMP;
       property maxHp: integer read getMHp write setMaxHp;
       property maxMp: integer read getMMp write setMaxMp;
-      property stat[x: integer]: smallint read getStat write setStat;
-      property attack: smallint index 1 read getStat write setStat;
-      property defense: smallint index 2 read getStat write setStat;
-      property mind: smallint index 3 read getStat write setStat;
-      property agility: smallint index 4 read getStat write setStat;
-      property equipment[x: byte]: word read getEquipment;
+      property stat[x: integer]: integer read getStat write setStat;
+      property attack: integer index 1 read getStat write setStat;
+      property defense: integer index 2 read getStat write setStat;
+      property mind: integer index 3 read getStat write setStat;
+      property agility: integer index 4 read getStat write setStat;
+      property equipment[x: integer]: integer read getEquipment;
       property expNeeded: integer read getExpNeeded;
       property levelUpdated: boolean read getLevelUpdatedStatus;
-      property skill[x: word]: boolean read getSkill write setSkill;
-      property skills: word read countSkills;
+      property skill[x: integer]: boolean read getSkill write setSkill;
+      property skills: integer read countSkills;
       property condition[x: integer]: boolean read getCondition write setCondition;
       property dead: boolean index 1 read getCondition;
       property dualWield: TWeaponStyle read FDualWield;
-      property highCondition: byte read getHighCondition;
+      property highCondition: integer read getHighCondition;
    end;
 
    TRpgParty = class(TRpgCharacter)
@@ -138,53 +146,58 @@ type
       //data
       FCash: integer;
       FParty: array[1..MAXPARTYSIZE] of TRpgHero;
-//      FInventory: TRpgInventory;
+      FInventory: TRpgInventory;
 
       //flags
       FLevelNotify: boolean;
       FDeathPossible: boolean;
 
-      function getMap: word;
-      procedure setY(const Value: word);
-      procedure setX(const Value: word);
-      function getFacing: byte;
-      procedure setFacing(const Value: byte);
-      function getHero(x: byte): TRpgHero;
-      procedure setHero(x: byte; value: TRpgHero);
+      function getMap: integer;
+      procedure setY(const Value: integer);
+      procedure setX(const Value: integer);
+      function getFacing: integer;
+      procedure setFacing(const Value: integer);
+      function getHero(x: integer): TRpgHero;
+      procedure setHero(x: integer; value: TRpgHero);
       function empty: boolean;
+      function GetTFacing: TFacing;
    protected
-      function getX: word; override;
-      function getY: word; override;
-      function getTranslucency: byte; override;
-      procedure setTranslucency(const Value: byte); override;
-      procedure doFlash(r, g, b, power: byte; time: cardinal); override;
+      function getX: integer; override;
+      function getY: integer; override;
+      function getTranslucency: integer; override;
+      procedure setTranslucency(const Value: integer); override;
+      procedure doFlash(r, g, b, power: integer; time: integer); override;
       function getBase: TMapSprite; override;
    public
+      [NoImport]
       constructor Create;
       destructor Destroy; override;
-      procedure addItem(const id, number: word);
-      procedure removeItem(const id, number: word);
-      procedure addExp(const id: smallint; number: integer);
-      procedure removeExp(const id: smallint; number: integer);
-      procedure addLevels(const id: smallint; number: integer);
-      procedure removeLevels(const id: smallint; number: integer);
+      procedure addItem(const id, number: integer);
+      procedure removeItem(const id, number: integer);
+      procedure addExp(const id: integer; number: integer);
+      procedure removeExp(const id: integer; number: integer);
+      procedure addLevels(const id: integer; number: integer);
+      procedure removeLevels(const id: integer; number: integer);
+      [NoImport]
       procedure sort;
-      procedure ChangeSprite(name: string; index: integer; oldSprite: TMapSprite); override;
+      [NoImport]
+      procedure ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite); override;
 
-      function takeDamage(power: word; defense, mDefense, variance: byte): word;
-      function openSlot: byte;
-      function size: byte;
+      function takeDamage(power: integer; defense, mDefense, variance: integer): integer;
+      function openSlot: integer;
+      function size: integer;
       function indexOf(who: TRpgHero): integer;
 
       property money: integer read FCash write FCash;
-//      property inventory: TRpgInventory read FInventory write FInventory;
-      property hero[x: byte]: TRpgHero read getHero write setHero; default;
+      property inventory: TRpgInventory read FInventory write FInventory;
+      property hero[x: integer]: TRpgHero read getHero write setHero; default;
       property levelNotify: boolean read FLevelNotify write FLevelNotify;
       property deathPossible: boolean read FDeathPossible write FDeathPossible;
-      property facing: byte read getFacing write setFacing;
-      property x: word read getX write setX;
-      property y: word read getY write setY;
-      property map: word read getMap;
+      property facingValue: integer read getFacing write setFacing;
+      property facing: TFacing read GetTFacing;
+      property x: integer read getX write setX;
+      property y: integer read getY write setY;
+      property mapID: integer read getMap;
    end;
 
    TPartyEvent = procedure(hero: TRpgHero; party: TRpgParty) of object;
@@ -204,7 +217,7 @@ uses
 constructor TRpgHero.Create(base: TClassTemplate);
 var
   I: Integer;
-//  dummy: byte;
+//  dummy: integer;
   calc: TExpCalcEvent;
   template: THeroTemplate absolute base;
 begin
@@ -262,7 +275,34 @@ begin
    result := TClassTemplate;
 end;
 
-function TRpgHero.countSkills: word;
+procedure TRpgHero.AddBattleCommand(which: integer);
+begin
+   //TODO: Implement this
+end;
+
+procedure TRpgHero.RemoveBattleCommand(which: integer);
+begin
+   //TODO: Implement this
+end;
+
+procedure TRpgHero.ChangeClass(id: integer; retainLevel: boolean; skillChange,
+  statChange: integer; showMessage: boolean);
+begin
+   //TODO: Implement this
+end;
+
+procedure TRpgHero.ChangeHP(quantity: integer; deathPossible: boolean);
+begin
+//   GParty.deathPossible := deathPossible;
+   setHP(FHitPoints + quantity);
+end;
+
+procedure TRpgHero.ChangeMP(quantity: integer);
+begin
+   setMP(FManaPoints + quantity);
+end;
+
+function TRpgHero.countSkills: integer;
 var
   i: Integer;
 begin
@@ -270,8 +310,6 @@ begin
    for i := 1 to high(FSkill) do
       if FSkill[i] then
          inc(result);
-      //end if
-   //end for
 end;
 
 destructor TRpgHero.Destroy;
@@ -296,7 +334,7 @@ begin
    FHitPoints := 0;
 end;
 
-procedure TRpgHero.equip(id: word);
+procedure TRpgHero.equip(id: integer);
 {var
    theItem: TRpgItem;
    dummy: TItemType; }
@@ -314,14 +352,14 @@ begin
    dummy := theItem.template.itemType;
    if (dummy = weaponItem) and (theItem.template.twoHanded) then
    begin
-      unequip(byte(weaponItem) - 1);
-      unequip(byte(shieldItem) - 1);
-      FEquipment[byte(weaponItem)] := theItem;
-      FEquipment[byte(shieldItem)] := theItem;
+      unequip(integer(weaponItem) - 1);
+      unequip(integer(shieldItem) - 1);
+      FEquipment[integer(weaponItem)] := theItem;
+      FEquipment[integer(shieldItem)] := theItem;
    end
    else begin
-      unequip(byte(dummy) - 1);
-      FEquipment[byte(dummy)] := theItem;
+      unequip(integer(dummy) - 1);
+      FEquipment[integer(dummy)] := theItem;
    end;
    GParty.inventory.Remove(id, 1);
    inc(FStat[stat_eq_mod, 1], TEquipment(theItem).attack);
@@ -330,7 +368,7 @@ begin
    inc(FStat[stat_eq_mod, 4], TEquipment(theItem).speed);}
 end;
 
-procedure TRpgHero.equip(id, slot: word);
+procedure TRpgHero.equipSlot(id, slot: integer);
 {var
    theItem: TRpgItem;
    dummy: TItemType; }
@@ -343,13 +381,13 @@ begin
 
    if (dummy = weaponItem) and (theItem.template.twoHanded) then
    begin
-      unequip(byte(weaponItem) - 1);
-      unequip(byte(shieldItem) - 1);
-      FEquipment[byte(weaponItem)] := theItem;
-      FEquipment[byte(shieldItem)] := theItem;
+      unequip(integer(weaponItem) - 1);
+      unequip(integer(shieldItem) - 1);
+      FEquipment[integer(weaponItem)] := theItem;
+      FEquipment[integer(shieldItem)] := theItem;
    end
    else begin
-      unequip(byte(dummy) - 1);
+      unequip(integer(dummy) - 1);
       FEquipment[slot] := theItem;
    end;
    GParty.inventory.Remove(id, 1);
@@ -359,19 +397,20 @@ begin
    inc(FStat[stat_eq_mod, 4], TEquipment(theItem).speed);}
 end;
 
-procedure TRpgHero.unequip(id: byte);
+procedure TRpgHero.unequip(slot: TSlot);
 var
-   I: Integer;
+   I: TSlot;
+   id: integer;
 begin
-   if id = 5 then
+   if slot = eq_all then
    begin
-      for I := 0 to 4 do
+      for I := eq_weapon to eq_relic do
          unequip(i);
       Exit;
    end;
 
-{   inc(id);
-   if FEquipment[id] <> nil then
+   id := ord(slot) + 1;
+{   if FEquipment[id] <> nil then
    begin
       GParty.inventory.Add(FEquipment[id]);
       dec(FStat[stat_eq_mod, 1], TEquipment(FEquipment[id]).attack);
@@ -384,7 +423,7 @@ begin
    end;}
 end;
 
-function TRpgHero.equipped(id: smallint): boolean;
+function TRpgHero.equipped(id: integer): boolean;
 {var
    i: Integer;}
 begin
@@ -413,7 +452,7 @@ begin
    else result := false;
 end;
 
-function TRpgHero.getEquipment(which: byte): word;
+function TRpgHero.getEquipment(which: integer): integer;
 begin
 {   if assigned(FEquipment[which]) then
       result := FEquipment[which].template.id
@@ -429,10 +468,10 @@ begin
    //end if
 end;
 
-function TRpgHero.getHighCondition: byte;
+function TRpgHero.getHighCondition: integer;
 var
-   i: word;
-   highPriority: byte;
+   i: integer;
+   highPriority: integer;
 begin
    highPriority := 0;
    result := 0;
@@ -469,7 +508,7 @@ begin
    end;
 end;
 
-function TRpgHero.getSkill(id: word): boolean;
+function TRpgHero.getSkill(id: integer): boolean;
 begin
    if (id > 0) and (id < high(FSkill)) then
       result := FSkill[id]
@@ -477,7 +516,7 @@ begin
       result := FSkill[id];
 end;
 
-function TRpgHero.getStat(which: integer): smallint;
+function TRpgHero.getStat(which: integer): integer;
 //var i: TStatComponents;
 begin
    result := 0;
@@ -548,7 +587,7 @@ end;
 procedure TRpgHero.setLevel(const value: integer);
 var
    dummy: boolean;
-   oldlevel: byte;
+   oldlevel: integer;
 begin
    if FLevel = value then
       Exit;
@@ -571,8 +610,8 @@ begin
 end;
 
 
-procedure TRpgHero.levelAdjustDown(before: byte);
-//var i: word;
+procedure TRpgHero.levelAdjustDown(before: integer);
+//var i: integer;
 begin
 {   for I := 1 to Template.skills do
       if (Template.skill[i].level > FLevel) and (Template.skill[i].level <= before) then
@@ -582,8 +621,8 @@ begin
    levelStatAdjust;}
 end;
 
-procedure TRpgHero.levelAdjustUp(before: byte);
-//var i: word;
+procedure TRpgHero.levelAdjustUp(before: integer);
+//var i: integer;
 begin
 {   for I := 1 to Template.skills do
       if (Template.skill[i].level <= FLevel) and (Template.skill[i].level > before) then
@@ -609,7 +648,7 @@ begin
    levelAdjustDown(FLevel + 1);
 end;
 
-function TRpgHero.potentialStat(item, slot, whichStat: word): word;
+function TRpgHero.potentialStat(item, slot, whichStat: integer): integer;
 {var
    theItem: TItem;}
 begin
@@ -657,7 +696,7 @@ begin
    //end if
 end;
 
-procedure TRpgHero.setPortrait(filename: string; index: byte);
+procedure TRpgHero.setPortrait(filename: string; index: integer);
 var dummy: string;
 begin
    if not (index in [1..16]) then
@@ -672,33 +711,30 @@ begin
    GGameEngine.loadPortrait(filename);}
 end;
 
-procedure TRpgHero.setSkill(id: word; value: boolean);
+procedure TRpgHero.setSkill(id: integer; value: boolean);
 begin
    if (id > 0) and (id < high(FSkill)) then
       FSkill[id] := value;
    //end if
 end;
 
-procedure TRpgHero.setSprite(filename: string; index: byte; translucent: boolean);
+procedure TRpgHero.setSprite(filename: string; translucent: boolean);
 var
    dummy: string;
 begin
-   if not (index in [1..8]) then
-      Exit;
    dummy := filename;
 {   findGraphic(dummy, 'charset');
    if dummy = '' then
       Exit;
 
    FSprite := filename;
-   FSpriteIndex := index;
    FTransparent := translucent;
    if GParty[1] = self then
    with GGameEngine.character[0] as TCharSprite do
       update(sprite, spriteIndex, translucent);}
 end;
 
-procedure TRpgHero.setStat(which: integer; value: smallint);
+procedure TRpgHero.setStat(which: integer; value: integer);
 begin
    inc(FStat[stat_bonus, which], self.stat[which] - value);
 end;
@@ -711,7 +747,7 @@ begin
       update(sprite, spriteIndex, translucency >= 3);}
 end;
 
-function TRpgHero.takeDamage(power: word; defense, mDefense, variance: byte): word;
+function TRpgHero.takeDamage(power: integer; defense, mDefense, variance: integer): integer;
 begin
 {   GParty.deathPossible := true;
    hp := hp - power;
@@ -741,7 +777,7 @@ end;
 
 { TRpgParty }
 
-procedure TRpgParty.addExp(const id: smallint; number: integer);
+procedure TRpgParty.addExp(const id: integer; number: integer);
 var
   I: Integer;
 //  dummy: TRpgHero;
@@ -761,12 +797,12 @@ begin
    //end if
 end;
 
-procedure TRpgParty.addItem(const id, number: word);
+procedure TRpgParty.addItem(const id, number: integer);
 begin
 //   FInventory.Add(id, number);
 end;
 
-procedure TRpgParty.addLevels(const id: smallint; number: integer);
+procedure TRpgParty.addLevels(const id: integer; number: integer);
 var
    I: Integer;
 //   dummy: TRpgHero;
@@ -786,7 +822,7 @@ begin
    //end if
 end;
 
-procedure TRpgParty.ChangeSprite(name: string; index: integer; oldSprite: TMapSprite);
+procedure TRpgParty.ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite);
 begin
 {   if assigned(GGameEngine.character[0]) then
    with GGameEngine.character[0] do
@@ -811,7 +847,7 @@ begin
 //   result := GGameEngine.currentParty;
 end;
 
-function TRpgParty.getFacing: byte;
+function TRpgParty.getFacing: integer;
 begin
    result := 0;
 {   case GGameEngine.currentParty.facing of
@@ -822,7 +858,7 @@ begin
    end;}
 end;
 
-function TRpgParty.getHero(x: byte): TRpgHero;
+function TRpgParty.getHero(x: integer): TRpgHero;
 begin
    if (x = 0) or (x > MAXPARTYSIZE) or (FParty[x] = nil) then
       result := nil //GCurrentEngine.hero[0]
@@ -830,26 +866,31 @@ begin
       result := FParty[x];
 end;
 
-function TRpgParty.getMap: word;
+function TRpgParty.getMap: integer;
 begin
 //   result := GGameEngine.currentMap.mapID;
 end;
 
-function TRpgParty.getTranslucency: byte;
+function TRpgParty.GetTFacing: TFacing;
+begin
+   //TODO: Implement this;
+end;
+
+function TRpgParty.getTranslucency: integer;
 begin
    if empty then
       result := 0
    else result := inherited getTranslucency;
 end;
 
-function TRpgParty.getX: word;
+function TRpgParty.getX: integer;
 begin
 {   if assigned(GGameEngine.currentParty) then
       result := GGameEngine.currentParty.location.x
    else result := 0;}
 end;
 
-function TRpgParty.getY: word;
+function TRpgParty.getY: integer;
 begin
 {   if assigned(GGameEngine.currentParty) then
       result := GGameEngine.currentParty.location.y
@@ -857,46 +898,40 @@ begin
 end;
 
 function TRpgParty.indexOf(who: TRpgHero): integer;
-var i: byte;
+var i: integer;
 begin
    result := -1;
    for i := 1 to MAXPARTYSIZE do
       if self[i] = who then
          result := i;
-      //end if
-   //end for
 end;
 
 function TRpgParty.empty: boolean;
-var i: byte;
+var i: integer;
 begin
    result := true;
    for i := 1 to MAXPARTYSIZE do
 {      if self[i] <> GCurrentEngine.hero[0] then
-         result := false;
-      //end if};
-   //end for
+         result := false;  }
 end;
 
-procedure TRpgParty.doFlash(r, g, b, power: byte; time: cardinal);
+procedure TRpgParty.doFlash(r, g, b, power: integer; time: integer);
 begin
 {   if assigned(GGameEngine.character[0]) then
       GGameEngine.character[0].flash(r, g, b, power, time);}
 end;
 
-function TRpgParty.size: byte;
-var i: byte;
+function TRpgParty.size: integer;
+var i: integer;
 begin
    result := 0;
    for i := 1 to MAXPARTYSIZE do
 {      if (self[i] <> GCurrentEngine.hero[0]) then
          inc(result)};
-      //end if
-   //end for
 end;
 
-function TRpgParty.openSlot: byte;
-var i: byte;
+function TRpgParty.openSlot: integer;
+var i: integer;
 begin
    i := 1;
 {   while (self[i] <> GCurrentEngine.hero[0]) and (i <= MAXPARTYSIZE) do
@@ -906,7 +941,7 @@ begin
    else result := i;
 end;
 
-procedure TRpgParty.removeExp(const id: smallint; number: integer);
+procedure TRpgParty.removeExp(const id: integer; number: integer);
 var
    I: Integer;
 //   dummy: TRpgHero;
@@ -919,18 +954,16 @@ begin
             dummy := GCurrentEngine.hero[self[i].template.id];
             dummy.exp := dummy.exp - number;
          end;};
-      //end for
    end else
       self[id].exp := self[id].exp - number;
-   //end if
 end;
 
-procedure TRpgParty.removeItem(const id, number: word);
+procedure TRpgParty.removeItem(const id, number: integer);
 begin
 //   FInventory.Remove(id, number);
 end;
 
-procedure TRpgParty.removeLevels(const id: smallint; number: integer);
+procedure TRpgParty.removeLevels(const id: integer; number: integer);
 var
    I: Integer;
 //   dummy: TRpgHero;
@@ -943,14 +976,11 @@ begin
             dummy := GCurrentEngine.hero[self[i].template.id];
             dummy.level := dummy.level - number;
          end;};
-      //end for
-   //end if
    end else
       self[id].level := self[id].level - number;
-   //end if
 end;
 
-procedure TRpgParty.setFacing(const Value: byte);
+procedure TRpgParty.setFacing(const Value: integer);
 var dummy: TMapSprite;
 begin
 //   dummy := GGameEngine.currentParty;
@@ -962,27 +992,27 @@ begin
    end;
 end;
 
-procedure TRpgParty.setHero(x: byte; value: TRpgHero);
+procedure TRpgParty.setHero(x: integer; value: TRpgHero);
 begin
    if (x = 0) or (x > MAXPARTYSIZE) then
       Exit
    else FParty[x] := value;
 end;
 
-procedure TRpgParty.setTranslucency(const Value: byte);
+procedure TRpgParty.setTranslucency(const Value: integer);
 begin
    if not empty then
       inherited setTranslucency(value);
 end;
 
-procedure TRpgParty.setX(const Value: word);
+procedure TRpgParty.setX(const Value: integer);
 //var place: TPoint;
 begin
 {   place := GGameEngine.currentParty.location;
    GGameEngine.currentParty.location := point(value, place.Y);}
 end;
 
-procedure TRpgParty.setY(const Value: word);
+procedure TRpgParty.setY(const Value: integer);
 //var place: TPoint;
 begin
 {   place := GGameEngine.currentParty.location;
@@ -991,7 +1021,7 @@ end;
 
 procedure TRpgParty.sort;
 var
-   i, j: byte;
+   i, j: integer;
 begin
    for I := 1 to MAXPARTYSIZE - 1 do
       for j := i to MAXPARTYSIZE - 1 do
@@ -1005,9 +1035,9 @@ begin
    //end if
 end;
 
-function TRpgParty.takeDamage(power: word; defense, mDefense,
-  variance: byte): word;
-var i: byte;
+function TRpgParty.takeDamage(power: integer; defense, mDefense,
+  variance: integer): integer;
+var i: integer;
 begin
    result := 0;
    for i := 1 to MAXPARTYSIZE do

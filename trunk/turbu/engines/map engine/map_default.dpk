@@ -40,7 +40,10 @@ contains
   turbu_mapchars in '..\..\turbu format\turbu_mapchars.pas',
   turbu_2k_char_sprites in 'turbu_2k_char_sprites.pas',
   turbu_2k_sprite_list in 'turbu_2k_sprite_list.pas',
-  turbu_2k_environment in 'turbu_2k_environment.pas';
+  turbu_2k_environment in 'turbu_2k_environment.pas',
+  turbu_2k_images in 'turbu_2k_images.pas',
+  turbu_2k_items in 'turbu_2k_items.pas',
+  turbu_2k_map_timer in 'turbu_2k_map_timer.pas';
 
 end.
 
