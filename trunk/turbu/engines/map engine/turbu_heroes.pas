@@ -195,8 +195,8 @@ type
       property deathPossible: boolean read FDeathPossible write FDeathPossible;
       property facingValue: integer read getFacing write setFacing;
       property facing: TFacing read GetTFacing;
-      property x: integer read getX write setX;
-      property y: integer read getY write setY;
+      property xPos: integer read getX write setX;
+      property yPos: integer read getY write setY;
       property mapID: integer read getMap;
    end;
 
