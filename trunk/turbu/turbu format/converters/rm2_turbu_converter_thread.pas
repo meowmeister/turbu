@@ -527,7 +527,7 @@ begin
                ds.appendRecord([id, obj.GetScript(0)]);
             except
                on E: Exception do
-                  report.makeError(E.Message);
+                  report.makeError(format('%s: %s', [TPath.GetFileNameWithoutExtension(filename), E.Message]));
             end;
          finally
             obj.Free;

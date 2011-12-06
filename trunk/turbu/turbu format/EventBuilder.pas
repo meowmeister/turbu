@@ -99,7 +99,7 @@ type
       class function GetLookup(id: integer; const name: string): string;
       function IndentString(level: integer): string;
       procedure NeededVariables(list: TStringList); virtual;
-      procedure ScanUsesList(list: TStringList);
+      procedure ScanUsesList(list: TStringList); virtual;
       property ChildScript[index: integer]: string read GetChildText;
       property ChildNode[index: integer]: string read GetChildNode;
       property ArgList: string read GetArgList write SetArgList;
@@ -333,12 +333,17 @@ begin
 end;
 
 function TEBObject.UsesList: TStringList;
+var
+   selfidx: integer;
 begin
    result := TStringList.Create;
    try
       result.Duplicates := dupIgnore;
       result.Sorted := true;
       self.ScanUsesList(result);
+      selfidx := result.IndexOf(self.Name);
+      if selfidx >= 0 then
+         result.Delete(selfidx);
    except
       result.Free;
       raise;

@@ -80,6 +80,8 @@ type
    TEBCallEvent = class(TEBObject)
    private
       function EventName(id: integer): string;
+   protected
+      procedure ScanUsesList(list: TStringList); override;
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
@@ -330,6 +332,12 @@ begin
       2: result := format('callScript(Ints[%d], Ints[%d]);', [Values[1], Values[2]]);
       3: result := format('battleGlobal%.4d;', [Values[1]]);
    end;
+end;
+
+procedure TEBCallEvent.ScanUsesList(list: TStringList);
+begin
+   if Values[0] = 0 then
+      list.Add('globalevents');
 end;
 
 { TEBGameOver }

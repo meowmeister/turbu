@@ -51,7 +51,7 @@ var
 
 implementation
 uses
-   sysUtils, StrUtils, Generics.Collections, Math,
+   sysUtils, StrUtils, Generics.Defaults, Generics.Collections, Math,
    charset_data,
    turbu_characters, turbu_items, turbu_skills, turbu_animations, conversion_table,
    turbu_resists, turbu_map_metadata, turbu_sounds, rm2_turbu_sounds,
@@ -322,6 +322,38 @@ begin
    end;
 end;
 
+function SanitizeScriptName(const name: string): string;
+const
+   NAMES: array[0..96] of string = (
+      'addExp', 'AddItem', 'AddLevels', 'AddTeleport', 'battle', 'battleCount', 'battleEx',
+      'battles', 'changeTileset', 'characters', 'clearPortrait', 'deathPossible',
+      'decreaseWeather', 'DeleteTeleport', 'DisableMenu', 'EnableMenu', 'EnableSave', 'eraseScreen',
+      'fadeOutMusic', 'flashEvent', 'flashScreen', 'flees', 'GameOver', 'getEventID',
+      'getTerrainID', 'HeldItems', 'HeroCount', 'Heroes', 'heroJoin', 'heroLeave',
+      'Image', 'increaseWeather', 'inn', 'inputNumber', 'inputText', 'itemCount', 'keyScan',
+      'levelGainNotify', 'lockScreen', 'losses', 'MapObject', 'maps', 'media',
+      'memorizeBgm', 'memorizeLocation', 'menuEnabled', 'messageOptions', 'messages',
+      'money', 'newImage', 'OpenMenu', 'panScreen', 'panScreenTo', 'Party',
+      'partySize', 'playMemorizedBgm', 'playMovie', 'playMusic', 'playSound',
+      'Random', 'RemoveExp', 'RemoveItem', 'RemoveLevels', 'returnScreen',
+      'rideVehicle', 'saveCount', 'SaveMenu', 'setBGImage', 'SetEncounterRate',
+      'setPortrait', 'SetSkin', 'SetSystemMusic', 'SetSystemSound', 'settings',
+      'setTransition', 'setWeather', 'shakeScreen', 'Shop', 'showBattleAnim',
+      'showChoice', 'showMessage', 'showScreen', 'stopMoveScripts', 'swapEvents',
+      'Switch', 'Teleport', 'teleportMapObject', 'teleportVehicle', 'thisObject',
+      'timer', 'timer2', 'tintScreen', 'unlockScreen', 'Vehicle', 'victories',
+      'wait', 'waitUntilMoved');
+var
+   dummy: integer;
+begin
+   if TArray.BinarySearch<string>(NAMES, name, dummy,
+     TComparer<string>.construct(
+       function(const l, r: string): integer
+       begin result := StrIComp(PChar(l), PChar(r)) end)) then
+      result := 'g' + name
+   else result := name;
+end;
+
 procedure T2k2Database.convertEvents(block: TEventBlock);
 var
    nameList: TStringList;
@@ -340,11 +372,12 @@ begin
             procedure(script: TEBProcedure)
             begin
                FGlobalScriptBlock.add(script);
-               script.Name := copy(script.name, 1, length(script.name) - 6)
+               script.Name := SanitizeScriptName(copy(script.name, 1, length(script.name) - 6))
             end);
          scriptName := obj.pages[0].scriptName;
          if AnsiEndsText('_page1', scriptName) then
-            obj.pages[0].scriptName := copy(scriptName, 1, length(scriptName) - 6);
+            obj.pages[0].scriptName := SanitizeScriptName(copy(scriptName, 1, length(scriptName) - 6));
+         obj.name := obj.pages[0].scriptName;
          GlobalEvents.Add(obj);
       end;
       self.saveScript(utf8String(FGlobalScriptBlock.serialize));

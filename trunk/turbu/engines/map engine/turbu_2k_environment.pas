@@ -61,6 +61,7 @@ type
       function GetMapObject(i: integer): TRpgEvent;
       function getTimer: TRpgTimer;
       function getTimer2: TRpgTimer;
+      function GetThisObject: TRpgCharacter;
    public
       [NoImport]
       constructor Create(database: TRpgDatabase);
@@ -94,6 +95,7 @@ type
       property levelGainNotify: boolean write notifyOnLevelGain;
       property deathPossible: boolean write canDieOnHpChange;
       property menuEnabled: boolean read isMenuEnabled write enableMenu;
+      property thisObject: TRpgCharacter read GetThisObject;
    end;
 
 procedure RegisterEnvironment(compiler: TrsCompiler; importer: TrsTypeImporter);
@@ -263,6 +265,11 @@ begin
    if clamp(i, 0, high(FSwitches)) = i then
       result := FSwitches[i]
    else result := false;
+end;
+
+function T2kEnvironment.GetThisObject: TRpgCharacter;
+begin
+   result := nil; //TODO: implement this
 end;
 
 function T2kEnvironment.getTimer: TRpgTimer;
