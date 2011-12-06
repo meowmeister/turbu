@@ -122,6 +122,9 @@ begin
    input.ImportFunction('procedure stopMoveScripts;');
    input.ImportFunction('procedure changeTileset(which: integer)');
    input.ImportFunction('procedure SetEncounterRate(low, high: integer)');
+   input.ImportFunction('procedure AddTeleport(mapID, x, y, switchID: integer);');
+   input.ImportFunction('procedure DeleteTeleport(mapID, x, y: integer);');
+   input.ImportFunction('procedure EnableTeleport(value: boolean);');
 end;
 
 procedure RegisterMediaC(input: TrsTypeImporter);

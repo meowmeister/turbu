@@ -755,7 +755,7 @@ begin
    FOpcode := converter.getData;
    FDepth := getNext(input);
    if not peekAhead(input, 0) then
-      FName := getString(input)
+      FName := utf8String(getString(input))
    else
       setLength(FName, 0);
    converter.read(input);

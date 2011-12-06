@@ -968,18 +968,23 @@ end;
 { TEBTeleLoc }
 
 function TEBTeleLoc.GetNodeText: string;
+const ACTION: array[0..1] of string = ('Add', 'Delete');
 begin
-   result := 'Teleport Position: ';
-   if boolean(Values[0]) then
-      result := result + 'Disable'
-   else result := result + format('Set to: %s, (%.3d, %.3d)', [mapName(Values[1]), Values[2], Values[3]]);
+   result := result + format('Teleport Positions: %s: %s, (%.3d, %.3d)', [ACTION[values[0]], mapName(Values[1]), Values[2], Values[3]]);
 end;
 
 function TEBTeleLoc.GetScriptText: string;
+var
+   v4: integer;
 begin
-   if boolean(Values[0]) then
-      result := result + 'DisableTeleport;'
-   else result := format('SetTeleport(%d, %d, %d);', [Values[1], Values[2], Values[3]]);
+   if boolean(values[0]) then
+      result := format('DeleteTeleport(%d, %d, %d);', [Values[1], Values[2], Values[3]])
+   else begin
+      if boolean(values[4]) then
+         v4 := values[5]
+      else v4 := 0;
+      result := format('AddTeleport(%d, %d, %d, %d);', [Values[1], Values[2], Values[3], v4]);
+   end;
 end;
 
 { TEBTeleEnable }
@@ -1000,17 +1005,17 @@ end;
 
 function TEBEscapeLoc.GetNodeText: string;
 begin
-   result := 'Escape Position: ';
-   if boolean(Values[0]) then
-      result := result + 'Disable'
-   else result := result + format('Set to: %s, (%.3d, %.3d)', [mapName(Values[1]), Values[2], Values[3]]);
+   result := result + format('Escape Position: Set to: %s, (%.3d, %.3d)', [mapName(Values[0]), Values[1], Values[2]]);
 end;
 
 function TEBEscapeLoc.GetScriptText: string;
+var
+   v4: integer;
 begin
-   if boolean(Values[0]) then
-      result := result + 'DisableEscape;'
-   else result := format('SetEscape(%d, %d, %d);', [Values[1], Values[2], Values[3]]);
+   if boolean(values[3]) then
+      v4 := values[4]
+   else v4 := 0;
+   result := format('SetEscape(%d, %d, %d, %d);', [Values[0], Values[1], Values[2], v4]);
 end;
 
 { TEBEscapeEnable }
