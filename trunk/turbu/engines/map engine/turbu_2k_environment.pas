@@ -74,6 +74,7 @@ type
       function Random(low, high: integer): integer;
       procedure EnableSave(value: boolean);
       procedure GameOver;
+      procedure DeleteObject(permanant: boolean);
 
       property Heroes[const i: integer]: TRpgHero read GetHero;
       property HeroCount: integer read GetHeroCount;
@@ -131,6 +132,11 @@ begin
    //TODO: Add vehicle support
 {   for vehicle in database.vehicles.Values do
       FVehicles.Add(TRpgVehicle.Create(database.mapTree, vehicle.id));}
+end;
+
+procedure T2kEnvironment.DeleteObject(permanant: boolean);
+begin
+   //TODO: implement this
 end;
 
 destructor T2kEnvironment.Destroy;
