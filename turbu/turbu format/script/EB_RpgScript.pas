@@ -691,8 +691,8 @@ begin
          list.add(indentString(indent + 1) + ';')
       else begin
          ifScript := (Children[1] as TEBCodeBlock).GetScript(indent);
-         if (children[1].ChildCount = 1) and (children[0] is TEBIf) then
-            ifScript := IndentString(indent) + 'begin' + CRLF + ifScript + indentString(indent) + 'end;';
+         if (children[1].ChildCount = 1) and (children[1].children[0] is TEBIf) then
+            ifScript := IndentString(indent) + 'begin' + CRLF + ifScript + CRLF + indentString(indent) + 'end;';
          list.add(ifScript);
          if ChildCount = 3 then
          begin
