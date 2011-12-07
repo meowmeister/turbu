@@ -106,6 +106,8 @@ begin
    input.ImportFunction('procedure tintScreen(r, g, b, sat: integer; duration: integer; wait: boolean);');
    input.ImportFunction('procedure flashScreen(r, g, b, power: integer; duration: integer; wait, continuous: boolean);');
    input.ImportFunction('procedure shakeScreen(power, speed: integer; duration: integer; wait, continuous: boolean);');
+   input.ImportFunction('procedure endFlashScreen;');
+   input.ImportFunction('procedure endShakeScreen;');
    input.ImportFunction('procedure lockScreen;');
    input.ImportFunction('procedure unlockScreen;');
    input.ImportFunction('procedure panScreen(direction: TFacing; distance: integer; speed: integer; wait: boolean);');
