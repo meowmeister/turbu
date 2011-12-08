@@ -33,7 +33,8 @@ begin
       FVehiclePass[ord(vh)] := base.vehiclePass[vh];
    FAirshipLanding := base.airshipLanding;
    FConcealment := base.Concealment;
-   FSoundEffect := TRpgSound.convert(base.soundEffect);
+   if assigned(FSoundEffect) then
+      FSoundEffect := TRpgSound.convert(base.soundEffect);
    FFrame := string(base.frame);
    for legacy in base.legacy do
       GDatabase.AddLegacy('terrain', id, legacy.Key, legacy.Value);
