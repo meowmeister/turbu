@@ -39,6 +39,7 @@ type
       FInts: TArray<integer>;
       FImages: TArray<TRpgImage>;
       FParty: TRpgParty;
+      FMenuEnabled: boolean;
       function GetSwitch(const i: integer): boolean;
       procedure SetSwitch(const i: integer; const Value: boolean);
       function GetHero(const i: integer): TRpgHero;
@@ -75,6 +76,9 @@ type
       procedure EnableSave(value: boolean);
       procedure GameOver;
       procedure DeleteObject(permanant: boolean);
+
+      [NoImport]
+      procedure RemoveImage(image: TRpgImage);
 
       property Heroes[const i: integer]: TRpgHero read GetHero;
       property HeroCount: integer read GetHeroCount;
@@ -132,6 +136,7 @@ begin
    //TODO: Add vehicle support
 {   for vehicle in database.vehicles.Values do
       FVehicles.Add(TRpgVehicle.Create(database.mapTree, vehicle.id));}
+   FMenuEnabled := true;
 end;
 
 procedure T2kEnvironment.DeleteObject(permanant: boolean);
@@ -199,7 +204,8 @@ end;
 
 procedure T2kEnvironment.enableMenu(const Value: boolean);
 begin
-   //TODO: implement this
+   FMenuEnabled := value;
+   //TODO: Do more here
 end;
 
 procedure T2kEnvironment.EnableSave(value: boolean);
@@ -214,7 +220,7 @@ end;
 
 function T2kEnvironment.isMenuEnabled: boolean;
 begin
-   //TODO: implement this
+   result := FMenuEnabled
 end;
 
 procedure T2kEnvironment.notifyOnLevelGain(const Value: boolean);
@@ -228,6 +234,15 @@ var
 begin
    dummy := abs(high - low);
    result := system.Random(dummy) + min(high, low);
+end;
+
+procedure T2kEnvironment.RemoveImage(image: TRpgImage);
+var
+   i: integer;
+begin
+   for I := 0 to high(FImages) do
+      if FImages[i] = image then
+         FImages[i] := nil;
 end;
 
 function T2kEnvironment.GetHero(const i: integer): TRpgHero;

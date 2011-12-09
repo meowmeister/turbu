@@ -107,6 +107,7 @@ class function TRpgItem.newItem(const item, quantity: integer): TRpgItem;
 var
    subtype: TItemClass;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 {   case GDatabase.findItem(item).itemType of
       it_junk: subtype := TJunkItem;
       weaponItem: subtype := TWeapon;

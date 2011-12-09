@@ -131,14 +131,14 @@ begin
    for I := 1 to base.skills do
       self.skillset.add(TSkillGainInfo.convert(base.skill[i]));
 
-   for I := 1 to high(self.resist) do
+   for I := 1 to base.dtypeModifiers do
    begin
       resistVal := -(base.dtypeModifier[i] - 100);
       if resistVal <> GLcfDatabase.attribute[i].rate[3] then
          self.addResist(point(i, resistVal));
    end;
 
-   for I := 1 to high(self.condition) do
+   for I := 1 to base.conditionModifiers do
    begin
       resistVal := -(base.conditionModifier[i] - 100);
       if resistVal <> 0 then

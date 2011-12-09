@@ -121,18 +121,18 @@ type
 
 implementation
 uses
-   types,
+   types, Classes,
    commons, turbu_defs, turbu_constants, tiles, turbu_2k_char_sprites,
-   turbu_2k_sprite_engine;
+   turbu_database, turbu_2k_sprite_engine, ArchiveUtils;
 
 { TRpgCharacter }
 
 procedure TRpgCharacter.flash(r, g, b, power: integer; time: integer; wait: boolean);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
    doFlash(r, g, b, power, time);
-{   if wait then
-      TEventThread(GCurrentThread).threadSleep(time, true);}
+   if wait then
+{$MESSAGE WARN 'Commented out code in live unit'}
+//      TEventThread(TThread.CurrentThread).threadSleep(time, true);
 end;
 
 function TRpgCharacter.getScreenX: integer;
@@ -162,7 +162,7 @@ begin
       Exit;
 
 {$MESSAGE WARN 'Commented out code in live unit'}
-{   self.base.moveOrder := GGameEngine.currentMap.routes[route];}
+{   self.base.moveOrder := GScriptEngine.ParsePath(path);}
    self.base.canSkip := skip;
    self.base.moveLoop := loop;
    self.base.moveFreq := clamp(frequency, 1, 8);
@@ -338,7 +338,7 @@ type
    TVhSpriteClass = class of TVehicleSprite;
 var
    loc: TLocation;
-   newSprite: TVhSpriteClass;
+//   newSprite: TVhSpriteClass;
 begin
    inherited Create;
    FVehicleIndex := which;
@@ -456,14 +456,9 @@ begin
 end;
 
 procedure TRpgVehicle.setSprite(filename: string; translucent: boolean);
-var dummy: string;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-   dummy := filename;
-//   findGraphic(dummy, 'charset');
-   if dummy = '' then
+   if not GraphicExists(filename, 'mapsprite') then
       Exit;
-
    FSprite := filename;
    self.translucency := 3 * ord(translucent);
 end;

@@ -200,7 +200,7 @@ type
    private
       function GetItem(const Key: integer): T;
    private type
-      TValueEnumerator = class(TEnumerator<T>)
+      TValueEnumerator = class
       private
         FValues: TArray<TRpgDatafile>;
         FIndex: Integer;

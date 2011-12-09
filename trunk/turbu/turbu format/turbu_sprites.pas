@@ -29,7 +29,8 @@ type
       moveMatrix: integer;
    end;
 
-   function nextPosition(matrix: TMoveMatrix; var current: TSgPoint): byte;
+   function nextPosition(matrix: TMoveMatrix; var current: TSgPoint): byte; overload;
+   function nextPosition(matrix: TMoveMatrix; currentAnim, currentFrame: integer): integer; overload;
 
 implementation
 uses
@@ -41,6 +42,13 @@ begin
       current := point(0, 0)
    else current.y := (current.y + 1) mod length(matrix[current.x]);
    result := matrix[current.x, current.y];
+end;
+
+function nextPosition(matrix: TMoveMatrix; currentAnim, currentFrame: integer): integer;
+begin
+   if (currentAnim > high(matrix)) or (currentFrame > high(matrix[currentAnim])) then
+      result := 0
+   else result := (currentFrame + 1) mod length(matrix[currentAnim]);
 end;
 
 end.

@@ -46,7 +46,6 @@ end;
 procedure UpgradeDatabase(database: TdmDatabase; const filename: string);
 var
    path: string;
-   thread: TThread;
 begin
    frmConversionReport := TfrmConversionReport.Create(nil);
    frmConversionReport.Caption := 'Database upgrade progress';

@@ -70,7 +70,7 @@ type
 
    TAirshipSprite = class(TVehicleSprite)
    private
-      FShadow: TMiniTile;
+      FShadow: TTile;
    protected
       function unload: boolean; override;
    public
@@ -109,7 +109,7 @@ type
 
 implementation
 uses
-   charset_data, turbu_2k_sprite_engine, timing;
+   charset_data, turbu_2k_sprite_engine, timing, turbu_database, turbu_sprites;
 
 const
    AIRSHIP_OFFSET: TPoint = (x: 0; y: -16);
@@ -154,7 +154,6 @@ begin
    end;
    if (FOffset.x = offset.x) and (FOffset.y = offset.y) then
       FOwner.reportState(state);
-   //end if
 end;
 
 { TVehicleSprite }
@@ -166,9 +165,12 @@ begin
 end;
 
 function TVehicleSprite.canMoveForward: boolean;
+var
+   engine: T2kSpriteEngine;
 begin
-   result := T2kSpriteEngine(FEngine).edgeCheck(FLocation.X, FLocation.Y, self.facing){ and
-      GDatabase.terrain[T2kSpriteEngine(FEngine)[lower, inFront.x, inFront.y].terrain].vehiclePass[FTemplate.vehicleType]};
+   engine := FEngine as T2kSpriteEngine;
+   result := engine.edgeCheck(FLocation.X, FLocation.Y, self.facing) and
+      GDatabase.terrains[TTile(engine[0, inFront.x, inFront.y]).terrain].vehiclePass[FTemplate.vehicleIndex];
 end;
 
 constructor TVehicleSprite.Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle; tileClass: TTileClass);
@@ -221,23 +223,14 @@ begin
    inherited place;
    FMoving := kept;
    inc(FAnimCounter);
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   if (FAnimated) and (FAnimCounter = VEHICLE_ANIM_RATE) then
-   begin
-      if (FAnimDir = true) and (animFrame = high(TAnimFrame)) then //counting up
-         FAnimDir := false
-      else if (FAnimDir = false) and (animFrame = low(TAnimFrame)) then
-         FAnimDir := true;
-
-      if FanimDir then
-         animFrame := TAnimFrame(ord(animFrame) + 1)
-      else
-         animFrame := TAnimFrame(ord(animFrame) - 1);
-      //end if
-   end;
    if FAnimCounter = VEHICLE_ANIM_RATE then
+   begin
       FAnimCounter := 0;
-   if (GGameEngine.currentParty = self) and (FMoved) and (not GGameEngine.screenLocked) then
+      if FAnimated then
+         turbu_sprites.nextPosition(FActionMatrix, FAction, FMoving);
+   end;
+{$MESSAGE WARN 'Commented out code in live unit'}
+{   if (GGameEngine.currentParty = self) and (FMoved) and (not GGameEngine.screenLocked) then
       T2kSpriteEngine(FEngine).moveTo(trunc(FTiles[1].X) + GGameEngine.displacement.x,
                                trunc(FTiles[1].Y) + GGameEngine.displacement.y);}
 end;
@@ -291,7 +284,7 @@ end;
 constructor TAirshipSprite.Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle; tileClass: TTileClass);
 begin
    inherited Create(parent, whichVehicle, TAirshipTile);
-//   FShadow := TMiniTile.Create(parent, nil);
+   FShadow := TTile.Create(parent);
    FShadow.ImageName := 'SysShadow';
    FShadow.Alpha := 160;
    FShadow.Visible := false;
@@ -516,15 +509,13 @@ begin
 
    if FMoveTick then
       result := inherited move(whichDir)
-   else
-      setMovement(whichDir);
+   else setMovement(whichDir);
 end;
 
 procedure THeroSprite.packUp;
 begin
    FEngine.Remove(FTiles[1]);
    FEngine.Remove(FTiles[2]);
-//   T2kSpriteEngine(FEngine).character[0] := nil;
 end;
 
 procedure THeroSprite.setMovement(direction: TFacing);
