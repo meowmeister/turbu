@@ -156,6 +156,7 @@ type
 
       procedure addResist(const value: TPoint); inline;
       procedure addCondition(const value: TPoint); inline;
+      function GetCondition(value: integer): integer;
 
       property command[x: byte]: smallint read getCommand write setCommand;
       property statblock[x: byte]: IStatBlock read getStatBlock write setStatBlock;
@@ -523,6 +524,16 @@ end;
 function TClassTemplate.getCommand(x: byte): smallint;
 begin
    result := FCommand[x];
+end;
+
+function TClassTemplate.GetCondition(value: integer): integer;
+var
+   i: integer;
+begin
+   for i := 0 to High(FConditions) do
+      if FConditions[i].X = value then
+         exit(FConditions[i].Y);
+   result := 0;
 end;
 
 class function TClassTemplate.getDatasetName: string;

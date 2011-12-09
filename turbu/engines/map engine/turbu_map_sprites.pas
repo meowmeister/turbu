@@ -129,7 +129,7 @@ type
 
    TCharSprite = class(TMapSprite)
    private
-      function workOutAnimFrame: TAnimFrame;
+      //function workOutAnimFrame: TAnimFrame;
       procedure loadCharset(filename: string);
    protected
       FMoved: boolean;
@@ -803,12 +803,12 @@ begin
 end;
 
 procedure TEventSprite.update(filename: string; transparent: boolean);
-//var orphan: TRpgEvent;
+//var orphan: IRpgCharacter;
 begin
 {$MESSAGE WARN 'Commented out code in live unit'}
    self.translucency := 3 * ord(transparent);
 {   FMapObj.currentPage.overrideSprite(filename, index, transparent);
-   orphan := FCharacter as TRpgEvent;
+   orphan := FCharacter;
    orphan.switchType;
    orphan.changeSprite(filename, index);}
 end;
@@ -898,7 +898,7 @@ begin
    FTiles[1].ImageIndex := frame + 1;
 end;
 
-function TCharSprite.workOutAnimFrame: TAnimFrame;
+{function TCharSprite.workOutAnimFrame: TAnimFrame;
 var dummy: TAnimFrame;
 begin
    result := center;
@@ -916,7 +916,6 @@ begin
                if assigned(FMoveTime) then
                   result := dummy
                else result := center;
-               //end if
             at_jogger, at_fixedJog: result := dummy;
             at_spinRight: self.facing := TFacing(3 - FMoving);
             at_statue: ;
@@ -925,7 +924,7 @@ begin
          result := center
       else result := dummy;
    end;
-end;
+end;}
 
 procedure TCharSprite.reload(const imageName: string; const index: byte);
 begin

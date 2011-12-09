@@ -123,7 +123,6 @@
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_items.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_sounds.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_skills.pas"/>
-			<DCCReference Include="..\logs.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_animations.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_resists.pas"/>
 			<DCCReference Include="..\discInterface.pas"/>
@@ -139,8 +138,6 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\turbu format\turbu_script_basis.pas"/>
-			<DCCReference Include="..\mapview\libs\script engine\rpg_list.pas"/>
-			<DCCReference Include="..\mapview\libs\script engine\script_backend.pas"/>
 			<DCCReference Include="..\..\classes\findfile\findfile.pas"/>
 			<DCCReference Include="function_header.pas">
 				<Form>frmFuncHeader</Form>

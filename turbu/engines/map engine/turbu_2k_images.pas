@@ -77,7 +77,8 @@ type
 implementation
 uses
    sysUtils, Math,
-   SDL_ImageManager;
+   SDL_ImageManager,
+   turbu_2k_environment;
 
 const
    ROTATE_FACTOR = 30;
@@ -156,18 +157,12 @@ end;
 
 procedure TRpgImageSprite.Dead;
 begin
-{   if self <> GImages[0] then
-      inherited Dead;}
+   if self <> GEnvironment.Image[0].FSprite then
+      inherited Dead;
 end;
 
 destructor TRpgImageSprite.Destroy;
-var
-   I: Integer;
 begin
-   //remove dangling pointers
-{   for I := 0 to high(GImages) do
-      if GImages[i] = self then
-         GImages[i] := nil;}
    FTransitionTimer.Free;
    inherited;
 end;
@@ -219,7 +214,7 @@ var
    dummy: single;
    i: integer;
    timeRemaining: integer;
-   oldcolor: integer;
+   oldcolor: cardinal;
 begin
    if assigned(FTransitionTimer) then
       timeRemaining := FTransitionTimer.timeRemaining
@@ -306,6 +301,7 @@ end;
 
 destructor TRpgImage.Destroy;
 begin
+   GEnvironment.RemoveImage(self);
    FSprite.Free;
    inherited;
 end;
