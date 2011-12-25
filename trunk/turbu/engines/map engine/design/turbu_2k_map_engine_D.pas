@@ -415,6 +415,9 @@ var
    i, j, counter: integer;
    offset: TSgPoint;
 begin
+   if FTimer.Enabled then
+      Exit;
+
    if FCurrentLayer >= 0 then
    begin
       drawRect.TopLeft := position;
