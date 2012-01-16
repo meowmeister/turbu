@@ -53,6 +53,8 @@ type
       mnuTestPartySetup: TMenuItem;
     mnuGenerateDBScript: TMenuItem;
     txtOutput: TMemo;
+    estTextRendering1: TMenuItem;
+    mnuTestMessageBox: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -75,6 +77,8 @@ type
       procedure mnuTestDatabaseUploadClick(Sender: TObject);
       procedure mnuTestPartySetupClick(Sender: TObject);
     procedure mnuGenerateDBScriptClick(Sender: TObject);
+    procedure estTextRendering1Click(Sender: TObject);
+    procedure mnuTestMessageBoxClick(Sender: TObject);
    private
       { Private declarations }
       FEngine: IDesignMapEngine;
@@ -93,11 +97,12 @@ implementation
 
 uses
    Contnrs, DB, DBClient, Generics.Collections, Registry, windows, Variants,
-   dm_database, turbu_database, test_project,
-   archiveInterface, discInterface, test_map_tree,
+   Opengl,
+   dm_database, turbu_database, test_project, dm_shaders,
+   archiveInterface, discInterface, test_map_tree, test_canvas,
    turbu_constants, conversion_report, conversion_report_form,
-   rm2_turbu_converter_thread,
-   commons, fileIO, formats, LDB, LMT, LMU,
+   rm2_turbu_converter_thread, turbu_OpenGL, turbu_2k_frames,
+   commons, fileIO, formats, LDB, LMT, LMU, timing,
    turbu_characters, locate_files, map_tree_controller, turbu_containers,
    rm2_turbu_characters, rm2_turbu_database,
    turbu_engines, turbu_plugin_interface, turbu_battle_engine,
@@ -106,7 +111,7 @@ uses
    turbu_tbi_lib, turbu_sdl_image, EventBuilder,
    MapObject_Editor,
    sdl_canvas, sdl_13, SG_defs,
-   test_map_size;
+   test_map_size, turbu_text_utils;
 
 {$R *.dfm}
 
@@ -143,9 +148,17 @@ begin
 end;
 
 procedure TfrmTestConsole.mnuCreateSdlWindowClick(Sender: TObject);
+var
+   form: TfrmTesting;
 begin
    if not assigned(lCanvas) then
-      lCanvas := TSdlCanvas.Create('TURBU testing canvas', rect(400, 400, 320, 240), [sdlwOpenGl, sdlwShown]);
+   begin
+      form := TfrmTesting.Create(self);
+      form.Show;
+      Application.ProcessMessages;
+      form.SdlFrame1.LogicalSize := point(320, 240);
+      lCanvas := TSdlCanvas.CreateFrom(form.SdlFrame1.SdlWindow);
+   end;
    if (sender = mnuCreateSdlWindow) and (assigned(lCanvas)) then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;
@@ -286,6 +299,34 @@ begin
       form.ShowModal;
    finally
       form.Free;
+   end;
+end;
+
+procedure TfrmTestConsole.mnuTestMessageBoxClick(Sender: TObject);
+var
+  i: Integer;
+begin
+   if not assigned(FEngine) then
+      mnuTestLoadingClick(Sender);
+
+   TThread.CreateAnonymousThread(
+      procedure
+      begin
+         GMenuEngine.ShowMessage('Testing 123', false);
+      end).Start;
+   sleep(100);
+   for i := 1 to 20 do
+   begin
+      glEnable(GL_ALPHA_TEST);
+      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+      GMenuEngine.Draw;
+      SDL_RenderPresent(lCanvas.Renderer);
+      sleep(64);
+      TRpgTimestamp.frameLength := 64;
    end;
 end;
 
@@ -538,6 +579,21 @@ begin
    finally
       targets.free;
    end;
+end;
+
+procedure TfrmTestConsole.estTextRendering1Click(Sender: TObject);
+begin
+   if not assigned(FEngine) then
+      mnuTestLoadingClick(Sender);
+
+   glEnable(GL_ALPHA_TEST);
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+//   lCanvas.Clear(SDL_WHITE);
+   GFontEngine.drawText('Testing 123', 100, 100, 12);
+   lCanvas.Flip;
 end;
 
 initialization

@@ -16,10 +16,7 @@ uses
   turbu_decl_utils in '..\turbu format\turbu_decl_utils.pas',
   turbu_characters in '..\turbu format\database\turbu_characters.pas',
   turbu_script_basis in '..\turbu format\turbu_script_basis.pas',
-  rpg_list in '..\mapview\libs\script engine\rpg_list.pas',
   turbu_items in '..\turbu format\database\turbu_items.pas',
-  script_interface in '..\mapview\libs\script engine\script_interface.pas',
-  script_backend in '..\mapview\libs\script engine\script_backend.pas',
   timing in '..\mapview\libs\timing.pas',
   findfile in '..\..\classes\findfile\findfile.pas',
   turbu_classes in '..\turbu format\database\turbu_classes.pas',
@@ -141,7 +138,18 @@ uses
   turbu_monsters in '..\turbu format\database\turbu_monsters.pas',
   rm2_turbu_monsters in '..\turbu format\converters\rm2_turbu_monsters.pas',
   EB_Battle in '..\turbu format\script\EB_Battle.pas',
-  dm_databaseAux in '..\editor\dm_databaseAux.pas';
+  dm_databaseAux in '..\editor\dm_databaseAux.pas',
+  ftgl in '..\..\classes\ftgl.pas',
+  turbu_text_utils in '..\engines\basis\turbu_text_utils.pas',
+  turbu_2k_frames in '..\engines\map engine\turbu_2k_frames.pas',
+  turbu_2k_images in '..\engines\map engine\turbu_2k_images.pas',
+  turbu_2k_map_timer in '..\engines\map engine\turbu_2k_map_timer.pas',
+  rs_maps in '..\turbu format\script\engine\libraries\rs_maps.pas',
+  rs_message in '..\turbu format\script\engine\libraries\rs_message.pas',
+  test_canvas in 'test_canvas.pas' {frmTesting},
+  dm_shaders in '..\turbu format\database\dm_shaders.pas',
+  turbu_OpenGL in '..\engines\basis\turbu_OpenGL.pas',
+  sdl_13 in '..\..\classes\jedi-sdl\SDL\Pas\sdl_13.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}
@@ -156,5 +164,6 @@ begin
   Application.CreateForm(TfrmTestProjLocation, frmTestProjLocation);
   Application.CreateForm(TfrmConversionReport, frmConversionReport);
   Application.CreateForm(TfrmTestMapSize, frmTestMapSize);
+  Application.CreateForm(TfrmTesting, frmTesting);
   Application.Run;
 end.

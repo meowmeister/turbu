@@ -89,9 +89,13 @@ type
       [TRelation]
       [VitalDataset]
       heroes_skillset: TSimpleDataSet;
+      [VitalDataset]
       Floats: TSimpleDataSet;
+      [VitalDataset]
       Strings: TSimpleDataSet;
+      [VitalDataset]
       Switches: TSimpleDataSet;
+      [VitalDataset]
       Variables: TSimpleDataSet;
       [VitalDataset]
       GlobalScripts: TSimpleDataSet;
@@ -161,6 +165,9 @@ type
       procedure classFilter(DataSet: TDataSet; var Accept: Boolean);
       procedure SwitchesVarsCalcFields(DataSet: TDataSet);
       procedure itemsAfterOpen(DataSet: TDataSet);
+      procedure script_cacheReconcileError(DataSet: TCustomClientDataSet;
+        E: EReconcileError; UpdateKind: TUpdateKind;
+        var Action: TReconcileAction);
    private
       { Private declarations }
 
@@ -186,6 +193,8 @@ type
       procedure Connect(const dbname: string; const validateProc: TProc<TSqlQuery>);
       procedure SaveAll(report: TUploadReportProc = nil);
       procedure EnsureTileGroups;
+      function OnClosedDataset(ds: TDataset): TDataset;
+      procedure OnReleaseClosedDataset(ds: TDataset);
 
       property TableCount: integer read GetTableCount;
       property datasets: TDatasetList read FDatasetList write FDatasetList;
@@ -495,6 +504,12 @@ begin
    end;
 end;
 
+procedure TdmDatabase.script_cacheReconcileError(DataSet: TCustomClientDataSet;
+  E: EReconcileError; UpdateKind: TUpdateKind; var Action: TReconcileAction);
+begin
+   action := raCancel;
+end;
+
 var
   LSetSmallint: TDBXWritableRow_SetInt16;
 
@@ -504,6 +519,32 @@ begin
   if value then
      result := LSetSmallint(handle, ordinal, 1)
   else result := LSetSmallint(handle, ordinal, 0);
+end;
+
+function TdmDatabase.OnClosedDataset(ds: TDataset): TDataset;
+const QUERY = 'select * from %s where %s';
+var
+   table: string;
+   sd: TSimpleDataset;
+begin
+   sd := ds as TSimpleDataset;
+   table := sd.DataSet.CommandText;
+   sd.DataSet.CommandType := ctQuery;
+   sd.DataSet.CommandText := format(QUERY, [table, ds.Filter]);
+   ds.Filtered := false;
+   ds.Filter := table;
+   ds.Active := true;
+   result := ds;
+end;
+
+procedure TdmDatabase.OnReleaseClosedDataset(ds: TDataset);
+var
+   sd: TSimpleDataset;
+begin
+   ds.Active := false;
+   sd := ds as TSimpleDataset;
+   sd.DataSet.CommandType := ctTable;
+   sd.DataSet.CommandText := ds.Filter;
 end;
 
 procedure TdmDatabase.OpenConnection(const dbname: string);

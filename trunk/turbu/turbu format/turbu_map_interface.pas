@@ -39,6 +39,7 @@ type
       procedure SetTileset(const Value: integer);
       function GetMapObjects: TStrings;
       function GetID: integer;
+      function GetScript: string;
       property tileset: integer read GetTileset write SetTileset;
       property ID: integer read GetID;
    end;

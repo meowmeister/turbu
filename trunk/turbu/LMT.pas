@@ -78,6 +78,8 @@ type
       property BoundsRect: TRect read GetBoundsRect;
    end;
 
+   TVehicleSet = (vh_boat, vh_ship, vh_airship);
+
    {*********************************************************************
    * FullTree class.  This class contains all of the entries in the LMT.
    * mapSet and projectLen have contain the data entries and the total number

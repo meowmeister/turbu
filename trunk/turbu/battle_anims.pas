@@ -52,6 +52,7 @@ type
 
    TAnimCell = class(TObject)
    private
+      FNew: boolean;
       FIndex: word;
       FX: smallint;
       FY: smallint;
@@ -67,6 +68,7 @@ type
       property zoom: word read FZoom;
       property color: TRpgColor read FColor;
       property saturation: byte read FSaturation;
+      property IsNew: boolean read FNew;
    end;
 
    TAnimFrame = array of TAnimCell;
@@ -179,7 +181,7 @@ begin
    converter := TBerConverter.Create(input);
    if converter.getData <> id then
       raise EParseMessage.createFmt('Battle Animation FX record %d of RPG_RT.LDB not found!', [id]);
-   assert(getNumSec(1, input, fillInZeroInt) = 0);
+   FNew := getChboxSec(1, input, fillInCellInt);
    FIndex := getNumSec(2, input, fillInZeroInt);
    FX := getNumSec(3, input, fillInZeroInt);
    FY := getNumSec(4, input, fillInZeroInt);
@@ -384,6 +386,7 @@ end;
 procedure fillInCellInt(const expected: byte; out theResult: integer);
 begin
    case expected of
+      1: theResult := 1;
       5..$A: theResult := 100;
    else begin
       msgBox ('No case implemented for x' + IntToHex(expected, 2) + '!', 'fillInCellInt says:', MB_OK);

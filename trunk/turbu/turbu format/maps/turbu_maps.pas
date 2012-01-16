@@ -83,6 +83,7 @@ type
       function GetMapObjects: TStrings;
       procedure LoadScripts(const scriptFile: string);
       function GetScriptObject: TEBMap;
+      function GetScript: string;
    protected
       FEncounters: T4IntArray;
       [NoUpload]
@@ -133,7 +134,7 @@ type
 implementation
 uses
    math, Sysutils,
-   commons, turbu_constants, ArchiveInterface;
+   commons, turbu_constants, ArchiveInterface, dm_database;
 
 { TRpgMap }
 
@@ -439,6 +440,13 @@ begin
       result.Free;
       raise;
    end;
+end;
+
+function TRpgMap.GetScript: string;
+begin
+   result := dmDatabase.ScriptLookup(self.id);
+   if result = BAD_LOOKUP then
+      result := self.ScriptObject.GetScript(0);
 end;
 
 function TRpgMap.GetScriptObject: TEBMap;

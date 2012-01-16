@@ -24,6 +24,8 @@ type
       FRotationTarget: single;
       FWaveTarget: single;
       FTag: Integer;
+      FCenterX, FCenterY: single;
+      FMasked: boolean;
 
       function getTimer: integer;
       procedure setTimer(const Value: integer);
@@ -34,11 +36,14 @@ type
       procedure applyColor;
       procedure update;
       function getZoom: integer;
+      procedure DrawQuad;
+   protected
+      procedure DoDraw; override;
    public
       constructor Create(engine: TSpriteEngine; const name: string; x, y: integer;
-        zoom: integer; pinned: boolean); reintroduce;
+        zoom: integer; pinned, masked: boolean); reintroduce;
       destructor Destroy; override;
-      procedure applyImageColors(r, g, b, sat: integer); inline;
+      procedure applyImageColors(r, g, b, sat: integer);
       procedure applyImageEffect(which: TImageEffects; power: integer);
       procedure Draw; override;
       procedure moveTo(x, y: integer; zoom, opacity: integer);
@@ -61,7 +66,7 @@ type
    public
       [NoImport]
       constructor Create(engine: TSpriteEngine; const name: string; x, y: integer;
-        zoom: integer; pinned: boolean); reintroduce;
+        zoom: integer; pinned, masked: boolean); reintroduce;
       destructor Destroy; override;
       procedure applyImageColors(r, g, b, sat: integer);
       procedure applyImageEffect(which: TImageEffects; power: integer);
@@ -69,6 +74,8 @@ type
       procedure Erase;
       procedure Waitfor;
 
+      [NoImport]
+      property base: TRpgImageSprite read FSprite;
       property zoom: integer read getZoom write setZoom;
       property opacity: integer read getOpaque write setOpaque;
       property timer: integer read getTimer write setTimer;
@@ -76,14 +83,45 @@ type
 
 implementation
 uses
-   sysUtils, Math,
-   SDL_ImageManager,
-   turbu_2k_environment;
+   sysUtils, Math, OpenGL, Types,
+   turbu_2k_environment, turbu_OpenGL, dm_shaders, turbu_2k_sprite_engine,
+   SDL_ImageManager;
 
 const
    ROTATE_FACTOR = 30;
 
 { TRpgImage }
+
+constructor TRpgImageSprite.Create(engine: TSpriteEngine; const name: string;
+  x, y: integer; zoom: integer; pinned, masked: boolean);
+begin
+   inherited Create(engine);
+   imageName := name;
+   self.pinned := pinned;
+   self.scaleX := zoom / 100;
+   self.scaleY := self.scaleX;
+   FZoomTarget := scaleX;
+   FRenderSpecial := true;
+   self.Z := 20;
+   self.centerOn(x, y);
+   FRefTarget := sgPointF(x, y);
+   FMasked := masked;
+   self.applyImageColors(100, 100, 100, 100);
+   self.Alpha := 255;
+   FAlphaTarget := 255;
+end;
+
+procedure TRpgImageSprite.Dead;
+begin
+   if self <> GEnvironment.Image[0].FSprite then
+      inherited Dead;
+end;
+
+destructor TRpgImageSprite.Destroy;
+begin
+   FTransitionTimer.Free;
+   inherited;
+end;
 
 procedure TRpgImageSprite.applyColor;
 begin
@@ -126,45 +164,64 @@ end;
 procedure TRpgImageSprite.centerOn(x, y: real);
 begin
    FRefPoint := sgPointF(x, y);
-   if not self.pinned then
+   FCenterX := x;
+   FCenterY := y;
+end;
+
+procedure TRpgImageSprite.DrawQuad;
+var
+   halfwidth, halfheight: single;
+   cx, cy: single;
+   drawrect: TRect;
+   current: integer;
+   shaders: TdmShaders;
+begin
+   glGetIntegerv(GL_CURRENT_PROGRAM, @current);
+   glPushAttrib(GL_CURRENT_BIT);
+   shaders := GSpriteEngine.ShaderEngine;
+   if FMasked then
+      shaders.UseShaderProgram(shaders.ShaderProgram('default', 'defaultF'))
+   else shaders.UseShaderProgram(shaders.ShaderProgram('default', 'noAlpha'));
+   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, Self.Image.surface.handle);
+   glColor4f(1, 1, 1, self.alpha / 255);
+   halfWidth := (self.Width / 2);
+   halfheight := (self.Height / 2);
+   if Pinned then
    begin
-      x := x + Engine.WorldX;
-      y := y + engine.WorldY;
+      cx := FCenterX - engine.worldX;
+      cy := FCenterY - engine.WorldY;
+   end
+   else begin
+      cx := FCenterX;
+      cy := FCenterY;
    end;
+   drawrect := self.GetDrawRect;
+   glBegin(GL_QUADS);
+      glTexCoord2i(drawRect.Left,                  drawRect.Top);
+      glVertex2f(cx - halfWidth * Self.ScaleX,     cy - halfHeight * Self.ScaleY);
+      glTexCoord2i(drawRect.Left,                  drawRect.Top + drawRect.Bottom);
+      glVertex2f(cx - halfWidth * Self.ScaleX,     cy + halfHeight * Self.ScaleY);
+      glTexCoord2i(drawRect.Left + drawRect.Right, drawRect.Top + drawRect.Bottom);
+      glVertex2f(cx + halfWidth * Self.ScaleX,     cy + halfHeight * Self.ScaleY);
+      glTexCoord2i(drawRect.Left + drawRect.Right, drawRect.Top);
+      glVertex2f(cx + halfWidth * Self.ScaleX,     cy - halfHeight * Self.ScaleY);
+   glEnd;
+   glPopAttrib;
+   shaders.UseShaderProgram(current);
+end;
+
+procedure TRpgImageSprite.DoDraw;
+begin
+   if FWavePower = 0 then
+DrawQuad
+   else begin
 //fixme
-{   self.CenterX := x;
-   self.CenterY := y;
-   self.x := centerX;
-   self.y := centerY;}
-end;
-
-constructor TRpgImageSprite.Create(engine: TSpriteEngine; const name: string;
-  x, y: integer; zoom: integer; pinned: boolean);
-begin
-   inherited Create(engine);
-   imageName := name;
-   self.pinned := pinned;
-   self.scaleX := zoom / 100;
-   self.scaleY := self.scaleX;
-   FZoomTarget := scaleX;
-//fixme
-{   drawMode := 1;
-   DrawFx := fxBright;}
-   self.centerOn(x, y);
-   FRefTarget := sgPointF(x, y);
-   self.applyImageColors(100, 100, 100, 100);
-end;
-
-procedure TRpgImageSprite.Dead;
-begin
-   if self <> GEnvironment.Image[0].FSprite then
-      inherited Dead;
-end;
-
-destructor TRpgImageSprite.Destroy;
-begin
-   FTransitionTimer.Free;
-   inherited;
+//      distortions.drawWave(self, commons.round(FWavePower * 3), 5, FTag, drawFX);
+DrawQuad;
+      inc(FTag);
+      if FTag > 3141590 then
+         FTag := 0;
+   end;
 end;
 
 function TRpgImageSprite.getZoom: integer;
@@ -255,48 +312,17 @@ end;
 {$Q+}{$R+}
 
 procedure TRpgImageSprite.Draw;
-var
-   followX, followY: single;
-   theImage: TSdlImage;
 begin
    self.update;
-   if FWavePower = 0 then
-      inherited Draw
-   else begin
-      if pinned then
-      begin
-         followX := 0;
-         followY := 0;
-      end else begin
-         followX := FEngine.WorldX;
-         followY := FEngine.worldY;
-      end;
-      if (X > followX + VisibleArea.Left)  and
-         (Y > followY + VisibleArea.Top)   and
-         (X < followX + VisibleArea.Right) and
-         (Y < followY + VisibleArea.Bottom)then
-      begin
-         if not Visible then Exit;
-         if ImageName = '' then Exit;
-         theImage := FEngine.Images.Image[ImageName];
-         if theImage = nil then
-            Exit;
-
-//fixme
-//         distortions.drawWave(self, commons.round(FWavePower * 3), 5, FTag, drawFX);
-         inc(FTag);
-         if FTag > 3141590 then
-            FTag := 0;
-      end;
-   end;
+   inherited Draw;
 end;
 
 { TRpgImage }
 
 constructor TRpgImage.Create(engine: TSpriteEngine; const name: string; x, y: integer;
-  zoom: integer; pinned: boolean);
+  zoom: integer; pinned, masked: boolean);
 begin
-   FSprite := TRpgImageSprite.Create(engine, name, x, y, zoom, pinned);
+   FSprite := TRpgImageSprite.Create(engine, name, x, y, zoom, pinned, masked);
 end;
 
 destructor TRpgImage.Destroy;
@@ -339,7 +365,7 @@ end;
 procedure TRpgImage.moveTo(x, y: integer; zoom, opacity, duration: integer);
 begin
    FSprite.moveTo(x, y, zoom, opacity);
-   FSprite.timer := duration;
+   FSprite.timer := duration * 100;
 end;
 
 procedure TRpgImage.setOpaque(const Value: integer);

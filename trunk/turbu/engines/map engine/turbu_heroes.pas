@@ -22,10 +22,9 @@ uses
    types,
    rsImport,
    turbu_classes, turbu_containers, turbu_defs, turbu_mapchars,
-   turbu_characters, turbu_map_sprites, turbu_2k_items;
+   turbu_characters, turbu_map_sprites, turbu_2k_items, turbu_constants;
 
 const
-   MAXPARTYSIZE = 4;
    MAXGOLD = 999999;
 
 type
@@ -99,7 +98,7 @@ type
       class function templateClass: TDatafileClass; override;
    public
       [NoImport]
-      constructor Create(base: TClassTemplate);
+      constructor Create(base: TClassTemplate; party: TRpgParty);
       destructor Destroy; override;
 
       procedure equip(id: integer);
@@ -167,6 +166,7 @@ type
       procedure setHero(x: integer; value: TRpgHero);
       function empty: boolean;
       function GetTFacing: TFacing;
+      function First: TRpgHero;
    protected
       function getX: integer; override;
       function getY: integer; override;
@@ -187,7 +187,7 @@ type
       [NoImport]
       procedure Pack;
       [NoImport]
-      procedure ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite); override;
+      procedure ChangeSprite(name: string; translucent: boolean); override;
       [NoImport]
       procedure SetSprite(value: TMapSprite);
 
@@ -206,6 +206,8 @@ type
       property xPos: integer read getX write setX;
       property yPos: integer read getY write setY;
       property mapID: integer read getMap;
+      [NoImport]
+      property Sprite: TMapSprite read FSprite;
    end;
 
    TPartyEvent = procedure(hero: TRpgHero; party: TRpgParty) of object;
@@ -219,7 +221,8 @@ const
 implementation
 uses
    Math,
-   ArchiveUtils, turbu_database, dm_database, commons, turbu_items, turbu_2k_environment;
+   ArchiveUtils, turbu_database, dm_database, commons, turbu_items,
+   turbu_2k_environment, turbu_2k_sprite_engine;
 
 const
    WEAPON_SLOT = 1;
@@ -237,7 +240,7 @@ const
 
 { TRpgHero }
 
-constructor TRpgHero.Create(base: TClassTemplate);
+constructor TRpgHero.Create(base: TClassTemplate; party: TRpgParty);
 var
    I: Integer;
 {  calc: TExpCalcEvent;}
@@ -248,11 +251,12 @@ begin
    if base = nil then
       Exit;
 
+   FParty := party;
    FName := template.name;
    FClass := dmDatabase.NameLookup('charClasses', template.charClass);
    FSprite := template.MapSprite;
    FTransparent := template.translucent;
-   setLength(FExpTable, template.maxLevel + 1);
+   setLength(FExpTable, max(template.maxLevel, 1) + 1);
 {   calc := TExpCalcEvent(GScriptEngine.GetExecMethod(template.expFunc));
    if assigned(calc) then
       for I := 2 to 50 do
@@ -810,12 +814,10 @@ begin
       self[id].level := self[id].level + number;
 end;
 
-procedure TRpgParty.ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite);
+procedure TRpgParty.ChangeSprite(name: string; translucent: boolean);
 begin
-{   if assigned(GGameEngine.character[0]) then
-   with GGameEngine.character[0] do
-      update(filename, index, translucency >= 3);
-   //end WITH}
+   if assigned(FSprite) then
+      FSprite.update(name, translucent);
 end;
 
 constructor TRpgParty.Create;
@@ -855,7 +857,7 @@ end;
 
 function TRpgParty.getMap: integer;
 begin
-//   result := GGameEngine.currentMap.mapID;
+   result := GSpriteEngine.mapID;
 end;
 
 function TRpgParty.GetTFacing: TFacing;
@@ -900,6 +902,16 @@ begin
    for i := 1 to MAXPARTYSIZE do
       if self[i] <> GEnvironment.Heroes[0] then
          result := false;
+end;
+
+function TRpgParty.First: TRpgHero;
+var
+   i: integer;
+begin
+   for i := 1 to MAXPARTYSIZE do
+      if (self[i] <> GEnvironment.Heroes[0]) then
+         exit(self[i]);
+   result := self[1];
 end;
 
 procedure TRpgParty.doFlash(r, g, b, power: integer; time: integer);
@@ -978,13 +990,17 @@ begin
 end;
 
 procedure TRpgParty.setHero(x: integer; value: TRpgHero);
+var
+   h1: TRpgHero;
 begin
    if (x = 0) or (x > MAXPARTYSIZE) then
-      Exit
-   else begin
-      FParty[x] := value;
-      FParty[x].FParty := self;
-   end;
+      Exit;
+
+   FParty[x] := value;
+   FParty[x].FParty := self;
+   h1 := self.First;
+   commons.runThreadsafe(
+      procedure begin self.ChangeSprite(h1.sprite, h1.transparent) end, true);
 end;
 
 procedure TRpgParty.SetSprite(value: TMapSprite);

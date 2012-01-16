@@ -148,7 +148,7 @@ type
    protected
       procedure Loaded; override;
    public
-      constructor Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp); overload;
+      constructor Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp); reintroduce; overload;
       procedure Add(aObject: TEBObject); override;
       procedure SetElse;
       function ClearElse: TEBCodeBlock;

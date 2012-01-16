@@ -412,7 +412,7 @@ end;
 function ConvertDefeat(opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBEnumCaseBlock.Create(parent);
-   result.text := 'br_defeat';
+   result.text := 'br_defeated';
 end;
 
 function ConvertSwitch(opcode: TEventCommand; parent: TEBObject): TEBObject;
@@ -762,7 +762,7 @@ end;
 
 function ConvertFlash(opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
-   result := TEBTranslucency.Create(parent);
+   result := TEBFlashObj.Create(parent);
    result.add(EventDeref(opcode.data[0]));
    result.Values.AddRange([opcode.Data[1], opcode.Data[2], opcode.Data[3],
                            opcode.Data[4], opcode.Data[5], opcode.Data[6]]);

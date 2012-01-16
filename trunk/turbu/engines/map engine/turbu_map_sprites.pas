@@ -2,34 +2,49 @@ unit turbu_map_sprites;
 
 interface
 uses
+   OpenGL,
    rsImport,
-   tiles, charset_data, timing,
+   commons, tiles, charset_data, timing,
    turbu_pathing, turbu_sprites, turbu_map_objects, turbu_defs, turbu_containers,
    sg_defs, sdl_sprite;
 
 type
    TMapSprite = class;
 
-   IRpgCharacter = interface
-      procedure ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite = nil);
-   end;
+   TChangeSprite = procedure (name: string; translucent: boolean) of object;
 
    TMapSprite = class(TObject)
+   private type
+      TMoveChange = class
+      private
+         FPath: TPath;
+         Ffrequency: integer;
+         FLoop, FSkip: boolean;
+      public
+         constructor Create(path: TPath; frequency: integer; loop, skip: boolean);
+      end;
    private
       FMoveQueue: TPath;
       FMoveAssignment: TPath;
+      FMoveChange: TMoveChange;
       FOrder: TMoveStep;
       FDirLocked: boolean;
       FMoveReversed: boolean;
       FMoveOpen: boolean;
       FFacing: TFacing;
       FJumping: boolean;
+      FJumpAnimateOverride: boolean;
       FLastJumpOp: shortint;
       FJumpTarget: TSgPoint;
+      FJumpTime: integer;
       FTransparencyFactor: byte;
       FPaused: boolean;
       FInitialized: boolean;
       FMoveLoop: boolean;
+
+      FFlashColor: TRpgColor;
+      FFlashTimer: TRpgTimestamp;
+      FFlashLength: integer;
 
       function tryMove(where: TFacing): boolean; inline;
       function tryMoveDiagonal(one, two: TFacing): boolean; inline;
@@ -45,29 +60,29 @@ type
       function getAnimFix: boolean;
       function GetTile(x: byte): TTile;
 
+      function MustFlash: boolean;
+      function GetFlashColor: TGlArrayF4;
+      procedure SetMovePause;
+      procedure SetMoveQueue(const Value: TPath);
+
       property dirLocked: boolean read isDirLocked write FDirLocked;
    protected
-      FCharacter: IRpgCharacter;
+      FChangeSprite: TChangeSprite;
       FLocation: TSgPoint;
       FTarget: TSgPoint;
       FMoveDir: TFacing;
-      FTiles: array[1..2] of TTile;
-      FMoving: byte;
+      FTiles: array[1..2] of TEventTile;
       FEngine: TSpriteEngine;
       FMoveRate: byte;
       FMoveFreq: byte;
       FSlipThrough: boolean;
-      FJumpAnimateOverride: boolean;
       FAnimFix: boolean;
       FMapObj: TRpgMapObject;
       FVisible: boolean;
-      FWhichFrame: smallint;
       FPause: TRpgTimestamp;
       FMoveTime: TRpgTimestamp;
       FCanSkip: boolean;
       FUnderConstruction: boolean;
-      FActionMatrix: TMoveMatrix;
-      FAction: integer;
 
       procedure EnterTile;
       procedure setFacing(data: TFacing); virtual;
@@ -79,19 +94,22 @@ type
       function doMove(which: TPath): boolean; virtual;
       function getCanSkip: boolean; virtual;
       procedure setTranslucency(const value: byte); virtual;
+      procedure SetFlashEvents(tile: TEventTile);
+      procedure updateMove(data: TRpgEventPage);
+      procedure DoUpdatePage(data: TRpgEventPage); virtual; abstract;
 
       property animFix: boolean read getAnimFix write FAnimFix;
-      property moveQueue: TPath read FMoveQueue write FMoveQueue;
+      property moveQueue: TPath read FMoveQueue write SetMoveQueue;
       property moveAssign: TPath read FMoveAssignment;
    public
       [NoImport]
-      constructor Create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); virtual;
+      constructor Create(base: TRpgMapObject; parent: TSpriteEngine); virtual;
       destructor Destroy; override;
       function move(whichDir: TFacing): boolean; virtual;
       function moveDiag(one, two: TFacing): boolean;
       procedure leaveTile;
       procedure place; virtual;
-      procedure updatePage(data: TRpgEventPage); virtual; abstract;
+      procedure updatePage(data: TRpgEventPage);
       procedure nuke(removeself: boolean = false);
       function inFront: TSgPoint;
       function inFrontTile: TTile; inline;
@@ -102,8 +120,11 @@ type
       procedure pause;
       procedure resume;
       procedure stop;
+      procedure CopyDrawState(base: TMapSprite);
+      procedure MoveChange(path: TPath; frequency: integer; loop, skip: boolean);
+      procedure CheckMoveChange;
 
-      property moveRate: byte read FMoveRate write FMoveRate;
+      property moveRate: byte read FMoveRate;
       property moveFreq: byte read FMoveFreq write FMoveFreq;
       property location: TSgPoint read FLocation write setLocation;
       property event: TRpgMapObject read FMapObj;
@@ -113,38 +134,45 @@ type
       property moveOrder: TPath read FMoveAssignment write setMoveOrder;
       property canSkip: boolean read getCanSkip write FCanSkip;
       property moveLoop: boolean read FMoveLoop write FMoveLoop;
-      property character: IRpgCharacter read FCharacter write FCharacter;
       property translucency: byte read FTransparencyFactor write setTranslucency;
       property tiles[x: byte]: TTile read GetTile;
+      property OnChangeSprite: TChangeSprite read FChangeSprite write FChangeSprite;
    end;
 
    TEventSprite = class(TMapSprite)
    protected
       procedure setLocation(data: TSgPoint); override;
+      procedure DoUpdatePage(data: TRpgEventPage); override;
    public
-      constructor Create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); override;
-      procedure updatePage(data: TRpgEventPage); override;
+      constructor Create(base: TRpgMapObject; parent: TSpriteEngine); override;
       procedure update(filename: string; transparent: boolean); override;
    end;
 
    TCharSprite = class(TMapSprite)
    private
-      //function workOutAnimFrame: TAnimFrame;
+      FWhichFrame: smallint;
+      FAnimTimer: TRpgTimestamp;
+
       procedure loadCharset(filename: string);
+      procedure UpdateFrame;
    protected
       FMoved: boolean;
+      FActionMatrix: TMoveMatrix;
+      FAction: integer;
+      FMoveFrame: byte;
       procedure setFacing(data: TFacing); override;
       procedure updateTiles;
       procedure setLocation(data: TSgPoint); override;
       procedure setTranslucency(const value: byte); override;
       procedure activateEvents(where: TTile);
+      procedure DoUpdatePage(data: TRpgEventPage); override;
    public
-      constructor Create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter); override;
+      constructor Create(base: TRpgMapObject; parent: TSpriteEngine); override;
+      destructor Destroy; override;
       procedure reload(const imageName: string; const index: byte);
       procedure assign(data: TCharSprite); reintroduce;
       procedure place; override;
       procedure update(filename: string; transparent: boolean); override;
-      procedure updatePage(data: TRpgEventPage); override;
       procedure action(const button: TButtonCode = btn_enter); virtual;
       procedure moveTick; override;
 
@@ -153,7 +181,7 @@ type
 
 const
    BASE_MOVE_DELAY = 133;
-   MOVE_DELAY: array[1..6] of integer = (BASE_MOVE_DELAY * 8, BASE_MOVE_DELAY * 4, BASE_MOVE_DELAY * 2, BASE_MOVE_DELAY, BASE_MOVE_DELAY div 2, BASE_MOVE_DELAY div 4);
+   MOVE_DELAY: array[1..6] of integer = (333, 243, 177, 133, 111, 67);
    WIDTH_BIAS = 4;
    FOOTSTEP_CONSTANT: array[1..6] of integer = (11, 10, 8, 6, 5, 5); //yay for fudge factors!
    MAX_TRANSPARENCY = 7;
@@ -162,9 +190,10 @@ const
 implementation
 uses
    SysUtils, Math, types,
-   commons, turbu_2k_map_tiles, ArchiveInterface,
+   turbu_2k_map_tiles, ArchiveInterface,
    turbu_sounds, turbu_constants, turbu_2k_sprite_engine, turbu_2k_map_locks,
-   turbu_database, turbu_2k_environment;
+   turbu_database, turbu_2k_environment,
+   rs_media;
 
 const OP_CLEAR = $C0; //arbitrary value
 
@@ -176,36 +205,38 @@ type
 
 { TMapSprite }
 
-constructor TMapSprite.Create(base: TRpgMapObject; parent: TSpriteEngine;
-  character: IRpgCharacter);
+procedure TMapSprite.CopyDrawState(base: TMapSprite);
 begin
-   FCharacter := character;
+   if assigned(base.FFlashTimer) then
+   begin
+      FFlashTimer := TRpgTimestamp.Create(base.FFlashTimer.timeRemaining);
+      FFlashColor := base.FFlashColor;
+      FFlashLength := base.FFlashLength;
+   end;
+   if assigned(base.FMoveQueue) then
+      FMoveQueue := base.FMoveQueue.clone;
+   if assigned(base.FMoveAssignment) then
+   begin
+      FMoveAssignment := base.FMoveAssignment.clone;
+      FMoveFreq := base.FMoveFreq;
+   end;
+   FMoveReversed := base.FMoveReversed;
+   FMoveOpen := base.FMoveOpen;
+   FMoveLoop := base.FMoveLoop;
+   FMoveDir := base.FMoveDir;
+   if base is TCharSprite then
+      self.facing := base.facing;
+   self.location := base.location;
+end;
+
+constructor TMapSprite.Create(base: TRpgMapObject; parent: TSpriteEngine);
+begin
    FMapObj := base;
    FEngine := parent as T2kSpriteEngine;
    FMoveRate := 4;
-   FWhichFrame := -1;
    FOrder.opcode := OP_CLEAR;
    if self.hasPage then
-   begin
-      FMoveRate := FMapObj.currentPage.moveSpeed;
-      FMoveFreq := FMapObj.currentPage.moveFrequency;
-      FCanSkip := true;
-      case FMapObj.currentPage.moveType of
-         mt_still, mt_cycleUD, mt_cycleLR: ;
-         mt_randomMove: FMoveQueue := TPath.Create(MOVE_CODES[MOVECODE_RANDOM], true);
-         mt_chaseHero: FMoveQueue := TPath.Create(MOVE_CODES[MOVECODE_CHASE], true);
-         mt_fleeHero: FMoveQueue := TPath.Create(MOVE_CODES[MOVECODE_FLEE], true);
-         mt_byRoute:
-         begin
-            assert(assigned(FMapObj.currentPage.path));
-            FMoveQueue := TPath.Assign(FMapObj.currentPage.path);
-            FCanSkip := FMapObj.currentPage.moveIgnore;
-         end;
-         else assert(false);
-      end;
-      FActionMatrix := GDatabase.moveMatrix[FMapObj.CurrentPage.ActionMatrix];
-   end
-   else FActionMatrix := GDatabase.moveMatrix[0];
+      UpdateMove(FMapObj.CurrentPage);
 end;
 
 procedure TMapSprite.decTransparencyFactor;
@@ -266,6 +297,43 @@ begin
    result := self.moveDiag(one, two) or canSkip;
 end;
 
+procedure TMapSprite.updateMove(data: TRpgEventPage);
+begin
+   FMoveRate := data.moveSpeed;
+   FMoveFreq := data.moveFrequency;
+   FCanSkip := true;
+   case data.moveType of
+      mt_still, mt_cycleUD, mt_cycleLR: SetMoveQueue(nil);
+      mt_randomMove: SetMoveQueue(TPath.Create(MOVE_CODES[MOVECODE_RANDOM], true));
+      mt_chaseHero: SetMoveQueue(TPath.Create(MOVE_CODES[MOVECODE_CHASE], true));
+      mt_fleeHero: SetMoveQueue(TPath.Create(MOVE_CODES[MOVECODE_FLEE], true));
+      mt_byRoute:
+      begin
+         assert(assigned(data.path));
+         SetMoveQueue(TPath.Assign(data.path));
+         FCanSkip := data.moveIgnore;
+      end;
+      else assert(false);
+   end;
+end;
+
+procedure TMapSprite.CheckMoveChange;
+begin
+   if assigned(FMoveChange) then
+   begin
+      self.moveOrder := FMoveChange.FPath;
+      self.canSkip := FMoveChange.FSkip;
+      self.moveLoop := FMoveChange.FLoop;
+      self.moveFreq := FMoveChange.Ffrequency;
+      FreeAndNil(FMoveChange);
+   end;
+end;
+
+procedure TMapSprite.updatePage(data: TRpgEventPage);
+begin
+   DoUpdatePage(data);
+end;
+
 procedure TMapSprite.beginJump;
 var midpoint: TSgPoint;
 begin
@@ -281,7 +349,7 @@ begin
    FLocation := FJumpTarget;
    assert(not assigned(FMoveTime));
    GSpriteEngine.Addlocation(currentTile.location, self);
-   FMoveTime := TRpgTimestamp.Create(commons.round(MOVE_DELAY[FMoveRate] / 2.5));
+   FMoveTime := TRpgTimestamp.Create(FJumpTime);
 end;
 
 procedure TMapSprite.endJump;
@@ -290,7 +358,7 @@ begin
    dec(FTarget.x, WIDTH_BIAS);
    FJumping := false;
    assert(not assigned(FMoveTime));
-   FMoveTime := TRpgTimestamp.Create(commons.round(MOVE_DELAY[FMoveRate] / 2.5));
+   FMoveTime := TRpgTimestamp.Create(FJumpTime);
 end;
 
 function TMapSprite.canJump(which: TPath): boolean;
@@ -341,7 +409,7 @@ function TMapSprite.canJump(which: TPath): boolean;
                processJumpMove(ord(FMoveDir), location)
             else processJumpMove(FLastJumpOp, location);
          end;
-      end; //end of CASE
+      end;
    end;
 
 var
@@ -351,6 +419,7 @@ begin
    i := which.cursor;
    target := FLocation;
    FLastJumpOp := -1;
+   FJumpTime := commons.round(MOVE_DELAY[FMoveRate] / 1.5);
    while (i <= which.last) and (which.opcodes[i].opcode <> $19) do
    begin
       if which.opcodes[i].opcode in [0..$B] then
@@ -364,6 +433,8 @@ begin
       FJumpTarget := target;
    end
    else result := false;
+   if which.opcodes[i].opcode = $19 then
+      inc(i);
    which.cursor := i;
 end;
 
@@ -422,9 +493,15 @@ begin
          facing_left: dec(target.X);
       end;
       startMoveTo(target);
-      FMoving := 0;
       result := true;
    end;
+end;
+
+procedure TMapSprite.MoveChange(path: TPath; frequency: integer; loop,
+  skip: boolean);
+begin
+   FreeAndNil(FMoveChange);
+   FMoveChange := TMoveChange.Create(path, frequency, loop, skip);
 end;
 
 function TMapSprite.moveDiag(one, two: TFacing): boolean;
@@ -504,27 +581,37 @@ begin
          FMoveTime.resume;
 end;
 
-procedure TMapSprite.place;
+procedure TMapSprite.SetMovePause;
 var
-   timeRemaining: cardinal;
-   dummy: single;
    frequency: integer;
 begin
-   if FInitialized and not assigned(FMoveTime) then
-      Exit;
-   if FInitialized and (not assigned(self.FMoveQueue)) and assigned(FMapObj) and
-     (FMapObj.currentPage.moveType = mt_still) then
-      Exit;
-
-   if not (FJumpAnimateOverride or self.animFix) then
+   if (FMoveFreq < 8) then
    begin
-      inc(FWhichFrame);
-      if FWhichFrame = FOOTSTEP_CONSTANT[FMoveRate] then
-      begin
-         FWhichFrame := 0;
-         FMoving :=  (FMoving + 1) mod length(FActionMatrix[FAction]);
-      end;
+      FPause.Free;
+      frequency := 8 - FMoveFreq;
+      frequency := commons.powerWrap(2, frequency);
+      FPause := TRpgTimestamp.Create(frequency * ((BASE_MOVE_DELAY - 15) div 4));
    end;
+end;
+
+procedure TMapSprite.SetMoveQueue(const Value: TPath);
+begin
+   FMoveQueue.Free;
+   FMoveQueue := Value;
+end;
+
+procedure TMapSprite.place;
+var
+   timeRemaining: integer;
+   dummy: single;
+begin
+   if (FInitialized and not assigned(FMoveTime)) or
+      (FInitialized and not (assigned(FMoveQueue) or assigned(FMoveAssignment))
+      and assigned(FMapObj) and (FMapObj.currentPage.moveType = mt_still)) then
+   begin
+      Exit;
+   end;
+
    if assigned(FMoveTime) then
    begin
       timeRemaining := FMoveTime.timeRemaining;
@@ -540,12 +627,7 @@ begin
          if FJumping then
             endJump
          else begin
-            if FMoveFreq < 8 then
-            begin
-               frequency := 8 - FMoveFreq;
-               frequency := commons.powerWrap(2, frequency);
-               FPause := TRpgTimestamp.Create(frequency * ((BASE_MOVE_DELAY - 15) div 4));
-            end;
+            SetMovePause;
             FJumpAnimateOverride := false;
          end;
          currentTile.bump(self);
@@ -586,7 +668,7 @@ begin
       $E: self.facing := facing_down;
       $F: self.facing := facing_left;
       $10: self.facing := TFacing((ord(self.facing) + 1) mod 4);
-      $11: self.facing := TFacing((ord(self.facing) - 1) mod 4);
+      $11: self.facing := TFacing((ord(self.facing) + ord(pred(high(TFacing)))) mod 4);
       $12: self.facing := opposite_facing(self.facing);
       $13: self.facing := TFacing((ord(self.facing) + system.random(3) + 1) mod 4);
       $14: self.facing := TFacing(system.random(4));
@@ -594,14 +676,8 @@ begin
       $16: self.facing := opposite_facing(towardsHero);
       $17:
       begin
-         unchanged := true;
-         if not assigned(FPause) then
-            FPause := TRpgTimestamp.Create(100)
-         else if FPause.timeRemaining = 0 then
-         begin
-            freeAndNil(FPause);
-            unchanged := false;
-         end;
+         assert(not assigned(FPause));
+         FPause := TRpgTimestamp.Create(300)
       end;
       $18:
       begin
@@ -617,10 +693,8 @@ begin
       $1F: FMoveFreq := min(0, FMoveFreq - 1);
       $20: GEnvironment.Switch[FOrder.data[1]] := true;
       $21: GEnvironment.Switch[FOrder.data[1]] := false;
-      $22: FCharacter.changeSprite(FOrder.name, boolean(FOrder.data[1]));
-{$MESSAGE WARN 'Commented-out code in live unit'}
-      $23: {GCurrentEngine.mediaPlayer.playAndFreeSfx(TRmSound.Create(FOrder.name, 0, FOrder.data[1],
-                                                                     FOrder.data[2], FOrder.data[3]))};
+      $22: FChangeSprite(FOrder.name, boolean(FOrder.data[1]));
+      $23: rs_Media.playSound(FOrder.name, FOrder.data[1], FOrder.data[2], FOrder.data[3]);
       $24: FSlipThrough := true;
       $25: FSlipThrough := false;
       $26: self.animFix := true;
@@ -629,6 +703,11 @@ begin
       $29: decTransparencyFactor;
       $30: result := false;
       else assert(false);
+   end;
+   if FOrder.opcode in [$C..$16] then
+   begin
+      FPause.Free;
+      FPause := TRpgTimestamp.Create(MOVE_DELAY[FMoveRate] div 3);
    end;
    if not unchanged then
       FOrder.opcode := OP_CLEAR;
@@ -642,11 +721,9 @@ begin
       Exit;
    if assigned(FPause) then
    begin
-      if FPause.timeRemaining = 0 then
-         freeAndNil(FPause)
-      else begin
-         Exit;
-      end;
+      if (FPause.timeRemaining > 0) then
+         Exit
+      else FreeAndNil(FPause);
    end;
 
    if assigned(FMoveQueue) and not FPaused then
@@ -657,7 +734,6 @@ begin
    begin
       if not doMove(FMoveAssignment) then
          freeAndNil(FMoveAssignment);
-      //end if
    end
    else if (not FPaused) and self.hasPage then
       case FMapObj.currentPage.moveType of
@@ -671,13 +747,18 @@ begin
                FMoveOpen := self.move(facing_right)
             else FMoveOpen := self.move(facing_left);
          else ; //handled elsewhere
-      end; //end case
+      end;
    if self.hasPage and (FMapObj.currentPage.moveType in [mt_cycleUD, mt_cycleLR]) and (not FMoveOpen) then
    begin
       FMoveReversed := not FMoveReversed;
       if self.inFrontTile <> nil then
          TMapTile(self.inFrontTile).bump(self);
    end;
+end;
+
+function TMapSprite.MustFlash: boolean;
+begin
+   result := Assigned(FFlashTimer) and (FFlashTimer.timeRemaining > 0);
 end;
 
 procedure TMapSprite.nuke(removeself: boolean = false);
@@ -697,6 +778,7 @@ begin
       FTiles[1].Dead;
    if assigned(FTiles[2]) then
       FTiles[2].Dead;
+   FFlashTimer.Free;
    FPause.free;
    FMoveTime.Free;
    FMoveQueue.Free;
@@ -705,10 +787,19 @@ end;
 
 procedure TMapSprite.flash(r, g, b, power: byte; time: cardinal);
 begin
-   if assigned(FTiles[1]) then
-      (FTiles[1] as TEventTile).flash(r, g, b, power, time);
-   if assigned(FTiles[2]) then
-      (FTiles[2] as TEventTile).flash(r, g, b, power, time);
+   if time = 0 then
+   begin
+      FreeAndNil(FFlashTimer);
+      Exit;
+   end;
+   FFlashColor.rgba[1] := r;
+   FFlashColor.rgba[2] := g;
+   FFlashColor.rgba[3] := b;
+   FFlashColor.rgba[4] := power;
+   FFlashTimer.Free;
+   time := time * 100;
+   FFlashTimer := TRpgTimestamp.Create(time);
+   FFlashLength := time;
 end;
 
 function TMapSprite.getAnimFix: boolean;
@@ -726,6 +817,14 @@ begin
    result := FCanSkip;
 end;
 
+function TMapSprite.GetFlashColor: TGlArrayF4;
+begin
+   result[0] := (FFlashColor.rgba[1] / 255);
+   result[1] := (FFlashColor.rgba[2] / 255);
+   result[2] := (FFlashColor.rgba[3] / 255);
+   result[3] := (FFlashColor.rgba[4] / 255) * (FFlashTimer.timeRemaining / FFlashLength);
+end;
+
 function TMapSprite.GetTile(x: byte): TTile;
 begin
    result := FTiles[x];
@@ -741,7 +840,12 @@ begin
    if FUnderConstruction or not (self.hasPage and (FMapObj.currentPage.animType in [at_fixedDir..at_statue])) then
       FFacing := data;
    FMoveDir := data;
-   FMoving := 1; //set to middle frame instead of first frame
+end;
+
+procedure TMapSprite.SetFlashEvents(tile: TEventTile);
+begin
+   tile.OnMustFlash := self.MustFlash;
+   tile.OnFlashColor := self.GetFlashColor;
 end;
 
 procedure TMapSprite.setLocation(data: TSgPoint);
@@ -754,7 +858,7 @@ procedure TMapSprite.setMoveOrder(const Value: TPath);
 begin
    if assigned(FMoveAssignment) then
       freeAndNil(FMoveAssignment);
-   FMoveAssignment := TPath.Assign(value);
+   FMoveAssignment := value;
 end;
 
 procedure TMapSprite.setTranslucency(const value: byte);
@@ -784,15 +888,16 @@ end;
 
 { TEventSprite }
 
-constructor TEventSprite.create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter);
+constructor TEventSprite.create(base: TRpgMapObject; parent: TSpriteEngine);
 begin
-   inherited Create(base, parent, character);
+   inherited Create(base, parent);
    FTiles[1] := TEventTile.create(Event, parent);
    FTiles[2] := nil;
    if assigned(FMapObj.currentPage) and FMapObj.currentPage.transparent then
       translucency := 3
    else translucency := 0;
    setLocation(point(base.location.X, base.location.Y));
+   self.SetFlashEvents(FTiles[1]);
 end;
 
 procedure TEventSprite.setLocation(data: TSgPoint);
@@ -803,19 +908,15 @@ begin
 end;
 
 procedure TEventSprite.update(filename: string; transparent: boolean);
-//var orphan: IRpgCharacter;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
    self.translucency := 3 * ord(transparent);
-{   FMapObj.currentPage.overrideSprite(filename, index, transparent);
-   orphan := FCharacter;
-   orphan.switchType;
-   orphan.changeSprite(filename, index);}
+   assert(false);
 end;
 
-procedure TEventSprite.updatePage(data: TRpgEventPage);
+procedure TEventSprite.DoUpdatePage(data: TRpgEventPage);
 begin
-   TEventTile(FTiles[1]).update(data);
+   FTiles[1].update(data);
+   updateMove(data);
 end;
 
 { TCharSprite }
@@ -850,24 +951,35 @@ begin
    end;
 end;
 
-constructor TCharSprite.create(base: TRpgMapObject; parent: TSpriteEngine; character: IRpgCharacter);
+constructor TCharSprite.create(base: TRpgMapObject; parent: TSpriteEngine);
 begin
-   inherited Create(base, parent, character);
+   inherited Create(base, parent);
    FUnderConstruction := true;
+   FWhichFrame := -1;
    FTiles[1] := TEventTile.Create(base, parent);
    FTiles[2] := TEventTile.Create(base, parent);
-   if base <> nil then
+   if assigned(base) and assigned(base.currentPage) then
    begin
-      assert(base.currentPage <> nil);
       if base.currentPage.transparent then
          translucency := 3;
+      FActionMatrix := GDatabase.moveMatrix[FMapObj.CurrentPage.ActionMatrix];
       self.facing := base.currentPage.direction;
       updatePage(base.currentPage);
       setLocation(point(base.location.X, base.location.Y));
-   end;
+   end
+   else FActionMatrix := GDatabase.moveMatrix[0];
    FTiles[2].Z := 5;
    FTiles[1].Z := 4;
    FUnderConstruction := false;
+   self.SetFlashEvents(FTiles[1]);
+   self.SetFlashEvents(FTiles[2]);
+   FAnimTimer := TRpgTimestamp.Create(0);
+end;
+
+destructor TCharSprite.Destroy;
+begin
+   FAnimTimer.Free;
+   inherited;
 end;
 
 procedure TCharSprite.loadCharset(filename: string);
@@ -881,10 +993,53 @@ begin
    UpdateTiles;
 end;
 
+procedure TCharSprite.UpdateFrame;
+const
+   ANIM_DELAY: array[1..6] of integer = (208, 125, 104, 78, 57, 42);
+   TIME_FACTOR = 7;
+var
+   newFrame, moveDelay: integer;
+begin
+   if (FJumpAnimateOverride or self.animFix) then
+      Exit;
+   if FAnimTimer.timeRemaining > 0 then
+      Exit;
+
+   inc(FWhichFrame);
+   if FWhichFrame = FOOTSTEP_CONSTANT[FMoveRate] then
+   begin
+      FWhichFrame := 0;
+      newFrame := (FMoveFrame + 1) mod length(FActionMatrix[FAction]);
+   end
+   else newFrame := FMoveFrame;
+
+   moveDelay := ANIM_DELAY[FMoveRate];
+   if hasPage then
+      case FMapObj.currentPage.animType of
+         at_sentry, at_fixedDir:
+            if assigned(FMoveTime) then
+               FMoveFrame := newFrame
+            else FMoveFrame := 0;
+         at_jogger, at_fixedJog: FMoveFrame := newFrame;
+         at_spinRight:
+         begin
+            self.facing := TFacing((ord(self.facing) + 1) mod ord(high(TFacing)));
+            moveDelay := moveDelay * 10
+         end;
+         at_statue: ;
+      end
+   else if not assigned(FMoveTime) and not assigned(moveQueue)
+     and not (assigned(moveAssign) and (FTarget <> FLocation * TILE_SIZE)) then
+      FMoveFrame := 0
+   else FMoveFrame := newFrame;
+   FAnimTimer.Create(moveDelay div TIME_FACTOR);
+end;
+
 procedure TCharSprite.place;
 begin
-   FMoved := (FMoving > 0) and (FWhichFrame = FMoveRate - 1);
+   FMoved := (FMoveFrame > 0) and (FWhichFrame = FMoveRate - 1);
    inherited place;
+   UpdateFrame;
    FTiles[2].Y := FTiles[1].Y - TILE_SIZE.y;
    FTiles[2].X := FTiles[1].X;
 end;
@@ -893,45 +1048,17 @@ procedure TCharSprite.updateTiles;
 var
    frame: integer;
 begin
-   frame := FActionMatrix[FAction, FMoving] * 2;
+   frame := FActionMatrix[FAction, FMoveFrame] * 2;
    FTiles[2].ImageIndex := frame;
    FTiles[1].ImageIndex := frame + 1;
 end;
-
-{function TCharSprite.workOutAnimFrame: TAnimFrame;
-var dummy: TAnimFrame;
-begin
-   result := center;
-   dummy := center;
-   case FMoving of
-      3: dummy := left;
-      2, 0: dummy := center;
-      1: dummy := right;
-   end;
-   if not (FJumpAnimateOverride or self.animFix) then
-   begin
-      if hasPage then
-         case FMapObj.currentPage.animType of
-            at_sentry, at_fixedDir:
-               if assigned(FMoveTime) then
-                  result := dummy
-               else result := center;
-            at_jogger, at_fixedJog: result := dummy;
-            at_spinRight: self.facing := TFacing(3 - FMoving);
-            at_statue: ;
-         end
-      else if not assigned(FMoveTime) and not assigned(FPause) and not assigned(moveQueue) and not assigned(moveAssign) then
-         result := center
-      else result := dummy;
-   end;
-end;}
 
 procedure TCharSprite.reload(const imageName: string; const index: byte);
 begin
    FTiles[1].name := imagename + intToStr(index);
    FTiles[2].name := imagename + intToStr(index);
    self.facing := facing_down;
-   FMoving := 0;
+   FMoveFrame := 0;
 end;
 
 procedure TCharSprite.setFacing(data: TFacing);
@@ -967,13 +1094,18 @@ begin
    updateTiles;
 end;
 
-procedure TCharSprite.updatePage(data: TRpgEventPage);
+procedure TCharSprite.DoUpdatePage(data: TRpgEventPage);
 begin
-   FUnderConstruction := true;
-   self.facing := data.direction;
-   FMoving := data.whichTile;
-   FUnderConstruction := false;
-   update(data.name, translucency >= 3);
+   if assigned(data) then
+   begin
+      FUnderConstruction := true;
+      self.facing := data.direction;
+      FMoveFrame := data.whichTile;
+      UpdateMove(data);
+      FUnderConstruction := false;
+      update(data.name, translucency >= 3);
+   end;
+   self.visible := assigned(data);
 end;
 
 { TMapSpriteHelper }
@@ -981,6 +1113,17 @@ end;
 function TMapSpriteHelper.currentTile: TMapTile;
 begin
    result := T2kSpriteEngine(FEngine)[0, self.location.x, self.location.y];
+end;
+
+{ TMapSprite.TMoveChange }
+
+constructor TMapSprite.TMoveChange.Create(path: TPath; frequency: integer; loop,
+  skip: boolean);
+begin
+   FPath := path;
+   Ffrequency := frequency;
+   FLoop := loop;
+   FSkip := skip;
 end;
 
 end.

@@ -22,41 +22,75 @@ type
    TRpgTimestamp = class(TObject)
    private
       class var
-      FFrameLength: cardinal;
+      FLastFrame: TDateTime;
+      FCounter: integer;
+      FFrameLength: array[1..10] of integer;
    private
       FHour: word;
       FMin: word;
       FSec: word;
       FMsec: word;
-      FPauseTime: cardinal;
+      FPauseTime: integer;
       FPaused: boolean;
 
-      procedure setup(length: cardinal); inline;
+      procedure setup(length: integer); inline;
+      class function GetFrameLength: integer; static;
    public
-      constructor Create(length: cardinal);
-      function timeRemaining: cardinal;
+      constructor Create(length: integer);
+      function timeRemaining: integer;
       procedure pause; inline;
       procedure resume;
 
-      class property FrameLength: cardinal read FFrameLength write FFrameLength;
+      class procedure newFrame;
+      class property FrameLength: integer read GetFrameLength;
    end;
 
-   procedure moveTowards(timer: cardinal; var current: extended; const goal: extended); overload;
-   procedure moveTowards(timer: cardinal; var current: single; const goal: single); overload;
-   procedure moveTowards(timer: cardinal; var current: byte; const goal: byte); overload;
-   procedure moveTowards(timer: cardinal; var current: integer; const goal: integer); overload;
+   procedure moveTowards(timer: integer; var current: extended; const goal: extended); overload;
+   procedure moveTowards(timer: integer; var current: single; const goal: single); overload;
+   procedure moveTowards(timer: integer; var current: byte; const goal: byte); overload;
+   procedure moveTowards(timer: integer; var current: integer; const goal: integer); overload;
 
 implementation
 uses
-   sysUtils, math, windows,
+   sysUtils, math, windows, DateUtils,
    commons;
 
 { TRpgTimestamp }
 
-constructor TRpgTimestamp.Create(length: cardinal);
+constructor TRpgTimestamp.Create(length: integer);
 begin
    inherited Create;
    setup(length);
+end;
+
+class function TRpgTimestamp.GetFrameLength: integer;
+begin
+   result := round(math.SumInt(FFrameLength) / length(FFrameLength));
+end;
+
+class procedure TRpgTimestamp.newFrame;
+var
+   i: integer;
+   delta: integer;
+begin
+   if FLastFrame = 0 then
+      FLastFrame := Now
+   else begin
+      delta := MilliSecondsBetween(Now, FLastFrame);
+      FLastFrame := Now;
+      if FCounter = 0 then
+      begin
+         for i := low(FFrameLength) to high(FFrameLength) do
+            FFrameLength[i] := delta;
+         inc(FCounter);
+      end
+      else begin
+         inc(FCounter);
+         if FCounter > high(FFrameLength) then
+            FCounter := low(FFrameLength);
+         FFrameLength[FCounter] := delta;
+      end;
+   end;
 end;
 
 procedure TRpgTimestamp.pause;
@@ -77,7 +111,7 @@ begin
    end;
 end;
 
-procedure TRpgTimestamp.setup(length: cardinal);
+procedure TRpgTimestamp.setup(length: integer);
 begin
    try
       decodeTime(sysUtils.GetTime, FHour, FMin, FSec, FMsec);
@@ -113,7 +147,7 @@ begin
    end;
 end;
 
-function TRpgTimestamp.timeRemaining: cardinal;
+function TRpgTimestamp.timeRemaining: integer;
 var
    theHour, theMin, theSec, theMsec: word;
    hour, min, sec, msec: smallint;
@@ -157,7 +191,7 @@ end;
 
 { Classless }
 
-procedure moveTowards(timer: cardinal; var current: extended; const goal: extended);
+procedure moveTowards(timer: integer; var current: extended; const goal: extended);
 var
    diff: extended;
    timefactor: integer;
@@ -167,7 +201,7 @@ begin
    current := current - diff;
 end;
 
-procedure moveTowards(timer: cardinal; var current: single; const goal: single);
+procedure moveTowards(timer: integer; var current: single; const goal: single);
 var
    diff: single;
    timefactor: integer;
@@ -177,7 +211,7 @@ begin
    current := current - diff;
 end;
 
-procedure moveTowards(timer: cardinal; var current: byte; const goal: byte);
+procedure moveTowards(timer: integer; var current: byte; const goal: byte);
 var
    diff: smallint;
    timefactor: integer;
@@ -188,7 +222,7 @@ begin
    current := current - diff;
 end;
 
-procedure moveTowards(timer: cardinal; var current: integer; const goal: integer);
+procedure moveTowards(timer: integer; var current: integer; const goal: integer);
 var
    diff: smallint;
    timefactor: integer;

@@ -159,6 +159,8 @@ end;
 
 { T2k2RpgEventPage }
 
+const WHICH_TILE: array[0..2] of word = (1, 0, 2);
+
 procedure T2k2RpgEventPage.CalculateTileID(tile: word);
 var
    dec: TDecodeResult;
@@ -177,7 +179,7 @@ begin
       CalculateTileID(base.whichChip)
    else begin
       FName := format('%s %d', [string(base.filename), base.whichChip]);
-      self.whichTile := ord(base.animFrame);
+      self.whichTile := WHICH_TILE[ord(base.animFrame)];
    end;
    self.direction := base.direction;
    self.transparent := base.transparent;

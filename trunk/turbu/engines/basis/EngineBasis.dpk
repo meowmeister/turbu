@@ -73,7 +73,6 @@ contains
   turbu_containers in '..\..\turbu format\turbu_containers.pas',
   turbu_functional in '..\..\turbu_functional.pas',
   finalizer_hack in 'finalizer_hack.pas',
-  StringListComp in '..\..\..\..\ListCompare\StringListComp.pas',
   uDataSetHelper in '..\..\..\classes\uDataSetHelper.pas',
   DSharp.Core.Variants in '..\..\..\classes\DSharp\Core\DSharp.Core.Variants.pas',
   DSharp.Linq.QueryProvider in '..\..\..\classes\DSharp\Core\DSharp.Linq.QueryProvider.pas',
@@ -86,6 +85,12 @@ contains
   dm_shaders in '..\..\turbu format\database\dm_shaders.pas',
   turbu_multimaps in '..\..\turbu_multimaps.pas',
   turbu_script_interface in '..\..\turbu format\turbu_script_interface.pas',
-  ArchiveUtils in '..\..\ArchiveUtils.pas';
+  ArchiveUtils in '..\..\ArchiveUtils.pas',
+  turbu_text_utils in 'turbu_text_utils.pas',
+  StringListComp in '..\..\..\classes\StringListComp.pas',
+  ftgl in '..\..\..\classes\ftgl.pas',
+  turbu_OpenGL in 'turbu_OpenGL.pas',
+  project_folder in 'project_folder.pas',
+  AsphyreTiming in '..\..\..\classes\Asphyre\AsphyreTiming.pas';
 
 end.

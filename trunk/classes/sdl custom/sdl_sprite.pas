@@ -105,6 +105,7 @@ type
       procedure Draw; virtual;
       procedure Dead; virtual;
       procedure DrawTo(const dest: TRect);
+      procedure SetSpecialRender;
 
       property Visible: Boolean read FVisible write FVisible;
       property X: Single read FX write FX;
@@ -197,7 +198,7 @@ type
       property AnimPlayMode: TAnimPlayMode read FAnimPlayMode write FAnimPlayMode;
    end;
 
-   TAnimatedRectSprite = class(TAnimatedSprite)
+   TAnimatedRectSprite = class(TParentSprite)
    private
       FStartingPoint: TSgPoint;
       FDisplacement: TSgPoint;
@@ -205,7 +206,6 @@ type
       FAnimPos: Integer;
    protected
       procedure SetDrawRect(const Value: TRect); override;
-      procedure DoMove(const MoveCount: Single); override;
    public
       constructor Create(parent: TParentSprite; region: TRect; displacement: TSgPoint; length: integer); reintroduce; overload;
       procedure Assign(const Value: TSprite); override;
@@ -218,32 +218,35 @@ type
    TTiledAreaSprite = class(TAnimatedRectSprite)
    private
       FFillArea: TRect;
+      FStretch: boolean;
    protected
       procedure DoDraw; override;
    public
       constructor Create(parent: TParentSprite; region: TRect; displacement: TSgPoint; length: integer);
+      destructor Destroy; override;
       property FillArea: TRect read FFillArea write FFillArea;
+      property stretch: boolean read FStretch write FStretch;
    end;
 
    TParticleSprite = class(TAnimatedSprite)
    private
-      FAccelX: Real;
-      FAccelY: Real;
-      FVelocityX: Real;
-      FVelocityY: Real;
+      FAccelX: single;
+      FAccelY: single;
+      FVelocityX: single;
+      FVelocityY: single;
       FUpdateSpeed : Single;
-      FDecay: Real;
-      FLifeTime: Real;
+      FDecay: single;
+      FLifeTime: single;
    public
       constructor Create(const AParent: TParentSprite); override;
       procedure DoMove(const MoveCount: Single); override;
-      property AccelX: Real read FAccelX write FAccelX;
-      property AccelY: Real read FAccelY write FAccelY;
-      property VelocityX: Real read FVelocityX write FVelocityX;
-      property VelocityY: Real read FVelocityY write FVelocityY;
+      property AccelX: single read FAccelX write FAccelX;
+      property AccelY: single read FAccelY write FAccelY;
+      property VelocityX: single read FVelocityX write FVelocityX;
+      property VelocityY: single read FVelocityY write FVelocityY;
       property UpdateSpeed : Single read FUpdateSpeed write FUpdateSpeed;
-      property Decay: Real read FDecay write FDecay;
-      property LifeTime: Real read FLifeTime write FLifeTime;
+      property Decay: single read FDecay write FDecay;
+      property LifeTime: single read FLifeTime write FLifeTime;
    end;
 
    TSpriteRenderer = class;
@@ -259,6 +262,9 @@ type
       FCanvas: TSdlCanvas;
       FDestroying: boolean;
       FRenderer: TSpriteRenderer;
+   protected
+      function GetHeight: Integer; virtual;
+      function GetWidth: Integer; virtual;
    public
       constructor Create(const AParent: TSpriteEngine; const ACanvas: TSdlCanvas); reintroduce;
       destructor Destroy; override;
@@ -271,9 +277,11 @@ type
       property WorldY: Single read FWorldY write FWorldY;
       property Images: TSdlImages read FImages write FImages;
       property Canvas: TSdlCanvas read FCanvas;
+      property Width: Integer read GetWidth;
+      property Height:Integer read GetHeight;
    end;
 
-   TRenderList = class
+{   TRenderList = class
    private
       FName: string;
       FVertices: TArray<smallint>;
@@ -281,7 +289,7 @@ type
       FVerticesValid: boolean;
       FTexturesValid: boolean;
    public
-   end;
+   end;}
 
    TSpriteRenderer = class
    private type TDrawMap = class(TMultimap<TSdlImage, TSprite>);
@@ -303,6 +311,7 @@ type
 implementation
 uses
    Generics.Defaults,
+   turbu_OpenGL,
    SDL, SDL_13;
 
 {  TSprite }
@@ -461,12 +470,22 @@ begin
    FZ := Z;
 end;
 
+procedure TSprite.SetSpecialRender;
+begin
+   FRenderSpecial := true;
+end;
+
 procedure TSprite.SetImage(const Value: TSdlImage);
 begin
+   if value = nil then
+      Exit;
    FImage := Value;
    FImageName := FImage.name;
-   FWidth := FImage.textureSize.X;
-   FHeight := FImage.textureSize.y;
+   if FImageType in [itSingleImage, itSpriteSheet] then
+   begin
+      FWidth := FImage.textureSize.X;
+      FHeight := FImage.textureSize.y;
+   end;
 end;
 
 procedure TSprite.SetImageName(const Value: string);
@@ -623,7 +642,7 @@ end;
 function TParentSprite.GetItem(Index: Integer): TSprite;
 begin
    if assigned(FList) then
-      Result := TSprite(FList[Index])
+      Result := FList[Index]
    else
       raise ESpriteError.CreateFmt('Index of the list exceeds the range. (%d)', [Index]);
 end;
@@ -636,7 +655,7 @@ begin
    if self.visible and assigned(FSpriteList) then
    begin
       for i := 0 to FSpriteList.Count - 1 do
-         TSprite(FSpriteList[i]).Draw;
+         FSpriteList[i].Draw;
    end;
 end;
 
@@ -811,9 +830,9 @@ end;
 destructor TSpriteEngine.Destroy;
 begin
    FRenderer.Free;
-   FDeadList.Free;
    FDestroying := true;
    inherited Destroy;
+   FDeadList.Free;
 end;
 
 procedure TSpriteEngine.Dead;
@@ -831,6 +850,8 @@ var
    list: TSpriteList;
    i, z: integer;
 begin
+   if FSpriteList = nil then
+      Exit;
    for z := 0 to high(FSpriteList.FSprites) do
    begin
       list := FSpriteList.FSprites[z];
@@ -842,6 +863,16 @@ begin
          FRenderer.Render;
       end;
    end;
+end;
+
+function TSpriteEngine.GetHeight: Integer;
+begin
+   result := inherited Height;
+end;
+
+function TSpriteEngine.GetWidth: Integer;
+begin
+   result := inherited Width;
 end;
 
 { TSpriteComparer }
@@ -940,58 +971,6 @@ begin
    FStartingPoint := region.TopLeft;
 end;
 
-procedure TAnimatedRectSprite.DoMove(const MoveCount: Single);
-var
-   dummy: integer;
-begin
-   if not FDoAnimate then
-      Exit;
-
-   case FAnimPlayMode of
-      pmForward: //12345 12345 12345
-      begin
-         if FAnimPos = FSeriesLength then
-         begin
-            if FAnimLooped then
-               FAnimPos := 0
-            else FDoAnimate := false;
-         end
-         else inc(FAnimPos);
-      end;
-      pmBackward: //54321 54321 54321
-      begin
-         if FAnimPos = 0 then
-         begin
-            if FAnimLooped then
-               FAnimPos := FSeriesLength
-            else FDoAnimate := false;
-         end
-         else dec(FAnimPos);
-      end;
-      pmPingPong: // 12345432123454321
-      begin
-         dummy := FAnimPos + trunc(FAnimSpeed);
-         if (dummy > FSeriesLength) or (dummy < 0) then
-            FAnimSpeed := -FAnimSpeed;
-         inc(FAnimPos, trunc(FAnimSpeed));
-         if not FAnimLooped then
-         begin
-            if (FAnimPos) >= (FSeriesLength) then
-               FDoFlag1 := True;
-            if (FAnimPos <= 0) and (FDoFlag1) then
-               FDoFlag2 := True;
-            if (FDoFlag1) and (FDoFlag2) then
-            begin
-               FDoAnimate := False;
-               FDoFlag1 := False;
-               FDoFlag2 := False;
-            end;
-         end;
-      end;
-   end; //end of case block
-   FOrigin := FStartingPoint + (FDisplacement * FAnimPos);
-end;
-
 procedure TAnimatedRectSprite.SetDrawRect(const Value: TRect);
 begin
    FStartingPoint := Value.TopLeft;
@@ -1004,8 +983,14 @@ end;
 constructor TTiledAreaSprite.Create(parent: TParentSprite; region: TRect;
   displacement: TSgPoint; length: integer);
 begin
-   FFillArea := rect(0, 0, 0, 0);
+   FFillArea := rect(0, 0, region.Right, region.Bottom);
    inherited Create(parent, region, displacement, length);
+   FRenderSpecial := true;
+end;
+
+destructor TTiledAreaSprite.Destroy;
+begin
+   inherited;
 end;
 
 procedure TTiledAreaSprite.DoDraw;
@@ -1013,7 +998,9 @@ var
    drawpoint, endpoint: TSgPoint;
 begin
    if (FFillArea.Bottom = 0) or (FFillArea.Right = 0) then
-      inherited Draw
+      inherited DoDraw
+   else if FStretch then
+      FImage.DrawRectTo(FFillArea, self.DrawRect)
    else begin
       drawpoint := FFillArea.TopLeft;
       endpoint := drawpoint + FFillArea.BottomRight;
@@ -1022,7 +1009,7 @@ begin
          repeat
             self.x := drawpoint.x;
             self.y := drawpoint.y;
-            inherited Draw;
+            inherited DoDraw;
             inc(drawpoint.x, FWidth);
          until drawpoint.x >= endpoint.x;
          inc(drawpoint.y, FHeight);
@@ -1033,50 +1020,6 @@ begin
 end;
 
 { TSpriteRenderer }
-
-const
-   GL_VERTEX_ARRAY = $8074;
-   GL_ARRAY_BUFFER = $8892;
-   GL_DYNAMIC_DRAW = $88E8;
-   GL_STREAM_DRAW = $88E0;
-   GL_TEXTURE_RECTANGLE_ARB = $84F5;
-   GL_TEXTURE_COORD_ARRAY = $8078;
-   GL_CURRENT_PROGRAM = $8B8D;
-
-type
-   TGLsizei = Integer;
-   TGLenum = Cardinal;
-   TGLuint = Cardinal;
-   TGLint = Integer;
-   PGLvoid = Pointer;
-   GLHandle = Integer;
-
-var
-   glGenBuffers: procedure(n: TGLsizei; buffers: PGLuint); stdcall;
-   glBindBuffer: procedure(target: TGLenum; buffer: TGLuint); stdcall;
-   glBufferData: procedure(target: TGLenum; size: TGLsizei; const data: PGLvoid; usage: TGLenum); stdcall;
-   glEnableClientState: procedure(_array: TGLenum); stdcall;
-   glDisableClientState: procedure(_array: TGLenum); stdcall;
-   glVertexPointer: procedure(size: TGLint; _type: TGLenum; stride: TGLsizei; const _pointer: PGLvoid); stdcall;
-   glTexCoordPointer: procedure(size: TGLint; _type: TGLenum; stride: TGLsizei; const _pointer: PGLvoid); stdcall;
-   glDrawArrays: procedure(mode: TGLenum; first: TGLint; count: TGLsizei); stdcall;
-   glBindTexture: procedure(target: TGLenum; texture: TGLuint); stdcall;
-   glUseProgram: procedure(programObj: GLhandle); stdcall;
-   ImplementationRead: boolean;
-
-procedure InitOpenGL;
-begin
-   glGenBuffers := SDL_GL_GetProcAddress('glGenBuffers');
-   glBindBuffer := SDL_GL_GetProcAddress('glBindBuffer');
-   glBufferData := SDL_GL_GetProcAddress('glBufferData');
-   glEnableClientState := SDL_GL_GetProcAddress('glEnableClientState');
-   glDisableClientState := SDL_GL_GetProcAddress('glDisableClientState');
-   glVertexPointer := SDL_GL_GetProcAddress('glVertexPointer');
-   glTexCoordPointer := SDL_GL_GetProcAddress('glTexCoordPointer');
-   glDrawArrays := SDL_GL_GetProcAddress('glDrawArrays');
-   glBindTexture := SDL_GL_GetProcAddress('glBindTexture');
-   glUseProgram := SDL_GL_GetProcAddress('glUseProgram');
-end;
 
 constructor TSpriteRenderer.Create(engine: TSpriteEngine);
 begin
@@ -1125,7 +1068,7 @@ begin
          right := left + sprite.FImage.textureSize.x;
          bottom := top + sprite.FImage.textureSize.Y;
       end;
-      itRectSet: asm int 3 end;
+      else raise ESpriteError.Create('RectSet not supported for vertex array drawing');
    end;
    vertices[counter] := left; vertices[counter + 1] := top;
    vertices[counter + 2] := left; vertices[counter + 3] := bottom;
@@ -1161,10 +1104,8 @@ end;
 procedure TSpriteRenderer.InternalRender(const vertices,
   texCoords: TArray<smallint>; image: TSdlImage);
 var
-   current: GLint;
    r, g, b, a: byte;
 begin
-   glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    glColor4f(1, 1, 1, image.surface.alpha / 255);
    glEnable(GL_ALPHA_TEST);
    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -1175,7 +1116,6 @@ begin
    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, image.handle);
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-   glUseProgram(4); //Forgive me, Wirth, for I have sinned
 
    glBindBuffer(GL_ARRAY_BUFFER, FVertexBuffer);
    glBufferData(GL_ARRAY_BUFFER, length(vertices) * sizeof(smallint), @vertices[0], GL_STREAM_DRAW);
@@ -1190,10 +1130,7 @@ begin
    glBindBuffer(GL_ARRAY_BUFFER, 0);
    glDisableClientState(GL_VERTEX_ARRAY);
    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-   glDisable(GL_ALPHA_TEST);
-   glDisable(GL_BLEND);
    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
-   glUseProgram(current);
    SDL_GetRenderDrawColor(FEngine.Canvas.Renderer, r, g, b, a);
    glColor4f(r / 255, g / 255, b / 255, a / 255);
 end;

@@ -48,7 +48,7 @@ type
       procedure FormCreate(Sender: TObject);
    private
       FFunctionList: TDeclList;
-      procedure DisableControls;
+//      procedure DisableControls;
       procedure BuildFunctionList;
       procedure LoadFunction(call: TEBCall);
    protected
@@ -71,7 +71,7 @@ procedure TfrmEBSetInteger.BuildFunctionList;
 const FUNCTIONS: array[1..2] of string = ('random', 'heldItems');
 var
 //   engine: IDesignScriptEngine;
-   name: string;
+//   name: string;
    decl: TRpgDecl;
    param: TNameType;
 begin
@@ -95,14 +95,14 @@ begin
    inherited Destroy;
 end;
 
-procedure TfrmEBSetInteger.DisableControls;
+{procedure TfrmEBSetInteger.DisableControls;
 var
    i: integer;
 begin
    for i := 0 to grpOperand.ControlCount - 1 do
       if not (grpOperand.Controls[i] is TRadioButton) then
          grpOperand.Controls[i].Enabled := false;
-end;
+end;}
 
 procedure TfrmEBSetInteger.FormCreate(Sender: TObject);
 begin

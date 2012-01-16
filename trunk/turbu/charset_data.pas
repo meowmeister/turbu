@@ -21,15 +21,6 @@ interface
 
 uses sg_defs, turbu_defs;
 
-type
-   TAnimFrame = (left, center, right);
-   TCharTiles = (bottom, top);
-   TVehicleSet = (vh_boat, vh_ship, vh_airship);
-
-const
-   SPRITE: TSgPoint = (x: 24; y: 16);
-   SPRITE_SET: TSgPoint = (x: 288; y: 256);
-
 function opposite_facing(const whichDir: TFacing): TFacing; inline;
 function towards(location, target: TSgPoint): TFacing;
 

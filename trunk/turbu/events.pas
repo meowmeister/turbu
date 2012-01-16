@@ -152,6 +152,8 @@ type
       property ignore: boolean read FIgnore write FIgnore;
    end;
 
+   TAnimFrame = (left, center, right);
+
    TEventPage = class(TObject)
    private
       FID: word;

@@ -35,7 +35,7 @@ type
       procedure SetBgColor(const Value: TSgColor);
 //      function GetBitDepth: byte;
    public
-      procedure Clear;
+      procedure Clear; overload;
       procedure SetRenderer; virtual; abstract;
 
       property Width: Integer read FSize.X;
@@ -51,15 +51,17 @@ type
    public
       constructor Create(size: TSgPoint); overload;
       procedure SetRenderer; override;
+      procedure DrawFull;
       property handle: TSdlTexture read FHandle;
    end;
 
    TSdlRenderTargets = class(TObjectList<TSdlRenderTarget>)
    public
-      function RenderOn(Index: Integer; Event: TNotifyEvent; Bkgrnd: Cardinal; FillBk: Boolean): Boolean;
+      function RenderOn(Index: Integer; Event: TNotifyEvent; Bkgrnd: Cardinal = 0; FillBk: Boolean = true): Boolean;
    end;
 
-   TRenderStack = class(TStack<TSdlRenderTarget>);
+   TRenderStack = class(TStack<TSdlRenderSurface>);
+   TSdlCanvasNotifyEvent = procedure(sender: TSdlCanvas) of object;
 
    {***************************************************************************
    * Encapsulates an SDL_Surface as the principal video buffer for an
@@ -72,6 +74,7 @@ type
       FRenderTarget: TSdlRenderSurface;
 //      FFullscreen: boolean;
       FWindow: TSdlWindow;
+      FOnResize: TSdlCanvasNotifyEvent;
       procedure SetRenderTarget(const Value: TSdlRenderSurface);
 //      procedure SetFullscreen(const Value: boolean);
 //      function IsFullscreen: boolean;
@@ -103,6 +106,8 @@ type
       ************************************************************************}
       procedure DrawBox(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
 
+      procedure Clear(const color: SDL_Color; const alpha: byte = $FF); overload;
+
       {************************************************************************
       * Flips the buffer, rendering the canvas to the screen.
       ************************************************************************}
@@ -132,6 +137,8 @@ type
 
       property Window: TSdlWindow read FWindow;
 
+      property OnResize: TSdlCanvasNotifyEvent read FOnResize write FOnResize;
+
 //      property Fullscreen: boolean read IsFullscreen write SetFullscreen;
    end;
 
@@ -140,6 +147,9 @@ type
 function currentRenderTarget: TSdlRenderSurface;
 
 implementation
+uses
+   OpenGL,
+   turbu_OpenGL;
 
 var
    lCurrentRenderTarget: TSdlRenderSurface;
@@ -158,16 +168,31 @@ var
 begin
    inherited Create;
    assert(assigned(lCurrentRenderTarget));
+   FParent := lCurrentRenderTarget.FParent;
    SDL_GetRendererInfo(FParent.FRenderer, info);
 
    FHandle := TSdlTexture.Create(FParent.FRenderer, info.texture_formats[0], sdltaRenderTarget, size.x, size.y);
+   SDL_SetTextureBlendMode(FHandle, [sdlbBlend]);
    FSize := FHandle.size;
+end;
+
+procedure TSdlRenderTarget.DrawFull;
+begin
+   glEnable(GL_TEXTURE_RECTANGLE_ARB);
+   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, self.handle.handle);
+   glBegin(GL_QUADS);
+      glTexCoord2i(0, 0); glVertex2i(0, 0);
+      glTexCoord2i(0, Height); glVertex2i(0, Height);
+      glTexCoord2i(Width, Height); glVertex2i(Width, Height);
+      glTexCoord2i(Width, 0); glVertex2i(Width, 0);
+   glEnd;
 end;
 
 procedure TSdlRenderTarget.SetRenderer;
 begin
-   SDL_SetTargetTexture(FParent.FRenderer, FHandle);
-   lCurrentRenderTarget := self;
+   if SDL_SetTargetTexture(FHandle) <> 0 then
+      asm int 3 end;
+   FParent.SetRenderTarget(self);
 end;
 
 {function TSdlRenderSurface.GetBitDepth: byte;
@@ -193,7 +218,7 @@ begin
 
    FWindow := SDL_CreateWindow(PAnsiChar(title), size.Left, size.Top, size.Right, size.Bottom, flags);
    SDL_GetWindowLogicalSize(FWindow, FSize.x, FSize.y);
-   FRenderer := TSDLRenderer.Create(FWindow, -1, [sdlrAccelerated]);
+   FRenderer := TSDLRenderer.Create(FWindow, SDL_RendererIndex('opengl'), [sdlrAccelerated]);
    SDL_RenderPresent(FRenderer);
    self.RenderTarget := self;
    FParent := self;
@@ -242,6 +267,12 @@ begin
    SDL_RenderDrawRect(FRenderer, @region);
 end;
 
+procedure TSdlCanvas.Clear(const color: SDL_Color; const alpha: byte);
+begin
+   assert(SDL_SetRenderDrawColor(FRenderer, color.r, color.g, color.b, alpha) = 0);
+   SDL_RenderFillRect(FRenderer, nil);
+end;
+
 procedure TSdlCanvas.DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect);
 var
    dummy: TSDLRect;
@@ -259,23 +290,25 @@ end;
 
 procedure TSdlCanvas.Flip;
 begin
-   assert(lCurrentRenderTarget = self);
+//   assert(lCurrentRenderTarget = self);
    SDL_RenderPresent(FRenderer);
 end;
 
 procedure TSdlCanvas.popRenderTarget;
 begin
-   setRenderTarget(FRenderStack.Pop);
+   FRenderStack.Pop.SetRenderer;
 end;
 
 procedure TSdlCanvas.pushRenderTarget;
 begin
-   FRenderStack.Push(FRenderTarget as TSdlRenderTarget);
+   FRenderStack.Push(FRenderTarget);
 end;
 
 procedure TSdlCanvas.Resize;
 begin
    SDL_GetWindowLogicalSize(FWindow, FSize.x, FSize.y);
+   if assigned(FOnResize) then
+      FOnResize(self);
 end;
 
 (*
@@ -295,7 +328,7 @@ end;
 procedure TSdlCanvas.SetRenderer;
 begin
    SetRenderTarget(nil);
-   SDL_ClearTargetTexture(FRenderer);
+   SDL_ResetTargetTexture(FRenderer);
 end;
 
 procedure TSdlCanvas.SetRenderTarget(const Value: TSdlRenderSurface);
@@ -312,19 +345,28 @@ function TSdlRenderTargets.RenderOn(Index: Integer; Event: TNotifyEvent;
   Bkgrnd: Cardinal; FillBk: Boolean): Boolean;
 var
    Target: TSdlRenderTarget;
+   color: TSgColor;
 begin
    result := false;
    if not ((Index >= 0) and (Index < count)) then
       Exit;
 
    Target := self[Index];
-   target.SetRenderer;
-   if (FillBk) then
-   begin
-      target.SetBgColor(TSgColor(bkgrnd));
-      target.Clear;
+   CurrentRenderTarget.FParent.pushRenderTarget;
+   try
+      target.SetRenderer;
+      if (FillBk) then
+      begin
+         color := TSgColor(bkgrnd);
+         color.rgba[4] := 255;
+         target.SetBgColor(color);
+         target.Clear;
+      end;
+      Event(Self);
+      result := true;
+   finally
+      CurrentRenderTarget.FParent.popRenderTarget;
    end;
-   Event(Self);
 end;
 
 { Classless }

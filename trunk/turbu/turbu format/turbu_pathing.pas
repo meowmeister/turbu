@@ -19,6 +19,7 @@ type
       FOpcodes: TMoveList;
       FBase: string;
       FCursor: integer;
+      FIterationCursor: integer;
       FLoop: boolean;
       FLooped: boolean;
       function GetLast: integer;
@@ -31,6 +32,7 @@ type
       constructor Load(savefile: TStream);
       procedure Save(savefile: TStream);
       destructor Destroy; override;
+      function Clone: TPath;
 
       function nextCommand: TMoveStep;
       procedure setDirection(direction: TFacing);
@@ -69,12 +71,12 @@ implementation
 uses
    SysUtils,
    turbu_classes,
-   uPSUtils;
+   rsLexer, rsDefs;
 
 var
    moveDic: TDictionary<string,integer>;
 
-function parseStep(parser: TPsPascalParser): TMoveStep; forward;
+function parseStep(lexer: TrsLexer): TMoveStep; forward;
 
 { TPath }
 
@@ -92,6 +94,14 @@ begin
    FOpcodes := TMoveList.Create;
    step.opcode := Ord(direction);
    FOpcodes.Add(step);
+end;
+
+function TPath.Clone: TPath;
+begin
+   result := TPath.Assign(self);
+   result.FCursor := self.FCursor;
+   result.FIterationCursor := self.FIterationCursor;
+   result.FLooped := self.FLooped;
 end;
 
 destructor TPath.Destroy;
@@ -122,7 +132,7 @@ end;
 
 constructor TPath.Create(data: string; loop: boolean);
 var
-   parser: TPSPascalParser;
+   lexer: TrsLexer;
 begin
    FOpcodes := TMoveList.Create;
    FLoop := loop;
@@ -130,15 +140,15 @@ begin
    if data = '' then
       Exit;
 
-   parser := TPSPascalParser.Create;
+   lexer := TrsLexer.Create;
    try
       if data[length(data)] <> ';' then
          data := data + ';';
-      parser.SetText(AnsiString(data));
-      while parser.CurrTokenID <> CSTI_EOF do
-         FOpcodes.Add(parseStep(parser))
+      lexer.Load(data);
+      while not lexer.eof do
+         FOpcodes.Add(parseStep(lexer))
    finally
-      parser.Free;
+      lexer.Free;
    end;
 end;
 
@@ -154,7 +164,12 @@ begin
          Exit;
       end;
    result := FOpcodes[FCursor];
-   inc(FCursor);
+   inc(FIterationCursor);
+   if (result.opcode in CODES_WITH_PARAMS) or (FIterationCursor >= result.data[1]) then
+   begin
+      inc(FCursor);
+      FIterationCursor := 0;
+   end;
 end;
 
 procedure TPath.Save(savefile: TStream);
@@ -180,70 +195,80 @@ begin
       result := -1;
 end;
 
-procedure parseAssert(parser: TPsPascalParser; token: TPsPasToken);
+procedure parseAssert(lexer: TrsLexer; kind: TTokenKind);
+var
+   token: TToken;
 begin
-   assert(parser.CurrTokenID = token);
-   parser.next;
+   lexer.Lex(token);
+   assert(token.kind = kind);
 end;
 
-function parseInt(parser: TPsPascalParser): integer;
+function parseInt(lexer: TrsLexer): integer;
+var
+   token: TToken;
 begin
-   assert(parser.CurrTokenID = CSTI_Integer);
-   result := strToInt(parser.OriginalToken);
-   parser.Next;
+   lexer.Lex(token);
+   assert(token.kind = tkInt);
+   result := strToInt(token.origText);
 end;
 
-procedure parseName(parser: TPsPascalParser; var step: TMoveStep);
+procedure parseName(lexer: TrsLexer; var step: TMoveStep);
+var
+   token: TToken;
 begin
-   assert(parser.CurrTokenID = CSTI_String);
-   step.name := AnsiDequotedStr(string(parser.OriginalToken), '''');
-   parser.Next;
+   lexer.Lex(token);
+   assert(token.kind = tkString);
+   step.name := AnsiDequotedStr(token.origText, '''');
 end;
 
-procedure parseOneInt(parser: TPsPascalParser; var step: TMoveStep);
+procedure parseOneInt(lexer: TrsLexer; var step: TMoveStep);
 begin
-   step.data[1] := parseInt(parser);
+   step.data[1] := parseInt(lexer);
 end;
 
-procedure parseNameAndInt(parser: TPsPascalParser; var step: TMoveStep);
+procedure parseNameAndInt(lexer: TrsLexer; var step: TMoveStep);
 begin
-   parseName(parser, step);
-   parseAssert(parser, CSTI_Comma);
-   parseOneInt(parser, step);
+   parseName(lexer, step);
+   parseAssert(lexer, tkComma);
+   parseOneInt(lexer, step);
 end;
 
-procedure parseFull(parser: TPsPascalParser; var step: TMoveStep);
+procedure parseFull(lexer: TrsLexer; var step: TMoveStep);
 var
    i: integer;
 begin
-   parseName(parser, step);
-   parseAssert(parser, CSTI_Comma);
+   parseName(lexer, step);
+   parseAssert(lexer, tkComma);
    for I := 1 to 3 do
    begin
-      step.data[i] := parseInt(parser);
+      step.data[i] := parseInt(lexer);
       if i <> 3 then
-         parseAssert(parser, CSTI_Comma);
+         parseAssert(lexer, tkComma);
    end;
 end;
 
-function parseStep(parser: TPsPascalParser): TMoveStep;
+function parseStep(lexer: TrsLexer): TMoveStep;
+var
+   token: TToken;
 begin
-   assert(parser.CurrTokenID = CSTI_Identifier);
-   result.opcode := lookupMoveCode(string(parser.GetToken));
-   parser.Next;
+   lexer.Lex(token);
+   assert(token.kind = tkIdentifier);
+   result.opcode := lookupMoveCode(token.origText);
+   FillChar(result.data, length(result.data), 0);
+   lexer.Lex(token);
    if (result.opcode in CODES_WITH_PARAMS) then
-      assert(parser.CurrTokenID = CSTI_OpenRound);
-   if parser.CurrTokenID = CSTI_OpenRound then
+      assert(token.kind = tkOpenParen);
+   if token.kind = tkOpenParen then
    begin
-      parser.Next;
       case result.opcode of
-         $22: parseNameAndInt(parser, result);
-         $23: parseFull(parser, result);
-         else parseOneInt(parser, result);
+         $22: parseNameAndInt(lexer, result);
+         $23: parseFull(lexer, result);
+         else parseOneInt(lexer, result);
       end;
-      parseAssert(parser, CSTI_CloseRound);
-   end;
-   parseAssert(parser, CSTI_SemiColon);
+      parseAssert(lexer, tkCloseParen);
+      parseAssert(lexer, tkSem);
+   end
+   else assert(token.kind = tkSem);
 end;
 
 var

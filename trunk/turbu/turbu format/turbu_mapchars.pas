@@ -8,7 +8,7 @@ uses
    turbu_map_sprites, turbu_map_objects, turbu_map_metadata;
 
 type
-   TRpgCharacter = class(TInterfacedObject, IRpgCharacter)
+   TRpgCharacter = class(TObject)
    private
       function getScreenX: integer; inline;
       function getScreenY: integer; inline;
@@ -25,7 +25,7 @@ type
       procedure flash(r, g, b, power: integer; time: integer; wait: boolean);
       procedure Move(frequency: integer; loop, skip: boolean; const path: string);
       [NoImport]
-      procedure ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite); virtual; abstract;
+      procedure ChangeSprite(name: string; translucent: boolean); virtual; abstract;
 
       property screenX: integer read getScreenX;
       property screenY: integer read getScreenY;
@@ -39,15 +39,18 @@ type
    TRpgEvent = class(TRpgCharacter)
    private
       FID: integer;
-      FTile: TSprite;
       FBase: TMapSprite;
       FIsChar: boolean;
       FEvent: TRpgMapObject;
+      FChangeSpriteName: string;
+      FChangeSpriteTranslucent: boolean;
+      FChangeSprite: boolean;
 
       function getLocation: TSgPoint;
       procedure setLocation(const Value: TSgPoint);
       function getMap: integer;
       function getFacing: integer;
+      procedure InternalChangeSprite;
    protected
       function getX: integer; override;
       function getY: integer; override;
@@ -58,9 +61,11 @@ type
       constructor create(base: TMapSprite);
       destructor Destroy; override;
 //      destructor delete;
+      [NoImport]
       procedure update;
       [NoImport]
-      procedure ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite); override;
+      procedure ChangeSprite(name: string; translucent: boolean); override;
+      [NoImport]
       procedure switchType;
 
       property map: integer read getMap;
@@ -82,7 +87,7 @@ type
       FY: integer;
       FGameSprite: TMapSprite;
       FVehicleIndex: integer;
-      FCarrying: IRpgCharacter;
+      FCarrying: TRpgCharacter;
 
       function getLocation: TSgPoint;
       procedure setLocation(const Value: TSgPoint);
@@ -102,7 +107,7 @@ type
       destructor Destroy; override;
       procedure setSprite(filename: string; translucent: boolean);
       [NoImport]
-      procedure ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite); override;
+      procedure ChangeSprite(name: string; translucent: boolean); override;
       procedure SetMusic(name: string; fadeIn, volume, tempo, balance: integer);
       function inUse: boolean;
 
@@ -116,29 +121,33 @@ type
       [NoImport]
       property gamesprite: TMapSprite read FGameSprite write FGameSprite;
       property vehicleIndex: integer read FVehicleIndex;
-      property carrying: IRpgCharacter read FCarrying write FCarrying;
+      property carrying: TRpgCharacter read FCarrying write FCarrying;
    end;
 
 implementation
 uses
-   types, Classes,
+   types, Classes, SysUtils,
    commons, turbu_defs, turbu_constants, tiles, turbu_2k_char_sprites,
-   turbu_database, turbu_2k_sprite_engine, ArchiveUtils;
+   turbu_database, turbu_2k_sprite_engine, turbu_2k_environment, ArchiveUtils,
+   turbu_pathing, turbu_script_engine;
 
 { TRpgCharacter }
 
 procedure TRpgCharacter.flash(r, g, b, power: integer; time: integer; wait: boolean);
 begin
-   doFlash(r, g, b, power, time);
-   if wait then
-{$MESSAGE WARN 'Commented out code in live unit'}
-//      TEventThread(TThread.CurrentThread).threadSleep(time, true);
+   TMonitor.Enter(self);
+   try
+      doFlash(r, g, b, power, time);
+      if wait then
+         GScriptEngine.threadSleep(time * 100, true);
+   finally
+      TMonitor.Exit(self);
+   end;
 end;
 
 function TRpgCharacter.getScreenX: integer;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   result := getX - round(GCurrentEngine.parent.WorldX / TILESIZE);
+   result := getX - round(GSpriteEngine.WorldX / TILE_SIZE.X);
 end;
 
 function TRpgCharacter.getScreenXP: integer;
@@ -157,15 +166,25 @@ begin
 end;
 
 procedure TRpgCharacter.move(frequency: integer; loop, skip: boolean; const path: string);
+var
+   lPath: TPath;
 begin
    if not assigned(self.base) then
       Exit;
 
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   self.base.moveOrder := GScriptEngine.ParsePath(path);}
-   self.base.canSkip := skip;
-   self.base.moveLoop := loop;
-   self.base.moveFreq := clamp(frequency, 1, 8);
+   TMonitor.Enter(self);
+   try
+      try
+         lPath := TPath.Create(path, loop);
+      except
+         //TODO: Log path creation failure
+         on EAssertionFailed do
+            Exit;
+      end;
+      self.base.MoveChange(lPath, clamp(frequency, 1, 8), loop, skip);
+   finally
+      TMonitor.Exit(self);
+   end;
 end;
 
 procedure TRpgCharacter.setTranslucency(const Value: integer);
@@ -175,18 +194,19 @@ end;
 
 function TRpgCharacter.getScreenY: integer;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   result := getY - round(GCurrentEngine.parent.WorldY / TILESIZE);
+   result := getY - round(GSpriteEngine.WorldY / TILE_SIZE.Y);
 end;
 
 { TRpgEvent }
 
 constructor TRpgEvent.create(base: TMapSprite);
 begin
+   if base = nil then
+      Exit;
+
    FIsChar := (base is TCharSprite);
    FBase := base;
-   FBase.character := self;
-   FTile := FBase.baseTile;
+   FBase.OnChangeSprite := self.ChangeSprite;
    FEvent := FBase.event;
    if FEvent <> nil then
       FID := FBase.event.id;
@@ -216,9 +236,23 @@ begin
    inherited;
 end;
 
-procedure TRpgEvent.ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite);
+procedure TRpgEvent.InternalChangeSprite;
 begin
-   base.update(name, base.translucency >= 3);
+   FEvent.currentPage.overrideSprite(FChangeSpriteName, FChangeSpriteTranslucent);
+   switchType;
+   FChangeSprite := false;
+end;
+
+procedure TRpgEvent.ChangeSprite(name: string; translucent: boolean);
+begin
+   TMonitor.Enter(self);
+   try
+      FChangeSprite := true;
+      FChangeSpriteName := name;
+      FChangeSpriteTranslucent := translucent;
+   finally
+      TMonitor.Exit(self);
+   end;
 end;
 
 procedure TRpgEvent.doFlash(r, g, b, power: integer; time: integer);
@@ -232,21 +266,10 @@ begin
 end;
 
 function TRpgEvent.getFacing: integer;
-
-   function translate(facing: TFacing): integer;
-   begin
-      case facing of
-         facing_up: result := 8;
-         facing_right: result := 6;
-         facing_down: result := 2;
-         facing_left: result := 4;
-         else result := 0;
-      end;
-   end;
-
+const TABLE: array[TFacing] of integer = (8, 6, 2, 4);
 begin
    if FIsChar then
-      result := translate((FBase as TCharSprite).facing)
+      result := TABLE[(FBase as TCharSprite).facing]
    else result := 2;
 end;
 
@@ -259,78 +282,88 @@ function TRpgEvent.getMap: integer;
 begin
    if FBase is TVehicleSprite then
       result := TVehicleSprite(FBase).template.Map
-   else
-      result := GSpriteEngine.mapID;
+   else result := GSpriteEngine.mapID;
 end;
 
 function TRpgEvent.getX: integer;
 begin
    if FIsChar then
       result := (FBase as TCharSprite).location.X
-   else with FTile as TEventTile do
-      result := trunc(FTile.X) div TILE_SIZE.x;
+   else result := trunc(FBase.baseTile.X) div TILE_SIZE.x;
 end;
 
 function TRpgEvent.getY: integer;
 begin
    if FIsChar then
       result := (FBase as TCharSprite).location.y
-   else with FTile as TEventTile do
-      result := trunc(FTile.y) div TILE_SIZE.y;
+   else result := trunc(FBase.baseTile.y) div TILE_SIZE.y;
 end;
 
 procedure TRpgEvent.setLocation(const Value: TSgPoint);
 begin
-   FBase.leaveTile;
-   FBase.location := value;
+   TMonitor.Enter(self);
+   try
+      FBase.leaveTile;
+      FBase.location := value;
+   finally
+      TMonitor.Exit(self);
+   end;
 end;
 
-{$WARN CONSTRUCTING_ABSTRACT OFF}
 procedure TRpgEvent.switchType;
-//var index: integer;
+var
+   old: TMapSprite;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   index := GGameEngine.currentMap.indexOf(FBase);
-   FBase.nuke;
-   FBase.Free;
-   GGameEngine.currentMap.event[index] := nil;
-   case FEvent.isTile of
-      false: FBase := TCharSprite.create(FEvent, GCurrentEngine.parent, self);
-      true: FBase := TEventSprite.create(FEvent, GCurrentEngine.parent, self);
+   TMonitor.Enter(self);
+   try
+      old := FBase;
+      if FEvent.isTile then
+         FBase := TEventSprite.create(FEvent, GSpriteEngine)
+      else FBase := TCharSprite.create(FEvent, GSpriteEngine);
+      FBase.OnChangeSprite := self.ChangeSprite;
+      FBase.CopyDrawState(old);
+      GSpriteEngine.SwapMapSprite(old, FBase);
+      FBase.place;
+   finally
+      TMonitor.Exit(self);
    end;
-   FBase.place;
-   GGameEngine.currentMap.swapEvent(FBase, index);}
 end;
-{$WARN CONSTRUCTING_ABSTRACT ON}
 
 procedure TRpgEvent.update;
-var
-   newpage, oldpage: TRpgEventPage;
 begin
    if FEvent = nil then
       Exit;
    FEvent.locked := false;
-   oldpage := FEvent.currentPage;
-   newpage := FEvent.newCurrentPage;
-{$MESSAGE WARN 'Commented out code in live unit'}
-   {if assigned(newpage) and (newpage.hasScript) and (newpage.startCondition in [parallel, automatic]) and (not FEvent.playing) then
-      GCurrentEngine.executeEvent(FEvent, FBase);}
-
-   if oldpage = newpage then
+   if not (FEvent.updated or FChangeSprite) then
+   begin
+      FBase.CheckMoveChange;
       Exit;
+   end;
 
-   if ((fevent.isTile) and (FBase is TCharSprite)) or
-      ((fevent.isTile = false) and (FBase is TEventSprite)) then
-      switchType
-   else
-      FBase.updatePage(fevent.currentPage);
+   TMonitor.Enter(self);
+   try
+      if FChangeSprite then
+         InternalChangeSprite
+      else if ((fevent.isTile) and (FBase is TCharSprite)) or
+         ((fevent.isTile = false) and (FBase is TEventSprite)) then
+         switchType
+      else FBase.updatePage(fevent.currentPage);
+      FBase.CheckMoveChange;
+   finally
+      TMonitor.Exit(self);
+   end;
 end;
 
 { TRpgVehicle }
 
-procedure TRpgVehicle.ChangeSprite(name: string; translucent: boolean; oldSprite: TMapSprite);
+procedure TRpgVehicle.ChangeSprite(name: string; translucent: boolean);
 begin
-   Self.setSprite(name, translucent);
+   TMonitor.Enter(self);
+   try
+      Self.setSprite(name, translucent);
+   finally
+      TMonitor.Exit(self);
+   end;
 end;
 
 constructor TRpgVehicle.Create(mapTree: TMapTree; which: integer);
@@ -338,7 +371,7 @@ type
    TVhSpriteClass = class of TVehicleSprite;
 var
    loc: TLocation;
-//   newSprite: TVhSpriteClass;
+   newSprite: TVhSpriteClass;
 begin
    inherited Create;
    FVehicleIndex := which;
@@ -349,14 +382,14 @@ begin
       FX := loc.x;
       FY := loc.y;
    end;
+   setSprite(GDatabase.vehicles[which].mapSprite, self.translucency > 3);
 {$MESSAGE WARN 'Commented out code in live unit'}
-{   setSprite(GDatabase.SystemData.vehicleGraphic[which], GDatabase.SystemData.vehicleIndex[which]);
-   case which of
+{   case which of
       vh_boat, vh_ship: newSprite := TGroundVehicleSprite;
       vh_airship: newSprite := TAirshipSprite;
       else raise ESpriteError.Create('Bad vehicle type');
-   end;
-   FGameSprite := newSprite.Create(GCurrentEngine.parent, self, nil); }
+   end;}
+   FGameSprite := newSprite.Create(GSpriteEngine, self, nil);
    if FMap = GSpriteEngine.mapID then
       FGameSprite.location := point(FX, FY)
    else FGameSprite.location := point(0, -1);

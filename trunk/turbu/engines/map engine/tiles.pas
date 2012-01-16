@@ -19,9 +19,9 @@ unit tiles;
 
 interface
 uses
-   types, classes, Generics.Collections,
+   types, classes, Generics.Collections, OpenGL,
    commons, timing, charset_data, turbu_maps, turbu_tilesets, turbu_map_objects,
-   turbu_defs,
+   turbu_defs, dm_shaders,
    SDL_sprite, SG_Defs;
 
 type
@@ -29,6 +29,8 @@ type
    TNeighborSet = set of TDirs8;
 
    TBroadcastProc = procedure of object;
+   TMustFlashEvent = function: boolean of object;
+   TGetFlashColorEvent = function: TGlArrayF4 of object;
 
    TTile = class abstract(TParentSprite)
    protected
@@ -67,21 +69,21 @@ type
    TEventTile = class(TTile)
    private
       FEvent: TRpgMapObject;
-      FSavedFx: integer;
-      FSavedColor: TRpgColor;
-      FFlashColor: TRpgColor;
-      FFlashTimer: TRpgTimestamp;
-      procedure saveColor;
-      procedure restoreColor(which: TRpgColor);
+      FOnMustFlash: TMustFlashEvent;
+      FOnGetFlashColor: TGetFlashColorEvent;
+      procedure DrawFlash;
+      procedure DrawSelf(SpriteRect: TRect);
+      procedure PrepareShader(shaders: TdmShaders);
+      function MustFlash: boolean;
    public
       constructor Create(baseEvent: TRpgMapObject; const AParent: TSpriteEngine); reintroduce;
-      destructor Destroy; override;
       procedure assign(data: TEventTile); reintroduce;
       procedure update(newPage: TRpgEventPage);
-      procedure flash(r, g, b, a: byte; time: cardinal);
 
       procedure Draw; override;
       property event: TRpgMapObject read FEvent write FEvent;
+      property OnMustFlash: TMustFlashEvent read FOnMustFlash write FOnMustFlash;
+      property OnFlashColor: TGetFlashColorEvent read FOnGetFlashColor write FOnGetFlashColor;
    end;
 
    TScrollData = class(TObject)
@@ -123,7 +125,7 @@ implementation
 
 uses
    SysUtils, Math,
-   turbu_constants, turbu_2k_sprite_engine,
+   turbu_constants, turbu_2k_sprite_engine, turbu_OpenGL,
    SDL_ImageManager;
 
 constructor TTile.Create(const AParent: TSpriteEngine; tileset: string);
@@ -321,73 +323,60 @@ begin
    end;
 end;
 
-destructor TEventTile.Destroy;
+procedure TEventTile.PrepareShader(shaders: TdmShaders);
+var
+   handle: integer;
 begin
-   FFlashTimer.Free;
-   inherited Destroy;
+   handle := shaders.ShaderProgram('default', 'flash');
+   shaders.UseShaderProgram(handle);
+   shaders.SetUniformValue(handle, 'flashColor', FOnGetFlashColor());
+   glClearStencil(0);
 end;
 
-procedure TEventTile.saveColor;
+procedure TEventTile.DrawSelf(SpriteRect: TRect);
+var
+   top, left: integer;
 begin
-   with FSavedColor do
-   begin
-//fixme
-      rgba[1] := lo(Red);
-      rgba[2] := lo(Green);
-      rgba[3] := lo(Blue);
-      rgba[4] := lo(Alpha);
-   end;
+   left := trunc(self.X + OffsetX - FEngine.WorldX);
+   top := trunc(self.Y + OffsetY - FEngine.WorldY);
+
+   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, Self.Image.surface.handle);
+   glEnable(GL_BLEND);
+   glEnable(GL_ALPHA_TEST);
+   glBegin(GL_QUADS);
+      glTexCoord2i(spriteRect.Left,                    spriteRect.Top);
+      glVertex2f(left,                                 top);
+      glTexCoord2i(spriteRect.Left,                    spriteRect.Top + spriteRect.Bottom);
+      glVertex2f(left,                                 top + self.Height);
+      glTexCoord2i(spriteRect.Left + spriteRect.Right, spriteRect.Top + spriteRect.Bottom);
+      glVertex2f(left + self.Width,                    top + self.Height);
+      glTexCoord2i(spriteRect.Left + spriteRect.Right, spriteRect.Top);
+      glVertex2f(left + self.Width,                    top);
+   glEnd;
 end;
 
-procedure TEventTile.restoreColor(which: TRpgColor);
+procedure TEventTile.DrawFlash;
+var
+   current: integer;
 begin
-   with which do
-   begin
-//fixme
-      Red := rgba[1];
-      Green := rgba[2];
-      Blue := rgba[3];
-      Alpha := rgba[4];
-   end;
+   glGetIntegerv(GL_CURRENT_PROGRAM, @current);
+   glPushAttrib(GL_CURRENT_BIT);
+   PrepareShader(GSpriteEngine.ShaderEngine);
+   DrawSelf(self.Image.spriteRect[self.ImageIndex]);
+   glUseProgram(current);
+   glPopAttrib;
+end;
+
+function TEventTile.MustFlash: boolean;
+begin
+   result := assigned(FOnMustFlash) and assigned(FOnGetFlashColor) and FOnMustFlash();
 end;
 
 procedure TEventTile.Draw;
-var
-   i: integer;
-   timer: cardinal;
 begin
-  inherited Draw;
-   if assigned(FFlashTimer) then
-   begin
-      timer := FFlashTimer.timeRemaining;
-      if timer > 0 then
-      begin
-         saveColor;
-         FSavedFx := self.DrawFx;
-         restoreColor(FFlashColor);
-         self.DrawFx := fxOneColor;
-         inherited Draw;
-         for i := 1 to 4 do
-            moveTowards(timer, FFlashColor.rgba[i], 0);
-         restoreColor(FSavedColor);
-         self.DrawFx := FSavedFx;
-      end
-      else freeAndNil(FFlashTimer);
-   end;
-end;
-
-procedure TEventTile.flash(r, g, b, a: byte; time: cardinal);
-begin
-   with FFlashColor do
-   begin
-      rgba[1] := r;
-      rgba[2] := g;
-      rgba[3] := b;
-      rgba[4] := a;
-   end;
-   if Assigned(FFlashTimer) then
-      FFlashTimer.Free;
-   FFlashTimer := TRpgTimestamp.Create(time);
+   if MustFlash then
+      DrawFlash
+   else inherited Draw;
 end;
 
 procedure TEventTile.update(newPage: TRpgEventPage);
@@ -413,11 +402,15 @@ begin
       self.z := 10;
       self.visible := false;
    end;
-   self.ImageIndex := FEvent.currentPage.whichTile;
-   if FEvent.currentPage.TileGroup <> -1 then
-      name := engine.tileset.Records[FEvent.currentPage.TileGroup].group.name
-   else name := FEvent.CurrentPage.Name;
-   engine.EnsureImage(name);
+   if assigned(FEvent) and assigned(FEvent.currentPage) then
+   begin
+      self.ImageIndex := FEvent.currentPage.whichTile;
+      if FEvent.currentPage.TileGroup <> -1 then
+         name := engine.tileset.Records[FEvent.currentPage.TileGroup].group.name
+      else name := FEvent.CurrentPage.Name;
+      engine.EnsureImage(name);
+   end
+   else name := '';
    self.ImageName := name;
 end;
 

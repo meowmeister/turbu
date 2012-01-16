@@ -46,7 +46,7 @@ type
 const ORIGIN: TSgPoint = (x: 0; y: 0);
 
 function sgPoint(x, y: integer): TSgPoint;
-function sgPointF(x, y: double): TSgFloatPoint;
+function sgPointF(x, y: single): TSgFloatPoint;
 
 function TRectToSdlRect(const input: TRect): TRect;
 
@@ -194,7 +194,7 @@ begin
    result := not (a = b);
 end;
 
-function sgPointF(x, y: double): TSgFloatPoint;
+function sgPointF(x, y: single): TSgFloatPoint;
 begin
    result.x := x;
    result.y := y;

@@ -21,7 +21,7 @@ interface
 uses
    types, classes, Generics.Collections, //system libraries
    chipset, hero_data, item_data, skill_data, rm_sound, condition_data,
-   events, charset_data, monster, battle_anims, turbu_defs; //modules
+   events, charset_data, monster, battle_anims, turbu_defs, LMT; //modules
 
 const
    SHOP_STYLES = 3;
@@ -143,6 +143,7 @@ type
       property usesFrame: boolean read FUsesFrame;
       property frame: ansiString read FFrame;
       property reverseGraphics: boolean read FReverseGraphics;
+      property font: byte read FWhichFont;
       property legacy: TLegacyDict read FLegacy;
    end;
 

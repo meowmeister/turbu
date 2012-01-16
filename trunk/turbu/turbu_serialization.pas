@@ -11,6 +11,8 @@ type
    TConstructorDict = TDictionary<TRttiInstanceType, TRttiMethod>;
    TDBSerializerRule = class;
    TRuleDict = TObjectDictionary<TClass, TDBSerializerRule>;
+   TClosedDatasetEvent = function (ds: TDataset): TDataset of object;
+   TReleaseClosedDatasetEvent = procedure (ds: TDataset) of object;
 
    TSerializer = class abstract(TObject)
    private
@@ -48,6 +50,9 @@ type
       FRelationDepth: integer;
       FKeyFields: TKeyFieldStack;
       FRules: TRuleDict;
+      class var
+        FOnClosedDataset: TClosedDatasetEvent;
+        FReleaseClosedDataset: TReleaseClosedDatasetEvent;
 
       function handleReferenceManagement(db: TDataset; var value: TValue; const fieldname: string): TReferenceResult;
 
@@ -67,7 +72,7 @@ type
       procedure uploadPointer(db: TDataset; const value: TValue; const fieldname: string);
       procedure uploadClass(db: TDataset; const value: TValue; const fieldname: string);
       procedure uploadValue(db: TDataset; const value: TValue; fieldname: string);
-    function downloadString(db: TDataset; const fieldname: string): TValue;
+      function downloadString(db: TDataset; const fieldname: string): TValue;
    public
       class function getFieldName(field: TRttiField): string; static;
       class function getField(db: TDataset; field: TRttiField): TField; static;
@@ -76,6 +81,8 @@ type
       destructor Destroy; override;
       procedure upload(value: TObject; db: TDataset);
       procedure download(value: TObject; db: TDataset);
+      class property OnClosedDataset: TClosedDatasetEvent read FOnClosedDataset write FOnClosedDataset;
+      class property OnReleaseClosedDataset: TReleaseClosedDatasetEvent read FReleaseClosedDataset write FReleaseClosedDataset;
    end;
 
    TDBUploadAttribute = class(TCustomAttribute)
@@ -344,6 +351,7 @@ var
    parentType: TRttiType;
    keyFields: TArray<string>;
    newVal: TValue;
+   wasClosed: boolean;
 begin
    parentType := FContext.GetType(GetTypeInfo);
    relationKey := TDBRelationKeyAttribute(parentType.GetAttribute(TDBRelationKeyAttribute));
@@ -360,6 +368,12 @@ begin
       relationKey.SetRelationFilter(TObject(CurrentInstance), db);
       keyFields := relationKey.GetRelationFilterFieldNames;
    end;
+   if not db.Active then
+   begin
+      wasClosed := true;
+      db := FOnClosedDataset(db);
+   end
+   else wasClosed := false;
    if assigned(enumerableManager) then
       enumerableManager.Clear(value)
    else begin
@@ -388,6 +402,8 @@ begin
       FKeyFields.Pop;
    end;
    result := value;
+   if wasClosed then
+      FReleaseClosedDataset(db);
 end;
 {$WARN USE_BEFORE_DEF ON}
 

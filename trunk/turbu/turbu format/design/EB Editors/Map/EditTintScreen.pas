@@ -97,16 +97,17 @@ end;
 
 procedure TfrmEBEditTintScreen.Draw;
 var
-   rgb: TGLArrayf3;
+   rgba: TGLArrayf4;
 begin
    if FShaders = nil then
       Exit;
 
    FShaders.SetUniformValue(FProgramHandle, 'satMult', FSaturation / 100);
-   rgb[0] := FRed / 100;
-   rgb[1] := FGreen / 100;
-   rgb[2] := FBlue / 100;
-   FShaders.SetUniformValue(FProgramHandle, 'rgbValues', rgb);
+   rgba[0] := FRed / 100;
+   rgba[1] := FGreen / 100;
+   rgba[2] := FBlue / 100;
+   rgba[3] := 1;
+   FShaders.SetUniformValue(FProgramHandle, 'rgbValues', rgba);
    glBegin(GL_QUADS);
       glVertex2i(0, 0);
       glVertex2i(0, imgReference.Height);

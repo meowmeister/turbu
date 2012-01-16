@@ -340,7 +340,7 @@ type
 {$WARN SYMBOL_PLATFORM OFF}
 procedure TConverterThread.Execute;
 const
-	SECTIONS_I_KNOW_HOW_TO_READ = [$0b..$0e, $11..$14, $17..$18, $1e, $20];
+	SECTIONS_I_KNOW_HOW_TO_READ = [$0b..$0e, $11..$15, $17..$18, $1e, $20];
 var
    datafile: TStream;
    filename: string;

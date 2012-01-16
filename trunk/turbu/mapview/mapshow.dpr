@@ -40,7 +40,6 @@ uses
   rs_system in 'libs\script engine\RPG Script library\rs_system.pas',
   rs_message in 'libs\script engine\RPG Script library\rs_message.pas',
   rs_menu in 'libs\script engine\RPG Script library\rs_menu.pas',
-  rs_map in 'libs\script engine\RPG Script library\rs_map.pas',
   transitions in 'libs\map engine\transitions.pas',
   transition_graphics in 'libs\map engine\transition_graphics.pas',
   distortions in 'libs\map engine\distortions.pas',

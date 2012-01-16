@@ -31,8 +31,6 @@ const
    AIRSHIP_START_LOCATION = 3;
 
 type
-   TInheritedDecision = (id_yes, id_no, id_parent);
-
    TMapTree = class;
 
    BoundsUploadAttribute = class(TDBUploadAttribute)
@@ -46,6 +44,8 @@ type
       procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
       procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
    end;
+
+   TInheritedDecision = (id_parent, id_no, id_yes);
 
    TMapRegion = class(TRpgDatafile)
    private

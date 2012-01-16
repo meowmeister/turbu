@@ -27,7 +27,12 @@ type
    TAnimYTarget = (at_top, at_center, at_bottom);
    TFlashTarget = (fl_none, fl_target, fl_screen);
 
-   TUploadColorAttribute = class(TDBUploadAttribute)
+   UploadColorAttribute = class(TDBUploadAttribute)
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
+   UploadCellColorAttribute = class(TDBUploadAttribute)
       procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
       procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
    end;
@@ -37,12 +42,14 @@ type
       FFrame: word;
       FSound: TRpgSound;
       FFlashWhere: TFlashTarget;
-      [TUploadColor]
+      [UploadColor]
       FColor: TRpgColor;
       FShakeWhere: TFlashTarget;
+      function GetColor(const index: integer): byte; inline;
    protected
       class function keyChar: ansiChar; override;
    public
+      constructor Create; override;
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
       destructor Destroy; override;
@@ -52,27 +59,33 @@ type
       property flashWhere: TFlashTarget read FFlashWhere write FFlashWhere;
       property color: TRpgColor read FColor write FColor;
       property shakeWhere: TFlashTarget read FShakeWhere write FShakeWhere;
+      property r: byte index 1 read GetColor;
+      property g: byte index 2 read GetColor;
+      property b: byte index 3 read GetColor;
+      property a: byte index 4 read GetColor;
    end;
 
    TAnimCell = class(TRpgDatafile)
-   private
+   protected
       FFrame: word;
       FPosition: TSgPoint;
       FZoom: TSgPoint;
-      [TUploadColor]
+      [UploadCellColor]
       FColor: TRpgColor;
       FSaturation: byte;
+      FImageIndex: integer;
    protected
       class function keyChar: ansiChar; override;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
-      property frame: word read FFrame write FFrame;
-      property position: TSgPoint read FPosition write FPosition;
-      property zoom: TSgPoint read FZoom write FZoom;
-      property color: TRpgColor read FColor write FColor;
-      property saturation: byte read FSaturation write FSaturation;
+      property frame: word read FFrame;
+      property position: TSgPoint read FPosition;
+      property zoom: TSgPoint read FZoom;
+      property color: TRpgColor read FColor;
+      property saturation: byte read FSaturation;
+      property ImageIndex: integer read FImageIndex;
    end;
 
    TAnimFrameList = class(TRpgObjectList<TAnimCell>);
@@ -89,6 +102,7 @@ type
       class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
    public
+      constructor Create; override;
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
       destructor Destroy; override;
@@ -127,6 +141,11 @@ implementation
 
 { TAnimEffects }
 
+function TAnimEffects.GetColor(const index: integer): byte;
+begin
+   result := FColor.rgba[index];
+end;
+
 class function TAnimEffects.keyChar: ansiChar;
 begin
    result := 'a';
@@ -153,6 +172,12 @@ begin
    savefile.writeChar('E');
 end;
 
+constructor TAnimEffects.Create;
+begin
+   inherited Create;
+   FSound := TRpgSound.Create;
+end;
+
 destructor TAnimEffects.Destroy;
 begin
    FSound.free;
@@ -160,6 +185,13 @@ begin
 end;
 
 { TAnimTemplate }
+
+constructor TAnimTemplate.Create;
+begin
+   inherited Create;
+   FTimingSec := TAnimEffectList.Create;
+   FFrameSec := TAnimFrameList.Create;
+end;
 
 destructor TAnimTemplate.Destroy;
 begin
@@ -249,26 +281,6 @@ begin
    savefile.writeChar('C');
 end;
 
-{ TUploadColorAttribute }
-
-procedure TUploadColorAttribute.download(db: TDataset; field: TRttiField;
-  instance: TObject);
-var
-   anim: TAnimEffects absolute instance;
-begin
-   assert(anim is TAnimEffects);
-   anim.FColor.color := cardinal(db.FieldByName('color').AsInteger);
-end;
-
-procedure TUploadColorAttribute.upload(db: TDataset; field: TRttiField;
-  instance: TObject);
-var
-   anim: TAnimEffects absolute instance;
-begin
-   assert(anim is TAnimEffects);
-   db.FieldByName('color').AsInteger := integer(anim.FColor.color);
-end;
-
 { TBattleCharAnim }
 
 constructor TBattleCharAnim.Create;
@@ -283,6 +295,46 @@ begin
    FWeapons.Free;
    FPoses.Free;
    inherited;
+end;
+
+{ UploadColorAttribute }
+
+procedure UploadColorAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   anim: TAnimEffects absolute instance;
+begin
+   assert(instance is TAnimEffects);
+   anim.FColor.color := cardinal(db.FieldByName('color').AsInteger);
+end;
+
+procedure UploadColorAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   anim: TAnimEffects absolute instance;
+begin
+   assert(instance is TAnimEffects);
+   db.FieldByName('color').AsInteger := integer(anim.FColor.color);
+end;
+
+{ UploadCellColorAttribute }
+
+procedure UploadCellColorAttribute.download(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   anim: TAnimCell absolute instance;
+begin
+   assert(instance is TAnimCell);
+   anim.FColor.color := cardinal(db.FieldByName('color').AsInteger);
+end;
+
+procedure UploadCellColorAttribute.upload(db: TDataset; field: TRttiField;
+  instance: TObject);
+var
+   anim: TAnimCell absolute instance;
+begin
+   assert(instance is TAnimCell);
+   db.FieldByName('color').AsInteger := integer(anim.FColor.color);
 end;
 
 end.

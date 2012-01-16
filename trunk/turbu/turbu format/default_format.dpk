@@ -82,7 +82,7 @@ contains
   rttiPackage in '..\..\classes\RPG Script\RTTI Creation\rttiPackage.pas',
   PrivateHeap,
   turbu_script_engine in 'script\engine\turbu_script_engine.pas',
-  logs in '..\logs.pas';
+  logs in '..\logs.pas',
+  rs_media in 'script\engine\libraries\rs_media.pas';
 
 end.
-
