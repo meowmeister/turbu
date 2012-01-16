@@ -82,6 +82,12 @@
 			<DCCReference Include="turbu_2k_images.pas"/>
 			<DCCReference Include="turbu_2k_items.pas"/>
 			<DCCReference Include="turbu_2k_map_timer.pas"/>
+			<DCCReference Include="..\..\turbu format\script\engine\libraries\rs_maps.pas"/>
+			<DCCReference Include="..\..\turbu format\script\engine\libraries\rs_message.pas"/>
+			<DCCReference Include="turbu_2k_frames.pas"/>
+			<DCCReference Include="..\..\turbu format\script\engine\libraries\rs_characters.pas"/>
+			<DCCReference Include="turbu_2k_animations.pas"/>
+			<DCCReference Include="turbu_2k_image_engine.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

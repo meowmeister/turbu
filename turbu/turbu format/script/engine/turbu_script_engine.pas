@@ -19,39 +19,81 @@ unit turbu_script_engine;
 
 interface
 uses
-   Generics.Collections, RTTI,
+   SysUtils, Classes, Generics.Collections, RTTI, SyncObjs,
+   timing,
    rsCompiler, rsExec, rsDefsBackend,
    turbu_map_interface, turbu_map_objects;
 
 type
-   TRegisterEnvironmentProc = procedure(compiler: TrsCompiler; importer: TrsTypeImporter);
+   TRegisterEnvironmentProc = procedure(compiler: TrsCompiler; importer: TrsTypeImporter; exec: TrsExec);
+   TThreadWaitEvent = function: boolean;
+
+   TScriptEngine = class;
+
+   TScriptThread = class(TThread)
+   private
+      FPage: TRpgEventPage;
+      FParent: TscriptEngine;
+      FOwnedExec: TrsExec;
+      FOwnedProgram: TrsProgram;
+      FDelay: TRpgTimestamp;
+      FWaiting: TThreadWaitEvent;
+
+
+      procedure scriptOnLine(Sender: TrsVM);
+      procedure InternalThreadSleep();
+      procedure threadSleep(Sender: TrsVM);
+   protected
+      procedure Execute; override;
+   public
+      constructor Create(page: TRpgEventPage; parent: TScriptEngine);
+      destructor Destroy; override;
+   end;
 
    TScriptEngine = class
    private
       FCompiler: TrsCompiler;
       FExec: TrsExec;
       FCurrentProgram: TrsProgram;
+      FThreads: TList<TScriptThread>;
+      FThreadLock: TCriticalSection;
+      FImports: TArray<TPair<string, TrsExecImportProc>>;
+      FEnvProc: TRegisterEnvironmentProc;
+
+      procedure AddScriptThread(thread: TScriptThread);
+      procedure ClearScriptThread(thread: TScriptThread);
+      procedure CreateExec;
+      procedure InternalLoadEnvironment(compiler: TRsCompiler);
+      procedure OnRunLine(Sender: TrsVM; const line: TrsDebugLineInfo);
    public
       constructor Create;
       destructor Destroy; override;
-      procedure LoadScript(const script: string);
+      procedure LoadScript(const script: string; context: TThread = nil);
       procedure LoadLibrary(const script: string);
       procedure LoadEnvironment(proc: TRegisterEnvironmentProc);
+      procedure RegisterUnit(const name: string; const comp: TrsCompilerRegisterProc; const exec: TrsExecImportProc);
       procedure RunScript(const name: string); overload; inline;
       procedure RunScript(const name: string; const args: TArray<TValue>); overload;
+      procedure KillAll;
+      procedure threadSleep(time: integer; block: boolean = false);
+      procedure SetWaiting(value: TThreadWaitEvent);
    end;
 
    TMapObjectManager = class
    private
       FMapObjects: TList<TRpgMapObject>;
       FScriptEngine: TScriptEngine;
+      FPlaylist: TList<TRpgEventPage>;
+      FOnUpdate: TProc;
    public
       constructor Create;
       destructor Destroy; override;
 
-      procedure LoadMap(const map: IRpgMap);
+      procedure LoadMap(const map: IRpgMap; context: TThread = nil);
+      procedure Tick;
 
       property ScriptEngine: TScriptEngine read FScriptEngine;
+      property OnUpdate: TProc read FOnUpdate write FOnUpdate;
    end;
 
 var
@@ -60,10 +102,13 @@ var
 
 implementation
 uses
-   SysUtils, Classes,
-   turbu_defs, turbu_battle_engine;
+   Math,
+   turbu_defs, turbu_battle_engine, logs,
+   rs_media,
+   SDL;
 
-{ TScriptEngine }
+threadvar
+   GOnHold: boolean;
 
 procedure RegisterBattlesC(input: TrsTypeImporter);
 begin
@@ -72,61 +117,6 @@ begin
    input.ImportType(TypeInfo(TBattleFormation));
    input.ImportFunction('procedure battle(which: integer; const background: string; results: TBattleResultSet; firstStrike: boolean)');
    input.ImportFunction('procedure battleEx(which: integer; const background: string; formation: TBattleFormation; results: TBattleResultSet; bgMode, terrain: integer)');
-end;
-
-procedure RegisterCharactersC(input: TrsTypeImporter);
-begin
-   input.ImportType(TypeInfo(TSlot));
-   input.ImportFunction('procedure AddItem(id, quantity: integer);');
-   input.ImportFunction('procedure RemoveItem(id, quantity: integer);');
-   input.ImportFunction('procedure heroJoin(id: integer);');
-   input.ImportFunction('procedure heroLeave(id: integer);');
-   input.ImportFunction('procedure addExp(id, number: integer; notify: boolean)');
-   input.ImportFunction('procedure RemoveExp(id, number: integer);');
-   input.ImportFunction('procedure AddLevels(id, number: integer; showMessage: boolean);');
-   input.ImportFunction('procedure RemoveLevels(hero, count: integer);');
-end;
-
-procedure RegisterMapsC(input: TrsTypeImporter);
-begin
-   input.ImportType(TypeInfo(TTransitionTypes));
-   input.ImportType(TypeInfo(TTransitions));
-   input.ImportType(TypeInfo(TWeatherEffects));
-   input.ImportFunction('procedure Teleport(mapID, x, y, facing: integer);');
-   input.ImportFunction('procedure memorizeLocation(var map, x, y: integer);');
-   input.ImportFunction('procedure rideVehicle;');
-   input.ImportFunction('procedure teleportVehicle(which, map, x, y: integer);');
-   input.ImportFunction('procedure teleportMapObject(which: TRpgEvent; x, y: integer);');
-   input.ImportFunction('procedure swapEvents(first, second: TRpgEvent);');
-   input.ImportFunction('function getTerrainID(x, y: integer): integer;');
-   input.ImportFunction('function getEventID(x, y: integer): integer;');
-   input.ImportFunction('procedure setTransition(const which: TTransitionTypes; const newTransition: TTransitions);');
-   input.ImportFunction('procedure eraseScreen(whichTransition: TTransitions);');
-   input.ImportFunction('procedure showScreen(whichTransition: TTransitions);');
-   input.ImportFunction('procedure tintScreen(r, g, b, sat: integer; duration: integer; wait: boolean);');
-   input.ImportFunction('procedure flashScreen(r, g, b, power: integer; duration: integer; wait, continuous: boolean);');
-   input.ImportFunction('procedure shakeScreen(power, speed: integer; duration: integer; wait, continuous: boolean);');
-   input.ImportFunction('procedure endFlashScreen;');
-   input.ImportFunction('procedure endShakeScreen;');
-   input.ImportFunction('procedure lockScreen;');
-   input.ImportFunction('procedure unlockScreen;');
-   input.ImportFunction('procedure panScreen(direction: TFacing; distance: integer; speed: integer; wait: boolean);');
-   input.ImportFunction('procedure panScreenTo(x, y: integer; speed: integer; wait: boolean);');
-   input.ImportFunction('procedure returnScreen(speed: integer; wait: boolean);');
-   input.ImportFunction('procedure setWeather(effect: TWeatherEffects; severity: integer);');
-   input.ImportFunction('procedure increaseWeather;');
-   input.ImportFunction('procedure decreaseWeather;');
-   input.ImportFunction('function newImage(name: string; x, y: integer; zoom, transparency: integer; pinned, mask: boolean): TRpgImage;');
-   input.ImportFunction('procedure flashEvent(r, g, b, power: integer; duration: integer; wait: boolean);');
-   input.ImportFunction('procedure setBGImage(name: string; scrollX, scrollY: integer; autoX, autoY: boolean);');
-   input.ImportFunction('procedure showBattleAnim(which: integer; target: TRpgCharacter; wait, fullscreen: boolean);');
-   input.ImportFunction('procedure waitUntilMoved;');
-   input.ImportFunction('procedure stopMoveScripts;');
-   input.ImportFunction('procedure changeTileset(which: integer)');
-   input.ImportFunction('procedure SetEncounterRate(low, high: integer)');
-   input.ImportFunction('procedure AddTeleport(mapID, x, y, switchID: integer);');
-   input.ImportFunction('procedure DeleteTeleport(mapID, x, y: integer);');
-   input.ImportFunction('procedure EnableTeleport(value: boolean);');
 end;
 
 procedure RegisterMediaC(input: TrsTypeImporter);
@@ -139,23 +129,6 @@ begin
    input.ImportFunction('procedure playMovie(name: string; posX, posY, width, height: integer);');
 end;
 
-procedure RegisterMessagesC(input: TrsTypeImporter);
-begin
-   input.ImportType(TypeInfo(TMboxLocation));
-   input.ImportFunction('procedure showMessage(const msg: string)');
-   input.ImportFunction('procedure messageOptions(const transparent: boolean; const position: TMboxLocation; const dontHideHero: boolean; const continueEvents: boolean);');
-   input.ImportFunction('procedure clearPortrait');
-   input.ImportFunction('procedure setPortrait(const filename: string; const index: integer; const rightside, flipped: boolean);');
-   input.ImportFunction('function showChoice(input: string; handler: integer): integer;');
-   input.ImportFunction('function inputNumber(const digits: integer): integer');
-   input.ImportFunction('function inn(messageStyle: integer; cost: integer): boolean;');
-   input.ImportFunction('function inputText(const base: string; portrait: integer): string');
-   input.ImportFunction('procedure OpenMenu;');
-   input.ImportFunction('procedure EnableMenu;');
-   input.ImportFunction('procedure DisableMenu;');
-   input.ImportFunction('procedure SaveMenu;');
-end;
-
 procedure RegisterSettingsC(input: TrsTypeImporter);
 begin
    input.ImportType(TypeInfo(TBgmTypes));
@@ -165,39 +138,127 @@ begin
    input.ImportFunction('procedure SetSkin(filename: string);');
 end;
 
+procedure RegisterBattlesE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
+begin
+   RegisterFunction('battle', nil);
+   RegisterFunction('battleEx', nil);
+end;
+
+procedure RegisterMediaE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
+begin
+   RegisterFunction('playMusic', @rs_media.playMusic);
+   RegisterFunction('fadeOutMusic', @rs_media.FadeOutMusic);
+   RegisterFunction('memorizeBgm', nil);
+   RegisterFunction('playMemorizedBgm', nil);
+   RegisterFunction('playSound', @rs_Media.playSound);
+   RegisterFunction('playMovie', nil);
+end;
+
+procedure RegisterSettingsE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
+begin
+   RegisterFunction('SetSystemMusic', nil);
+   RegisterFunction('SetSystemSound', nil);
+   RegisterFunction('SetSkin', nil);
+end;
+
+{ TScriptEngine }
+
 constructor TScriptEngine.Create;
 begin
    assert(GScriptEngine = nil);
    FCompiler := TrsCompiler.Create;
-   FExec := TrsExec.Create;
+   CreateExec;
    GScriptEngine := self;
+   FThreads := TList<TScriptThread>.Create;
+   FThreadLock := TCriticalSection.Create;
+
    FCompiler.RegisterStandardUnit('battles', RegisterBattlesC);
-   FCompiler.RegisterStandardUnit('characters', RegisterCharactersC);
-   FCompiler.RegisterStandardUnit('maps', RegisterMapsC);
    FCompiler.RegisterStandardUnit('media', RegisterMediaC);
-   FCompiler.RegisterStandardUnit('messages', RegisterMessagesC);
    FCompiler.RegisterStandardUnit('settings', RegisterSettingsC);
+
 end;
 
 destructor TScriptEngine.Destroy;
 begin
    GScriptEngine := nil;
+   FThreads.Free;
+   FThreadLock.Free;
    FCompiler.Free;
    FCurrentProgram.Free;
    FExec.Free;
    inherited Destroy;
 end;
 
-procedure TScriptEngine.LoadEnvironment(proc: TRegisterEnvironmentProc);
+procedure TScriptEngine.CreateExec;
+begin
+   FExec := TrsExec.Create;
+   FExec.RegisterStandardUnit('battles', RegisterBattlesE);
+   FExec.RegisterStandardUnit('media', RegisterMediaE);
+   FExec.RegisterStandardUnit('settings', RegisterSettingsE);
+   FExec.OnLine := self.OnRunLine;
+end;
+
+procedure TScriptEngine.OnRunLine(Sender: TrsVM; const line: TrsDebugLineInfo);
+var
+   st: TScriptThread;
+begin
+   st := TThread.CurrentThread as TScriptThread;
+   st.scriptOnLine(sender);
+end;
+
+procedure TScriptEngine.KillAll;
+var
+   curr: TThread;
+   thread: TScriptThread;
+   done: boolean;
+begin
+   curr := TThread.CurrentThread;
+   if not (curr is TScriptThread) then
+      curr := nil;
+   FThreadLock.Enter;
+   for thread in FThreads do
+      if thread <> curr then
+         thread.Terminate;
+   FThreadLock.Leave;
+
+   repeat
+      sleep(10);
+      FThreadLock.Enter;
+      done := ((curr = nil) and (FThreads.Count = 0)) or ((FThreads.Count = 1) and (FThreads[0] = curr));
+      FThreadLock.Leave;
+   until done;
+end;
+
+procedure TScriptEngine.AddScriptThread(thread: TScriptThread);
+begin
+   FThreadLock.Enter;
+   FThreads.Add(thread);
+   FThreadLock.Leave;
+end;
+
+procedure TScriptEngine.ClearScriptThread(thread: TScriptThread);
+begin
+   FThreadLock.Enter;
+   FThreads.Remove(thread);
+   FThreadLock.Leave;
+end;
+
+procedure TScriptEngine.InternalLoadEnvironment(compiler: TRsCompiler);
 var
    importer: TrsTypeImporter;
 begin
-   importer := TrsTypeImporter.Create(FCompiler, FCompiler.GetUnit('SYSTEM'));
+   importer := TrsTypeImporter.Create(compiler, compiler.GetUnit('SYSTEM'));
    try
-      proc(FCompiler, importer);
+      FEnvProc(compiler, importer, FExec);
    finally
       importer.Free;
    end;
+end;
+
+procedure TScriptEngine.LoadEnvironment(proc: TRegisterEnvironmentProc);
+begin
+   FEnvProc := proc;
+   InternalLoadEnvironment(FCompiler);
 end;
 
 procedure TScriptEngine.LoadLibrary(const script: string);
@@ -205,9 +266,27 @@ begin
    FCompiler.CompileUnit(script);
 end;
 
-procedure TScriptEngine.LoadScript(const script: string);
+procedure TScriptEngine.LoadScript(const script: string; context: TThread = nil);
+var
+   pair: TPair<string, TrsExecImportProc>;
+   tempCompiler: TrsCompiler;
 begin
-   FreeAndNil(FCurrentProgram);
+   logs.logText(script);
+   if context is TScriptThread then
+   begin
+      TScriptThread(context).FOwnedExec := FExec;
+      TScriptThread(context).FOwnedProgram := FCurrentProgram;
+      CreateExec;
+      for pair in FImports do
+         FExec.RegisterStandardUnit(pair.Key, pair.Value);
+      tempCompiler := TrsCompiler.Create;
+      try
+         InternalLoadEnvironment(tempCompiler);
+      finally
+         tempCompiler.Free;
+      end;
+   end
+   else FCurrentProgram.Free;
    FCurrentProgram := FCompiler.Compile(script);
    FExec.Load(FCurrentProgram);
 end;
@@ -217,9 +296,40 @@ begin
    FExec.RunProc(name, []);
 end;
 
+procedure TScriptEngine.RegisterUnit(const name: string;
+  const comp: TrsCompilerRegisterProc; const exec: TrsExecImportProc);
+begin
+   FCompiler.RegisterStandardUnit(name, comp);
+   FExec.RegisterStandardUnit(name, exec);
+   SetLength(FImports, length(FImports) + 1);
+   FImports[high(FImports)] := TPair<string, TrsExecImportProc>.Create(name, exec);
+end;
+
 procedure TScriptEngine.RunScript(const name: string; const args: TArray<TValue>);
 begin
    FExec.RunProc(name, args);
+end;
+
+{$O-}
+procedure TScriptEngine.SetWaiting(value: TThreadWaitEvent);
+var
+   st: TScriptThread;
+begin
+   st := TThread.CurrentThread as TScriptThread;
+   st.FWaiting := value;
+end;
+
+procedure TScriptEngine.threadSleep(time: integer; block: boolean = false);
+var
+   st: TScriptThread;
+begin
+   st := TThread.CurrentThread as TScriptThread;
+   st.FDelay := TRpgTimestamp.Create(time);
+{   if block then
+      GGameEngine.cutscene := GGameEngine.cutscene + 1;}
+   st.InternalThreadSleep;
+{   if block then
+      GGameEngine.cutscene := GGameEngine.cutscene - 1;}
 end;
 
 { TMapObjectManager }
@@ -230,17 +340,19 @@ begin
    GMapObjectManager := self;
    FMapObjects := TList<TRpgMapObject>.Create;
    FScriptEngine := TScriptEngine.Create;
+   FPlaylist := TList<TRpgEventPage>.Create;
 end;
 
 destructor TMapObjectManager.Destroy;
 begin
    GMapObjectManager := nil;
+   FPlaylist.Free;
    FScriptEngine.Free;
    FMapObjects.Free;
    inherited Destroy;
 end;
 
-procedure TMapObjectManager.LoadMap(const map: IRpgMap);
+procedure TMapObjectManager.LoadMap(const map: IRpgMap; context: TThread = nil);
 var
    list: TStrings;
    i: integer;
@@ -254,6 +366,106 @@ begin
    finally
       list.Free;
    end;
+   FScriptEngine.LoadScript(map.GetScript, context);
+end;
+
+procedure TMapObjectManager.Tick;
+var
+   obj: TRpgMapObject;
+   page: TRpgEventPage;
+   thread: TScriptThread;
+begin
+   FPlaylist.Clear;
+   for obj in FMapObjects do
+   begin
+      obj.UpdateCurrentPage;
+      if assigned(obj.currentPage) and obj.currentPage.hasScript and (not obj.locked) and (not obj.playing)
+         and (obj.currentPage.startCondition in [automatic, parallel]) then
+         FPlaylist.Add(obj.currentPage);
+   end;
+   if assigned(FOnUpdate) then
+      FOnUpdate;
+   for page in FPlaylist do
+   begin
+      page.parent.playing := true;
+      thread := TScriptThread.Create(page, FScriptEngine);
+      thread.FreeOnTerminate := true;
+      {$IFDEF DEBUG}
+      TThread.NameThreadForDebugging(AnsiString(format('Script thread: %s', [page.ScriptName])), thread.ThreadID);
+      {$ENDIF}
+      thread.Start;
+   end;
+end;
+
+{ TScriptThread }
+
+constructor TScriptThread.Create(page: TRpgEventPage; parent: TScriptEngine);
+begin
+   inherited Create(true);
+   FPage := page;
+   FParent := parent;
+   parent.AddScriptThread(self);
+end;
+
+destructor TScriptThread.Destroy;
+begin
+   FOwnedExec.Free;
+   FOwnedProgram.Free;
+   FParent.ClearScriptThread(self);
+   inherited Destroy;
+end;
+
+procedure TScriptThread.Execute;
+begin
+   try
+      FParent.RunScript(FPage.scriptName);
+   finally
+      FPage.parent.playing := false;
+   end;
+end;
+
+procedure TScriptThread.InternalThreadSleep;
+const DELAY_SLICE = 50;
+var
+   timeleft: cardinal;
+   dummy: cardinal;
+begin
+   repeat
+      timeleft := FDelay.timeRemaining;
+      dummy := min(DELAY_SLICE, timeleft);
+      SDL_Delay(dummy);
+   until (timeleft = dummy) or (self.Terminated);
+end;
+
+procedure TScriptThread.threadSleep(Sender: TrsVM);
+begin
+   InternalThreadSleep;
+   self.scriptOnLine(sender);
+end;
+
+procedure TScriptThread.scriptOnLine(Sender: TrsVM);
+begin
+   if (not self.terminated) and assigned(FWaiting) then
+   begin
+      repeat
+         sleep(TRpgTimestamp.FrameLength);
+      until (FWaiting() = true) or (self.Terminated);
+      FWaiting := nil;
+   end
+   else if assigned(FDelay) then
+      if (FDelay.timeRemaining > 0) then
+         threadSleep(sender)
+      else
+      begin
+         freeAndNil(FDelay);
+         if GOnHold then
+         begin
+//            GGameEngine.cutscene := GGameEngine.cutscene - 1;
+            GOnHold := false;
+         end;
+      end;
+   if Self.Terminated then
+      Abort;
 end;
 
 end.

@@ -41,8 +41,13 @@ type
    TBattlePageConditionSet = set of TBattlePageConditions;
 
    TRpgMapObject = class;
+   TRpgEventConditions = class;
+
+   TConditionEvaluator = function(value: TRpgEventConditions): boolean of object;
 
    TRpgEventConditions = class(TObject)
+   private
+      class var FOnEval: TConditionEvaluator;
    protected
       [UploadConditions]
       FConditions: TPageConditionSet;
@@ -63,12 +68,12 @@ type
       FClock1Op: TComparisonOp;
       FClock2Op: TComparisonOp;
       FScript: string;
-//      function evaluate: boolean;
+      function evaluate: boolean;
    public
       constructor Load(savefile: TStream);
       procedure Save(savefile: TStream);
 
-//      property valid: boolean read evaluate;
+      property valid: boolean read evaluate;
       property conditions: TPageConditionSet read FConditions write FConditions;
       property switch1Set: integer read FSwitch1 write FSwitch1;
       property switch2Set: integer read FSwitch2 write FSwitch2;
@@ -85,6 +90,7 @@ type
       property timer1Op: TComparisonOp read FClock1Op write FClock1Op;
       property timer2Op: TComparisonOp read FClock2Op write FClock2Op;
       property script: string read FScript write FScript;
+      class property OnEval: TConditionEvaluator read FOnEval write FOnEval;
    end;
 
    TBattleEventConditions = class(TRpgEventConditions)
@@ -147,18 +153,19 @@ type
       FPath: TPath;
       FMoveIgnore: boolean;
       FMatrix: word;
-{      FEventScript: ansiString;
-      FScriptText: ansiString;
-      FCompiledScript: ansiString; }
+
+      FOverrideFile: string;
+      FOverrideTransparency: boolean;
+      FOverrideSprite: boolean;
+
       function isValid: boolean; inline;
 
-{      function getEventScript: ansiString;
-      function getCompiledScript: ansiString;}
       function hasScriptFunction: boolean; inline;
 
-{      function getOpcode(x: word): TEventCommand;
-      function getLength: word; }
       function GetTileGroup: integer;
+      function GetFilename: string;
+      function GetTransparent: boolean;
+    procedure SetName(const Value: string);
    protected
       [NoUpload]
       FConditions: TRpgEventConditions;
@@ -175,11 +182,13 @@ type
       procedure save(savefile: TStream); override;
 
       function isTile: boolean; inline;
+      procedure overrideSprite(const filename: string; transparent: boolean);
 
+      property name: string read GetFilename write SetName;
       property conditionBlock: TRpgEventConditions read FConditions;
       property whichTile: word read FFrame write FFrame;
       property direction: TFacing read FDirection write FDirection;
-      property transparent: boolean read FTransparent write FTransparent;
+      property transparent: boolean read GetTransparent write FTransparent;
       property path: TPath read FPath write FPath;
       property moveIgnore: boolean read FMoveIgnore write FMoveIgnore;
       property moveType: TMoveType read FMoveType write FMoveType;
@@ -191,13 +200,8 @@ type
       property moveSpeed: byte read FMoveSpeed write FMoveSpeed;
       property scriptName: string read FEventText write FeventText;
       property actionMatrix: word read FMatrix;
-//      property eventScript: ansiString read getEventScript;
       property parent: TRpgMapObject read FParent;
       property hasScript: boolean read hasScriptFunction;
-{      property compiledScript: tbtString read getCompiledScript;
-      property parseStack: TStack read FParseStack write FParseStack;
-      property opcode[x: word]: TEventCommand read getOpcode;
-      property len: word read getLength;}
       property valid: boolean read isValid;
       property tilegroup: integer read GetTileGroup;
    end;
@@ -208,13 +212,15 @@ type
    private
       FLocation: TSgPoint;
       FPages: TPageList;
+      FCurrentlyPlaying: integer;
       function getPage(x: integer): TRpgEventPage;
    private
       FCurrentPage: TRpgEventPage;
       FPageChanged: boolean;
       FLocked: boolean;
-      function getCurrentPage: TRpgEventPage;
       function GetPageCount: integer;
+      function isCurrentlyPlaying: boolean;
+      procedure setCurrentlyPlaying(const Value: boolean);
    public //no idea why, but marking this protected generates a bad VMT.
       class function keyChar: ansiChar; override;
    public
@@ -226,14 +232,13 @@ type
 
       procedure AddPage(value: TRpgEventPage);
       function isTile: boolean;
+      procedure UpdateCurrentPage;
 
       property location: TSgPoint read FLocation write FLocation;
       property pages: TPageList read FPages;
       property page[x: integer]: TRpgEventPage read getPage; default;
-      property newCurrentPage: TRpgEventPage read getCurrentPage;
-{     property parent: TEventBlock read FParent;
       property playing: boolean read isCurrentlyPlaying write setCurrentlyPlaying;
-      property deleted: boolean read FDeleted write FDeleted;
+{      property deleted: boolean read FDeleted write FDeleted;
 }
       property locked: boolean read FLocked write FLocked;
       property currentPage: TRpgEventPage read FCurrentPage;
@@ -242,7 +247,7 @@ type
 
 implementation
 uses
-   SysUtils;
+   SysUtils, math;
 
 { TRpgMapObject }
 
@@ -300,19 +305,35 @@ begin
    FPages.Add(value);
 end;
 
-function TRpgMapObject.getCurrentPage: TRpgEventPage;
-var i: integer;
+procedure TRpgMapObject.UpdateCurrentPage;
+var
+   current: TRpgEventPage;
+   i: integer;
 begin
-   result := nil;
+   current := nil;
    I := FPages.High;
-   while (result = nil) and (i >= 0) do
+   while (current = nil) and (i >= 0) do
    begin
       if FPages[i].valid then
-         result := FPages[i];
+         current := FPages[i];
       dec(i);
    end;
-   FPageChanged := (FCurrentPage = result);
-   FCurrentPage := result;
+   FPageChanged := (FCurrentPage <> current);
+   if FPageChanged and assigned(current) then
+      current.FOverrideSprite := false;
+   FCurrentPage := current;
+end;
+
+procedure TRpgMapObject.setCurrentlyPlaying(const Value: boolean);
+begin
+   if value then
+      inc(FCurrentlyPlaying)
+   else FCurrentlyPlaying := max(FCurrentlyPlaying - 1, 0);
+end;
+
+function TRpgMapObject.isCurrentlyPlaying: boolean;
+begin
+   result := FCurrentlyPlaying > 0;
 end;
 
 function TRpgMapObject.getPage(x: integer): TRpgEventPage;
@@ -327,7 +348,7 @@ end;
 
 function TRpgMapObject.isTile: boolean;
 begin
-   result := FCurrentPage.isTile;
+   result := assigned(FCurrentPage) and FCurrentPage.isTile;
 end;
 
 class function TRpgMapObject.keyChar: ansiChar;
@@ -336,6 +357,11 @@ begin
 end;
 
 { TRpgEventConditions }
+
+function TRpgEventConditions.evaluate: boolean;
+begin
+   result := FOnEval(self);
+end;
 
 constructor TRpgEventConditions.Load(savefile: TStream);
 begin
@@ -401,8 +427,7 @@ end;
 
 function TRpgEventPage.isValid: boolean;
 begin
-   assert(false, 'not implemented'); result := false;
-//   result := self.FConditions.Valid;
+   result := FConditions.Valid;
 end;
 
 class function TRpgEventPage.keyChar: AnsiChar;
@@ -458,11 +483,38 @@ begin
    self.writeEnd(savefile);
 end;
 
+procedure TRpgEventPage.SetName(const Value: string);
+begin
+   FOverrideSprite := false;
+   FName := value;
+end;
+
+function TRpgEventPage.GetFilename: string;
+begin
+   if FOverrideSprite then
+      result := FOverrideFile
+   else result := inherited name;
+end;
+
 function TRpgEventPage.GetTileGroup: integer;
 begin
-   if FName[1] <> '*' then
+   if name[1] <> '*' then
       Exit(-1);
-   result := StrToInt(Copy(FName, 2, MAXINT));
+   result := StrToInt(Copy(name, 2, MAXINT));
+end;
+
+function TRpgEventPage.GetTransparent: boolean;
+begin
+   if FOverrideSprite then
+      result := FOverrideTransparency
+   else Result := FTransparent;
+end;
+
+procedure TRpgEventPage.overrideSprite(const filename: string; transparent: boolean);
+begin
+   FOverrideSprite := true;
+   FOverrideFile := filename;
+   FOverrideTransparency := transparent;
 end;
 
 function TRpgEventPage.hasScriptFunction: boolean;

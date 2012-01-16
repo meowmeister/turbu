@@ -84,7 +84,7 @@ type
    THeroSprite = class(TCharSprite)
    private
       FTemplate: TRpgHero;
-      FParty: IRpgCharacter;
+      FParty: TRpgParty;
       FNextMove: TFacing;
       FMoveQueued: boolean;
       FMoveTick: boolean;
@@ -102,14 +102,15 @@ type
       procedure boardVehicle;
       function move(whichDir: TFacing): boolean; override;
       procedure packUp;
-      procedure settleDown;
+      procedure settleDown(engine: TSpriteEngine);
 
       property template: TRpgHero read FTemplate;
    end;
 
 implementation
 uses
-   charset_data, turbu_2k_sprite_engine, timing, turbu_database, turbu_sprites;
+   charset_data, turbu_2k_sprite_engine, timing, turbu_database, turbu_sprites,
+   turbu_2k_environment;
 
 const
    AIRSHIP_OFFSET: TPoint = (x: 0; y: -16);
@@ -176,7 +177,8 @@ end;
 constructor TVehicleSprite.Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle; tileClass: TTileClass);
 var dummy: TVehicleTile;
 begin
-   inherited Create(nil, parent, whichvehicle);
+   inherited Create(nil, parent);
+   self.OnChangeSprite := whichVehicle.ChangeSprite;
    whichVehicle.gamesprite := self;
    self.FTemplate := whichVehicle;
    //update char tiles to vehicle tiles
@@ -219,20 +221,20 @@ end;
 procedure TVehicleSprite.place;
 var kept: word;
 begin
-   kept := FMoving;
+   kept := FMoveFrame;
    inherited place;
-   FMoving := kept;
+   FMoveFrame := kept;
    inc(FAnimCounter);
    if FAnimCounter = VEHICLE_ANIM_RATE then
    begin
       FAnimCounter := 0;
       if FAnimated then
-         turbu_sprites.nextPosition(FActionMatrix, FAction, FMoving);
+         turbu_sprites.nextPosition(FActionMatrix, FAction, FMoveFrame);
    end;
 {$MESSAGE WARN 'Commented out code in live unit'}
-{   if (GGameEngine.currentParty = self) and (FMoved) and (not GGameEngine.screenLocked) then
-      T2kSpriteEngine(FEngine).moveTo(trunc(FTiles[1].X) + GGameEngine.displacement.x,
-                               trunc(FTiles[1].Y) + GGameEngine.displacement.y);}
+{   if (GEnvironment.Party.base = self) and (FMoved) and (not GSpriteEngine.screenLocked) then
+      T2kSpriteEngine(FEngine).moveTo(trunc(FTiles[1].X) + GSpriteEngine.displacement.x,
+                               trunc(FTiles[1].Y) + GSpriteEngine.displacement.y);}
 end;
 
 procedure TVehicleSprite.reportState(which: TVehicleState);
@@ -412,13 +414,13 @@ begin
          begin
             activateEvents(currentTile);
             location := FLocation;
-{            while currentTile.countertop do
+            while currentTile.countertop do
             begin
-               currentTile := GGameEngine.tileInFrontOf(location, self.facing);
+               currentTile := GSpriteEngine.tileInFrontOf(location, self.facing);
                if assigned(currentTile) then
                   activateEvents(currentTile)
                else Break;
-            end; }
+            end;
          end;
       end;
       btn_cancel: ; //update this later
@@ -469,14 +471,17 @@ end;
 constructor THeroSprite.create(const AParent: TSpriteEngine; whichHero: TRpgHero; party: TRpgParty);
 const x = 1; y = 1;
 begin
-   inherited create(nil, AParent, party);
+   inherited create(nil, AParent);
+   party.SetSprite(self);
+   self.OnChangeSprite := party.ChangeSprite;
    FTemplate := whichHero;
    if assigned(FTemplate) and (FTemplate.sprite <> '') then
       update(FTemplate.sprite, FTemplate.transparent);
    setLocation(point(x, y));
    FParty := party;
-   moveFreq := 8;
+   FMoveFreq := 8;
    FCanSkip := true;
+   self.facing := facing_down;
 end;
 
 function THeroSprite.doMove(which: TPath): boolean;
@@ -525,10 +530,9 @@ begin
    else MoveQueue.setDirection(direction);
 end;
 
-procedure THeroSprite.settleDown;
+procedure THeroSprite.settleDown(engine: TSpriteEngine);
 begin
-   FEngine.add(FTiles[1]);
-   FEngine.add(FTiles[2]);
+   FEngine := engine;
 end;
 
 procedure THeroSprite.place;

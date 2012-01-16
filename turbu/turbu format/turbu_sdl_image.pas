@@ -20,18 +20,20 @@ unit turbu_sdl_image;
 interface
 uses
    types,
-   SDL_ImageManager, SDL, SDL_13;
+   SG_defs, SDL_ImageManager, SDL, SDL_13;
 
 type
    TRpgSdlImage = class(TSdlImage)
    private
       FOrigSurface: PSdlSurface;
+    FSurface: TSdlTexture;
 
    protected
       procedure processImage(image: PSdlSurface); override;
    public
       constructor CreateSprite(renderer: TSdlRenderer; surface: PSdlSurface; imagename: string; container: TSdlImages); overload;
       constructor CreateSprite(renderer: TSdlRenderer; rw: PSDL_RWops; extension, imagename: string; container: TSdlImages); overload;
+      constructor CreateSprite(renderer: TSdlRenderer; rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload; override;
       destructor Destroy; override;
       property Texture: TSdlTexture read FSurface;
       property surface: PSdlSurface read FOrigSurface;
@@ -61,6 +63,14 @@ constructor TRpgSdlImage.CreateSprite(renderer: TSdlRenderer; rw: PSDL_RWops; ex
 begin
    inherited CreateSprite(renderer, rw, extension, imagename, container, EMPTY);
    self.TextureSize := GetTBIInfo(surface).size;
+end;
+
+constructor TRpgSdlImage.CreateSprite(renderer: TSdlRenderer; rw: PSDL_RWops;
+  extension, imagename: string; container: TSdlImages; spriteSize: TSgPoint);
+begin
+   inherited CreateSprite(renderer, rw, extension, imagename, container, spriteSize);
+   if spriteSize = EMPTY then
+      self.TextureSize := GetTBIInfo(surface).size;
 end;
 
 destructor TRpgSdlImage.Destroy;

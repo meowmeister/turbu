@@ -12,7 +12,7 @@ object dmShaders: TdmShaders
           'uniform int hShift;'
           'uniform float satMult;'
           'uniform float valMult;'
-          'uniform vec3 rgbValues;'
+          'uniform vec4 rgbValues;'
           ''
           '#define RED 0'
           '#define GREEN 1'
@@ -139,19 +139,21 @@ object dmShaders: TdmShaders
             'alMult, 0.0, 1.0);'
           '}'
           ''
-          'void MixChannel(inout float channel, float modifier)'
+          
+            'void MixChannel(inout float channel, float modifier, float alpha' +
+            ')'
           '{'
           #9'if (modifier < 1.0)'
-          #9#9'channel *= modifier;'
+          #9#9'channel *= modifier * alpha;'
           #9'else if (modifier > 1.0)'
-          #9#9'channel += modifier - 1.0;'
+          #9#9'channel += (modifier - 1.0) * alpha;'
           '}'
           ''
           'vec3 MixRGB(vec3 rgbColor)'
           '{'
-          #9'MixChannel(rgbColor.r, rgbValues.r);'
-          #9'MixChannel(rgbColor.g, rgbValues.g);'
-          #9'MixChannel(rgbColor.b, rgbValues.b);'
+          #9'MixChannel(rgbColor.r, rgbValues.r, rgbValues.a);'
+          #9'MixChannel(rgbColor.g, rgbValues.g, rgbValues.a);'
+          #9'MixChannel(rgbColor.b, rgbValues.b, rgbValues.a);'
           #9'return rgbColor;'
           '}'
           ''
@@ -168,23 +170,28 @@ object dmShaders: TdmShaders
       item
         Name = 'default'
         Strings.Strings = (
-          
-            'varying vec2 texture_coordinate; uniform sampler2D my_color_text' +
-            'ure; '
+          'varying vec2 texture_coordinate;'
           ''
           'void main()'
           '{'
-          '  vec4 vertex = gl_Vertex;'
-          ''
-          '  gl_Position = gl_ModelViewProjectionMatrix * vertex;'
+          '  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;'
           
             '  // Passing The Texture Coordinate Of Texture Unit 0 To The Fra' +
             'gment Shader'
           '  texture_coordinate = vec2(gl_MultiTexCoord0);'
           ''
-          
-            '  gl_FrontColor = texture2D(my_color_texture, texture_coordinate' +
-            ');'
+          '  gl_FrontColor = gl_Color;'
+          '}')
+      end
+      item
+        Name = 'TextV'
+        Strings.Strings = (
+          'void main()'
+          '{'
+          '   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;'
+          '   gl_TexCoord[0] = gl_MultiTexCoord0;'
+          '   gl_TexCoord[1] = gl_MultiTexCoord1;'
+          '   gl_FrontColor = gl_Color;'
           '}')
       end>
     Left = 24
@@ -193,12 +200,107 @@ object dmShaders: TdmShaders
   object fragment: TJvMultiStringHolder
     MultipleStrings = <
       item
-        Name = 'default'
+        Name = 'defaultF'
         Strings.Strings = (
+          'varying vec2 texture_coordinate;'
+          'uniform sampler2DRect baseTexture;'
+          ''
           'void main()'
           '{'
-          '    gl_FragColor = gl_color;'
+          
+            '    gl_FragColor = texture2DRect(baseTexture, texture_coordinate' +
+            ') * gl_Color;'
           '}')
+      end
+      item
+        Name = 'tint'
+        Strings.Strings = (
+          'varying vec2 texture_coordinate; '
+          'uniform sampler2DRect baseTexture;'
+          ''
+          'vec3 ProcessShifts(vec3 rgbColor);'
+          ''
+          'void main(void)'
+          '{'
+          
+            '    vec4 lColor =  texture2DRect(baseTexture, texture_coordinate' +
+            ');'
+          
+            '    gl_FragColor = vec4(ProcessShifts(lColor.rgb), lColor.a * gl' +
+            '_Color.a);'
+          '}')
+      end
+      item
+        Name = 'textF'
+        Strings.Strings = (
+          'uniform sampler2DRect texAlpha;'
+          'uniform sampler2DRect texRGB;'
+          'void main()'
+          '{   '
+          '   float alpha = texture2DRect(texAlpha, gl_TexCoord[0].st).a;'
+          '   vec3 rgb = texture2DRect(texRGB, gl_TexCoord[1].st).rgb;'
+          '   gl_FragColor = vec4(rgb, alpha);'
+          '}')
+      end
+      item
+        Name = 'textShadow'
+        Strings.Strings = (
+          'uniform sampler2DRect texAlpha;'
+          'uniform float strength;'
+          'float alpha;'
+          'void main()'
+          '{ '
+          '   alpha = texture2DRect(texAlpha, gl_TexCoord[0].st).a;'
+          '   if (alpha < 0.1)'
+          '      discard;'
+          '   gl_FragColor = vec4(0, 0, 0, alpha * strength);'
+          '}'
+          '')
+      end
+      item
+        Name = 'textBlit'
+        Strings.Strings = (
+          'uniform sampler2D texAlpha;'
+          'float alpha;'
+          'void main()'
+          '{ '
+          '   alpha = texture2D(texAlpha, gl_TexCoord[0].st).a;'
+          '   gl_FragColor = vec4(0, 0, 0, alpha);'
+          '}'
+          '')
+      end
+      item
+        Name = 'flash'
+        Strings.Strings = (
+          'varying vec2 texture_coordinate; '
+          'uniform sampler2DRect baseTexture;'
+          'uniform vec4 flashColor;'
+          ''
+          'void main(void)'
+          '{    '
+          
+            '    vec4 lColor =  texture2DRect(baseTexture, texture_coordinate' +
+            ');'
+          
+            '    vec3 mixColor = mix(lColor.rgb, flashColor.rgb, flashColor.a' +
+            ');'
+          '    gl_FragColor = vec4(mixColor, lColor.a);'
+          '}'
+          '')
+      end
+      item
+        Name = 'noAlpha'
+        Strings.Strings = (
+          'varying vec2 texture_coordinate;'
+          'uniform sampler2DRect baseTexture;'
+          ''
+          'void main()'
+          '{'
+          
+            '    gl_FragColor = vec4(texture2DRect(baseTexture, texture_coord' +
+            'inate).rgb, gl_Color.a);'
+          '}'
+          '')
       end>
     Left = 136
     Top = 16

@@ -72,6 +72,14 @@ object frmTestConsole: TfrmTestConsole
         Caption = 'Test Render Targets'
         OnClick = estRenderTargets1Click
       end
+      object estTextRendering1: TMenuItem
+        Caption = 'Test Te&xt Rendering'
+        OnClick = estTextRendering1Click
+      end
+      object mnuTestMessageBox: TMenuItem
+        Caption = 'Test M&essage Box'
+        OnClick = mnuTestMessageBoxClick
+      end
     end
     object mnuMaps: TMenuItem
       Caption = '&Maps'

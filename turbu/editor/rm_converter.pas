@@ -67,7 +67,7 @@ implementation
 
 uses
    windows, inifiles, strUtils, Generics.Collections, IOUtils,
-   commons, fileIO, rm2_turbu_converter_thread,
+   commons, fileIO, rm2_turbu_converter_thread, project_folder,
    conversion_report_form, conversion_report,
    turbu_database, turbu_characters, turbu_constants, locate_files,
    discInterface,

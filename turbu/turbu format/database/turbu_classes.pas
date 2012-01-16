@@ -1063,7 +1063,7 @@ begin
    else begin
       FDataset.Connection.Execute(format(SQL, [UpperCase(FDataset.Name)]), nil, @ds);
       try
-         assert(ds.RecordCount = 1);
+         assert(ds.Bof and not ds.Eof);
          result := ds.FieldByName('result').AsInteger;
       finally
          ds.Free;
@@ -1177,7 +1177,7 @@ end;
 function TRpgDataDict<T>.TValueEnumerator.MoveNext: Boolean;
 begin
    inc(FIndex);
-   result := FIndex >= length(FValues);
+   result := FIndex < length(FValues);
 end;
 
 end.

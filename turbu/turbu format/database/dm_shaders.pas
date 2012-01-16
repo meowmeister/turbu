@@ -43,6 +43,7 @@ type
       glUniform1f: procedure(location: GLint; v0: GLfloat); stdcall;
       glUniform1i: procedure(location: GLint; v0: GLint); stdcall;
       glUniform3fv: procedure(location: GLint; count: GLsizei; value: PGLfloat); stdcall;
+      glUniform4fv: procedure(location: GLint; count: GLsizei; value: PGLfloat); stdcall;
 
       function GetShader(const name: string; container: TJvMultiStringHolder): integer;
       function GetShaderType(container: TJvMultiStringHolder): cardinal;
@@ -53,7 +54,7 @@ type
       procedure UseShaderProgram(value: integer);
       procedure SetUniformValue(handle: integer; const name: string; value: glInt); overload;
       procedure SetUniformValue(handle: integer; const name: string; value: glFloat); overload;
-      procedure SetUniformValue(handle: integer; const name: string; const value: TGLArrayf3); overload;
+      procedure SetUniformValue(handle: integer; const name: string; const value: TGLArrayf4); overload;
    end;
 
 implementation
@@ -93,6 +94,7 @@ begin
    glUniform1f := SDL_GL_GetProcAddress('glUniform1f');
    glUniform1i := SDL_GL_GetProcAddress('glUniform1i');
    glUniform3fv := SDL_GL_GetProcAddress('glUniform3fv');
+   glUniform4fv := SDL_GL_GetProcAddress('glUniform4fv');
 end;
 
 procedure TdmShaders.DataModuleDestroy(Sender: TObject);
@@ -201,9 +203,9 @@ begin
 end;
 
 procedure TdmShaders.SetUniformValue(handle: integer; const name: string;
-  const value: TGLArrayf3);
+  const value: TGLArrayf4);
 begin
-   glUniform3fv(GetUniformLocation(handle, name), 3, @value[0]);
+   glUniform4fv(GetUniformLocation(handle, name), 4, @value[0]);
 end;
 
 function TdmShaders.ShaderProgram(const vert, frag, libs: string): integer;

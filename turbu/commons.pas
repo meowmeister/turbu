@@ -31,6 +31,7 @@ const
    HKEY_CURRENT_USER = $80000001;
    LFCR = #13#10;
    ORIGIN: TPoint = (X: 0; Y: 0);
+   NULLRECT: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
    MULTIPLIER_31 = 8.2258064516129032258064516129032;
 
 //   HKEY_LOCAL_MACHINE = $80000002;
@@ -44,6 +45,8 @@ type
       false: (color: cardinal);
       true: (rgba: packed array[1..4] of byte);
    end;
+
+   TGLColor = array[1..4] of single;
 
    {Custom exception for handling parse errors.}
    EParseMessage = class(Exception);
@@ -87,7 +90,6 @@ type
 
 var
    GCurrentFolder: string;
-   GProjectFolder: string;
 
 implementation
 

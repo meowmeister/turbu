@@ -830,7 +830,7 @@ begin
 end;
 
 function TEBFlashObj.GetScriptText: string;
-const LINE = '%s.Flash(%d, %d, %d, %d, %d, %s)';
+const LINE = '%s.Flash(%d, %d, %d, %d, %d, %s);';
 begin
    result := format(LINE, [ChildScript[0], RGB32(Values[0]), RGB32(Values[1]),
                            RGB32(Values[2]), RGB32(Values[3]), Values[4], BOOL_STR[Values[5]]]);

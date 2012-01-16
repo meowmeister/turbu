@@ -60,6 +60,7 @@ constructor T2k2RpgAnim.convert(base: TBattleAnim; id: word);
 var
    i, j: integer;
    idx: integer;
+   baseCell: battle_anims.TAnimCell;
 begin
    inherited Create;
    self.id := id;
@@ -74,8 +75,11 @@ begin
    for I := 1 to base.frames do
       for j := 1 to high(base.frame[i]) do
       begin
+         baseCell := base.frame[i][j];
+         if not baseCell.IsNew then
+            Continue;
          inc(idx);
-         self.frame.Add(TAnimCell.Convert(base.frame[i][j], i, idx));
+         self.frame.Add(TAnimCell.Convert(baseCell, i, idx));
       end;
 
    effect := TAnimEffectList.Create;
@@ -89,12 +93,13 @@ end;
 
 constructor T2k2AnimCell.Convert(base: battle_anims.TAnimCell; frame: word; index: integer);
 begin
-   self.id := index;
-   self.frame := frame;
-   self.position := point(base.x, base.y);
-   self.zoom := point(base.zoom, base.zoom);
-   self.color := base.color;
-   self.saturation := base.saturation;
+   FId := index;
+   FFrame := frame;
+   FPosition := point(base.x, base.y);
+   FZoom := point(base.zoom, base.zoom);
+   FColor := base.color;
+   FSaturation := base.saturation;
+   FImageIndex := base.index;
 end;
 
 var

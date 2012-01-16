@@ -86,6 +86,7 @@ type
       FShakeTime: integer;
       FShakeBias: shortint;
       FScreenLocked: boolean;
+
       FPanSpeed: double;
       FDisplacing: boolean;
       FReturning: boolean;
@@ -1000,8 +1001,8 @@ end;
 
 function TGameMap.swapOutSpriteList(newList: TSpriteList): TSpriteList;
 begin
-{   result := FSpriteList;
-   FSpriteList := newList; }
+   result := FSpriteList;
+   FSpriteList := newList;
 end;
 
 procedure TGameMap.systemMenu(which: TSysMenuList);

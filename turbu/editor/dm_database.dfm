@@ -1900,6 +1900,9 @@ object dmDatabase: TdmDatabase
       FieldName = 'saturation'
       Required = True
     end
+    object animations_frameSecImageIndex: TIntegerField
+      FieldName = 'imageIndex'
+    end
   end
   object tilesets: TSimpleDataSet
     Aggregates = <>
@@ -3889,6 +3892,96 @@ object dmDatabase: TdmDatabase
       FieldName = 'PHeight'
       Required = True
     end
+    object syslayoutTitleScreen: TWideStringField
+      FieldName = 'TitleScreen'
+      Size = 32
+    end
+    object syslayoutGameOverScreen: TWideStringField
+      FieldName = 'GameOverScreen'
+      Size = 32
+    end
+    object syslayoutSysGraphic: TWideStringField
+      FieldName = 'SysGraphic'
+      Size = 32
+    end
+    object syslayoutBattleSysGraphic: TWideStringField
+      FieldName = 'BattleSysGraphic'
+      Size = 32
+    end
+    object syslayoutEditorBattleBG: TWideStringField
+      FieldName = 'EditorBattleBG'
+      Size = 32
+    end
+    object syslayoutWallpaperStretch: TBooleanField
+      FieldName = 'WallpaperStretch'
+    end
+    object syslayoutWhichFont: TByteField
+      FieldName = 'WhichFont'
+    end
+    object syslayoutStartingHeroes: TIntegerField
+      FieldName = 'StartingHeroes'
+    end
+    object syslayoutStartingHero_1: TIntegerField
+      FieldName = 'StartingHero_1'
+    end
+    object syslayoutStartingHero_2: TIntegerField
+      FieldName = 'StartingHero_2'
+    end
+    object syslayoutStartingHero_3: TIntegerField
+      FieldName = 'StartingHero_3'
+    end
+    object syslayoutStartingHero_4: TIntegerField
+      FieldName = 'StartingHero_4'
+    end
+    object syslayoutUsesFrame: TBooleanField
+      FieldName = 'UsesFrame'
+    end
+    object syslayoutframe: TWideStringField
+      FieldName = 'frame'
+      Size = 32
+    end
+    object syslayoutreverseGraphics: TBooleanField
+      FieldName = 'reverseGraphics'
+    end
+    object syslayoutTransition_1: TByteField
+      FieldName = 'Transition_1'
+    end
+    object syslayoutTransition_2: TByteField
+      FieldName = 'Transition_2'
+    end
+    object syslayoutTransition_3: TByteField
+      FieldName = 'Transition_3'
+    end
+    object syslayoutTransition_4: TByteField
+      FieldName = 'Transition_4'
+    end
+    object syslayoutTransition_5: TByteField
+      FieldName = 'Transition_5'
+    end
+    object syslayoutTransition_6: TByteField
+      FieldName = 'Transition_6'
+    end
+    object syslayoutCommands_1: TByteField
+      FieldName = 'Commands_1'
+    end
+    object syslayoutCommands_2: TByteField
+      FieldName = 'Commands_2'
+    end
+    object syslayoutCommands_3: TByteField
+      FieldName = 'Commands_3'
+    end
+    object syslayoutCommands_4: TByteField
+      FieldName = 'Commands_4'
+    end
+    object syslayoutCommands_5: TByteField
+      FieldName = 'Commands_5'
+    end
+    object syslayoutCommands_6: TByteField
+      FieldName = 'Commands_6'
+    end
+    object syslayoutCommands_7: TByteField
+      FieldName = 'Commands_7'
+    end
   end
   object MapTree: TSimpleDataSet
     Aggregates = <>
@@ -4897,6 +4990,7 @@ object dmDatabase: TdmDatabase
     IndexDefs = <>
     Params = <>
     StoreDefs = True
+    OnReconcileError = script_cacheReconcileError
     Left = 752
     Top = 344
     object IntegerField57: TIntegerField

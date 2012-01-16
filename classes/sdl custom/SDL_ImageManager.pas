@@ -108,7 +108,7 @@ type
       * exception.
       ************************************************************************}
       constructor CreateSprite(renderer: TSdlRenderer; filename, imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
-      constructor CreateSprite(renderer: TSdlRenderer; rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
+      constructor CreateSprite(renderer: TSdlRenderer; rw: PSDL_RWops; extension, imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload; virtual;
       constructor CreateSprite(renderer: TSdlRenderer; surface: PSdlSurface; imagename: string; container: TSdlImages; spriteSize: TSgPoint); overload;
 
       constructor CreateBlankSprite(renderer: TSdlRenderer; imagename: string; container: TSdlImages; spriteSize: TSgPoint; count: integer);
@@ -164,6 +164,7 @@ type
       FArchiveCallback: TArchiveCallback;
       FUpdateMutex: PSDL_Mutex;
       FHash: TDictionary<string, integer>;
+    FSpriteClass: TSdlImageClass;
 
       function GetCount: Integer; inline;
       function GetItem(Num: Integer): TSdlImage;
@@ -249,6 +250,7 @@ type
       property FreeOnClear: boolean read FFreeOnClear write FFreeOnClear;
       property ArchiveLoader: TArchiveLoader read FArchiveLoader write FArchiveLoader;
       property ArchiveCallback: TArchiveCallback read FArchiveCallback write FArchiveCallback;
+      property SpriteClass: TSdlImageClass read FSpriteClass write FSpriteClass;
    end;
 
    TSdlBackgroundImage = class(TSdlImage)
@@ -286,6 +288,7 @@ begin
    FArchiveCallback := callback;
    FUpdateMutex := SDL_CreateMutex;
    FHash := TDictionary<string, integer>.Create;
+   FSpriteClass := TSdlImage;
 end;
 
 //---------------------------------------------------------------------------
@@ -530,7 +533,7 @@ end;
 function TSdlImages.AddSpriteFromArchive(filename, imagename: string;
   spritesize: TSgPoint; loader: TArchiveLoader = nil): integer;
 begin
-   result := AddSpriteFromArchive(filename, imagename, spritesize, TSdlImage, loader);
+   result := AddSpriteFromArchive(filename, imagename, spritesize, FSpriteClass, loader);
 end;
 
 //---------------------------------------------------------------------------

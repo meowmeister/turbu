@@ -43,7 +43,13 @@ contains
   turbu_2k_environment in 'turbu_2k_environment.pas',
   turbu_2k_images in 'turbu_2k_images.pas',
   turbu_2k_items in 'turbu_2k_items.pas',
-  turbu_2k_map_timer in 'turbu_2k_map_timer.pas';
+  turbu_2k_map_timer in 'turbu_2k_map_timer.pas',
+  rs_maps in '..\..\turbu format\script\engine\libraries\rs_maps.pas',
+  rs_message in '..\..\turbu format\script\engine\libraries\rs_message.pas',
+  turbu_2k_frames in 'turbu_2k_frames.pas',
+  rs_characters in '..\..\turbu format\script\engine\libraries\rs_characters.pas',
+  turbu_2k_animations in 'turbu_2k_animations.pas',
+  turbu_2k_image_engine in 'turbu_2k_image_engine.pas';
 
 end.
 

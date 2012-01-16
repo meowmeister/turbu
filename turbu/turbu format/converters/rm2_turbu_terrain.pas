@@ -13,7 +13,7 @@ type
 implementation
 uses
    Generics.Collections,
-   turbu_sounds, rm2_turbu_sounds, charset_data, turbu_database;
+   LMT, turbu_sounds, rm2_turbu_sounds, charset_data, turbu_database;
 
 { T2k2Terrain }
 

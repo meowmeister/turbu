@@ -704,10 +704,10 @@ function SDL_CreateSoftwareRenderer(surface: PSDLSurface): TSDLRenderer; cdecl; 
 function SDL_RenderTargetSupported(renderer: TSDLRenderer): SDL_bool; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderTargetSupported}
 
-function SDL_SetTargetTexture(renderer: TSdlRenderer; texture: TSDLTexture): integer; cdecl; external SDLLibName;
+function SDL_SetTargetTexture(texture: TSDLTexture): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_SetTargetTexture}
 
-function SDL_ClearTargetTexture(renderer: TSdlRenderer): integer;
+function SDL_ResetTargetTexture(renderer: TSdlRenderer): integer; cdecl; external SDLLibName;
 
 function SDL_GetRendererInfo(renderer: TSdlRenderer; var info: TSDL_RendererInfo): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetRenderDriverInfo}
@@ -1194,6 +1194,9 @@ cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_Error'{$ELSE} SDLLibName{
 {$EXTERNALSYM SDL_Error}
 {$ENDIF}
 
+function SDL_SetHint(name, value: PAnsiChar): SDL_bool;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetHint'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+
 // Private error message function - used internally
 procedure SDL_OutOfMemory;
 
@@ -1393,12 +1396,6 @@ end;
 function SDL_GetEventState(type_:cardinal): byte; inline;
 begin
    result := SDL_EventState(type_, SDL_QUERY);
-end;
-
-function SDL_ClearTargetTexture(renderer: TSdlRenderer): integer;
-const CLEAR_TEXTURE: TSdlTexture = (FPtr: nil);
-begin
-   result := SDL_SetTargetTexture(renderer, CLEAR_TEXTURE);
 end;
 
 { TSdlWindow }

@@ -23,19 +23,23 @@ uses
    turbu_map_engine, turbu_versioning, turbu_map_sprites, turbu_classes, turbu_heroes,
    turbu_database_interface, turbu_map_interface, turbu_sdl_image, turbu_2k_char_sprites,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine, turbu_defs,
-   turbu_2k_environment, turbu_script_engine,
-   AsphyreTimer, SG_defs, SDL_ImageManager, sdl_canvas, SDL, sdl_13;
+   turbu_2k_environment, turbu_script_engine, turbu_map_metadata, dm_shaders,
+   turbu_2k_image_engine,
+   timing, AsphyreTimer, SG_defs, SDL_ImageManager, sdl_canvas, SDL, sdl_13;
 
 type
    TTileGroupPair = TPair<TTileGroupRecord, PSdlSurface>;
    TTransProc = reference to procedure(var location: integer);
+   TSwitchState = (sw_noSwitch, sw_ready, sw_switching);
 
    T2kMapEngine = class(TMapEngine)
    private
       FStretchRatio: TSgFloatPoint;
       FSignal: TSimpleEvent;
       FButtonState: set of TButtonCode;
-      FGameState: TGameState;
+      FSwitchState: TSwitchState;
+      FTeleportThread: TThread;
+      FTitleScreen: TRpgTimestamp;
    protected
       FDatabase: TRpgDatabase;
       FCanvas: TSdlCanvas;
@@ -48,6 +52,9 @@ type
       FPartySprite: THeroSprite;
       FGameEnvironment: T2kEnvironment;
       FObjectManager: TMapObjectManager;
+      FRenderTargets: TSdlRenderTargets;
+      FShaderEngine: TdmShaders;
+      FImageEngine: TImageEngine;
 
       function retrieveImage(const folder, filename: string): TRpgSdlImage;
 
@@ -55,6 +62,7 @@ type
       procedure loadTileset(const value: TTileSet);
       procedure loadSprite(const filename: string);
       function CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
+      procedure CanvasResize (sender: TSdlCanvas);
       procedure LoadMapSprites(map: TRpgMap);
       function doneLoadingMap: boolean;
       procedure prepareMap(const data: IMapMetadata);
@@ -67,6 +75,7 @@ type
       FCutscene: integer;
       FTransProc: TTransProc;
       procedure OnTimer(Sender: TObject);
+      procedure standardRender(Sender: TObject);
       procedure OnProcess(Sender: TObject);
       procedure HandleEvent(event: TSdlEvent);
       procedure KeyDown(key: TSdlKeySym);
@@ -74,6 +83,8 @@ type
       procedure PressButton(button: TButtonCode);
       procedure PartyButton(button: TButtonCode);
       procedure Validate(query: TSqlQuery);
+      procedure PlayMapMusic(metadata: TMapMetadata);
+      procedure DrawRenderTarget(target: TSdlRenderTarget);
    protected
       FDatabaseOwner: boolean;
       procedure cleanup; override;
@@ -89,19 +100,32 @@ type
       function MapTree: IMapTree; override;
       function database: IRpgDatabase; override;
       procedure NewGame; override;
+      procedure changeMaps(newmap: word; newLocation: TSgPoint);
+      procedure loadRpgImage(filename: string; mask: boolean);
+      procedure TitleScreen; virtual;
 
       property PartySprite: THeroSprite read FPartySprite;
-      property State: TGameState read FGameState;
+      property ImageEngine: TImageEngine read FImageEngine;
       property TransProc: TTransProc write FTransProc;
    end;
 
+var
+   GGameEngine: T2kMapEngine;
+
 implementation
 uses
-   math, Forms, Dialogs,
-   archiveInterface, commons, turbu_plugin_interface, turbu_game_data,
-   turbu_constants, turbu_map_metadata, turbu_functional, dm_database,
-   turbu_map_objects, turbu_2k_map_locks, timing,
+   math, Forms, Dialogs, OpenGL,
+   archiveInterface, commons, turbu_plugin_interface, turbu_game_data, turbu_OpenGl,
+   turbu_constants, turbu_functional, dm_database, turbu_2k_images,
+   turbu_map_objects, turbu_2k_map_locks, turbu_2k_frames, turbu_text_utils,
+   rs_maps, rs_message, rs_characters, rs_media, archiveUtils,
    sdlstreams, sdl_sprite, sg_utils;
+
+const
+   RENDERER_MAIN = 0;
+   RENDERER_ALT = 1;
+   TRAN_1 = 2;
+   TRAN_2 = 3;
 
 { Callbacks }
 
@@ -122,11 +146,18 @@ end;
 
 { T2kMapEngine }
 
-const TILE_SIZE = 16;
-
 procedure T2kMapEngine.AfterPaint;
 begin
    //this virtual method intentionally left blank
+end;
+
+procedure T2kMapEngine.CanvasResize(sender: TSdlCanvas);
+var
+   i: integer;
+begin
+   FRenderTargets.Clear;
+   for i := 1 to 4 do
+      FRenderTargets.Add(TSdlRenderTarget.Create(FCanvas.size));
 end;
 
 procedure T2kMapEngine.cleanup;
@@ -134,20 +165,28 @@ var i: integer;
 begin
    assert(FInitialized);
    FInitialized := false;
+   if FDatabaseOwner then
+      FObjectManager.ScriptEngine.KillAll;
+   FreeAndNil(GMenuEngine);
+   FreeAndNil(FShaderEngine);
    FreeAndNil(FGameEnvironment);
    FreeAndNil(FPartySprite);
    FreeAndNil(FCanvas);
    FreeAndNil(FImages);
    FreeAndNil(FSignal);
+   FreeAndNil(FImageEngine);
    for I := 0 to high(FMaps) do
       FMaps[i].Free;
    setLength(FMaps, 0);
    if FDatabaseOwner then
    begin
-      FDatabase.Free;
+      GGameEngine := nil;
+      FreeAndNil(FDatabase);
       GDatabase := nil;
       FreeAndNil(dmDatabase);
-      FObjectManager.Free;
+      FreeAndNil(FObjectManager);
+      GMapObjectManager := nil;
+      GScriptEngine := nil;
    end;
    inherited Cleanup;
 end;
@@ -158,6 +197,7 @@ begin
    self.data := TMapEngineData.Create('TURBU basic map engine', TVersion.Create(0, 1, 0));
    FTimer := TAsphyreTimer.Create;
    FTimer.MaxFPS := 60;
+   FRenderTargets := TSdlRenderTargets.Create(true);
 end;
 
 function T2kMapEngine.CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
@@ -191,6 +231,7 @@ end;
 
 destructor T2kMapEngine.Destroy;
 begin
+   FRenderTargets.Free;
    FTimer.Free;
    inherited;
 end;
@@ -215,6 +256,7 @@ begin
          if not assigned(FDatabase) then
             raise ERpgPlugin.Create('Incompatible project database');
          FObjectManager := TMapObjectManager.Create;
+         GGameEngine := self;
       end
       else begin
          FDatabase := GDatabase;
@@ -238,16 +280,30 @@ begin
       end
       else renderer := SDL_GetRenderer(window);
       FCanvas := TSdlCanvas.CreateFrom(window);
+      FCanvas.OnResize := self.CanvasResize;
       FStretchRatio.x := layout.physWidth / layout.width;
       FStretchRatio.y := layout.physHeight / layout.height;
+      SDL_SetWindowLogicalSize(window, layout.width, layout.height);
       FImages := TSdlImages.Create(renderer);
       FImages.ArchiveCallback := aCallback;
       FImages.ArchiveLoader := aLoader;
+      FImages.SpriteClass := TRpgSdlImage;
       setLength(FMaps, FDatabase.mapTree.lookupCount);
       FSignal := TSimpleEvent.Create;
       FSignal.SetEvent;
       FGameEnvironment := T2kEnvironment.Create(FDatabase);
-      FObjectManager.ScriptEngine.LoadEnvironment(@turbu_2k_environment.RegisterEnvironment)
+      FObjectManager.ScriptEngine.LoadEnvironment(@turbu_2k_environment.RegisterEnvironment);
+      rs_maps.RegisterScriptUnit(FObjectManager.ScriptEngine);
+      rs_message.RegisterScriptUnit(FObjectManager.ScriptEngine);
+      rs_characters.RegisterScriptUnit(FObjectManager.ScriptEngine);
+
+      FObjectManager.OnUpdate := FGameEnvironment.UpdateEvents;
+      FShaderEngine := TdmShaders.Create(nil);
+      GFontEngine := TFontEngine.Create(FShaderEngine);
+      GFontEngine.Current := TRpgFont.Create('RMG2000_0.fon');
+      GMenuEngine := TMenuSpriteEngine.Create(
+        TSystemImages.Create(FImages, GDatabase.layout.systemGraphic, GDatabase.layout.wallpaperStretch),
+        FCanvas, FImages);
    except
       cleanup;
       raise;
@@ -261,13 +317,69 @@ var
    party: TRpgParty;
 begin
    party := FGameEnvironment.Party;
-   for I := 0 to FGameEnvironment.HeroCount do
-   begin
-      party.hero[1] := FGameEnvironment.heroes[i];
-      if FGameEnvironment.heroes[i].sprite <> '' then
-         Break;
-   end;
+   for I := 1 to FDatabase.layout.startingHeroes do
+      party.hero[i] := FGameEnvironment.heroes[FDatabase.layout.startingHero[i]];
    FPartySprite := THeroSprite.create(FCurrentMap, party.hero[1], party);
+end;
+
+procedure T2kMapEngine.PlayMapMusic(metadata: TMapMetadata);
+var
+   id: smallint;
+begin
+   id := metadata.id;
+   case metadata.bgmState of
+      id_parent:
+      begin
+         repeat
+            id := FDatabase.mapTree[id].parent;
+         until (id = 0) or (FDatabase.mapTree[id].bgmState <> id_parent);
+         if id = 0 then
+            rs_media.stopMusic
+         else if FDatabase.mapTree[id].bgmState = id_yes then
+            rs_media.playMusicData(FDatabase.mapTree[id].bgmData);
+      end;
+      id_no: ;
+      id_yes: rs_media.playMusicData(FDatabase.mapTree[id].bgmData);
+   end;
+end;
+
+procedure T2kMapEngine.changeMaps(newmap: word; newLocation: TSgPoint);
+var
+   hero: TCharSprite;
+   oldEngine: T2kSpriteEngine;
+   metadata: TMapMetadata;
+begin
+   assert(newmap <> FCurrentMap.mapID);
+
+   FSwitchState := sw_ready;
+   FObjectManager.ScriptEngine.killAll;
+   while not FCurrentMap.blank do
+      sleep(10);
+   FreeAndNil(FImageEngine);
+   oldEngine := FCurrentMap;
+   hero := FCurrentMap.CurrentParty;
+   if assigned(hero) then
+      (hero as THeroSprite).packUp;
+   metadata := FDatabase.mapTree[newmap];
+   FTeleportThread := TThread.CurrentThread;
+   try
+      TThread.Synchronize(TThread.CurrentThread,
+         procedure begin self.loadMap(metadata) end);
+   finally
+      FTeleportThread := nil;
+   end;
+   FCurrentMap.CurrentParty := hero;
+   FCurrentMap.CopyState(oldEngine);
+   if assigned(hero) then
+   begin
+      hero.location := newLocation;
+      (hero as THeroSprite).settleDown(FCurrentMap);
+   end;
+   TThread.Synchronize(TThread.CurrentThread,
+      procedure begin FCurrentMap.centerOn(newLocation.x, newLocation.y) end);
+   PlayMapMusic(metadata);
+   FSwitchState := sw_noSwitch;
+   FTimer.Enabled := true;
 end;
 
 procedure T2kMapEngine.KeyDown(key: TSdlKeySym);
@@ -301,7 +413,11 @@ begin
       SDL_SCANCODE_LEFT: RemoveButton(btn_left);
       SDL_SCANCODE_DOWN: RemoveButton(btn_down);
       SDL_SCANCODE_UP: RemoveButton(btn_up);
-      SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER: RemoveButton(btn_enter);
+      SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER:
+      begin
+         RemoveButton(btn_enter);
+         FEnterLock := false;
+      end;
       SDL_SCANCODE_ESCAPE, SDL_SCANCODE_INSERT: RemoveButton(btn_cancel);
    end;
 end;
@@ -316,7 +432,7 @@ begin
    begin
       loadTileset(FDatabase.tileset[FWaitingMap.tileset]);
       FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
-                               FCanvas, FDatabase.tileset[FWaitingMap.tileset],
+                               FShaderEngine, FCanvas, FDatabase.tileset[FWaitingMap.tileset],
                                FImages);
    end;
    if doneLoadingMap then
@@ -347,6 +463,7 @@ begin
    FTimer.Enabled := false;
    if not (FInitialized) then
       raise ERpgPlugin.Create('Can''t load a map on an uninitialized map engine.');
+   GEnvironment.ClearEvents;
    map := TMapMetadata(data);
    if not assigned(map) then
       raise ERpgPlugin.Create('Incompatible metadata object.');
@@ -395,8 +512,9 @@ procedure T2kMapEngine.PressButton(button: TButtonCode);
 begin
    if FEnterLock and (button in [btn_enter, btn_cancel]) then
       Exit;
-   case State of
-      gs_map:
+
+   case GMenuEngine.State of
+      msNone:
          if FCutscene > 0 then
             Exit
          else if (button = btn_cancel) {and FMenuEnabled} then
@@ -409,11 +527,8 @@ begin
          end
          else if assigned(FPartySprite) then
             PartyButton(button);
-      gs_message: {FCurrentMBox.button(button)};
-      gs_menu: {FSystemMenu.button(button)};
-      gs_battle: ;
-      gs_fading: ;
-      gs_minigame: ;
+      msShared, msExclusiveShared: GMenuEngine.MessageBox.button(button);
+      msFull:;
    end;
 end;
 
@@ -462,12 +577,11 @@ end;
 function T2kMapEngine.doneLoadingMap: boolean;
 begin
    FCurrentMap := FMaps[FWaitingMap.id];
+   FImageEngine := TImageEngine.Create(FCurrentMap, FCanvas, FImages);
    GSpriteEngine := FCurrentMap;
    LoadMapSprites(FCurrentMap.mapObj);
-   FObjectManager.LoadMap(FWaitingMap);
+   FObjectManager.LoadMap(FWaitingMap, FTeleportThread);
    result := FSignal.WaitFor(INFINITE) = wrSignaled;
-   if result then
-      self.repaint;
 end;
 
 procedure T2kMapEngine.HandleEvent(event: TSdlEvent);
@@ -498,15 +612,16 @@ end;
 procedure T2kMapEngine.NewGame;
 var
    loc: TLocation;
-   metadata: IMapMetadata;
+   metadata: TMapMetadata;
 begin
-   loc := FDatabase.mapTree.location[0];
+   loc := FDatabase.mapTree.location[-1];
    metadata := FDatabase.mapTree[loc.map];
    self.loadMap(metadata);
    InitializeParty;
    FPartySprite.leaveTile;
    FCurrentMap.CurrentParty := FPartySprite;
    FPartySprite.location := sgPoint(loc.x, loc.y);
+   PlayMapMusic(metadata);
    self.Play;
 end;
 
@@ -519,12 +634,78 @@ begin
       FImages.AddSpriteFromArchive(lname, filename, SPRITE_SIZE);
 end;
 
+procedure T2kMapEngine.standardRender(Sender: TObject);
+begin
+   if FSwitchState = sw_switching then
+      Exit;
+   case GMenuEngine.State of
+      msNone, msShared, msExclusiveShared: FCurrentMap.Draw;
+      msFull:;
+   end;
+   if FSwitchState = sw_ready then
+      FSwitchState := sw_switching;
+end;
+
+procedure T2kMapEngine.TitleScreen;
+var
+   cls: TSdlImageClass;
+begin
+   cls := FImages.SpriteClass;
+   FImages.SpriteClass := TSdlImage;
+   try
+      FImageEngine.Clear;
+      FImages.EnsureImage(format('Special Images\%s.png', [FDatabase.layout.titleScreen]), '*TitleScreen');
+      TRpgImage.Create(FImageEngine, '*TitleScreen', FCanvas.Width div 2, FCanvas.Height div 2, 100, false, false);
+      FTitleScreen := TRpgTimestamp.Create(5000);
+   finally
+      FImages.SpriteClass := cls;
+   end;
+end;
+
+procedure T2kMapEngine.DrawRenderTarget(target: TSdlRenderTarget);
+var
+   current: integer;
+   r, g, b, a: byte;
+begin
+   glPushAttrib(GL_ENABLE_BIT);
+   glColor4f(1, 1, 1, 1);
+   glGetIntegerv(GL_CURRENT_PROGRAM, @current);
+   if not FCurrentMap.Fade then
+      FShaderEngine.UseShaderProgram(FShaderEngine.ShaderProgram('default', 'defaultF'));
+   glEnable(GL_ALPHA_TEST);
+   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+   target.DrawFull();
+
+   glPopAttrib;
+   SDL_GetRenderDrawColor(target.parent.Renderer, r, g, b, a);
+   glColor4f(r / 255, g / 255, b / 255, a / 255);
+   glUseProgram(current);
+end;
+
+procedure WriteTimestamp;
+var
+   hour, min, sec, msec: word;
+begin
+   decodeTime(sysUtils.GetTime, hour, min, sec, msec);
+   commons.OutputFormattedString('Frame timestamp: %d:%d:%d.%d', [hour, min, sec, msec]);
+end;
+
 {$R-}
 procedure T2kMapEngine.OnTimer(Sender: TObject);
 begin
-   //TODO: Remove commented-out code blocks when render targets, transitions and script events are implemented
+   if assigned(FTitleScreen) and (FTitleScreen.timeRemaining = 0) then
+   begin
+      FTimer.Enabled := false;
+      Application.Terminate;
+      Exit;
+   end;
+
+   //TODO: Remove commented-out code blocks when transitions and script events are implemented
    inc(FFrame);
-   TRpgTimeStamp.FrameLength := max(commons.round(FTimer.latency), 1);
+   TRpgTimeStamp.NewFrame;
 {   if assigned(FTransProc) then
       FCurrentMap.Draw
    else if FCurrentMap.blank then
@@ -532,20 +713,25 @@ begin
    else begin
       GRenderTargets.RenderOn(2, standardRender, 0, true);
    end; }
+   SDL_SetRenderDrawColor(FCanvas.renderer, 0, 0, 0, 255);
    FCanvas.Clear;
-   FCurrentMap.Draw;
+   FRenderTargets.RenderOn(RENDERER_MAIN, standardRender, 0, true);
 
-//   dummy := device.Render(0, true);
-   FTimer.Process;
-//   if dummy then
-      FCanvas.Flip;
+   DrawRenderTarget(FRenderTargets[RENDERER_MAIN]);
+
+   if (GMenuEngine.State <> msFull) and assigned(FImageEngine) then
+      FImageEngine.Draw;
+   if GMenuEngine.State <> msNone then
+      GMenuEngine.Draw;
+
+   FCanvas.Flip;
+//   WriteTimestamp;
    if FFrame > FHeartbeat then
    begin
       FCurrentMap.advanceFrame;
       FFrame := 0;
    end;
-{   GScriptEngine.eventTick;
-   mapEngine.scriptEngine.timer.tick;}
+   FTimer.Process;
 end;
 {$R+}
 
@@ -557,8 +743,12 @@ begin
    SDL_PumpEvents;
    for event in SDL_GetEvents do
       HandleEvent(event);
+   if assigned(FTitleScreen) then
+      Exit;
    for button in FButtonState do
       pressButton(button);
+   GMapObjectManager.Tick;
+//   GEnvironment.UpdateEvents;
    FCurrentMap.Process(sender);
 end;
 
@@ -568,14 +758,37 @@ begin
    //clear the SDL event queue
    SDL_PumpEvents;
    SDL_FlushEvents(0, SDL_LASTEVENT);
-   FTimer.Enabled := true;
+   if FPartySprite = nil then
+      initializeParty;
    FTimer.OnTimer := self.OnTimer;
    FTimer.OnProcess := self.OnProcess;
+   FTimer.Enabled := true;
 end;
 
 function T2kMapEngine.Playing: boolean;
 begin
    result := FTimer.Enabled;
+end;
+
+procedure T2kMapEngine.loadRpgImage(filename: string; mask: boolean);
+const MODES: array [boolean] of TSdlBlendModes = ([], [sdlbBlend]);
+var
+   oName: string;
+   image: TSdlImage;
+   cls: TSdlImageClass;
+begin
+   oName := filename;
+   if not archiveUtils.GraphicExists(filename, 'pictures') then
+      Abort;
+
+   cls := FImages.SpriteClass;
+   FImages.SpriteClass := TSdlImage;
+   try
+      image := FImages.EnsureImage('pictures/' + filename, oName);
+      SDL_SetTextureBlendMode(image.surface, MODES[mask])
+   finally
+      FImages.SpriteClass := cls;
+   end;
 end;
 
 end.

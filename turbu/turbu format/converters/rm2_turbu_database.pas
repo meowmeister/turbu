@@ -21,7 +21,8 @@ interface
 
 uses
    classes,
-   LDB, LMT, battle_anims, turbu_database, events, conversion_report, rm2_turbu_monsters,
+   LDB, LMT, battle_anims, turbu_database, events, conversion_report,
+   rm2_turbu_monsters, turbu_game_data,
    formats;
 
 type
@@ -46,6 +47,11 @@ type
                           weaponList, soundList: TStringList);
    end;
 
+   T2k2Layout = class helper for TGameLayout
+   public
+      constructor Convert(base: TSystemRecord);
+   end;
+
 var
    GLcfDatabase: TLcfDatabase;
 
@@ -65,7 +71,7 @@ uses
    SDL, SDL_13, sdl_image, sg_defs;
 
 const
-   MOVE_MATRIX: array[0..3, 0..3] of byte = ((0, 1, 2, 1), (3, 4, 5, 4), (6, 7, 8, 7), (9, 10, 11, 10));
+   MOVE_MATRIX: array[0..3, 0..3] of byte = ((1, 0, 1, 2), (4, 3, 4, 5), (7, 6, 7, 8), (10, 9, 10, 11));
 
 { T2k2Database }
 
@@ -129,6 +135,7 @@ var
    defMoveMatrix: TMoveMatrix;
    moveArray: ^TMoveMatrixArray;
    newcmd: TBattleCommand;
+   legacyPair: TPair<integer, AnsiString>;
 begin
    // setup
    self.Create;
@@ -292,13 +299,11 @@ begin
          self.battleChars.Add(TBattleCharAnim.convert(base.anim2[i], i));
 
       ConversionReport.newStep('Preparing layout');
-      self.layout.width := LOGICAL_SIZE.X;
-      self.layout.height := LOGICAL_SIZE.Y;
-      self.layout.physWidth := PHYSICAL_SIZE.X;
-      self.layout.physHeight := PHYSICAL_SIZE.Y;
-
+      self.layout.Convert(base.SystemData);
       ConvertVehicles(base.SystemData);
       ConvertSysSounds(base.SystemData);
+      for legacyPair in base.SystemData.legacy do
+         self.AddLegacy('SystemData', 0, legacyPair.key, legacyPair.value);
 
       ConversionReport.NewStep('Converting terrain');
       for i := 1 to base.terrains do
@@ -589,6 +594,36 @@ begin
     FSfx[sfx] := (TRpgSound.Convert(base.sfx[LDB.TSfxTypes(sfx)]));
     FSfx[sfx].id := ord(sfx);
   end;
+end;
+
+{ T2k2Layout }
+
+constructor T2k2Layout.Convert(base: TSystemRecord);
+var
+   i: integer;
+begin
+   FWidth := LOGICAL_SIZE.X;
+   FHeight := LOGICAL_SIZE.Y;
+   FPWidth := PHYSICAL_SIZE.X;
+   FPHeight := PHYSICAL_SIZE.Y;
+
+   FTitleScreen := string(base.titleScreen);
+   FGameOverScreen := string(base.gameOverScreen);
+   FSysGraphic := string(base.systemGraphic);
+   FBattleSysGraphic := string(base.battleSysGraphic);
+   FEditorBattleBG := string(base.editorBattleBG);
+   FWallpaperStretch := not base.wallpaperStretch; //original was false = stretch, true = tiled
+   FWhichFont := base.font;
+   FStartingHeroes := base.startingHeroes;
+   for i := 1 to 4 do
+      FStartingHero[i] := base.startingHero[i];
+   for i := ord(Low(TTransitionTypes)) to ord(High(TTransitionTypes)) do
+      FTransition[TTransitionTypes(i)] := base.transition[TTransitionTypes(i)];
+   for i := 0 to High(base.defaultCommands) do
+      FCommands[i] := base.defaultCommands[i];
+   FUsesFrame := base.usesFrame;
+   FFrame := string(base.frame);
+   FReverseGraphics := base.reverseGraphics;
 end;
 
 end.

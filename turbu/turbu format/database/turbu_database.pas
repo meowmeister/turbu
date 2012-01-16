@@ -138,6 +138,7 @@ type
       procedure LoadSounds;
       procedure SaveSounds;
       function GetTileGroup(const key: string): TTileGroup;
+    procedure downloadStringList(dataset: TDataset; list: TStringList);
    protected
       FGlobalScriptBlock: TEBUnit;
       FSysVocab: TStringList;
@@ -222,8 +223,8 @@ var
    GDatabase: TRpgDatabase;
 
 const
-   MIN_DBVERSION = 46;
-   DBVERSION = 46;
+   MIN_DBVERSION = 47;
+   DBVERSION = 47;
 
 implementation
 uses
@@ -265,6 +266,8 @@ begin
    FName := DBNAME;
    FID := DBVERSION;
    FSerializer := TDatasetSerializer.Create;
+   FSerializer.OnClosedDataset := dmDatabase.OnClosedDataset;
+   FSerializer.OnReleaseClosedDataset := dmDatabase.OnReleaseClosedDataset;
 
    for I := low(TItemType) to high(TItemType) do
       FItems[i] := TItemList.Create(dmDatabase.items, FSerializer);
@@ -385,6 +388,8 @@ begin
 
    FLayout.download(FSerializer, dm.syslayout);
    LoadSounds;
+   DownloadStringList(dm.Switches, FSwitches);
+   DownloadStringList(dm.Variables, FVariables);
 end;
 
 procedure TRpgDatabase.save(dm: TDmDatabase);
@@ -595,6 +600,27 @@ begin
          idFIeld.Value := i + 1;
          nameField.Value := list[i];
          dataset.Post;
+      end;
+   finally
+      dataset.EnableControls;
+   end;
+end;
+
+procedure TRpgDatabase.downloadStringList(dataset: TDataset; list: TStringList);
+var
+   nameField: TWideStringField;
+   idField: TIntegerField;
+begin
+   idField := dataset.FieldByName('id') as TIntegerField;
+   nameField := dataset.FieldByName('name') as TWideStringField;
+   dataset.DisableControls;
+   try
+      dataset.First;
+      while not dataset.eof do
+      begin
+         if idField.Value > 0 then
+            list.add(nameField.Value);
+         dataset.next;
       end;
    finally
       dataset.EnableControls;

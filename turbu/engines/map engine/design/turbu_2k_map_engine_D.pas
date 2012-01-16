@@ -281,13 +281,16 @@ begin
       FTilesetListD.Free;
       FTilesetListD := loadTilesetD(FDatabase.tileset[FWaitingMap.tileset]);
       FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
-                                FCanvas, FDatabase.tileset[FWaitingMap.tileset],
+                                FShaderEngine, FCanvas, FDatabase.tileset[FWaitingMap.tileset],
                                 FImages);
    end;
    FCurrentLayer := 0;
    UploadMapObjects;
    if doneLoadingMap then
-      result := FCurrentMap.mapObj
+   begin
+      Repaint;
+      result := FCurrentMap.mapObj;
+   end
    else result := nil;
 end;
 
@@ -383,9 +386,12 @@ begin
       assert(assigned(image));
       texture := image.Texture;
       //TODO: this is a horrible hack and will need to be fixed eventually
-      if (value < 0) or (value in enumerator.layers) then
-         texture.alpha := $FF
-      else texture.alpha := $A0;
+      if assigned(texture.ptr) then
+      begin
+         if (value < 0) or (value in enumerator.layers) then
+            texture.alpha := $FF
+         else texture.alpha := $A0;
+      end;
    end;
    self.repaint;
 end;

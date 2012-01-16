@@ -27,7 +27,7 @@ interface
 implementation
 uses
    sysUtils,
-   commons;
+   project_folder;
 
 var
    textLog: text;
@@ -56,7 +56,10 @@ end;
 procedure closeLog;
 begin
    if logOpen then
+   begin
       closeFile(textLog);
+      logOpen := false;
+   end;
 end;
 
 function logName: string;

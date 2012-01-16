@@ -103,7 +103,6 @@
 			<DCCReference Include="libs\script engine\RPG Script library\rs_system.pas"/>
 			<DCCReference Include="libs\script engine\RPG Script library\rs_message.pas"/>
 			<DCCReference Include="libs\script engine\RPG Script library\rs_menu.pas"/>
-			<DCCReference Include="libs\script engine\RPG Script library\rs_map.pas"/>
 			<DCCReference Include="libs\map engine\transitions.pas"/>
 			<DCCReference Include="libs\map engine\transition_graphics.pas"/>
 			<DCCReference Include="libs\map engine\distortions.pas"/>

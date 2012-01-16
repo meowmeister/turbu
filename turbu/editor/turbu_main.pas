@@ -156,8 +156,8 @@ implementation
 uses
    SysUtils, Math, Graphics, Windows, OpenGL,
    commons, rm_converter, archiveInterface, dm_ProjectBoot, engine_manager,
-   turbu_constants, turbu_characters, database, turbu_battle_engine, turbu_maps,
-   turbu_classes, turbu_versioning, turbu_tilesets, turbu_defs,
+   turbu_constants, database, turbu_battle_engine, project_folder,
+   turbu_classes, turbu_versioning, turbu_defs,
    dm_database, discInterface, formats, map_tree_controller, delete_map,
    sdl_image, sdlstreams, sg_utils;
 
@@ -386,6 +386,7 @@ begin
       function: single begin result := FZoom end,
       function: integer begin result := TILE_SIZE end,
       function: TSgPoint begin result := FMapEngine.mapPosition end);
+   TThread.NameThreadForDebugging('TURBU main thread');
 end;
 
 procedure TfrmTurbuMain.imgLogoDblClick(Sender: TObject);
@@ -819,6 +820,7 @@ procedure TfrmTurbuMain.btnRunClick(Sender: TObject);
 begin
    RequireMapEngine;
    FMapEngine.Play;
+   FocusControl(imgLogo);
    enableRunButtons(true);
 end;
 
