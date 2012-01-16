@@ -187,7 +187,7 @@ end;
 
 procedure TPackageList.RemovePackage(const FileName: string);
 var
-   info, subInfo: PPackageInfo;
+   info: PPackageInfo;
    list: TList<PPackageInfo>;
    i: integer;
 begin
