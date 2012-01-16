@@ -68,6 +68,8 @@ var
    item: string;
    itemBase: AnsiString;
 begin
+   if not FileExists(filename) then
+      Exit;
    stream := TFileStream.Create(filename, fmOpenRead);
    setLength(data, stream.size);
    stream.Read(data[1], stream.size);
@@ -94,7 +96,8 @@ begin
    files := Match(path, '*.tep');
    for filename in files do
       Patch(filename, files);
-   Patch(IncludeTrailingPathDelimiter(path) + 'Turbu.exe', files);
+   Patch(TPath.Combine(path, 'Turbu.exe'), files);
+   Patch(TPath.Combine(path, 'Turbu_player.exe'), files);
    files.free;
 end;
 
@@ -103,6 +106,9 @@ begin
    Run;
   except
     on E: Exception do
-      MessageBox(0, PChar(E.Message), PChar(E.ClassType), 0);
+    begin
+      MessageBox(0, PChar(E.Message), PChar(E.ClassName), 0);
+      Halt(nativeInt(E.ClassType));
+    end;
   end;
 end.
