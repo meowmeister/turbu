@@ -229,11 +229,14 @@ begin
 end;
 
 procedure TfrmTestConsole.mnuEventEditorClick(Sender: TObject);
+var
+   map: TRpgMap;
 begin
    mnuTestDatabaseUploadClick(sender);
 
-   TfrmObjectEditor.EditMapObject(TRpgMap(FCurrentMap).mapObjects[1], TRpgMap(FCurrentMap),
-                                  GDatabase.tileset[TRpgMap(FCurrentMap).tileset].name);
+   map := TRpgMap(FCurrentMap);
+   TfrmObjectEditor.EditMapObject(map.mapObjects[1], map,
+                                  GDatabase.tileset[map.tileset].name);
    if sender = mnuEventEditor then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;

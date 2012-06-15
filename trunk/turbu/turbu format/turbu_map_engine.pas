@@ -64,7 +64,7 @@ type
       procedure SetMapResizeEvent(const value: TMapResizeEvent);
       procedure ResizeWindow(rect: TRect);
       procedure scrollMap(const newPosition: TSgPoint);
-      procedure setPaletteList(value: TList<integer>);
+      procedure setPaletteList(value: TArray<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
       procedure Repaint;
@@ -113,7 +113,7 @@ type
 
    TMatrix<T> = class(TObject)
    private
-      FMatrix: array of array of T;
+      FMatrix: array of T;
       FWidth, FHeight: integer;
       function GetValue(X, Y: integer): T; inline;
       procedure SetValue(X, Y: integer; const Value: T); inline;
@@ -187,19 +187,19 @@ end;
 constructor TMatrix<T>.Create(size: TSgPoint);
 begin
    inherited Create;
-   setLength(FMatrix, size.X, size.Y);
+   setLength(FMatrix, size.X * size.Y);
    FWidth := size.x;
    FHeight := size.y;
 end;
-
+{$o-}
 function TMatrix<T>.GetValue(X, Y: integer): T;
 begin
-   result := FMatrix[X, Y];
+   result := FMatrix[(Y * FWidth) + x];
 end;
 
 procedure TMatrix<T>.SetValue(X, Y: integer; const Value: T);
 begin
-   FMatrix[X, Y] := Value;
+   FMatrix[(Y * FWidth) + x] := Value;
 end;
 
 end.

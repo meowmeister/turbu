@@ -98,7 +98,8 @@ type
       * Like Draw, but only draws a portion of the image, as defined by the
       * source parameter.
       ************************************************************************}
-      procedure DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect);
+      procedure DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect); overload;
+      procedure DrawRect(target: TSdlRenderTarget; dest: TSgPoint; source: TRect); overload;
       procedure DrawRectTo(image: TSdlImage; dest, source: TRect);
 
       {************************************************************************
@@ -190,7 +191,7 @@ end;
 
 procedure TSdlRenderTarget.SetRenderer;
 begin
-   if SDL_SetTargetTexture(FHandle) <> 0 then
+   if SDL_SetRenderTarget(FParent.FRenderer, FHandle) <> 0 then
       asm int 3 end;
    FParent.SetRenderTarget(self);
 end;
@@ -280,6 +281,16 @@ begin
    dummy.TopLeft := dest;
    dummy.BottomRight := source.BottomRight;
    assert(SDL_RenderCopy(FRenderer, image.surface, @source, @dummy) = 0);
+end;
+
+procedure TSdlCanvas.DrawRect(target: TSdlRenderTarget; dest: TSgPoint;
+  source: TRect);
+var
+   dummy: TSDLRect;
+begin
+   dummy.TopLeft := dest;
+   dummy.BottomRight := source.BottomRight;
+   assert(SDL_RenderCopy(FRenderer, target.handle, @source, @dummy) = 0);
 end;
 
 procedure TSdlCanvas.DrawRectTo(image: TSdlImage; dest, source: TRect);

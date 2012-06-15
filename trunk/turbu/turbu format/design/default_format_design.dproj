@@ -241,6 +241,9 @@
 			<DCCReference Include="EB Editors\Map\EditShakeScreen.pas">
 				<Form>frmEBEditShakeScreen</Form>
 			</DCCReference>
+			<DCCReference Include="EB Editors\Map\EditPanScreen.pas">
+				<Form>frmEBEditBase1</Form>
+			</DCCReference>
 			<DCCReference Include="..\converters\conversion_report_form.pas">
 				<Form>frmConversionReport</Form>
 			</DCCReference>

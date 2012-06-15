@@ -640,7 +640,7 @@ begin
 
    boot := TdmProjectBoot.Create(nil);
    try
-      FMapEngine := boot.Boot(filename);
+      FMapEngine := boot.Boot(filename) as IDesignMapEngine;
    finally
       boot.Free;
    end;
@@ -764,12 +764,16 @@ begin
    width := (FPaletteSelectionTiles.right - FPaletteSelectionTiles.left) + 1;
    height := (FPaletteSelectionTiles.bottom - FPaletteSelectionTiles.top) + 1;
    list := TList<integer>.Create;
-   list.capacity := (height * width) + 1;
-   list.add(width);
-   for j := 0 to height - 1 do
-      for i := 0 to width - 1 do
-         list.add((6 * (FPaletteSelectionTiles.top + j)) + FPaletteSelectionTiles.Left + i);
-   FMapEngine.setPaletteList(list);
+   try
+      list.capacity := (height * width) + 1;
+      list.add(width);
+      for j := 0 to height - 1 do
+         for i := 0 to width - 1 do
+            list.add((6 * (FPaletteSelectionTiles.top + j)) + FPaletteSelectionTiles.Left + i);
+      FMapEngine.setPaletteList(list.ToArray);
+   finally
+      list.Free;
+   end;
 end;
 
 function TfrmTurbuMain.calculatePaletteRect: TRect;

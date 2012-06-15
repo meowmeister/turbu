@@ -97,6 +97,7 @@ contains
   db_upgrade in 'db_upgrade.pas',
   EditFlashScreen in 'EB Editors\Map\EditFlashScreen.pas' {frmEBEditFlashScreen},
   EditShakeScreen in 'EB Editors\Map\EditShakeScreen.pas' {frmEBEditShakeScreen},
+  EditPanScreen in 'EB Editors\Map\EditPanScreen.pas' {frmEBEditBase1},
   conversion_report_form in '..\converters\conversion_report_form.pas' {frmConversionReport},
   conversion_report in '..\converters\conversion_report.pas',
   conversion_output in '..\converters\conversion_output.pas' {frmConversionOutput};

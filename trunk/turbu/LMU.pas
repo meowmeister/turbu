@@ -60,7 +60,7 @@ type
       eventData: ansiString;
       modified: integer;
 
-      constructor Create(theLMU: TStream; database: TLcfDataBase; tree: TFullTree; id: word);
+      constructor Create(theLMU: TStream; database: TLcfDataBase; id: word);
       destructor Destroy; override;
       property eventCount: word read FEventlen;
       property events[x: word]: TEvent read getEvent write setEvent;
@@ -87,7 +87,7 @@ uses windows, sysUtils, //system libs
 * a fileStream containing an LMU file as a parameter and reads in the
 * record from the file.
 *********************************************************************}
-constructor TMapUnit.Create(theLMU: TStream; database: TLcfDataBase; tree: TFullTree; id: word);
+constructor TMapUnit.Create(theLMU: TStream; database: TLcfDataBase; id: word);
 var
    i, len: integer;
    legacyString: ansiString;
@@ -128,7 +128,7 @@ try
 except
    on E: EParseMessage do
    begin
-      msgBox(E.message, 'TMapTreeData.Create says:', MB_OK);
+      msgBox(E.message, 'TMapUnit.Create says:', MB_OK);
       raise EMessageAbort.Create
    end
 end //end of TRY block
