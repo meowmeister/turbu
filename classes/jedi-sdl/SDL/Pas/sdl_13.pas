@@ -704,10 +704,10 @@ function SDL_CreateSoftwareRenderer(surface: PSDLSurface): TSDLRenderer; cdecl; 
 function SDL_RenderTargetSupported(renderer: TSDLRenderer): SDL_bool; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderTargetSupported}
 
-function SDL_SetTargetTexture(texture: TSDLTexture): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_SetTargetTexture}
+function SDL_SetRenderTarget(renderer: TSDLRenderer; texture: TSDLTexture): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_SetRenderTarget}
 
-function SDL_ResetTargetTexture(renderer: TSdlRenderer): integer; cdecl; external SDLLibName;
+function SDL_ResetTargetTexture(renderer: TSDLRenderer): integer;
 
 function SDL_GetRendererInfo(renderer: TSdlRenderer; var info: TSDL_RendererInfo): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetRenderDriverInfo}
@@ -1396,6 +1396,12 @@ end;
 function SDL_GetEventState(type_:cardinal): byte; inline;
 begin
    result := SDL_EventState(type_, SDL_QUERY);
+end;
+
+function SDL_ResetTargetTexture(renderer: TSDLRenderer): integer;
+const NULL_TEX: TSdlTexture = (FPtr: nil);
+begin
+   result := SDL_SetRenderTarget(renderer, NULL_TEX);
 end;
 
 { TSdlWindow }

@@ -67,7 +67,7 @@ type
       procedure SetMapResizeEvent(const value: TMapResizeEvent);
       procedure ResizeWindow(rect: TRect);
       procedure scrollMap(const newPosition: TSgPoint);
-      procedure setPaletteList(value: TList<integer>);
+      procedure setPaletteList(value: TArray<integer>);
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
       procedure doubleClick;
@@ -401,11 +401,11 @@ begin
    FOnResize := value;
 end;
 
-procedure T2kMapEngineD.setPaletteList(value: TList<integer>);
+procedure T2kMapEngineD.setPaletteList(value: TArray<integer>);
 begin
-   assert((value[0] = 1) or (value.Count mod value[0] = 1));
-   FPaletteList.Free;
-   FPaletteList := value;
+   assert((value[0] = 1) or (length(value) mod value[0] = 1));
+   FPaletteList.Clear;
+   FPaletteList.AddRange(value);
 end;
 
 procedure T2kMapEngineD.Stop;

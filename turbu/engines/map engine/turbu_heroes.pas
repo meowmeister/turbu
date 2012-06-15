@@ -278,9 +278,9 @@ begin
    self.levelAdjustUp(0);
    level := template.minLevel;
    FExpTotal := FExpTable[FLevel];
-   for I := low(FEquipment) to high(FEquipment) do
+{   for I := low(FEquipment) to high(FEquipment) do
       if template.eq[i] <> 0 then
-         self.equip(template.eq[i]);
+         self.equip(template.eq[i]);}
    i := GDatabase.conditions.Count;
    setLength(FConditionModifier, i);
    setLength(FCondition, i);

@@ -3982,6 +3982,9 @@ object dmDatabase: TdmDatabase
     object syslayoutCommands_7: TByteField
       FieldName = 'Commands_7'
     end
+    object syslayoutCommands_8: TByteField
+      FieldName = 'Commands_8'
+    end
   end
   object MapTree: TSimpleDataSet
     Aggregates = <>

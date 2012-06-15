@@ -7,7 +7,7 @@ uses
 
 type
    TTransitionArray = array[TTransitionTypes] of byte;
-   TWord7Array = array[1..7] of word;
+   TWord8Array = array[1..8] of word;
 
    TGameLayout = class(TRpgDatafile)
    protected
@@ -26,7 +26,7 @@ type
       FStartingHeroes: word;
       FStartingHero: T4IntArray;
       FTransition: TTransitionArray;
-      FCommands: TWord7Array;
+      FCommands: TWord8Array;
       FUsesFrame: boolean;
       FFrame: string;
       FReverseGraphics: boolean;
@@ -70,7 +70,7 @@ end;
 
 function TGameLayout.GetComand(which: word): word;
 begin
-   assert(which in [1..7]);
+   assert(which in [1..8]);
    result := FCommands[which];
 end;
 

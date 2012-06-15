@@ -131,7 +131,7 @@ begin
          FReport.makeError(format('No entry for map %s exists in the map tree.', [filename]));
          Exit;
       end;
-      map := TMapUnit.Create(mapFile, database, mapTree, id);
+      map := TMapUnit.Create(mapFile, database, id);
       cMap := TRpgMap.Convert(map, mapTree.getMapData(id), database, id);
       outFile := TMemoryStream.Create;
       cMap.save(outFile);

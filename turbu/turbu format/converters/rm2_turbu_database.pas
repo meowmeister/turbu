@@ -620,7 +620,7 @@ begin
    for i := ord(Low(TTransitionTypes)) to ord(High(TTransitionTypes)) do
       FTransition[TTransitionTypes(i)] := base.transition[TTransitionTypes(i)];
    for i := 0 to High(base.defaultCommands) do
-      FCommands[i] := base.defaultCommands[i];
+      FCommands[i + 1] := base.defaultCommands[i];
    FUsesFrame := base.usesFrame;
    FFrame := string(base.frame);
    FReverseGraphics := base.reverseGraphics;
