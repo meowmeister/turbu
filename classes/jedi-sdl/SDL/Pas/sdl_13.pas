@@ -157,6 +157,8 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
   SDL_Rect = TSdlRect;
   {$EXTERNALSYM SDL_Rect}
 
+  PSdl_Point = ^TPoint;
+
   PSDL_Color = ^TSDL_Color;
   TSDL_Color = record
     r: UInt8;
@@ -886,8 +888,26 @@ function SDL_RenderFillRect(renderer: TSDLRenderer; const rect: PSdlRect): integ
 function SDL_RenderCopy(renderer: TSDLRenderer; texture: TSdlTexture; const srcrect, dstrect: PSdlRect): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderCopy}
 
-function SDL_RenderCopyFlipped(renderer: TSDLRenderer; texture: TSdlTexture; const srcrect, dstrect: PSdlRect; axes: TSdlFlipAxes): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_RenderCopy}
+(**
+ *  Copy a portion of the source texture to the current rendering target, rotating it by angle around the given center
+ *
+ *  texture: The source texture.
+ *  srcrect: A pointer to the source rectangle, or NULL for the entire
+ *                   texture.
+ *  dstrect: A pointer to the destination rectangle, or NULL for the
+ *                   entire rendering target.
+ *  angle: An angle in degrees that indicates the rotation that will be applied to dstrect
+ *  center: A pointer to a point indicating the point around which dstrect will be rotated (if NULL, rotation will be done aroud dstrect.w/2, dstrect.h/2)
+ *  flip: A SFL_Flip value stating which flipping actions should be performed on the texture
+ *
+ *  returns 0 on success, or -1 on error
+ *)
+function SDL_RenderCopyEx(renderer: TSDLRenderer; texture: TSdlTexture;
+   const srcrect, dstrect: PSdlRect; angle: double; center: PSDL_Point;
+   flip: TSdlFlipAxes): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderCopyEx}
+
+function SDL_RenderCopyFlipped(renderer: TSDLRenderer; texture: TSdlTexture; const srcrect, dstrect: PSdlRect; axes: TSdlFlipAxes): integer;
 
 procedure SDL_RenderPresent(renderer: TSDLRenderer); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderPresent}
@@ -1402,6 +1422,12 @@ function SDL_ResetTargetTexture(renderer: TSDLRenderer): integer;
 const NULL_TEX: TSdlTexture = (FPtr: nil);
 begin
    result := SDL_SetRenderTarget(renderer, NULL_TEX);
+end;
+
+function SDL_RenderCopyFlipped(renderer: TSDLRenderer; texture: TSdlTexture;
+  const srcrect, dstrect: PSdlRect; axes: TSdlFlipAxes): integer;
+begin
+  result := SDL_RenderCopyEx(renderer, texture, srcrect, dstrect, 0, nil, axes);
 end;
 
 { TSdlWindow }

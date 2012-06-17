@@ -90,7 +90,6 @@ contains
   StringListComp in '..\..\..\classes\StringListComp.pas',
   ftgl in '..\..\..\classes\ftgl.pas',
   turbu_OpenGL in 'turbu_OpenGL.pas',
-  project_folder in 'project_folder.pas',
-  AsphyreTiming in '..\..\..\classes\Asphyre\AsphyreTiming.pas';
+  project_folder in 'project_folder.pas';
 
 end.
