@@ -19,7 +19,7 @@ unit turbu_map_engine;
 
 interface
 uses
-   Generics.Collections, Types, Classes,
+   Generics.Collections, Types, Classes, ComCtrls, Menus,
    turbu_plugin_interface, turbu_versioning, turbu_battle_engine,
    turbu_database_interface, turbu_map_interface,
    sg_defs,
@@ -37,16 +37,30 @@ type
       procedure BreakSomething;
    end;
 
+   ITurbuController = interface(IInterface)
+   ['{020CD243-BE17-492B-898B-FACAC0DDDB10}']
+      function MapResize(const size: TSgPoint): TSgPoint;
+   end;
+
+   TButtonPosition = (bpLayer, bpSave, bpPlay, bpCommand);
+
+   ITurbuControllerEx = interface(ITurbuController)
+   ['{236C7AAC-2AEF-4853-8962-37F909FCF090}']
+      procedure TilesetChanged;
+      procedure SetButton(button: TToolButton; position: TButtonPosition);
+      procedure setLayer(const value: integer);
+      procedure UpdateEngine(const filename: string);
+   end;
+
    IMapEngine = interface(IInterface)
    ['{A5FDC982-D72E-448E-8E37-7865094C5B5E}']
       function initialize(window: TSdlWindow; const database: string): TSdlWindow;
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
-      function loadMap(map: IMapMetadata): IRpgMap;
+      procedure loadMap(map: IMapMetadata);
       procedure Play;
       function Playing: boolean;
       function mapTree: IMapTree;
-      function database: IRpgDatabase;
       procedure NewGame;
 
       function getData: TMapEngineData;
@@ -59,9 +73,10 @@ type
       property tilesetImage[const index: byte]: PSdlSurface read GetTilesetImage;
       procedure SetCurrentLayer(const value: shortint);
       function GetCurrentLayer: shortint;
+      function GetTileSize: TsgPoint;
       property CurrentLayer: shortint read GetCurrentLayer write SetCurrentLayer;
       function mapPosition: TSgPoint;
-      procedure SetMapResizeEvent(const value: TMapResizeEvent);
+      procedure SetController(const value: ITurbuController);
       procedure ResizeWindow(rect: TRect);
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TArray<integer>);
@@ -80,9 +95,11 @@ type
       function AddNewMap(parentID: integer): IMapMetadata;
       procedure EditMapProperties(mapID: integer);
       procedure DeleteMap(mapID: integer; deleteResult: TDeleteMapMode);
+      procedure ClearButtons;
       procedure Reset;
       procedure Pause;
       procedure Stop;
+      procedure EditDatabase;
    end;
 
    TMapEngine = class abstract (TRpgPlugBase, IMapEngine)
@@ -101,11 +118,10 @@ type
       function initialize(window: TSdlWindow; const database: string): TSdlWindow; virtual;
       procedure registerBattleEngine(value: IBattleEngine);
       function setDefaultBattleEngine(name: string): boolean;
-      function loadMap(map: IMapMetadata): IRpgMap; virtual; abstract;
+      procedure loadMap(map: IMapMetadata); virtual; abstract;
       procedure Play; virtual; abstract;
       function Playing: boolean; virtual; abstract;
       function MapTree: IMapTree; virtual; abstract;
-      function database: IRpgDatabase; virtual; abstract;
       procedure NewGame; virtual; abstract;
 
       property data: TMapEngineData read GetData write FData;
@@ -117,8 +133,16 @@ type
       FWidth, FHeight: integer;
       function GetValue(X, Y: integer): T; inline;
       procedure SetValue(X, Y: integer; const Value: T); inline;
+
+      procedure VerticalExpand(base: TMatrix<T>; position: integer);
+      procedure VerticalContract(base: TMatrix<T>; position: integer);
+      procedure HOrizontalContract(base: TMatrix<T>; fromRow, toRow,
+        position: integer);
+      procedure HOrizontalExpand(base: TMatrix<T>; fromRow, toRow,
+        position: integer);
    public
-      constructor Create(size: TSgPoint);
+      constructor Create(size: TSgPoint); overload;
+      constructor Create(size: TSgPoint; base: TMatrix<T>; position: integer); overload;
       property value[X, Y: integer]: T read GetValue write SetValue; default;
       property width: integer read FWidth;
       property height:integer read FHeight;
@@ -191,6 +215,73 @@ begin
    FWidth := size.x;
    FHeight := size.y;
 end;
+
+constructor TMatrix<T>.Create(size: TSgPoint; base: TMatrix<T>; position: integer);
+begin
+   if (position < 1) or (position > 9) then
+      raise Exception.CreateFmt('Invalid position value: %d; valid values are 1..9', [position]);
+   Create(size);
+   if base.FHeight <= FHeight then
+      VerticalExpand(base, position)
+   else verticalContract(base, position);
+end;
+
+procedure TMatrix<T>.HOrizontalExpand(base: TMatrix<T>; fromRow, toRow, position: integer);
+var
+   start, i: integer;
+begin
+   case position mod 3 of
+      0: start := 0;
+      1: start := (FWidth - base.Width) div 2;
+      2: start := FWidth - base.Width;
+   end;
+   for i := 0 to base.Width - 1 do
+      self[i, toRow] := base[i + start, fromRow];
+end;
+
+procedure TMatrix<T>.HOrizontalContract(base: TMatrix<T>; fromRow, toRow, position: integer);
+var
+   start, i: integer;
+begin
+   case position mod 3 of
+      0: start := 0;
+      1: start := (base.Width - FWidth) div 2;
+      2: start := base.Width - FWidth;
+   end;
+   for i := 0 to FWidth - 1 do
+      self[i, toRow] := base[i + start, fromRow];
+end;
+
+procedure TMatrix<T>.VerticalExpand(base: TMatrix<T>; position: integer);
+var
+   start, i: integer;
+begin
+   case position div 3 of
+      0: start := 0;
+      1: start := (FHeight - base.Height) div 2;
+      2: start := FHeight - base.Height;
+   end;
+   for i := 0 to base.Height - 1 do
+      if base.width <= self.width then
+         HorizontalExpand(base, i, i + start, position)
+      else HorizontalContract(base, i, i + start, position);
+end;
+
+procedure TMatrix<T>.VerticalContract(base: TMatrix<T>; position: integer);
+var
+   start, i: integer;
+begin
+   case position div 3 of
+      0: start := 0;
+      1: start := (base.Height - FHeight) div 2;
+      2: start := base.Height - FHeight;
+   end;
+   for i := 0 to FHeight - 1 do
+      if base.width <= self.width then
+         HorizontalExpand(base, i, i + start, position)
+      else HorizontalContract(base, i, i + start, position);
+end;
+
 {$o-}
 function TMatrix<T>.GetValue(X, Y: integer): T;
 begin

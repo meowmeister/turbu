@@ -6,7 +6,7 @@
 			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
 			<DCC_DependencyCheckOutputName>Turbu.exe</DCC_DependencyCheckOutputName>
 			<ProjectVersion>12.3</ProjectVersion>
-			<Config Condition="'$(Config)'==''">Release</Config>
+			<Config Condition="'$(Config)'==''">Alpha release</Config>
 			<Base>True</Base>
 			<Platform>Win32</Platform>
 			<AppType>Application</AppType>
@@ -69,7 +69,7 @@
 			<DCC_ResourcePath>C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Radio;C:\Program Files\Borland\BDS\4.0\source\Win32\Samples\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\converters;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\engines\battle basis;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\asphyre\Source;$(BDSPROJECTSDIR)\turbu\packages\bpl;$(DCC_ResourcePath)</DCC_ResourcePath>
 			<DCC_ObjPath>C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Radio;C:\Program Files\Borland\BDS\4.0\source\Win32\Samples\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\converters;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\engines\battle basis;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\asphyre\Source;$(BDSPROJECTSDIR)\turbu\packages\bpl;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Radio;C:\Program Files\Borland\BDS\4.0\source\Win32\Samples\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\turbu format\converters;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\engines\battle basis;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\asphyre\Source;$(BDSPROJECTSDIR)\turbu\packages\bpl;$(DCC_IncludePath)</DCC_IncludePath>
-			<DCC_Define>EDITOR;DEBUG;FullDebugMode;madExcept;$(DCC_Define)</DCC_Define>
+			<DCC_Define>EDITOR;DEBUG;FullDebugMode;madExcept;LogMemoryLeakDetailToFile;$(DCC_Define)</DCC_Define>
 			<DCC_GenerateStackFrames>True</DCC_GenerateStackFrames>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_4)'!=''">
@@ -94,32 +94,21 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="..\LMT.pas"/>
-			<DCCReference Include="..\fileIO.pas"/>
 			<DCCReference Include="..\LDB.pas"/>
-			<DCCReference Include="..\BER.pas"/>
 			<DCCReference Include="..\chipset.pas"/>
 			<DCCReference Include="..\LMU.pas"/>
 			<DCCReference Include="..\skill_data.pas"/>
 			<DCCReference Include="..\condition_data.pas"/>
 			<DCCReference Include="..\battle_anims.pas"/>
-			<DCCReference Include="..\events.pas"/>
-			<DCCReference Include="database.pas">
-				<Form>frmDatabase</Form>
-			</DCCReference>
 			<DCCReference Include="turbu_main.pas">
 				<Form>frmTurbuMain</Form>
 			</DCCReference>
-			<DCCReference Include="..\formats.pas"/>
 			<DCCReference Include="rm_converter.pas">
 				<Form>frmRmConverter</Form>
 			</DCCReference>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_characters.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_database.pas"/>
 			<DCCReference Include="..\turbu format\converters\conversion_table.pas"/>
-			<DCCReference Include="frame_commands.pas">
-				<Form>frameHeroCommands</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_items.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_sounds.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_skills.pas"/>
@@ -128,13 +117,6 @@
 			<DCCReference Include="..\discInterface.pas"/>
 			<DCCReference Include="frame_params.pas">
 				<Form>frameParams</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
-			<DCCReference Include="attributes_editor.pas">
-				<Form>frmAttributesEditor</Form>
-			</DCCReference>
-			<DCCReference Include="frame_items.pas">
-				<Form>frameItems</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\turbu format\turbu_script_basis.pas"/>
@@ -152,18 +134,10 @@
 			</DCCReference>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_map_objects.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_event_builder.pas"/>
-			<DCCReference Include="frame_vocab.pas">
-				<Form>frameVocab</Form>
-				<DesignClass>TFrame</DesignClass>
-			</DCCReference>
 			<DCCReference Include="..\turbu format\design\db_create.pas"/>
 			<DCCReference Include="dm_ProjectBoot.pas">
 				<Form>dmProjectBoot</Form>
 				<DesignClass>TDataModule</DesignClass>
-			</DCCReference>
-			<DCCReference Include="frame_class.pas">
-				<Form>frameClass</Form>
-				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\monster.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_monsters.pas"/>
@@ -198,8 +172,8 @@
 				<CfgParent>Base</CfgParent>
 			</BuildConfiguration>
 		</ItemGroup>
-		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
-		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
 		<PropertyGroup>
 			<PostBuildEvent><![CDATA["$(OUTPUTDIR)TepRename.exe"]]></PostBuildEvent>
 		</PropertyGroup>
@@ -215,9 +189,9 @@
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">0</VersionInfo>
-						<VersionInfo Name="MinorVer">9</VersionInfo>
-						<VersionInfo Name="Release">3</VersionInfo>
-						<VersionInfo Name="Build">1453</VersionInfo>
+						<VersionInfo Name="MinorVer">8</VersionInfo>
+						<VersionInfo Name="Release">2</VersionInfo>
+						<VersionInfo Name="Build">1342</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -229,13 +203,13 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc,</VersionInfoKeys>
 						<VersionInfoKeys Name="FileDescription">TURBU Editor</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">0.9.3.1453</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.8.2.1342</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">TURBU Editor</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">Turbu.exe</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">TURBU editor</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">0.9.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">0.7.5</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Source>

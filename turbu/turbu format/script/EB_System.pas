@@ -102,7 +102,7 @@ type
 implementation
 uses
    SysUtils, TypInfo,
-   EB_RpgScript;
+   EB_RpgScript, EB_ObjectHelper;
 
 { TEBWait }
 

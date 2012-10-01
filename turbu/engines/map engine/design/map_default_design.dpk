@@ -29,7 +29,6 @@ package map_default_design;
 requires
   map_default,
   JvStdCtrls,
-  JvDB,
   turbu_design_basis,
   default_format_design;
 
@@ -40,6 +39,12 @@ contains
   mapobject_container in 'mapobject_container.pas',
   frame_conditions in 'frame_conditions.pas' {frameConditions: TFrame},
   MapObject_Editor in 'MapObject_Editor.pas' {frmObjectEditor},
-  dataset_viewer in 'dataset_viewer.pas' {frmDatasetViewer};
+  dataset_viewer in 'dataset_viewer.pas' {frmDatasetViewer},
+  database in '..\..\..\editor\database.pas' {frmDatabase},
+  attributes_editor in '..\..\..\editor\attributes_editor.pas' {frmAttributesEditor},
+  frame_vocab in '..\..\..\editor\frame_vocab.pas' {frameVocab: TFrame},
+  frame_items in '..\..\..\editor\frame_items.pas' {frameItems: TFrame},
+  frame_commands in '..\..\..\editor\frame_commands.pas' {frameHeroCommands: TFrame},
+  frame_class in '..\..\..\editor\frame_class.pas' {frameClass: TFrame};
 
 end.

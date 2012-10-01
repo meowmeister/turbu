@@ -50,7 +50,7 @@ Source: ..\..\dlls\libdiscord.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\libpng15.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\msvcp80.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\msvcr80.dll; DestDir: {app}; Flags: ignoreversion
-Source: ..\..\dlls\SDL.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\SDL2.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\sdl_image.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\zlib1.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\design\scripts\general\battle_algorithms.trs; DestDir: {app}\design\scripts\general

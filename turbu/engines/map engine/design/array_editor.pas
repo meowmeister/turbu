@@ -4,7 +4,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, Forms, StdCtrls, Mask, DBCtrls, DB, ExtCtrls, DbClient,
-  dm_database, Grids, DBGrids, turbu_listGrid;
+  Grids, DBGrids, turbu_listGrid;
 
 type
   TfrmArrayEdit = class(TForm)

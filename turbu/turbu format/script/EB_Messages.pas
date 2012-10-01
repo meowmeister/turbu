@@ -102,7 +102,8 @@ type
 implementation
 uses
    SysUtils, TypInfo,
-   turbu_defs, EB_Expressions;
+   turbu_defs, EB_Expressions,
+   EB_ObjectHelper;
 
 { TEBShowMessage }
 

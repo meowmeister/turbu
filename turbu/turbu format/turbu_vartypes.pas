@@ -28,8 +28,7 @@ uses
 
 implementation
 uses
-   sysUtils, Generics.collections,
-   turbu_constants;
+   sysUtils, Generics.collections;
 
 type
    TTranslator = TDictionary<string, string>;
@@ -64,15 +63,10 @@ begin
    result := typeList;
 end;
 
-var
-   i: integer;
-
 initialization
 begin
    typeList := TStringList.Create;
    typeList.CaseSensitive := false;
-   for i := low(TYPENAMES) to high(TYPENAMES) do
-      assert(registerType(TYPENAMES[i]) = i);
 
    translator := TTranslator.Create;
    translator.Add('longint', 'integer');

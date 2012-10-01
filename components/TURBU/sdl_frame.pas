@@ -52,6 +52,7 @@ type
       function GetAspectRatio: double;
       function GetLogicalSize: TPoint;
       procedure SetLogicalSize(const Value: TPoint);
+      procedure ClearViewport(var msg); message WM_USER;
    protected
       procedure CreateWnd; override;
       procedure DestroyWnd; override;
@@ -59,6 +60,7 @@ type
       procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
          X, Y: Integer); override;
       procedure WMGetDlgCode(var msg: TMessage); message WM_GETDLGCODE;
+      procedure Resize; override;
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
@@ -70,6 +72,7 @@ type
       procedure FillColor(color: SDL_Color; alpha: byte);
       procedure DrawRect(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
       procedure DrawBox(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
+      procedure DrawLine(const start, finish: TPoint; const color: SDL_Color; const alpha: byte = $FF);
       function AddTexture(surface: PSdlSurface): integer; overload;
       procedure AddTexture(surface: PSdlSurface; const name: string); overload;
       function AddImage(image: TSdlImage): integer; inline;
@@ -176,6 +179,14 @@ begin
    assert(SDL_RenderDrawRect(FRenderer, @region) = 0);
 end;
 
+procedure TSdlFrame.DrawLine(const start, finish: TPoint;
+  const color: SDL_Color; const alpha: byte);
+begin
+   CreateRenderer;
+   assert(SDL_SetRenderDrawColor(FRenderer, color.r, color.g, color.b, alpha) = 0);
+   assert(SDL_RenderDrawLine(FRenderer, start.X, start.Y, finish.X, finish.Y) = 0);
+end;
+
 procedure TSdlFrame.DrawRect(const region: TRect; const color: SDL_Color;
   const alpha: byte = $FF);
 begin
@@ -236,8 +247,13 @@ begin
 end;
 
 function TSdlFrame.GetTextureByName(name: string): TSdlTexture;
+var
+   image: TSdlImage;
 begin
-   result := FImageManager.Image[name].surface;
+   image := FImageManager.Image[name];
+   if assigned(image) then
+      result := image.surface
+   else pointer(result) := nil;
 end;
 
 procedure TSdlFrame.Paint;
@@ -432,6 +448,18 @@ begin
    FLogicalHeight := self.Height;
    SDL_SetWindowLogicalSize(FWindow, FLogicalWidth, FLogicalHeight);
    self.Flip;
+end;
+
+procedure TSdlFrame.Resize;
+begin
+   inherited Resize;
+   if FRenderer.ptr <> nil then
+      PostMessage(self.Handle, WM_USER, 0, 0);
+end;
+
+procedure TSdlFrame.ClearViewport(var msg);
+begin
+   SDL_RenderSetViewport(FRenderer, nil);
 end;
 
 function TSdlFrame.AddTexture(surface: PSdlSurface): integer;

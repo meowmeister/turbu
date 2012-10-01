@@ -79,7 +79,6 @@
 			<DCCReference Include="turbu_sprites.pas"/>
 			<DCCReference Include="turbu_defs.pas"/>
 			<DCCReference Include="turbu_decl_utils.pas"/>
-			<DCCReference Include="turbu_vartypes.pas"/>
 			<DCCReference Include="turbu_constants.pas"/>
 			<DCCReference Include="database\turbu_game_data.pas"/>
 			<DCCReference Include="database\turbu_map_metadata.pas"/>
@@ -90,9 +89,7 @@
 			<DCCReference Include="maps\turbu_map_objects.pas"/>
 			<DCCReference Include="..\charset_data.pas"/>
 			<DCCReference Include="turbu_pathing.pas"/>
-			<DCCReference Include="script\EB_RpgScript.pas"/>
 			<DCCReference Include="script\EB_Messages.pas"/>
-			<DCCReference Include="script\EB_Expressions.pas"/>
 			<DCCReference Include="script\EB_Maps.pas"/>
 			<DCCReference Include="script\EB_System.pas"/>
 			<DCCReference Include="script\EB_Characters.pas"/>
@@ -121,6 +118,8 @@
 			<DCCReference Include="script\engine\turbu_script_engine.pas"/>
 			<DCCReference Include="..\logs.pas"/>
 			<DCCReference Include="script\engine\libraries\rs_media.pas"/>
+			<DCCReference Include="script\EB_ObjectHelper.pas"/>
+			<DCCReference Include="script\EB_Expressions_RM.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

@@ -57,7 +57,8 @@ implementation
 uses
    classes,
    formats,
-   turbu_database, turbu_defs, turbu_sounds, rm2_turbu_database, rm2_turbu_sounds;
+   turbu_database, turbu_defs, turbu_sounds, rm2_turbu_database, rm2_turbu_sounds,
+   turbu_operators;
 
 { T2k2SkillTemplate }
 

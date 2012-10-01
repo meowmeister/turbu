@@ -11,7 +11,10 @@ function constrictSdlRect(const value: TRect; amount: integer): TRect;
 function expandSdlRect(const value: TRect; amount: integer): TRect;
 function multiplyRect(const value: TRect; amount: integer): TRect; overload;
 function multiplyRect(const value: TRect; amount: TSgPoint): TRect; overload;
+function multiplyRect(const value: TRect; amount: single): TRect; overload;
 function pointToGridLoc(const point, cellSize: TSgPoint; const hScroll, vScroll: integer;
+                        const scale: double): TSgPoint;
+function gridLocToPoint(const point, cellSize: TSgPoint; const hScroll, vScroll: integer;
                         const scale: double): TSgPoint;
 function TRectToSdlRect(const value: TRect): TRect;
 
@@ -51,6 +54,14 @@ begin
    result.Bottom := value.Bottom * amount;
 end;
 
+function multiplyRect(const value: TRect; amount: single): TRect;
+begin
+   result.Left := round(value.Left * amount);
+   result.Top := round(value.Top * amount);
+   result.Right := round(value.Right * amount);
+   result.Bottom := round(value.Bottom * amount);
+end;
+
 function multiplyRect(const value: TRect; amount: TSgPoint): TRect;
 begin
    result.Left := value.Left * amount.x;
@@ -64,6 +75,14 @@ function pointToGridLoc(const point, cellSize: TSgPoint; const hScroll, vScroll:
 begin
    result := ((point / scale) + sgPoint(hScroll, vScroll)) / cellSize;
 end;
+
+function gridLocToPoint(const point, cellSize: TSgPoint; const hScroll, vScroll: integer;
+                        const scale: double): TSgPoint;
+begin
+   result.x := round(point.x * scale * cellsize.x) - hScroll;
+   result.y := round(point.y * scale * cellsize.y) - vScroll;
+end;
+
 
 function TRectToSdlRect(const value: TRect): TRect;
 begin

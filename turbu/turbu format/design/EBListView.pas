@@ -25,12 +25,14 @@ uses
 
 type
    TOrphanEvent = procedure(sender: TObject; obj: TEbObject) of object;
+   TIsObjectEvent = function(value: integer): boolean of object;
 
    TEBTreeView = class(TTreeView)
    private
       FProc: TEBRoutine;
       FDblClickExpand: boolean;
       FOnOrphan: TOrphanEvent;
+      FOnIsObjectType: TIsObjectEvent;
       FDataLink: TFieldDataLink;
       {$IFNDEF COMPONENT}
       FMap: IRpgMap;
@@ -48,6 +50,7 @@ type
       function GetEBChildren(obj: TEBObject): TList<TEBObject>;
       function ValidateList(obj: TEbObject; list: TList<TEBObject>): boolean;
       function BuildTree(base: TEBObject; parent: TTreeNode; isNew: boolean): TTreeNode;
+      function IsObjectType(value: integer): boolean;
    private
       function GetDataSet: TDataSet;
       procedure SetDataSet(const Value: TDataSet);
@@ -69,6 +72,7 @@ type
    published
       property DoubleClickExpand: boolean read FDblClickExpand write FDblClickExpand stored FDblClickExpand;
       property OnOrphan: TOrphanEvent read FOnOrphan write FOnOrphan;
+      property OnIsObjectType: TIsObjectEvent read FOnIsObjectType write FOnIsObjectType;
       property ReadOnly default true;
       property ShowLines default false;
       property RowSelect default true;
@@ -80,8 +84,8 @@ procedure Register;
 implementation
 uses
    Windows, SysUtils, Controls, DBClient{$IFNDEF COMPONENT},
-   EbEdit, EbSelector, turbu_vartypes, turbu_constants,
-   turbu_database, array_editor{$ENDIF};
+   EbEdit, EbSelector, turbu_vartypes,
+   array_editor{$ENDIF};
 
 procedure Register;
 begin
@@ -235,11 +239,17 @@ begin
       selector.Free;
    end;
 end;
+
 {$ELSE}
 begin
 end;
 {$ENDIF}
 {$WARN CONSTRUCTING_ABSTRACT ON}
+
+function TEBTreeView.IsObjectType(value: integer): boolean;
+begin
+   result := assigned(FOnIsObjectType) and FOnIsObjectType(value);
+end;
 
 function TEBTreeView.BuildTree(base: TEBObject; parent: TTreeNode; isNew: boolean): TTreeNode;
 var
@@ -329,7 +339,7 @@ begin
    varInt := lookupType(VarType);
    if varInt = -1 then
       raise ERPGScriptError.CreateFmt('Unregistered variable type %s.', [VarType]);
-   if varInt >= VT_OBJECT then
+   if IsObjectType(varInt) then
       AddObjectContext(context, '', name, vartype)
    else AddVariable(context, name, vartype);
 {$ENDIF}

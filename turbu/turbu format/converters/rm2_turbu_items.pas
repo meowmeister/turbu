@@ -88,7 +88,7 @@ type
 implementation
 uses
    Generics.Collections,
-   formats, rm2_turbu_database;
+   formats, rm2_turbu_database, turbu_operators;
 
 { T2k2ItemTemplate }
 

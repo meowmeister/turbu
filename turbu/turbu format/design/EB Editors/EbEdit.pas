@@ -23,7 +23,7 @@ interface
 uses
    SysUtils, Classes, Controls, Forms, StdCtrls, ExtCtrls, Generics.Collections,
    DB, JVSpin,
-   EventBuilder, finalizer_hack, turbu_map_interface, variable_selector,
+   EventBuilder, finalizer_hack, turbu_map_interface,
    IDLookupCombo, EB_Expressions;
 
 type
@@ -56,20 +56,6 @@ type
 
       class property AllEditors: TEditorDic read GetEditors;
    protected
-      procedure UploadValuePtrSelection(v1, v2: integer; r1, r2: TRadioButton;
-        valueBox: TJvSpinEdit; ptrBox: TIntSelector); overload;
-      procedure UploadValuePtrSelection(expr: TEBExpression; r1, r2: TRadioButton;
-        valueBox: TJvSpinEdit; ptrBox: TIntSelector); overload;
-      procedure UploadLookupPtrSelection(expr: TEBExpression; r1, r2: TRadioButton;
-        valueBox: TIDLookupCombo; ptrBox: TIntSelector); overload;
-      procedure UploadLookupPtrSelection(v1, v2: integer; r1, r2: TRadioButton;
-        valueBox: TIDLookupCombo; ptrBox: TIntSelector); overload;
-      function DownloadValuePtrSelection(r1, r2: TRadioButton;
-        valueBox: TJvSpinEdit; ptrBox: TIntSelector): TIntPair;
-      function DownloadLookupPtrSelection(r1, r2: TRadioButton;
-        valueBox: TIDLookupCombo; ptrBox: TIntSelector; const lookupName: string): TEBExpression;
-      function DownloadLookupPtrSelectionInts(r1, r2: TRadioButton;
-        valueBox: TIDLookupCombo; ptrBox: TIntSelector): TIntPair;
       procedure UploadObjectRef(base: TEBObjExpr; box: TComboBox);
       function DownloadObjectRef(box: TComboBox): TEBObjExpr;
       procedure EnableControl(control: TControl; controller: TRadioButton); overload;
@@ -227,59 +213,6 @@ begin
   //this method intentionally left blank
 end;
 
-procedure TfrmEBEditBase.UploadLookupPtrSelection(expr: TEBExpression;
-  r1, r2: TRadioButton; valueBox: TIDLookupCombo; ptrBox: TIntSelector);
-begin
-   if expr is TEBLookupValue then
-   begin
-      r1.Checked := true;
-      valueBox.ID := expr.Values[0];
-   end
-   else begin
-      assert(expr is TEBIntsValue);
-      r2.Checked := true;
-      ptrBox.ID := expr.Values[0];
-   end;
-end;
-
-procedure TfrmEBEditBase.UploadLookupPtrSelection(v1, v2: integer; r1,
-  r2: TRadioButton; valueBox: TIDLookupCombo; ptrBox: TIntSelector);
-begin
-   if v1 = 0 then
-   begin
-      r1.Checked := true;
-      valueBox.ID := v2;
-   end
-   else begin
-      r2.Checked := true;
-      ptrBox.ID := v2;
-   end;
-end;
-
-function TfrmEBEditBase.DownloadLookupPtrSelection(r1, r2: TRadioButton;
-  valueBox: TIDLookupCombo; ptrBox: TIntSelector; const lookupName: string): TEBExpression;
-begin
-   assert(r1.Checked or r2.Checked);
-   if r1.Checked then
-      result := TEBLookupValue.Create(valueBox.id, lookupName)
-   else result := TEBIntsValue.Create(ptrBox.id);
-end;
-
-function TfrmEBEditBase.DownloadLookupPtrSelectionInts(r1, r2: TRadioButton;
-  valueBox: TIDLookupCombo; ptrBox: TIntSelector): TIntPair;
-begin
-   assert(r1.Checked or r2.Checked);
-   if r1.Checked then
-   begin
-      result[1] := 0;
-      result[2] := valueBox.id;
-   end
-   else begin
-      result [1] := 1;
-      result [2] := ptrBox.ID;
-   end;
-end;
-
 procedure TfrmEBEditBase.UploadObjectRef(base: TEBObjExpr; box: TComboBox);
 begin
    if base.Text = 'ThisObject' then
@@ -295,45 +228,6 @@ begin
    if box.ItemIndex = 0 then
       result := TEBObjExpr.Create('ThisObject')
    else result := TEBObjArrayValue.Create('MapObject', box.ItemIndex);
-end;
-
-procedure TfrmEBEditBase.UploadValuePtrSelection(v1, v2: integer; r1,
-  r2: TRadioButton; valueBox: TJvSpinEdit; ptrBox: TIntSelector);
-begin
-   if v1 = 0 then
-   begin
-      r1.Checked := true;
-      valueBox.AsInteger := v2;
-   end
-   else begin
-      r2.Checked := true;
-      ptrBox.ID := v2;
-   end;
-end;
-
-procedure TfrmEBEditBase.UploadValuePtrSelection(expr: TEBExpression; r1,
-  r2: TRadioButton; valueBox: TJvSpinEdit; ptrBox: TIntSelector);
-var
-   v1: integer;
-begin
-   assert(expr.values.count > 0);
-   v1 := ord(expr.ClassType = TEBIntsValue);
-   UploadValuePtrSelection(v1, expr.Values[0], r1, r2, valueBox, ptrBox);
-end;
-
-function TfrmEBEditBase.DownloadValuePtrSelection(r1, r2: TRadioButton;
-  valueBox: TJvSpinEdit; ptrBox: TIntSelector): TIntPair;
-begin
-   assert(r1.Checked or r2.Checked);
-   if r1.Checked then
-   begin
-      result[1] := 0;
-      result[2] := valueBox.AsInteger;
-   end
-   else begin
-      result [1] := 1;
-      result [2] := ptrBox.ID;
-   end;
 end;
 
 procedure TfrmEBEditBase.ValidateError(control: TWinControl; const reason: string);

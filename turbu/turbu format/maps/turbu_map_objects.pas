@@ -4,7 +4,7 @@ interface
 uses
    Classes, DB, RTTI,
    turbu_defs, turbu_classes, turbu_containers, charset_data, turbu_pathing,
-   turbu_serialization, turbu_map_interface,
+   turbu_serialization, turbu_map_interface, turbu_operators,
    SG_defs;
 
 type

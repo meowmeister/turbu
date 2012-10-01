@@ -1,6 +1,7 @@
 inherited frmEBEditExp: TfrmEBEditExp
   Caption = 'Change Experience'
   ClientHeight = 388
+  ExplicitWidth = 320
   ExplicitHeight = 423
   PixelsPerInch = 120
   TextHeight = 16

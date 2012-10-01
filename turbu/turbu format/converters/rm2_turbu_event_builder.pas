@@ -29,9 +29,9 @@ function UnknownOpcodeList: TStringList;
 implementation
 uses
    SysUtils, Generics.Defaults, Generics.Collections, TypInfo,
-   turbu_defs, commons, move_data, turbu_pathing, rm2_turbu_map_objects, formats,
+   commons, move_data, turbu_pathing, rm2_turbu_map_objects, formats,
    EB_RpgScript, EB_Messages, EB_Expressions, EB_System, EB_Maps, EB_Characters,
-   EB_Settings, EB_Media, EB_Battle, turbu_battle_engine;
+   EB_Settings, EB_Media, EB_Battle, EB_Expressions_RM, turbu_battle_engine, turbu_operators;
 
 type
    TConvertRoutine = function (opcode: TEventCommand; parent: TEBObject): TEBObject;

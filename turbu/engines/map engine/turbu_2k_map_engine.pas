@@ -94,11 +94,10 @@ type
       constructor Create; override;
       destructor Destroy; override;
       function initialize(window: TSdlWindow; const database: string): TSdlWindow; override;
-      function loadMap(map: IMapMetadata): IRpgMap; override;
+      procedure loadMap(map: IMapMetadata); override;
       procedure Play; override;
       function Playing: boolean; override;
       function MapTree: IMapTree; override;
-      function database: IRpgDatabase; override;
       procedure NewGame; override;
       procedure changeMaps(newmap: word; newLocation: TSgPoint);
       procedure loadRpgImage(filename: string; mask: boolean);
@@ -222,11 +221,6 @@ begin
    end;
    result.TopLeft := center;
    result.BottomRight := screensize;
-end;
-
-function T2kMapEngine.database: IRpgDatabase;
-begin
-   result := FDatabase;
 end;
 
 destructor T2kMapEngine.Destroy;
@@ -422,7 +416,7 @@ begin
    end;
 end;
 
-function T2kMapEngine.loadMap(map: IMapMetadata): IRpgMap;
+procedure T2kMapEngine.loadMap(map: IMapMetadata);
 var
    viewport: TRect;
 begin
@@ -435,9 +429,8 @@ begin
                                FShaderEngine, FCanvas, FDatabase.tileset[FWaitingMap.tileset],
                                FImages);
    end;
-   if doneLoadingMap then
-      result := FCurrentMap.mapObj
-   else result := nil;
+   if not doneLoadingMap then
+      raise Exception.Create('Error loading map');
 end;
 
 procedure T2kMapEngine.LoadMapSprites(map: TRpgMap);

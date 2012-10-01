@@ -9,6 +9,8 @@ inherited frmEBEditMoney: TfrmEBEditMoney
   inherited Panel1: TPanel
     Width = 288
     Height = 162
+    ExplicitWidth = 288
+    ExplicitHeight = 162
     object GroupBox1: TGroupBox
       Left = 8
       Top = 61
@@ -56,14 +58,20 @@ inherited frmEBEditMoney: TfrmEBEditMoney
   inherited btnOK: TButton
     Left = 5
     Top = 172
+    ExplicitLeft = 5
+    ExplicitTop = 172
   end
   inherited btnCancel: TButton
     Left = 99
     Top = 172
+    ExplicitLeft = 99
+    ExplicitTop = 172
   end
   inherited btnHelp: TButton
     Left = 192
     Top = 172
+    ExplicitLeft = 192
+    ExplicitTop = 172
   end
   object grpOperation: TRadioGroup
     Left = 8

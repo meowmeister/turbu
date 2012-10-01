@@ -2,10 +2,13 @@ inherited frmEBEditEquipment: TfrmEBEditEquipment
   Caption = 'Change Equipment'
   ClientHeight = 459
   OnCreate = FormCreate
+  ExplicitWidth = 320
+  ExplicitHeight = 240
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 406
+    ExplicitHeight = 406
     object grpOperation: TRadioGroup
       Left = 8
       Top = 142
@@ -84,12 +87,15 @@ inherited frmEBEditEquipment: TfrmEBEditEquipment
   end
   inherited btnOK: TButton
     Top = 416
+    ExplicitTop = 416
   end
   inherited btnCancel: TButton
     Top = 416
+    ExplicitTop = 416
   end
   inherited btnHelp: TButton
     Top = 416
+    ExplicitTop = 416
   end
   object srcEquipment: TDataSource
     DataSet = items_equipment

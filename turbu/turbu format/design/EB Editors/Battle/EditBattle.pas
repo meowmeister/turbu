@@ -51,7 +51,7 @@ type
 
 implementation
 uses
-   dm_databaseAux, EB_Battle, ArchiveInterface, turbu_battle_engine;
+   dm_databaseAux, EB_Battle, ArchiveInterface, turbu_battle_engine, EbEditHelper;
 
 {$R *.dfm}
 

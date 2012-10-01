@@ -38,7 +38,7 @@ type
 implementation
 uses
    SysUtils, Classes,
-   turbu_defs, rm2_turbu_database, rm2_turbu_map_objects, turbu_database,
+   turbu_defs, rm2_turbu_database, rm2_turbu_map_objects, turbu_database, turbu_operators,
    ArchiveInterface, EB_RpgScript, EB_System;
 
 var

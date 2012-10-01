@@ -26,7 +26,7 @@ type
 
 implementation
 uses
-   EB_Characters;
+   EB_Characters, EbEditHelper;
 
 {$R *.dfm}
 

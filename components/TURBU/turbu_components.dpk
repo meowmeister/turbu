@@ -41,7 +41,12 @@ contains
   IDLookupCombo in 'IDLookupCombo.pas',
   pic_edit in 'pic_edit.pas',
   sound_edit in 'sound_edit.pas',
-  button_edit in 'button_edit.pas';
+  button_edit in 'button_edit.pas',
+  turbu_containers in '..\..\turbu\turbu format\turbu_containers.pas',
+  turbu_database_interface in '..\..\turbu\turbu format\turbu_database_interface.pas',
+  turbu_functional in '..\..\turbu\turbu_functional.pas',
+  turbu_map_interface in '..\..\turbu\turbu format\turbu_map_interface.pas',
+  rttiHelper in '..\..\turbu\rttiHelper.pas';
 
 end.
 

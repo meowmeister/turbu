@@ -22,7 +22,7 @@ interface
 uses
    Controls, Classes, Forms, Menus, ExtCtrls, StdCtrls, ComCtrls, Dialogs,
    Generics.Collections, ImgList, ToolWin, ActnList, ActnMan, SyncObjs,
-   PlatformDefaultStyleActnCtrls,
+   PlatformDefaultStyleActnCtrls, Messages,
    JvPluginManager, JvExControls, JvxSlider,
    turbu_plugin_interface, turbu_engines, turbu_map_engine,
    MusicSelector, scrollbox_manager,
@@ -30,7 +30,7 @@ uses
    sdl_frame, sdl, sdl_13, sg_defs;
 
 type
-   TfrmTurbuMain = class(TForm)
+   TfrmTurbuMain = class(TForm, ITurbuController, ITurbuControllerEx)
       mnuMain: TMainMenu;
       mnuDatabase: TMenuItem;
       dlgOpen: TOpenDialog;
@@ -57,6 +57,9 @@ type
       sldZoom: TJvxSlider;
       actPlayMusic: TAction;
       Label1: TLabel;
+      tbLayerSplitter: TToolButton;
+      tbSaveSplitter: TToolButton;
+      tbPlaySplitter: TToolButton;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -111,6 +114,7 @@ type
       pluginManager: TJvPluginManager;
       FScrollboxManager: TScrollboxManager;
       FMapEngine: IDesignMapEngine;
+      FTileSize: TsgPoint;
       FCurrentLayer: integer;
       FLastGoodLayer: integer;
       FPaletteTexture: integer;
@@ -127,8 +131,7 @@ type
       procedure openProject(const filename: string);
       procedure closeProject;
 
-      procedure loadMap(const value: word); overload;
-      procedure loadMap(const value: IMapMetadata); overload;
+      procedure loadMap(const value: IMapMetadata);
 
       procedure assignPaletteImage(surface: PSdlSurface);
       procedure displayPalette(height: integer); overload;
@@ -144,6 +147,12 @@ type
       procedure SetZoom(const value: single);
       procedure EnableZoom(value: boolean);
       procedure NormalizeMousePosition(image: TSdlFrame; var x, y: integer; scale: single);
+   private //ITurbuController declarations
+      function MapResize(const size: TSgPoint): TSgPoint;
+      procedure TilesetChanged;
+      procedure HandleTilesetChanged(var message); message WM_USER;
+      procedure SetButton(button: TToolButton; position: TButtonPosition);
+      procedure UpdateEngine(const filename: string);
    public
       { Public declarations }
    end;
@@ -154,17 +163,14 @@ var
 implementation
 
 uses
-   SysUtils, Math, Graphics, Windows, OpenGL,
+   SysUtils, Math, Graphics, Windows, OpenGL, IOUtils, ShellAPI,
    commons, rm_converter, archiveInterface, dm_ProjectBoot, engine_manager,
-   turbu_constants, database, turbu_battle_engine, project_folder,
-   turbu_classes, turbu_versioning, turbu_defs,
+   turbu_constants, database, turbu_battle_engine, project_folder, logs,
+   turbu_classes, turbu_versioning, turbu_defs, delayedAction,
    dm_database, discInterface, formats, map_tree_controller, delete_map,
    sdl_image, sdlstreams, sg_utils;
 
 {$R *.dfm}
-
-const
-   TILE_SIZE: integer = 16;
 
 procedure TfrmTurbuMain.displayPalette(height: integer);
 
@@ -219,9 +225,9 @@ var
    texture: TSdlTexture;
 begin
    texture := imgPalette.images[FPaletteTexture].surface;
-   sbPalette.Max := texture.size.y;
+   sbPalette.Max := round(texture.size.y / (imgPalette.Width / imgPalette.LogicalWidth));
    sbPalette.PageSize := imgPalette.LogicalHeight;
-   sbPalette.LargeChange := sbPalette.PageSize - TILE_SIZE;
+   sbPalette.LargeChange := sbPalette.PageSize - FTileSize.y;
    displayPalette;
 end;
 
@@ -321,12 +327,12 @@ var
    infile: TStream;
    plugins: TStringList;
    engines: TEngineDataList;
-   plugStr: string;
+   plugStr, pf: string;
    i, j: integer;
    pluginIntf: ITurbuPlugin;
 begin
-   GProjectFolder := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
-   assert(GArchives.Add(openFolder(GProjectFolder + DESIGN_DB)) = BASE_ARCHIVE);
+   pf := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+   assert(GArchives.Add(openFolder(pf + DESIGN_DB)) = BASE_ARCHIVE);
    inFile := nil;
    plugins := TStringList.Create;
    try
@@ -353,6 +359,13 @@ begin
    end;
    pnlZoomResize(self);
    focusControl(trvMapTree);
+end;
+
+procedure TfrmTurbuMain.HandleTilesetChanged(var message);
+begin
+   imgPalette.ClearTextures;
+   FPaletteImages.Clear;
+   setLayer(FCurrentLayer);
 end;
 
 procedure TfrmTurbuMain.imgBackgroundClick(Sender: TObject);
@@ -384,7 +397,7 @@ begin
    imgLogo.DrawTexture(index);
    FScrollboxManager := TScrollboxManager.Create(imgBackground, imgLogo, sbHoriz, sbVert,
       function: single begin result := FZoom end,
-      function: integer begin result := TILE_SIZE end,
+      function: integer begin result := FTileSize.x end,
       function: TSgPoint begin result := FMapEngine.mapPosition end);
    TThread.NameThreadForDebugging('TURBU main thread');
 end;
@@ -424,7 +437,7 @@ begin
       FIgnoreMouseDown := false
    else begin
       NormalizeMousePosition(imgLogo, x, y, FZoom);
-      point := pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, FZoom);
+      point := pointToGridLoc(sgPoint(x, y), FTileSize, sbHoriz.Position, sbVert.Position, FZoom);
       case button of
          mbLeft: FMapEngine.draw(point, true);
          mbRight: FMapEngine.RightClick(point);
@@ -440,7 +453,7 @@ begin
    if (ssLeft in shift) then
    begin
       NormalizeMousePosition(imgLogo, x, y, FZoom);
-      FMapEngine.draw(pointToGridLoc(sgPoint(x, y), sgPoint(16, 16), sbHoriz.Position, sbVert.Position, FZoom),
+      FMapEngine.draw(pointToGridLoc(sgPoint(x, y), FTileSize, sbHoriz.Position, sbVert.Position, FZoom),
                       false);
    end;
 end;
@@ -464,7 +477,7 @@ procedure TfrmTurbuMain.imgPaletteMouseDown(Sender: TObject;
 begin
    if (button = mbLeft) then
    begin
-      NormalizeMousePosition(imgPalette, x, y, FZoom);
+      NormalizeMousePosition(imgPalette, x, y, 2);
       FPaletteSelection.TopLeft := point(x, y);
       imgPaletteMouseMove(sender, shift, x, y);
    end;
@@ -523,20 +536,21 @@ const
 begin
    FMapEngine := retrieveEngine(et_map, value.mapEngine,
                  TVersion.Create(0, 0, 0)) as IDesignMapEngine;
+   FMapEngine.SetController(self);
    FMapEngine.initialize(imgLogo.sdlWindow, FDBName);
-   FMapEngine.SetMapResizeEvent(FScrollboxManager.SetMapSize);
    FMapEngine.autosaveMaps := mnuAutosaveMaps.checked;
    FMapEngine.loadMap(value);
    FMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
+   FTileSize := FMapEngine.GetTileSize;
    imgPalette.ClearTextures;
    FPaletteImages.Clear;
    setLayer(FCurrentLayer);
    EnableZoom(true);
 end;
 
-procedure TfrmTurbuMain.loadMap(const value: word);
+function TfrmTurbuMain.MapResize(const size: TSgPoint): TSgPoint;
 begin
-   loadMap(FMapEngine.mapTree.Items[value]);
+   result := FScrollboxManager.SetMapSize(size);
 end;
 
 procedure TfrmTurbuMain.mnu2KClick(Sender: TObject);
@@ -567,15 +581,9 @@ begin
 end;
 
 procedure TfrmTurbuMain.mnuDatabaseClick(Sender: TObject);
-var
-   frmDatabase: TfrmDatabase;
 begin
-   frmDatabase := TFrmDatabase.Create(nil);
-   try
-      frmDatabase.ShowModal;
-   finally
-      frmDatabase.Free;
-   end;
+   RequireMapEngine;
+   FMapEngine.EditDatabase;
 end;
 
 procedure TfrmTurbuMain.mnuExitClick(Sender: TObject);
@@ -631,6 +639,8 @@ var
    boot: TdmProjectBoot;
 begin
    location := IncludeTrailingPathDelimiter(ExtractFilePath(filename));
+   logs.closeLog;
+   GProjectFolder := location;
    openArchive(MAP_DB, MAP_ARCHIVE);
    openArchive(IMAGE_DB, IMAGE_ARCHIVE);
    openArchive(SCRIPT_DB, SCRIPT_ARCHIVE);
@@ -694,6 +704,43 @@ begin
    FLastPalettePos := ScrollPos;
 end;
 
+//thanks to Joseph Styons on StackOverflow for this routine (heavily modified)
+//http://stackoverflow.com/a/4093723/32914
+procedure AddButtonToToolbar(bar: TToolBar; button: TToolButton; addBeforeIdx: integer);
+var
+   prevBtnIdx: integer;
+begin
+   if (addBeforeIdx = -1) or (bar.ButtonCount <= addBeforeIdx) then
+      prevBtnIdx := -1
+   else prevBtnIdx := addBeforeIdx;
+
+   if prevBtnIdx < 0 then
+      button.Left := bar.Buttons[bar.ButtonCount - 1].Left + bar.Buttons[bar.ButtonCount - 1].Width
+   else button.Left := bar.Buttons[prevBtnIdx].Left;
+
+   button.Parent := bar;
+end;
+
+procedure TfrmTurbuMain.SetButton(button: TToolButton; position: TButtonPosition);
+var
+   idx: integer;
+begin
+   if (button = nil) or (button.Parent = ToolBar2) then
+      Exit;
+   case position of
+      bpLayer: idx := tbLayerSplitter.Index;
+      bpSave: idx := tbSaveSplitter.Index;
+      bpPlay: idx := tbPlaySplitter.Index;
+      else idx := -1;
+   end;
+   AddButtonToToolbar(ToolBar2, button, idx);
+end;
+
+procedure TfrmTurbuMain.TilesetChanged;
+begin
+   windows.PostMessage(self.Handle, WM_USER, 0, 0);
+end;
+
 procedure TfrmTurbuMain.setLayer(const value: integer);
 
    procedure LoadImage(const value: integer);
@@ -755,11 +802,11 @@ begin
    FPaletteSelectionTiles.TopLeft := pointToGridLoc(
      sgPoint(min(FPaletteSelection.left, FPaletteSelection.right),
              min(FPaletteSelection.top, FPaletteSelection.bottom)),
-     sgPoint(16, 16), 0, FCurrPalettePos, ratio);
+     FTileSize, 0, FCurrPalettePos, ratio);
    FPaletteSelectionTiles.BottomRight := pointToGridLoc(
      sgPoint(max(FPaletteSelection.left, FPaletteSelection.right),
              max(FPaletteSelection.top, FPaletteSelection.bottom)),
-     sgPoint(16, 16), 0, FCurrPalettePos, ratio);
+     FTileSize, 0, FCurrPalettePos, ratio);
 
    width := (FPaletteSelectionTiles.right - FPaletteSelectionTiles.left) + 1;
    height := (FPaletteSelectionTiles.bottom - FPaletteSelectionTiles.top) + 1;
@@ -777,12 +824,26 @@ begin
 end;
 
 function TfrmTurbuMain.calculatePaletteRect: TRect;
+var
+   ratio: double;
+   offset: integer;
 begin
-   result := multiplyRect(FPaletteSelectionTiles, 16);
-   dec(result.top, FCurrPalettePos * 1);
-   dec(result.bottom, FCurrPalettePos * 1);
-   inc(result.right, 15);
-   inc(result.bottom, 15);
+//   ratio := imgPalette.Width / imgPalette.LogicalWidth;
+   ratio := 1;
+   offset := round(FCurrPalettePos * ratio);
+   result.TopLeft := gridLocToPoint(FPaletteSelectionTiles.TopLeft,
+     FTileSize, 0, offset, ratio);
+   result.BottomRight := gridLocToPoint(
+     sgPoint(FPaletteSelectionTiles.right + 1, FPaletteSelectionTiles.bottom + 1),
+     FTileSize, 1, offset + 1, ratio); //adding 1 to X and Y values to subtract
+                                       //so that it takes it in by 1 pixel
+{
+   cellsize := round(FTileSize.x * ratio);
+   result := multiplyRect(FPaletteSelectionTiles, FTileSize.x * ratio);
+   dec(result.top, offset);
+   dec(result.bottom, offset);
+   inc(result.right, cellsize - 1);
+   inc(result.bottom, cellsize - 1);}
 end;
 
 procedure TfrmTurbuMain.sldZoomChanged(Sender: TObject);
@@ -795,7 +856,12 @@ begin
 //QC 89303: Can't call Abort inside a splitter's OnMoved event
 //   RequireMapEngine;
    if assigned(FMapEngine) then
-      resizePalette;
+   begin
+      imgPalette.ClearTextures;
+      FPaletteImages.Clear;
+      setLayer(FCurrentLayer);
+   end;
+   trvMapTree.Invalidate;
 end;
 
 procedure TfrmTurbuMain.btnMapObjClick(Sender: TObject);
@@ -854,6 +920,33 @@ begin
    topNode := trvMapTree.selected = trvMapTree.items[0];
    mnuDeleteMap.Enabled := not topNode;
    mnuEditMapProperties.Enabled := not topNode;
+end;
+
+procedure TfrmTurbuMain.UpdateEngine(const filename: string);
+begin
+   DelayExec(
+     procedure
+     var
+        info: SHELLEXECUTEINFO;
+        ver: OSVERSIONINFO;
+     begin
+        CloseProject;
+        ver.dwOSVersionInfoSize := sizeof(ver);
+        GetVersionEx(ver);
+        info := default(SHELLEXECUTEINFO);
+        info.cbSize := sizeof(SHELLEXECUTEINFO);
+        if ver.dwMajorVersion >= 6 then
+          info.lpVerb := 'runas'
+        else info.lpVerb := 'open';
+        info.lpFile := PChar(TPath.Combine(ExtractFilePath(Application.ExeName), 'update.exe'));
+        info.lpParameters := PChar('"' + filename + '"');
+        info.nShow := SW_SHOW;
+        info.fMask := SEE_MASK_NOASYNC;
+        if ShellExecuteEx(@info) then
+           Application.Terminate
+        else Application.MessageBox('Unable to launch the updater', 'Update error');
+     end);
+   Abort;
 end;
 
 initialization

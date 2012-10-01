@@ -21,13 +21,12 @@ unit EB_Expressions;
 interface
 uses
    Classes,
-   EventBuilder, turbu_defs;
+   EventBuilder, turbu_operators;
 
 type
    TEBVariableValue = class(TEBExpression)
-   private
-      FIsGlobal: boolean;
    protected
+      FIsGlobal: boolean;
       procedure SerializeProps(list: TStringList; depth: integer); override;
       procedure AssignProperty(const key, value: string); override;
    public
@@ -42,22 +41,6 @@ type
    TEBNilValue = class(TEBVariableValue)
    public
       constructor Create(parent: TEBObject); override;
-   end;
-
-   TEBSwitchesValue = class(TEBVariableValue)
-   public
-      constructor Create(subscript: integer); overload;
-      constructor Create(subscript: TEBExpression); overload;
-      function GetNodeText: string; override;
-      function GetScriptText: string; override;
-   end;
-
-   TEBIntsValue = class(TEBVariableValue)
-   public
-      constructor Create(subscript: integer); overload;
-      constructor Create(subscript: TEBExpression); overload;
-      function GetNodeText: string; override;
-      function GetScriptText: string; override;
    end;
 
    TEBBooleanValue = class(TEBExpression)
@@ -206,7 +189,7 @@ type
       function GetNodeText: string; override;
    end;
 
-function CreateSubscript(mode, data: integer): TEBExpression;
+   function CleanEnum(const name: string): string;
 
 const
    COMPARISONS: array[TComparisonOp] of string = ('=', '>=', '<=', '>', '<', '<>');
@@ -217,14 +200,67 @@ uses
    SysUtils, Variants, Math, TypInfo,
    EB_RPGScript;
 
-function CreateSubscript(mode, data: integer): TEBExpression;
-begin
-   case mode of
-      0: result := TEBIntegerValue.Create(data);
-      1: result := TEBVariableValue.Create('Num');
-      2: result := TEBIntsValue.Create(data);
-      else raise ERPGScriptError.CreateFmt('Unknown subscript mode value: %d!', [mode]);
+function CleanEnum(const name: string): string;
+
+   function Joseph_Styons_UnCamelCase(const camel: string) : string;
+     function IsUppercase(c: char): boolean; inline;
+     begin
+       Result := (c >= 'A') and (c <= 'Z');
+     end;
+   const
+     c_Delim = #32;
+   var
+     i,offset: integer;
+   begin
+     if Length(camel) > 2 then
+     begin
+       //initialize with a big empty string
+       result := StringOfChar(' ', length(Camel) * 2);
+
+       //offset will contain the # of spaces we've added
+       offset := 0;
+
+       //first char never changes, just copy it over
+       Result[1] := camel[1];
+
+       for i := 2 to Length(camel) do
+       begin
+         //go ahead and copy the current char
+         Result[i+offset] := camel[i];
+
+         //we only do anything interesting when the *next* char is uppercase
+         if (i < length(camel)) and IsUppercase(camel[i+1]) then
+         begin
+           //special case: XXx should become X-Xx, so look two ahead
+           if IsUppercase(camel[i]) then
+           begin
+             if (i < Length(camel)-1) and not(IsUppercase(camel[i+2])) then
+             begin
+               //if we match the special case, then add a space
+               Inc(offset);
+               Result[i+offset] := c_Delim;
+             end;
+           end
+           else begin
+             //if we are lowercase, followed by uppercase, add a space
+             Inc(offset);
+             Result[i+offset] := c_Delim;
+           end;
+         end;
+       end;
+       //cut out extra spaces
+       SetLength(Result,Length(camel)+offset);
+     end
+     else Result := camel;  //no change if < 2 chars
    end;
+
+var
+   index: integer;
+begin
+   index := pos('_', name);
+   result := copy(name, index + 1, MAXINT);
+   result[1] := UpCase(result[1]);
+   result := Joseph_Styons_UnCamelCase(result);
 end;
 
 { TEBVariableValue }
@@ -321,62 +357,6 @@ end;
 function TEBBooleanValue.GetNodeText: string;
 begin
    result := BOOL_STR[Values[0]];
-end;
-
-{ TEBSwitchesValue }
-
-constructor TEBSwitchesValue.Create(subscript: integer);
-begin
-   inherited Create('Switch', subscript);
-   FIsGlobal := true;
-end;
-
-constructor TEBSwitchesValue.Create(subscript: TEBExpression);
-begin
-   inherited Create('Switch', subscript);
-   FIsGlobal := true;
-end;
-
-function TEBSwitchesValue.GetNodeText: string;
-begin
-   if values.count > 0 then
-      result := format('Switch[%s]', [SwitchName(values[0])])
-   else result := inherited GetNodeText;
-end;
-
-function TEBSwitchesValue.GetScriptText: string;
-begin
-   if values.count > 0 then
-      result := format('Switch[%d]', [values[0]])
-   else result := inherited GetScriptText;
-end;
-
-{ TEBIntsValue }
-
-constructor TEBIntsValue.Create(subscript: integer);
-begin
-   inherited Create('Ints', subscript);
-   FIsGlobal := true;
-end;
-
-constructor TEBIntsValue.Create(subscript: TEBExpression);
-begin
-   inherited Create('Ints', subscript);
-   FIsGlobal := true;
-end;
-
-function TEBIntsValue.GetNodeText: string;
-begin
-   if values.count > 0 then
-      result := format('Ints[%s]', [IntName(values[0])])
-   else result := inherited GetNodeText;
-end;
-
-function TEBIntsValue.GetScriptText: string;
-begin
-   if values.count > 0 then
-      result := format('Ints[%d]', [values[0]])
-   else result := inherited GetScriptText;
 end;
 
 { TEBIntegerValue }
@@ -645,7 +625,7 @@ var
    child: TEBObject;
    expr: TEBExpression;
 begin
-   result := self.CleanEnum(self.Text);
+   result := CleanEnum(self.Text);
    if self.ChildCount = 0 then
       Exit;
 
@@ -835,7 +815,7 @@ begin
 end;
 
 initialization
-   TEBObject.RegisterClasses([TEBVariableValue, TEBSwitchesValue, TEBIntsValue,
+   TEBObject.RegisterClasses([TEBVariableValue,
                     TEBBooleanValue, TEBIntegerValue, TEBStringValue, TEBEnumValue,
                     TEBLookupValue, TEBComparison, TEBObjExpr, TEBObjArrayValue,
                     TEBLookupObjExpr, TEBPropExpr, TEBCall, TEBBinaryOp,

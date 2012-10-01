@@ -1,6 +1,7 @@
 inherited frmEBEditSkills: TfrmEBEditSkills
   Caption = 'frmEBEditSkills'
   ClientHeight = 344
+  ExplicitWidth = 320
   ExplicitHeight = 379
   PixelsPerInch = 120
   TextHeight = 16

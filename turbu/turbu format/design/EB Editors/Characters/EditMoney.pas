@@ -23,7 +23,7 @@ interface
 uses
   Forms, StdCtrls, ExtCtrls, Classes, Controls, Mask,
   JvExMask, JvSpin,
-  variable_selector,  EventBuilder, EbEdit;
+  variable_selector,  EventBuilder, EbEdit, button_edit;
 
 type
    [EditorCategory('Characters', 'Change Money')]
@@ -43,7 +43,7 @@ type
 
 implementation
 uses
-   EB_Characters;
+   EB_Characters, EbEditHelper;
 
 {$R *.dfm}
 
