@@ -20,7 +20,7 @@ unit turbu_items;
 interface
 uses
    classes, DB,
-   turbu_constants, turbu_defs, turbu_classes;
+   turbu_constants, turbu_defs, turbu_classes, turbu_operators;
 
 type
    TItemType = (it_junk, it_weapon, it_armor, it_medicine, it_upgrade, it_book,

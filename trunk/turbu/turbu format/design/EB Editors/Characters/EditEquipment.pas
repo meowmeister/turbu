@@ -31,7 +31,7 @@ type
 
 implementation
 uses
-   turbu_constants, dm_database, EB_Characters, EB_Expressions;
+   turbu_constants, dm_database, EB_Characters, EB_Expressions, EbEditHelper;
 
 {$R *.dfm}
 

@@ -44,7 +44,7 @@ type
 implementation
 uses
    SysUtils, Types, Generics.Collections,
-   charset_data, turbu_defs, rm2_turbu_maps, rm2_turbu_event_builder,
+   charset_data, rm2_turbu_maps, rm2_turbu_event_builder, turbu_operators,
    EventBuilder;
 
 { T2k2RpgMapObject }

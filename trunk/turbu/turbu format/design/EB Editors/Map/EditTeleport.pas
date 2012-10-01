@@ -32,7 +32,7 @@ const
 
 type
    [EditorCategory('Map', 'Teleport')]
-   TfrmEBEditTeleport = class(TfrmEbEditBase)
+   TfrmEBEditTeleport = class(TfrmEbEditBase, ITurbuController)
       trvMapTree: TTreeView;
       sbxMain: TScrollBox;
       imgBackground: TPaintBox;
@@ -63,6 +63,8 @@ type
       procedure LoadMap(Sender: TObject; Node: TTreeNode);
       function LoadEngine(const name: string): IDesignMapEngine;
       procedure DrawPosition(x, y: integer; new: boolean);
+
+      function MapResize(const size: TSgPoint): TSgPoint;
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
@@ -195,7 +197,7 @@ begin
    metadata := IMapMetadata(node.Data);
    FMapEngine := LoadEngine(metadata.mapEngine);
    FMapEngine.initialize(imgView.sdlWindow, dmDatabase.dbName);
-   FMapEngine.SetMapResizeEvent(FScrollboxManager.SetMapSize);
+   FMapEngine.SetController(self);
    FMapEngine.loadMap(metadata);
    FMapEngine.SetCurrentLayer(-1);
    current := (FPosition * TILE_SIZE) - (sgPoint(sbHoriz.PageSize, sbVert.PageSize) / 2);
@@ -205,6 +207,11 @@ begin
    FCurrentMap := metadata.id;
    FMapEngine.Draw(FPosition, true);
    FMapEngine.DoneDrawing;
+end;
+
+function TfrmEBEditTeleport.MapResize(const size: TSgPoint): TSgPoint;
+begin
+   result := FScrollboxManager.SetMapSize(size);
 end;
 
 procedure TfrmEBEditTeleport.OnScrollMap(Sender: TObject;

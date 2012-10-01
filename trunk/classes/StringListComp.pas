@@ -70,7 +70,7 @@ begin
 
    //handle overlaps
    while (i < List1.Count) and (j < List2.Count) do
-      case sign(strComp(PChar(List1[i]), PChar(List2[i]))) of
+      case sign(strComp(PChar(List1[i]), PChar(List2[j]))) of
          0:
          begin
             if assigned(matchProc) then

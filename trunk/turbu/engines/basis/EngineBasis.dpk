@@ -90,6 +90,11 @@ contains
   StringListComp in '..\..\..\classes\StringListComp.pas',
   ftgl in '..\..\..\classes\ftgl.pas',
   turbu_OpenGL in 'turbu_OpenGL.pas',
-  project_folder in 'project_folder.pas';
+  project_folder in 'project_folder.pas',
+  delayedAction in 'delayedAction.pas',
+  turbu_operators in '..\..\turbu format\turbu_operators.pas',
+  EB_Expressions in '..\..\turbu format\script\EB_Expressions.pas',
+  EB_RpgScript in '..\..\turbu format\script\EB_RpgScript.pas',
+  turbu_vartypes in '..\..\turbu format\turbu_vartypes.pas';
 
 end.

@@ -25,7 +25,7 @@ type
 
 implementation
 uses
-   EB_Expressions;
+   EB_Expressions, EB_Expressions_RM;
 
 {$R *.dfm}
 

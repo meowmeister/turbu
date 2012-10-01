@@ -284,7 +284,7 @@ type
 implementation
 uses
    Classes, SysUtils, TypInfo,
-   EB_RPGScript;
+   EB_RPGScript, EB_ObjectHelper;
 
 function RGB32(value: integer): integer;
 begin

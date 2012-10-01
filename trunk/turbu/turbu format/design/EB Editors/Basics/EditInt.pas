@@ -63,7 +63,7 @@ type
 implementation
 uses
    turbu_database, turbu_vartypes, turbu_defs, turbu_constants,
-   EB_System;
+   EB_System, EB_Expressions_RM;
 
 {$R *.dfm}
 

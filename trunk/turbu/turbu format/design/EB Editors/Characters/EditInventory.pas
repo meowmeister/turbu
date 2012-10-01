@@ -31,7 +31,7 @@ type
 
 implementation
 uses
-   EB_Characters, EB_Expressions;
+   EB_Characters, EB_Expressions, EbEditHelper;
 
 {$R *.dfm}
 

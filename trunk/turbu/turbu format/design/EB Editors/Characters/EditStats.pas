@@ -27,7 +27,8 @@ type
 
 implementation
 uses
-   turbu_constants, dm_database, EB_Characters, EB_Expressions;
+   turbu_constants, dm_database, EB_Characters, EB_Expressions, EbEditHelper,
+   EB_Expressions_RM;
 
 {$R *.dfm}
 

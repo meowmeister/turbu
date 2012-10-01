@@ -21,8 +21,7 @@ unit EB_RpgScript;
 interface
 uses
    SysUtils, Classes,
-   turbu_defs,
-   EventBuilder, EB_Expressions;
+   EventBuilder, EB_Expressions, turbu_operators;
 
 type
    TEBUntranslated = class(TEBObject)
@@ -250,18 +249,6 @@ type
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
-   end;
-
-   TEBObjectHelper = class helper for TEBObject
-   private
-      class function VarName(id: integer; const group: string): string; static;
-   public
-      function HeroName(id: integer): string;
-      function VehicleName(id: integer): string;
-      function CleanEnum(const name: string): string;
-      function SecondFraction(count: integer): string;
-      class function IntName(id: integer): string;
-      function SwitchName(id: integer): string;
    end;
 
    TStringsHelper = class helper for TStrings
@@ -892,106 +879,6 @@ end;
 function TEBForLoop.NeededVariableType: THeaderItems;
 begin
    result := hi_var;
-end;
-
-{ TEBObjectHelper }
-
-function TEBObjectHelper.CleanEnum(const name: string): string;
-
-   function Joseph_Styons_UnCamelCase(const camel: string) : string;
-     function IsUppercase(c: char): boolean; inline;
-     begin
-       Result := (c >= 'A') and (c <= 'Z');
-     end;
-   const
-     c_Delim = #32;
-   var
-     i,offset: integer;
-   begin
-     if Length(camel) > 2 then
-     begin
-       //initialize with a big empty string
-       result := StringOfChar(' ', length(Camel) * 2);
-
-       //offset will contain the # of spaces we've added
-       offset := 0;
-
-       //first char never changes, just copy it over
-       Result[1] := camel[1];
-
-       for i := 2 to Length(camel) do
-       begin
-         //go ahead and copy the current char
-         Result[i+offset] := camel[i];
-
-         //we only do anything interesting when the *next* char is uppercase
-         if (i < length(camel)) and IsUppercase(camel[i+1]) then
-         begin
-           //special case: XXx should become X-Xx, so look two ahead
-           if IsUppercase(camel[i]) then
-           begin
-             if (i < Length(camel)-1) and not(IsUppercase(camel[i+2])) then
-             begin
-               //if we match the special case, then add a space
-               Inc(offset);
-               Result[i+offset] := c_Delim;
-             end;
-           end
-           else begin
-             //if we are lowercase, followed by uppercase, add a space
-             Inc(offset);
-             Result[i+offset] := c_Delim;
-           end;
-         end;
-       end;
-       //cut out extra spaces
-       SetLength(Result,Length(camel)+offset);
-     end
-     else Result := camel;  //no change if < 2 chars
-   end;
-
-var
-   index: integer;
-begin
-   index := pos('_', name);
-   result := copy(name, index + 1, MAXINT);
-   result[1] := UpCase(result[1]);
-   result := Joseph_Styons_UnCamelCase(result);
-end;
-
-function TEBObjectHelper.HeroName(id: integer): string;
-begin
-   result := self.GetLookup(id, 'heroes');
-end;
-
-function TEBObjectHelper.VehicleName(id: integer): string;
-begin
-   result := self.GetLookup(id, 'vehicles');
-end;
-
-class function TEBObjectHelper.VarName(id: integer; const group: string): string;
-var
-   name: string;
-begin
-   name := GetLookup(id, group);
-   if name = '' then
-      result := intToStr(id)
-   else result := format('%d: %s', [id, name]);
-end;
-
-class function TEBObjectHelper.IntName(id: integer): string;
-begin
-   result := VarName(id, 'Variables');
-end;
-
-function TEBObjectHelper.SecondFraction(count: integer): string;
-begin
-   result := formatFloat('###.#', count / 10) + ' sec';
-end;
-
-function TEBObjectHelper.SwitchName(id: integer): string;
-begin
-   result := VarName(id, 'Switches');
 end;
 
 { TStringsHelper }

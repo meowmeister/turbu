@@ -1,6 +1,7 @@
 inherited frmEBEditInventory: TfrmEBEditInventory
   Caption = 'Change Inventory'
   ClientHeight = 319
+  ExplicitWidth = 320
   ExplicitHeight = 354
   PixelsPerInch = 120
   TextHeight = 16

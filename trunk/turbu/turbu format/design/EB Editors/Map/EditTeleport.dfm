@@ -9,6 +9,8 @@ inherited frmEBEditTeleport: TfrmEBEditTeleport
   inherited Panel1: TPanel
     Width = 585
     Height = 284
+    ExplicitWidth = 585
+    ExplicitHeight = 284
     object Panel2: TPanel
       Left = 10
       Top = 10
@@ -170,13 +172,19 @@ inherited frmEBEditTeleport: TfrmEBEditTeleport
   inherited btnOK: TButton
     Left = 302
     Top = 294
+    ExplicitLeft = 302
+    ExplicitTop = 294
   end
   inherited btnCancel: TButton
     Left = 396
     Top = 294
+    ExplicitLeft = 396
+    ExplicitTop = 294
   end
   inherited btnHelp: TButton
     Left = 489
     Top = 294
+    ExplicitLeft = 489
+    ExplicitTop = 294
   end
 end

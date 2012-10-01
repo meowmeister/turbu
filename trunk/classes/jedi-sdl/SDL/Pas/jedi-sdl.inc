@@ -318,9 +318,9 @@
    {$WARN UNSAFE_TYPE OFF} {Disable warning for unsafe types in Delphi 7}
    {$DEFINE Has_Int64}
    {$DEFINE HAS_TYPES}
-{$ENDIF ver200}
+{$ENDIF ver210}
 
-{$IFDEF ver220}
+{$IF CompilerVersion > 21}
    {$DEFINE Delphi}      {Delphi 2010}
    {$DEFINE Delphi32}
    {$DEFINE Delphi4UP}
@@ -336,7 +336,7 @@
    {$WARN UNSAFE_TYPE OFF} {Disable warning for unsafe types in Delphi 7}
    {$DEFINE Has_Int64}
    {$DEFINE HAS_TYPES}
-{$ENDIF ver200}
+{$IFEND}
 
 {$IFDEF UNIX}
   {$ifdef VER140}    // Kylix 1 & 2

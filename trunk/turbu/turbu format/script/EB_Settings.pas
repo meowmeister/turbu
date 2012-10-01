@@ -53,7 +53,7 @@ type
 implementation
 uses
    SysUtils, TypInfo, Classes,
-   turbu_defs;
+   turbu_defs, EB_Expressions;
 
 { TEBSysBGM }
 

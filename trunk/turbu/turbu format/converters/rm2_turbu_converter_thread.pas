@@ -591,7 +591,7 @@ begin
    try
       for step in path.opcodes do
          if (step.opcode = MOVECODE_CHANGE_SPRITE) then
-            FMapSprites.Add(step.name)
+            FMapSprites.Add(copy(step.name, 1, length(step.name) - 2)) //trim off the frame at the end
          else if step.opcode = MOVECODE_PLAY_SFX then
             FSounds.Add(step.name);
    finally

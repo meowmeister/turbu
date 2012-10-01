@@ -103,5 +103,13 @@ resourcestring
    VIDEO_DB = 'Movies';
 
 implementation
+uses
+   turbu_vartypes;
+
+var
+   i: integer;
+initialization
+   for i := low(TYPENAMES) to high(TYPENAMES) do
+      assert(registerType(TYPENAMES[i]) = i);
 
 end.

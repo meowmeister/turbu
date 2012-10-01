@@ -162,7 +162,7 @@ const
 implementation
 uses
    SysUtils, Classes,
-   EB_RpgScript;
+   EB_RpgScript, EB_ObjectHelper;
 
 function GetIntText(decider, value: integer): string;
 begin

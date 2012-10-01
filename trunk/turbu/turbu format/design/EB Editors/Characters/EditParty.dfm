@@ -1,6 +1,7 @@
 inherited frmEBEditParty: TfrmEBEditParty
   Caption = 'Change Party'
   ClientHeight = 215
+  ExplicitWidth = 320
   ExplicitHeight = 250
   PixelsPerInch = 120
   TextHeight = 16

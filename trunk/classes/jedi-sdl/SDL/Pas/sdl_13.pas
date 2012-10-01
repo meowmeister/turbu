@@ -6,7 +6,7 @@ uses Windows, sysUtils;
 {$I jedi-sdl.inc}
 
 const
-  SDLLibName = 'SDL.dll';
+  SDLLibName = 'SDL2.dll';
 
 type
   PSdlDisplayMode = ^TSdlDisplayMode;
@@ -157,7 +157,10 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
   SDL_Rect = TSdlRect;
   {$EXTERNALSYM SDL_Rect}
 
-  PSdl_Point = ^TPoint;
+  PSdlPoint = ^TsdlPoint;
+  TSdlPoint = TPoint;
+  SDL_Point = TSdlPoint;
+  {$EXTERNALSYM SDL_Point}
 
   PSDL_Color = ^TSDL_Color;
   TSDL_Color = record
@@ -281,6 +284,7 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     procedure UnlockSurface;
     procedure AcquireReference;
     function BlitFrom(src: PSdlSurface; srcrect, dstrect: PSdlRect): integer; inline;
+    function BlitScaledFrom(src: PSdlSurface; srcrect, dstrect: PSdlRect): integer; inline;
 
     property Flags: TSdlSurfaceFlags read FFlags;
     property Format: PSdlPixelFormat read FFormat;
@@ -709,7 +713,7 @@ function SDL_RenderTargetSupported(renderer: TSDLRenderer): SDL_bool; cdecl; ext
 function SDL_SetRenderTarget(renderer: TSDLRenderer; texture: TSDLTexture): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_SetRenderTarget}
 
-function SDL_ResetTargetTexture(renderer: TSDLRenderer): integer;
+function SDL_ResetTargetTexture(renderer: TSdlRenderer): integer; //cdecl; external SDLLibName;
 
 function SDL_GetRendererInfo(renderer: TSdlRenderer; var info: TSDL_RendererInfo): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetRenderDriverInfo}
@@ -861,6 +865,25 @@ function SDL_GetRenderDrawBlendMode(renderer: TSdlRenderer; var blendMode: TSdlB
 {$EXTERNALSYM SDL_GetRenderDrawBlendMode}
 
 (**
+ *  \brief Set the drawing area for rendering on the current target.
+ *
+ *  \param rect The rectangle representing the drawing area, or NULL to set the viewport to the entire target.
+ *
+ *  The x,y of the viewport rect represents the origin for rendering.
+ *
+ *  \note When the window is resized, the current viewport is automatically
+ *        centered within the new window size.
+ *)
+function SDL_RenderSetViewport(renderer: TSDLRenderer; rect: PSdlRect): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderSetViewport}
+
+(**
+ *  \brief Get the drawing area for the current target.
+ *)
+procedure SDL_RenderGetViewport(renderer: TSDLRenderer; rect: PSdlRect); cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderGetViewport}
+
+(**
  *  Clears the current rendering target with the drawing color
  *
  *  This function clears the entire rendering target, ignoring the viewport.
@@ -889,27 +912,26 @@ function SDL_RenderCopy(renderer: TSDLRenderer; texture: TSdlTexture; const srcr
 {$EXTERNALSYM SDL_RenderCopy}
 
 (**
- *  Copy a portion of the source texture to the current rendering target, rotating it by angle around the given center
+ *  \brief Copy a portion of the source texture to the current rendering target, rotating it by angle around the given center
  *
- *  texture: The source texture.
- *  srcrect: A pointer to the source rectangle, or NULL for the entire
+ *  \param texture The source texture.
+ *  \param srcrect   A pointer to the source rectangle, or NULL for the entire
  *                   texture.
- *  dstrect: A pointer to the destination rectangle, or NULL for the
+ *  \param dstrect   A pointer to the destination rectangle, or NULL for the
  *                   entire rendering target.
- *  angle: An angle in degrees that indicates the rotation that will be applied to dstrect
- *  center: A pointer to a point indicating the point around which dstrect will be rotated (if NULL, rotation will be done aroud dstrect.w/2, dstrect.h/2)
- *  flip: A SFL_Flip value stating which flipping actions should be performed on the texture
+ *  \param angle    An angle in degrees that indicates the rotation that will be applied to dstrect
+ *  \param center   A pointer to a point indicating the point around which dstrect will be rotated (if NULL, rotation will be done aroud dstrect.w/2, dstrect.h/2)
+ *  \param flip     A SFL_Flip value stating which flipping actions should be performed on the texture
  *
- *  returns 0 on success, or -1 on error
+ *  \return 0 on success, or -1 on error
  *)
-function SDL_RenderCopyEx(renderer: TSDLRenderer; texture: TSdlTexture;
-   const srcrect, dstrect: PSdlRect; angle: double; center: PSDL_Point;
-   flip: TSdlFlipAxes): integer; cdecl; external SDLLibName;
+function SDL_RenderCopyEx(renderer: TSDLRenderer; texture: TSdlTexture; const srcrect, dstrect: PSdlRect;
+                          angle: double; center: PSdlPoint; flip: TSdlFlipAxes): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderCopyEx}
 
 function SDL_RenderCopyFlipped(renderer: TSDLRenderer; texture: TSdlTexture; const srcrect, dstrect: PSdlRect; axes: TSdlFlipAxes): integer;
 
-procedure SDL_RenderPresent(renderer: TSDLRenderer); cdecl; external SDLLibName;
+procedure SDL_RenderPresent(renderer: TSDLRenderer); cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_RenderPresent}
 
 function SDL_GetRenderer(window: TSDLWindow): TSDLRenderer; cdecl; external SDLLibName;
@@ -987,6 +1009,9 @@ cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_UpperBlit'{$ELSE} SDLLibN
 function SDL_LowerBlit(src: PSdlSurface; srcrect: PSdlRect; dst: PSdlSurface; dstrect: PSdlRect): Integer;
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_LowerBlit'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_LowerBlit}
+
+function SDL_SoftStretch(src: PSDLSurface; srcrect: PSDLRect;
+    dst: PSDLSurface; dstrect: PSDLRect): integer; cdecl; external SDLLibName;
 
 function SDL_SetSurfaceBlendMode(surface: PSdlSurface; blendMode: TSdlBlendModes): integer;
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetSurfaceBlendMode'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
@@ -1236,7 +1261,17 @@ begin
 end;
 
 procedure TSdlSurface.CopyPaletteFrom(const source: PSdlSurface);
+const METHOD = 'TSdlSurface.CopyPaletteFrom: ';
 begin
+   if source = nil then
+      raise Exception.Create(METHOD + 'source not assigned');
+   if source.Format = nil then
+      raise Exception.Create(METHOD + 'source.Format not assigned');
+   if source.Format.palette = nil then
+      raise Exception.Create(METHOD + 'source.Format.palette not assigned');
+   if source.Format.palette.colors = nil then
+      raise Exception.Create(METHOD + 'source.Format.palette.colors not assigned');
+
    self.SetPalette(source.Format.palette.colors, 0, source.Format.palette.count);
 end;
 
@@ -1318,6 +1353,12 @@ end;
 function TSdlSurface.BlitFrom(src: PSdlSurface; srcrect: PSdlRect; dstrect: PSdlRect): integer;
 begin
    result := sdl_upperBlit(src, srcRect, @self, dstRect);
+end;
+
+function TSdlSurface.BlitScaledFrom(src: PSdlSurface; srcrect,
+  dstrect: PSdlRect): integer;
+begin
+   result := SDL_SoftStretch(src, srcRect, @self, dstRect);
 end;
 
 { TSdlTexture }
@@ -1407,6 +1448,11 @@ begin
    result := SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.unused);
 end;
 
+function SDL_RenderCopyFlipped(renderer: TSDLRenderer; texture: TSdlTexture; const srcrect, dstrect: PSdlRect; axes: TSdlFlipAxes): integer;
+begin
+  result := SDL_RenderCopyEx(renderer, texture, srcrect, dstrect, 0, nil, axes);
+end;
+
 function SDL_GetEvents(minType: cardinal = 0; maxType: cardinal = SDL_LASTEVENT): TSdlEventArray;
 begin
    SetLength(result, 128);
@@ -1418,16 +1464,10 @@ begin
    result := SDL_EventState(type_, SDL_QUERY);
 end;
 
-function SDL_ResetTargetTexture(renderer: TSDLRenderer): integer;
-const NULL_TEX: TSdlTexture = (FPtr: nil);
+function SDL_ResetTargetTexture(renderer: TSdlRenderer): integer;
+const NIL_TEX: TSdlTexture = (FPtr: nil;);
 begin
-   result := SDL_SetRenderTarget(renderer, NULL_TEX);
-end;
-
-function SDL_RenderCopyFlipped(renderer: TSDLRenderer; texture: TSdlTexture;
-  const srcrect, dstrect: PSdlRect; axes: TSdlFlipAxes): integer;
-begin
-  result := SDL_RenderCopyEx(renderer, texture, srcrect, dstrect, 0, nil, axes);
+   result := SDL_SetRenderTarget(renderer, NIL_TEX);
 end;
 
 { TSdlWindow }

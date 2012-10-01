@@ -3,11 +3,15 @@ inherited frmBattleEx: TfrmBattleEx
   ClientHeight = 454
   ClientWidth = 378
   OnCreate = FormCreate
+  ExplicitWidth = 320
+  ExplicitHeight = 240
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Width = 378
     Height = 401
+    ExplicitWidth = 378
+    ExplicitHeight = 401
     object grpMParty: TGroupBox
       Left = 8
       Top = 9
@@ -168,13 +172,19 @@ inherited frmBattleEx: TfrmBattleEx
   inherited btnOK: TButton
     Left = 95
     Top = 411
+    ExplicitLeft = 95
+    ExplicitTop = 411
   end
   inherited btnCancel: TButton
     Left = 189
     Top = 411
+    ExplicitLeft = 189
+    ExplicitTop = 411
   end
   inherited btnHelp: TButton
     Left = 282
     Top = 411
+    ExplicitLeft = 282
+    ExplicitTop = 411
   end
 end

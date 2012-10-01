@@ -12,8 +12,7 @@ object dmProjectBoot: TdmProjectBoot
     Params = <>
     SQL.Strings = (
       'select EngineName, version'
-      'from BOOT'
-      'where ID = 0')
+      'from BOOT')
     SQLConnection = Connection
     Left = 80
     Top = 88

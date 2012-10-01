@@ -73,6 +73,7 @@ type
    procedure SetRegistryValue(KeyName, valueName, value: string);
    function getPersonalFolder: string;
    function getProjectFolder: string;
+   function getTempFolder: string;
    procedure createProjectFolder;
    function IsBetween(number, low, high: integer): boolean; inline;
    function round(value: real): integer; inline;
@@ -283,6 +284,16 @@ procedure createProjectFolder;
 begin
    SetRegistryValue('\Software\TURBU', 'TURBU Projects Folder', IncludeTrailingPathDelimiter(getPersonalFolder) + 'TURBU Projects');
    ForceDirectories(getProjectFolder);
+end;
+
+function getTempFolder: string;
+var
+   buffer: array [0..MAX_PATH] of char;
+   pBuffer: PChar;
+begin
+   pBuffer := @buffer[0];
+   GetTempPath(length(buffer), pBuffer);
+   result := string(pBuffer);
 end;
 
 procedure clamp(var value: single; low, high: single);

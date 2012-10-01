@@ -298,7 +298,8 @@ begin
          dec(minis[2], 14);
          dec(minis[3], 14);
          if se in neighbors then
-            dec(minis[4], 22);
+            dec(minis[4], 22)
+         else dec(minis[4], 14);
       end else
    //36:
       if neighbors * [n, e] = [n, e] then
@@ -307,7 +308,8 @@ begin
          dec(minis[2], 10);
          dec(minis[4], 10);
          if sw in neighbors then
-            dec(minis[3], 22);
+            dec(minis[3], 22)
+         else dec(minis[3], 10);
       end else
    //38:
       if neighbors * [e, s] = [e, s] then
@@ -316,7 +318,8 @@ begin
          inc(minis[3], 14);
          inc(minis[4], 14);
          if nw in neighbors then
-            dec(minis[1], 22);
+            dec(minis[1], 22)
+         else inc(minis[1], 22);
       end else
    //40:
       if neighbors * [s, w] = [s, w] then
@@ -325,7 +328,8 @@ begin
          inc(minis[3], 10);
          inc(minis[4], 10);
          if ne in neighbors then
-            dec(minis[2], 22);
+            dec(minis[2], 22)
+         else inc(minis[2], 10);
       end else
    //miscellaneous cases, which can be handled individually
       begin
@@ -346,21 +350,41 @@ begin
          begin
             base[1] := minis[1] - 12;
             base[2] := minis[2] - 12;
+         end
+         else if s in neighbors then
+         begin
+            base[1] := minis[1] + 12;
+            base[2] := minis[2] + 12;
          end;
          if s in neighbors then
          begin
             base[3] := minis[3] + 12;
             base[4] := minis[4] + 12;
+         end
+         else if n in neighbors then
+         begin
+            base[3] := minis[3] - 12;
+            base[4] := minis[4] - 12;
          end;
          if w in neighbors then
          begin
             base[1] := minis[1] - 2;
             base[3] := minis[3] - 2;
+         end
+         else if e in neighbors then
+         begin
+            base[1] := minis[1] + 2;
+            base[3] := minis[3] + 2;
          end;
          if e in neighbors then
          begin
             base[2] := minis[2] + 2;
             base[4] := minis[4] + 2;
+         end
+         else if w in neighbors then
+         begin
+            base[2] := minis[2] - 2;
+            base[4] := minis[4] - 2;
          end;
          for i := 1 to 4 do
             minis[i] := base[i];

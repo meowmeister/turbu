@@ -21,7 +21,7 @@ interface
 uses
    types, classes, DB,
    turbu_constants, turbu_defs, turbu_classes, turbu_sounds, turbu_containers,
-   turbu_decl_utils, turbu_serialization;
+   turbu_decl_utils, turbu_serialization, turbu_operators;
 
 type
    TSkillGainDisplayFunc = function(one, two, three, four: integer): string of object;

@@ -65,7 +65,7 @@ type
 implementation
 uses
    SysUtils, Classes,
-   EB_RpgScript;
+   EB_RpgScript, EB_ObjectHelper;
 
 { TEBPlayBGM }
 

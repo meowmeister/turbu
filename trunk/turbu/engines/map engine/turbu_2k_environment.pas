@@ -22,7 +22,7 @@ uses
    Generics.Collections,
    rsCompiler, rsImport, rsExec,
    turbu_defs, turbu_heroes, turbu_database, turbu_mapchars, turbu_2k_images,
-   turbu_2k_map_timer, turbu_map_sprites, turbu_map_objects,
+   turbu_2k_map_timer, turbu_map_sprites, turbu_map_objects, turbu_operators,
    sdl_sprite;
 
 type

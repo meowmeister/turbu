@@ -44,7 +44,7 @@ type
 implementation
 uses
    Messages,
-   EB_System, EB_Expressions;
+   EB_System, EB_Expressions, EB_Expressions_RM;
 
 {$R *.dfm}
 

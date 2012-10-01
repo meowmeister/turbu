@@ -38,9 +38,9 @@ type
       FObjectContainers: TMapObjectContainerList;
       FCursorPosition: TSgPoint;
       FHookedObject: TMapSprite;
-      FOnResize: TMapResizeEvent;
       FTopLeft: TSgPoint;
       FDBFilename: string;
+      FController: ITurbuController;
 
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
       procedure saveMap(value: TRpgMap);
@@ -62,9 +62,10 @@ type
       function initializeDesigner(window: TSdlWindow; const database: string): TSdlWindow;
       function GetTilesetImageSize(const index: byte): TSgPoint;
       function GetTilesetImage(const index: byte): PSdlSurface;
-      function DesignLoadMap(map: IMapMetadata): IRpgMap;
+      function GetTileSize: TsgPoint;
+      procedure DesignLoadMap(map: IMapMetadata);
       function mapPosition: TSgPoint;
-      procedure SetMapResizeEvent(const value: TMapResizeEvent);
+      procedure SetController(const value: ITurbuController);
       procedure ResizeWindow(rect: TRect);
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TArray<integer>);
@@ -83,11 +84,13 @@ type
       function addNewMap(parentID: integer): IMapMetadata;
       procedure editMapProperties(mapID: integer);
       procedure DeleteMap(mapID: integer; deleteMode: TDeleteMapMode);
+      procedure ClearButtons;
       procedure Reset;
       procedure Pause;
       procedure Stop;
+      procedure EditDatabase;
 
-      function IDesignMapEngine.loadMap = DesignLoadMap;
+      procedure IDesignMapEngine.loadMap = DesignLoadMap;
       function IDesignMapEngine.Initialize = InitializeDesigner;
    protected
       procedure cleanup; override;
@@ -100,7 +103,7 @@ type
 implementation
 uses
    commons, math, windows, Dialogs, Controls,
-   logs,
+   logs, database,
    turbu_map_metadata, archiveInterface, turbu_constants, turbu_sdl_image, turbu_database,
    turbu_functional, turbu_plugin_interface, turbu_containers, turbu_map_objects,
    eval, MapObject_Editor, dm_database, db_upgrade,
@@ -163,6 +166,7 @@ begin
       script := dmDatabase.ScriptLookup(0);
       logs.logText(script);
       FObjectManager.ScriptEngine.LoadLibrary(script);
+      FPaletteList := TList<integer>.Create;
       //do more
    except
       if FInitialized then
@@ -194,6 +198,11 @@ begin
    FreeAndNil(FObjectContainers);
    FreeAndNil(FPaletteList);
    FreeAndNil(FTilesetListD);
+end;
+
+procedure T2kMapEngineD.ClearButtons;
+begin
+   //nothing to do here just yet
 end;
 
 procedure T2kMapEngineD.ClearContainers;
@@ -254,7 +263,7 @@ begin
    end;
 end;
 
-function T2kMapEngineD.DesignLoadMap(map: IMapMetadata): IRpgMap;
+procedure T2kMapEngineD.DesignLoadMap(map: IMapMetadata);
 var
    viewport: TRect;
 begin
@@ -287,11 +296,8 @@ begin
    FCurrentLayer := 0;
    UploadMapObjects;
    if doneLoadingMap then
-   begin
-      Repaint;
-      result := FCurrentMap.mapObj;
-   end
-   else result := nil;
+      Repaint
+   else raise Exception.Create('Error loading map');
 end;
 
 procedure T2kMapEngineD.DoDelete;
@@ -396,9 +402,9 @@ begin
    self.repaint;
 end;
 
-procedure T2kMapEngineD.SetMapResizeEvent(const value: TMapResizeEvent);
+procedure T2kMapEngineD.SetController(const value: ITurbuController);
 begin
-   FOnResize := value;
+   FController := value;
 end;
 
 procedure T2kMapEngineD.setPaletteList(value: TArray<integer>);
@@ -495,6 +501,18 @@ begin
    begin
       SDL_RenderDrawLine(renderer, 0, y, FCanvas.Width, y);
       inc(y, TILE_SIZE.y);
+   end;
+end;
+
+procedure T2kMapEngineD.EditDatabase;
+var
+   frmDatabase: TfrmDatabase;
+begin
+   frmDatabase := TFrmDatabase.Create(nil);
+   try
+      frmDatabase.ShowModal;
+   finally
+      frmDatabase.Free;
    end;
 end;
 
@@ -600,8 +618,8 @@ end;
 
 function T2kMapEngineD.DoResize(map: TRpgMap; viewport: TRect): TRect;
 begin
-   if assigned(FOnResize) then
-      result := rect(viewport.TopLeft, FOnResize(map.size * TILE_SIZE) / TILE_SIZE)
+   if assigned(FController) then
+      result := rect(viewport.TopLeft, FController.MapResize(map.size * TILE_SIZE) / TILE_SIZE)
    else result := viewport;
 end;
 
@@ -667,6 +685,12 @@ begin
       end);
 
    result := FTilesize * sgPoint(MAX_WIDTH, Ceil(tileCount / MAX_WIDTH));
+end;
+
+function T2kMapEngineD.GetTileSize: TsgPoint;
+const SIZE: TsgPoint = (x: 16; y: 16);
+begin
+   result := SIZE;
 end;
 
 function T2kMapEngineD.GetValidateProc: TProc<TSqlQuery>;

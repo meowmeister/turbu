@@ -35,14 +35,10 @@ requires
 
 contains
   base_selector in 'base_selector.pas' {frmBaseSelector},
-  EBListView in 'EBListView.pas',
-  ebSelector in 'EB Editors\ebSelector.pas' {frmEBSelector},
-  EbEdit in 'EB Editors\EbEdit.pas' {frmEBEditBase},
   sprite_selector in 'sprite_selector.pas' {frmSpriteSelector},
   portrait_selector in 'portrait_selector.pas' {frmPortraitSelector},
   sdl_frame_helper in 'sdl_frame_helper.pas',
   variable_selector in '..\..\..\components\TURBU\variable_selector.pas',
-  array_editor in '..\..\engines\map engine\design\array_editor.pas' {frmArrayEdit},
   PortraitEdit in 'EB Editors\Messages\PortraitEdit.pas' {frmSelectPortrait},
   MessageOptions in 'EB Editors\Messages\MessageOptions.pas' {frmMessageOptions},
   MessageEdit in 'EB Editors\Messages\MessageEdit.pas' {frmMessageEdit},
@@ -100,7 +96,13 @@ contains
   EditPanScreen in 'EB Editors\Map\EditPanScreen.pas' {frmEBEditBase1},
   conversion_report_form in '..\converters\conversion_report_form.pas' {frmConversionReport},
   conversion_report in '..\converters\conversion_report.pas',
-  conversion_output in '..\converters\conversion_output.pas' {frmConversionOutput};
+  conversion_output in '..\converters\conversion_output.pas' {frmConversionOutput},
+  events in '..\..\events.pas',
+  move_data in '..\..\move_data.pas',
+  BER in '..\..\BER.pas',
+  fileIO in '..\..\fileIO.pas',
+  formats in '..\..\formats.pas',
+  EbEditHelper in 'EB Editors\EbEditHelper.pas';
 
 end.
 

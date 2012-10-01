@@ -1,6 +1,7 @@
 package sdlframe;
 
 {$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -11,7 +12,7 @@ package sdlframe;
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
+{$OPTIMIZATION OFF}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
 {$REFERENCEINFO OFF}
@@ -22,6 +23,8 @@ package sdlframe;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
 {$IMPLICITBUILD ON}
 
 requires
@@ -33,6 +36,11 @@ contains
   sdl in '..\..\classes\jedi-sdl\SDL\Pas\sdl.pas',
   sdl_13 in '..\..\classes\jedi-sdl\SDL\Pas\sdl_13.pas',
   sdl_ScrollFrame in 'sdl_ScrollFrame.pas',
-  sdl_canvas in '..\..\classes\sdl custom\sdl_canvas.pas';
+  sdl_canvas in '..\..\classes\sdl custom\sdl_canvas.pas',
+  SDL_ImageManager in '..\..\classes\sdl custom\SDL_ImageManager.pas',
+  sdl_image in '..\..\classes\jedi-sdl\SDL_Image\Pas\sdl_image.pas',
+  SDL_rwStream in '..\..\classes\sdl custom\SDL_rwStream.pas',
+  SG_defs in '..\..\classes\sdl custom\SG_defs.pas',
+  turbu_OpenGL in '..\..\turbu\engines\basis\turbu_OpenGL.pas';
 
 end.

@@ -5,7 +5,8 @@ interface
 uses
    StdCtrls, Classes, Controls, ExtCtrls, DB, DBCtrls, Mask,
    JvExMask, JvSpin,
-   EventBuilder, EbEdit, dm_database, variable_selector, IDLookupCombo;
+   EventBuilder, EbEdit, dm_database, variable_selector, IDLookupCombo,
+  button_edit;
 
 type
    [EditorCategory('Characters', 'Change Experience')]
@@ -39,7 +40,7 @@ type
 
 implementation
 uses
-   EB_Characters;
+   EB_Characters, EbEditHelper;
 
 {$R *.dfm}
 

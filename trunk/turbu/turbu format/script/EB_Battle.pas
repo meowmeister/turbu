@@ -107,7 +107,7 @@ type
 implementation
 uses
    SysUtils, TypInfo,
-   turbu_defs;
+   turbu_defs, EB_ObjectHelper, EB_Expressions;
 
 { TEBMonsterHP }
 

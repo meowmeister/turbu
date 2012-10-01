@@ -165,7 +165,6 @@ object frmTurbuMain: TfrmTurbuMain
       Margins.Right = 4
       Margins.Bottom = 4
       Align = alTop
-      OnMoved = splSidebarMoved
     end
     object sbxPallette: TScrollBox
       Left = 0
@@ -188,6 +187,7 @@ object frmTurbuMain: TfrmTurbuMain
       Color = clGreen
       ParentColor = False
       TabOrder = 0
+      OnResize = splSidebarMoved
       object imgPalette: TSdlFrame
         Left = 0
         Top = 0
@@ -271,11 +271,11 @@ object frmTurbuMain: TfrmTurbuMain
       Grouped = True
       Style = tbsCheck
     end
-    object ToolButton1: TToolButton
+    object tbLayerSplitter: TToolButton
       Left = 81
       Top = 0
       Width = 8
-      Caption = 'ToolButton1'
+      Caption = 'tbLayerSplitter'
       ImageIndex = 2
       Style = tbsSeparator
     end
@@ -295,11 +295,11 @@ object frmTurbuMain: TfrmTurbuMain
       ImageIndex = 3
       OnClick = btnSaveAllClick
     end
-    object ToolButton2: TToolButton
+    object tbSaveSplitter: TToolButton
       Left = 143
       Top = 0
       Width = 8
-      Caption = 'ToolButton2'
+      Caption = 'tbSaveSplitter'
       ImageIndex = 4
       Style = tbsSeparator
     end
@@ -313,11 +313,11 @@ object frmTurbuMain: TfrmTurbuMain
       Top = 0
       Action = actPause
     end
-    object ToolButton3: TToolButton
+    object tbPlaySplitter: TToolButton
       Left = 205
       Top = 0
       Width = 8
-      Caption = 'ToolButton3'
+      Caption = 'tbPlaySplitter'
       ImageIndex = 6
       Style = tbsSeparator
     end
@@ -523,7 +523,7 @@ object frmTurbuMain: TfrmTurbuMain
     Left = 312
     Top = 152
     Bitmap = {
-      494C010108004C01880114001400FFFFFF00FF10FFFFFFFFFFFFFFFF424D3600
+      494C010108000D00040014001400FFFFFF00FF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000500000003C0000000100200000000000004B
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

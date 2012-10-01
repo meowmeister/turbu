@@ -45,6 +45,17 @@ contains
   MusicSelector in 'MusicSelector.pas',
   button_edit in '..\..\..\components\TURBU\button_edit.pas',
   map_tree_controller in '..\..\editor\map_tree_controller.pas',
-  scrollbox_manager in '..\..\editor\scrollbox_manager.pas';
+  scrollbox_manager in '..\..\editor\scrollbox_manager.pas',
+  JVDBSpinEdit,
+  JVDBLookup,
+  JVDBGridSelectColumnForm,
+  JVExDBGrids,
+  JVDBUltimGrid,
+  JVDBGrid,
+  JVDBUtils,
+  EBListView in '..\..\turbu format\design\EBListView.pas',
+  EbEdit in '..\..\turbu format\design\EB Editors\EbEdit.pas' {frmEbEditBase},
+  array_editor in '..\map engine\design\array_editor.pas' {frmArrayEdit},
+  ebSelector in '..\..\turbu format\design\EB Editors\ebSelector.pas' {frmEBSelector};
 
 end.

@@ -50,6 +50,7 @@ type
       FHandle: TSdlTexture;
    public
       constructor Create(size: TSgPoint); overload;
+      destructor Destroy; override;
       procedure SetRenderer; override;
       procedure DrawFull;
       property handle: TSdlTexture read FHandle;
@@ -175,6 +176,12 @@ begin
    FHandle := TSdlTexture.Create(FParent.FRenderer, info.texture_formats[0], sdltaRenderTarget, size.x, size.y);
    SDL_SetTextureBlendMode(FHandle, [sdlbBlend]);
    FSize := FHandle.size;
+end;
+
+destructor TSdlRenderTarget.Destroy;
+begin
+   FHandle.Free;
+   inherited Destroy;
 end;
 
 procedure TSdlRenderTarget.DrawFull;
@@ -316,10 +323,16 @@ begin
 end;
 
 procedure TSdlCanvas.Resize;
+var
+   x, y: integer;
 begin
-   SDL_GetWindowLogicalSize(FWindow, FSize.x, FSize.y);
-   if assigned(FOnResize) then
-      FOnResize(self);
+   SDL_GetWindowLogicalSize(FWindow, x, y);
+   if (x <> FSize.x) or (y <> FSize.y) then
+   begin
+      FSize := sgPoint(x, y);
+      if assigned(FOnResize) then
+         FOnResize(self);
+   end;
 end;
 
 (*
