@@ -136,9 +136,9 @@ type
 
       procedure VerticalExpand(base: TMatrix<T>; position: integer);
       procedure VerticalContract(base: TMatrix<T>; position: integer);
-      procedure HOrizontalContract(base: TMatrix<T>; fromRow, toRow,
+      procedure HorizontalContract(base: TMatrix<T>; fromRow, toRow,
         position: integer);
-      procedure HOrizontalExpand(base: TMatrix<T>; fromRow, toRow,
+      procedure HorizontalExpand(base: TMatrix<T>; fromRow, toRow,
         position: integer);
    public
       constructor Create(size: TSgPoint); overload;
@@ -150,7 +150,7 @@ type
 
 implementation
 uses
-   sysUtils;
+   sysUtils, TypInfo;
 
 { TMapEngine }
 
@@ -221,25 +221,34 @@ begin
    if (position < 1) or (position > 9) then
       raise Exception.CreateFmt('Invalid position value: %d; valid values are 1..9', [position]);
    Create(size);
-   if base.FHeight <= FHeight then
-      VerticalExpand(base, position)
-   else verticalContract(base, position);
+   try
+      if base.FHeight <= FHeight then
+         VerticalExpand(base, position)
+      else verticalContract(base, position);
+   except
+      on E: ERangeError do
+      begin
+         E.Message := format('TMatrix<%s>: Range check error resizing a %dX%d matrix to %dX%d, position %d',
+                             [PTypeInfo(TypeInfo(T)).Name, base.width, base.height, size.x, size.y, position]);
+         raise;
+      end;
+   end;
 end;
 
-procedure TMatrix<T>.HOrizontalExpand(base: TMatrix<T>; fromRow, toRow, position: integer);
+procedure TMatrix<T>.HorizontalExpand(base: TMatrix<T>; fromRow, toRow, position: integer);
 var
    start, i: integer;
 begin
    case position mod 3 of
-      0: start := 0;
-      1: start := (FWidth - base.Width) div 2;
-      2: start := FWidth - base.Width;
+      0: start := FWidth - base.Width;
+      1: start := 0;
+      2: start := (FWidth - base.Width) div 2;
    end;
    for i := 0 to base.Width - 1 do
-      self[i, toRow] := base[i + start, fromRow];
+      self[i + start, toRow] := base[i, fromRow];
 end;
 
-procedure TMatrix<T>.HOrizontalContract(base: TMatrix<T>; fromRow, toRow, position: integer);
+procedure TMatrix<T>.HorizontalContract(base: TMatrix<T>; fromRow, toRow, position: integer);
 var
    start, i: integer;
 begin
