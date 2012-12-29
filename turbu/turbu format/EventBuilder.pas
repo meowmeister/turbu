@@ -63,6 +63,7 @@ type
       FChildren: TObjectList<TEBObject>;
       FNameDic: TStringList;
       FOwner: TEBObject;
+      FDeleting: boolean;
 
       function HasText: Boolean;
       function GetArgList: string;
@@ -97,6 +98,7 @@ type
       class var FDatastore: IRpgDatastore;
 
       class function GetLookup(id: integer; const name: string): string;
+      class function GetFKLookup(key, id: integer; const name: string): string;
       function IndentString(level: integer): string;
       procedure NeededVariables(list: TStringList); virtual;
       procedure ScanUsesList(list: TStringList); virtual;
@@ -117,6 +119,7 @@ type
       function GetEnumerator: TEBEnumerator;
       function Serialize: string;
       procedure Add(aObject: TEBObject); virtual;
+      procedure RemoveChild(aObject: TEBObject);
       procedure SaveScript;
       function RequiredVariables: TStringList;
       function UsesList: TStringList;
@@ -144,6 +147,7 @@ type
       function AlwaysBlock: boolean; virtual;
       function AlwaysEndBlock: boolean; virtual;
       function MustBlock: boolean; virtual;
+      function ExprNodeTree: boolean; virtual;
    public
       function GetScript(indent: integer): string; override;
       function GetNode: TEBNode; override;
@@ -232,6 +236,17 @@ begin
    end;
 end;
 
+procedure TEBObject.RemoveChild(aObject: TEBObject);
+var
+   obj: TEBObject;
+begin
+   if FDeleting then
+      Exit;
+   obj := FChildren.Extract(aObject);
+   if (obj = aObject) and (obj.Name <> '') and assigned(FNameDic) then
+      FNameDic.Delete(FNameDic.IndexOf(obj.Name));
+end;
+
 procedure TEBObject.AddNamed(aObject: TEBObject);
 begin
    Add(aObject);
@@ -264,6 +279,9 @@ end;
 
 destructor TEBObject.Destroy;
 begin
+   FDeleting := true;
+   if assigned(FOwner) then
+      FOwner.RemoveChild(self);
    FNameDic.Free;
    FChildren.Free;
    FValues.Free;
@@ -636,6 +654,16 @@ begin
    result := TEBEnumerator.Create(self);
 end;
 
+class function TEBObject.GetFKLookup(key, id: integer;
+  const name: string): string;
+begin
+   if assigned(FDatastore) then
+      result := FDatastore.NameLookup(name, key, id)
+   else result := BAD_LOOKUP;
+   if result = BAD_LOOKUP then
+      result := format('??%s #%d??', [name, id]);
+end;
+
 class function TEBObject.GetLookup(id: integer; const name: string): string;
 begin
    if assigned(FDatastore) then
@@ -792,6 +820,11 @@ begin
    result := true;
 end;
 
+function TEBBlock.ExprNodeTree: boolean;
+begin
+   result := false;
+end;
+
 function TEBBlock.GetNodeText: string;
 begin
    result := self.name;
@@ -799,11 +832,13 @@ end;
 
 function TEBBlock.GetNode: TEBNode;
 var
-  child: TEBObject;
+   child: TEBObject;
+   exprNodes: boolean;
 begin
    result := inherited GetNode;
+   exprNodes := self.ExprNodeTree;
    for child in self do
-      if not (child is TEBExpression) then
+      if exprNodes or not (child is TEBExpression) then
          result.Add(child.GetNode);
    if AlwaysEndBlock then
       result.Add(TEBNode.Create(self, '<>'))
@@ -857,7 +892,8 @@ end;
 
 function TEBExpression.GetNode: TEBNode;
 begin
-   raise ERPGScriptError.Create('Expressions don''t get their own tree nodes!');
+   result := inherited;
+//   raise ERPGScriptError.Create('Expressions don''t get their own tree nodes!');
 end;
 
 { TEBRoutine }
@@ -946,7 +982,7 @@ var
          Exit;
       if result <> '' then
          result := result + '; ';
-      result := result + TrimLeft(format(PARAM, [childParam.FlagsName, fragment.CommaText, childParam.VarType]));
+      result := result + TrimLeft(format(PARAM, [childParam.FlagsName, fragment.CommaText, lastType]));
       fragment.Clear;
    end;
 
@@ -990,6 +1026,7 @@ end;
 function TEBParam.FlagsName: string;
 begin
    result := TypInfo.SetToString(PTypeInfo(TypeInfo(TParamFlags)), byte(FFlags * [pfVar, pfConst, pfOut]));
+   result := stringReplace(result, 'pf', '', [rfReplaceAll]);
 end;
 
 function TEBParam.HasFlags: Boolean;

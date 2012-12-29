@@ -2,15 +2,11 @@ inherited frmTimerEdit: TfrmTimerEdit
   Caption = 'Set Timer'
   ClientHeight = 305
   ClientWidth = 387
-  ExplicitWidth = 393
-  ExplicitHeight = 340
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Width = 387
     Height = 252
-    ExplicitWidth = 387
-    ExplicitHeight = 252
     object radWhichTimer: TRadioGroup
       Left = 6
       Top = 3
@@ -142,19 +138,13 @@ inherited frmTimerEdit: TfrmTimerEdit
   inherited btnOK: TButton
     Left = 104
     Top = 262
-    ExplicitLeft = 104
-    ExplicitTop = 262
   end
   inherited btnCancel: TButton
     Left = 198
     Top = 262
-    ExplicitLeft = 198
-    ExplicitTop = 262
   end
   inherited btnHelp: TButton
     Left = 291
     Top = 262
-    ExplicitLeft = 291
-    ExplicitTop = 262
   end
 end

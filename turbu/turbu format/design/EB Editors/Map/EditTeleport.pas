@@ -32,6 +32,7 @@ const
 
 type
    [EditorCategory('Map', 'Teleport')]
+   [EditorContext('RM2K')]
    TfrmEBEditTeleport = class(TfrmEbEditBase, ITurbuController)
       trvMapTree: TTreeView;
       sbxMain: TScrollBox;

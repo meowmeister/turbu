@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Messages', 'Message Options')]
+   [EditorContext('RM2K')]
    TfrmMessageOptions = class(TfrmEbEditBase)
       GroupBox3: TGroupBox;
       radVisibility: TRadioGroup;

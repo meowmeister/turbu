@@ -21,8 +21,8 @@ unit EditNull;
 interface
 
 uses
-  Forms, Messages, StdCtrls, ExtCtrls, Classes, Controls,
-  EventBuilder, EbEdit, EB_System, EB_Maps;
+   Forms, Messages, StdCtrls, ExtCtrls, Classes, Controls,
+   EventBuilder, EbEdit;
 
 const WM_HIDE = WM_USER + 1;
 
@@ -43,20 +43,6 @@ type
       function NewClassType: TEbClass; override;
    end;
 
-   [EditorCategory('Basics', 'Game Over')]
-   TFrmGameOver = class(TfrmEBEditNull<TEBGameOver>);
-
-   [EditorCategory('Basics', 'Title Screen')]
-   TFrmTitleScreen = class(TfrmEBEditNull<TEBTitleScreen>);
-
-   [EditorCategory('Map', 'Ride Vehicle')]
-   TFrmRideVehicle = class(TfrmEBEditNull<TEBRideVehicle>);
-
-   [EditorCategory('Map', 'End Flash Screen')]
-   TFrmEndFlashScreen = class(TfrmEBEditNull<TEBEndFlash>);
-
-   [EditorCategory('Map', 'End Shake Screen')]
-   TFrmEndShakeScreen = class(TfrmEBEditNull<TEBEndShake>);
 
 implementation
 uses
@@ -95,15 +81,4 @@ begin
    result := T;
 end;
 
-initialization
-   RegisterEbEditor(TEBGameOver, TFrmGameOver);
-   RegisterEbEditor(TEBTitleScreen, TFrmTitleScreen);
-   RegisterEbEditor(TEBRideVehicle, TFrmRideVehicle);
-   RegisterEBEditor(TEBEndShake, TFrmEndShakeScreen);
-finalization
-   UnRegisterEbEditor(TEBGameOver);
-   UnRegisterEbEditor(TEBTitleScreen);
-   UnRegisterEbEditor(TEBRideVehicle);
-   UnRegisterEBEditor(TEBEndFlash);
-   UnRegisterEBEditor(TEBEndShake);
 end.

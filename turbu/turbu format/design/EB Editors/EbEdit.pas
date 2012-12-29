@@ -22,12 +22,13 @@ interface
 
 uses
    SysUtils, Classes, Controls, Forms, StdCtrls, ExtCtrls, Generics.Collections,
-   DB, JVSpin,
+   DB, JVSpin, DBClient,
    EventBuilder, finalizer_hack, turbu_map_interface,
    IDLookupCombo, EB_Expressions;
 
 type
    EditorCategoryAttribute = finalizer_hack.EditorCategoryAttribute;
+   EditorContextAttribute = finalizer_hack.EditorContextAttribute;
    TfrmEBEditBase = class;
    TEbEditorClass = class of TfrmEBEditBase;
 
@@ -61,27 +62,42 @@ type
       procedure EnableControl(control: TControl; controller: TRadioButton); overload;
       procedure EnableControl(control: TControl; controller: TCheckBox); overload;
       procedure EnableGroupBox(box: TGroupBox; value: boolean);
+      procedure PrepareNewObject(obj: TEBObject); dynamic;
    public
       procedure SetupMap(const map: IRpgMap); dynamic;
       procedure SetupEvent(const obj: IRpgMapObject); dynamic;
       function NewObj: TEbObject; dynamic;
       class function Category: EditorCategoryAttribute;
+      class function Context: EditorContextAttribute;
+   end;
+
+   IContextualEditor = interface
+   ['{13A5C344-D6F7-4130-90F2-8490D3F4E0EA}']
+      procedure SetContext(const context, suffix: string);
+   end;
+
+   IVariableEditor = interface
+   ['{A41D2914-5536-4E8A-9134-227E76196C27}']
+      procedure SetVariables(locals, globals: TCustomClientDataset);
    end;
 
    procedure RegisterEbEditor(ebType: TEbClass; editor: TEbEditorClass);
    procedure UnregisterEbEditor(ebType: TEbClass);
-   function NewEbObject(ebType: TEbClass; const context: IRpgMap; const mapObj: IRpgMapObject): TEbObject;
-   function EditEbObject(obj: TEbObject; const context: IRpgMap; const mapObj: IRpgMapObject): boolean;
+   procedure RegisterEBGlobalProp(const category, name: string);
+   function GetEBGlobalProps(const category: string): TStringList;
+   function EditEbObject(obj: TEbObject; const context: IRpgMap; const mapObj: IRpgMapObject;
+      const category, suffix: string; locals, globals: TCustomClientDataset): boolean;
 
 implementation
 uses
-   RTTI,
+   RTTI, StrUtils,
    rttiHelper, array_editor;
 
 {$R *.dfm}
 
 var
    dic: TEditorDic;
+   properties: TObjectDictionary<string, TStringList>;
 
 procedure RegisterEbEditor(ebType: TEbClass; editor: TEbEditorClass);
 begin
@@ -93,28 +109,32 @@ begin
    dic.Remove(ebType);
 end;
 
-function NewEbObject(ebType: TEbClass; const context: IRpgMap; const mapObj: IRpgMapObject): TEbObject;
+procedure RegisterEBGlobalProp(const category, name: string);
 var
-   editorCls: TEbEditorClass;
-   editor: TfrmEBEditBase;
+   sl: TStringList;
 begin
-   if not dic.TryGetValue(ebType, editorCls) then
-      exit(nil);
-
-   editor := editorCls.Create(nil);
-   try
-      editor.SetupMap(context);
-      editor.SetupEvent(mapObj);
-      result := editor.NewObj;
-   finally
-      editor.Release;
+   if not properties.TryGetValue(category, sl) then
+   begin
+      sl := TStringList.Create;
+      sl.Duplicates := dupError;
+      sl.Sorted := true;
+      properties.Add(category, sl);
    end;
+   sl.Add(name);
 end;
 
-function EditEbObject(obj: TEbObject; const context: IRpgMap; const mapObj: IRpgMapObject): boolean;
+function GetEBGlobalProps(const category: string): TStringList;
+begin
+   properties.TryGetValue(category, result);
+end;
+
+function EditEbObject(obj: TEbObject; const context: IRpgMap; const mapObj: IRpgMapObject;
+   const category, suffix: string; locals, globals: TCustomClientDataset): boolean;
 var
    editorCls: TEbEditorClass;
    editor: TfrmEBEditBase;
+   cxe: IContextualEditor;
+   vars: IVariableEditor;
 begin
    if not dic.TryGetValue(TEbClass(obj.classType), editorCls) then
       exit(false);
@@ -123,6 +143,10 @@ begin
    try
       editor.SetupMap(context);
       editor.SetupEvent(mapObj);
+      if supports(editor, IContextualEditor, cxe) then
+         cxe.SetContext(category, suffix);
+      if supports(editor, IVariableEditor, vars) then
+         vars.SetVariables(locals, globals);
       result := editor.EditObj(obj);
    finally
       editor.Release;
@@ -136,9 +160,16 @@ begin
    result := TRttiContext.Create.GetType(self).GetAttribute(EditorCategoryAttribute) as EditorCategoryAttribute;
 end;
 
+class function TfrmEBEditBase.Context: EditorContextAttribute;
+begin
+   result := TRttiContext.Create.GetType(self).GetAttribute(EditorContextAttribute) as EditorContextAttribute;
+end;
+
 function TfrmEBEditBase.ContextLookup(const name: string): integer;
 begin
-   result := -TfrmArrayEdit.VariableContext.Lookup('name', name, 'id');
+//   result := -TfrmArrayEdit.VariableContext.Lookup('name', name, 'id');
+result := -1;
+{$MESSAGE WARN 'TfrmEBEditBase.ContextLookup is broken, please fix it!'}
 end;
 
 function TfrmEBEditBase.EditObj(obj: TEbObject): boolean;
@@ -193,6 +224,7 @@ begin
    if self.ShowModal = mrOK then
    begin
       result := NewClassType.Create(nil);
+      PrepareNewObject(result);
       try
          DownloadObject(result);
       except
@@ -201,6 +233,11 @@ begin
       end;
    end
    else result := nil;
+end;
+
+procedure TfrmEBEditBase.PrepareNewObject(obj: TEBObject);
+begin
+  //this method intentionally left blank
 end;
 
 procedure TfrmEBEditBase.SetupEvent(const obj: IRpgMapObject);
@@ -252,6 +289,8 @@ end;
 
 initialization
    dic := TEditorDic.Create;
+   properties := TObjectDictionary<string, TStringList>.Create([doOwnsValues]);
 finalization
    dic.Free;
+   properties.Free;
 end.

@@ -12,6 +12,14 @@ type
       property name: string read FName;
    end;
 
+   EditorContextAttribute = class(TCustomAttribute)
+   private
+      FName: string;
+   public
+      constructor Create(const name: string);
+      property name: string read FName;
+   end;
+
 implementation
 
 { EditorCategoryAttribute }
@@ -19,6 +27,13 @@ implementation
 constructor EditorCategoryAttribute.Create(const category, name: string);
 begin
    FCategory := category;
+   FName := name;
+end;
+
+{ EditorContextAttribute }
+
+constructor EditorContextAttribute.Create(const name: string);
+begin
    FName := name;
 end;
 

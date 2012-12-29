@@ -1,12 +1,10 @@
 inherited frmInputNumber: TfrmInputNumber
   Caption = 'Input Number'
   ClientHeight = 117
-  ExplicitHeight = 152
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 64
-    ExplicitHeight = 64
     object GroupBox2: TGroupBox
       Left = 96
       Top = 8
@@ -25,15 +23,12 @@ inherited frmInputNumber: TfrmInputNumber
   end
   inherited btnOK: TButton
     Top = 74
-    ExplicitTop = 74
   end
   inherited btnCancel: TButton
     Top = 74
-    ExplicitTop = 74
   end
   inherited btnHelp: TButton
     Top = 74
-    ExplicitTop = 74
   end
   object GroupBox1: TGroupBox
     Left = 8

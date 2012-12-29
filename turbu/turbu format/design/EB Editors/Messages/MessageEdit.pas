@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Messages', 'Show Message')]
+   [EditorContext('RM2K')]
    TfrmMessageEdit = class(TfrmEbEditBase)
       Memo1: TMemo;
    private

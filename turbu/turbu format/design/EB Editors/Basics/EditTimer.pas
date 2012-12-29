@@ -21,12 +21,13 @@ unit EditTimer;
 interface
 
 uses
-  SysUtils, Classes, Controls, Forms, StdCtrls, ExtCtrls, Mask,
-  JvExMask, JvSpin,
-  EventBuilder, EbEdit, variable_selector;
+   SysUtils, Classes, Controls, Forms, StdCtrls, ExtCtrls, Mask,
+   JvExMask, JvSpin,
+   EventBuilder, EbEdit, variable_selector, turbu_variable_selector, button_edit;
 
 type
    [EditorCategory('Basics', 'Set Timer')]
+   [EditorContext('RM2K')]
    TfrmTimerEdit = class(TfrmEbEditBase)
       radWhichTimer: TRadioGroup;
       radOperation: TRadioGroup;

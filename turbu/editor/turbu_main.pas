@@ -112,6 +112,7 @@ type
       procedure imgPalettePaint(Sender: TObject);
    private
       pluginManager: TJvPluginManager;
+      FLogoIndex: integer;
       FScrollboxManager: TScrollboxManager;
       FMapEngine: IDesignMapEngine;
       FTileSize: TsgPoint;
@@ -152,7 +153,10 @@ type
       procedure TilesetChanged;
       procedure HandleTilesetChanged(var message); message WM_USER;
       procedure SetButton(button: TToolButton; position: TButtonPosition);
+      procedure ClearMapMenuItem(item: TMenuItem);
+      procedure SetMapMenuItem(item: TMenuItem);
       procedure UpdateEngine(const filename: string);
+      function AddTileImage(il: TImageList; index: integer): integer;
    public
       { Public declarations }
    end;
@@ -271,6 +275,11 @@ begin
    FMusicPlayer.ShowModal;
 end;
 
+function TfrmTurbuMain.AddTileImage(il: TImageList; index: integer): integer;
+begin
+   result := ilToolbarIcons.AddImage(il, index);
+end;
+
 procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);
 var
    texture: TSdlTexture;
@@ -379,7 +388,6 @@ var
    convert1, convert2: PSdlSurface;
    rw: PSDL_RWops;
    stream: TResourceStream;
-   index: integer;
 begin
    stream := TResourceStream.Create(HInstance, 'logo', RT_RCDATA);
    rw := SDLStreamSetup(stream);
@@ -388,13 +396,13 @@ begin
    convert1 := TSdlSurface.Create(1, 1, 32);
    convert2 := TSdlSurface.Convert(surface, convert1.Format);
 
-   index := imgLogo.AddTexture(convert2);
+   FLogoIndex := imgLogo.AddTexture(convert2);
    SDLStreamCloseRWops(rw);
    stream.Free;
    surface.Free;
    convert1.Free;
 
-   imgLogo.DrawTexture(index);
+   imgLogo.DrawTexture(FLogoIndex);
    FScrollboxManager := TScrollboxManager.Create(imgBackground, imgLogo, sbHoriz, sbVert,
       function: single begin result := FZoom end,
       function: integer begin result := FTileSize.x end,
@@ -469,7 +477,10 @@ procedure TfrmTurbuMain.imgLogoPaint(Sender: TObject);
 begin
    if assigned(FMapEngine) then
       FMapEngine.Repaint
-   else imgLogo.Flip;
+   else begin
+      imgLogo.DrawTexture(FLogoIndex);
+      imgLogo.Flip;
+   end;
 end;
 
 procedure TfrmTurbuMain.imgPaletteMouseDown(Sender: TObject;
@@ -778,6 +789,18 @@ begin
    box.canvas.brush.color := fg;
    Windows.SetBkColor(box.Canvas.Handle, ColorToRgb(bg));
    box.canvas.FillRect(box.ClientRect);
+end;
+
+procedure TfrmTurbuMain.SetMapMenuItem(item: TMenuItem);
+begin
+   if mnuTreePopup.Items.IndexOf(item) = -1 then
+      mnuTreePopup.Items.Add(item);
+end;
+
+procedure TfrmTurbuMain.ClearMapMenuItem(item: TMenuItem);
+begin
+   if mnuTreePopup.Items.IndexOf(item) <> -1 then
+      mnuTreePopup.Items.Remove(item);
 end;
 
 procedure TfrmTurbuMain.SetZoom(const value: single);

@@ -3,15 +3,11 @@ inherited frmShowChoice: TfrmShowChoice
   ClientHeight = 296
   ClientWidth = 528
   OnCreate = FormCreate
-  ExplicitWidth = 534
-  ExplicitHeight = 331
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Width = 528
     Height = 243
-    ExplicitWidth = 528
-    ExplicitHeight = 243
     object GroupBox2: TGroupBox
       Left = 8
       Top = 66
@@ -78,20 +74,14 @@ inherited frmShowChoice: TfrmShowChoice
   inherited btnOK: TButton
     Left = 245
     Top = 253
-    ExplicitLeft = 245
-    ExplicitTop = 253
   end
   inherited btnCancel: TButton
     Left = 339
     Top = 253
-    ExplicitLeft = 339
-    ExplicitTop = 253
   end
   inherited btnHelp: TButton
     Left = 432
     Top = 253
-    ExplicitLeft = 432
-    ExplicitTop = 253
   end
   object grpCancel: TRadioGroup
     Left = 319

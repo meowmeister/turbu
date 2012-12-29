@@ -23,10 +23,12 @@ interface
 uses
    Forms, DBCtrls, StdCtrls, Classes, Controls, ExtCtrls, DB,
    EventBuilder, EbEdit, IDLookupCombo, variable_selector, button_edit,
+   turbu_variable_selector,
    turbu_map_interface, sg_defs;
 
 type
    [EditorCategory('Map', 'Teleport Vehicle')]
+   [EditorContext('RM2K')]
    TfrmTeleportVehicle = class(TfrmEbEditBase)
       cboVehicle: TIDLookupCombo;
       srcVehicles: TDataSource;

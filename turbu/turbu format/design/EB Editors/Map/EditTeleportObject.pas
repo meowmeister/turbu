@@ -21,12 +21,13 @@ unit EditTeleportObject;
 interface
 
 uses
-  Forms, Controls, Classes, Dialogs, StdCtrls, ExtCtrls,
-  EventBuilder, EbEdit, variable_selector, button_edit, turbu_map_interface,
-  sg_defs;
+   Forms, Controls, Classes, Dialogs, StdCtrls, ExtCtrls,
+   EventBuilder, EbEdit, variable_selector, turbu_variable_selector, button_edit,
+   turbu_map_interface, sg_defs;
 
 type
    [EditorCategory('Map', 'Teleport Map Object')]
+   [EditorContext('RM2K')]
    TfrmEditTeleportObject = class(TfrmEbEditBase)
       cboObject: TComboBox;
       txtPosition: TRpgButtonEdit;

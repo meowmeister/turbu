@@ -1,13 +1,10 @@
 inherited frmEBEditInventory: TfrmEBEditInventory
   Caption = 'Change Inventory'
   ClientHeight = 319
-  ExplicitWidth = 320
-  ExplicitHeight = 354
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 266
-    ExplicitHeight = 266
     object grpOperation: TRadioGroup
       Left = 8
       Top = 8
@@ -70,15 +67,12 @@ inherited frmEBEditInventory: TfrmEBEditInventory
   end
   inherited btnOK: TButton
     Top = 276
-    ExplicitTop = 276
   end
   inherited btnCancel: TButton
     Top = 276
-    ExplicitTop = 276
   end
   inherited btnHelp: TButton
     Top = 276
-    ExplicitTop = 276
   end
   object GroupBox2: TGroupBox
     Left = 8

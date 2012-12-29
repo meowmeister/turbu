@@ -1,13 +1,10 @@
 inherited frmEBEditHP: TfrmEBEditHP
   Caption = 'Change HP'
   ClientHeight = 366
-  ExplicitWidth = 320
-  ExplicitHeight = 240
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 313
-    ExplicitHeight = 313
     object grpOperation: TRadioGroup
       Left = 8
       Top = 142
@@ -79,14 +76,11 @@ inherited frmEBEditHP: TfrmEBEditHP
   end
   inherited btnOK: TButton
     Top = 323
-    ExplicitTop = 323
   end
   inherited btnCancel: TButton
     Top = 323
-    ExplicitTop = 323
   end
   inherited btnHelp: TButton
     Top = 323
-    ExplicitTop = 323
   end
 end

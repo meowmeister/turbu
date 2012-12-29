@@ -22,11 +22,12 @@ interface
 
 uses
    Classes, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
-   variable_selector,
+   variable_selector, turbu_variable_selector,
    EventBuilder, EbEdit, button_edit;
 
 type
    [EditorCategory('Basics', 'Set Switch')]
+   [EditorContext('RM2K')]
    TfrmEbSetSwitch = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       radSwitch: TRadioButton;

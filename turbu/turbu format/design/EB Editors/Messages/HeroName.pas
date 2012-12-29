@@ -3,16 +3,17 @@ unit HeroName;
 interface
 
 uses
-  Classes, Controls, Forms, StdCtrls, DBCtrls, ExtCtrls,
-  EventBuilder, EbEdit, IDLookupCombo, DB;
+   Classes, Controls, Forms, StdCtrls, DBCtrls, ExtCtrls,
+   EventBuilder, EbEdit, IDLookupCombo, DB;
 
 type
    [EditorCategory('Messages', 'Enter Hero Name')]
+   [EditorContext('RM2K')]
    TfrmInputHeroName = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       cboHeroID: TIDLookupCombo;
       chkShowName: TCheckBox;
-    srcHeroes: TDataSource;
+      srcHeroes: TDataSource;
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;

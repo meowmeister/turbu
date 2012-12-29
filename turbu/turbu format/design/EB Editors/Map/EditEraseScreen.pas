@@ -39,9 +39,11 @@ type
    end;
 
    [EditorCategory('Map', 'Erase Screen')]
+   [EditorContext('RM2K')]
    TfrmEBEditEraseScreen = class(TfrmEBEditShowTransition<TEBEraseScreen>);
 
    [EditorCategory('Map', 'Show Screen')]
+   [EditorContext('RM2K')]
    TfrmEBEditShowScreen = class(TfrmEBEditShowTransition<TEBShowScreen>)
       procedure FormShow(Sender: TObject);
    end;

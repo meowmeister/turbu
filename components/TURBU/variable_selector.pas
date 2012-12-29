@@ -24,12 +24,14 @@ uses
    button_edit;
 
 type
-   TVarSelector = class(TRpgCustomButtonEdit)
+   TCustomVarSelector = class(TRpgCustomButtonEdit)
    private
       FID: integer;
       FVarName: string;
+      FLocals: TCustomClientDataset;
       procedure UpdateText;
       procedure SetID(const Value: integer);
+    procedure SetVarName(const Value: string);
    protected
       procedure ButtonClick(Sender: TObject); override;
       function GetName: string; virtual; abstract;
@@ -37,96 +39,95 @@ type
    public
       constructor Create(AOwner: TComponent); override;
       property ID: integer read FID write SetID;
-      property varname: string read FVarName;
+      property varname: string read FVarName write SetVarName;
+   published
+      property LocalContext: TCustomClientDataset read FLocals write FLocals;
    end;
 
-   TSwitchSelector = class(TVarSelector)
-      function GetName: string; override;
+   TVarSelector = class(TCustomVarSelector)
+   private
+      FGlobals: TCustomClientDataset;
+   protected
       function GetDset: TCustomClientDataset; override;
-   end;
-
-   TIntSelector = class(TVarSelector)
       function GetName: string; override;
-      function GetDset: TCustomClientDataset; override;
+   published
+      property GlobalContext: TCustomClientDataset read FGlobals write FGlobals;
    end;
 
 procedure Register;
 
 implementation
-{$IFNDEF COMPONENT}
 uses
-   array_editor, dm_database;
-{$ENDIF}
+   variants
+   {$IFNDEF COMPONENT}, array_editor{$ENDIF};
 
 procedure Register;
 begin
-   RegisterComponents('TURBU', [TIntSelector, TSwitchSelector]);
+   RegisterComponents('TURBU', [TVarSelector]);
 end;
 
-{ TVarSelector }
+{ TCustomVarSelector }
 
-constructor TVarSelector.Create(AOwner: TComponent);
+constructor TCustomVarSelector.Create(AOwner: TComponent);
 begin
    inherited Create(AOwner);
    self.ID := 0;
 end;
 
-procedure TVarSelector.SetID(const Value: integer);
+procedure TCustomVarSelector.SetID(const Value: integer);
 begin
    FID := Value;
-{$IFNDEF COMPONENT}
    UpdateText;
-{$ELSE}
-   self.Caption := '';
-{$ENDIF}
 end;
 
-procedure TVarSelector.UpdateText;
+procedure TCustomVarSelector.SetVarName(const Value: string);
+var
+   id: variant;
 begin
-{$IFNDEF COMPONENT}
+   assert(assigned(FLocals));
+   id := FLocals.Lookup('name', value, 'id');
+   assert(not VarIsNull(id));
+   FID := -id;
+   UpdateText;
+end;
+
+procedure TCustomVarSelector.UpdateText;
+begin
+   {$IFNDEF COMPONENT}
    if FID >= 0 then
-      Self.caption := GetDset.Lookup('id', FID, 'DisplayName')
-   else begin
-      FVarname := TfrmArrayEdit.VariableContext.Lookup('id', -FID, 'name');
+   begin
+      if GetDset <> nil then
+         Self.caption := GetDset.Lookup('id', FID, 'Name')
+      else self.Caption := '';
+   end
+   else if assigned(FLocals) then
+   begin
+      FVarname := FLocals.Lookup('id', -FID, 'name');
       Self.Caption := 'Local: ' + FVarname;
-   end;
-{$ENDIF}
+   end
+   else {$ENDIF} Self.Caption := '';
 end;
 
-procedure TVarSelector.ButtonClick(Sender: TObject);
+procedure TCustomVarSelector.ButtonClick(Sender: TObject);
 begin
 {$IFNDEF COMPONENT}
-   TfrmArrayEdit.Edit(GetName, 'integer', GetDset, FID);
+   TfrmArrayEdit.Edit(GetName, 'integer', GetDset, FLocals, FID);
    UpdateText;
 {$ENDIF}
 end;
 
-{ TSwitchSelector }
+{ TVarSelector }
 
-function TSwitchSelector.GetDset: TCustomClientDataset;
+function TVarSelector.GetDset: TCustomClientDataset;
 begin
-{$IFNDEF COMPONENT}
-   result := dmDatabase.Switches;
-{$ENDIF}
+   result := FGlobals;
 end;
 
-function TSwitchSelector.GetName: string;
+function TVarSelector.GetName: string;
 begin
-   result := 'Switch';
-end;
-
-{ TIntSelector }
-
-function TIntSelector.GetDset: TCustomClientDataset;
-begin
-{$IFNDEF COMPONENT}
-   result := dmDatabase.Variables;
-{$ENDIF}
-end;
-
-function TIntSelector.GetName: string;
-begin
-   result := 'Variable';
+   if assigned(FGlobals) then
+      result := FGlobals.Name
+   else result := '';
 end;
 
 end.

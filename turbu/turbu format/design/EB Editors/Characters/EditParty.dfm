@@ -1,13 +1,10 @@
 inherited frmEBEditParty: TfrmEBEditParty
   Caption = 'Change Party'
   ClientHeight = 215
-  ExplicitWidth = 320
-  ExplicitHeight = 250
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 162
-    ExplicitHeight = 162
     object GroupBox2: TGroupBox
       Left = 8
       Top = 62
@@ -68,15 +65,12 @@ inherited frmEBEditParty: TfrmEBEditParty
   end
   inherited btnOK: TButton
     Top = 172
-    ExplicitTop = 172
   end
   inherited btnCancel: TButton
     Top = 172
-    ExplicitTop = 172
   end
   inherited btnHelp: TButton
     Top = 172
-    ExplicitTop = 172
   end
   object srcHeroes: TDataSource
     DataSet = dmDatabase.heroes

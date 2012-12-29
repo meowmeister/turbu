@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Messages', 'Open Shop')]
+   [EditorContext('RM2K')]
    TfrmEBEditShop = class(TfrmEbEditBase)
       radTransactions: TRadioGroup;
       grpMessage: TGroupBox;

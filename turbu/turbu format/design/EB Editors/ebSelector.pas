@@ -21,7 +21,7 @@ unit EbSelector;
 interface
 
 uses
-   Controls, Forms, ComCtrls, StdCtrls, Classes, ExtCtrls,
+   Controls, Forms, ComCtrls, StdCtrls, Classes, ExtCtrls, Generics.Collections,
    turbu_MultiMaps, EbEdit;
 
 type
@@ -35,54 +35,82 @@ type
       trvList: TTreeView;
       procedure FormCreate(Sender: TObject);
       procedure trvListClick(Sender: TObject);
-    procedure trvListDblClick(Sender: TObject);
+      procedure trvListDblClick(Sender: TObject);
+      procedure FormDestroy(Sender: TObject);
    private
       type
          TTreeTemplate = class(TMultiMap<string, TTreeData>);
       class var
-         FMap: TTreeTemplate;
+         FMap: TDictionary<string, TTreeTemplate>;
          FMapCount: integer;
+      var
+         FCategories: TStringList;
+         FCatStr: string;
+         FSuffix: string;
       procedure BuildMap;
       function GetCurrent: TEbEditorClass;
+      procedure AddEditor(cls: TEBEditorClass; lMap: TTreeTemplate);
    protected
       class constructor Create;
       class destructor Destroy;
    public
+      constructor Create(const cat, suffix: string); reintroduce;
       property Current: TEbEditorClass read GetCurrent;
    end;
 
 implementation
 uses
-   Math, SysUtils, Generics.Defaults, Generics.Collections,
+Windows,
+   Math, SysUtils, Generics.Defaults,
    EventBuilder, turbu_functional;
 
 {$R *.dfm}
 
 { TfrmEBSelector }
 
+procedure TfrmEBSelector.AddEditor(cls: TEBEditorClass; lMap: TTreeTemplate);
+var
+   cat: EditorCategoryAttribute;
+   ctx: EditorContextAttribute;
+begin
+   ctx := cls.Context;
+   if ctx = nil then
+   begin
+      OutputDebugString(PChar(Format('No context for editor class %s', [cls.ClassName])));
+      Exit;
+   end
+   else if (FCategories.IndexOf(ctx.name) = -1) then
+      Exit;
+   cat := cls.Category;
+   if assigned(cat) then
+   begin
+      if (not lMap.ContainsKey(cat.category)) or
+         (TFunctional.countWhere<TTreeData>
+            (lMap[cat.category],
+            function(data: TTreeData): boolean
+            begin result := data.value = cls; end) = 0) then
+            lMap.Add(cat.category, TTreeData.Create(cat, cls))
+   end;
+end;
+
 procedure TfrmEBSelector.BuildMap;
 var
    cls: TEbEditorClass;
-   cat: EditorCategoryAttribute;
+   catStr: string;
+   lMap: TTreeTemplate;
 begin
-   if AllEditors.Count = FMapCount then
+   catStr := FCategories.CommaText;
+   FMap.TryGetValue(catStr, lMap);
+   if (assigned(lMap)) and (AllEditors.Count = FMapCount) then
       Exit;
-   FMap.Clear;
-   for cls in AllEditors.Values do
+   if lMap = nil then
    begin
-      cat := cls.Category;
-      if assigned(cat) then
-      begin
-         if (not FMap.ContainsKey(cat.category)) or
-            (TFunctional.countWhere<TTreeData>
-            (FMap[cat.category],
-            function(data: TTreeData): boolean
-            begin
-               result := data.value = cls;
-            end) = 0) then
-            FMap.Add(cat.category, TTreeData.Create(cat, cls))
-      end;
-   end;
+      lMap := TTreeTemplate.Create;
+      FMap.Add(catStr, lMap)
+   end
+   else FMap.Clear;
+   for cls in AllEditors.Values do
+      addEditor(cls, lMap);
    FMapCount := AllEditors.Count;
 end;
 
@@ -114,7 +142,23 @@ var
 class constructor TfrmEBSelector.Create;
 begin
    treeData := TTreeDataType.Create;
-   FMap := TTreeTemplate.Create;
+   FMap := TObjectDictionary<string, TTreeTemplate>.Create([doOwnsValues]);
+end;
+
+constructor TfrmEBSelector.Create(const cat, suffix: string);
+var
+   i: integer;
+begin
+   FCategories := TStringList.Create;
+   FCategories.StrictDelimiter := true;
+   FCategories.CommaText := cat;
+   FCategories.Add('Universal');
+   if suffix <> '' then
+      for i := 0 to FCategories.count - 1 do
+         FCategories[i] := FCategories[i] + suffix;
+   FCatStr := cat;
+   FSuffix := suffix;
+   inherited Create(nil);
 end;
 
 class destructor TfrmEBSelector.Destroy;
@@ -130,19 +174,27 @@ var
    keys: TArray<string>;
    key: string;
    list: TArray<TTreeData>;
+   lMap: TTreeTemplate;
 begin
    inherited;
    BuildMap;
-   keys := FMap.Keys.ToArray;
+   lMap := FMap[FCategories.CommaText];
+   keys := lMap.Keys.ToArray;
    TArray.Sort<string>(keys);
    for key in keys do
    begin
       category := trvList.Items.AddChild(nil, key);
-      list := FMap[key].ToArray;
+      list := lMap[key].ToArray;
       TArray.Sort<TTreeData>(list, TreeData);
       for data in list do
          trvList.Items.AddChildObject(category, data.key.name, data.Value);
    end;
+end;
+
+procedure TfrmEBSelector.FormDestroy(Sender: TObject);
+begin
+   FCategories.Free;
+   inherited;
 end;
 
 procedure TfrmEBSelector.trvListClick(Sender: TObject);

@@ -1,13 +1,10 @@
 inherited frmEBEditMP: TfrmEBEditMP
   Caption = 'Change MP'
   ClientHeight = 342
-  ExplicitWidth = 320
-  ExplicitHeight = 240
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 289
-    ExplicitHeight = 289
     object grpOperation: TRadioGroup
       Left = 8
       Top = 142
@@ -71,14 +68,11 @@ inherited frmEBEditMP: TfrmEBEditMP
   end
   inherited btnOK: TButton
     Top = 299
-    ExplicitTop = 299
   end
   inherited btnCancel: TButton
     Top = 299
-    ExplicitTop = 299
   end
   inherited btnHelp: TButton
     Top = 299
-    ExplicitTop = 299
   end
 end

@@ -24,10 +24,11 @@ uses
    Forms, StdCtrls, Classes, Controls, ExtCtrls, DB, DBCtrls, DBIndexComboBox,
    Mask, DBClient, JvExMask, JvSpin,
    dm_database, EbEdit, EventBuilder, variable_selector, turbu_map_interface,
-   IDLookupCombo, button_edit;
+   IDLookupCombo, turbu_variable_selector, button_edit;
 
 type
    [EditorCategory('Basics', 'Call Script')]
+   [EditorContext('RM2K')]
    TfrmEBEditCall = class(TfrmEbEditBase)
       grpMain: TGroupBox;
       radGlobalScript: TRadioButton;

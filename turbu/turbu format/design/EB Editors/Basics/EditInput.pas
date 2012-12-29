@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Basics', 'Direct Input')]
+   [EditorContext('RM2K')]
    TfrmInputEdit = class(TfrmEbEditBase)
    protected
       procedure UploadObject(obj: TEbObject); override;

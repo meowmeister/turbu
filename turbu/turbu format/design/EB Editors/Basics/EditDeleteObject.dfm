@@ -1,14 +1,12 @@
 inherited frmEBDeleteObject: TfrmEBDeleteObject
   Caption = 'Delete Map Object'
   ClientHeight = 136
-  ExplicitHeight = 171
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 83
     Padding.Top = 5
     Padding.Right = 10
-    ExplicitHeight = 83
     object radDuration: TRadioGroup
       Left = 10
       Top = 5
@@ -25,14 +23,11 @@ inherited frmEBDeleteObject: TfrmEBDeleteObject
   end
   inherited btnOK: TButton
     Top = 93
-    ExplicitTop = 93
   end
   inherited btnCancel: TButton
     Top = 93
-    ExplicitTop = 93
   end
   inherited btnHelp: TButton
     Top = 93
-    ExplicitTop = 93
   end
 end

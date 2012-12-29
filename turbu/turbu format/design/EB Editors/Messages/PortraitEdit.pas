@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Messages', 'Select Portrait')]
+   [EditorContext('RM2K')]
    TfrmSelectPortrait = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       imgPortrait: TSdlFrame;

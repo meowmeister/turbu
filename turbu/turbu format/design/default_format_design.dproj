@@ -75,7 +75,6 @@
 				<Form>frmPortraitSelector</Form>
 			</DCCReference>
 			<DCCReference Include="sdl_frame_helper.pas"/>
-			<DCCReference Include="..\..\..\components\TURBU\variable_selector.pas"/>
 			<DCCReference Include="EB Editors\Messages\PortraitEdit.pas">
 				<Form>frmSelectPortrait</Form>
 			</DCCReference>
@@ -108,9 +107,6 @@
 			</DCCReference>
 			<DCCReference Include="EB Editors\Basics\EditCallScript.pas">
 				<Form>frmEBEditCall</Form>
-			</DCCReference>
-			<DCCReference Include="EB Editors\Basics\EditNull.pas">
-				<Form>frmEBEditNull</Form>
 			</DCCReference>
 			<DCCReference Include="EB Editors\Characters\EditMoney.pas">
 				<Form>frmEBEditMoney</Form>
@@ -247,6 +243,9 @@
 			<DCCReference Include="..\..\fileIO.pas"/>
 			<DCCReference Include="..\..\formats.pas"/>
 			<DCCReference Include="EB Editors\EbEditHelper.pas"/>
+			<DCCReference Include="EB Editors\Basics\EditComment.pas"/>
+			<DCCReference Include="EB Editors\Basics\EditNull_RM.pas"/>
+			<DCCReference Include="..\..\..\components\TURBU\turbu_variable_selector.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
