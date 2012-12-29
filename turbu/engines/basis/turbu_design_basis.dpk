@@ -63,6 +63,7 @@ contains
   EditComparisonInt in '..\..\turbu format\design\EB Editors\Basics\EditComparisonInt.pas' {frmEBEditComparisonInt},
   fr_EditCondition in '..\..\turbu format\design\EB Editors\Basics\fr_EditCondition.pas' {frEditCondition: TFrame},
   EditConditional in '..\..\turbu format\design\EB Editors\Basics\EditConditional.pas' {frmConditionEdit},
-  variable_selector in '..\..\..\components\TURBU\variable_selector.pas';
+  variable_selector in '..\..\..\components\TURBU\variable_selector.pas',
+  conversion_report in '..\..\turbu format\converters\conversion_report.pas';
 
 end.

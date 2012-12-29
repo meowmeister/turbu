@@ -233,7 +233,6 @@
 			<DCCReference Include="..\converters\conversion_report_form.pas">
 				<Form>frmConversionReport</Form>
 			</DCCReference>
-			<DCCReference Include="..\converters\conversion_report.pas"/>
 			<DCCReference Include="..\converters\conversion_output.pas">
 				<Form>frmConversionOutput</Form>
 			</DCCReference>
