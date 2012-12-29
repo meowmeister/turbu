@@ -4,7 +4,7 @@ interface
 uses
    StdCtrls,
    JvSpin,
-   EBEdit, variable_selector, EventBuilder, IDLookupCombo;
+   EBEdit, variable_selector, turbu_variable_selector, EventBuilder, IDLookupCombo;
 
    procedure UploadValuePtrSelection(v1, v2: integer; r1, r2: TRadioButton;
      valueBox: TJvSpinEdit; ptrBox: TIntSelector); overload;

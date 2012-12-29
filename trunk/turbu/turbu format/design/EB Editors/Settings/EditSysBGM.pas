@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Settings', 'Change System BGM')]
+   [EditorContext('RM2K')]
    TfrmEditSysBGM = class(TfrmEbEditBase)
       StaticText1: TStaticText;
       cboWhich: TComboBox;

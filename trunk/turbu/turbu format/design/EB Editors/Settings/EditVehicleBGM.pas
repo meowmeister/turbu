@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Settings', 'Change Vehicle BGM')]
+   [EditorContext('RM2K')]
    TfrmEditVehicleBGM = class(TfrmEbEditBase)
       StaticText1: TStaticText;
       cboWhich: TComboBox;

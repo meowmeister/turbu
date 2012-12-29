@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Map', 'Swap Map Object')]
+   [EditorContext('RM2K')]
    TfrmEditSwapObjects = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       cboObject1: TComboBox;

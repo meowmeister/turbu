@@ -137,6 +137,7 @@ object frmObjectEditor: TfrmObjectEditor
           Indent = 19
           TabOrder = 0
           Context = dsContext
+          EditorCategory = 'RM2K'
         end
       end
       object Panel1: TPanel

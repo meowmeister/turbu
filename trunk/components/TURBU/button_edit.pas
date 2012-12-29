@@ -66,6 +66,7 @@ constructor TRpgCustomButtonEdit.Create(AOwner: TComponent);
 begin
    inherited Create(AOwner);
    self.ReadOnly := true;
+   self.Text := '';
 end;
 
 procedure TRpgCustomButtonEdit.SetParent(AParent: TWinControl);

@@ -12,6 +12,7 @@ object frmArrayEdit: TfrmArrayEdit
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poOwnerFormCenter
   PixelsPerInch = 120
   TextHeight = 16
   object Panel1: TPanel
@@ -46,7 +47,7 @@ object frmArrayEdit: TfrmArrayEdit
       TabOrder = 0
       OnClick = lstGroupsClick
     end
-    object Button1: TButton
+    object btnArraySIze: TButton
       Left = 8
       Top = 291
       Width = 121
@@ -95,10 +96,19 @@ object frmArrayEdit: TfrmArrayEdit
       Columns = <
         item
           Expanded = False
-          FieldName = 'DisplayName'
+          FieldName = 'name'
           Width = 210
           Visible = True
         end>
+    end
+    object btnAddVar: TButton
+      Left = 8
+      Top = 291
+      Width = 121
+      Height = 33
+      Caption = 'Add &Variable'
+      TabOrder = 4
+      OnClick = btnAddVarClick
     end
   end
   object btnOK: TButton
@@ -143,7 +153,6 @@ object frmArrayEdit: TfrmArrayEdit
     TabOrder = 3
   end
   object srcList: TDataSource
-    DataSet = dmDatabase.Variables
     Left = 264
     Top = 32
   end

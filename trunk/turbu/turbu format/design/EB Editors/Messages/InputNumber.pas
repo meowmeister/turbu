@@ -21,11 +21,13 @@ unit InputNumber;
 interface
 
 uses
-  SysUtils, Classes, Controls, Forms, StdCtrls, ExtCtrls,
-  EbEdit, EventBuilder, Mask, JvExMask, JvSpin, variable_selector;
+   SysUtils, Classes, Controls, Forms, StdCtrls, ExtCtrls,
+   EbEdit, EventBuilder, Mask, JvExMask, JvSpin, turbu_variable_selector, button_edit,
+   variable_selector;
 
 type
    [EditorCategory('Messages', 'Input Number')]
+   [EditorContext('RM2K')]
    TfrmInputNumber = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       spnDigits: TJvSpinEdit;

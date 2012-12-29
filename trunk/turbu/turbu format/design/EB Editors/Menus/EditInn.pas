@@ -27,6 +27,7 @@ uses
 
 type
    [EditorCategory('Messages', 'Call Inn')]
+   [EditorContext('RM2K')]
    TfrmEBEditInn = class(TfrmEbEditBase)
       grpMessage: TGroupBox;
       innVocab: TClientDataSet;

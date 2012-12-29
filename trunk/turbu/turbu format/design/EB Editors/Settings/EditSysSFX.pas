@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Settings', 'Change System SFX')]
+   [EditorContext('RM2K')]
    TfrmEditSysSFX = class(TfrmEbEditBase)
       StaticText1: TStaticText;
       cboWhich: TComboBox;

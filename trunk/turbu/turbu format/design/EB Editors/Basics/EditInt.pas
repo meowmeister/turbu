@@ -23,11 +23,12 @@ interface
 uses
    SysUtils, Controls, Forms, Classes, Dialogs, ExtCtrls, StdCtrls, Mask,
    JvExMask, JvSpin,
-   EventBuilder, EbEdit, EB_Expressions, variable_selector, turbu_classes,
-  button_edit;
+   EventBuilder, EbEdit, EB_Expressions, turbu_variable_selector, turbu_classes,
+   button_edit, variable_selector;
 
 type
    [EditorCategory('Basics', 'Set Integer')]
+   [EditorContext('RM2K')]
    TfrmEBSetInteger = class(TfrmEbEditBase)
       grpOperand: TGroupBox;
       radVariable: TRadioButton;

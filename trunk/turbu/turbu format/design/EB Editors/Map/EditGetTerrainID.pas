@@ -22,12 +22,13 @@ interface
 
 uses
    Forms, StdCtrls, Controls, Classes, ExtCtrls,
-   EventBuilder, EbEdit, variable_selector, button_edit, turbu_map_interface,
-   EB_Maps,
+   EventBuilder, EbEdit, variable_selector, turbu_variable_selector, button_edit,
+   turbu_map_interface, EB_Maps,
    SG_Defs;
 
 type
    [EditorCategory('Map', 'Get Terrain ID')]
+   [EditorContext('RM2K')]
    TfrmGetID = class(TfrmEbEditBase)
       GroupBox2: TGroupBox;
       Label2: TLabel;

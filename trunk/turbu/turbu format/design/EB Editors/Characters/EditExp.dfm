@@ -1,13 +1,10 @@
 inherited frmEBEditExp: TfrmEBEditExp
   Caption = 'Change Experience'
   ClientHeight = 388
-  ExplicitWidth = 320
-  ExplicitHeight = 423
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 335
-    ExplicitHeight = 335
     object GroupBox2: TGroupBox
       Left = 8
       Top = 8
@@ -124,15 +121,12 @@ inherited frmEBEditExp: TfrmEBEditExp
   end
   inherited btnOK: TButton
     Top = 345
-    ExplicitTop = 345
   end
   inherited btnCancel: TButton
     Top = 345
-    ExplicitTop = 345
   end
   inherited btnHelp: TButton
     Top = 345
-    ExplicitTop = 345
   end
   object chkLevelMessage: TCheckBox
     Left = 15

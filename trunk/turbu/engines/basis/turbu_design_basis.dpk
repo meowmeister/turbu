@@ -56,6 +56,13 @@ contains
   EBListView in '..\..\turbu format\design\EBListView.pas',
   EbEdit in '..\..\turbu format\design\EB Editors\EbEdit.pas' {frmEbEditBase},
   array_editor in '..\map engine\design\array_editor.pas' {frmArrayEdit},
-  ebSelector in '..\..\turbu format\design\EB Editors\ebSelector.pas' {frmEBSelector};
+  ebSelector in '..\..\turbu format\design\EB Editors\ebSelector.pas' {frmEBSelector},
+  dbTabControl in '..\..\..\components\TURBU\dbTabControl.pas',
+  EditNull in '..\..\turbu format\design\EB Editors\Basics\EditNull.pas' {frmEBEditNull},
+  EditIf in '..\..\turbu format\design\EB Editors\Basics\EditIf.pas' {frmEBEditIf},
+  EditComparisonInt in '..\..\turbu format\design\EB Editors\Basics\EditComparisonInt.pas' {frmEBEditComparisonInt},
+  fr_EditCondition in '..\..\turbu format\design\EB Editors\Basics\fr_EditCondition.pas' {frEditCondition: TFrame},
+  EditConditional in '..\..\turbu format\design\EB Editors\Basics\EditConditional.pas' {frmConditionEdit},
+  variable_selector in '..\..\..\components\TURBU\variable_selector.pas';
 
 end.

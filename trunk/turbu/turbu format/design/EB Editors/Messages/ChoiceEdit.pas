@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Messages', 'Show Choice')]
+   [EditorContext('RM2K')]
    TfrmShowChoice = class(TfrmEbEditBase)
       txtChoice1: TEdit;
       txtChoice2: TEdit;

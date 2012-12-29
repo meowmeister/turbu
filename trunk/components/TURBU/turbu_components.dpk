@@ -46,7 +46,8 @@ contains
   turbu_database_interface in '..\..\turbu\turbu format\turbu_database_interface.pas',
   turbu_functional in '..\..\turbu\turbu_functional.pas',
   turbu_map_interface in '..\..\turbu\turbu format\turbu_map_interface.pas',
-  rttiHelper in '..\..\turbu\rttiHelper.pas';
+  rttiHelper in '..\..\turbu\rttiHelper.pas',
+  turbu_variable_selector in 'turbu_variable_selector.pas';
 
 end.
 

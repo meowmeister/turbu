@@ -8,6 +8,7 @@ uses
 
 type
    [EditorCategory('Settings', 'Change Default Transitions')]
+   [EditorContext('RM2K')]
    TfrmEditTransitions = class(TfrmEbEditBase)
       GroupBox1: TGroupBox;
       cboEvent: TComboBox;

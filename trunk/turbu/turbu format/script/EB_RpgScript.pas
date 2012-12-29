@@ -41,6 +41,7 @@ type
    private
       FVarBlock: TStringList;
       FLabelBlock: TStringList;
+      FReturnType: string;
       procedure ScanHeader;
    protected
       function ParamList: string;
@@ -51,6 +52,9 @@ type
       function HasConst: boolean;
       function HasLabels: boolean;
       function AlwaysBlock: boolean; override;
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
    public
       constructor Create(AOwner: TEBObject); override;
       destructor Destroy; override;
@@ -58,6 +62,8 @@ type
       function GetScript(indent: integer): string; override;
       function GetScriptText: string; override;
       function GetVarBlock: TStringList; override;
+
+      property ReturnType: string read FReturnType write FReturnType;
    end;
 
    TEBProgram = class(TEBBlock)
@@ -243,6 +249,7 @@ type
    public
       function GetNodeText: string; override;
       function GetScript(indent: integer): string; override;
+      function GetNode: TEBNode; override;
    end;
 
    TEbAssignment = class(TEBObject)
@@ -359,13 +366,18 @@ begin
 end;
 
 function TEBProcedure.GetScriptText: string;
-const HEADER = 'procedure %s%s;';
+const
+   PROC_HEADER = 'procedure %s%s;';
+   FUNC_HEADER = 'function %s%s: %s;';
 begin
-   result := format(HEADER, [self.name, self.paramList]);
+   if FReturnType = '' then
+      result := format(PROC_HEADER, [self.name, self.paramList])
+   else result := format(FUNC_HEADER, [self.name, self.paramList, FReturnType]);
 end;
 
 function TEBProcedure.GetVarBlock: TStringList;
 begin
+   ScanHeader;
    result := FVarBlock;
 end;
 
@@ -388,6 +400,7 @@ begin
          inbuilt[counter] := TEBVariable(child);
          inc(counter);
       end;
+   SetLength(inbuilt, counter);
    FVarBlock.Clear;
    FLabelBlock.Clear;
    reqs := RequiredVariables;
@@ -407,6 +420,20 @@ begin
    finally
       reqs.Free;
    end;
+end;
+
+procedure TEBProcedure.SerializeProps(list: TStringList; depth: integer);
+begin
+  inherited;
+  if FReturnType <> '' then
+   list.Add('ReturnType = ' + FReturnType)
+end;
+
+procedure TEBProcedure.AssignProperty(const key, value: string);
+begin
+   if (key = 'ReturnType') then
+      FReturnType := value
+   else inherited;
 end;
 
 function TEBProcedure.ParamList: string;
@@ -610,6 +637,7 @@ begin
 end;
 
 { TEBIf }
+
 constructor TEBIf.Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp);
 begin
    inherited Create(parent);
@@ -640,7 +668,7 @@ begin
 end;
 
 function TEBIf.GetNode: TEBNode;
-const LINE = 'IF %s ';
+const LINE = 'If %s ';
 var
    node: TEBNode;
 begin
@@ -661,7 +689,7 @@ end;
 
 function TEBIf.GetNodeText: string;
 begin
-   result := 'IF ' + ChildNode[0];
+   result := 'If ' + ChildNode[0];
 end;
 
 function TEBIf.GetScript(indent: integer): string;
@@ -978,6 +1006,18 @@ begin
 end;
 
 { TEBComment }
+
+function TEBComment.GetNode: TEBNode;
+var
+   subobj: TEBObject;
+begin
+   result := inherited GetNode;
+   for subobj in self do
+   begin
+      assert(subobj is TEBExtension);
+      result.Add(subobj.GetNode);
+   end;
+end;
 
 function TEBComment.GetNodeText: string;
 begin

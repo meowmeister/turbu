@@ -20,7 +20,7 @@ unit EBListView;
 
 interface
 uses
-   ComCtrls, Messages, Classes, DB, DBCtrls, Generics.Collections,
+   ComCtrls, Messages, Classes, DB, DBCtrls, Generics.Collections, DBClient,
    EventBuilder{$IFNDEF COMPONENT}, turbu_map_interface{$ENDIF};
 
 type
@@ -33,7 +33,8 @@ type
       FDblClickExpand: boolean;
       FOnOrphan: TOrphanEvent;
       FOnIsObjectType: TIsObjectEvent;
-      FDataLink: TFieldDataLink;
+      FDataset: TCustomClientDataset;
+      FGlobals: TCustomClientDataset;
       {$IFNDEF COMPONENT}
       FMap: IRpgMap;
       FMapObject: IRpgMapObject;
@@ -44,26 +45,32 @@ type
       procedure InsertObject;
       procedure Orphan(obj: TEbObject);
       procedure SetupContext;
-      procedure AddObjectContext(context: TDataset; const base: string; const name, vartype: string);
-      procedure AddVariable(context: TDataset; const name, vartype: string);
-      procedure AddToContext(context: TDataset; const name, vartype: string);
+      procedure AddObjectContext(context: TCustomClientDataSet; const base: string; const name, vartype: string);
+      procedure AddVariable(context: TCustomClientDataSet; const name, vartype: string);
+      procedure AddToContext(context: TCustomClientDataSet; const name, vartype: string); overload;
+      procedure AddToContext(context: TCustomClientDataSet; const decl: string); overload;
       function GetEBChildren(obj: TEBObject): TList<TEBObject>;
       function ValidateList(obj: TEbObject; list: TList<TEBObject>): boolean;
       function BuildTree(base: TEBObject; parent: TTreeNode; isNew: boolean): TTreeNode;
       function IsObjectType(value: integer): boolean;
    private
-      function GetDataSet: TDataSet;
-      procedure SetDataSet(const Value: TDataSet);
+      function GetDataSet: TCustomClientDataSet;
+      procedure SetDataSet(const Value: TCustomClientDataSet);
       procedure insertNewObject(obj: TEBObject);
    private
+      FCategory: string;
+      FSuffix: string;
       procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
       procedure WMChar(var Message: TWMChar); message WM_CHAR;
       procedure WMGetDlgCode(var msg: TMessage); message WM_GETDLGCODE;
    protected
+      FDeleteLock: boolean;
       procedure DblClick; override;
+      procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+      procedure KeyUp(var Key: Word; Shift: TShiftState); override;
+      procedure Notification(AComponent: TComponent; Operation: TOperation); override;
    public
       constructor Create(AOwner: TComponent); override;
-      destructor Destroy; override;
       property proc: TEBRoutine read FProc write SetProc;
       {$IFNDEF COMPONENT}
       property map: IRpgMap read FMap write FMap;
@@ -76,15 +83,18 @@ type
       property ReadOnly default true;
       property ShowLines default false;
       property RowSelect default true;
-      property Context: TDataSet read GetDataSet write SetDataSet;
+      property Context: TCustomClientDataset read GetDataSet write SetDataSet;
+      property Globals: TCustomClientDataset read FGlobals write FGlobals;
+      property EditorCategory: string read FCategory write FCategory;
+      property EditorSuffix: string read FSuffix write FSuffix;
    end;
 
 procedure Register;
 
 implementation
 uses
-   Windows, SysUtils, Controls, DBClient{$IFNDEF COMPONENT},
-   EbEdit, EbSelector, turbu_vartypes,
+   Windows, SysUtils, Controls, Forms {$IFNDEF COMPONENT},
+   EbEdit, EbSelector, turbu_vartypes, EB_RpgScript,
    array_editor{$ENDIF};
 
 procedure Register;
@@ -100,8 +110,6 @@ begin
    ReadOnly := true;
    ShowLines := false;
    RowSelect := true;
-   FDatalink := TFieldDataLink.Create;
-   FDatalink.DataSource := TDataSource.Create(self);
 end;
 
 function TEBTreeView.GetEBChildren(obj: TEBObject): TList<TEBObject>;
@@ -112,7 +120,7 @@ begin
       Exit(nil);
    result := TList<TEBObject>.Create;
    for subobj in obj do
-      if not (subObj is TEBExpression) then
+      if (FSuffix <> '') or not (subObj is TEBExpression) then
          result.add(subObj);
    assert(result.Count > 0);
 end;
@@ -123,6 +131,8 @@ var
    obj: TEbObject;
    list: TList<TEBObject>;
 begin
+   if self.ReadOnly then
+      Exit;
    node := self.Selected;
    if assigned(node) then
    begin
@@ -137,7 +147,7 @@ begin
                list := GetEBChildren(obj)
             else list := nil;
             try
-               if EbEdit.EditEbObject(obj, map, mapObj) and
+               if EbEdit.EditEbObject(obj, map, mapObj, FCategory, FSuffix, self.Context, FGlobals) and
                  ((obj.ChildCount > 0) or (node.HasChildren) or assigned(list)) then
                begin
                   if assigned(node.Parent) and (node.Parent.Data = obj) then
@@ -155,12 +165,6 @@ begin
    inherited DblClick;
 end;
 
-destructor TEBTreeView.Destroy;
-begin
-   FreeAndNil(FDatalink);
-   inherited;
-end;
-
 procedure TEBTreeView.EndLoading;
 var
    item: TTreeNode;
@@ -171,45 +175,50 @@ begin
    items.GetFirstNode.MakeVisible;
 end;
 
-function TEBTreeView.GetDataSet: TDataSet;
+function TEBTreeView.GetDataSet: TCustomClientDataSet;
 begin
-   Result := FDataLink.DataSource.Dataset;
+   Result := FDataset;
 end;
 
-procedure TEBTreeView.SetDataSet(const Value: TDataSet);
+procedure TEBTreeView.SetDataSet(const Value: TCustomClientDataSet);
 begin
-{$IFNDEF COMPONENT}
-   if assigned(FDatalink.DataSource) and (TfrmArrayEdit.VariableContext = FDatalink.DataSource.Dataset) then
-      TfrmArrayEdit.VariableContext := nil;
-   FDataLink.DataSource.Dataset := Value;
+   FDataset := Value;
    if Value <> nil then
-   begin
-     Value.FreeNotification(Self);
-     TfrmArrayEdit.VariableContext := Value;
-   end;
-{$ELSE}
-   FDataLink.DataSource.dataset := Value;
-   if Value <> nil then Value.FreeNotification(Self);
-{$ENDIF}
+      Value.FreeNotification(Self);
 end;
 
 procedure TEBTreeView.insertNewObject(obj: TEBObject);
 var
    parent, current: TTreeNode;
    index: integer;
+   parentObj: TEBObject;
 begin
+{$IFNDEF COMPONENT}
    parent := self.Selected.Parent;
    current := BuildTree(obj, parent, false);
    current.MoveTo(self.Selected, naInsert);
    current.Expand(true);
    if assigned(parent) then
+      parentObj := TObject(parent.Data) as TEBObject
+   else parentObj := FProc;
+   if assigned(selected.Data) then
    begin
-      if assigned(selected.Data) then
-         index := (TObject(parent.Data) as TEBObject).children.IndexOf(TObject(selected.Data) as TEBObject)
-      else index := 0;
-      (TObject(parent.Data) as TEBObject).Children.Insert(index, obj);
+      index := parentObj.children.IndexOf(TObject(selected.Data) as TEBObject);
+      if TObject(selected.Data).ClassType = TEBCodeBlock then
+      begin
+         parentObj := selected.data;
+         index := parentObj.ChildCount;
+      end
+      else if index = -1 then
+         index := parentObj.ChildCount;
    end
-   else FProc.Add(obj);
+   else begin
+      index := 0;
+      parentObj := parent.data;
+   end;
+   parentObj.Children.Insert(index, obj);
+   SetupContext;
+{$ENDIF}
 end;
 
 {$WARN CONSTRUCTING_ABSTRACT OFF}
@@ -219,15 +228,23 @@ var
    selector: TfrmEBSelector;
    editor: TfrmEBEditBase;
    obj: TEbObject;
+   cxe: IContextualEditor;
+   vars: IVariableEditor;
+   cls: TEBEditorClass;
 begin
-   selector := TfrmEBSelector.Create(nil);
+   selector := TfrmEBSelector.Create(FCategory, FSuffix);
    try
       if (selector.ShowModal = mrOK) and assigned(selector.Current) then
       begin
-         editor := selector.Current.Create(nil);
+         cls := selector.Current;
+         editor := cls.Create(nil);
          try
             editor.SetupMap(FMap);
             editor.SetupEvent(FMapObject);
+            if supports(editor, IContextualEditor, cxe) then
+               cxe.SetContext(FCategory, FSuffix);
+            if supports(editor, IVariableEditor, vars) then
+               vars.SetVariables(FDataset, FGlobals);
             obj := editor.NewObj;
          finally
             editor.free;
@@ -249,6 +266,62 @@ end;
 function TEBTreeView.IsObjectType(value: integer): boolean;
 begin
    result := assigned(FOnIsObjectType) and FOnIsObjectType(value);
+end;
+
+procedure TEBTreeView.KeyDown(var Key: Word; Shift: TShiftState);
+var
+   node: TTreeNode;
+   obj, sub: TEBObject;
+   list: TList<TEBObject>;
+begin
+   if (key = VK_DELETE) and (shift = []) then
+   begin
+      if not FDeleteLock then
+      begin
+         FDeleteLock := true;
+         node := self.Selected;
+         if assigned(node) and (node.Text <> '') and (node.Text <> '<>')then
+         begin
+            obj := TObject(node.Data) as TEbObject;
+            list := GetEBChildren(obj);
+            if assigned(list) then
+               try
+                  for sub in list do
+                     Orphan(sub);
+               finally
+                  list.Free;
+               end;
+            obj.Free;
+            node.Delete;
+         end;
+      end;
+      key := 0;
+   end
+   else if (key = VK_INSERT) and (shift = []) then
+      InsertObject
+   else inherited KeyDown(key, shift);
+end;
+
+procedure TEBTreeView.KeyUp(var Key: Word; Shift: TShiftState);
+begin
+   if (key = VK_DELETE) and (shift = []) then
+   begin
+      FDeleteLock := false;
+      key := 0;
+   end
+   else inherited KeyUp(key, shift);
+end;
+
+procedure TEBTreeView.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+   if (Operation = opRemove) and ((AComponent = FGlobals) or (AComponent = FDataset)) then
+   begin
+      if AComponent = FGlobals then
+         FGlobals := nil
+      else FDataset := nil;
+   end
+   else inherited Notification(AComponent, operation);
 end;
 
 function TEBTreeView.BuildTree(base: TEBObject; parent: TTreeNode; isNew: boolean): TTreeNode;
@@ -281,7 +354,8 @@ begin
          last := node;
       end;
       EndLoading;
-      SetupContext;
+      if IsNew then
+         SetupContext;
       result := dict[tree.Data];
    finally
       items.EndUpdate;
@@ -295,21 +369,23 @@ end;
 
 procedure TEBTreeView.SetProc(const Value: TEBRoutine);
 begin
+   //prevent a corner case where saved data is restored from FMemStream,
+   //invalidating the Items.Clear call
+   self.HandleNeeded;
    Items.Clear;
    FProc := Value;
    BuildTree(value, nil, true);
 end;
 
-procedure TEBTreeView.AddVariable(context: TDataset; const name, vartype: string);
+procedure TEBTreeView.AddVariable(context: TCustomClientDataSet; const name, vartype: string);
 begin
    context.Append;
-   context.FieldByName('name').AsString := name;
-   context.FieldByName('DisplayName').AsString := name;
+   context.FieldByName('Name').AsString := name;
    context.FieldByName('type').AsString:= vartype;
    context.Post;
 end;
 
-procedure TEBTreeView.AddObjectContext(context: TDataset; const base: string; const name, vartype: string);
+procedure TEBTreeView.AddObjectContext(context: TCustomClientDataSet; const base: string; const name, vartype: string);
 {$IFNDEF COMPONENT}
 {var
    objtype: TPSCompileTimeClass;
@@ -331,7 +407,8 @@ begin
 {$ENDIF}
 end;
 
-procedure TEBTreeView.AddToContext(context: TDataset; const name, vartype: string);
+procedure TEBTreeView.AddToContext(context: TCustomClientDataSet; const name,
+  vartype: string);
 var
    varInt: integer;
 begin
@@ -343,6 +420,20 @@ begin
       AddObjectContext(context, '', name, vartype)
    else AddVariable(context, name, vartype);
 {$ENDIF}
+end;
+
+procedure TEBTreeView.AddToContext(context: TCustomClientDataSet; const decl: string);
+var
+   name, vartype: string;
+   colonPos: integer;
+begin
+   colonPos := pos(':', decl);
+   name := trim(copy(decl, 1, colonPos - 1));
+   vartype := trim(copy(decl, colonPos + 1));
+   if vartype[length(vartype)] = ';' then
+      SetLength(vartype, length(vartype) - 1);
+
+   AddToContext(context, name, vartype);
 end;
 
 procedure TEBTreeView.SetupContext;
@@ -361,7 +452,7 @@ begin
       AddToContext(ctx, param.text, param.vartype);
    locals := proc.GetVarBlock;
    for i := 0 to locals.count - 1 do
-      AddToContext(ctx, locals.Names[i], locals.ValueFromIndex[i]);
+      AddToContext(ctx, locals[i]);
 end;
 
 procedure TEBTreeView.WMChar(var Message: TWMChar);
@@ -450,6 +541,7 @@ begin
          newnode.MoveTo(node, naInsert);
          newnode.Expand(true);
          node.Free;
+         SetupContext;
       end;
    finally
       Items.EndUpdate;

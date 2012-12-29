@@ -19,7 +19,7 @@ unit turbu_map_engine;
 
 interface
 uses
-   Generics.Collections, Types, Classes, ComCtrls, Menus,
+   Generics.Collections, Types, Classes, ComCtrls, Menus, Controls,
    turbu_plugin_interface, turbu_versioning, turbu_battle_engine,
    turbu_database_interface, turbu_map_interface,
    sg_defs,
@@ -48,8 +48,11 @@ type
    ['{236C7AAC-2AEF-4853-8962-37F909FCF090}']
       procedure TilesetChanged;
       procedure SetButton(button: TToolButton; position: TButtonPosition);
+      function AddTileImage(il: TImageList; index: integer): integer;
       procedure setLayer(const value: integer);
       procedure UpdateEngine(const filename: string);
+      procedure SetMapMenuItem(item: TMenuItem);
+      procedure ClearMapMenuItem(item: TMenuItem);
    end;
 
    IMapEngine = interface(IInterface)

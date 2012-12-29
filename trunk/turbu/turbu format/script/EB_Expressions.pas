@@ -88,6 +88,13 @@ type
       function GetScriptText: string; override;
    end;
 
+   TEBComparisonBool = class(TEBExpression)
+   public
+      constructor Create(expr: TEBExpression; value: boolean); reintroduce;
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
    TEBChainable = class(TEBExpression)
    private
       FHint: integer;
@@ -399,7 +406,7 @@ end;
 
 function TEBChainable.GetScriptLink: string;
 begin
-   result := GetLink;
+   result := StringReplace(GetLink, ' ', '', [rfReplaceAll]);
 end;
 
 function TEBChainable.GetScriptText: string;
@@ -814,10 +821,37 @@ begin
    result := format(LINE, [self.Text, self.ChildScript[0]]);
 end;
 
+{ TEBComparisonBool }
+
+constructor TEBComparisonBool.Create(expr: TEBExpression; value: boolean);
+begin
+   inherited Create(nil);
+   self.Add(expr);
+   Values.Add(ord(value));
+end;
+
+function TEBComparisonBool.GetNodeText: string;
+const
+   LINE = '%s = %s';
+begin
+   assert(self.ChildCount = 1);
+   assert(self.Values.Count = 1);
+   result := format(LINE, [ChildNode[0], BOOL_STR[Values[0]]]);
+end;
+
+function TEBComparisonBool.GetScriptText: string;
+begin
+   assert(self.ChildCount = 1);
+   assert(self.Values.Count = 1);
+   result := ChildScript[0];
+   if Values[0] = 0 then
+      result := 'not ' + result;
+end;
+
 initialization
    TEBObject.RegisterClasses([TEBVariableValue,
                     TEBBooleanValue, TEBIntegerValue, TEBStringValue, TEBEnumValue,
                     TEBLookupValue, TEBComparison, TEBObjExpr, TEBObjArrayValue,
                     TEBLookupObjExpr, TEBPropExpr, TEBCall, TEBBinaryOp,
-                    TEBIntArray, TEBNilValue, TEBParenExpr]);
+                    TEBIntArray, TEBNilValue, TEBParenExpr, TEBComparisonBool]);
 end.

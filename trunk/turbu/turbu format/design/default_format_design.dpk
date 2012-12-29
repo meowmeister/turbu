@@ -38,7 +38,6 @@ contains
   sprite_selector in 'sprite_selector.pas' {frmSpriteSelector},
   portrait_selector in 'portrait_selector.pas' {frmPortraitSelector},
   sdl_frame_helper in 'sdl_frame_helper.pas',
-  variable_selector in '..\..\..\components\TURBU\variable_selector.pas',
   PortraitEdit in 'EB Editors\Messages\PortraitEdit.pas' {frmSelectPortrait},
   MessageOptions in 'EB Editors\Messages\MessageOptions.pas' {frmMessageOptions},
   MessageEdit in 'EB Editors\Messages\MessageEdit.pas' {frmMessageEdit},
@@ -50,7 +49,6 @@ contains
   EditInput in 'EB Editors\Basics\EditInput.pas' {frmInputEdit},
   EditDeleteObject in 'EB Editors\Basics\EditDeleteObject.pas' {frmEBDeleteObject},
   EditCallScript in 'EB Editors\Basics\EditCallScript.pas' {frmEBEditCall},
-  EditNull in 'EB Editors\Basics\EditNull.pas' {frmEBEditNull},
   EditMoney in 'EB Editors\Characters\EditMoney.pas' {frmEBEditMoney},
   EditInventory in 'EB Editors\Characters\EditInventory.pas' {frmEBEditInventory},
   EditParty in 'EB Editors\Characters\EditParty.pas' {frmEBEditParty},
@@ -102,7 +100,10 @@ contains
   BER in '..\..\BER.pas',
   fileIO in '..\..\fileIO.pas',
   formats in '..\..\formats.pas',
-  EbEditHelper in 'EB Editors\EbEditHelper.pas';
+  EbEditHelper in 'EB Editors\EbEditHelper.pas',
+  EditComment in 'EB Editors\Basics\EditComment.pas',
+  EditNull_RM in 'EB Editors\Basics\EditNull_RM.pas',
+  turbu_variable_selector in '..\..\..\components\TURBU\turbu_variable_selector.pas';
 
 end.
 

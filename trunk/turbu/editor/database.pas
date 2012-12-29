@@ -24,7 +24,7 @@ uses
    Mask, DBCtrls,
    turbu_database, events, frame_commands, frame_class, dm_database, frame_items,
    EBListView, turbu_listGrid, variable_selector, DBIndexComboBox, frame_vocab,
-   button_edit;
+   button_edit, turbu_variable_selector;
 
 type
    TfrmDatabase = class(TForm)

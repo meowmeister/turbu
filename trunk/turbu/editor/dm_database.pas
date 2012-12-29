@@ -188,7 +188,8 @@ type
       { Public declarations }
       procedure beginUpload;
       procedure endUpload;
-      function NameLookup(const name: string; id: integer): string;
+      function NameLookup(const name: string; id: integer): string; overload;
+      function NameLookup(const name: string; id, key: integer): string; overload;
       function ScriptLookup(id: integer): string;
       procedure BuildDatabase(const dbname: string; dbObj: TRpgDatafile);
       procedure Connect(const dbname: string; const validateProc: TProc<TSqlQuery>);
@@ -372,6 +373,11 @@ begin
    assert(masterIdx > 0);
    master := Copy(dset.Name, 1, masterIdx - 1);
    result := StringReplace(result, '$MASTER', master, []);
+end;
+
+function TdmDatabase.NameLookup(const name: string; id, key: integer): string;
+begin
+   asm int 3 end;
 end;
 
 function TdmDatabase.IndexGen(dset: TSimpleDataset): string;

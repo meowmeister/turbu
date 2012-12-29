@@ -2,8 +2,6 @@ inherited frmInputHeroName: TfrmInputHeroName
   Caption = 'Enter Hero Name'
   ClientHeight = 197
   ClientWidth = 291
-  ExplicitWidth = 297
-  ExplicitHeight = 232
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
@@ -17,7 +15,6 @@ inherited frmInputHeroName: TfrmInputHeroName
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Hero'
       TabOrder = 0
-      ExplicitWidth = 278
       object cboHeroID: TIDLookupCombo
         Left = 9
         Top = 25
@@ -37,7 +34,6 @@ inherited frmInputHeroName: TfrmInputHeroName
       Anchors = [akLeft, akTop, akRight, akBottom]
       Caption = 'Options'
       TabOrder = 1
-      ExplicitHeight = 78
       object chkShowName: TCheckBox
         Left = 9
         Top = 25

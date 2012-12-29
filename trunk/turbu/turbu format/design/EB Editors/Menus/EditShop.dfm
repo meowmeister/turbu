@@ -3,15 +3,11 @@ inherited frmEBEditShop: TfrmEBEditShop
   ClientHeight = 539
   ClientWidth = 493
   OnCreate = FormCreate
-  ExplicitWidth = 499
-  ExplicitHeight = 574
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Width = 493
     Height = 486
-    ExplicitWidth = 493
-    ExplicitHeight = 486
     object GroupBox1: TGroupBox
       Left = 8
       Top = 135
@@ -113,20 +109,14 @@ inherited frmEBEditShop: TfrmEBEditShop
   inherited btnOK: TButton
     Left = 210
     Top = 496
-    ExplicitLeft = 210
-    ExplicitTop = 496
   end
   inherited btnCancel: TButton
     Left = 304
     Top = 496
-    ExplicitLeft = 304
-    ExplicitTop = 496
   end
   inherited btnHelp: TButton
     Left = 397
     Top = 496
-    ExplicitLeft = 397
-    ExplicitTop = 496
   end
   object radTransactions: TRadioGroup
     Left = 8

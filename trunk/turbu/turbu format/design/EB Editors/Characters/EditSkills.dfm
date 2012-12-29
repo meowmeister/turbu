@@ -1,13 +1,10 @@
 inherited frmEBEditSkills: TfrmEBEditSkills
   Caption = 'frmEBEditSkills'
   ClientHeight = 344
-  ExplicitWidth = 320
-  ExplicitHeight = 379
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 291
-    ExplicitHeight = 291
     object grpOperation: TRadioGroup
       Left = 8
       Top = 142
@@ -68,15 +65,12 @@ inherited frmEBEditSkills: TfrmEBEditSkills
   end
   inherited btnOK: TButton
     Top = 301
-    ExplicitTop = 301
   end
   inherited btnCancel: TButton
     Top = 301
-    ExplicitTop = 301
   end
   inherited btnHelp: TButton
     Top = 301
-    ExplicitTop = 301
   end
   object srcSkills: TDataSource
     DataSet = dmDatabase.skills

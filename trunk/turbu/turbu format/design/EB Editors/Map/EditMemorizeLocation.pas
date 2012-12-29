@@ -22,7 +22,8 @@ interface
 
 uses
    Forms, StdCtrls, ExtCtrls, Classes, Controls,
-   EventBuilder, EbEdit, button_edit, variable_selector, EB_Maps;
+   EventBuilder, EbEdit, button_edit, variable_selector, turbu_variable_selector,
+   EB_Maps;
 
 type
    TfrmMemorizedLocation = class(TfrmEbEditBase)
@@ -42,11 +43,13 @@ type
    end;
 
    [EditorCategory('Map', 'Memorize Location')]
+   [EditorContext('RM2K')]
    TfrmMemorizeLocation = class(TfrmMemorizedLocation<TEBMemorizeLocation>)
       procedure FormShow(Sender: TObject);
    end;
 
    [EditorCategory('Map', 'Teleport To Memorized Location')]
+   [EditorContext('RM2K')]
    TfrmMemoTeleport = class(TfrmMemorizedLocation<TEBMemoTeleport>)
       procedure FormShow(Sender: TObject);
    end;

@@ -83,13 +83,13 @@ uses
 
 function TframeConditions.EditSwitches(id: integer): integer;
 begin
-   TfrmArrayEdit.Edit('Switch', 'boolean', dmDatabase.Switches, id);
+   TfrmArrayEdit.Edit('Switch', 'boolean', dmDatabase.Switches, nil, id);
    result := id;
 end;
 
 function TframeConditions.EditVars(id: integer): integer;
 begin
-   TfrmArrayEdit.Edit('Variable', 'integer', dmDatabase.Variables, id);
+   TfrmArrayEdit.Edit('Variable', 'integer', dmDatabase.Variables, nil, id);
    result := id;
 end;
 

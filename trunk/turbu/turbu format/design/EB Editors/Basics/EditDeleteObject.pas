@@ -26,6 +26,7 @@ uses
 
 type
    [EditorCategory('Basics', 'Delete Map Object')]
+   [EditorContext('RM2K')]
    TfrmEBDeleteObject = class(TfrmEbEditBase)
       radDuration: TRadioGroup;
    public

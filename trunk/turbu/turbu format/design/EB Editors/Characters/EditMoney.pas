@@ -21,12 +21,13 @@ unit EditMoney;
 interface
 
 uses
-  Forms, StdCtrls, ExtCtrls, Classes, Controls, Mask,
-  JvExMask, JvSpin,
-  variable_selector,  EventBuilder, EbEdit, button_edit;
+   Forms, StdCtrls, ExtCtrls, Classes, Controls, Mask,
+   JvExMask, JvSpin,
+   variable_selector, turbu_variable_selector, EventBuilder, EbEdit, button_edit;
 
 type
    [EditorCategory('Characters', 'Change Money')]
+   [EditorContext('RM2K')]
    TfrmEBEditMoney = class(TfrmEbEditBase)
       grpOperation: TRadioGroup;
       GroupBox1: TGroupBox;

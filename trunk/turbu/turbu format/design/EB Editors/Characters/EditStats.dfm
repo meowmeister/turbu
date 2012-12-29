@@ -2,13 +2,10 @@ inherited frmEBEditStats: TfrmEBEditStats
   Caption = 'Change Stats'
   ClientHeight = 352
   OnCreate = FormCreate
-  ExplicitWidth = 320
-  ExplicitHeight = 387
   PixelsPerInch = 120
   TextHeight = 16
   inherited Panel1: TPanel
     Height = 299
-    ExplicitHeight = 299
     object grpOperation: TRadioGroup
       Left = 8
       Top = 142
@@ -84,14 +81,11 @@ inherited frmEBEditStats: TfrmEBEditStats
   end
   inherited btnOK: TButton
     Top = 309
-    ExplicitTop = 309
   end
   inherited btnCancel: TButton
     Top = 309
-    ExplicitTop = 309
   end
   inherited btnHelp: TButton
     Top = 309
-    ExplicitTop = 309
   end
 end

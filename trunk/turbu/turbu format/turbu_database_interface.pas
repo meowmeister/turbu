@@ -29,7 +29,8 @@ type
    end;
 
    IRpgDatastore = interface
-      function NameLookup(const name: string; id: integer): string;
+      function NameLookup(const name: string; id: integer): string; overload;
+      function NameLookup(const name: string; key, id: integer): string; overload;
    end;
 
    TUploadReportProc = reference to procedure (name: string);

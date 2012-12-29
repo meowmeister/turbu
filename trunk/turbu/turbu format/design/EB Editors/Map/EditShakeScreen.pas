@@ -9,6 +9,7 @@ uses
 
 type
    [EditorCategory('Map', 'Shake Screen')]
+   [EditorContext('RM2K')]
    TfrmEBEditShakeScreen = class(TfrmEbEditBase)
       radShakeMode: TRadioGroup;
       sldStrength: TJvxSlider;

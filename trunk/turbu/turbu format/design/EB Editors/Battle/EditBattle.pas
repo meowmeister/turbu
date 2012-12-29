@@ -21,11 +21,13 @@ unit EditBattle;
 interface
 
 uses
-  Dialogs, StdCtrls, DBCtrls, ExtCtrls, DB, Classes, Controls,
-  EbEdit, EventBuilder, variable_selector, IDLookupCombo, pic_edit, button_edit;
+   Dialogs, StdCtrls, DBCtrls, ExtCtrls, DB, Classes, Controls,
+   EbEdit, EventBuilder, variable_selector, IDLookupCombo, pic_edit,
+   turbu_variable_selector, button_edit;
 
 type
    [EditorCategory('Battles', 'Enter Battle (Simple)')]
+   [EditorContext('RM2K')]
    TfrmBattle = class(TfrmEbEditBase)
       grpMParty: TGroupBox;
       cboMpartyID: TIDLookupCombo;
