@@ -93,7 +93,6 @@ contains
   EditShakeScreen in 'EB Editors\Map\EditShakeScreen.pas' {frmEBEditShakeScreen},
   EditPanScreen in 'EB Editors\Map\EditPanScreen.pas' {frmEBEditBase1},
   conversion_report_form in '..\converters\conversion_report_form.pas' {frmConversionReport},
-  conversion_report in '..\converters\conversion_report.pas',
   conversion_output in '..\converters\conversion_output.pas' {frmConversionOutput},
   events in '..\..\events.pas',
   move_data in '..\..\move_data.pas',
