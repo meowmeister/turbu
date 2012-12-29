@@ -85,7 +85,6 @@
 			<DCCReference Include="maps\turbu_maps.pas"/>
 			<DCCReference Include="database\turbu_tilesets.pas"/>
 			<DCCReference Include="..\mapview\libs\timing.pas"/>
-			<DCCReference Include="..\commons.pas"/>
 			<DCCReference Include="maps\turbu_map_objects.pas"/>
 			<DCCReference Include="..\charset_data.pas"/>
 			<DCCReference Include="turbu_pathing.pas"/>

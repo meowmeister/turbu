@@ -47,7 +47,6 @@ contains
   turbu_maps in 'maps\turbu_maps.pas',
   turbu_tilesets in 'database\turbu_tilesets.pas',
   timing in '..\mapview\libs\timing.pas',
-  commons in '..\commons.pas',
   turbu_map_objects in 'maps\turbu_map_objects.pas',
   charset_data in '..\charset_data.pas',
   turbu_pathing in 'turbu_pathing.pas',

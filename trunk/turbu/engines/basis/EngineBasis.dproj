@@ -126,6 +126,7 @@
 			<DCCReference Include="..\..\turbu format\script\EB_Expressions.pas"/>
 			<DCCReference Include="..\..\turbu format\script\EB_RpgScript.pas"/>
 			<DCCReference Include="..\..\turbu format\turbu_vartypes.pas"/>
+			<DCCReference Include="..\..\commons.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

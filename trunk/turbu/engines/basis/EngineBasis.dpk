@@ -95,6 +95,7 @@ contains
   turbu_operators in '..\..\turbu format\turbu_operators.pas',
   EB_Expressions in '..\..\turbu format\script\EB_Expressions.pas',
   EB_RpgScript in '..\..\turbu format\script\EB_RpgScript.pas',
-  turbu_vartypes in '..\..\turbu format\turbu_vartypes.pas';
+  turbu_vartypes in '..\..\turbu format\turbu_vartypes.pas',
+  commons in '..\..\commons.pas';
 
 end.
