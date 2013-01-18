@@ -32,6 +32,8 @@ type
       procedure makeError(text: string; group: integer = -1);
       procedure fatal(errorMessage: string); overload;
       procedure fatal(error: Exception); overload;
+      procedure PauseSteps;
+      procedure ResumeSteps;
       procedure makeReport;
       property tasks: integer write setTasks;
    end;

@@ -125,7 +125,7 @@ object frmConversionReport: TfrmConversionReport
         Left = 6
         Top = 6
         Width = 35
-        Height = 25
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -137,7 +137,7 @@ object frmConversionReport: TfrmConversionReport
         Left = 81
         Top = 6
         Width = 8
-        Height = 25
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -164,7 +164,7 @@ object frmConversionReport: TfrmConversionReport
         Left = 6
         Top = 6
         Width = 40
-        Height = 25
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -176,7 +176,7 @@ object frmConversionReport: TfrmConversionReport
         Left = 92
         Top = 6
         Width = 8
-        Height = 25
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -203,7 +203,7 @@ object frmConversionReport: TfrmConversionReport
         Left = 6
         Top = 6
         Width = 37
-        Height = 26
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -215,7 +215,7 @@ object frmConversionReport: TfrmConversionReport
         Left = 92
         Top = 6
         Width = 8
-        Height = 26
+        Height = 17
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
