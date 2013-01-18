@@ -38,6 +38,7 @@ type
       FFatal: boolean;
       FOutput: TfrmConversionOutput;
       FFinished: boolean;
+      FPaused: boolean;
 
       procedure setTasks(const value: integer);
       procedure setCurrentTask(const name: string; const steps: integer); overload;
@@ -46,6 +47,8 @@ type
       procedure makeHint(text: string; group: integer = -1);
       procedure makeNotice(text: string; group: integer = -1);
       procedure makeError(text: string; group: integer = -1);
+      procedure PauseSteps;
+      procedure ResumeSteps;
       procedure makeReport;
       procedure fatal(errorMessage: string); overload;
       procedure fatal(error: Exception); overload;
@@ -167,6 +170,8 @@ procedure TfrmConversionReport.newStep(name: string);
 var
    closure: TThreadProcedure;
 begin
+   if FPaused then
+      Exit;
    closure := procedure()
    begin
       if FCurrentTaskRunning then
@@ -175,6 +180,16 @@ begin
       lblSteps.Caption := name;
    end;
    runThreadsafe(closure, true);
+end;
+
+procedure TfrmConversionReport.PauseSteps;
+begin
+   FPaused := true;
+end;
+
+procedure TfrmConversionReport.ResumeSteps;
+begin
+   FPaused := false;
 end;
 
 procedure TfrmConversionReport.setCurrentTask(const name: string; const steps: integer);
