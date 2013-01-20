@@ -60,6 +60,11 @@ type
       tbLayerSplitter: TToolButton;
       tbSaveSplitter: TToolButton;
       tbPlaySplitter: TToolButton;
+      tbDrawMode: TToolBar;
+      ilDrawTools: TImageList;
+      tbPen: TToolButton;
+      N2: TMenuItem;
+      mnuUndo: TMenuItem;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -110,6 +115,8 @@ type
       procedure imgBackgroundPaint(Sender: TObject);
       procedure actPlayMusicExecute(Sender: TObject);
       procedure imgPalettePaint(Sender: TObject);
+      procedure DrawToolButtonClick(Sender: TObject);
+      procedure mnuUndoClick(Sender: TObject);
    private
       pluginManager: TJvPluginManager;
       FLogoIndex: integer;
@@ -441,6 +448,8 @@ var
    point: TSgPoint;
 begin
    RequireMapEngine;
+   if (FTileSize.x = 0) then
+      Abort;
    if FIgnoreMouseDown then
       FIgnoreMouseDown := false
    else begin
@@ -458,6 +467,8 @@ procedure TfrmTurbuMain.imgLogoMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
    RequireMapEngine;
+   if (FTileSize.x = 0) then
+      Abort;
    if (ssLeft in shift) then
    begin
       NormalizeMousePosition(imgLogo, x, y, FZoom);
@@ -544,12 +555,24 @@ end;
 procedure TfrmTurbuMain.loadMap(const value: IMapMetadata);
 const
    SDL_BLACK: SDL_Color = ();
+var
+   i: integer;
+   ctrl: TControl;
 begin
    FMapEngine := retrieveEngine(et_map, value.mapEngine,
                  TVersion.Create(0, 0, 0)) as IDesignMapEngine;
    FMapEngine.SetController(self);
    FMapEngine.initialize(imgLogo.sdlWindow, FDBName);
    FMapEngine.autosaveMaps := mnuAutosaveMaps.checked;
+   for i := 0 to tbDrawMode.ControlCount - 1 do
+   begin
+      ctrl := tbDrawMode.Controls[i];
+      if (ctrl as TToolButton).Down then
+      begin
+         DrawToolButtonClick(ctrl);
+         Break;
+      end;
+   end;
    FMapEngine.loadMap(value);
    FMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
    FTileSize := FMapEngine.GetTileSize;
@@ -619,6 +642,12 @@ procedure TfrmTurbuMain.mnuTestbugrepsClick(Sender: TObject);
 begin
    RequireMapEngine;
    (FMapEngine as IBreakable).BreakSomething;
+end;
+
+procedure TfrmTurbuMain.mnuUndoClick(Sender: TObject);
+begin
+   RequireMapEngine;
+   FMapEngine.Undo;
 end;
 
 procedure TfrmTurbuMain.OnScrollMap(Sender: TObject; ScrollCode: TScrollCode;
@@ -750,6 +779,12 @@ end;
 procedure TfrmTurbuMain.TilesetChanged;
 begin
    windows.PostMessage(self.Handle, WM_USER, 0, 0);
+end;
+
+procedure TfrmTurbuMain.DrawToolButtonClick(Sender: TObject);
+begin
+   RequireMapEngine;
+   FMapEngine.SetPaintMode(TPaintMode((sender as TToolButton).Tag));
 end;
 
 procedure TfrmTurbuMain.setLayer(const value: integer);

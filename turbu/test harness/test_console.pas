@@ -102,7 +102,7 @@ uses
    archiveInterface, discInterface, test_map_tree, test_canvas,
    turbu_constants, conversion_report, conversion_report_form,
    rm2_turbu_converter_thread, turbu_OpenGL, turbu_2k_frames,
-   commons, fileIO, formats, LDB, LMT, LMU, timing,
+   commons, fileIO, formats, LDB, LMT, LMU, timing, project_folder,
    turbu_characters, locate_files, map_tree_controller, turbu_containers,
    rm2_turbu_characters, rm2_turbu_database,
    turbu_engines, turbu_plugin_interface, turbu_battle_engine,
@@ -212,7 +212,8 @@ begin
    if not assigned(lCanvas) then
       mnuCreateSdlWindowClick(sender);
 
-   FCurrentMap := FEngine.loadMap(GDatabase.mapTree[1]);
+   FEngine.loadMap(GDatabase.mapTree[12]);
+   FCurrentMap := T2kMapEngineD(FEngine).CurrentMap.mapObj;
 
    if sender = mnuTestMapLoading then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
@@ -329,7 +330,7 @@ begin
       GMenuEngine.Draw;
       SDL_RenderPresent(lCanvas.Renderer);
       sleep(64);
-      TRpgTimestamp.frameLength := 64;
+//      TRpgTimestamp.frameLength := 64;
    end;
 end;
 

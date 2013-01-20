@@ -70,6 +70,8 @@ type
       property data: TMapEngineData read getData;
    end;
 
+   TPaintMode = (pmPen, pmFlood, pmRect, pmEllipse);
+
    IDesignMapEngine = interface(IMapEngine)
    ['{B68B1D70-D95E-4CEB-B009-2197D7EC7642}']
       function GetTilesetImage(const index: byte): PSdlSurface;
@@ -83,8 +85,10 @@ type
       procedure ResizeWindow(rect: TRect);
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TArray<integer>);
+      procedure SetPaintMode(value: TPaintMode);
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
+      procedure Undo;
       procedure Repaint;
       procedure doubleClick;
       procedure rightClick(const position: TSgPoint);

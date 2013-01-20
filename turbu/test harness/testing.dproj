@@ -44,7 +44,7 @@
 			<DCC_DcpOutput>..\dcus</DCC_DcpOutput>
 			<DCC_UsePackage>vcl;rtl;vclx;vclactnband;dbrtl;vcldb;vcldbx;bdertl;dsnap;dsnapcon;TeeUI;TeeDB;Tee;adortl;vclib;ibxpress;IndyCore;IndySystem;IndyProtocols;xmlrtl;inet;intrawebdb_100_120;Intraweb_100_120;VclSmp;vclie;websnap;webdsnap;inetdbbde;inetdbxpress;soaprtl;DbxCommonDriver;DbxClientDriver;DBXInterBaseDriver;DBXMySQLDriver;dbexpress;dbxcds;Jcl;JclVcl;JvCoreD12R;JvSystemD12R;JvStdCtrlsD12R;JvAppFrmD12R;JvBandsD12R;JvDBD12R;JvDlgsD12R;JvBDED12R;JvCmpD12R;JvCryptD12R;JvCtrlsD12R;JvCustomD12R;JvDockingD12R;JvEDID12R;JvGlobusD12R;JvHMID12R;JvInterpreterD12R;JvJansD12R;JvManagedThreadsD12R;JvMMD12R;JvNetD12R;JvPageCompsD12R;JvPluginD12R;JvPrintPreviewD12R;JvRuntimeDesignD12R;JvTimeFrameworkD12R;JvValidatorsD12R;JvWizardD12R;JvXPCtrlsD12R;turbu_components;vclAbsDBd12</DCC_UsePackage>
 			<DCC_Define>EDITOR;PS_USESSUPPORT;SDL_13;$(DCC_Define)</DCC_Define>
-			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\classes\sdl custom;..\bin;..\dcus;..\..\classes\FastMM4;..\..\components\TURBU;..\..\components\PascalScript;..\..\classes\DeHL;..\..\classes\DeHL\Collections;..\..\classes\DeHL\Extensions;..\..\classes\DeHL\Serialization;..\..\classes\DeHL\Math;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\..\turbu;..\..\turbu\turbu format;..\..\turbu\turbu format\converters;..\..\turbu\turbu format\database;..\..\turbu\turbu format\plugins;..\..\turbu\engines\battle basis;..\..\classes\sdl custom;..\bin;..\dcus;..\..\classes\FastMM4;..\..\components\TURBU;..\..\components\PascalScript;..\..\classes\DeHL;..\..\classes\DeHL\Collections;..\..\classes\DeHL\Extensions;..\..\classes\DeHL\Math;..\..\classes\jedi-sdl\sdl\pas;..\..\classes\DSharp\Core;..\..\classes\RPG Script;..\..\classes\RPG Script\RTTI Creation;..\..\classes;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_DependencyCheckOutputName>..\bin\testing.exe</DCC_DependencyCheckOutputName>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
@@ -85,6 +85,7 @@
 			<DCCReference Include="..\turbu format\database\turbu_skills.pas"/>
 			<DCCReference Include="..\turbu format\turbu_constants.pas"/>
 			<DCCReference Include="..\engines\turbu_2k3_battle_engine.pas"/>
+			<DCCReference Include="..\engines\basis\project_folder.pas"/>
 			<DCCReference Include="..\engines\turbu_2k_battle_engine.pas"/>
 			<DCCReference Include="..\turbu format\turbu_decl_utils.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_characters.pas"/>
@@ -153,6 +154,8 @@
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_2k_image_engine.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_2k_animations.pas"/>
 			<DCCReference Include="..\editor\function_header.pas">
 				<Form>frmFuncHeader</Form>
 			</DCCReference>
@@ -208,6 +211,10 @@
 			<DCCReference Include="..\turbu format\design\base_selector.pas">
 				<Form>frmBaseSelector</Form>
 			</DCCReference>
+			<DCCReference Include="..\turbu format\design\db_upgrade.pas">
+				<Form>frmBaseSelector</Form>
+			</DCCReference>
+			<DCCReference Include="..\engines\basis\Disharmony.pas"/>
 			<DCCReference Include="..\engines\basis\ClipboardWatcher.pas"/>
 			<DCCReference Include="..\turbu format\converters\rm2_turbu_event_builder.pas"/>
 			<DCCReference Include="..\turbu format\EventBuilder.pas"/>
@@ -244,11 +251,12 @@
 			<DCCReference Include="..\turbu format\design\EB Editors\Basics\EditInt.pas">
 				<Form>frmEBSetInteger</Form>
 			</DCCReference>
-			<DCCReference Include="..\..\..\ListCompare\StringListComp.pas"/>
 			<DCCReference Include="..\engines\basis\finalizer_hack.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_2k_map_tiles.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_2k_map_locks.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_2k_items.pas"/>
 			<DCCReference Include="..\engines\map engine\turbu_2k_char_sprites.pas"/>
+			<DCCReference Include="..\turbu format\script\engine\turbu_script_engine.pas"/>
 			<DCCReference Include="..\editor\database.pas"/>
 			<DCCReference Include="..\turbu format\script\EB_Media.pas"/>
 			<DCCReference Include="..\turbu format\script\EB_System.pas"/>
@@ -257,7 +265,9 @@
 			<DCCReference Include="..\turbu format\script\EB_Messages.pas"/>
 			<DCCReference Include="..\turbu format\script\EB_Maps.pas"/>
 			<DCCReference Include="..\turbu format\script\EB_Expressions.pas"/>
+			<DCCReference Include="..\turbu format\script\EB_Expressions_RM.pas"/>
 			<DCCReference Include="..\turbu format\script\EB_Characters.pas"/>
+			<DCCReference Include="..\turbu format\script\EB_ObjectHelper.pas"/>
 			<DCCReference Include="..\..\classes\Asphyre\AsphyreTimer.pas"/>
 			<DCCReference Include="..\turbu format\design\sdl_frame_helper.pas"/>
 			<DCCReference Include="..\editor\frame_vocab.pas"/>
@@ -279,12 +289,16 @@
 			<DCCReference Include="..\engines\map engine\turbu_2k_map_timer.pas"/>
 			<DCCReference Include="..\turbu format\script\engine\libraries\rs_maps.pas"/>
 			<DCCReference Include="..\turbu format\script\engine\libraries\rs_message.pas"/>
+			<DCCReference Include="..\turbu format\script\engine\libraries\rs_media.pas"/>
+			<DCCReference Include="..\turbu format\script\engine\libraries\rs_characters.pas"/>
 			<DCCReference Include="test_canvas.pas">
 				<Form>frmTesting</Form>
 			</DCCReference>
 			<DCCReference Include="..\turbu format\database\dm_shaders.pas"/>
 			<DCCReference Include="..\engines\basis\turbu_OpenGL.pas"/>
 			<DCCReference Include="..\..\classes\jedi-sdl\SDL\Pas\sdl_13.pas"/>
+			<DCCReference Include="..\..\classes\jedi-sdl\SDL\Pas\sdl.pas"/>
+			<DCCReference Include="..\..\classes\jedi-sdl\SDL_Image\Pas\sdl_image.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

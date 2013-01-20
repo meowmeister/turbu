@@ -106,6 +106,7 @@ type
       property PartySprite: THeroSprite read FPartySprite;
       property ImageEngine: TImageEngine read FImageEngine;
       property TransProc: TTransProc write FTransProc;
+      property CurrentMap: T2kSpriteEngine read FCurrentMap;
    end;
 
 var
@@ -570,7 +571,8 @@ end;
 function T2kMapEngine.doneLoadingMap: boolean;
 begin
    FCurrentMap := FMaps[FWaitingMap.id];
-   FImageEngine := TImageEngine.Create(FCurrentMap, FCanvas, FImages);
+   if FImageEngine = nil then
+      FImageEngine := TImageEngine.Create(FCurrentMap, FCanvas, FImages);
    GSpriteEngine := FCurrentMap;
    LoadMapSprites(FCurrentMap.mapObj);
    FObjectManager.LoadMap(FWaitingMap, FTeleportThread);
