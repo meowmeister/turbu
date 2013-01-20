@@ -164,6 +164,8 @@ destructor T2kEnvironment.Destroy;
 var
    i: integer;
 begin
+   FParty.Free;
+   ClearEvents;
    FVehicles.Free;
    for i := 0 to High(FHeroes) do
       FHeroes[i].free;
