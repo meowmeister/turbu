@@ -134,7 +134,6 @@ type
       function GetValidateProc: TProc<TSqlQuery>; override;
    public
       function IsDesign: boolean; override;
-      property CurrentMap: T2kSpriteEngine read FCurrentMap;
    end;
 
 implementation
