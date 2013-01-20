@@ -101,7 +101,7 @@ type
       destructor Destroy; override;
 
       procedure assignTile(const x, y, layer: integer; const tile: TTileRef);
-      procedure updateBorders(x, y, layer: integer);
+      function updateBorders(x, y, layer: integer): boolean;
       procedure Process(Sender: TObject);
       procedure AdvanceFrame;
       function GetTile(x, y, layer: integer): TMapTile;
@@ -253,7 +253,7 @@ begin
    dec(y, y mod TILE_SIZE.y);
 end;
 
-procedure T2kSpriteEngine.updateBorders(x, y, layer: integer);
+function T2kSpriteEngine.updateBorders(x, y, layer: integer): boolean;
 var
    tile: TBorderTile;
    neighbors: TNeighborSet;
@@ -272,6 +272,7 @@ var
    tileRef: TTileRef;
    newTile: TMapTile;
 begin
+   result := false;
    if not normalizePoint(x, y) then
       Exit;
    if not (FTiles[layer][x, y] is TBorderTile) then
@@ -291,6 +292,7 @@ begin
    tileRef := FMap.GetTile(x, y, layer);
    if byte(neighbors) <> tileRef.tile then
    begin
+      result := true;
       tileRef.tile := byte(neighbors);
       FMap.assignTile(x, y, layer, tileRef);
       FTiles[layer][x, y].Dead;

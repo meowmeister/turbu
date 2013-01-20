@@ -28,11 +28,23 @@ uses
 
 type
    T2kMapEngineD = class(T2kMapEngine, IDesignMapEngine, IBreakable)
+   private type
+      TTriple = record
+         x, y, z: integer;
+         constructor Create(const coords: TsgPoint; layer: smallint); overload;
+         constructor Create(x, y: integer; layer: smallint); overload;
+      end;
+
+      TUndoFrame = TArray<TPair<TTriple, TTileRef>>;
+
    private
       FTilesetListD: TList<TTileGroupPair>;
       FTileSize: TSgPoint;
       FDrawFrom: TSgPoint;
-      FPaletteList: TList<integer>;
+      FDrawTo: TSgPoint;
+      FPaintMode: TPaintMode;
+      FDrawGuide: boolean;
+      FPaletteList: TArray<integer>;
       FCurrentLayer: shortint;
       FAutosaveMaps: boolean;
       FObjectContainers: TMapObjectContainerList;
@@ -41,6 +53,10 @@ type
       FTopLeft: TSgPoint;
       FDBFilename: string;
       FController: ITurbuController;
+
+      //undo data
+      FBeingDrawn: TDictionary<TTriple, TTileRef>;
+      FUndoStack: TStack<TUndoFrame>;
 
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
       procedure saveMap(value: TRpgMap);
@@ -56,6 +72,24 @@ type
       function DoResize(map: TRpgMap; viewport: TRect): TRect;
       procedure UploadMapObjects;
       procedure Validate(query: TSqlQuery);
+
+      procedure FillRect(bounds: TRect; const predicate: TPredicate<TsgPoint>);
+      procedure InternalDraw(const position: TSgPoint; new: boolean);
+      procedure InternalDrawRect(const position: TSgPoint; new: boolean);
+      procedure InternalDrawPen(const position: TsgPoint; new: boolean);
+      procedure InternalDrawFlood(const position: TSgPoint; new: boolean);
+      procedure DetermineFlood(const position: TsgPoint; out bounds: TRect;
+         out floodSet: TDictionary<TsgPoint, boolean>);
+      function FloodCompatible(const position: TsgPoint; tv: TTileRef): boolean;
+      procedure TryFlood(const position: TsgPoint; var bounds: TRect;
+         floodSet: TDictionary<TsgPoint, boolean>; open: TList<TsgPoint>;
+         tv: TTileRef);
+      function GetDelayDrawRect: TRect;
+      procedure NewUndoFrame;
+      procedure beingDrawn(x, y: integer); overload;
+      procedure BeingDrawn(x, y: integer; tileRef: TTileRef); overload;
+      procedure DrawRow(y: integer; const drawRect: TRect;
+        const predicate: TPredicate<TsgPoint>);
    private //IBreakable
       procedure BreakSomething;
    private //IDesignMapEngine
@@ -69,7 +103,9 @@ type
       procedure ResizeWindow(rect: TRect);
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TArray<integer>);
+      procedure SetPaintMode(value: TPaintMode);
       procedure draw(const position: TSgPoint; new: boolean);
+      procedure Undo;
       procedure doneDrawing;
       procedure doubleClick;
       procedure rightClick(const position: TSgPoint);
@@ -98,11 +134,12 @@ type
       function GetValidateProc: TProc<TSqlQuery>; override;
    public
       function IsDesign: boolean; override;
+      property CurrentMap: T2kSpriteEngine read FCurrentMap;
    end;
 
 implementation
 uses
-   commons, math, windows, Dialogs, Controls,
+   commons, math, windows, Dialogs, Controls, Forms,
    logs, database,
    turbu_map_metadata, archiveInterface, turbu_constants, turbu_sdl_image, turbu_database,
    turbu_functional, turbu_plugin_interface, turbu_containers, turbu_map_objects,
@@ -151,6 +188,24 @@ begin
    draw(position, true);
 end;
 
+procedure T2kMapEngineD.BeingDrawn(x, y: integer; tileRef: TTileRef);
+var
+   loc: TTriple;
+begin
+   loc := TTriple.Create(x, y, FCurrentLayer);
+   if not FBeingDrawn.ContainsKey(loc) then
+      FBeingDrawn.Add(loc, tileRef);
+end;
+
+procedure T2kMapEngineD.beingDrawn(x, y: integer);
+var
+   loc: TTriple;
+begin
+   loc := TTriple.Create(x, y, FCurrentLayer);
+   if not FBeingDrawn.ContainsKey(loc) then
+      FBeingDrawn.Add(loc, FCurrentMap.mapObj.getTile(x, y, FCurrentLayer));
+end;
+
 function T2kMapEngineD.InitializeDesigner(window: TSdlWindow; const database: string): TSdlWindow;
 var
    script: string;
@@ -166,7 +221,9 @@ begin
       script := dmDatabase.ScriptLookup(0);
       logs.logText(script);
       FObjectManager.ScriptEngine.LoadLibrary(script);
-      FPaletteList := TList<integer>.Create;
+
+      FBeingDrawn := TDictionary<TTriple, TTileRef>.Create;
+      FUndoStack := TStack<TUndoFrame>.Create;
       //do more
    except
       if FInitialized then
@@ -176,12 +233,27 @@ begin
 end;
 
 procedure T2kMapEngineD.AfterPaint;
+var
+   guideRect: TRect;
 begin
-  if (FCurrentLayer < 0) and (not FTimer.Enabled) then
-  begin
-     DrawGrid;
-     DrawCursor;
-  end;
+   if (FCurrentLayer < 0) and (not FTimer.Enabled) then
+   begin
+      DrawGrid;
+      DrawCursor;
+   end
+   else if FDrawGuide then
+   begin
+      guideRect := GetDelayDrawRect;
+      inc(guideRect.Right);
+      inc(guideRect.Bottom);
+      guideRect := multiplyRect(guideRect, TILE_SIZE);
+      dec(guideRect.Right);
+      dec(guideRect.Bottom);
+      guideRect := TRectToSdlRect(guideRect);
+      dec(guideRect.Left, FTopLeft.x);
+      dec(guideRect.Right, FTopLeft.y);
+      FCanvas.DrawBox(guideRect, SDL_WHITE);
+   end;
 end;
 
 procedure T2kMapEngineD.BreakSomething;
@@ -196,8 +268,9 @@ begin
    self.ClearContainers;
    inherited cleanup;
    FreeAndNil(FObjectContainers);
-   FreeAndNil(FPaletteList);
    FreeAndNil(FTilesetListD);
+   FBeingDrawn.Free;
+   FUndoStack.Free;
 end;
 
 procedure T2kMapEngineD.ClearButtons;
@@ -250,6 +323,22 @@ begin
    end;
 end;
 
+procedure T2kMapEngineD.Undo;
+var
+   frame: TUndoFrame;
+   pair: TPair<TTriple, TTileRef>;
+begin
+   if FUndoStack.Count = 0 then
+   begin
+      Application.MessageBox('Nothing to undo!', 'TURBU Editor');
+      exit;
+   end;
+   frame := FUndoStack.Pop;
+   for pair in frame do
+      FCurrentMap.assignTile(pair.Key.x, pair.Key.y, pair.key.z, pair.Value);
+   Repaint;
+end;
+
 procedure T2kMapEngineD.UploadMapObjects;
 var
    obj: TRpgMapObject;
@@ -270,6 +359,7 @@ begin
    if assigned(FCurrentMap) then
    begin
       self.ClearContainers;
+      FUndoStack.Clear;
       FreeAndNil(FPartySprite);
       if not FCurrentMap.mapObj.modified then
          freeAndNil(FMaps[FCurrentMap.mapObj.id])
@@ -402,6 +492,12 @@ begin
    self.repaint;
 end;
 
+procedure T2kMapEngineD.SetPaintMode(value: TPaintMode);
+begin
+   {$MESSAGE WARN 'T2kMapEngineD.SetPaintMode: Not implemented yet'}
+   FPaintMode := value;
+end;
+
 procedure T2kMapEngineD.SetController(const value: ITurbuController);
 begin
    FController := value;
@@ -410,8 +506,7 @@ end;
 procedure T2kMapEngineD.setPaletteList(value: TArray<integer>);
 begin
    assert((value[0] = 1) or (length(value) mod value[0] = 1));
-   FPaletteList.Clear;
-   FPaletteList.AddRange(value);
+   FPaletteList := value;
 end;
 
 procedure T2kMapEngineD.Stop;
@@ -420,48 +515,175 @@ begin
    Assert(false, 'not implemented yet');
 end;
 
-procedure T2kMapEngineD.draw(const position: TSgPoint; new: boolean);
+procedure T2kMapEngineD.InternalDrawPen(const position: TsgPoint; new: boolean);
 var
-   tile: TTileRef;
    drawRect: TRect;
-   i, j, counter: integer;
-   offset: TSgPoint;
+begin
+   drawRect.TopLeft := position;
+   drawRect.Right := drawRect.Left + FPaletteList[0] - 1;
+   drawRect.Bottom := drawRect.Top + (high(FPaletteList) div FPaletteList[0]) - 1;
+
+   if new then
+      FDrawFrom := position;
+
+   FillRect(drawRect, nil);
+end;
+
+procedure T2kMapEngineD.InternalDrawRect(const position: TSgPoint; new: boolean);
+begin
+   if new then
+      FDrawFrom := position;
+   FDrawTo := position;
+   FDrawGuide := true;
+end;
+
+procedure T2kMapEngineD.DrawRow(y: integer; const drawRect: TRect; const predicate: TPredicate<TsgPoint>);
+var
+   x, counter: integer;
+   offset, drawSize: TsgPoint;
+   tileValue: TTileRef;
+begin
+   drawSize := sgPoint(FPaletteList[0], (length(FPaletteList) - 1) div FPaletteList[0]);
+   for x := max(0, drawRect.Left) to min(drawRect.Right, FCurrentMap.Width - 1) do
+   begin
+      if assigned(predicate) and (predicate(sgPoint(x, y)) = false) then
+         Continue;
+      //(((a mod b) + b) mod b) to compensate for negative numbers
+      offset := (((sgPoint(x, y) - FDrawFrom) mod drawSize) + drawSize) mod drawSize;
+      counter := (offset.y * FPaletteList[0]) + offset.x + 1;
+
+      tileValue := FCurrentMap.tileset.tile(FPaletteList[counter], FCurrentLayer);
+      BeingDrawn(x,y);
+      FCurrentMap.assignTile(x, y, FCurrentLayer, tileValue);
+      inc(counter);
+      if counter = Length(FPaletteList) then
+         counter := 1;
+   end;
+end;
+
+procedure T2kMapEngineD.FillRect(bounds: TRect; const predicate: TPredicate<TsgPoint>);
+var
+   i, j: integer;
+   tileRef: TTileRef;
+begin
+   for i := bounds.Top to bounds.Bottom do
+      DrawRow(i, bounds, predicate);
+   bounds := sg_utils.expandRect(bounds, 1);
+   for j := bounds.Top to bounds.Bottom do
+      for I := bounds.Left to bounds.Right do
+      begin
+         tileRef := FCurrentMap.mapObj.GetTile(i, j, FCurrentLayer);
+         if FCurrentMap.updateBorders(i, j, FCurrentLayer) then
+            BeingDrawn(i, j, tileRef);
+      end;
+   FCurrentMap.Dead;
+end;
+
+function T2kMapEngineD.FloodCompatible(const position: TsgPoint; tv: TTileRef): boolean;
+var
+   group, tile, group2, tile2: integer;
+   tv2: TTileRef;
+   tileGroup: TTileGroupRecord;
+begin
+   tv2 := FCurrentMap.mapObj.getTile(position.x, position.y, FCurrentLayer);
+
+   group := tv.group;
+   tile := tv.tile;
+   group2 := tv2.group;
+   tile2 := tv2.tile;
+
+   result := group = group2;
+   tileGroup := FCurrentMap.tileset.Records[group];
+   if result and not (tsBordered in tileGroup.group.tileType) then
+      result := tile = tile2;
+end;
+
+procedure T2kMapEngineD.TryFlood(const position: TsgPoint; var bounds: TRect;
+  floodSet: TDictionary<TsgPoint, boolean>; open: TList<TsgPoint>; tv: TTileRef);
+begin
+   if floodSet.ContainsKey(position) then
+      Exit;
+   if not FloodCompatible(position, tv) then
+      Exit;
+   floodSet.Add(position, true);
+   if position.x > 0 then
+      open.add(sgPoint(position.x - 1, position.y));
+   if position.y > 0 then
+      open.add(sgPoint(position.x, position.y - 1));
+   if position.x < FCurrentMap.Width then
+      open.add(sgPoint(position.x + 1, position.y));
+   if position.y < FCurrentMap.Height then
+      open.add(sgPoint(position.x, position.y + 1));
+   bounds.Left := min(bounds.Left, position.x);
+   bounds.Right := max(bounds.Right, position.x);
+   bounds.Top := min(bounds.Top, position.y);
+   bounds.Bottom := max(bounds.bottom, position.y);
+end;
+
+procedure T2kMapEngineD.DetermineFlood(const position: TsgPoint; out bounds: TRect;
+  out floodSet: TDictionary<TsgPoint, boolean>);
+var
+   tv: TTileRef;
+   open: TList<TsgPoint>;
+   lastOpen: TArray<TsgPoint>;
+   point: TsgPoint;
+begin
+   tv := FCurrentMap.mapObj.getTile(position.x, position.y, FCurrentLayer);
+   bounds := rect(position, position);
+   floodSet := TDictionary<TsgPoint, boolean>.Create;
+   open := TList<TsgPoint>.Create;
+   try
+      try
+         TryFlood(position, bounds, floodSet, open, tv);
+         repeat
+            lastOpen := open.ToArray;
+            open.Clear;
+            for point in lastOpen do
+               TryFlood(point, bounds, floodSet, open, tv)
+         until open.Count = 0;
+      except
+         floodSet.Free;
+         raise;
+      end;
+   finally
+      open.Free;
+   end;
+end;
+
+procedure T2kMapEngineD.InternalDrawFlood(const position: TSgPoint; new: boolean);
+var
+   bounds: TRect;
+   floodSet: TDictionary<TsgPoint, boolean>;
+begin
+   if not new then
+      Exit;
+   DetermineFlood(position, bounds, floodSet);
+   try
+      FillRect(bounds,
+        function (position: TsgPoint): boolean
+        begin result := floodSet.ContainsKey(position) end);
+   finally
+      floodSet.Free;
+   end;
+end;
+
+procedure T2kMapEngineD.InternalDraw(const position: TSgPoint; new: boolean);
+begin
+   case FPaintMode of
+      pmPen: InternalDrawPen(position, new);
+      pmFlood: InternalDrawFlood(position, new);
+      pmRect: InternalDrawRect(position, new);
+//      pmEllipse: InternalDrawEllipse(position, new);
+   end;
+end;
+
+procedure T2kMapEngineD.draw(const position: TSgPoint; new: boolean);
 begin
    if FTimer.Enabled then
       Exit;
 
    if FCurrentLayer >= 0 then
-   begin
-      drawRect.TopLeft := position;
-      drawRect.Right := drawRect.Left + FPaletteList[0] - 1;
-      drawRect.Bottom := drawRect.Top + ((FPaletteList.Count - 1) div FPaletteList[0]) - 1;
-
-      //calculate where to start drawing
-      if new then
-      begin
-         offset := ORIGIN;
-         FDrawFrom := position;
-      end
-      else
-         offset := position - FDrawFrom;
-      counter := (offset.y * FPaletteList[0]) + offset.x;
-      counter := safeMod(counter, FPaletteList.Count - 1) + 1;
-
-      for j := drawRect.Top to drawRect.Bottom do
-         for I := drawRect.Left to drawRect.Right do
-         begin
-            tile := FCurrentMap.tileset.Tile(FPaletteList[counter], FCurrentLayer);
-            FCurrentMap.assignTile(i, j, FCurrentLayer, tile);
-            inc(counter);
-            if counter = FPaletteList.Count then
-               counter := 1;
-         end;
-      drawRect := sg_utils.expandRect(drawRect, 1);
-      for j := drawRect.Top to drawRect.Bottom do
-         for I := drawRect.Left to drawRect.Right do
-            FCurrentMap.updateBorders(i, j, FCurrentLayer);
-      FCurrentMap.Dead;
-   end
+      InternalDraw(position, new)
    else begin
       FCursorPosition := position;
       if not assigned(FHookedObject) then
@@ -554,6 +776,7 @@ begin
          FCurrentMap.viewport := DoResize(FCurrentMap.mapObj, FCurrentMap.viewport);
       end;
       self.repaint;
+      FUndoStack.Clear;
    end;
 end;
 
@@ -613,6 +836,16 @@ begin
       FObjectContainers.Add(TMapObjectContainer.Create(FHookedObject, FCanvas));
       FHookedObject := nil;
       self.repaint;
+   end;
+   if FCurrentLayer >= 0 then
+   begin
+      FDrawGuide := false;
+      if FPaintMode = pmRect then
+      begin
+         FillRect(GetDelayDrawRect, nil);
+         repaint;
+      end;
+      NewUndoFrame;
    end;
 end;
 
@@ -712,6 +945,12 @@ begin
    end);
 end;
 
+function T2kMapEngineD.GetDelayDrawRect: TRect;
+begin
+   result := rect(min(FDrawFrom.x, FDrawTo.x), min(FDrawFrom.y, FDrawTo.y),
+           max(FDrawFrom.x, FDrawTo.x), max(FDrawFrom.y, FDrawTo.y));
+end;
+
 function T2kMapEngineD.GetTilesetImage(const index: byte): PSdlSurface;
 var
    pair: TTileGroupPair;
@@ -790,6 +1029,17 @@ begin
       end) + 1;
 end;
 
+procedure T2kMapEngineD.NewUndoFrame;
+var
+   frame: TUndoFrame;
+begin
+   if (FBeingDrawn = nil) or (FBeingDrawn.Count = 0) then
+      Exit;
+   frame := FBeingDrawn.ToArray;
+   FUndoStack.Push(frame);
+   FBeingDrawn.Clear;
+end;
+
 procedure T2kMapEngineD.Pause;
 begin
    FTimer.Enabled := false;
@@ -834,6 +1084,23 @@ begin
       end
       else MessageDlg('This project is using an out-of-date database and can''t be loaded.', mtError, [mbOK], 0);
    end;
+end;
+
+{ T2kMapEngineD.TTriple }
+
+constructor T2kMapEngineD.TTriple.Create(const coords: TsgPoint;
+  layer: smallint);
+begin
+   x := coords.x;
+   y := coords.y;
+   z := layer;
+end;
+
+constructor T2kMapEngineD.TTriple.Create(x, y: integer; layer: smallint);
+begin
+   self.x := x;
+   self.y := y;
+   self.z := layer;
 end;
 
 end.
