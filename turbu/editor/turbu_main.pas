@@ -628,10 +628,13 @@ end;
 procedure TfrmTurbuMain.mnuOpenClick(Sender: TObject);
 var
    filename: string;
+   msg: TMsg;
 begin
    dlgOpen.InitialDir := getProjectFolder;
    if dlgOpen.Execute then
    begin
+      //clear out any lingering mouse messages
+      while PeekMessage(msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) do ;
       filename := dlgOpen.FileName;
       closeProject;
       openProject(filename);
