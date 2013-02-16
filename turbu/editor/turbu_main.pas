@@ -132,6 +132,7 @@ type
       FCurrPalettePos: integer;
       FPaletteImages: TDictionary<integer, integer>;
       FIgnoreMouseDown: boolean;
+      FLoadingImage: boolean;
       FZoom: single;
       FMusicPlayer: TfrmMusicSelector;
       FDBName: string;
@@ -234,9 +235,13 @@ end;
 procedure TfrmTurbuMain.resizePalette;
 var
    texture: TSdlTexture;
+   maxSize: integer;
 begin
    texture := imgPalette.images[FPaletteTexture].surface;
-   sbPalette.Max := round(texture.size.y / (imgPalette.Width / imgPalette.LogicalWidth));
+   maxSize := round(texture.size.y / (imgPalette.Width / imgPalette.LogicalWidth));
+   if maxSize < sbPalette.PageSize then
+      sbPalette.PageSize := maxSize;
+   sbPalette.Max := maxSize;
    sbPalette.PageSize := imgPalette.LogicalHeight;
    sbPalette.LargeChange := sbPalette.PageSize - FTileSize.y;
    displayPalette;
@@ -290,11 +295,15 @@ end;
 procedure TfrmTurbuMain.assignPaletteImage(surface: PSdlSurface);
 var
    texture: TSdlTexture;
+   ratio: extended;
 begin
    FPaletteTexture := imgPalette.AddTexture(surface);
    texture := imgPalette.images[FPaletteTexture].surface;
    imgPalette.LogicalWidth := texture.size.X;
    imgPalette.LogicalHeight := round(imgPalette.LogicalWidth * (imgPalette.Height / imgPalette.Width));
+   ratio := imgPalette.Width / imgPalette.LogicalWidth;
+   sbxPallette.Constraints.MaxHeight := round(texture.size.Y * ratio);
+
    bindPaletteCursor;
    resizePalette;
 end;
@@ -794,15 +803,20 @@ procedure TfrmTurbuMain.setLayer(const value: integer);
 
    procedure LoadImage(const value: integer);
    begin
-      if not FPaletteImages.ContainsKey(value) then
-      begin
-         assignPaletteImage(FMapEngine.tilesetImage[value]);
-         FPaletteImages.add(value, FPaletteTexture);
-      end
-      else begin
-         FPaletteTexture := FPaletteImages[value];
-         bindPaletteCursor;
-         resizePalette;
+      FLoadingImage := true;
+      try
+         if not FPaletteImages.ContainsKey(value) then
+         begin
+            assignPaletteImage(FMapEngine.tilesetImage[value]);
+            FPaletteImages.add(value, FPaletteTexture);
+         end
+         else begin
+            FPaletteTexture := FPaletteImages[value];
+            bindPaletteCursor;
+            resizePalette;
+         end;
+      finally
+         FLoadingImage := false;
       end;
    end;
 
@@ -916,7 +930,7 @@ procedure TfrmTurbuMain.splSidebarMoved(Sender: TObject);
 begin
 //QC 89303: Can't call Abort inside a splitter's OnMoved event
 //   RequireMapEngine;
-   if assigned(FMapEngine) then
+   if assigned(FMapEngine) and not FLoadingImage then
    begin
       imgPalette.ClearTextures;
       FPaletteImages.Clear;
