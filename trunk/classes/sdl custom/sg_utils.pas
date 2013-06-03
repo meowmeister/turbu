@@ -17,6 +17,7 @@ function pointToGridLoc(const point, cellSize: TSgPoint; const hScroll, vScroll:
 function gridLocToPoint(const point, cellSize: TSgPoint; const hScroll, vScroll: integer;
                         const scale: double): TSgPoint;
 function TRectToSdlRect(const value: TRect): TRect;
+function SdlRectToTRect(const value: TRect): TRect;
 
 implementation
 
@@ -89,6 +90,13 @@ begin
    result.TopLeft := value.TopLeft;
    result.Right := value.Right - value.Left;
    result.Bottom := value.Bottom - value.Top;
+end;
+
+function SdlRectToTRect(const value: TRect): TRect;
+begin
+   result.TopLeft := value.TopLeft;
+   result.Right := value.Right + value.Left;
+   result.Bottom := value.Bottom + value.Top;
 end;
 
 end.

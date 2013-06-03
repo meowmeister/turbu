@@ -131,12 +131,12 @@ object dmShaders: TdmShaders
           '    float gray;'
           ''
           '    if (hShift != 0)'
-          '    '#9'rgbColor = slideHue(rgbColor);'
-          #9'grayVec = rgbColor * Luma;'
-          #9'gray = (grayVec.r + grayVec.g + grayVec.b);'
+          '        rgbColor = slideHue(rgbColor);'
+          '    grayVec = rgbColor * Luma;'
+          '    gray = (grayVec.r + grayVec.g + grayVec.b);'
           
-            #9'return clamp(mix(vec3(gray, gray, gray), rgbColor, satMult) * v' +
-            'alMult, 0.0, 1.0);'
+            '    return clamp(mix(vec3(gray, gray, gray), rgbColor, satMult) ' +
+            '* valMult, 0.0, 1.0);'
           '}'
           ''
           
@@ -170,17 +170,18 @@ object dmShaders: TdmShaders
       item
         Name = 'default'
         Strings.Strings = (
-          'varying vec2 texture_coordinate;'
-          ''
-          'void main()'
-          '{'
-          '  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;'
+          'varying vec4 v_color;'
+          'varying vec2 texture_coordinate; '
+          ' '
+          'void main() '
+          '{ '
+          '  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex; '
           
             '  // Passing The Texture Coordinate Of Texture Unit 0 To The Fra' +
-            'gment Shader'
-          '  texture_coordinate = vec2(gl_MultiTexCoord0);'
-          ''
-          '  gl_FrontColor = gl_Color;'
+            'gment Shader '
+          '  texture_coordinate = vec2(gl_MultiTexCoord0); '
+          '  v_color = gl_Color;'
+          '  gl_FrontColor = gl_Color; '
           '}')
       end
       item
@@ -202,21 +203,24 @@ object dmShaders: TdmShaders
       item
         Name = 'defaultF'
         Strings.Strings = (
-          'varying vec2 texture_coordinate;'
-          'uniform sampler2DRect baseTexture;'
-          ''
-          'void main()'
-          '{'
+          'varying vec4 v_color;'
+          'varying vec2 texture_coordinate; '
+          'uniform sampler2DRect baseTexture; '
+          ' '
+          'void main() '
+          '{ '
           
             '    gl_FragColor = texture2DRect(baseTexture, texture_coordinate' +
-            ') * gl_Color;'
+            ') * v_color; '
           '}')
       end
       item
         Name = 'tint'
         Strings.Strings = (
           'varying vec2 texture_coordinate; '
+          'varying vec4 v_color;'
           'uniform sampler2DRect baseTexture;'
+          'uniform vec4 rgbValues;'
           ''
           'vec3 ProcessShifts(vec3 rgbColor);'
           ''
@@ -226,8 +230,8 @@ object dmShaders: TdmShaders
             '    vec4 lColor =  texture2DRect(baseTexture, texture_coordinate' +
             ');'
           
-            '    gl_FragColor = vec4(ProcessShifts(lColor.rgb), lColor.a * gl' +
-            '_Color.a);'
+            '    gl_FragColor = vec4(ProcessShifts(lColor.rgb), lColor.a * v_' +
+            'color.a);'
           '}')
       end
       item
@@ -301,6 +305,37 @@ object dmShaders: TdmShaders
             'inate).rgb, gl_Color.a);'
           '}'
           '')
+      end
+      item
+        Name = 'Ellipse'
+        Strings.Strings = (
+          'uniform vec2 tl;'
+          'uniform vec2 br;'
+          'float x;'
+          'float y;'
+          'float x0, y0, a, b;'
+          'float dist;'
+          ''
+          'float sqr(float value)'
+          '{'
+          '   return value * value;'
+          '}'
+          ''
+          'void main()'
+          '{ '
+          '   x = gl_TexCoord[0].s;'
+          '   y = gl_TexCoord[0].t;'
+          ''
+          '   x0 =(tl.x + br.x) / 2.0;'
+          '   y0 =(tl.y + br.y) / 2.0;'
+          '   a = (tl.x - br.x) / 2.0;'
+          '   b = (tl.y - br.y) / 2.0;'
+          '   dist = sqr((x-x0)/a)+sqr((y-y0)/b);'
+          '   if (abs(1.0 - dist) > 0.5)'
+          '      discard;'
+          ''
+          '   gl_FragColor = vec4(1, 1, 1, 1);'
+          '}')
       end>
     Left = 136
     Top = 16

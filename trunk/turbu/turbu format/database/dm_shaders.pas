@@ -42,8 +42,9 @@ type
       glGetUniformLocation: function(programObj: integer; const char: PAnsiChar): glint; stdcall;
       glUniform1f: procedure(location: GLint; v0: GLfloat); stdcall;
       glUniform1i: procedure(location: GLint; v0: GLint); stdcall;
-      glUniform3fv: procedure(location: GLint; count: GLsizei; value: PGLfloat); stdcall;
-      glUniform4fv: procedure(location: GLint; count: GLsizei; value: PGLfloat); stdcall;
+//      glUniform3fv: procedure(location: GLint; count: GLsizei; value: PGLfloat); stdcall;
+//      glUniform4fv: procedure(location: GLint; count: GLsizei; value: PGLfloat); stdcall;
+      glUniform4f: procedure(location: GLint; v1, v2, v3, v4: GLFloat); stdcall;
 
       function GetShader(const name: string; container: TJvMultiStringHolder): integer;
       function GetShaderType(container: TJvMultiStringHolder): cardinal;
@@ -57,7 +58,11 @@ type
       procedure SetUniformValue(handle: integer; const name: string; const value: TGLArrayf4); overload;
    end;
 
+procedure glCheckError;
+
 implementation
+uses
+   Generics.Defaults;
 
 {$R *.dfm}
 
@@ -69,13 +74,37 @@ const
    GL_FALSE = 0;
    GL_INFO_LOG_LENGTH = $8B84;
 
+procedure glCheckError;
+{$IFDEF DEBUG}
+var
+   err: glEnum;
+begin
+{   err := glGetError;
+   if err <> GL_NO_ERROR then
+      asm int 3 end;}
+end;
+{$ELSE}
+begin
+end;
+{$ENDIF}
+
 { TdmShaders }
+
+function UniformsEqual(const left, right: TdmShaders.TUniform): boolean;
+begin
+   result := (left.prog = right.prog) and (left.name = right.name);
+end;
+
+function UniformHash(const value: TdmShaders.Tuniform): integer;
+begin
+   result := BobJenkinsHash(value.name[1], length(value.name) * sizeof(char), 0) xor value.prog;
+end;
 
 procedure TdmShaders.DataModuleCreate(Sender: TObject);
 begin
    FMap := TDictionary<string, integer>.Create;
    FPrograms := TDictionary<TArray<integer>, integer>.Create;
-   FUniforms := TDictionary<TUniform, integer>.Create;
+   FUniforms := TDictionary<TUniform, integer>.Create(TEqualityComparer<TUniform>.Construct(uniformsEqual, uniformHash));
 
    glCreateProgram := SDL_GL_GetProcAddress('glCreateProgram');
    glCreateShader := SDL_GL_GetProcAddress('glCreateShader');
@@ -93,8 +122,9 @@ begin
    glGetUniformLocation := SDL_GL_GetProcAddress('glGetUniformLocation');
    glUniform1f := SDL_GL_GetProcAddress('glUniform1f');
    glUniform1i := SDL_GL_GetProcAddress('glUniform1i');
-   glUniform3fv := SDL_GL_GetProcAddress('glUniform3fv');
-   glUniform4fv := SDL_GL_GetProcAddress('glUniform4fv');
+//   glUniform3fv := SDL_GL_GetProcAddress('glUniform3fv');
+//   glUniform4fv := SDL_GL_GetProcAddress('glUniform4fv');
+   glUniform4f := SDL_GL_GetProcAddress('glUniform4f');
 end;
 
 procedure TdmShaders.DataModuleDestroy(Sender: TObject);
@@ -159,10 +189,12 @@ function TdmShaders.GetUniformLocation(handle: integer; const name: string): int
 var
    uni: TUniform;
 begin
+   glCheckError;
    uni := TUniform.Create(handle, name);
    if not FUniforms.TryGetValue(uni, result) then
    begin
       result := glGetUniformLocation(handle, PAnsiChar(AnsiString(name)));
+      glCheckError;
       if result = -1 then
          raise Exception.CreateFmt('No uniform "%s" found in program %d', [name, handle]);
       FUniforms.Add(uni, result);
@@ -175,13 +207,19 @@ var
    status, infoLogLength, dummy: integer;
    strInfoLog: AnsiString;
 begin
+   glCheckError;
    result := glCreateProgram;
    for shader in units do
+   begin
       glAttachShader(result, shader);
+      glCheckError;
+   end;
 
    glLinkProgram(result);
+   glCheckError;
 
    glGetProgramiv (result, GL_LINK_STATUS, @status);
+   glCheckError;
    if (status = GL_FALSE) then
    begin
       glGetProgramiv(result, GL_INFO_LOG_LENGTH, @infoLogLength);
@@ -195,17 +233,21 @@ end;
 procedure TdmShaders.SetUniformValue(handle: integer; const name: string; value: glInt);
 begin
    glUniform1i(GetUniformLocation(handle, name), value);
+   glCheckError;
 end;
 
 procedure TdmShaders.SetUniformValue(handle: integer; const name: string; value: glFloat);
 begin
    glUniform1f(GetUniformLocation(handle, name), value);
+   glCheckError;
 end;
 
 procedure TdmShaders.SetUniformValue(handle: integer; const name: string;
   const value: TGLArrayf4);
 begin
-   glUniform4fv(GetUniformLocation(handle, name), 4, @value[0]);
+   glUniform4f(GetUniformLocation(handle, name), value[0], value[1], value[2], value[3]);
+//   glUniform4fv(GetUniformLocation(handle, name), 4, @value[0]);
+   glCheckError;
 end;
 
 function TdmShaders.ShaderProgram(const vert, frag, libs: string): integer;
@@ -236,8 +278,12 @@ begin
 end;
 
 procedure TdmShaders.UseShaderProgram(value: integer);
+var
+   err: glEnum;
 begin
+   glCheckError;
    glUseProgram(value);
+   glCheckError;
 end;
 
 { TdmShaders.TUniform }

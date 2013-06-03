@@ -52,7 +52,8 @@ type
       constructor Create(size: TSgPoint); overload;
       destructor Destroy; override;
       procedure SetRenderer; override;
-      procedure DrawFull;
+      procedure DrawFull; overload;
+      procedure DrawFull(const TopLeft: TPoint); overload;
       property handle: TSdlTexture read FHandle;
    end;
 
@@ -107,6 +108,7 @@ type
       * Draws a box on screen
       ************************************************************************}
       procedure DrawBox(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
+      procedure DrawDashedBox(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
 
       procedure Clear(const color: SDL_Color; const alpha: byte = $FF); overload;
 
@@ -151,7 +153,7 @@ function currentRenderTarget: TSdlRenderSurface;
 implementation
 uses
    OpenGL,
-   turbu_OpenGL;
+   turbu_OpenGL, dm_shaders;
 
 var
    lCurrentRenderTarget: TSdlRenderSurface;
@@ -184,16 +186,36 @@ begin
    inherited Destroy;
 end;
 
+procedure TSdlRenderTarget.DrawFull(const TopLeft: TPoint);
+begin
+glCheckError;
+   glEnable(GL_TEXTURE_RECTANGLE_ARB);
+glCheckError;
+   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, self.handle.handle);
+glCheckError;
+   glBegin(GL_QUADS);
+      glTexCoord2i(0, 0); glVertex2i(topleft.X, topleft.y);
+      glTexCoord2i(Width, 0); glVertex2i(topleft.X + Width, topLeft.y);
+      glTexCoord2i(Width, Height); glVertex2i(topleft.X + Width, topleft.y + Height);
+      glTexCoord2i(0, Height); glVertex2i(topleft.X, topleft.y + Height);
+   glEnd;
+glCheckError;
+end;
+
 procedure TSdlRenderTarget.DrawFull;
 begin
+glCheckError;
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
+glCheckError;
    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, self.handle.handle);
+glCheckError;
    glBegin(GL_QUADS);
       glTexCoord2i(0, 0); glVertex2i(0, 0);
       glTexCoord2i(0, Height); glVertex2i(0, Height);
       glTexCoord2i(Width, Height); glVertex2i(Width, Height);
       glTexCoord2i(Width, 0); glVertex2i(Width, 0);
    glEnd;
+glCheckError;
 end;
 
 procedure TSdlRenderTarget.SetRenderer;
@@ -273,6 +295,40 @@ procedure TSdlCanvas.DrawBox(const region: TRect; const color: SDL_Color;
 begin
    assert(SDL_SetRenderDrawColor(FRenderer, color.r, color.g, color.b, alpha) = 0);
    SDL_RenderDrawRect(FRenderer, @region);
+end;
+
+procedure TSdlCanvas.DrawDashedBox(const region: TRect; const color: SDL_Color; const alpha: byte);
+
+   procedure DrawHorizLine(x1, x2, y: integer);
+   var
+      x: integer;
+   begin
+      x := x1;
+      while x < x2 - 2 do
+      begin
+         SDL_RenderDrawLine(FRenderer, x, y, x + 2, y);
+         inc(x, 4);
+      end;
+   end;
+
+   procedure DrawVertLine(y1, y2, x: integer);
+   var
+      y: integer;
+   begin
+      y := y1;
+      while y < y2 - 2 do
+      begin
+         SDL_RenderDrawLine(FRenderer, x, y1, x, y + 2);
+         inc(y, 4);
+      end;
+   end;
+
+begin
+   assert(SDL_SetRenderDrawColor(FRenderer, color.r, color.g, color.b, alpha) = 0);
+   DrawHorizLine(region.Left, region.Right, region.Top);
+   DrawHorizLine(region.Left, region.Right, region.Bottom);
+   DrawVertLine(region.Top, region.Bottom, region.Left);
+   DrawVertLine(region.Top, region.Bottom, region.Right);
 end;
 
 procedure TSdlCanvas.Clear(const color: SDL_Color; const alpha: byte);
