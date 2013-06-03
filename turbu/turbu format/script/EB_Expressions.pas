@@ -86,6 +86,7 @@ type
       constructor Create(left, right: TEBExpression; comparison: TComparisonOp); reintroduce;
       function GetNodeText: string; override;
       function GetScriptText: string; override;
+      procedure negate;
    end;
 
    TEBComparisonBool = class(TEBExpression)
@@ -196,10 +197,24 @@ type
       function GetNodeText: string; override;
    end;
 
+   TEBAndList = class(TEBExpression)
+   public
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
+   TEBNotExpr = class(TEBExpression)
+   public
+      constructor Create(AParent: TEBObject; base: TEBExpression);
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
    function CleanEnum(const name: string): string;
 
 const
    COMPARISONS: array[TComparisonOp] of string = ('=', '>=', '<=', '>', '<', '<>');
+   NEG_COMPARISONS: array[TComparisonOp] of TComparisonOp = (co_notEquals, co_lt, co_gt, co_ltE, co_gtE, co_equals);
    HINTS: array[0..3] of string = ('', '''s', ' is', ' has');
 
 implementation
@@ -351,6 +366,11 @@ begin
    assert(self.Values.Count = 1);
    result := format(LINE, [ChildScript[0], COMPARISONS[TComparisonOp(Values[0])],
                            ChildScript[1]]);
+end;
+
+procedure TEBComparison.negate;
+begin
+   Values[0] := ord(NEG_COMPARISONS[TComparisonOp(Values[0])]);
 end;
 
 { TEBBooleanValue }
@@ -848,10 +868,69 @@ begin
       result := 'not ' + result;
 end;
 
+{ TEBAndList }
+
+function TEBAndList.GetNodeText: string;
+var
+   i, count: integer;
+begin
+   count := self.children.Count;
+   assert(count > 0);
+   if count = 1 then
+      result := self.ChildNode[0]
+   else begin
+      result := '';
+      for i := 0 to count - 1 do
+      begin
+         result := result + format('(%s)', [self.ChildNode[i]]);
+         if i < count - 1 then
+            result := result + ' and ';
+      end;
+   end;
+end;
+
+function TEBAndList.GetScriptText: string;
+var
+   i, count: integer;
+begin
+   count := self.children.Count;
+   assert(count > 0);
+   if count = 1 then
+      result := self.ChildScript[0]
+   else begin
+      result := '';
+      for i := 0 to count - 1 do
+      begin
+         result := result + format('(%s)', [self.ChildScript[i]]);
+         if i < count - 1 then
+            result := result + ' and ';
+      end;
+   end;
+end;
+
+{ TEBNotExpr }
+
+constructor TEBNotExpr.Create(AParent: TEBObject; base: TEBExpression);
+begin
+   inherited Create(AParent);
+   Add(base);
+end;
+
+function TEBNotExpr.GetNodeText: string;
+begin
+   result := 'not [' + ChildNode[0] + ']';
+end;
+
+function TEBNotExpr.GetScriptText: string;
+begin
+   result := 'not (' + ChildScript[0] + ')';
+end;
+
 initialization
    TEBObject.RegisterClasses([TEBVariableValue,
                     TEBBooleanValue, TEBIntegerValue, TEBStringValue, TEBEnumValue,
                     TEBLookupValue, TEBComparison, TEBObjExpr, TEBObjArrayValue,
                     TEBLookupObjExpr, TEBPropExpr, TEBCall, TEBBinaryOp,
-                    TEBIntArray, TEBNilValue, TEBParenExpr, TEBComparisonBool]);
+                    TEBIntArray, TEBNilValue, TEBParenExpr, TEBComparisonBool,
+                    TEBAndList, TEBNotExpr]);
 end.

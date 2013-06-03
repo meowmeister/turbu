@@ -39,6 +39,7 @@ type
       FMap: IRpgMap;
       FMapObject: IRpgMapObject;
       {$ENDIF}
+      FReadOnly: boolean;
       procedure SetProc(const Value: TEBRoutine);
       procedure EndLoading;
       procedure ReconcilePostEdit(obj: TEbObject; node: TTreeNode; list: TList<TEBObject>);
@@ -80,7 +81,7 @@ type
       property DoubleClickExpand: boolean read FDblClickExpand write FDblClickExpand stored FDblClickExpand;
       property OnOrphan: TOrphanEvent read FOnOrphan write FOnOrphan;
       property OnIsObjectType: TIsObjectEvent read FOnIsObjectType write FOnIsObjectType;
-      property ReadOnly default true;
+      property ReadOnly: boolean read FReadOnly write FReadOnly default false;
       property ShowLines default false;
       property RowSelect default true;
       property Context: TCustomClientDataset read GetDataSet write SetDataSet;
@@ -107,7 +108,7 @@ end;
 constructor TEBTreeView.Create(AOwner: TComponent);
 begin
    inherited Create(AOwner);
-   ReadOnly := true;
+   inherited ReadOnly := true;
    ShowLines := false;
    RowSelect := true;
 end;
@@ -122,7 +123,8 @@ begin
    for subobj in obj do
       if (FSuffix <> '') or not (subObj is TEBExpression) then
          result.add(subObj);
-   assert(result.Count > 0);
+   if result.Count = 0 then
+      FreeAndNil(result);
 end;
 
 procedure TEBTreeView.DblClick;
@@ -221,47 +223,20 @@ begin
 {$ENDIF}
 end;
 
-{$WARN CONSTRUCTING_ABSTRACT OFF}
 procedure TEBTreeView.InsertObject;
 {$IFNDEF COMPONENT}
 var
-   selector: TfrmEBSelector;
-   editor: TfrmEBEditBase;
    obj: TEbObject;
-   cxe: IContextualEditor;
-   vars: IVariableEditor;
-   cls: TEBEditorClass;
 begin
-   selector := TfrmEBSelector.Create(FCategory, FSuffix);
-   try
-      if (selector.ShowModal = mrOK) and assigned(selector.Current) then
-      begin
-         cls := selector.Current;
-         editor := cls.Create(nil);
-         try
-            editor.SetupMap(FMap);
-            editor.SetupEvent(FMapObject);
-            if supports(editor, IContextualEditor, cxe) then
-               cxe.SetContext(FCategory, FSuffix);
-            if supports(editor, IVariableEditor, vars) then
-               vars.SetVariables(FDataset, FGlobals);
-            obj := editor.NewObj;
-         finally
-            editor.free;
-         end;
-         if assigned(obj) then
-            InsertNewObject(obj);
-      end;
-   finally
-      selector.Free;
-   end;
+   obj := TfrmEBSelector.Select(FCategory, FSuffix, FMap, FMapObject, FDataset, FGlobals);
+   if assigned(obj) then
+      InsertNewObject(obj);
 end;
 
 {$ELSE}
 begin
 end;
 {$ENDIF}
-{$WARN CONSTRUCTING_ABSTRACT ON}
 
 function TEBTreeView.IsObjectType(value: integer): boolean;
 begin
