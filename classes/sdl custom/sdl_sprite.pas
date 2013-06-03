@@ -311,7 +311,7 @@ type
 implementation
 uses
    Generics.Defaults,
-   turbu_OpenGL,
+   turbu_OpenGL, dm_shaders,
    SDL, SDL_13;
 
 {  TSprite }
@@ -1026,7 +1026,7 @@ begin
    if not ImplementationRead then
    begin
       InitOpenGL;
-      glEnable(GL_VERTEX_ARRAY);
+      glEnableClientState(GL_VERTEX_ARRAY);
       ImplementationRead := true;
    end;
    FDrawMap := TDrawMap.Create;
@@ -1106,6 +1106,7 @@ procedure TSpriteRenderer.InternalRender(const vertices,
 var
    r, g, b, a: byte;
 begin
+   glCheckError;
    glColor4f(1, 1, 1, image.surface.alpha / 255);
    glEnable(GL_ALPHA_TEST);
    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -1113,15 +1114,21 @@ begin
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
+   glCheckError;
    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, image.handle);
+   glCheckError;
    glEnableClientState(GL_VERTEX_ARRAY);
+   glCheckError;
    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
+   glCheckError;
    glBindBuffer(GL_ARRAY_BUFFER, FVertexBuffer);
+   glCheckError;
    glBufferData(GL_ARRAY_BUFFER, length(vertices) * sizeof(smallint), @vertices[0], GL_STREAM_DRAW);
    glVertexPointer(2, GL_SHORT, 0, nil);
 
    glBindBuffer(GL_ARRAY_BUFFER, FTextureCoords);
+   glCheckError;
    glBufferData(GL_ARRAY_BUFFER, length(texCoords) * sizeof(smallint), @texCoords[0], GL_STREAM_DRAW);
    glTexCoordPointer(2, GL_SHORT, 0, nil);
 

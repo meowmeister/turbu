@@ -389,9 +389,10 @@ type
  *}
   TSdlKeyboardEvent = packed record
     Type_: cardinal;
+    Timestamp: cardinal;
     Window: cardinal;
-    Which: byte;
     State: byte;
+    isRepeat: byte;
     pad: word;
     KeySym: TSdlKeysym;
   end;
@@ -1024,6 +1025,14 @@ cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_GetSurfaceBlendMode'{$ELS
 function SDL_SetPaletteColors(palette: PSdlPalette;  colors: PSdlColorArray; firstcolor, ncolors: integer): integer;
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetPaletteColors'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_SetPaletteColors}
+
+function SDL_AllocPalette(colors: integer): PSdlPalette;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_AllocPalette'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_AllocPalette}
+
+function SDL_SetSurfacePalette(surface: PSdlSurface; palette: PSdlPalette): integer;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetSurfacePalette'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+{$EXTERNALSYM SDL_SetSurfacePalette}
 
 (**
  * SDL_SetTexturePalette
