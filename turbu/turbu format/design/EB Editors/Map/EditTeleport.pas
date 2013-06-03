@@ -66,6 +66,7 @@ type
       procedure DrawPosition(x, y: integer; new: boolean);
 
       function MapResize(const size: TSgPoint): TSgPoint;
+      function ScrollMap(const TopLeft: TSgPoint): TSgPoint;
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
@@ -213,6 +214,11 @@ end;
 function TfrmEBEditTeleport.MapResize(const size: TSgPoint): TSgPoint;
 begin
    result := FScrollboxManager.SetMapSize(size);
+end;
+
+function TfrmEBEditTeleport.ScrollMap(const TopLeft: TSgPoint): TSgPoint;
+begin
+   result := FScrollboxManager.ScrollMap(TopLeft);
 end;
 
 procedure TfrmEBEditTeleport.OnScrollMap(Sender: TObject;
