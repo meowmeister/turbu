@@ -22,7 +22,8 @@ interface
 
 uses
    Controls, Forms, ComCtrls, StdCtrls, Classes, ExtCtrls, Generics.Collections,
-   turbu_MultiMaps, EbEdit;
+   DBClient,
+   turbu_MultiMaps, turbu_map_interface, EventBuilder, EbEdit;
 
 type
    TTreeData = record //because generic KV pairs are broken
@@ -56,13 +57,15 @@ type
    public
       constructor Create(const cat, suffix: string); reintroduce;
       property Current: TEbEditorClass read GetCurrent;
+      class function Select(const cat, suffix: string; const FMap: IRpgMap;
+        const FMapObject: IRpgMapObject; locals, globals: TCustomClientDataset): TEbObject;
    end;
 
 implementation
 uses
 Windows,
    Math, SysUtils, Generics.Defaults,
-   EventBuilder, turbu_functional;
+   turbu_functional;
 
 {$R *.dfm}
 
@@ -214,6 +217,42 @@ begin
    if assigned(result) then
       assert(TClass(result).InheritsFrom(TfrmEBEditBase));
 end;
+
+{$WARN CONSTRUCTING_ABSTRACT OFF}
+class function TfrmEBSelector.Select(const cat, suffix: string;
+  const FMap: IRpgMap; const FMapObject: IRpgMapObject;
+  locals, globals: TCustomClientDataset): TEbObject;
+var
+   selector: TfrmEBSelector;
+   cls: TEBEditorClass;
+   editor: TfrmEBEditBase;
+   cxe: IContextualEditor;
+   vars: IVariableEditor;
+begin
+   result := nil;
+   selector := self.Create(cat, suffix);
+   try
+      if (selector.ShowModal = mrOK) and assigned(selector.Current) then
+      begin
+         cls := selector.Current;
+         editor := cls.Create(nil);
+         try
+            editor.SetupMap(FMap);
+            editor.SetupEvent(FMapObject);
+            if supports(editor, IContextualEditor, cxe) then
+               cxe.SetContext(cat, suffix);
+            if supports(editor, IVariableEditor, vars) then
+               vars.SetVariables(locals, globals);
+            result := editor.NewObj;
+         finally
+            editor.Release;
+         end;
+      end;
+   finally
+      selector.Free;
+   end;
+end;
+{$WARN CONSTRUCTING_ABSTRACT ON}
 
 { TTreeData }
 

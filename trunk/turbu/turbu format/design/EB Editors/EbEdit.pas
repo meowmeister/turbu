@@ -206,7 +206,7 @@ end;
 
 procedure TfrmEBEditBase.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-   CanClose := self.ValidateForm;
+   CanClose := (self.ModalResult <> mrOK) or self.ValidateForm;
 end;
 
 procedure TfrmEBEditBase.FormShow(Sender: TObject);

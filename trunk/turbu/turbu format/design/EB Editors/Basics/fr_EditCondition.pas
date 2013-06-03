@@ -39,7 +39,7 @@ type
 
 implementation
 uses
-   EB_RpgScript;
+   EB_RpgScript, EB_Expressions;
 
 {$R *.dfm}
 
@@ -64,8 +64,22 @@ begin
 end;
 
 function TfrEditCondition.DownloadObject: string;
+var
+   andObj: TEBAndList;
+   i: integer;
 begin
-   result := trvCondition.proc.children[0].Serialize;
+   if trvCondition.proc.ChildCount = 1 then
+      result := trvCondition.proc.children[0].Serialize
+   else begin
+      andObj := TEBAndList.Create(nil);
+      try
+         for i := 0 to trvCondition.proc.ChildCount - 1 do
+            andObj.add(trvCondition.proc.children[i].Clone);
+         result := andObj.Serialize;
+      finally
+         andObj.free;
+      end;
+   end;
 end;
 
 procedure TfrEditCondition.SetContext(const context, suffix: string);
@@ -75,8 +89,16 @@ begin
 end;
 
 procedure TfrEditCondition.UploadObject(obj: TEbObject);
+var
+   andObj: TEBAndList;
+   i: integer;
 begin
-   trvCondition.proc.Add(TEBObject.Load(obj.Serialize));
+   if obj.ClassType = TEBAndList then
+   begin
+      andObj := obj as TEBAndList;
+      for i := 0 to andObj.ChildCount do
+         trvCondition.proc.Add(TEBObject.Load(obj.children[i].Serialize));
+   end else trvCondition.proc.Add(TEBObject.Load(obj.Serialize));
    trvCondition.proc := trvCondition.proc; //ugly hack, I know
 end;
 
