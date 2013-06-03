@@ -102,7 +102,7 @@ var
 
 implementation
 uses
-   Math,
+   Math, Forms,
    turbu_defs, turbu_battle_engine, logs,
    rs_media,
    SDL;
@@ -226,6 +226,8 @@ begin
       FThreadLock.Enter;
       done := ((curr = nil) and (FThreads.Count = 0)) or ((FThreads.Count = 1) and (FThreads[0] = curr));
       FThreadLock.Leave;
+      if TThread.CurrentThread.ThreadID = MainThreadID then
+         CheckSynchronize();
    until done;
 end;
 
@@ -418,6 +420,7 @@ end;
 procedure TScriptThread.Execute;
 begin
    try
+      NameThreadForDebugging('TURBU Script Thread');
       FParent.RunScript(FPage.scriptName);
    finally
       FPage.parent.playing := false;
