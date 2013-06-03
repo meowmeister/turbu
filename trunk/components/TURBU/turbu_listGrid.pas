@@ -3,7 +3,7 @@ unit turbu_listGrid;
 interface
 
 uses
-   Classes, Grids, DBGrids;
+   Classes, Grids, DBGrids, DBCtrls;
 
 type
    TRpgListGrid = class(TDBGrid)
@@ -24,6 +24,11 @@ type
       { Published declarations }
       property OnRowEnter: TMovedEvent read FOnRowEnter write FOnRowEnter;
       property Options default DEFAULT_OPTIONS;
+   end;
+
+   TDBLookupComboBox = class(DBCtrls.TDBLookupComboBox)
+   protected
+      procedure KeyDown(var Key: Word; Shift: TShiftState); override;
    end;
 
 procedure Register;
@@ -51,6 +56,14 @@ begin
    inherited Scroll(Distance);
    if Assigned(FOnRowEnter) then
       FOnRowEnter(self, oldRow, self.Row);
+end;
+
+{ TDBLookupComboBox }
+
+procedure TDBLookupComboBox.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+   if self.DataLink.DataSet.CanModify then
+      inherited KeyDown(key, shift);
 end;
 
 end.

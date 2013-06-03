@@ -240,33 +240,34 @@ end;
 
 procedure TCustomDBTabControl.RebuildTabs;
 var
-  Bookmark: TBookmark;
+  ar, i, rc: integer;
 begin
+//  Exit;
   if (DataSource <> nil) and (DataSource.State = dsBrowse) then
-    with DataSource do
-    begin
-      Tabs.BeginUpdate;
-      DataSet.DisableControls;
-      BookMark := DataSet.GetBookmark;
-      try
-        Tabs.Clear;
-        DataSet.First;
-        while not DataSet.Eof do
-        begin
-          if Field = nil then
-            Tabs.AddObject(IntToStr(DataSet.RecNo), TObject(DataSet.RecNo))
-          else
-            Tabs.AddObject(Field.AsString, TObject(DataSet.RecNo));
-          DataSet.Next;
-        end;
-        if FShowInsertTab then
-          Tabs.AddObject('*', TObject(-1));
-      finally
-        DataSet.GotoBookmark(Bookmark);
-        DataSet.EnableControls;
-        Tabs.EndUpdate;
+  begin
+    Tabs.BeginUpdate;
+    ar := FDataLink.ActiveRecord;
+    try
+      Tabs.Clear;
+      rc := DataSource.dataset.RecordCount;
+      if dataSource.DataSet.State = dsInsert then
+         dec(rc);
+      FDataLink.BufferCount := rc;
+      for i := 0 to rc - 1 do
+      begin
+        FDatalink.ActiveRecord := i;
+        if (Field = nil) or Field.IsNull then
+          Tabs.AddObject(IntToStr(DataSource.DataSet.RecNo), TObject(DataSource.DataSet.RecNo))
+        else
+          Tabs.AddObject(Field.AsString, TObject(DataSource.DataSet.RecNo));
       end;
-    end
+      if FShowInsertTab then
+        Tabs.AddObject('*', TObject(-1));
+    finally
+      FDataLink.ActiveRecord := ar;
+      Tabs.EndUpdate;
+    end;
+  end
   else
     Tabs.Clear;
 end;
