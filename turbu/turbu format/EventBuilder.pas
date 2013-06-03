@@ -119,6 +119,7 @@ type
       function GetEnumerator: TEBEnumerator;
       function Serialize: string;
       procedure Add(aObject: TEBObject); virtual;
+      procedure Insert(index: integer; aObject: TEBObject);
       procedure RemoveChild(aObject: TEBObject);
       procedure SaveScript;
       function RequiredVariables: TStringList;
@@ -229,6 +230,19 @@ begin
       AObject.FOwner.children.Extract(aObject);
    aObject.FOwner := self;
    FChildren.Add(aObject);
+   if aObject.name <> '' then
+   begin
+      EnsureNameDic;
+      FNameDic.AddObject(aObject.Name, aObject);
+   end;
+end;
+
+procedure TEBObject.Insert(index: integer; aObject: TEBObject);
+begin
+   if aObject.FOwner <> nil then
+      AObject.FOwner.children.Extract(aObject);
+   aObject.FOwner := self;
+   FChildren.Insert(index, aObject);
    if aObject.name <> '' then
    begin
       EnsureNameDic;
@@ -904,7 +918,6 @@ begin
    inherited Destroy;
 end;
 
-{$WARN CONSTRUCTING_ABSTRACT OFF}
 procedure TEBRoutine.AddNamed(obj: TEBObject);
 begin
    if (obj.Name <> 'Header') or assigned(FHeader) or not (obj is TEBHeader) then
@@ -912,6 +925,7 @@ begin
    FHeader := TEBHeader(obj);
 end;
 
+{$WARN CONSTRUCTING_ABSTRACT OFF}
 procedure TEBRoutine.CreateHeader;
 begin
    FHeader := TEBHeader.Create(nil);
@@ -961,7 +975,7 @@ end;
 procedure TEBRoutine.SerializeProps(list: TStringList; depth: integer);
 begin
    inherited;
-   if assigned(FHeader) then
+   if assigned(FHeader) and not FHeader.Empty then
       FHeader.SerializeTo(list, depth);
 end;
 
