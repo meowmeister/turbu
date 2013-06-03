@@ -28,6 +28,7 @@ type
       function currentMapID: integer;
       function currentMap: IMapMetadata;
       procedure addChildMap(data: IMapMetadata);
+      procedure SelectMap(id: integer);
    end;
 
 implementation
@@ -83,6 +84,19 @@ end;
 function TMapTreeController.currentMapID: integer;
 begin
    result := currentMap.id;
+end;
+
+procedure TMapTreeController.SelectMap(id: integer);
+var
+   item: TTreeNode;
+begin
+   for item in self.Items do
+      if (IInterface(item.Data) as IMapMetadata).ID = id then
+      begin
+         select(item);
+         Exit;
+      end;
+   raise Exception.CreateFmt('Invalid map ID: %d.', [id]);
 end;
 
 procedure TMapTreeController.addChildMap(data: IMapMetadata);

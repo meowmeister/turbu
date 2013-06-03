@@ -104,6 +104,7 @@ type
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TArray<integer>);
       procedure SetPaintMode(value: TPaintMode);
+      procedure SetExactDrawMode(value: boolean);
       procedure draw(const position: TSgPoint; new: boolean);
       procedure Undo;
       procedure doneDrawing;
@@ -489,6 +490,11 @@ begin
       end;
    end;
    self.repaint;
+end;
+
+procedure T2kMapEngineD.SetExactDrawMode(value: boolean);
+begin
+   {$MESSAGE WARN 'T2kMapEngineD.SetExactDrawMode: Not implemented yet'}
 end;
 
 procedure T2kMapEngineD.SetPaintMode(value: TPaintMode);
