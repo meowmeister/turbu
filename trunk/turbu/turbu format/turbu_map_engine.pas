@@ -40,6 +40,7 @@ type
    ITurbuController = interface(IInterface)
    ['{020CD243-BE17-492B-898B-FACAC0DDDB10}']
       function MapResize(const size: TSgPoint): TSgPoint;
+      function ScrollMap(const TopLeft: TSgPoint): TSgPoint;
    end;
 
    TButtonPosition = (bpLayer, bpSave, bpPlay, bpCommand);
@@ -53,6 +54,7 @@ type
       procedure UpdateEngine(const filename: string);
       procedure SetMapMenuItem(item: TMenuItem);
       procedure ClearMapMenuItem(item: TMenuItem);
+      procedure RebuildMapTree(id: integer);
    end;
 
    IMapEngine = interface(IInterface)
@@ -70,7 +72,7 @@ type
       property data: TMapEngineData read getData;
    end;
 
-   TPaintMode = (pmPen, pmFlood, pmRect, pmEllipse);
+   TPaintMode = (pmPen, pmFlood, pmRect, pmEllipse, pmSelect, pmErase);
 
    IDesignMapEngine = interface(IMapEngine)
    ['{B68B1D70-D95E-4CEB-B009-2197D7EC7642}']
@@ -86,6 +88,7 @@ type
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setPaletteList(value: TArray<integer>);
       procedure SetPaintMode(value: TPaintMode);
+      procedure SetExactDrawMode(value: boolean);
       procedure draw(const position: TSgPoint; new: boolean);
       procedure doneDrawing;
       procedure Undo;
@@ -294,8 +297,8 @@ begin
    end;
    for i := 0 to FHeight - 1 do
       if base.width <= self.width then
-         HorizontalExpand(base, i, i + start, position)
-      else HorizontalContract(base, i, i + start, position);
+         HorizontalExpand(base, i + start, i, position)
+      else HorizontalContract(base, i + start, i, position);
 end;
 
 {$o-}

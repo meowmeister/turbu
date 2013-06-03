@@ -65,6 +65,10 @@ type
       tbPen: TToolButton;
       N2: TMenuItem;
       mnuUndo: TMenuItem;
+    ToolButton2: TToolButton;
+    ToolButton5: TToolButton;
+    tbExactDraw: TToolButton;
+    ToolButton7: TToolButton;
       procedure mnu2KClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
       procedure mnuDatabaseClick(Sender: TObject);
@@ -117,6 +121,7 @@ type
       procedure imgPalettePaint(Sender: TObject);
       procedure DrawToolButtonClick(Sender: TObject);
       procedure mnuUndoClick(Sender: TObject);
+      procedure tbExactDrawClick(Sender: TObject);
    private
       pluginManager: TJvPluginManager;
       FLogoIndex: integer;
@@ -158,6 +163,7 @@ type
       procedure NormalizeMousePosition(image: TSdlFrame; var x, y: integer; scale: single);
    private //ITurbuController declarations
       function MapResize(const size: TSgPoint): TSgPoint;
+      function ScrollMap(const TopLeft: TSgPoint): TSgPoint;
       procedure TilesetChanged;
       procedure HandleTilesetChanged(var message); message WM_USER;
       procedure SetButton(button: TToolButton; position: TButtonPosition);
@@ -165,6 +171,7 @@ type
       procedure SetMapMenuItem(item: TMenuItem);
       procedure UpdateEngine(const filename: string);
       function AddTileImage(il: TImageList; index: integer): integer;
+      procedure RebuildMapTree(id: integer);
    public
       { Public declarations }
    end;
@@ -582,6 +589,7 @@ begin
          Break;
       end;
    end;
+   tbExactDrawClick(tbExactDraw);
    FMapEngine.loadMap(value);
    FMapEngine.ScrollMap(sgPoint(sbHoriz.Position, sbVert.Position));
    FTileSize := FMapEngine.GetTileSize;
@@ -594,6 +602,11 @@ end;
 function TfrmTurbuMain.MapResize(const size: TSgPoint): TSgPoint;
 begin
    result := FScrollboxManager.SetMapSize(size);
+end;
+
+function TfrmTurbuMain.ScrollMap(const TopLeft: TSgPoint): TSgPoint;
+begin
+   result := FScrollboxManager.ScrollMap(TopLeft);
 end;
 
 procedure TfrmTurbuMain.mnu2KClick(Sender: TObject);
@@ -741,6 +754,12 @@ begin
    end;
 end;
 
+procedure TfrmTurbuMain.RebuildMapTree(id: integer);
+begin
+   trvMapTree.buildMapTree(FMapEngine.mapTree);
+   trvMapTree.SelectMap(id);
+end;
+
 procedure TfrmTurbuMain.RequireMapEngine;
 begin
    if not assigned(FMapEngine) then
@@ -791,6 +810,12 @@ end;
 procedure TfrmTurbuMain.TilesetChanged;
 begin
    windows.PostMessage(self.Handle, WM_USER, 0, 0);
+end;
+
+procedure TfrmTurbuMain.tbExactDrawClick(Sender: TObject);
+begin
+   RequireMapEngine;
+   FMapEngine.SetExactDrawMode(tbExactDraw.Down);
 end;
 
 procedure TfrmTurbuMain.DrawToolButtonClick(Sender: TObject);

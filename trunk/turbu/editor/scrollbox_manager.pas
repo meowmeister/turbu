@@ -37,6 +37,7 @@ type
       procedure configureScrollBars(const size, position: TSgPoint);
    public
       function SetMapSize(const size: TSgPoint): TSgPoint;
+      function ScrollMap(const TopLeft: TSgPoint): TSgPoint;
       constructor Create(background: TPaintBox; map: TSdlFrame; sbH, sbV: TScrollBar;
          getZoom: TFunc<single>; getTileSize: TFunc<integer>; getPosition: TFunc<TSgPoint>);
    end;
@@ -75,6 +76,15 @@ procedure TScrollboxManager.configureScrollBars(const size, position: TSgPoint);
 begin
    configureScrollBar(sbHoriz, size.x, min(imgMap.LogicalWidth, size.x), position.x);
    configureScrollBar(sbVert, size.y, min(imgMap.LogicalHeight, size.y), position.y);
+end;
+
+function TScrollboxManager.ScrollMap(const TopLeft: TSgPoint): TSgPoint;
+var
+   scaled: TSgPoint;
+begin
+   scaled := TopLeft * FGetZoom();
+   configureScrollBars(sgPoint(sbHoriz.Max, sbVert.Max), scaled);
+   result := sgPoint(sbHoriz.Position, sbVert.Position);
 end;
 
 function TScrollboxManager.SetMapSize(const size: TSgPoint): TSgPoint;
