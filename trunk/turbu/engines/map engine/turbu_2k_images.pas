@@ -7,6 +7,7 @@ uses
 
 type
    TImageEffects = (ie_none, ie_rotate, ie_wave);
+   TRpgImage = class;
 
    TRpgImageSprite = class(TSprite)
    private
@@ -26,6 +27,7 @@ type
       FTag: Integer;
       FCenterX, FCenterY: single;
       FMasked: boolean;
+      FImage: TRpgImage;
 
       function getTimer: integer;
       procedure setTimer(const Value: integer);
@@ -40,7 +42,7 @@ type
    protected
       procedure DoDraw; override;
    public
-      constructor Create(engine: TSpriteEngine; const name: string; x, y: integer;
+      constructor Create(engine: TSpriteEngine; image: TRpgImage; const name: string; x, y: integer;
         zoom: integer; pinned, masked: boolean); reintroduce;
       destructor Destroy; override;
       procedure applyImageColors(r, g, b, sat: integer);
@@ -92,7 +94,7 @@ const
 
 { TRpgImage }
 
-constructor TRpgImageSprite.Create(engine: TSpriteEngine; const name: string;
+constructor TRpgImageSprite.Create(engine: TSpriteEngine; image: TRpgImage; const name: string;
   x, y: integer; zoom: integer; pinned, masked: boolean);
 begin
    inherited Create(engine);
@@ -109,6 +111,7 @@ begin
    self.applyImageColors(100, 100, 100, 100);
    self.Alpha := 255;
    FAlphaTarget := 255;
+   FImage := image;
 end;
 
 procedure TRpgImageSprite.Dead;
@@ -120,6 +123,7 @@ end;
 destructor TRpgImageSprite.Destroy;
 begin
    FTransitionTimer.Free;
+   FImage.FSprite := nil;
    inherited;
 end;
 
@@ -322,7 +326,7 @@ end;
 constructor TRpgImage.Create(engine: TSpriteEngine; const name: string; x, y: integer;
   zoom: integer; pinned, masked: boolean);
 begin
-   FSprite := TRpgImageSprite.Create(engine, name, x, y, zoom, pinned, masked);
+   FSprite := TRpgImageSprite.Create(engine, self, name, x, y, zoom, pinned, masked);
 end;
 
 destructor TRpgImage.Destroy;
@@ -334,7 +338,7 @@ end;
 
 procedure TRpgImage.Erase;
 begin
-   FSprite.Dead;
+   self.Free;
 end;
 
 procedure TRpgImage.applyImageColors(r, g, b, sat: integer);

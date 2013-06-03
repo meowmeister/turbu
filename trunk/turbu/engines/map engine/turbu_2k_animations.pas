@@ -62,7 +62,7 @@ type
 implementation
 uses
    windows, sysUtils, OpenGL,
-   turbu_OpenGL, turbu_2k_sprite_engine, turbu_constants,
+   turbu_OpenGL, turbu_2k_sprite_engine, turbu_constants, turbu_containers,
    rs_maps, rs_media,
    SDL, sdl_imageManager;
 
@@ -181,6 +181,7 @@ var
    frame: word;
    currFrame: TAnimCell;
    tr: cardinal;
+   frames: TRpgObjectList<TAnimCell>;
 begin
    //timing/sync issues
    tr := FTimer.timeRemaining;
@@ -191,9 +192,14 @@ begin
 
    //create new tiles
    ClearSpriteList;
-   for currFrame in FBase.frame.where(
-      function(input: TAnimCell): boolean begin result := input.frame = frame end) do
-      SetupFrame(currFrame);
+   frames := FBase.frame.where(
+      function(input: TAnimCell): boolean begin result := input.frame = frame end);
+   try
+      for currFrame in frames do
+         SetupFrame(currFrame);
+   finally
+      frames.Free;
+   end;
 
    if FLastEffect < FBase.effect.Count then
       PlayEffect(frame);

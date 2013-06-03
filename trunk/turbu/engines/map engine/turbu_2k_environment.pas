@@ -169,6 +169,8 @@ begin
    FVehicles.Free;
    for i := 0 to High(FHeroes) do
       FHeroes[i].free;
+   for i := 0 to High(FImages) do
+      FImages[i].free;
    GEnvironment := nil;
    inherited Destroy;
 end;

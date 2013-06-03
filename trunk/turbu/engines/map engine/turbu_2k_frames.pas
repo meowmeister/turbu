@@ -71,12 +71,14 @@ type
       FCursor: TSysFrame;
       FMessageBox: TMessageBox;
       FMenuState: TMenuState;
+      FTerminated: boolean;
 
       procedure EndMessage;
    public
       constructor Create(graphic: TSystemImages; canvas: TSdlCanvas; images: TSdlImages);
       destructor Destroy; override;
       procedure ShowMessage(const msg: string; modal: boolean);
+      procedure Terminate;
 
       property MenuInt: integer read FMenuInt;
       property Cursor: TSysFrame read FCursor;
@@ -274,7 +276,10 @@ begin
 //      FCorners[TCorners(i)].visible := false;
    end;
    for i := 0 to FList.count - 1 do
+   begin
       FList[i].ImageName := graphic.filename;
+      FList[i].SetSpecialRender;
+   end;
    visible := false;
    layout(coords);
 end;
@@ -386,6 +391,7 @@ begin
    GFontEngine.OnGetColor := nil;
    GFontEngine.OnGetDrawRect := nil;
    FSystemGraphic.Free;
+   EndMessage;
    inherited Destroy;
 end;
 
@@ -399,6 +405,8 @@ end;
 
 procedure TMenuSpriteEngine.ShowMessage(const msg: string; modal: boolean);
 begin
+   if FTerminated then
+      Exit;
 {   while FState = gs_fading do
       windows.sleep(GFrameLength);}
    FMessageBox.Visible := true;
@@ -408,6 +416,12 @@ begin
    FMessageBox.text := msg;
    FMessageBox.state := mb_display;
    FMessageBox.FSignal.WaitFor;
+end;
+
+procedure TMenuSpriteEngine.Terminate;
+begin
+   FTerminated := true;
+   EndMessage;
 end;
 
 { TSystemImages }
@@ -772,6 +786,7 @@ begin
    coords.Right := FFrameTarget.parent.Width;
    coords.Bottom := FFrameTarget.parent.Height div 3;
    coords.Top := coords.Bottom * ord(FPosition);
+//   FFrameTarget.DrawFull(coords.TopLeft);
    SDL_RenderCopy(FFrameTarget.parent.Renderer, FFrameTarget.handle, nil, @coords);
 end;
 
@@ -883,31 +898,32 @@ begin
    if FTextCounter >= FParsedText.Count then
       Exit;
 
-   TMonitor.Enter(self);
-   try
-      FRemainder := FRemainder + (TRpgTimestamp.FrameLength / 1000);
-      while (FTextCounter < FParsedText.Count) and (FImmediate or (FRemainder > FTextRate)) do
-      begin
-         if (FSpecialIndex > 0) and (FSpecialIndex <= length(FSpecialText)) then
+   //to prevent deadlocking on the synchronized part of ResetText
+   if TMonitor.TryEnter(self) then
+      try
+         FRemainder := FRemainder + (TRpgTimestamp.FrameLength / 1000);
+         while (FTextCounter < FParsedText.Count) and (FImmediate or (FRemainder > FTextRate)) do
          begin
-            DrawChar(FSpecialText[FSpecialIndex]);
-            inc(FSpecialIndex);
-         end
-         else begin
-            if FSpecialIndex > 0 then
+            if (FSpecialIndex > 0) and (FSpecialIndex <= length(FSpecialText)) then
             begin
-               FSpecialIndex := 0;
-               FSpecialText := '';
+               DrawChar(FSpecialText[FSpecialIndex]);
+               inc(FSpecialIndex);
+            end
+            else begin
+               if FSpecialIndex > 0 then
+               begin
+                  FSpecialIndex := 0;
+                  FSpecialText := '';
+               end;
+               DrawChar(FTextCounter);
+               inc(FTextCounter);
             end;
-            DrawChar(FTextCounter);
-            inc(FTextCounter);
+            if not FImmediate then
+               FRemainder := FRemainder - FTextRate;
          end;
-         if not FImmediate then
-            FRemainder := FRemainder - FTextRate;
+      finally
+         TMonitor.Exit(self);
       end;
-   finally
-      TMonitor.Exit(self);
-   end;
 end;
 
 procedure TMessageBox.PromptButton(const input: TButtonCode);

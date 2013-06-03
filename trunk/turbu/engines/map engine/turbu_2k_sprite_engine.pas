@@ -407,6 +407,7 @@ end;
 
 destructor T2kSpriteEngine.Destroy;
 begin
+   FreeAndNil(FFadeTime);
    FSpriteLocations.Free;
    FMapObjects.Free;
    FTiles.Free;
@@ -499,6 +500,7 @@ begin
    FFlashColor[3] := b / 255;
    FFlashColor[4] := power / 255;
    duration := duration * 100;
+   FFlashTime.Free;
    FFlashTime := TRpgTimestamp.Create(duration);
    FFlashDuration := duration;
 end;

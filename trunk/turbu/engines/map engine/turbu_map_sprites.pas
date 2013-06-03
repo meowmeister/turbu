@@ -782,6 +782,8 @@ begin
    FPause.free;
    FMoveTime.Free;
    FMoveQueue.Free;
+   FMoveChange.free;
+   FMoveAssignment.Free;
    inherited;
 end;
 

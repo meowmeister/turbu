@@ -165,6 +165,7 @@ var i: integer;
 begin
    assert(FInitialized);
    FInitialized := false;
+   GMenuEngine.Terminate;
    if FDatabaseOwner then
       FObjectManager.ScriptEngine.KillAll;
    FreeAndNil(GMenuEngine);
@@ -228,6 +229,7 @@ destructor T2kMapEngine.Destroy;
 begin
    FRenderTargets.Free;
    FTimer.Free;
+   FTitleScreen.Free;
    inherited;
 end;
 
@@ -650,7 +652,7 @@ begin
    try
       FImageEngine.Clear;
       FImages.EnsureImage(format('Special Images\%s.png', [FDatabase.layout.titleScreen]), '*TitleScreen');
-      TRpgImage.Create(FImageEngine, '*TitleScreen', FCanvas.Width div 2, FCanvas.Height div 2, 100, false, false);
+      GEnvironment.Image[0] := TRpgImage.Create(FImageEngine, '*TitleScreen', FCanvas.Width div 2, FCanvas.Height div 2, 100, false, false);
       FTitleScreen := TRpgTimestamp.Create(5000);
    finally
       FImages.SpriteClass := cls;
@@ -662,11 +664,13 @@ var
    current: integer;
    r, g, b, a: byte;
 begin
-   glPushAttrib(GL_ENABLE_BIT);
+   glCheckError;
+   glPushAttrib(GL_ALL_ATTRIB_BITS);
+//   glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TEXTURE_BIT);
    glColor4f(1, 1, 1, 1);
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    if not FCurrentMap.Fade then
-      FShaderEngine.UseShaderProgram(FShaderEngine.ShaderProgram('default', 'defaultF'));
+      FShaderEngine.UseShaderProgram(FShaderEngine.ShaderProgram('default', 'defaultF') {4});
    glEnable(GL_ALPHA_TEST);
    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
    glEnable(GL_BLEND);
@@ -694,6 +698,7 @@ begin
    if assigned(FTitleScreen) and (FTitleScreen.timeRemaining = 0) then
    begin
       FTimer.Enabled := false;
+      FreeAndNil(FTitleScreen);
       Application.Terminate;
       Exit;
    end;

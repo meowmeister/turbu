@@ -167,6 +167,7 @@ begin
 
    FShaderEngine.SetUniformValue(FPass2, 'texAlpha', 0);
    FShaderEngine.SetUniformValue(FPass2, 'texRGB', 1);
+glCheckError;
    glBegin(GL_QUADS);
       glMultiTexCoord2iARB(GL_TEXTURE0_ARB, 0, 0);
       glMultiTexCoord2iARB(GL_TEXTURE1_ARB, rect.Left, rect.Top);
@@ -184,6 +185,8 @@ begin
       glMultiTexCoord2iARB(GL_TEXTURE1_ARB, rect.Left + rect.right, rect.top);
       glVertex2f(x + FTarget.Width, y);
    glEnd;
+   glDisable(GL_MULTISAMPLE);
+glCheckError;
 end;
 
 function TFontEngine.drawChar(text: char; x, y: single; colorIndex: integer): TSgFloatPoint;
