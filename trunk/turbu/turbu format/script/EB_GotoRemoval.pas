@@ -4,28 +4,25 @@ interface
 uses
    EB_RpgScript, EventBuilder;
 
-   procedure GotoRemoval(value: TEBRoutine);
+procedure GotoRemoval(value: TEBRoutine);
 
 implementation
 uses
    SysUtils, Math, Generics.Collections,
-   EB_Expressions, turbu_operators;
+   EB_Expressions, EB_Optimizations, turbu_operators;
 
-type
-   TCollector = class
-      class procedure Collect<T: TEBObject>(value: TEBObject; list: TList<T>); static;
-   end;
+type TEBIfSpecial = class(TEBIf);
 
 function CollectGotos(value: TEBRoutine): TList<TEBGoto>;
 begin
    result := TList<TEBGoto>.Create;
-   TCollector.Collect<TEBGoto>(value, result);
+   TCollector.CollectExact<TEBGoto>(value, result);
 end;
 
 function CollectLabels(value: TEBRoutine): TList<TEBLabel>;
 begin
    result := TList<TEBLabel>.Create;
-   TCollector.Collect<TEBLabel>(value, result);
+   TCollector.CollectExact<TEBLabel>(value, result);
 end;
 
 function FindLabel(lGoto: TEBGoto; labels: TList<TEBLabel>): TEBLabel;
@@ -47,7 +44,7 @@ begin
    child1 := parentIf.children[1].children[0];
    if child1.ClassType = TEBGoto then
       lGoto := TEBGoto(child1)
-   else assert(false);
+   else raise ERPGScriptError.CreateFmt('Expected TEBGoto object but found %s instead.', [child1.ClassName]);
    result := lGoto.values[0];
 end;
 
@@ -158,69 +155,21 @@ begin
    end;
 end;
 
-function NegateCondition(cond: TEBExpression): TEBExpression;
-var
-   tempIf: TEBIf;
-begin
-   tempIf := TEBIf.Create(nil, cond);
-   try
-      tempIf.Negate;
-      result := tempIf.children[0] as TEBExpression;
-      result.Extract;
-   finally
-      tempIf.Free;
-   end;
-end;
-
 function CloneIfConditionNeg(parentIf: TEBIf; parentBlock: TEBObject; idx: integer): TEBExpression;
 begin
    result := CloneIfCondition(parentIf, parentBlock, idx);
    result := negateCondition(result);
 end;
 
-{
-procedure ApplyMoveTransformation(parentIf: TEBIf; dest: TEBObject);
-var
-   gIndex, lIndex: integer;
-   i: integer;
-   block: TEBObject;
-   parentRpt: TEBrepeatLoop;
-begin
-   block := parentIf.Owner;
-   gIndex := block.children.IndexOf(parentIf);
-   lIndex := block.children.IndexOf(dest);
-   parentIf.negate;
-   if gIndex < lIndex then
-   begin
-      parentIf.children[1].Clear;
-      for i := gIndex + 1 to lIndex - 1 do
-         parentIf.Add(block.children[gIndex + 1]);
-   end
-   else begin
-      block.children.Extract(parentIf);
-      parentRpt := TEBRepeatLoop.Create(nil);
-      block.Insert(gIndex, parentRpt);
-      parentRpt.Add(parentIf.children[0]);
-      for i := gIndex + 1 to lIndex - 1 do
-         parentRpt.Add(block.children[gIndex + 1]);
-      parentIf.Free;
-      if parentRpt.ChildCount = 0 then
-         ParentRpt.Free
-      else CheckForBreakCapture(parentRpt);
-   end;
-end;
-}
-
 procedure ApplyMoveTransformation(parentIf: TEBIf; dest: TEBObject); forward;
 
-procedure ApplyLiftingTransformation(parentIf: TEBIf; dest, block: TEBObject; parentIdx: integer);
+function TryOptimizeLifting(parentIf: TEBIf; dest, block: TEBObject): boolean;
 var
-   parentRpt: TEBRepeatLoop;
-   i, gIndex, lIndex: integer;
    cond: TEBExpression;
    gVar: TEBVariableValue;
    asn: TEBAssignment;
 begin
+   result := false;
    if (block.ClassType = TEBRepeatLoop) and (block.children[0].ClassType = TEBNotExpr)
      and (block.children[0].children[0].classType = TEBVariableValue) then
    begin
@@ -229,7 +178,7 @@ begin
       begin
          block.Insert(1, parentIf);
          ApplyMoveTransformation(parentIf, dest);
-         Exit;
+         Exit(true);
       end;
       if (block.ChildCount - 1 > block.children.IndexOf(parentIf)) and
         (block.children[block.children.IndexOf(parentIf) + 1].ClassType = TEBAssignment) then
@@ -248,6 +197,33 @@ begin
          end;
       end;
    end;
+end;
+
+procedure TryEngulfSpecialIf(parentRpt: TEBRepeatLoop; block: TEBObject);
+var
+   idx: integer;
+   sibling: TEBObject;
+begin
+   while true do
+   begin
+      assert(parentRpt.Owner = block);
+      idx := block.children.IndexOf(parentRpt);
+      if idx = 0 then
+         Exit;
+      sibling := block.children[idx - 1];
+      if sibling.ClassType = TEBIfSpecial then
+         parentRpt.Insert(1, sibling)
+      else Exit;
+   end;
+end;
+
+procedure ApplyLiftingTransformation(parentIf: TEBIf; dest, block: TEBObject; parentIdx: integer);
+var
+   parentRpt: TEBRepeatLoop;
+   i, gIndex, lIndex: integer;
+begin
+   if TryOptimizeLifting(parentIf, dest, block) then
+      Exit;
    parentRpt := TEBRepeatLoop.Create(nil);
    block.Insert(parentIdx + 1, parentRpt);
    parentRpt.Add(CloneIfConditionNeg(parentIf, block, parentIdx));
@@ -257,7 +233,10 @@ begin
       parentRpt.Add(block.children[lIndex]);
    if parentRpt.ChildCount = 1 then
       ParentRpt.Free
-   else CheckForBreakCapture(parentRpt);
+   else begin
+      CheckForBreakCapture(parentRpt);
+      TryEngulfSpecialIf(parentRpt, block);
+   end;
 end;
 
 procedure ApplyLoweringTransformation(parentIf: TEBIf; dest, block: TEBObject; lIndex, gIndex: integer);
@@ -403,16 +382,19 @@ begin
    end;
 end;
 
-function IsOrListDuplicate(orList: TEBOrList; expr: TEBObject): boolean;
+procedure MergeIfCriteria(sourceIf, destIf: TEBIf);
 var
-   child: TEBObject;
-   exprScript: string;
+   orList: TEBOrList;
 begin
-   result := false;
-   exprScript := expr.GetScript(0);
-   for child in orList do
-      if child.GetScript(0) = exprScript then
-         Exit(true);
+   if destIf.children[0].ClassType = TEBOrList then
+      orList := TEBOrList(destIf.children.Extract(destIf.children[0]))
+   else begin
+      orList := TEBOrList.Create(nil);
+      orList.Add(destIf.children[0]);
+   end;
+   if not IsBinListDuplicate(orList, sourceIf.children[0]) then
+      orList.Insert(0, sourceIf.children[0]);
+   destIf.Insert(0, orList);
 end;
 
 procedure MoveIntoIf(parentIf, destIf: TEBIf; destBlock: TEBObject);
@@ -420,7 +402,6 @@ var
    destParent: TEBObject;
    cloneIf: TEBIf;
    idx: integer;
-   orList: TEBOrList;
 begin
    destParent := destIf.Owner;
    idx := destParent.children.IndexOf(destIf);
@@ -432,15 +413,7 @@ begin
             assert(false);
          cloneIf.Negate;
       end;
-      if destIf.children[0].ClassType = TEBOrList then
-         orList := TEBOrList(destIf.children.Extract(destIf.children[0]))
-      else begin
-         orList := TEBOrList.Create(nil);
-         orList.Add(destIf.children[0]);
-      end;
-      if not IsOrListDuplicate(orList, cloneIf.children[0]) then
-         orList.Insert(0, cloneIf.children[0]);
-      destIf.Insert(0, orList);
+      MergeIfCriteria(cloneIf, destIf);
       destBlock.Insert(0, parentIf);
    finally
       cloneIf.Free;
@@ -470,6 +443,32 @@ begin
    PClass(aCase)^ := caseType.ClassParent;
 end;
 
+procedure TryMergeUp(newIf: TEBIf; parent: TEBObject);
+var
+   idx: integer;
+   candidate: TEBIfSpecial;
+   casevar, casevar2: string;
+begin
+   assert(parent = newIf.owner);
+   idx := parent.children.IndexOf(newIf);
+   if idx = 0 then
+      Exit;
+   if parent.children[idx - 1].ClassType <> TEBIfSpecial then
+      Exit;
+   candidate := TEBIfSpecial(parent.children[idx - 1]);
+   casevar := (newIf.children[1].children[0] as TEBAssignment).children[0].Name;
+   casevar2 := (candidate.children[1].children[0] as TEBAssignment).children[0].Name;
+   if casevar <> casevar2 then
+      Exit;
+   casevar := (newIf.children[1].children[0] as TEBAssignment).children[1].GetScriptText;
+   casevar2 := (candidate.children[1].children[0] as TEBAssignment).children[1].GetScriptText;
+   if casevar <> casevar2 then
+      Exit;
+
+   MergeIfCriteria(newIf, candidate);
+   newIf.Free;
+end;
+
 procedure MoveIntoCase(parentIf: TEBIf; destCase: TEBCase; destBlock: TEBObject);
 var
    destParent: TEBObject;
@@ -480,7 +479,7 @@ var
 begin
    destParent := destCase.Owner;
    idx := destParent.children.IndexOf(destCase);
-   cloneIf := TEBIf.Create(nil, CloneIfCondition(parentIf, destParent, idx));
+   cloneIf := TEBIfSpecial.Create(nil, CloneIfCondition(parentIf, destParent, idx));
    idx := destParent.children.IndexOf(destCase);
    destParent.Insert(idx, cloneIf);
    caseName := GetCaseName(destCase);
@@ -499,6 +498,8 @@ begin
    cloneIf.Add(TEBAssignment.Create(nil, TEBVariableValue.Create(caseName), destCase.children[0] as TEBExpression));
    destCase.Insert(0, TEBVariableValue.Create(caseName));
    destBlock.Insert(0, parentIf);
+   if destCase.children[0].text = caseName then
+      TryMergeUp(cloneIf, destparent);
 end;
 
 procedure MoveIntoWhileLoop(parentIf: TEBIf; destLoop: TEBWhileLoop);
@@ -664,7 +665,7 @@ begin
    candParent := candidate.Owner;
    if baseParent <> candParent then
       Exit;
-   baseIdx := baseParent.children.IndexOf(baseParent);
+   baseIdx := baseParent.children.IndexOf(base);
    candIdx := candParent.children.IndexOf(candidate);
    if abs(baseIdx - candIdx) = 1 then
    begin
@@ -678,7 +679,7 @@ begin
    end;
 end;
 
-procedure OptimizeLabelPlacement(gotos: TList<TEBGoto>; labels: TList<TEBLabel>);
+procedure DoOptimizeLabelPlacement(gotos: TList<TEBGoto>; labels: TList<TEBLabel>);
 var
    i, j: integer;
    lLabel, candidate: TEBLabel;
@@ -705,6 +706,111 @@ begin
    end;
 end;
 
+procedure OptimizeLabelPlacement(routine: TEBRoutine; gotos: TList<TEBGoto>; labels: TList<TEBLabel>);
+var
+   script, newScript: string;
+begin
+   newScript := routine.GetScript(0);
+   repeat
+      script := newScript;
+      DoOptimizeLabelPlacement(gotos, labels);
+      newScript := routine.GetScript(0);
+   until script = newScript;
+end;
+
+procedure MergeListElement(expr: TEBExpression; list: TEBAndList);
+begin
+   if not IsBinListDuplicate(list, expr) then
+      list.Add(expr.clone);
+end;
+
+procedure MergeLists(source, dest: TEBAndList);
+var
+   i: integer;
+begin
+   for i := 0 to source.ChildCount - 1 do
+      MergeListElement(source.children[i] as TEBExpression, dest);
+end;
+
+procedure MergeRepeatCriteria(outer, inner: TEBRepeatLoop);
+var
+   base: TEBExpression;
+   baseList: TEBAndList;
+begin
+   base := outer.children[0] as TEBExpression;
+   if base.ClassType = TEBAndList then
+   begin
+      base.Extract;
+      baseList := TEBAndList(base);
+   end
+   else begin
+      baseList := TEBAndList.Create(nil);
+      baseList.Add(base);
+   end;
+
+   base := inner.children[0] as TEBExpression;
+   if base.ClassType = TEBAndList then
+      MergeLists(TEBAndList(base), baseList)
+   else MergeListElement(base as TEBExpression, baseList);
+   outer.Insert(0, baseList);
+end;
+
+procedure TryCollapseNestedRepeat(rpt: TEBRepeatLoop; repeats: TList<TEBRepeatLoop>);
+var
+   i: integer;
+   nested: TEBRepeatLoop;
+begin
+   while true do
+   begin
+      if rpt.ChildCount <> 2 then
+         Exit;
+      if rpt.children[1].ClassType <> TEBRepeatLoop then
+         Exit;
+      nested := TEBRepeatLoop(rpt.children[1]);
+      for i := 1 to nested.ChildCount - 1 do
+         rpt.Add(nested.children[1]);
+      MergeRepeatCriteria(rpt, nested);
+      repeats.Extract(nested);
+      nested.Free;
+   end;
+end;
+
+procedure CollapseNestedRepeats(routine: TEBRoutine);
+var
+   repeats: TList<TEBRepeatLoop>;
+   rpt: TEBRepeatLoop;
+   i: integer;
+begin
+   repeats := TList<TEBRepeatLoop>.Create;
+   try
+      TCollector.CollectExactRecursive<TEBRepeatLoop>(routine, repeats);
+      i := 0;
+      while i < repeats.Count do
+      begin
+         rpt := repeats[i];
+         TryCollapseNestedRepeat(rpt, repeats);
+         inc(i);
+      end;
+   finally
+      repeats.Free;
+   end;
+end;
+
+procedure RevertSpecialIfs(routine: TEBRoutine);
+var
+   ifs: TList<TEBIfSpecial>;
+   ifObj: TEBIfSpecial;
+begin
+   ifs := TList<TEBIfSpecial>.Create;
+   try
+      TCollector.CollectExactRecursive<TEBIfSpecial>(routine, ifs);
+      for ifObj in ifs do
+         PClass(ifObj)^ := TEBIf;
+   finally
+      ifs.Free;
+   end;
+end;
+
 procedure GotoRemoval(value: TEBRoutine);
 var
    gotos: TList<TEBGoto>;
@@ -715,31 +821,24 @@ var
 begin
    gotos := CollectGotos(value);
    labels := CollectLabels(value);
-   OptimizeLabelPlacement(gotos, labels);
-   for i := 0 to gotos.Count - 1 do
-   begin
-      lGoto := gotos[i];
-      lLabel := FindLabel(lGoto, labels);
-      if assigned(lLabel) then
-         DoGotoRemoval(value, lGoto, lLabel)
-      else lGoto.Free;
+   try
+      OptimizeLabelPlacement(value, gotos, labels);
+      for i := 0 to gotos.Count - 1 do
+      begin
+         lGoto := gotos[i];
+         lLabel := FindLabel(lGoto, labels);
+         if assigned(lLabel) then
+            DoGotoRemoval(value, lGoto, lLabel)
+         else lGoto.Free;
+      end;
+      for lLabel in labels do
+         ClearLabel(value, lLabel);
+      CollapseNestedRepeats(value);
+      RevertSpecialIfs(value);
+   finally
+      gotos.Free;
+      labels.Free;
    end;
-   for lLabel in labels do
-      ClearLabel(value, lLabel);
-   gotos.Free;
-   labels.Free;
-end;
-
-{ TCollector }
-
-class procedure TCollector.Collect<T>(value: TEBObject; list: TList<T>);
-var
-   child: TEBObject;
-begin
-   for child in value do
-      if child.InheritsFrom(T) then
-         list.Add(child)
-      else Collect<T>(child, list);
 end;
 
 end.
