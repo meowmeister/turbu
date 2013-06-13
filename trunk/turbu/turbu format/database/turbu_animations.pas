@@ -110,8 +110,8 @@ type
       property filename: string read FFilename write FFilename;
       property hitsAll: boolean read FHitsAll write FHitsAll;
       property yTarget: TAnimYTarget read FYTarget write FYTarget;
-      property effect: TAnimEffectList read FTimingSec write FTimingSec;
-      property frame: TAnimFrameList read FFrameSec write FFrameSec;
+      property effect: TAnimEffectList read FTimingSec;
+      property frame: TAnimFrameList read FFrameSec;
    end;
 
    TBattleCharData = class(TRpgDatafile)
