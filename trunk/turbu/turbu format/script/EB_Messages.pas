@@ -49,10 +49,18 @@ type
    end;
 
    [UsesUnit('Messages')]
+   TEBChoiceExpr = class(TEBExpression)
+   public
+      function GetScriptText: string; override;
+      function GetNodeText: string; override;
+   end;
+
+   [UsesUnit('Messages')]
    TEBChoiceMessage = class(TEBCase)
+   protected
+      procedure Loaded; override;
    public
       function GetNodeText: string; override;
-      function GetScriptText: string; override;
    end;
 
    TEBInputNumber = class(TEBMessageObject)
@@ -220,17 +228,36 @@ begin
    result := format(LINE, [Values[1], Values[0]]);
 end;
 
-{ TEBChoiceMessage }
+{ TEBChoiceExpr }
 
-function TEBChoiceMessage.GetNodeText: string;
+function TEBChoiceExpr.GetNodeText: string;
 begin
    result := 'Show Choice: ' + self.Text;
 end;
 
-function TEBChoiceMessage.GetScriptText: string;
-const LINE = 'case ShowChoice(%s, %d) of';
+function TEBChoiceExpr.GetScriptText: string;
+const LINE = 'ShowChoice(%s, %d)';
 begin
    result := format(LINE, [QuotedStr(Text), Values[0]]);
+end;
+
+{ TEBChoiceMessage }
+
+function TEBChoiceMessage.GetNodeText: string;
+begin
+   result := self.ChildNode[0];
+end;
+
+procedure TEBChoiceMessage.Loaded;
+begin
+   if (Self.ChildCount = 0) or not (self.children[0] is TEBExpression) then
+   begin
+      self.Insert(0, TEBChoiceExpr.Create(nil));
+      self.Children[0].Text := self.Text;
+      self.Text := '';
+      self.children[0].Values.add(self.Values[0]);
+      self.Values.Delete(0);
+   end;
 end;
 
 { TEBInputHeroName }
@@ -343,5 +370,5 @@ end;
 initialization
    TEBObject.RegisterClasses([TEBShowMessage, TEBMessageOptions, TEBPortrait, TEBChoiceMessage,
                     TEBInputNumber, TEBInputHeroName, TEBSave, TEBMenu, TEBMenuEnable,
-                    TEBShop, TEBInn]);
+                    TEBShop, TEBInn, TEBChoiceExpr]);
 end.

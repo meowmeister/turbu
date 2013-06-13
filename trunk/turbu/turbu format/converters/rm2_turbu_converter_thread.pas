@@ -427,13 +427,13 @@ begin
                   ConvertMap(filename, FLdb, FLmt, GDatabase.mapTree, fromFolder, toFolder);
                end);
 
-            if DebugHook <> 0 then
+{            if DebugHook <> 0 then
             begin
                list := rm2_turbu_event_builder.UnknownOpcodeList;
                for op in list do
                   FReport.MakeHint(op);
                list.free;
-            end;
+            end;}
 
             if terminated then
                Exit;

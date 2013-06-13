@@ -45,7 +45,7 @@ implementation
 uses
    SysUtils, Types, Generics.Collections,
    charset_data, rm2_turbu_maps, rm2_turbu_event_builder, turbu_operators,
-   EventBuilder;
+   EventBuilder, EB_GotoRemoval;
 
 { T2k2RpgMapObject }
 
@@ -256,11 +256,13 @@ var
    new, last: TEBObject;
    stack: TStack<TEBObject>;
    fudgeFactor, idx: integer;
+   converter: TScriptConverter;
 begin
    fudgeFactor := 0;
    stack := TStack<TEBObject>.Create;
    result := TEBProcedure.Create(nil);
    result.name := name;
+   converter := TScriptConverter.Create;
    try
    try
       last := result;
@@ -273,9 +275,9 @@ begin
          else if command.indent + fudgeFactor < stack.Count - 1 then
             stack.Pop;
          if (command.opcode = 20110) or (command.opcode = 22410) then //additional message line
-            ConvertOpcode(command, last)
+            converter.ConvertOpcode(command, last)
          else begin
-            new := ConvertOpcode(command, stack.Peek);
+            new := converter.ConvertOpcode(command, stack.Peek);
             if assigned(new) then
                last := new
             else last := stack.peek;
@@ -287,6 +289,8 @@ begin
       end;
       assert(stack.Count = 1);
       assert(fudgeFactor = 0);
+      if converter.LabelGotoCount > 0 then
+         GotoRemoval(result);
    except
       result.SaveScript;
       result.free;
@@ -294,6 +298,7 @@ begin
    end;
    finally
       stack.Free;
+      converter.Free;
    end;
 end;
 

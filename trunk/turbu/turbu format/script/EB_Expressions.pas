@@ -197,15 +197,27 @@ type
       function GetNodeText: string; override;
    end;
 
-   TEBAndList = class(TEBExpression)
+   TEBBooleanBinList = class(TEBExpression)
+   protected
+      function opName: string; virtual; abstract;
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
    end;
 
+   TEBAndList = class(TEBBooleanBinList)
+   protected
+      function opName: string; override;
+   end;
+
+   TEBOrList = class(TEBBooleanBinList)
+   protected
+      function opName: string; override;
+   end;
+
    TEBNotExpr = class(TEBExpression)
    public
-      constructor Create(AParent: TEBObject; base: TEBExpression);
+      constructor Create(AParent: TEBObject; base: TEBExpression); reintroduce;
       function GetNodeText: string; override;
       function GetScriptText: string; override;
    end;
@@ -868,9 +880,9 @@ begin
       result := 'not ' + result;
 end;
 
-{ TEBAndList }
+{ TEBBooleanBinList }
 
-function TEBAndList.GetNodeText: string;
+function TEBBooleanBinList.GetNodeText: string;
 var
    i, count: integer;
 begin
@@ -884,12 +896,12 @@ begin
       begin
          result := result + format('(%s)', [self.ChildNode[i]]);
          if i < count - 1 then
-            result := result + ' and ';
+            result := result + ' ' + opName + ' ';
       end;
    end;
 end;
 
-function TEBAndList.GetScriptText: string;
+function TEBBooleanBinList.GetScriptText: string;
 var
    i, count: integer;
 begin
@@ -903,7 +915,7 @@ begin
       begin
          result := result + format('(%s)', [self.ChildScript[i]]);
          if i < count - 1 then
-            result := result + ' and ';
+            result := result + ' ' + opName + ' ';
       end;
    end;
 end;
@@ -926,11 +938,25 @@ begin
    result := 'not (' + ChildScript[0] + ')';
 end;
 
+{ TEBOrList }
+
+function TEBOrList.opName: string;
+begin
+   result := 'or';
+end;
+
+{ TEBAndList }
+
+function TEBAndList.opName: string;
+begin
+   result := 'and';
+end;
+
 initialization
    TEBObject.RegisterClasses([TEBVariableValue,
                     TEBBooleanValue, TEBIntegerValue, TEBStringValue, TEBEnumValue,
                     TEBLookupValue, TEBComparison, TEBObjExpr, TEBObjArrayValue,
                     TEBLookupObjExpr, TEBPropExpr, TEBCall, TEBBinaryOp,
                     TEBIntArray, TEBNilValue, TEBParenExpr, TEBComparisonBool,
-                    TEBAndList, TEBNotExpr]);
+                    TEBAndList, TEBOrList, TEBNotExpr]);
 end.
