@@ -69,7 +69,7 @@ begin
    self.hitsAll := base.hitsAll;
    self.yTarget := TAnimYTarget(base.yTarget);
 
-   self.frame := TAnimFrameList.Create;
+   assert(assigned(self.frame));
    frame.Capacity := (base.frames + 1) * 2;
    idx := 0;
    for I := 1 to base.frames do
@@ -82,7 +82,7 @@ begin
          self.frame.Add(TAnimCell.Convert(baseCell, i, idx));
       end;
 
-   effect := TAnimEffectList.Create;
+   assert(assigned(self.effect));
    effect.Add(TAnimEffects.Create);
    effect.Capacity := base.effects + 1;
    for i := 1 to base.effects do
