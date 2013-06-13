@@ -382,7 +382,9 @@ end;
 
 procedure TEBComparison.negate;
 begin
-   Values[0] := ord(NEG_COMPARISONS[TComparisonOp(Values[0])]);
+   if self.children[1].classtype = TEBBooleanValue then //switch true and false
+      self.children[1].Values[0] := self.children[1].Values[0] xor 1
+   else Values[0] := ord(NEG_COMPARISONS[TComparisonOp(Values[0])]);
 end;
 
 { TEBBooleanValue }
