@@ -45,7 +45,7 @@ implementation
 uses
    SysUtils, Types, Generics.Collections,
    charset_data, rm2_turbu_maps, rm2_turbu_event_builder, turbu_operators,
-   EventBuilder, EB_GotoRemoval;
+   EventBuilder, EB_GotoRemoval, EB_NestedIfOptimization;
 
 { T2k2RpgMapObject }
 
@@ -289,8 +289,12 @@ begin
       end;
       assert(stack.Count = 1);
       assert(fudgeFactor = 0);
+      NestedIfOptimization(result);
       if converter.LabelGotoCount > 0 then
+      begin
          GotoRemoval(result);
+         NestedIfOptimization(result);
+      end;
    except
       result.SaveScript;
       result.free;

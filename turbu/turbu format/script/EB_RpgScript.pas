@@ -1000,7 +1000,7 @@ begin
       list.AddObject(labeltext, self)
    else begin
       if list.objects[idx] is TEBLabel then
-         raise ERPGScriptError.CreateFmt('Label %d declared multiple times', [Values[0]])
+         //raise ERPGScriptError.CreateFmt('Label %d declared multiple times', [Values[0]])
       else list.Objects[idx] := self;
    end;
 end;
