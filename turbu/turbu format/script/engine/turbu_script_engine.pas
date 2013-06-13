@@ -289,7 +289,12 @@ begin
       end;
    end
    else FCurrentProgram.Free;
-   FCurrentProgram := FCompiler.Compile(script);
+   try
+      FCurrentProgram := FCompiler.Compile(script);
+   except
+      FCurrentProgram := nil;
+      raise;
+   end;
    FExec.Load(FCurrentProgram);
 end;
 
