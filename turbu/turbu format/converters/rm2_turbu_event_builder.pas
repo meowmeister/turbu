@@ -20,21 +20,38 @@ unit rm2_turbu_event_builder;
 
 interface
 uses
-   Classes,
-   Events, EventBuilder;
+   Classes, Generics.Collections,
+   Events, EB_RpgScript, EventBuilder;
 
-function ConvertOpcode(opcode: TEventCommand; parent: TEBObject): TEBObject;
-function UnknownOpcodeList: TStringList;
+type
+   TScriptConverter = class
+   private type
+      TUnknownOpcodeDictionary = TDictionary<integer, integer>;
+   private
+      blockStack: TStack<integer>;
+      ifStack: TStack<TEBIf>;
+      tally: TUnknownOpcodeDictionary;
+      LoopDepth: integer;
+      FLabelGotoCount: integer;
+      procedure LogUnknownOpcode(opcode: integer);
+   public
+      constructor Create;
+      destructor Destroy; override;
+
+      function ConvertOpcode(opcode: TEventCommand; parent: TEBObject): TEBObject;
+      function UnknownOpcodeList: TStringList;
+      property LabelGotoCount: integer read FLabelGotoCount;
+   end;
 
 implementation
 uses
-   SysUtils, Generics.Defaults, Generics.Collections, TypInfo,
+   SysUtils, Generics.Defaults, TypInfo,
    commons, move_data, turbu_pathing, rm2_turbu_map_objects, formats,
-   EB_RpgScript, EB_Messages, EB_Expressions, EB_System, EB_Maps, EB_Characters,
+   EB_Messages, EB_Expressions, EB_System, EB_Maps, EB_Characters,
    EB_Settings, EB_Media, EB_Battle, EB_Expressions_RM, turbu_battle_engine, turbu_operators;
 
 type
-   TConvertRoutine = function (opcode: TEventCommand; parent: TEBObject): TEBObject;
+   TConvertRoutine = function (converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 
    TOpcodePair = record
       K: integer;
@@ -48,17 +65,12 @@ type
 
    TOpcodeDictionary = TDictionary<integer, TEBClass>;
    TComplexOpcodeDictionary = TDictionary<integer, TConvertRoutine>;
-   TUnknownOpcodeDictionary = TDictionary<integer, integer>;
    TIntPair = TPair<integer, integer>;
    TPartySubscript = reference to function(subscript: TEBChainable; out expr: TEBExpression): TEBObject;
 
 var
    dict: TOpcodeDictionary;
    cDict: TComplexOpcodeDictionary;
-   blockStack: TStack<integer>;
-   ifStack: TStack<TEBIf>;
-   tally: TUnknownOpcodeDictionary;
-   LoopDepth: integer;
 
 const
    APPEND = '%s'#13#10'%s';
@@ -68,7 +80,22 @@ begin
   result := right.Value - left.Value;
 end;
 
-function UnknownOpcodeList: TStringList;
+constructor TScriptConverter.Create;
+begin
+   blockStack := TStack<integer>.Create;
+   ifStack := TStack<TEBIf>.Create;
+   tally := TUnknownOpcodeDictionary.Create;
+end;
+
+destructor TScriptConverter.Destroy;
+begin
+   ifStack.Free;
+   blockStack.Free;
+   tally.Free;
+   inherited;
+end;
+
+function TScriptConverter.UnknownOpcodeList: TStringList;
 var
    pair: TPair<integer, integer>;
    list: TList<TIntPair>;
@@ -91,7 +118,7 @@ begin
    end;
 end;
 
-procedure LogUnknownOpcode(opcode: integer);
+procedure TScriptConverter.LogUnknownOpcode(opcode: integer);
 var
    count: integer;
 begin
@@ -137,64 +164,70 @@ begin
       result := CreateForLoop(TEBObject(result.owner), result, 1, 4);
 end;
 
-function ConvertOpcode(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function TScriptConverter.ConvertOpcode(opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    newClass: TEBClass;
    converter: TConvertRoutine;
 begin
-   if cDict.TryGetValue(opcode.opcode, converter) then
-      Exit(converter(opcode, parent))
-   else if not dict.TryGetValue(opcode.opcode, newClass) then
-      newClass := TEbUntranslated;
-   if assigned(newClass) then
-   begin
-      result := objectFactory(newClass, opcode, parent);
-      if newClass = TEbUntranslated then
+   result := nil;
+   try
+      if cDict.TryGetValue(opcode.opcode, converter) then
+         Exit(converter(self, opcode, parent))
+      else if not dict.TryGetValue(opcode.opcode, newClass) then
+         newClass := TEbUntranslated;
+      if assigned(newClass) then
       begin
-         TEbUntranslated(result).opcode := opcode.opcode;
-         LogUnknownOpcode(opcode.opcode);
-      end;
-   end
-   else result := nil;
+         result := objectFactory(newClass, opcode, parent);
+         if newClass = TEbUntranslated then
+         begin
+            TEbUntranslated(result).opcode := opcode.opcode;
+            LogUnknownOpcode(opcode.opcode);
+         end;
+      end
+      else result := nil;
+   finally
+      if assigned(result) then
+         result.Loaded;
+   end;
 end;
 
-function ConvertMessageOptions(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertMessageOptions(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := objectFactory(TEBMessageOptions, opcode, parent);
    result.Values[0] := result.Values[0] xor 1;
    result.Values[3] := result.Values[3] xor 1;
 end;
 
-function ConvertCase(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertCase(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := objectFactory(TEBChoiceMessage, opcode, parent);
-   blockStack.Push(0);
+   converter.blockStack.Push(0);
 end;
 
-function ConvertEndCase(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertEndCase(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
-   assert(blockStack.Pop >= 0);
+   assert(converter.blockStack.Pop >= 0);
    result := objectFactory(TEBEndCase, opcode, parent);
 end;
 
-function ConvertCaseExtension(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertCaseExtension(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    index: integer;
 begin
    if opcode.name = '' then
    begin
-      assert(blockStack.Peek >= 0);
+      assert(converter.blockstack.Peek >= 0);
       result := objectFactory(TEBElseBlock, opcode, parent);
    end
    else
    begin
-      index := blockStack.Pop;
+      index := converter.blockstack.Pop;
       try
          assert(index >= 0);
          result := objectFactory(TEBCaseBlock, opcode, parent);
          result.Values.Add(index);
       finally
-         blockStack.Push(index + 1);
+         converter.blockstack.Push(index + 1);
       end;
    end;
 end;
@@ -250,7 +283,7 @@ begin
    end;
 end;
 
-function ConvertIf(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertIf(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 const
    FACING_VALUES: array[0..3] of string = ('facing_up', 'facing_right', 'facing_down', 'facing_left');
 var
@@ -315,16 +348,16 @@ begin
    if right = nil then
       right := TEBBooleanValue.Create(true);
    result := TEBIf.Create(parent, left, right, op);
-   blockStack.push(-1);
-   ifStack.Push(TEBIf(result));
+   converter.blockstack.push(-1);
+   converter.ifStack.Push(TEBIf(result));
 end;
 
-function ConvertBattleIf(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertBattleIf(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    left: TEBExpression;
 begin
    case opcode.data[0] of
-      0..1: Exit(ConvertIf(opcode, parent));
+      0..1: Exit(ConvertIf(converter, opcode, parent));
       2: left := TEBLookupObjExpr.Create('hero', opcode.Data[1], 'heroes', TEBPropExpr.Create('CanAct'));
       3: left := TEBLookupObjExpr.Create('monster', opcode.Data[1], 'monsters', TEBPropExpr.Create('CanAct'));
       4: left := TEBLookupObjExpr.Create('monster', opcode.Data[1], 'monsters', TEBPropExpr.Create('Targetted'));
@@ -336,25 +369,25 @@ begin
       else raise ERpgScriptError.CreateFmt('Unknown data[0] value %d', [opcode.data[0]]);
    end;
    result := TEBIf.Create(parent, left, TEBBooleanValue.Create(true), co_equals);
-   blockStack.push(-1);
-   ifStack.Push(TEBIf(result));
+   converter.blockstack.push(-1);
+   converter.ifStack.Push(TEBIf(result));
 end;
 
-function ConvertIfElse(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertIfElse(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
-   assert(blockStack.peek = -1);
-   ifStack.Peek.SetElse;
-   result := ifStack.Peek;
+   assert(converter.blockstack.peek = -1);
+   converter.ifStack.Peek.SetElse;
+   result := converter.ifStack.Peek;
 end;
 
-function ConvertEndIf(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertEndIf(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
-   assert(blockStack.pop = -1);
-   ifStack.pop;
+   assert(converter.blockstack.pop = -1);
+   converter.ifStack.pop;
    result := nil;
 end;
 
-function ConvertBattle(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertBattle(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    block: TEBEnumCaseBlock;
    battleResults: TBattleResultSet;
@@ -397,25 +430,25 @@ begin
    (result as TEBBattleBase).results := battleResults;
 end;
 
-function ConvertVictory(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertVictory(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBEnumCaseBlock.Create(parent);
    result.text := 'br_victory';
 end;
 
-function ConvertEscape(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertEscape(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBEnumCaseBlock.Create(parent);
    result.text := 'br_escaped';
 end;
 
-function ConvertDefeat(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertDefeat(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBEnumCaseBlock.Create(parent);
    result.text := 'br_defeated';
 end;
 
-function ConvertSwitch(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertSwitch(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 //in RPG Maker, 1 = false, 0 = true for this opcode.  Transposing for sanity's sake.
 const
    TRANSPOSE: array[0..2] of integer = (1, 0, 2);
@@ -430,7 +463,7 @@ begin
       result := CreateForLoop(parent, result, opcode.data[1], opcode.data[2]);
 end;
 
-function ConvertVar(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertVar(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 const
    OPS: array[1..5] of TBinaryOp = (bo_add, bo_sub, bo_mult, bo_div, bo_mod);
    HEROPROPS: array[0..5] of string = ('level', 'exp', 'hp', 'mp', 'maxHP', 'maxMP');
@@ -497,7 +530,7 @@ begin
       result := CreateForLoop(parent, result, opcode.data[1], opcode.data[2]);
 end;
 
-function ConvertInventory(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertInventory(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    expr: TEBExpression;
 begin
@@ -509,7 +542,7 @@ begin
    result.add(expr);
 end;
 
-function ConvertParty(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertParty(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    expr: TEBExpression;
 begin
@@ -521,7 +554,7 @@ begin
    result.add(expr);
 end;
 
-function ConvertStats(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertStats(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := SetupPartySubscript(Opcode.data[0], Opcode.data[1], Opcode.data[2],
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
@@ -535,7 +568,7 @@ begin
       end);
 end;
 
-function ConvertSkills(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertSkills(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := SetupPartySubscript(Opcode.data[0], Opcode.data[1], Opcode.data[2],
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
@@ -547,7 +580,7 @@ begin
       end);
 end;
 
-function ConvertEquipment(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertEquipment(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := SetupPartySubscript(Opcode.data[0], Opcode.data[1], Opcode.data[2],
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
@@ -561,7 +594,7 @@ begin
       end);
 end;
 
-function ConvertHP(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertHP(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := SetupPartySubscript(Opcode.data[0], Opcode.data[1], Opcode.data[2],
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
@@ -574,7 +607,7 @@ begin
       end);
 end;
 
-function ConvertMP(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertMP(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := SetupPartySubscript(Opcode.data[0], Opcode.data[1], Opcode.data[2],
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
@@ -586,7 +619,7 @@ begin
       end);
 end;
 
-function ConvertStatus(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertStatus(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := SetupPartySubscript(Opcode.data[0], Opcode.data[1], Opcode.data[2],
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
@@ -596,7 +629,7 @@ begin
       end);
 end;
 
-function ConvertFullHeal(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertFullHeal(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := SetupPartySubscript(Opcode.data[0], Opcode.data[1], 0,
       function(subscript: TEBChainable; out expr: TEBExpression): TEBObject
@@ -606,20 +639,20 @@ begin
       end);
 end;
 
-function ConvertSetSprite(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertSetSprite(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBHeroSprite.Create(parent);
    result.Text := format('%s %d', [opcode.name, opcode.Data[1]]);
    result.Values.AddRange([opcode.Data[0], opcode.Data[2]]);
 end;
 
-function ConvertSetPortrait(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertSetPortrait(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := ObjectFactory(TEBHeroPortrait, opcode, parent);
    result.Values[1] := result.Values[1] + 1;
 end;
 
-function ConvertVSprite(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertVSprite(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBVehicleSprite.Create(parent);
    result.Text := format('%s %d', [opcode.name, opcode.Data[1]]);
@@ -627,18 +660,18 @@ begin
    result.Values.Add(0);
 end;
 
-procedure SetupMif(mif: TEBMaybeIf; opcode: TEventCommand; const blockName: string);
+procedure SetupMif(converter: TScriptConverter; mif: TEBMaybeIf; opcode: TEventCommand; const blockName: string);
 begin
    mif.IfBlock := boolean(opcode.data[2]);
    mif.Setup(blockName);
    if boolean(opcode.data[2]) then
    begin
-      blockStack.push(-1);
-      ifStack.Push(mif);
+      converter.blockstack.push(-1);
+      converter.ifStack.Push(mif);
    end;
 end;
 
-function ConvertShop(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertShop(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    i: integer;
 begin
@@ -648,46 +681,46 @@ begin
    assert(opcode.data[3] = 0);
    for I := 4 to high(opcode.data) do
       result.values.add(opcode.data[i]);
-   SetupMif(result as TEBMaybeIf, opcode, 'Transaction');
+   SetupMif(converter, result as TEBMaybeIf, opcode, 'Transaction');
 end;
 
-function ConvertInn(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertInn(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBInn.Create(parent);
    result.Values.Add(opcode.data[0]);
    result.Values.Add(opcode.data[1]);
-   SetupMif(result as TEBMaybeIf, opcode, 'Stay');
+   SetupMif(converter, result as TEBMaybeIf, opcode, 'Stay');
 end;
 
-function ConvertTeleportVehicle(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertTeleportVehicle(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBTeleportVehicle.Create(parent);
    result.Values.Add(opcode.data[0] + 1);
    result.Values.AddRange([opcode.data[1], opcode.data[2], opcode.data[3], opcode.data[4]]);
 end;
 
-function ConvertTeleportEvent(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertTeleportEvent(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBTeleportMapObj.Create(parent);
    result.Add(eventDeref(opcode.data[0]));
    result.Values.AddRange([opcode.data[1], opcode.data[2], opcode.data[3]]);
 end;
 
-function ConvertSwapObjects(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertSwapObjects(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBSwapObjects.Create(parent);
    result.Add(eventDeref(opcode.data[0]));
    result.Add(eventDeref(opcode.data[1]));
 end;
 
-function Cleanup(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function Cleanup(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
-   assert(blockStack.Count = 0);
-   assert(ifStack.Count = 0);
+   assert(converter.blockstack.Count = 0);
+   assert(converter.ifStack.Count = 0);
    result := nil;
 end;
 
-function ConvertNewImage(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertNewImage(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    effect: boolean;
    i: integer;
@@ -714,7 +747,7 @@ begin
    end;
 end;
 
-function ConvertMoveImage(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertMoveImage(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    sub: TEBObject;
 begin
@@ -743,7 +776,7 @@ begin
    end;
 end;
 
-function ConvertShowAnim(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertShowAnim(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBShowAnim.Create(parent);
    result.Values.AddRange([opcode.Data[0], opcode.Data[2], opcode.Data[3]]);
@@ -752,7 +785,7 @@ begin
    else result.Add(eventDeref(opcode.Data[1]));
 end;
 
-function ConvertTranslucency(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertTranslucency(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBTranslucency.Create(parent);
    if boolean(opcode.Data[0]) then
@@ -760,7 +793,7 @@ begin
    else result.values.add(30);
 end;
 
-function ConvertFlash(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertFlash(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBFlashObj.Create(parent);
    result.add(EventDeref(opcode.data[0]));
@@ -768,7 +801,7 @@ begin
                            opcode.Data[4], opcode.Data[5], opcode.Data[6]]);
 end;
 
-function ConvertMove(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertMove(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 var
    i: integer;
    moveString: AnsiString;
@@ -788,45 +821,45 @@ begin
    end;
 end;
 
-function ConvertEncounterRate(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertEncounterRate(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBEncounterRate.Create(parent);
    result.Values.AddRange([1, opcode.Data[0]]);
 end;
 
-function ConvertWhileLoop(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertWhileLoop(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBWhileLoop.Create(parent);
-   inc(LoopDepth);
+   inc(converter.LoopDepth);
 end;
 
-function LoopEnd(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function LoopEnd(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := nil;
-   dec(LoopDepth);
+   dec(converter.LoopDepth);
 end;
 
-function ConvertBreak(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertBreak(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
-   if LoopDepth > 0 then
+   if converter.LoopDepth > 0 then
       result := TEBBreak.Create(parent)
    else result := TEBExit.Create(parent);
 end;
 
-function ConvertDelete(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertDelete(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBDeleteObj.Create(parent);
    result.Values.Add(0);
 end;
 
-function ConvertClassChange(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertClassChange(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := ObjectFactory(TEBClassChange, opcode, parent);
    assert(opcode.Data[0] = 1);
    result.Values.Delete(0);
 end;
 
-function ConvertBattleCommand(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertBattleCommand(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := ObjectFactory(TEBBattleCommand, opcode, parent);
    assert(opcode.Data[0] = 1);
@@ -834,37 +867,37 @@ begin
    result.values[2] := result.Values[2] xor 1;
 end;
 
-function ConvertMonsterHP(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertMonsterHP(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := ObjectFactory(TEBMonsterHP, opcode, parent);
    result.Values[0] := result.Values[0] + 1;
 end;
 
-function ConvertMonsterMP(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertMonsterMP(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := ObjectFactory(TEBMonsterMP, opcode, parent);
    result.Values[0] := result.Values[0] + 1;
 end;
 
-function ConvertMonsterStatus(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertMonsterStatus(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := ObjectFactory(TEBMonsterStatus, opcode, parent);
    result.Values[0] := result.Values[0] + 1;
 end;
 
-function ConvertShowMonster(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertShowMonster(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := ObjectFactory(TEBShowMonster, opcode, parent);
    result.Values[0] := result.Values[0] + 1;
 end;
 
-function ConvertBattleGlobalEvent(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertBattleGlobalEvent(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBCallEvent.Create(parent);
    result.Values.AddRange([0, opcode.Data[0]]);
 end;
 
-function ConvertSysBGM(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertSysBGM(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    case opcode.data[0] of
       0..2: result := ObjectFactory(TEBSysBGM, opcode, parent);
@@ -880,46 +913,46 @@ begin
    end;
 end;
 
-function ConvertEraseScreen(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertEraseScreen(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    inc(opcode.data[0]);
    result := ObjectFactory(TEBEraseScreen, opcode, parent);
 end;
 
-function ConvertShowScreen(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertShowScreen(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    inc(opcode.data[0]);
    result := ObjectFactory(TEBShowScreen, opcode, parent);
 end;
 
-function ConvertTransition(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertTransition(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    inc(opcode.data[1]);
    result := ObjectFactory(TEBTransition, opcode, parent);
 end;
 
-function ConvertInputHeroName(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertInputHeroName(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := TEBInputHeroName.Create(parent);
    result.Values.Add(opcode.data[0]);
    result.Values.Add(opcode.data[2]);
 end;
 
-function ConvertTeleport(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertTeleport(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := ObjectFactory(TEBTeleport, opcode, parent);
    if result.Values.Count = 3 then
       result.Values.Add(0);
 end;
 
-function ConvertCallEvent(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertCallEvent(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    result := ObjectFactory(TEBCallEvent, opcode, parent);
    if (result.values[0] = 1) and (result.values[1] = 10005) then
       result.values[1] := 0;
 end;
 
-function ConvertFlashScreen(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertFlashScreen(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    if length(opcode.data) <> 7 then
    begin
@@ -934,7 +967,7 @@ begin
    end;
 end;
 
-function ConvertShakeScreen(opcode: TEventCommand; parent: TEBObject): TEBObject;
+function ConvertShakeScreen(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
 begin
    if length(opcode.data) <> 5 then
    begin
@@ -949,8 +982,20 @@ begin
    end;
 end;
 
+function ConvertLabel(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   result := ObjectFactory(TEBLabel, opcode, parent);
+   inc(converter.FLabelGotoCount);
+end;
+
+function ConvertGoto(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
+begin
+   result := ObjectFactory(TEBGoto, opcode, parent);
+   inc(converter.FLabelGotoCount);
+end;
+
 const
-   OPCODES_IMPLEMENTED = 59;
+   OPCODES_IMPLEMENTED = 57;
    OPCODE_LIST: array[1..OPCODES_IMPLEMENTED] of TOpcodePair =
      ((K: 10; V: nil), (K: 20713; v: nil), (K: 20720; V: nil), (K: 20730; V: nil),
       (K: 10110; V: TEBShowMessage), (K: 20110; V: TEBExtension), (K: 10130; V: TEBPortrait),
@@ -968,13 +1013,12 @@ const
       (K: 11750; V: TEBTileSub), (K: 11810; V: TEBTeleLoc), (K: 11820; V: TEBTeleEnable),
       (K: 11830; V: TEBEscapeLoc), (K: 11840; V: TEBEscapeEnable), (K: 11910; V: TEBSave),
       (K: 11930; V: TEBSaveEnable), (K: 11950; V: TEBMenu), (K: 11960; V: TEBMenuEnable),
-      (K: 12110; V: TEBLabel), (K: 12120; V: TEBGoto), (K: 12310; V: TEBExit),
-      (K: 12410; V: TEBComment), (K: 22410; V: TEBExtension),
+      (K: 12310; V: TEBExit), (K: 12410; V: TEBComment), (K: 22410; V: TEBExtension),
       (K: 12420; V: TEBGameOver), (K: 12510; V: TEBTitleScreen), (K: 13210; V: TEBBattleBG),
       (K: 13410; V: TEBEndBattle), (K: 1006; V: TEBForceFlee), (K: 1007; V: TEBEnableCombo),
       (K: 13260; V: TEBBattleAnimation));
 
-   COMPLEX_OPCODES = 65;
+   COMPLEX_OPCODES = 67;
    COMPLEX: array[1..COMPLEX_OPCODES] of TComplexOpcodePair =
      ((K: 0; V: Cleanup), (K: 10120; v: ConvertMessageOptions), (K: 20140; v: ConvertCaseExtension),
       (K: 10140; V: ConvertCase), (K: 20141; V: ConvertEndCase), (K: 12010; V: ConvertIf),
@@ -998,7 +1042,8 @@ const
       (K: 13310; V: ConvertBattleIf), (K: 23310; V: ConvertIfElse), (K: 23311; V: ConvertEndIf),
       (K: 11010; V: ConvertEraseScreen), (K: 11020; V: ConvertShowScreen),
       (K: 10690; V: ConvertTransition), (K: 10740; V: ConvertInputHeroName),
-      (K: 10810; V: ConvertTeleport), (K: 12330; V: ConvertCallEvent));
+      (K: 10810; V: ConvertTeleport), (K: 12330; V: ConvertCallEvent),
+      (K: 12110; V: ConvertLabel), (K: 12120; V: ConvertGoto));
 
 var
    i: integer;
@@ -1010,13 +1055,7 @@ initialization
    cDict := TComplexOpcodeDictionary.Create;
    for I := low(COMPLEX) to high(COMPLEX) do
       cDict.Add(COMPLEX[i].K, COMPLEX[i].V);
-   blockStack := TStack<integer>.Create;
-   ifStack := TStack<TEBIf>.Create;
-   tally := TUnknownOpcodeDictionary.Create;
 finalization
-   ifStack.Free;
-   blockStack.Free;
    dict.Free;
    cDict.Free;
-   tally.Free;
 end.

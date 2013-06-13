@@ -472,6 +472,8 @@ begin
    dataset := FDatasetList.FindByName(name);
    if not assigned(dataset) then
       exit(BAD_LOOKUP);
+   if not Connection.Connected then
+      exit(BAD_LOOKUP);
 
    if dataset.Active then
    begin

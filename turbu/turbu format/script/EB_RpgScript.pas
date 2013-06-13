@@ -152,8 +152,10 @@ type
       function StripTrailingSemCommented(const value: string): string;
    protected
       procedure Loaded; override;
+      procedure NeededVariables(list: TStringList); override;
    public
       constructor Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp); reintroduce; overload;
+      constructor Create(parent: TEBObject; cond: TEBExpression); reintroduce; overload;
       procedure Add(aObject: TEBObject); override;
       procedure SetElse;
       function ClearElse: TEBCodeBlock;
@@ -161,6 +163,8 @@ type
       function GetScriptText: string; override;
       function GetNode: TEBNode; override;
       function GetNodeText: string; override;
+      procedure Negate;
+      function NeededVariableType: THeaderItems; override;
 
       property ElseSet: boolean read FElseSet;
    end;
@@ -221,6 +225,16 @@ type
       function GetNodeText: string; override;
    end;
 
+   TEBRepeatLoop = class(TEBLoop)
+   private
+      function GetUntilClause: string;
+   public
+      function GetNodeText: string; override;
+      function GetScript(indent: integer): string; override;
+      function GetScriptText: string; override;
+      function MustBlock: boolean; override;
+   end;
+
    TEBLabel = class(TEBObject)
    public
       function GetNodeText: string; override;
@@ -230,6 +244,12 @@ type
    end;
 
    TEBBreak = class(TEBObject)
+   public
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
+   TEBContinue = class(TEBBreak)
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
@@ -252,10 +272,13 @@ type
       function GetNode: TEBNode; override;
    end;
 
-   TEbAssignment = class(TEBObject)
+   TEBAssignment = class(TEBObject)
    public
+      constructor Create(AOwner: TEBObject; left, right: TEBExpression); reintroduce;
       function GetNodeText: string; override;
       function GetScriptText: string; override;
+      procedure NeededVariables(list: TStringList); override;
+      function NeededVariableType: THeaderItems; override;
    end;
 
    TStringsHelper = class helper for TStrings
@@ -424,9 +447,9 @@ end;
 
 procedure TEBProcedure.SerializeProps(list: TStringList; depth: integer);
 begin
-  inherited;
-  if FReturnType <> '' then
-   list.Add('ReturnType = ' + FReturnType)
+   inherited;
+   if FReturnType <> '' then
+      list.Add('ReturnType = ' + FReturnType)
 end;
 
 procedure TEBProcedure.AssignProperty(const key, value: string);
@@ -640,8 +663,13 @@ end;
 
 constructor TEBIf.Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp);
 begin
+   Create(parent, TEBComparison.Create(left, right, op));
+end;
+
+constructor TEBIf.Create(parent: TEBObject; cond: TEBExpression);
+begin
    inherited Create(parent);
-   Add(TEBComparison.Create(left, right, op));
+   Add(cond);
    TEBCodeBlock.Create(self);
 end;
 
@@ -736,6 +764,36 @@ end;
 procedure TEBIf.Loaded;
 begin
    FElseSet := ChildCount > 2;
+end;
+
+procedure TEBIf.NeededVariables(list: TStringList);
+var
+   name: string;
+begin
+   inherited NeededVariables(list);
+   if children[0] is TEBVariableValue then
+   begin
+      name := children[0].Text;
+      if list.IndexOfName(name) = -1 then
+         list.AddObject(format('%s=boolean', [name]), self);
+   end;
+end;
+
+function TEBIf.NeededVariableType: THeaderItems;
+begin
+   result := hi_var;
+end;
+
+procedure TEBIf.Negate;
+var
+   cond: TEBExpression;
+begin
+   cond := self.children[0] as TEBExpression;
+   if cond.ClassType = TEBComparison then
+      TEBComparison(cond).negate
+   else if cond.ClassType = TEBNotExpr then
+      self.Insert(0, cond.children.Extract(cond.children[0]))
+   else self.Insert(0, TEBNotExpr.Create(nil, cond));
 end;
 
 procedure TEBIf.SetElse;
@@ -873,7 +931,8 @@ end;
 
 procedure TEBForLoop.AddSingle(const value: string; const data: TObject);
 begin
-   FTempList.AddObject(value, data);
+   if FTempList.IndexOf(value) = -1 then
+      FTempList.AddObject(value, data);
 end;
 
 procedure TEBForLoop.NeededVariables(list: TStringList);
@@ -993,6 +1052,37 @@ begin
    else result := 'while true do';
 end;
 
+{ TEBrepeatLoop }
+
+function TEBRepeatLoop.GetNodeText: string;
+begin
+   if (ChildCount > 0) and (Children[0] is TEBExpression) then
+      result := format('Repeat until (%s):', [ChildNode[0]])
+   else result := 'Repeat Indefinitely:';
+end;
+
+function TEBRepeatLoop.GetScript(indent: integer): string;
+begin
+   result := inherited GetScript(indent) + CRLF + IndentString(indent) + GetUntilClause;
+end;
+
+function TEBRepeatLoop.GetScriptText: string;
+begin
+   result := 'repeat ';
+end;
+
+function TEBRepeatLoop.GetUntilClause: string;
+begin
+   if (ChildCount > 0) and (Children[0] is TEBExpression) then
+      result := format('until %s;', [ChildScript[0]])
+   else result := 'until false';
+end;
+
+function TEBRepeatLoop.MustBlock: boolean;
+begin
+   result := false;
+end;
+
 { TEBBreak }
 
 function TEBBreak.GetNodeText: string;
@@ -1003,6 +1093,18 @@ end;
 function TEBBreak.GetScriptText: string;
 begin
    result := 'Break;';
+end;
+
+{ TEBContinue }
+
+function TEBContinue.GetNodeText: string;
+begin
+   result := 'Continue Loop From Top';
+end;
+
+function TEBContinue.GetScriptText: string;
+begin
+   result := 'Continue;';
 end;
 
 { TEBComment }
@@ -1127,17 +1229,53 @@ begin
    result := format('unit %s;', [self.name]);
 end;
 
-{ TEbAssignment }
+{ TEBAssignment }
 
-function TEbAssignment.GetNodeText: string;
+constructor TEBAssignment.Create(AOwner: TEBObject; left, right: TEBExpression);
 begin
-   raise ERPGScriptError.Create('Not Implemented');
+   inherited Create(AOwner);
+   add(left);
+   add(right);
 end;
 
-function TEbAssignment.GetScriptText: string;
+function TEBAssignment.GetNodeText: string;
+const LINE = 'set [%s] to [%s];';
+begin
+   result := format(LINE, [ChildNode[0], ChildNode[1]])
+end;
+
+function TEBAssignment.GetScriptText: string;
 const LINE = '%s := %s;';
 begin
    result := format(LINE, [ChildScript[0], ChildScript[1]]);
+end;
+
+procedure TEBAssignment.NeededVariables(list: TStringList);
+var
+   name, line: string;
+begin
+   inherited NeededVariables(list);
+   if children[0] is TEBVariableValue then
+   begin
+      name := children[0].Text;
+      if list.IndexOfName(name) = -1 then
+      begin
+         if children[1] is TEBIntegerValue then
+            line := format('%s=integer', [name])
+         else if (children[1] is TEBBooleanValue) or (children[1] is TEBComparison ) then
+            line := format('%s=boolean', [name])
+         else if children[1] is TEBStringValue then
+            line := format('%s=string', [name])
+         else Exit;
+
+         list.AddObject(line, self);
+      end;
+   end;
+end;
+
+function TEBAssignment.NeededVariableType: THeaderItems;
+begin
+   result := hi_var;
 end;
 
 { TEBMaybeCase }
@@ -1220,5 +1358,6 @@ initialization
                     TEBCase, TEBCaseBlock, TEBElseBlock, TEBEndCase, TEBIf,
                     TEBCodeBlock, TEBEnumCaseBlock, TEBForLoop, TEBLabel, TEBGoto,
                     TEBWhileLoop, TEBBreak, TEBComment, TEBProgram, TEBMap,
-                    TEBFunctionCall, TEBUnit, TEBExit]);
+                    TEBFunctionCall, TEBUnit, TEBExit, TEBRepeatLoop,
+                    TEBAssignment, TEBContinue]);
 end.

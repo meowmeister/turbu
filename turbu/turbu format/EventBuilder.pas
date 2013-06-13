@@ -93,7 +93,6 @@ type
       function Empty: boolean; virtual;
       procedure AddNamed(aObject: TEBObject); virtual;
       procedure AssignProperty(const key, value: string); virtual;
-      procedure Loaded; virtual;
 
       class var FDatastore: IRpgDatastore;
 
@@ -126,8 +125,10 @@ type
       function UsesList: TStringList;
       function Clone: TEBObject;
       procedure Clear;
+      procedure Extract;
       function NeededVariableType: THeaderItems; virtual;
       procedure FreeChild(const name: string);
+      procedure Loaded; virtual;
 
       property Values: TList<integer> read FValues;
       property InUnit: string read GetUnit;
@@ -226,6 +227,8 @@ const INDENT_SIZE = 2;
 
 procedure TEBObject.Add(aObject: TEBObject);
 begin
+   if aObject = self then
+      raise ERpgScriptError.Create('Can''t add an object as a child of itself');
    if aObject.FOwner <> nil then
       AObject.FOwner.children.Extract(aObject);
    aObject.FOwner := self;
@@ -238,9 +241,21 @@ begin
 end;
 
 procedure TEBObject.Insert(index: integer; aObject: TEBObject);
+var
+   idx: integer;
 begin
+   if aObject = self then
+      raise ERpgScriptError.Create('Can''t insert an object as a child of itself');
    if aObject.FOwner <> nil then
+   begin
+      if aObject.FOwner = self then
+      begin
+         idx := children.IndexOf(aObject);
+         if (idx > 0) and (idx < index) then
+            dec(index);
+      end;
       AObject.FOwner.children.Extract(aObject);
+   end;
    aObject.FOwner := self;
    FChildren.Insert(index, aObject);
    if aObject.name <> '' then
@@ -498,6 +513,12 @@ begin
       FNameDic.Sorted := true;
       FNameDic.Duplicates := dupError;
    end;
+end;
+
+procedure TEBObject.Extract;
+begin
+   assert(FOwner.children.Extract(self) = self);
+   FOwner := nil;
 end;
 
 function TEBObject.HasText: Boolean;
