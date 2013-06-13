@@ -5,7 +5,7 @@ uses
    sdl_sprite, sg_defs,
    rsImport,
    charset_data,
-   turbu_map_sprites, turbu_map_objects, turbu_map_metadata;
+   turbu_map_sprites, turbu_map_objects, turbu_map_metadata, turbu_defs;
 
 type
    TRpgCharacter = class(TObject)
@@ -51,6 +51,7 @@ type
       function getMap: integer;
       function getFacing: integer;
       procedure InternalChangeSprite;
+      function GetTFacing: TFacing;
    protected
       function getX: integer; override;
       function getY: integer; override;
@@ -71,7 +72,10 @@ type
       property map: integer read getMap;
       property x: integer read getX;
       property y: integer read getY;
+      property xPos: integer read getX;
+      property yPos: integer read getY;
       property facingValue: integer read getFacing;
+      property facing: TFacing read GetTFacing;
       property id: integer read FID;
       [NoImport]
       property base: TMapSprite read FBase;
@@ -127,7 +131,7 @@ type
 implementation
 uses
    types, Classes, SysUtils,
-   commons, turbu_defs, turbu_constants, tiles, turbu_2k_char_sprites,
+   commons, turbu_constants, tiles, turbu_2k_char_sprites,
    turbu_database, turbu_2k_sprite_engine, turbu_2k_environment, ArchiveUtils,
    turbu_pathing, turbu_script_engine;
 
@@ -263,6 +267,13 @@ end;
 function TRpgEvent.getBase: TMapSprite;
 begin
    result := self.FBase;
+end;
+
+function TRpgEvent.GetTFacing: TFacing;
+begin
+   if FIsChar then
+      result := (FBase as TCharSprite).facing
+   else result := facing_down;
 end;
 
 function TRpgEvent.getFacing: integer;
