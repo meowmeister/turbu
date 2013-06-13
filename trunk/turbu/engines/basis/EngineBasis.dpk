@@ -97,6 +97,8 @@ contains
   EB_RpgScript in '..\..\turbu format\script\EB_RpgScript.pas',
   turbu_vartypes in '..\..\turbu format\turbu_vartypes.pas',
   commons in '..\..\commons.pas',
-  EB_GotoRemoval in '..\..\turbu format\script\EB_GotoRemoval.pas';
+  EB_GotoRemoval in '..\..\turbu format\script\EB_GotoRemoval.pas',
+  EB_Optimizations in '..\..\turbu format\script\EB_Optimizations.pas',
+  EB_NestedIfOptimization in '..\..\turbu format\script\EB_NestedIfOptimization.pas';
 
 end.
