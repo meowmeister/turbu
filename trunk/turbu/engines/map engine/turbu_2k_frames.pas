@@ -690,6 +690,7 @@ begin
    FNextArrow.ImageName := parent.FSystemGraphic.FFilename;
    FPortrait := TSprite.Create(parent);
    FPortrait.SetSpecialRender;
+   FPortrait.Visible := false;
    inherited Create(parent, coords);
    FTextColor := 1;
    SetTextRate(1);
