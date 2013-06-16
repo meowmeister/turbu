@@ -300,6 +300,8 @@ begin
 
       ConversionReport.newStep('Preparing layout');
       self.layout.Convert(base.SystemData);
+      if GProjectFormat = pf_2k3 then
+         self.layout.translucentMessages := base.battleLayout.windowTrans;
       ConvertVehicles(base.SystemData);
       ConvertSysSounds(base.SystemData);
       for legacyPair in base.SystemData.legacy do

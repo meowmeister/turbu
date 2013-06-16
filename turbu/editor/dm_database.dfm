@@ -3985,6 +3985,9 @@ object dmDatabase: TdmDatabase
     object syslayoutCommands_8: TByteField
       FieldName = 'Commands_8'
     end
+    object syslayoutTranslucentMessages: TBooleanField
+      FieldName = 'translucentMessages'
+    end
   end
   object MapTree: TSimpleDataSet
     Aggregates = <>
