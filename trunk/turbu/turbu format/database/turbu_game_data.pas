@@ -30,6 +30,7 @@ type
       FUsesFrame: boolean;
       FFrame: string;
       FReverseGraphics: boolean;
+      FTranslucentMessages: boolean;
       function getStartingHero(which: word): integer;
       function getTransition(which: TTransitionTypes): byte;
   private
@@ -56,6 +57,7 @@ type
       property usesFrame: boolean read FUsesFrame;
       property frame: string read FFrame;
       property reverseGraphics: boolean read FReverseGraphics;
+      property translucentMessages: boolean read FTranslucentMessages write FTranslucentMessages;
    end;
 
 

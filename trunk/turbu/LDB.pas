@@ -315,6 +315,7 @@ type
       property mparties: word read getMonsterParties;
       property mparty: TArray<TMonsterParty> read FMparty;
       property anim2: TArray<TBattleAnim2> read FAnim2;
+      property battleLayout: TBattleLayout read FBattleLayout;
    end;
 
    function globalEventBlock: TObject;

@@ -54,11 +54,13 @@ type
       FWorseArrow: TSystemTile;
       FEqualValue: TSystemTile;
       FStretch: boolean;
+      FTranslucent: boolean;
       procedure Setup(parent: TMenuSpriteEngine);
       function GetHandle: integer;
       function GetDrawRect(value: integer): TRect;
    public
-      constructor Create(images: TSdlImages; const filename: string; stretch: boolean);
+      constructor Create(images: TSdlImages; const filename: string;
+        stretch, translucent: boolean);
       destructor Destroy; override;
 
       property filename: string read FFilename;
@@ -409,11 +411,11 @@ begin
       Exit;
 {   while FState = gs_fading do
       windows.sleep(GFrameLength);}
+   FMessageBox.text := msg;
    FMessageBox.Visible := true;
    if modal then
       FMenuState := msExclusiveShared
    else FMenuState := msShared;
-   FMessageBox.text := msg;
    FMessageBox.state := mb_display;
    FMessageBox.FSignal.WaitFor;
 end;
@@ -426,13 +428,15 @@ end;
 
 { TSystemImages }
 
-constructor TSystemImages.Create(images: TSdlImages; const filename: string; stretch: boolean);
+constructor TSystemImages.Create(images: TSdlImages; const filename: string;
+  stretch, translucent: boolean);
 var
    cls: TSdlImageClass;
 begin
    inherited Create;
    FFilename := filename;
    FStretch := stretch;
+   FTranslucent := translucent;
    cls := images.SpriteClass;
    images.SpriteClass := TSdlImage;
    try
@@ -534,6 +538,7 @@ end;
 
 destructor TCustomMessageBox.Destroy;
 begin
+   FButtonLock.Free;
    FSignal.Free;
    FParsedText.free;
    inherited;
@@ -692,6 +697,12 @@ begin
    FPortrait.SetSpecialRender;
    FPortrait.Visible := false;
    inherited Create(parent, coords);
+   if parent.FSystemGraphic.FTranslucent then
+   begin
+      SDL_SetTextureBlendMode(FBackground.Image.surface, [sdlbBlend]);
+      FBackground.Alpha := 200;
+   end;
+
    FTextColor := 1;
    SetTextRate(1);
 
@@ -771,6 +782,7 @@ end;
 procedure TMessageBox.DrawFrame;
 var
    coords: TRect;
+   bm: TSdlBlendModes;
 begin
    if not FFrameDrawn then
    begin
@@ -782,6 +794,7 @@ begin
       inherited Draw;
       FFrameTarget.parent.popRenderTarget;
       FFrameDrawn := true;
+      SDL_SetTextureBlendMode(FFrameTarget.handle, [sdlbBlend]);
    end;
    coords.Left := 0;
    coords.Right := FFrameTarget.parent.Width;
