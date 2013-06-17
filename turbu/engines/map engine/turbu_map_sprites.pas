@@ -986,7 +986,11 @@ end;
 
 procedure TCharSprite.loadCharset(filename: string);
 begin
-   FEngine.Images.EnsureImage('mapsprite\' + filename + '.png', filename, SPRITE_SIZE);
+   commons.runThreadsafe(
+      procedure
+      begin
+         FEngine.Images.EnsureImage('mapsprite\' + filename + '.png', filename, SPRITE_SIZE);
+      end, true);
 end;
 
 procedure TCharSprite.moveTick;

@@ -220,9 +220,9 @@ const
 
 implementation
 uses
-   Math,
+   Math, SysUtils,
    ArchiveUtils, turbu_database, dm_database, commons, turbu_items,
-   turbu_2k_environment, turbu_2k_sprite_engine;
+   turbu_2k_environment, turbu_2k_sprite_engine, turbu_script_engine;
 
 const
    WEAPON_SLOT = 1;
@@ -728,8 +728,7 @@ begin
    FSprite := filename;
    FTransparent := translucent;
    if FParty[1] = self then
-   {with GGameEngine.character[0] as TCharSprite do
-      update(sprite, spriteIndex, translucent);}
+      FParty.ChangeSprite(ChangeFileExt(filename, ''), translucent);
 end;
 
 procedure TRpgHero.setStat(which: integer; value: integer);
