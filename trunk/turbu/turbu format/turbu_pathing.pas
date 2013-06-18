@@ -93,6 +93,7 @@ var
 begin
    FOpcodes := TMoveList.Create;
    step.opcode := Ord(direction);
+   FillChar(step.data, length(step.data), 0);
    FOpcodes.Add(step);
 end;
 
