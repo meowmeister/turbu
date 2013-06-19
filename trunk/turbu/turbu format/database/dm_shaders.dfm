@@ -336,6 +336,30 @@ object dmShaders: TdmShaders
           ''
           '   gl_FragColor = vec4(1, 1, 1, 1);'
           '}')
+      end
+      item
+        Name = 'flashtint'
+        Strings.Strings = (
+          'varying vec2 texture_coordinate; '
+          'uniform sampler2DRect baseTexture;'
+          'uniform vec4 flashColor;'
+          'varying vec4 v_color;'
+          'uniform vec4 rgbValues;'
+          ''
+          'vec3 ProcessShifts(vec3 rgbColor);'
+          ''
+          'void main(void)'
+          '{    '
+          
+            '    vec4 lColor =  texture2DRect(baseTexture, texture_coordinate' +
+            ');'
+          
+            '    vec3 mixColor = mix(lColor.rgb, flashColor.rgb, flashColor.a' +
+            ');'
+          
+            '    gl_FragColor = vec4(ProcessShifts(mixColor), lColor.a * v_co' +
+            'lor.a);'
+          '}')
       end>
     Left = 136
     Top = 16
