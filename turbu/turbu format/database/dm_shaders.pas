@@ -278,8 +278,6 @@ begin
 end;
 
 procedure TdmShaders.UseShaderProgram(value: integer);
-var
-   err: glEnum;
 begin
    glCheckError;
    glUseProgram(value);
