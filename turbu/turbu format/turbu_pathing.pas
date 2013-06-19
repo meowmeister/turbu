@@ -186,6 +186,7 @@ begin
    FLoop := false;
    FOpcodes.Clear;
    newStep.opcode := Ord(direction);
+   FillChar(newStep.data, length(newStep.data), 0);
    FOpcodes.Add(newStep);
    FCursor := 0;
 end;
