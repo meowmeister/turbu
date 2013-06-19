@@ -516,7 +516,11 @@ begin
    if keyIsPressed(VK_RETURN) then
       include(result, btn_enter);
    if keyIsPressed(VK_ESCAPE) then
+      include(result, btn_cancel)
+   else if KeyIsPressed(VK_INSERT) then
       include(result, btn_cancel);
+   if result * [btn_enter, btn_cancel] = [] then
+      FEnterLock := false;
 end;
 
 procedure T2kMapEngine.repaint;
