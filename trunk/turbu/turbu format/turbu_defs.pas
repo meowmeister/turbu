@@ -88,6 +88,7 @@ type
    TImageEffects = (ie_none, ie_rotate, ie_wave);
 
    TButtonCode = (btn_enter, btn_cancel, btn_up, btn_down, btn_left, btn_right);
+   TButtonCodes = set of TButtonCode;
 
    TGameState = (gs_map, gs_message, gs_menu, gs_battle, gs_sleeping, gs_fading, gs_minigame);
 

@@ -57,6 +57,7 @@ type
                      chip_data: TTileSet): TTileAttributes; virtual;
       function open(exceptFor: TObject): boolean; virtual;
       function canEnter: boolean;
+      procedure UpdateGridLoc;
 
       class procedure heartbeat;
 
@@ -302,6 +303,11 @@ end;
 procedure TTile.setEngine(newEngine: TSpriteEngine);
 begin
    FEngine := newEngine;
+end;
+
+procedure TTile.UpdateGridLoc;
+begin
+   FGridLoc := sgPoint(round(self.X / TILE_SIZE.x), round(self.y / TILE_SIZE.y));
 end;
 
 { TEventTile }
