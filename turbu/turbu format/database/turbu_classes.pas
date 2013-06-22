@@ -187,6 +187,8 @@ type
    protected
       FDataset: TSimpleDataset;
       FSerializer: TDatasetSerializer;
+      FCountLoaded: boolean;
+      FDatasetCount: integer;
       function GetNewItem: TRpgDatafile; virtual; abstract;
       procedure Add(value: TRpgDatafile); overload;
    public
@@ -1061,13 +1063,18 @@ begin
    else if not FDataset.Connection.Connected then
       result := self.Count
    else begin
-      FDataset.Connection.Execute(format(SQL, [UpperCase(FDataset.Name)]), nil, @ds);
-      try
-         assert(ds.Bof and not ds.Eof);
-         result := ds.FieldByName('result').AsInteger;
-      finally
-         ds.Free;
+      if not FCountLoaded then
+      begin
+         FDataset.Connection.Execute(format(SQL, [UpperCase(FDataset.Name)]), nil, @ds);
+         try
+            assert(ds.Bof and not ds.Eof);
+            FDatasetCount := ds.FieldByName('result').AsInteger;
+         finally
+            ds.Free;
+         end;
+         FCountLoaded := true;
       end;
+      result := FDatasetCount;
    end;
 end;
 
