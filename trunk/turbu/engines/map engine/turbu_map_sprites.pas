@@ -59,6 +59,9 @@ type
       procedure decTransparencyFactor;
       function getAnimFix: boolean;
       function GetTile(x: byte): TTile;
+      function TryMovePreferredDirection(facing: TFacing): boolean;
+      function TryMoveTowardsHero: boolean;
+      function TryMoveAwayFromHero: boolean;
 
       function MustFlash: boolean;
       function GetFlashColor: TGlArrayF4;
@@ -192,7 +195,7 @@ uses
    SysUtils, Math, types,
    turbu_2k_map_tiles, ArchiveInterface,
    turbu_sounds, turbu_constants, turbu_2k_sprite_engine, turbu_2k_map_locks,
-   turbu_database, turbu_2k_environment,
+   turbu_database, turbu_2k_environment, turbu_script_engine,
    rs_media;
 
 const OP_CLEAR = $C0; //arbitrary value
@@ -290,6 +293,34 @@ function TMapSprite.tryMove(where: TFacing): boolean;
 begin
    FMoveOpen := self.move(where);
    result := FMoveOpen or canSkip;
+end;
+
+function TMapSprite.TryMovePreferredDirection(facing: TFacing): boolean;
+var
+   ninetyDegrees: TFacing;
+begin
+   if tryMove(facing) then
+      Exit(true);
+   if Random(2) = 1 then
+      ninetyDegrees := TFacing((ord(self.facing) + 1) mod 4)
+   else ninetyDegrees := TFacing((ord(self.facing) + ord(pred(high(TFacing)))) mod 4);
+   if tryMove(ninetyDegrees) then
+      result := true
+   else if tryMove(opposite_facing(ninetyDegrees)) then
+      result := true
+   else if tryMove(opposite_facing(facing)) then
+      result := true
+   else result := false;
+end;
+
+function TMapSprite.TryMoveTowardsHero: boolean;
+begin
+   result := TryMovePreferredDirection(towardsHero);
+end;
+
+function TMapSprite.TryMoveAwayFromHero: boolean;
+begin
+   result := TryMovePreferredDirection(opposite_facing(towardsHero));
 end;
 
 function TMapSprite.tryMoveDiagonal(one, two: TFacing): boolean;
@@ -660,8 +691,8 @@ begin
       6: unchanged := not tryMoveDiagonal(facing_down, facing_left);
       7: unchanged := not tryMoveDiagonal(facing_up, facing_left);
       8: unchanged := not tryMove(TFacing(system.random(4)));
-      9: unchanged := not ((self = GSpriteEngine.CurrentParty) or (tryMove(towardsHero)));
-      $A: unchanged := not ((self = GSpriteEngine.CurrentParty) or (tryMove(opposite_facing(towardsHero))));
+      9: unchanged := not ((self = GSpriteEngine.CurrentParty) or (TryMoveTowardsHero));
+      $A: unchanged := not ((self = GSpriteEngine.CurrentParty) or (TryMoveAwayFromHero));
       $B: unchanged := not tryMove(FFacing);
       $C: self.facing := facing_up;
       $D: self.facing := facing_right;
