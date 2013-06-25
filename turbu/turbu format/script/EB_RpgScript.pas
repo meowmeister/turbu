@@ -151,7 +151,6 @@ type
       function StripTrailingSem(const value: string): string;
       function StripTrailingSemCommented(const value: string): string;
    protected
-      procedure Loaded; override;
       procedure NeededVariables(list: TStringList); override;
    public
       constructor Create(parent: TEBObject; left, right: TEBExpression; op: TComparisonOp); reintroduce; overload;
@@ -165,6 +164,7 @@ type
       function GetNodeText: string; override;
       procedure Negate;
       function NeededVariableType: THeaderItems; override;
+      procedure Loaded; override;
 
       property ElseSet: boolean read FElseSet;
    end;
