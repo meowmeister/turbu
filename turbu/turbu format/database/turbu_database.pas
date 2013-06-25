@@ -139,6 +139,7 @@ type
       procedure SaveSounds;
       function GetTileGroup(const key: string): TTileGroup;
     procedure downloadStringList(dataset: TDataset; list: TStringList);
+    function GetVocab(const key: string): string;
    protected
       FGlobalScriptBlock: TEBUnit;
       FSysVocab: TStringList;
@@ -208,6 +209,7 @@ type
       property monsterParties: TMonsterPartyList read FMonsterParties;
       property battleChars: TBattleCharList read FBattleChars;
       property terrains: TTerrainList read FTerrains;
+      property vocab[const key: string]: string read GetVocab;
 
       property projectName: string read getProjectName;
       property uploadedTypes: TRpgDataTypeSet read FUploadedTypes;
@@ -786,6 +788,13 @@ begin
       result.download(FSerializer, dmDatabase.tilegroups);
       FTileGroup.Add(result.filename, result);
    end;
+end;
+
+function TRpgDatabase.GetVocab(const key: string): string;
+begin
+   result := FSysVocab.Values[key];
+   if result = '' then
+      result := FCustomVocab.Values[key];
 end;
 
 function TRpgDatabase.HasTileGroup(const filename: string): boolean;

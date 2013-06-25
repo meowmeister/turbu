@@ -486,8 +486,8 @@ begin
       AddVocab(BASE_VOCAB[vocab], base.vocabulary[vocab]);
    for I := 1 to INN_STYLES do
    begin
-      AddVocab(format(INN_FMT, [i, 'Greet1']),
-               AnsiString(format('%s\i%s %s', [base.innVocab[i, inn_greet1], base.innVocab[i, inn_greet2], base.innVocab[i, inn_greet3]])));
+      AddVocab(format(INN_FMT, [i, 'Greet']),
+               AnsiString(format('%s\i\$%s'#13#10'%s', [base.innVocab[i, inn_greet1], base.innVocab[i, inn_greet2], base.innVocab[i, inn_greet3]])));
       AddVocab(format(INN_FMT, [i, 'Stay']), base.innVocab[i, inn_stay]);
       AddVocab(format(INN_FMT, [i, 'Cancel']), base.innVocab[i, inn_cancel]);
    end;
