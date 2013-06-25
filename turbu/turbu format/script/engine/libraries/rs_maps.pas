@@ -59,7 +59,8 @@ uses
    Windows, SysUtils, types, math, SyncObjs,
    rsExec, rsCompiler,
    commons, turbu_2k_environment, turbu_2k_sprite_engine, turbu_constants,
-   turbu_database, turbu_2k_map_engine, turbu_animations, turbu_2k_animations;
+   turbu_database, turbu_2k_map_engine, turbu_animations, turbu_2k_animations,
+   turbu_pathing, turbu_2k_char_sprites, turbu_map_sprites;
 
 var
    FDefaultTransitions: array[TTransitionTypes] of TTransitions;
@@ -86,8 +87,8 @@ procedure teleportEvent(which: TRpgEvent; x, y: integer);
 var newpoint: TPoint;
 begin
    newpoint := point(x, y);
-{   if GScriptEngine.onMap(newpoint) then
-      which.location := newpoint;}
+   if GSpriteEngine.onMap(newpoint) then
+      which.location := newpoint;
 end;
 
 procedure teleportVehicle(which: TRpgVehicle; map, x, y: integer);
@@ -96,13 +97,13 @@ begin
    if (which.gamesprite = GEnvironment.Party.Sprite) and (map <> GSpriteEngine.mapID) then
       Exit;
 
-{   newpoint := point(x, y);
-   if GScriptEngine.onMap(newpoint, map) then
+   newpoint := point(x, y);
+   if GSpriteEngine.onMap(newpoint) then
    begin
       which.gamesprite.leaveTile;
       which.map := map;
       which.location := newpoint;
-   end; }
+   end;
 end;
 
 procedure memorizeLocation(var map, x, y: integer);
@@ -113,13 +114,11 @@ begin
       x := 0;
       y := 0;
    end
-{
    else begin
       map := GGameEngine.currentMap.mapID;
-      x := GGameEngine.currentParty.location.x;
-      y := GGameEngine.currentParty.location.y;
+      x := GEnvironment.Party.Sprite.location.x;
+      y := GEnvironment.Party.Sprite.location.y;
    end;
-}
 end;
 
 procedure swapEvents(first, second: TRPgEvent);
@@ -134,39 +133,38 @@ end;
 
 procedure rideVehicle;
 begin
-{   if GEnvironment.Party is THeroSprite then
-      (GGEnvironment.Party as THeroSprite).boardVehicle
-   else (GEnvironment.Party as TVehicleSprite).state := vs_landing; }
+   if GEnvironment.Party.Sprite is THeroSprite then
+      (GEnvironment.Party.Sprite as THeroSprite).boardVehicle
+   else (GEnvironment.Party.Sprite as TVehicleSprite).state := vs_landing;
 end;
 
 function getTerrainID(x, y: integer): integer;
 begin
-{   if (x > GGameEngine.width) or (y > GGameEngine.height) then
+   if (x > GGameEngine.CurrentMap.width) or (y > GGameEngine.CurrentMap.height) then
       result := 0
-   else result := GGameEngine[lower, x, y].terrain; }
+   else result := GGameEngine.CurrentMap.GetTile(x, y, 0).terrain;
 end;
 
 function getEventID(x, y: integer): integer;
-{var
-   dummy: TObjectList;
-   i: integer;}
+var
+   events: TArray<TMapSprite>;
+   i: integer;
 begin
-{   result := 0;
-   if (x > GGameEngine.width) or (y > GGameEngine.height) then
+   result := 0;
+   if (x > GGameEngine.CurrentMap.width) or (y > GGameEngine.CurrentMap.height) then
       Exit;
-   dummy := (GGameEngine[lower, x, y] as TLowerTile).event;
-   if dummy.count = 0 then
-      Exit;
+   events := GGameEngine.CurrentMap.GetTile(x, y, 0).event;
 
-   for I := 0 to dummy.Count - 1 do
+   for I := 0 to high(events) do
    begin
-      if (dummy[i] is TEventSprite) or ((dummy[i] is TCharSprite) and not (dummy[i] is TVehicleSprite) and not (dummy[i] is THeroSprite)) then
-         result := (dummy[i] as TAdditionSprite).event.id;
-   end;}
+      if (events[i] is TEventSprite) or ((events[i] is TCharSprite) and not (events[i] is TVehicleSprite) and not (events[i] is THeroSprite)) then
+         result := events[i].event.id;
+   end;
 end;
 
 procedure setTransition(const which: TTransitionTypes; const newTransition: TTransitions);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 {   if newTransition = trnDefault then
       Exit;
 
@@ -175,11 +173,12 @@ end;
 
 function waitForBlank: boolean;
 begin
-//   result := GGameEngine.blank;
+   result := GGameEngine.CurrentMap.blank;
 end;
 
 procedure eraseScreen(whichTransition: TTransitions);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 {   if whichTransition = trnDefault then
       eraseScreen(FDefaultTransitions[trnMapExit])
    else transitions.erase(whichTransition);
@@ -188,11 +187,14 @@ end;
 
 function waitForFadeEnd: boolean;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 //   result := GGameEngine.state <> gs_fading;
+result := true;
 end;
 
 procedure showScreen(whichTransition: TTransitions);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 {   if whichTransition = trnDefault then
       showScreen(FDefaultTransitions[trnMapEnter])
    else transitions.show(whichTransition);
@@ -234,11 +236,13 @@ end;
 
 procedure lockScreen;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 //   GGameEngine.screenLocked := true;
 end;
 
 procedure unlockScreen;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 //   GGameEngine.screenLocked := false;
 end;
 
@@ -286,6 +290,7 @@ end;
 
 procedure setWeather(effect: TWeatherEffects; severity: integer);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 {   with GGameEngine.weatherEngine do
    begin
       weatherType := effect;
@@ -296,11 +301,13 @@ end;
 
 procedure increaseWeather;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 //   setWeather(GGameEngine.weatherEngine.weatherType, GGameEngine.weatherEngine.intensity + 1);
 end;
 
 procedure decreaseWeather;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 //   setWeather(GGameEngine.weatherEngine.weatherType, max(GGameEngine.weatherEngine.intensity - 1, 0));
 end;
 
@@ -324,6 +331,7 @@ end;
 
 procedure setBG(name: string; scrollX, scrollY: integer; autoX, autoY: boolean);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 //   GGameEngine.currentMap.setBG(name, scrollX, scrollY, autoX, autoY);
 end;
 
@@ -349,7 +357,6 @@ end;
 procedure showBattleAnim(which: integer; target: TRpgCharacter; wait, fullscreen: boolean);
 var
    dummy: TAnimTemplate;
-   sprite: TAnimSprite;
 begin
    if target = nil then
       Exit;
@@ -368,7 +375,7 @@ begin
       assert(LSignal = nil);
       LSignal := TSimpleEvent.Create;
    end;
-   sprite := TAnimSprite.Create(GSpriteEngine, dummy, target, fullscreen, LSignal);
+   TAnimSprite.Create(GSpriteEngine, dummy, target, fullscreen, LSignal);
    if wait then
       GScriptEngine.SetWaiting(AnimWait);
 end;
@@ -376,16 +383,21 @@ end;
 function allMoved: boolean;
 var
    I: Integer;
+   obj: TRpgEvent;
+   partyMove: TPath;
 begin
-{   result := true;
+   result := true;
+   partyMove := GEnvironment.Party.Sprite.moveOrder;
+   if assigned(partyMove) and not (partYMove.looped) then
+      result := false;
    i := 0;
-   while result and (I < high(GRpgEvents)) do
+   while result and (I <= GEnvironment.MapObjectCount) do
    begin
       inc(i);
-      with GRpgEvents[i] do
-         if assigned(base.moveOrder) then
-            result := result and (base.moveOrder.looped)
-   end;}
+      obj := GEnvironment.MapObject[i];
+         if assigned(obj) and assigned(obj.base.moveOrder) then
+            result := obj.base.moveOrder.looped
+   end;
 end;
 
 procedure waitUntilMoved;
@@ -397,11 +409,12 @@ procedure stopMoveScripts;
 var
    I: Integer;
 begin
-{   for I := 1 to high(GRpgEvents) do
-      GRpgEvents[i].base.stop;
-   for i := 0 to high(GVehicles) do
-      GVehicles[i].base.stop;
-   GParty.base.stop;}
+   for I := 1 to GEnvironment.MapObjectCount - 1 do
+      GEnvironment.MapObject[i].base.stop;
+{   for i := 0 to high(GVehicles) do
+      GVehicles[i].base.stop;}
+{$MESSAGE WARN 'Commented out code in live unit'}
+   GEnvironment.Party.base.stop;
 end;
 
 procedure RegisterMapsC(input: TrsTypeImporter);
@@ -455,7 +468,7 @@ begin
    RegisterFunction('getTerrainID', nil);
    RegisterFunction('getEventID', nil);
    RegisterFunction('setTransition', nil);
-   RegisterFunction('eraseScreen', nil);
+   RegisterFunction('eraseScreen', @eraseScreen);
    RegisterFunction('showScreen', @showScreen);
    RegisterFunction('tintScreen', @tintScreen);
    RegisterFunction('flashScreen', @flashScreen);
