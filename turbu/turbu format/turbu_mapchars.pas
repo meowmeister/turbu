@@ -61,7 +61,6 @@ type
       [NoImport]
       constructor create(base: TMapSprite);
       destructor Destroy; override;
-//      destructor delete;
       [NoImport]
       procedure update;
       [NoImport]
@@ -79,6 +78,8 @@ type
       property id: integer read FID;
       [NoImport]
       property base: TMapSprite read FBase;
+      [NoImport]
+      property mapObj: TRpgMapObject read FEvent;
       property location : TSgPoint read getLocation write setLocation;
    end;
 
