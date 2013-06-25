@@ -996,7 +996,14 @@ end;
 procedure TTiledAreaSprite.DoDraw;
 var
    drawpoint, endpoint: TSgPoint;
+   alphaSet: boolean;
 begin
+   if self.Alpha <> 0 then
+   begin
+      SDL_SetTextureAlphaMod(self.Image.surface, self.Alpha);
+      alphaSet := true;
+   end
+   else alphaSet := false;
    if (FFillArea.Bottom = 0) or (FFillArea.Right = 0) then
       inherited DoDraw
    else if FStretch then
@@ -1017,6 +1024,8 @@ begin
       self.x := FFillArea.Left;
       self.y := FFillArea.Top;
    end;
+   if alphaSet then
+      SDL_SetTextureAlphaMod(self.Image.surface, 255);
 end;
 
 { TSpriteRenderer }
