@@ -32,6 +32,7 @@ type
 
    TScriptThread = class(TThread)
    private
+      FPages: TStack<TRpgEventPage>;
       FPage: TRpgEventPage;
       FParent: TscriptEngine;
       FOwnedExec: TrsExec;
@@ -39,15 +40,18 @@ type
       FDelay: TRpgTimestamp;
       FWaiting: TThreadWaitEvent;
 
-
       procedure scriptOnLine(Sender: TrsVM);
       procedure InternalThreadSleep();
       procedure threadSleep(Sender: TrsVM);
+
+      procedure PushPage(value: TRpgEventPage);
+      procedure PopPage;
    protected
       procedure Execute; override;
    public
       constructor Create(page: TRpgEventPage; parent: TScriptEngine);
       destructor Destroy; override;
+      function CurrentObject: TRpgMapObject;
    end;
 
    TScriptEngine = class
@@ -74,6 +78,7 @@ type
       procedure RegisterUnit(const name: string; const comp: TrsCompilerRegisterProc; const exec: TrsExecImportProc);
       procedure RunScript(const name: string); overload; inline;
       procedure RunScript(const name: string; const args: TArray<TValue>); overload;
+      procedure RunObjectScript(obj: TRpgMapObject; page: integer); overload;
       procedure KillAll;
       procedure threadSleep(time: integer; block: boolean = false);
       procedure SetWaiting(value: TThreadWaitEvent);
@@ -91,6 +96,7 @@ type
 
       procedure LoadMap(const map: IRpgMap; context: TThread = nil);
       procedure Tick;
+      procedure RunPageScript(page: TRpgEventPage);
 
       property ScriptEngine: TScriptEngine read FScriptEngine;
       property OnUpdate: TProc read FOnUpdate write FOnUpdate;
@@ -303,6 +309,27 @@ begin
    FExec.RunProc(name, []);
 end;
 
+procedure TScriptEngine.RunScript(const name: string; const args: TArray<TValue>);
+begin
+   FExec.RunProc(name, args);
+end;
+
+procedure TScriptEngine.RunObjectScript(obj: TRpgMapObject; page: integer);
+var
+   context: TScriptThread;
+   lPage: TRpgEventPage;
+begin
+   context := TThread.CurrentThread as TScriptThread;
+   lPage := obj.pages[page];
+   assert(assigned(context.FPage));
+   context.PushPage(lPage);
+   try
+      RunScript(lPage.scriptName);
+   finally
+      context.PopPage;
+   end;
+end;
+
 procedure TScriptEngine.RegisterUnit(const name: string;
   const comp: TrsCompilerRegisterProc; const exec: TrsExecImportProc);
 begin
@@ -310,11 +337,6 @@ begin
    FExec.RegisterStandardUnit(name, exec);
    SetLength(FImports, length(FImports) + 1);
    FImports[high(FImports)] := TPair<string, TrsExecImportProc>.Create(name, exec);
-end;
-
-procedure TScriptEngine.RunScript(const name: string; const args: TArray<TValue>);
-begin
-   FExec.RunProc(name, args);
 end;
 
 {$O-}
@@ -376,11 +398,23 @@ begin
    FScriptEngine.LoadScript(map.GetScript, context);
 end;
 
+procedure TMapObjectManager.RunPageScript(page: TRpgEventPage);
+var
+   thread: TScriptThread;
+begin
+   page.parent.playing := true;
+   thread := TScriptThread.Create(page, FScriptEngine);
+   thread.FreeOnTerminate := true;
+   {$IFDEF DEBUG}
+   TThread.NameThreadForDebugging(AnsiString(format('Script thread: %s', [page.ScriptName])), thread.ThreadID);
+   {$ENDIF}
+   thread.Start;
+end;
+
 procedure TMapObjectManager.Tick;
 var
    obj: TRpgMapObject;
    page: TRpgEventPage;
-   thread: TScriptThread;
 begin
    FPlaylist.Clear;
    for obj in FMapObjects do
@@ -393,15 +427,7 @@ begin
    if assigned(FOnUpdate) then
       FOnUpdate;
    for page in FPlaylist do
-   begin
-      page.parent.playing := true;
-      thread := TScriptThread.Create(page, FScriptEngine);
-      thread.FreeOnTerminate := true;
-      {$IFDEF DEBUG}
-      TThread.NameThreadForDebugging(AnsiString(format('Script thread: %s', [page.ScriptName])), thread.ThreadID);
-      {$ENDIF}
-      thread.Start;
-   end;
+      RunPageScript(page);
 end;
 
 { TScriptThread }
@@ -414,19 +440,28 @@ begin
    parent.AddScriptThread(self);
 end;
 
+function TScriptThread.CurrentObject: TRpgMapObject;
+begin
+   result := FPage.parent;
+end;
+
 destructor TScriptThread.Destroy;
 begin
    FOwnedExec.Free;
    FOwnedProgram.Free;
    FParent.ClearScriptThread(self);
+   FPages.Free;
    inherited Destroy;
 end;
 
 procedure TScriptThread.Execute;
 begin
    try
-      NameThreadForDebugging('TURBU Script Thread');
-      FParent.RunScript(FPage.scriptName);
+      if FPage.scriptName <> '' then
+      begin
+         NameThreadForDebugging('TURBU Script Thread');
+         FParent.RunScript(FPage.scriptName);
+      end;
    finally
       FPage.parent.playing := false;
    end;
@@ -443,6 +478,19 @@ begin
       dummy := min(DELAY_SLICE, timeleft);
       SDL_Delay(dummy);
    until (timeleft = dummy) or (self.Terminated);
+end;
+
+procedure TScriptThread.PushPage(value: TRpgEventPage);
+begin
+   if FPages = nil then
+      FPages := TStack<TRpgEventPage>.Create;
+   FPages.Push(FPage);
+   FPage := value;
+end;
+
+procedure TScriptThread.PopPage;
+begin
+   FPage := FPages.Pop;
 end;
 
 procedure TScriptThread.threadSleep(Sender: TrsVM);
