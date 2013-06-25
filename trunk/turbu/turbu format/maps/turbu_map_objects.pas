@@ -165,7 +165,7 @@ type
       function GetTileGroup: integer;
       function GetFilename: string;
       function GetTransparent: boolean;
-    procedure SetName(const Value: string);
+      procedure SetName(const Value: string);
    protected
       [NoUpload]
       FConditions: TRpgEventConditions;

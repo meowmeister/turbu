@@ -57,10 +57,9 @@ type
 
    [UsesUnit('Messages')]
    TEBChoiceMessage = class(TEBCase)
-   protected
-      procedure Loaded; override;
    public
       function GetNodeText: string; override;
+      procedure Loaded; override;
    end;
 
    TEBInputNumber = class(TEBMessageObject)
