@@ -36,6 +36,9 @@ const
    ANIM_RATE: byte = 44;  //for water tiles
    ANIM_RATE2: byte = 12; //for animated tiles
    MAXPARTYSIZE = 4;
+   MAXEXP = 1000000;
+   MAXGOLD = 999999;
+   MAXLEVEL = 50;
 
    //sizes
    PORTRAIT_SIZE: TSgPoint    = (X: 48;  Y: 48);
