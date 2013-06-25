@@ -41,6 +41,8 @@ type
       FEvents: TArray<TRpgEvent>;
       FParty: TRpgParty;
       FMenuEnabled: boolean;
+      FEventMap: TDictionary<TRpgMapObject, TRpgCharacter>;
+
       function GetSwitch(const i: integer): boolean;
       procedure SetSwitch(const i: integer; const Value: boolean);
       function GetHero(const i: integer): TRpgHero;
@@ -68,6 +70,7 @@ type
       function EvalVar(index, value: integer; op: TComparisonOp): boolean;
       function GetInt(const i: integer): integer;
       procedure SetInt(const i, Value: integer);
+      function GetMapObjectCount: integer;
    public
       [NoImport]
       constructor Create(database: TRpgDatabase);
@@ -83,6 +86,7 @@ type
       procedure TitleScreen;
       procedure DeleteObject(permanant: boolean);
       function HeroPresent(id: integer): boolean;
+      procedure CallScript(objectID, pageID: integer);
 
       [NoImport]
       procedure RemoveImage(image: TRpgImage);
@@ -100,6 +104,7 @@ type
       property Vehicle[i: integer]: TRpgVehicle read GetVehicle;
       property Image[i: integer]: TRpgImage read GetImage write SetImage;
       property MapObject[i: integer]: TRpgEvent read GetMapObject;
+      property MapObjectCount: integer read GetMapObjectCount;
       property Party: TRpgParty read FParty;
 
       property money: integer read getCash write setCash;
@@ -124,7 +129,7 @@ var
 
 implementation
 uses
-   Windows, SysUtils, Math, RTTI,
+   Windows, SysUtils, Math, RTTI, Classes,
    Commons,
    turbu_characters, turbu_script_engine, turbu_2k_sprite_engine, turbu_constants,
    turbu_2k_map_engine,
@@ -153,6 +158,7 @@ begin
       FVehicles.Add(TRpgVehicle.Create(database.mapTree, vehicle.id));}
    FMenuEnabled := true;
    TRpgEventConditions.OnEval := Self.EvalConditions;
+   FEventMap := TDictionary<TRpgMapObject, TRpgCharacter>.Create;
 end;
 
 procedure T2kEnvironment.DeleteObject(permanant: boolean);
@@ -171,6 +177,7 @@ begin
       FHeroes[i].free;
    for i := 0 to High(FImages) do
       FImages[i].free;
+   FEventMap.Free;
    GEnvironment := nil;
    inherited Destroy;
 end;
@@ -187,6 +194,7 @@ begin
    for i := 1 to High(FEvents) do
       FreeAndNil(FEvents[i]);
    SetLength(FEvents, 1);
+   FEventMap.Clear;
 end;
 
 procedure T2kEnvironment.AddEvent(base: TMapSprite);
@@ -197,6 +205,7 @@ begin
    if newItem.id > high(FEvents) then
       SetLength(FEvents, newItem.id + 1);
    FEvents[newItem.id] := newitem;
+   FEventMap.Add(base.event, newItem);
 end;
 
 function T2kEnvironment.battleFlees: integer;
@@ -212,6 +221,11 @@ end;
 function T2kEnvironment.battleVictories: integer;
 begin
    result := 0;
+end;
+
+procedure T2kEnvironment.CallScript(objectID, pageID: integer);
+begin
+   GScriptEngine.RunObjectScript(self.MapObject[objectID].mapObj, pageID);
 end;
 
 procedure T2kEnvironment.canDieOnHpChange(const Value: boolean);
@@ -353,7 +367,10 @@ procedure T2kEnvironment.SetImage(i: integer; const Value: TRpgImage);
 begin
    i := clamp(i, 0, 250);
    if i >= length(FImages) then
-      SetLength(FImages, i + 1);
+      SetLength(FImages, i + 1)
+   else if assigned(FImages[i]) then
+      commons.runThreadsafe(procedure begin FImages[i].Destroy; end, true);
+
    FImages[i] := value;
 end;
 
@@ -362,6 +379,11 @@ begin
    if (clamp(i, 0, high(FEvents)) = i) and (assigned(FEvents[i])) then
       result := FEvents[i]
     else result := FEvents[0];
+end;
+
+function T2kEnvironment.GetMapObjectCount: integer;
+begin
+   result := high(FEvents);
 end;
 
 function T2kEnvironment.GetSwitch(const i: integer): boolean;
@@ -391,8 +413,11 @@ begin
 end;
 
 function T2kEnvironment.GetThisObject: TRpgCharacter;
+var
+   obj: TRpgMapObject;
 begin
-   result := nil; //TODO: implement this
+   obj := (tthread.CurrentThread as TScriptThread).CurrentObject;
+   result := FEventMap[obj];
 end;
 
 function T2kEnvironment.getTimer: TRpgTimer;
