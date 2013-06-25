@@ -442,7 +442,8 @@ begin
    end
    else result.tile := value.baseTile;
    case result.group of
-      0..3: ;
+      0..1: result.group := result.group xor 1; //swap 1 and 0
+      2..3: ;
       4..6:
       begin
          //swap #1 and #2 to get them to convert right
