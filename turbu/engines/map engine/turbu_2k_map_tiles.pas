@@ -96,7 +96,7 @@ type
 implementation
 uses
    turbu_constants, turbu_maps, turbu_map_objects, turbu_defs,
-   turbu_2k_sprite_engine;
+   turbu_2k_sprite_engine, turbu_script_engine, turbu_2k_environment;
 
 { TMapTile }
 
@@ -106,19 +106,18 @@ var
    I: Integer;
    lEvent: TArray<TMapSprite>;
 begin
-{$MESSAGE WARN 'Commented-out code in live unit'}
    bumper := character as TMapSprite;
    lEvent := self.event;
-   if bumper is TCharSprite then
+   if bumper = GEnvironment.Party.Sprite then
       for dummy in lEvent do
       begin
          if dummy.hasPage and (dummy.event.currentPage.startCondition in [by_touch, by_collision]) then
-{            GScriptEngine.executeEvent(dummy.lEvent, dummy); };
+            GMapObjectManager.RunPageScript(dummy.event.currentPage);
       end
    else if bumper.hasPage and (bumper.event.currentPage.startCondition = by_collision) then
       for I := 0 to high(lEvent) do
-{         if FOccupied[i] = GGameEngine.currentParty then
-            GScriptEngine.executeEvent(bumper.event, bumper); };
+         if lEvent[i] = GEnvironment.Party.Sprite then
+            GMapObjectManager.RunPageScript(bumper.event.currentPage);
 end;
 
 function TMapTile.GetEvent: TArray<TMapSprite>;
