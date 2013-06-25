@@ -54,8 +54,9 @@ const
 procedure prepareMbox(out oldValue: TMboxLocation);
 var newValue: TMboxLocation;
 begin
-   oldValue := GMenuEngine.MessageBox.position;
+   oldValue := GMenuEngine.position;
    newValue := oldValue;
+{$MESSAGE WARN 'Commented out code in live unit'}
    if FMboxCautious and {GSpriteEngine.heroIn(oldValue)} false then //TODO: fix this
    begin
       case oldValue of
@@ -91,7 +92,7 @@ end;
 
 procedure setMessageBoxPosition(const position: TMboxLocation);
 begin
-   GMenuEngine.MessageBox.position := position;
+   GMenuEngine.position := position;
 end;
 
 procedure setMessageModal(const value: boolean);
@@ -101,7 +102,7 @@ end;
 
 procedure setMessageBoxVisible(const value: boolean);
 begin
-   GMenuEngine.MessageBox.boxVisible := value;
+   GMenuEngine.boxVisible := value;
 end;
 
 procedure messageOptions(const transparent: boolean; const position: TMboxLocation; const dontHideHero, modal: boolean);
@@ -114,17 +115,20 @@ end;
 
 procedure setFlipped(const value: boolean);
 begin
-   GMenuEngine.MessageBox.portrait.MirrorX := value;
+{$MESSAGE WARN 'Commented out code in live unit'}
+//   GMenuEngine.MessageBox.portrait.MirrorX := value;
 end;
 
 procedure clearPortrait;
 begin
-   GMenuEngine.MessageBox.portrait.Visible := false;
+{$MESSAGE WARN 'Commented out code in live unit'}
+//   GMenuEngine.MessageBox.portrait.Visible := false;
 end;
 
 procedure setRightside(const value: boolean);
 begin
-   GMenuEngine.MessageBox.rightside := value;
+{$MESSAGE WARN 'Commented out code in live unit'}
+//   GMenuEngine.MessageBox.rightside := value;
 end;
 
 procedure setPortrait(filename: string; const index: integer; const rightside, flipped: boolean);
@@ -148,7 +152,8 @@ begin
       Exit;
 
    setRightside(rightside);
-   GMenuEngine.MessageBox.setPortrait(filename, index);
+{$MESSAGE WARN 'Commented out code in live unit'}
+//   GMenuEngine.MessageBox.setPortrait(filename, index);
    setFlipped(flipped);
 end;
 
@@ -158,6 +163,7 @@ var
 begin
    prepareMbox(oldValue);
    asm int 3 end;
+{$MESSAGE WARN 'Commented out code in live unit'}
 //   GMenuEngine.choiceBox(msg, acceptCancel);
    setMessageBoxPosition(oldValue);
    result := GMenuEngine.menuInt;
@@ -169,6 +175,7 @@ var
 begin
    prepareMbox(oldValue);
    asm int 3 end;
+{$MESSAGE WARN 'Commented out code in live unit'}
 //   GMenuEngine.inputNumber(digits);
    setMessageBoxPosition(oldValue);
    result := GMenuEngine.menuInt;
@@ -177,16 +184,16 @@ end;
 function inn(messageStyle, cost: integer): boolean;
 var
    oldValue: TMboxLocation;
-   I: Integer;
+//   I: Integer;
 begin
    prepareMbox(oldValue);
-   asm int 3 end;
-//   GMenuEngine.inn(messageStyle, cost);}
+   GMenuEngine.inn(messageStyle, cost);
    setMessageBoxPosition(oldValue);
-   if GMenuEngine.menuInt = 2 then
+   if GMenuEngine.menuInt = 1 then
    begin
-{      GMenuEngine.cutscene := GMenuEngine.cutscene + 1;
       result := true;
+{$MESSAGE WARN 'Commented out code in live unit'}
+{      GMenuEngine.cutscene := GMenuEngine.cutscene + 1;
       for I := 1 to high(GScriptEngine.heroes) do
          GScriptEngine.Hero[i].fullheal;
       assert(GParty.money >= cost);
