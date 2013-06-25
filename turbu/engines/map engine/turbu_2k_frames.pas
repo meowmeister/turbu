@@ -43,11 +43,12 @@ type
 
    TMenuSpriteEngine = class;
    TSysFrame = class;
-   TMessageBox = class;
+   TCustomMessageBox = class;
 
    TSystemImages = class(TObject)
+   private type TSystemRectArray = array[TSystemRects] of TRect;
    private
-      FRects: array[TSystemRects] of TRect;
+      FRects: TSystemRectArray;
       FFilename: string;
       FBetterArrow: TSystemTile;
       FDotArrow: TSystemTile;
@@ -64,28 +65,43 @@ type
       destructor Destroy; override;
 
       property filename: string read FFilename;
+      property rects: TSystemRectArray read FRects;
+      property translucent: boolean read FTranslucent;
    end;
+
+   TMessageBoxTypes = (mbtMessage, mbtChoice, mbtPrompt, mbtInput);
 
    TMenuSpriteEngine = class(TSpriteEngine)
    private
       FSystemGraphic: TSystemImages;
       FMenuInt: integer;
       FCursor: TSysFrame;
-      FMessageBox: TMessageBox;
       FMenuState: TMenuState;
       FTerminated: boolean;
-
+      FBoxes: array[TMessageBoxTypes] of TCustomMessageBox;
+      FCurrentBox: TCustomMessageBox;
+      FPosition: TMboxLocation;
+      FBoxVisible: boolean;
+      procedure SetPosition(const Value: TMboxLocation);
+      procedure SetBoxVisible(const Value: boolean);
+   protected
       procedure EndMessage;
+      function InnVocab(style: integer; const name: string; value: integer = 0): string;
    public
       constructor Create(graphic: TSystemImages; canvas: TSdlCanvas; images: TSdlImages);
       destructor Destroy; override;
       procedure ShowMessage(const msg: string; modal: boolean);
+      procedure inn(style, cost: integer);
+      procedure ChoiceBox(const msg: string; responses: TArray<string>; allowCancel: boolean);
       procedure Terminate;
+      procedure button(const input: TButtonCode);
 
-      property MenuInt: integer read FMenuInt;
+      property MenuInt: integer read FMenuInt write FMenuInt;
       property Cursor: TSysFrame read FCursor;
-      property MessageBox: TMessageBox read FMessageBox;
       property State: TMenuState read FMenuState;
+      property SystemGraphic: TSystemImages read FSystemGraphic;
+      property position: TMboxLocation read FPosition write SetPosition;
+      property boxVisible: boolean read FBoxVisible write SetBoxVisible;
    end;
 
    TCorners = (topLeft, topRight, bottomLeft, bottomRight);
@@ -112,16 +128,16 @@ type
 
    TCustomMessageBox = class abstract(TSysFrame)
    private
-      FInputResult: array of byte;
       FMessageText: string;
       FBoxVisible: boolean;
       FPlaySound: TPlaySoundEvent;
-      FSignal: TSimpleEvent;
+      FFrameTarget: TSdlRenderTarget;
+      FFrameDrawn: boolean;
+      FCoords: TRect;
 
-      procedure PlaySound(which: TSfxTypes);
-      procedure parseText(const input: string); virtual;
+      procedure DrawFrame;
    protected
-      FCursorPosition: smallint;
+      FSignal: TSimpleEvent;
       FParsedText: TStringList;
       FOptionEnabled: array of boolean;
       FColumns: byte;
@@ -129,102 +145,46 @@ type
       FDontChangeCursor: boolean;
       FButtonLock: TRpgTimestamp;
       FLastLineColumns: byte;
+      FPosition: TMboxLocation;
 
       function columnWidth: word;
       function lastColumnWidth: word;
+      procedure PlaySound(which: TSfxTypes);
+      procedure parseText(const input: string); virtual;
+      procedure ClearTarget(target: TSdlRenderTarget);
+      procedure SetPosition(const Value: TMboxLocation);
+      procedure EndMessage;
    public
       constructor Create(parent: TMenuSpriteEngine; const coords: TRect); virtual;
       destructor Destroy; override;
-      procedure button(const input: TButtonCode); virtual;
-      procedure placeCursor(position: smallint); virtual;
+      procedure button(const input: TButtonCode); virtual; abstract;
+      procedure Draw; override;
+      procedure moveTo(coords: TRect); override;
 
       property text: string read FMessageText write parseText;
       property boxVisible: boolean read FBoxVisible write FBoxVisible;
+      property position: TMboxLocation read FPosition write SetPosition;
       property OnPlaySound: TPlaySoundEvent read FPlaySound write FPlaySound;
       property Signal: TSimpleEvent read FSignal;
    end;
 
-   TMessageBox = class(TCustomMessageBox)
-   private
-      FPortrait: TSprite;
-      FNextArrow: TTiledAreaSprite;
-      FPosition: TMboxLocation;
-      FRightPortrait: boolean;
-      FState: TMessageState;
-      FAcceptCancel: boolean;
-      FOnValidate: TValidateEvent;
-      
-      procedure setRightside(const value: boolean);
-      procedure changeInputResult(digit, value: byte);
-      function getInputResult(digit: byte): byte;
-      function computeInputResult: integer;
-      procedure parseText(const input: string); override;
-      function Validate(const text: string): boolean;
-   private //drawing section
-      FFrameTarget: TSdlRenderTarget;
-      FTextTarget: TsdlRenderTarget;
-      FFrameDrawn: boolean;
-      FTextRate: single;
-      FRemainder: single;
-      FTextCounter: integer;
-      FTextPosX: single;
-      FTextPosY: single;
-      FTextColor: integer;
-      FTextLine: integer;
-      FSpecialText: string;
-      FSpecialIndex: integer;
-      FImmediate: boolean;
-
-      procedure DrawChar(value: char); overload;
-      procedure DrawChar(index: integer); overload;
-      procedure DrawNextChar;
-      procedure DrawFrame;
-      procedure ParseToken(const input: string; var counter: integer);
-      procedure ParseParamToken(const input: string; var counter: integer);
-      procedure ParseInt(const input: string; var counter: integer);
-      procedure NewLine;
-      procedure DrawSpecialChar(const line: string);
-      procedure SetTextRate(value: integer);
-      function GetHeroName(value: integer): string;
-      function GetIntegerValue: integer;
-      procedure ClearTarget(target: TSdlRenderTarget);
-      procedure PromptButton(const input: TButtonCode);
-      procedure InputButton(const input: TButtonCode);
-      function GetDrawCoords: TRect;
-      procedure ResetText;
-   public
-      constructor Create(parent: TMenuSpriteEngine; const coords: TRect); override;
-      destructor Destroy; override;
-      procedure Draw; override;
-      procedure button(const input: TButtonCode); override;
-      procedure moveTo(coords: TRect); override;
-{      procedure realign; inline;
-      procedure placeCursor(position: smallint); override;
-      procedure tick;}
-      procedure setPortrait(const filename: string; const index: byte);
-//      procedure setupInput(const digits: byte);
-
-      property position: TMboxLocation read FPosition write FPosition;
-      property portrait: TSprite read FPortrait;
-      property rightside: boolean write setRightside;
-      property state: TMessageState read FState write FState;
-{      property canCancel: boolean  read FAcceptCancel write FAcceptCancel;}
-      property inputResult[x: byte]: byte read getInputResult write changeInputResult;
-      property OnValidate: TValidateEvent read FOnValidate write FOnValidate;
-   end;
+procedure SetX(sprite: TTiledAreaSprite; x: integer);
+procedure SetY(sprite: TTiledAreaSprite; y: integer);
 
 var
    GMenuEngine: TMenuSpriteEngine;
+const
+   SEPARATOR = 8;
 
 implementation
 uses
-   SysUtils, Math, Character, OpenGL,
-   commons, turbu_text_utils, turbu_2k_environment, turbu_OpenGL,
+   SysUtils, Math, OpenGL,
+   commons, turbu_text_utils, turbu_2k_environment, turbu_OpenGL, turbu_database,
+   turbu_2k_message_boxes,
    sdl_13;
 
 const
    ARROW_DISPLACEMENT: TSgPoint = (x: 8; y: 0);
-   SEPARATOR = 8;
    FRAME_DISPLACEMENT: TSgPoint = (x: 32; y: 0);
 
 { TSystemTile }
@@ -257,7 +217,6 @@ begin
    FBackground.Z := 1;
    FBackground.name := 'background';
    FBackground.stretch := graphic.FStretch;
-//   FBackground.Visible := false;
    FBorders[facing_up] := TTiledAreaSprite.Create(self, graphic.FRects[srFrameT], displacement, length);
    FBorders[facing_down] := TTiledAreaSprite.Create(self, graphic.FRects[srFrameB], displacement, length);
    FBorders[facing_left] := TTiledAreaSprite.Create(self, graphic.FRects[srFrameL], displacement, length);
@@ -269,13 +228,11 @@ begin
    for I := 0 to ord(high(TFacing)) do
    begin
       FBorders[TFacing(i)].Z := 2;
-//      FBorders[TFacing(i)].visible := false;
    end;
    for I := 0 to ord(high(TCorners)) do
    begin
       FCorners[TCorners(i)].Z := 3;
       FCorners[TCorners(i)].FillArea := NULLRECT;
-//      FCorners[TCorners(i)].visible := false;
    end;
    for i := 0 to FList.count - 1 do
    begin
@@ -376,6 +333,8 @@ end;
 { TMenuSpriteEngine }
 
 constructor TMenuSpriteEngine.Create(graphic: TSystemImages; canvas: TSdlCanvas; images: TSdlImages);
+var
+   size: TRect;
 begin
    assert(GMenuEngine = nil);
    GMenuEngine := self;
@@ -384,7 +343,11 @@ begin
    FSystemGraphic := graphic;
    graphic.Setup(self);
    FCursor := TSysFrame.Create(self, FRAME_DISPLACEMENT, 2, NULLRECT);
-   FMessageBox := TMessageBox.Create(self, rect(0, 0, 320, 80));
+   size := rect(0, 0, 320, 80);
+   FBoxes[mbtMessage] := TMessageBox.Create(self, size);
+   FBoxes[mbtChoice] := TChoiceBox.Create(self, size);
+   FBoxes[mbtPrompt] := TPromptBox.Create(self, size);
+   FBoxes[mbtInput] := TInputBox.Create(self, size);
 end;
 
 destructor TMenuSpriteEngine.Destroy;
@@ -399,25 +362,89 @@ end;
 
 procedure TMenuSpriteEngine.EndMessage;
 begin
-//   FEnterLock := true;
    FMenuState := msNone;
-   FMessageBox.visible := false;
-   FMessageBox.FSignal.SetEvent;
+end;
+
+function TMenuSpriteEngine.InnVocab(style: integer; const name: string; value: integer = 0): string;
+var
+   key: string;
+begin
+   key := format('Inn%d-%s', [style, name]);
+   result := GDatabase.vocab[key];
+   if result = '' then
+   begin
+      key := format('Inn%d-%s', [1, name]);
+      result := GDatabase.vocab[key];
+   end;
+   if pos('\i', result) > 0 then
+      result := StringReplace(result, '\i', IntToStr(value), [rfReplaceAll]);
+   if pos('\$', result) > 0 then
+      result := StringReplace(result, '\$', IntToStr(value), [rfReplaceAll]);
+end;
+
+procedure TMenuSpriteEngine.inn(style, cost: integer);
+var
+   greet1: string;
+   choices: TArray<string>;
+begin
+   greet1 := innVocab(style, 'Greet', cost);
+   choices := TArray<string>.Create(innVocab(style, 'Stay'), innVocab(style, 'Cancel'));
+   choiceBox(greet1, choices, true);
+end;
+
+procedure TMenuSpriteEngine.button(const input: TButtonCode);
+begin
+   assert(assigned(FCurrentBox));
+   FCurrentBox.button(input);
+end;
+
+procedure TMenuSpriteEngine.ChoiceBox(const msg: string; responses: TArray<string>;
+  allowCancel: boolean);
+begin
+   FBoxes[mbtChoice].text := msg;
+  {$MESSAGE WARN 'Commented out code in live unit'}
+  asm int 3 end;
+end;
+
+procedure TMenuSpriteEngine.SetBoxVisible(const Value: boolean);
+var
+   box: TCustomMessageBox;
+begin
+   FBoxVisible := Value;
+   for box in FBoxes do
+      box.boxVisible := value;
+end;
+
+procedure TMenuSpriteEngine.SetPosition(const Value: TMboxLocation);
+var
+   box: TCustomMessageBox;
+begin
+   FPosition := Value;
+   for box in FBoxes do
+      box.position := value;
 end;
 
 procedure TMenuSpriteEngine.ShowMessage(const msg: string; modal: boolean);
+var
+   box: TCustomMessageBox;
 begin
    if FTerminated then
       Exit;
+{$MESSAGE WARN 'Commented out code in live unit'}
 {   while FState = gs_fading do
       windows.sleep(GFrameLength);}
-   FMessageBox.text := msg;
-   FMessageBox.Visible := true;
-   if modal then
-      FMenuState := msExclusiveShared
-   else FMenuState := msShared;
-   FMessageBox.state := mb_display;
-   FMessageBox.FSignal.WaitFor;
+   box := FBoxes[mbtMessage];
+   box.text := msg;
+   box.Visible := true;
+   FCurrentBox := box;
+   try
+      if modal then
+         FMenuState := msExclusiveShared
+      else FMenuState := msShared;
+      box.FSignal.WaitFor;
+   finally
+      FCurrentBox := nil;
+   end;
 end;
 
 procedure TMenuSpriteEngine.Terminate;
@@ -534,6 +561,8 @@ begin
    FParsedText.Duplicates := dupAccept;
    FSignal := TSimpleEvent.Create;
    FBoxVisible := true;
+   FFrameTarget := TSdlRenderTarget.Create(sgPoint(self.Width, self.Height));
+   ClearTarget(FFrameTarget);
 end;
 
 destructor TCustomMessageBox.Destroy;
@@ -541,248 +570,11 @@ begin
    FButtonLock.Free;
    FSignal.Free;
    FParsedText.free;
+   FFrameTarget.Free;
    inherited;
 end;
 
-function TCustomMessageBox.columnWidth: word;
-begin
-   result := ((self.FBounds.Right - 8) div FColumns) - SEPARATOR;
-end;
-
-function TCustomMessageBox.lastColumnWidth: word;
-begin
-   result := ((self.FBounds.Right - 8) div FLastLineColumns) - SEPARATOR;
-end;
-
-procedure TCustomMessageBox.parseText(const input: string);
-begin
-   FSignal.ResetEvent;
-   FParsedText.Text := input;
-   FMessageText := input;
-end;
-
-procedure TCustomMessageBox.placeCursor(position: smallint);
-var
-   coords: TRect;
-   column, columns: byte;
-   width: word;
-   max: smallint;
-begin
-   if self.FDontChangeCursor then
-      position := (self.FCursorPosition);
-   FCursorPosition := position;
-   max := (FParsedText.Count - 1) - (FPromptLines + FLastLineColumns);
-   if (position > max) and (FLastLineColumns > 0) then
-   begin
-      columns := FLastLineColumns;
-      width := lastColumnWidth;
-   end else
-   begin
-      columns := FColumns;
-      width := columnWidth;
-   end;
-   if FParsedText.Count = 0 then
-      position := 0
-   else if position >= FParsedText.Count then
-      position := FParsedText.Count - 1;
-   if position > max then
-      dec(position, max + 1);
-   column := position mod columns;
-   inc(position, FPromptLines * columns);
-   coords := rect(8 + (column * (width + SEPARATOR)),
-                  (position div columns) * 15 + origin.y + 8,
-                  width, 18);
-   if FCursorPosition > max then
-      inc(coords.top, (FCursorPosition div FColumns) * 15);
-
-   with TMenuSpriteEngine(FEngine).cursor do
-   begin
-      Visible := true;
-      layout(coords);
-   end;
-   FDontChangeCursor := false;
-end;
-
-procedure TCustomMessageBox.PlaySound(which: TSfxTypes);
-begin
-   if assigned(FPlaySound) then
-      FPlaySound(which);
-end;
-
-procedure TCustomMessageBox.button(const input: TButtonCode);
-var
-   max, absMax, lPosition: smallint;
-   ratio: byte;
-begin
-   if (FCursorPosition = -1) and (input in [btn_up, btn_down, btn_left, btn_right]) then
-      Exit;
-   if FParsedText.Count = 0 then
-      Exit;
-   if assigned(FButtonLock) then
-   begin
-      if FButtonLock.timeRemaining = 0 then
-         freeAndNil(FButtonLock);
-      Exit;
-   end;
-
-   lPosition := FCursorPosition; //to suppress a compiler warning
-   max := (FParsedText.Count - 1) - (FPromptLines + FLastLineColumns);
-   absMax := max + FLastLineColumns;
-   case input of
-      btn_enter:
-      begin
-         if FOptionEnabled[FCursorPosition] then
-         begin
-            TMenuSpriteEngine(FEngine).FMenuInt := FCursorPosition;
-            PlaySound(sfxAccept);
-         end
-         else PlaySound(sfxBuzzer);
-      end;
-      btn_down:
-      begin
-         if FCursorPosition <= max - FColumns then
-            lPosition := FCursorPosition + FColumns
-         else if FColumns = 1 then
-            lPosition := 0
-         else if (FLastLineColumns > 0) and (FCursorPosition <= max) then
-         begin
-            lPosition := FCursorPosition mod FColumns;
-            ratio := FColumns div FLastLineColumns;
-            lPosition := (lPosition div ratio) + max + 1;
-         end;
-      end;
-      btn_up:
-      begin
-         if FCursorPosition > max then
-         begin
-            ratio := FColumns div FLastLineColumns;
-            lPosition := FCursorPosition - (max + 1);
-            lPosition := (max + 1 - FColumns) + (lPosition * ratio) + (ratio div 2);
-         end else if FCursorPosition >= FColumns then
-            lPosition := FCursorPosition - FColumns
-         else if FColumns = 1 then
-            lPosition := FParsedText.Count - 1;
-      end;
-      btn_right:
-      begin
-         if (FColumns > 1) and (FCursorPosition < absMax) then
-            lPosition := FCursorPosition + 1;
-      end;
-      btn_left:
-      begin
-         if (FColumns > 1) and (FCursorPosition > 0) then
-            lPosition := FCursorPosition - 1;
-      end;
-      else ;
-   end;
-   if (input in [btn_up, btn_down, btn_left, btn_right]) and (lPosition <> FCursorPosition) then
-   begin
-      FButtonLock := TRpgTimestamp.Create(180);
-      placeCursor(lPosition);
-      PlaySound(sfxCursor);
-   end;
-end;
-
-{ TMessageBox }
-
-constructor TMessageBox.Create(parent: TMenuSpriteEngine; const coords: TRect);
-const BORDER_THICKNESS = 16;
-begin
-   //these three lines go before the inherited constructor because they're
-   //needed (the first, at least) by the virtual MoveTo function that gets
-   //called from the inherited constructor
-   FNextArrow := TSystemTile.Create(parent, parent.FSystemGraphic.FRects[srArrowD], ORIGIN, 1);
-   FNextArrow.ImageName := parent.FSystemGraphic.FFilename;
-   FPortrait := TSprite.Create(parent);
-   FPortrait.SetSpecialRender;
-   FPortrait.Visible := false;
-   inherited Create(parent, coords);
-   if parent.FSystemGraphic.FTranslucent then
-   begin
-      SDL_SetTextureBlendMode(FBackground.Image.surface, [sdlbBlend]);
-      FBackground.Alpha := 200;
-   end;
-
-   FTextColor := 1;
-   SetTextRate(1);
-
-   FFrameTarget := TSdlRenderTarget.Create(sgPoint(self.Width, self.Height));
-   FTextTarget := TSdlRenderTarget.Create(sgPoint(self.Width - BORDER_THICKNESS, self.Height - BORDER_THICKNESS));
-   ClearTarget(FFrameTarget);
-   ClearTarget(FTextTarget);
-end;
-
-destructor TMessageBox.Destroy;
-begin
-   FFrameTarget.Free;
-   FTextTarget.Free;
-   inherited Destroy;
-end;
-
-procedure TMessageBox.ClearTarget(target: TSdlRenderTarget);
-var
-   r, g, b, a: byte;
-begin
-   target.parent.pushRenderTarget;
-   SDL_GetRenderDrawColor(FTextTarget.parent.Renderer, r, g, b, a);
-   SDL_SetRenderDrawColor(FTextTarget.parent.Renderer, 0, 0, 0, 0);
-   target.SetRenderer;
-   glDisable(GL_BLEND);
-   target.Clear;
-   glEnable(GL_BLEND);
-   SDL_SetRenderDrawColor(FTextTarget.parent.Renderer, r, g, b, a);
-   target.parent.popRenderTarget;
-end;
-
-function TMessageBox.GetDrawCoords: TRect;
-begin
-   result.Left := 0;
-   result.Right := FFrameTarget.parent.Width;
-   result.Bottom := FFrameTarget.parent.Height div 3;
-   result.Top := result.Bottom * ord(FPosition);
-end;
-
-procedure TMessageBox.Draw;
-const
-   TEXTV = 0.1;
-   TEXTH = 0.025;
-var
-   xVal, yVal: single;
-   dest: TRect;
-begin
-   if boxVisible then
-      DrawFrame;
-
-   if FState = mb_display then
-   begin
-      FTextTarget.parent.pushRenderTarget;
-      FTextTarget.SetRenderer;
-      try
-         FPortrait.Draw;
-         DrawNextChar;
-      finally
-         FTextTarget.parent.popRenderTarget;
-      end;
-      dest := GetDrawCoords;
-      setX(FNextArrow, dest.Right div 2);
-      xVal := dest.right * TEXTH;
-      yVal := dest.Bottom * TEXTV;
-      inc(dest.Left, round(xVal));
-      dec(dest.right, round(xVal * 2));
-      inc(dest.Top, round(yVal));
-      dec(dest.Bottom, round(yVal * 2));
-      SDL_RenderCopy(FTextTarget.parent.Renderer, FTextTarget.handle, nil, @dest);
-      setY(FNextArrow, dest.Bottom + dest.top);
-      if FTextCounter >= FParsedText.Count then
-         FNextArrow.Draw;
-   end
-   else TMenuSpriteEngine(Engine).cursor.Draw;
-end;
-
-procedure TMessageBox.DrawFrame;
-var
-   coords: TRect;
-   bm: TSdlBlendModes;
+procedure TCustomMessageBox.DrawFrame;
 begin
    if not FFrameDrawn then
    begin
@@ -796,419 +588,75 @@ begin
       FFrameDrawn := true;
       SDL_SetTextureBlendMode(FFrameTarget.handle, [sdlbBlend]);
    end;
-   coords.Left := 0;
-   coords.Right := FFrameTarget.parent.Width;
-   coords.Bottom := FFrameTarget.parent.Height div 3;
-   coords.Top := coords.Bottom * ord(FPosition);
-//   FFrameTarget.DrawFull(coords.TopLeft);
-   SDL_RenderCopy(FFrameTarget.parent.Renderer, FFrameTarget.handle, nil, @coords);
+//   FFrameTarget.DrawFull(FCoords.TopLeft);
+   SDL_RenderCopy(FFrameTarget.parent.Renderer, FFrameTarget.handle, nil, @FCoords);
 end;
 
-procedure TMessageBox.DrawChar(value: char);
+procedure TCustomMessageBox.EndMessage;
+begin
+   TMenuSpriteEngine(Engine).endMessage;
+   visible := false;
+   FSignal.SetEvent;
+end;
+
+procedure TCustomMessageBox.Draw;
+begin
+   if boxVisible then
+      DrawFrame;
+end;
+
+procedure TCustomMessageBox.ClearTarget(target: TSdlRenderTarget);
 var
-   newPos: TSgFloatPoint;
+   r, g, b, a: byte;
 begin
-   newPos := GFontEngine.drawChar(value, FTextPosX, FTextPosY, FTextColor);
-   FTextPosX := newPos.x;
-   FTextPosY := newPos.y;
+   target.parent.pushRenderTarget;
+   SDL_GetRenderDrawColor(target.parent.Renderer, r, g, b, a);
+   SDL_SetRenderDrawColor(target.parent.Renderer, 0, 0, 0, 0);
+   target.SetRenderer;
+   glDisable(GL_BLEND);
+   target.Clear;
+   glEnable(GL_BLEND);
+   SDL_SetRenderDrawColor(target.parent.Renderer, r, g, b, a);
+   target.parent.popRenderTarget;
 end;
 
-procedure TMessageBox.NewLine;
-const 
-   TOP_MARGIN = 3;
-   LINE_HEIGHT = 16;
+function TCustomMessageBox.columnWidth: word;
 begin
-   if FPortrait.Visible and not FRightPortrait then
-      FTextPosX := 65
-   else FTextPosX := 3;
-   inc(FTextLine);
-   FTextPosY := (LINE_HEIGHT * FTextLine) + TOP_MARGIN;   
+   result := ((self.FBounds.Right - 8) div FColumns) - SEPARATOR;
 end;
 
-function TMessageBox.GetIntegerValue: integer;
+function TCustomMessageBox.lastColumnWidth: word;
 begin
-   inc(FTextCounter);
-   if FParsedText[FTextCounter] = '\V' then
-      result := GEnvironment.Ints[GetIntegerValue]
-   else if not TryStrToInt(FParsedText[FTextCounter], result) then
-      Abort;
+   result := ((self.FBounds.Right - 8) div FLastLineColumns) - SEPARATOR;
 end;
 
-procedure TMessageBox.moveTo(coords: TRect);
+procedure TCustomMessageBox.moveTo(coords: TRect);
 begin
    inherited moveTo(coords);
    self.Width := coords.Right;
    self.Height := coords.Bottom;
-
-   SetX(FNextArrow, 152 + trunc(FCorners[topLeft].X));
-   SetY(FNextArrow, trunc(FCorners[bottomLeft].Y));
-   FPortrait.Y := 8;
-   setRightside(FRightPortrait);
 end;
 
-procedure TMessageBox.SetTextRate(value: integer);
-begin
-   FTextRate := value * 0.01;
-end;
-
-function TMessageBox.GetHeroName(value: integer): string;
-begin
-   if value = 0 then
-   begin
-      if GEnvironment.partySize = 0 then
-         result := ''
-      else result := GEnvironment.party.hero[1].name;
-   end
-   else if clamp(value, 1, GEnvironment.HeroCount) <> value then
-      Abort
-   else result := GEnvironment.Heroes[value].name;
-end;
-
-procedure TMessageBox.DrawSpecialChar(const line: string);
-const HALF_CHAR = 3;
-begin
-   assert(line[1] = '\');
-   try
-      case line[2] of
-         '$': FSpecialText := IntToStr(GEnvironment.money);
-         '!':; //TODO: implement this
-         '.': FRemainder := FRemainder - 0.25;  //quarter-second delay
-         '|': FRemainder := FRemainder - 1;     //full-second delay
-         '>': FImmediate := true;
-         '<': FImmediate := false;
-         '^': TMenuSpriteEngine(Engine).endMessage;
-         '_': FTextPosX := FTextPosX + HALF_CHAR;
-         'E': Abort; //TODO: implement error reporting
-         'e': Abort; //TODO: implement error reporting
-         'C': FTextColor := clamp(GetIntegerValue, 1, 20);
-         'S': SetTextRate(clamp(GetIntegerValue, 1, 20));
-         'N': FSpecialText := GetHeroName(GetIntegerValue);
-         'V': FSpecialText := IntToStr(GEnvironment.Ints[GetIntegerValue]);
-         'T': Abort; //TODO: implement string array in Environment
-         'F': Abort; //TODO: implement float array in Environment
-         'O': Abort; //TODO: implement vocab display
-      end;   
-   except
-      on EAbort do ;
-   end;
-   if FSpecialText <> '' then
-      FSpecialIndex := 1;
-end;
-
-procedure TMessageBox.DrawChar(index: integer);
-var
-   value: string;
-begin
-   value := FParsedText[index];
-   if length(value) = 1 then
-      drawChar(value[1])
-   else if value = #13#10 then
-      NewLine
-   else DrawSpecialChar(value);
-end;
-
-procedure TMessageBox.DrawNextChar;
-begin
-   if FTextCounter >= FParsedText.Count then
-      Exit;
-
-   //to prevent deadlocking on the synchronized part of ResetText
-   if TMonitor.TryEnter(self) then
-      try
-         FRemainder := FRemainder + (TRpgTimestamp.FrameLength / 1000);
-         while (FTextCounter < FParsedText.Count) and (FImmediate or (FRemainder > FTextRate)) do
-         begin
-            if (FSpecialIndex > 0) and (FSpecialIndex <= length(FSpecialText)) then
-            begin
-               DrawChar(FSpecialText[FSpecialIndex]);
-               inc(FSpecialIndex);
-            end
-            else begin
-               if FSpecialIndex > 0 then
-               begin
-                  FSpecialIndex := 0;
-                  FSpecialText := '';
-               end;
-               DrawChar(FTextCounter);
-               inc(FTextCounter);
-            end;
-            if not FImmediate then
-               FRemainder := FRemainder - FTextRate;
-         end;
-      finally
-         TMonitor.Exit(self);
-      end;
-end;
-
-procedure TMessageBox.PromptButton(const input: TButtonCode);
-begin
-   case input of
-      btn_enter:
-      begin
-         if Validate(FParsedText[FCursorPosition]) then
-         begin
-            TMenuSpriteEngine(Engine).FMenuInt := FCursorPosition;
-            TMenuSpriteEngine(Engine).endMessage;
-            playSound(sfxAccept);
-         end
-         else playSound(sfxBuzzer);;
-      end;
-      btn_cancel:
-      begin
-         if FAcceptCancel then
-         begin
-            TMenuSpriteEngine(Engine).FMenuInt := 3;
-            TMenuSpriteEngine(Engine).endMessage;
-            playSound(sfxCancel);
-         end;
-      end;
-      btn_down, btn_up:
-      begin
-         if FCursorPosition = 2 then
-         begin
-            placeCursor(3);
-         end
-         else placeCursor(2);
-         playSound(sfxCursor);
-      end
-      else ;
-   end;
-end;
-
-procedure TMessageBox.InputButton(const input: TButtonCode);
-begin
-   case input of
-      btn_enter:
-      begin
-         TMenuSpriteEngine(Engine).FMenuInt := computeInputResult;
-         TMenuSpriteEngine(Engine).endMessage;
-         playSound(sfxAccept);
-      end;
-      btn_down:
-      begin
-         if inputResult[FCursorPosition] = 0 then
-            inputResult[FCursorPosition] := 9
-         else inputResult[FCursorPosition] := inputResult[FCursorPosition] - 1;
-         playSound(sfxCursor);
-      end;
-      btn_up:
-      begin
-         if inputResult[FCursorPosition] = 9 then
-            inputResult[FCursorPosition] := 0
-         else inputResult[FCursorPosition] := inputResult[FCursorPosition] + 1;
-         playSound(sfxCursor);
-      end;
-      btn_left:
-      begin
-         if FCursorPosition > 0 then
-            placeCursor(FCursorPosition - 1);
-         playSound(sfxCursor);
-      end;
-      btn_right:
-      begin
-         if FCursorPosition < high(FInputResult) then
-            placeCursor(FCursorPosition + 1);
-         playSound(sfxCursor);
-      end
-      else ;
-   end;
-end;
-
-procedure TMessageBox.button(const input: TButtonCode);
-begin
-   if assigned(FButtonLock) then
-      if (FButtonLock.timeRemaining = 0) then
-         freeAndNil(FButtonLock)
-      else Exit;
-
-   case FState of
-      mb_display:
-         case input of
-            btn_enter, btn_cancel: if FTextCounter >= FParsedText.Count then
-              TMenuSpriteEngine(Engine).endMessage;
-            else ;
-         end;
-      mb_choice:
-         case input of
-            btn_cancel:
-            begin
-               if FAcceptCancel then
-               begin
-                  TMenuSpriteEngine(Engine).FMenuInt := -1;
-                  TMenuSpriteEngine(Engine).endMessage;
-                  PlaySound(sfxCancel);
-               end;
-            end;
-            else begin
-               inherited button(input);
-               if input = btn_enter then
-                  TMenuSpriteEngine(Engine).endMessage;
-            end;
-         end;
-      mb_prompt: PromptButton(input);
-      mb_input: InputButton(input);
-   end;
-   FButtonLock := TRpgTimestamp.Create(180);
-end;
-
-function TMessageBox.computeInputResult: integer;
-var
-   i: integer;
-begin
-   result := 0;
-   for i := high(FInputResult) downto 0 do
-      result := (result * 10) + FInputResult[i];
-end;
-
-function TMessageBox.getInputResult(digit: byte): byte;
-begin
-   assert(digit < length(FInputResult));
-   result := FInputResult[digit];
-end;
-
-procedure TMessageBox.changeInputResult(digit, value: byte);
-var
-   dummy: string;
-   i: integer;
-begin
-   assert(digit <= high(FInputResult));
-   assert(value < 10);
-   if FInputResult[digit] = value then
-      Exit;
-
-   FInputResult[digit] := value;
-   dummy := intToStr(FInputResult[0]);
-   for I := 1 to high(FInputResult) do
-      dummy := dummy + '  ' + intToStr(FInputResult[i]);
-   text := dummy;
-end;
-
-procedure TMessageBox.ParseInt(const input: string; var counter: integer);
-var
-   start: integer;
-begin
-   inc(counter);
-   start := counter;
-   if UpperCase(copy(input, start, 3)) = '\V[' then
-   begin
-      FParsedText.Add('\V');
-      inc(counter);
-      ParseInt(input, counter);
-   end
-   else begin
-      while (counter <= length(input)) and (TCharacter.IsDigit(input[counter])) do
-         inc(counter);
-      if (counter > length(input)) or (input[counter] <> ']') then
-      begin
-         FParsedText.Add('\e');
-         counter := start;
-      end
-      else begin
-         FParsedText.Add(copy(input, start, counter - start));
-//         inc(counter);
-      end;
-   end;
-end;
-
-procedure TMessageBox.ParseParamToken(const input: string; var counter: integer);
-var
-   token: char;
-begin
-   token := UpCase(input[counter]);
-   FParsedText.Add('\' + token);
-   case token of
-      'C','S','N','V','T','F':
-      begin
-         inc(counter);
-         if input[counter] = '[' then
-            ParseInt(input, counter)
-         else FParsedText.Add('\E' + input[counter]);
-      end;
-      'O': FParsedText.Add('\E' + input[counter]); //TODO: support \O for vocab
-      else assert(false);
-   end;
-end;
-
-procedure TMessageBox.ParseToken(const input: string; var counter: integer);
-var
-   token: char;
-begin
-   assert(input[counter] = '\');
-   inc(counter);
-   token := UpCase(input[counter]);
-   case token of
-      '\': FParsedText.Add('\');
-      '$','!','.','|','>','<','^','_': FParsedText.Add('\' + token);
-      'C','S','N','V','T','F','O': ParseParamToken(input, counter);
-      else FParsedText.Add('\E' + input[counter]);
-   end;
-end;
-
-procedure TMessageBox.setPortrait(const filename: string; const index: byte);
-var
-   image: TSdlImage;
-begin
-   image := Engine.Images.EnsureImage(format('portrait\%s', [filename]), filename);
-   FPortrait.Visible := true;
-   FPortrait.ImageName := image.name;
-   FPortrait.ImageIndex := index;
-end;
-
-procedure TMessageBox.setRightside(const value: boolean);
-begin
-   FRightPortrait := value;
-   case value of
-      false: FPortrait.X := 8;
-      true: FPortrait.X := FCorners[topRight].x - 56;
-   end;
-end;
-
-procedure TMessageBox.ResetText;
+procedure TCustomMessageBox.parseText(const input: string);
 begin
    FSignal.ResetEvent;
-   FParsedText.Clear;
-   runThreadsafe(procedure begin ClearTarget(FTextTarget) end, true);
-   FTextCounter := 0;
-   FSpecialText := '';
-   FSpecialIndex := 0;
-   FImmediate := false;
-   FRemainder := 0;
-   FTextLine := -1;
-   SetTextRate(1);
-   NewLine;
+   FParsedText.Text := input;
+   FMessageText := input;
 end;
 
-procedure TMessageBox.parseText(const input: string);
-var
-   counter: integer;
+procedure TCustomMessageBox.PlaySound(which: TSfxTypes);
 begin
-   TMonitor.Enter(self);
-   try
-      ResetText;
-      counter := 1;
-      while counter <= length(input) do
-      begin
-         if input[counter] = #13 then
-         begin
-            FParsedText.Add(#13#10);
-            if (counter < length(input)) and (input[counter + 1] = #10) then
-               inc(counter);
-         end
-         else if input[counter] <> '\' then
-            FParsedText.Add(input[counter])
-         else ParseToken(input, counter);
-         inc(counter);
-      end;
-   finally
-      TMonitor.Exit(self);
-   end;
+   if assigned(FPlaySound) then
+      FPlaySound(which);
 end;
 
-function TMessageBox.Validate(const text: string): boolean;
+procedure TCustomMessageBox.SetPosition(const Value: TMboxLocation);
 begin
-   if assigned(FOnValidate) then
-      result := FOnValidate(text)
-   else result := true;
+   FPosition := Value;
+   FCoords.Left := 0;
+   FCoords.Right := FFrameTarget.parent.Width;
+   FCoords.Bottom := FFrameTarget.parent.Height div 3;
+   FCoords.Top := FCoords.Bottom * ord(FPosition);
 end;
 
 end.
