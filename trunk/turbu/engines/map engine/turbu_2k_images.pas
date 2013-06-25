@@ -331,8 +331,11 @@ end;
 
 destructor TRpgImage.Destroy;
 begin
-   GEnvironment.RemoveImage(self);
-   FSprite.Free;
+   runThreadsafe(
+      procedure begin
+         GEnvironment.RemoveImage(self);
+         FSprite.Free;
+      end, true);
    inherited;
 end;
 
