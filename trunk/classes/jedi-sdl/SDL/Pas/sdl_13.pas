@@ -8,6 +8,15 @@ uses Windows, sysUtils;
 const
   SDLLibName = 'SDL2.dll';
 
+  // SDL_verion.h constants
+  // Printable format: "%d.%d.%d", MAJOR, MINOR, PATCHLEVEL
+  SDL_MAJOR_VERSION = 2;
+{$EXTERNALSYM SDL_MAJOR_VERSION}
+  SDL_MINOR_VERSION = 0;
+{$EXTERNALSYM SDL_MINOR_VERSION}
+  SDL_PATCHLEVEL    = 0;
+{$EXTERNALSYM SDL_PATCHLEVEL}
+
 type
   PSdlDisplayMode = ^TSdlDisplayMode;
   TSdlDisplayMode = record
@@ -588,6 +597,24 @@ TSdlHatPosition = set of (sdlhUp, sdlhRight, sdlhDown, sdlhLeft);
   TSdlEventFilter = function (userdata: pointer; event: PSdlEvent): integer;
 
   TSdlEventArray = array of TSdlEvent;
+
+  {$MINENUMSIZE 4}
+  TSdlSysWmType = (syswmUnknown, syswmWindows, syswmX11, syswmDirectFb, syswmCocoa, syswmUikit);
+  {$MINENUMSIZE 1}
+
+  PSDL_version = ^TSDL_version;
+  TSDL_version = record
+    major: UInt8;
+    minor: UInt8;
+    patch: UInt8;
+  end;
+
+  PSDL_SysWMinfo = ^TSDL_SysWMinfo;
+  TSDL_SysWMinfo = record
+    version : TSDL_version;
+    subsystem: TSdlSysWmType;
+    window : HWnd;	// The display window
+  end;
 
 function SDL_GetCurrentDisplayMode(var mode: TSdlDisplayMode): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetCurrentDisplayMode}
@@ -1251,6 +1278,11 @@ cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_Error'{$ELSE} SDLLibName{
 function SDL_SetHint(name, value: PAnsiChar): SDL_bool;
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetHint'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 
+function SDL_GetWindowWMInfo(window: TSdlWindow; var info : TSDL_SysWMinfo) : SDL_bool;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_GetWMInfo'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+
+procedure SDL_VERSION(var X: TSDL_Version);
+
 // Private error message function - used internally
 procedure SDL_OutOfMemory;
 
@@ -1477,6 +1509,13 @@ function SDL_ResetTargetTexture(renderer: TSdlRenderer): integer;
 const NIL_TEX: TSdlTexture = (FPtr: nil;);
 begin
    result := SDL_SetRenderTarget(renderer, NIL_TEX);
+end;
+
+procedure SDL_VERSION(var X: TSDL_Version);
+begin
+  X.major := SDL_MAJOR_VERSION;
+  X.minor := SDL_MINOR_VERSION;
+  X.patch := SDL_PATCHLEVEL;
 end;
 
 { TSdlWindow }
