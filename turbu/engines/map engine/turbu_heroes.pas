@@ -24,9 +24,6 @@ uses
    turbu_classes, turbu_containers, turbu_defs, turbu_mapchars,
    turbu_characters, turbu_map_sprites, turbu_2k_items, turbu_constants;
 
-const
-   MAXGOLD = 999999;
-
 type
    TStatComponents = (stat_base, stat_bonus, stat_eq_mod);
 
@@ -568,13 +565,12 @@ end;
 
 procedure TRpgHero.setExp(value: integer);
 begin
-{   FExpTotal := clamp(value, 0, MAXEXP);
+   FExpTotal := clamp(value, 0, MAXEXP);
    if (FLevel < MAXLEVEL) then
       if (expNeeded <= 0) then
          updateLevel(true)
       else if (expNeeded > FExpTable[FLevel + 1] - FExpTable[FLevel]) then
          updateLevel(false);
-}
 end;
 
 procedure TRpgHero.setHP(value: integer);
