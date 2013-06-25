@@ -299,18 +299,19 @@ function TMapSprite.TryMovePreferredDirection(facing: TFacing): boolean;
 var
    ninetyDegrees: TFacing;
 begin
-   if tryMove(facing) then
+   if move(facing) then
       Exit(true);
    if Random(2) = 1 then
       ninetyDegrees := TFacing((ord(self.facing) + 1) mod 4)
    else ninetyDegrees := TFacing((ord(self.facing) + ord(pred(high(TFacing)))) mod 4);
-   if tryMove(ninetyDegrees) then
+   if move(ninetyDegrees) then
       result := true
-   else if tryMove(opposite_facing(ninetyDegrees)) then
+   else if move(opposite_facing(ninetyDegrees)) then
       result := true
-   else if tryMove(opposite_facing(facing)) then
+   else if move(opposite_facing(facing)) then
       result := true
    else result := false;
+   FMoveOpen := result or canSkip
 end;
 
 function TMapSprite.TryMoveTowardsHero: boolean;
@@ -652,6 +653,7 @@ begin
       dummy := FTiles[1].y;
       moveTowards(timeRemaining, dummy, FTarget.y);
       FTiles[1].y := dummy;
+      FTiles[1].UpdateGridLoc;
       if timeRemaining <= TRpgTimeStamp.FrameLength then
       begin
          freeAndNil(FMoveTime);
@@ -971,8 +973,7 @@ begin
       eventPtr := (eventList[i]).event;
       if (eventList[i] <> self) and assigned(eventPtr.currentPage) and (eventPtr.currentPage.hasScript)
          and (eventPtr.currentPage.startCondition = by_key) then
-{$MESSAGE WARN 'Commented out code in live unit'}
-         {GScriptEngine.executeEvent(eventPtr, eventList[i])};
+         GMapObjectManager.runPageScript(eventPtr.currentPage);
    end;
 end;
 
@@ -1079,6 +1080,7 @@ begin
    UpdateFrame;
    FTiles[2].Y := FTiles[1].Y - TILE_SIZE.y;
    FTiles[2].X := FTiles[1].X;
+   FTiles[2].UpdateGridLoc;
 end;
 
 procedure TCharSprite.updateTiles;
