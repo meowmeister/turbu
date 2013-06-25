@@ -63,6 +63,7 @@ type
       FDispGoalX, FDispGoalY: single;
       FDisplacementX, FDisplacementY: single;
       FDisplacementSpeed: single;
+      FScreenLocked: boolean;
 
       //shake control
       FShakePower: byte;
@@ -90,7 +91,6 @@ type
 
       procedure CheckDisplacement;
       procedure clearDisplacement;
-      procedure moveTo(x, y: integer);
       procedure ApplyDisplacement;
       procedure InternalCenterOn(px, py: integer);
    protected
@@ -129,6 +129,7 @@ type
       procedure centerOn(x, y: integer);
       procedure centerOnWorldCoords(x, y: single);
       procedure scrollMap(const newPosition: TSgPoint);
+      procedure setBG(name: string; x, y: integer; autoX, autoY: boolean); overload;
 
       //visual effects
       procedure CopyState(base: T2kSpriteEngine);
@@ -141,6 +142,7 @@ type
       procedure displaceTo(x, y: integer);
       procedure setDispSpeed(speed: byte);
       procedure shakeScreen(power, speed: integer; duration: integer);
+      procedure moveTo(x, y: integer);
 
       property overlapping: TFacingSet read FOverlapping;
       property viewport: TRect read FViewport write SetViewport;
@@ -159,6 +161,9 @@ type
       property ShaderEngine: TdmShaders read FShaderEngine;
       property Displacing: boolean read FDisplacing;
       property Returning: boolean read FReturning write FReturning;
+      property ScreenLocked: boolean read FScreenLocked write FScreenLocked;
+      property DisplacementX: single read FDisplacementX;
+      property DisplacementY: single read FDisplacementY;
    end;
 
 var
@@ -167,8 +172,8 @@ var
 implementation
 uses
    SysUtils, OpenGL, Math, Classes,
-   turbu_constants, archiveInterface, charset_data, turbu_mapchars, turbu_OpenGL,
-   turbu_2k_environment,
+   turbu_constants, archiveInterface, charset_data, locate_files, turbu_mapchars,
+   turbu_OpenGL, turbu_2k_environment,
    sdl_13;
 
 const
@@ -962,6 +967,34 @@ begin
    self.viewport := rect(reducedPosition, self.viewport.BottomRight);
    self.WorldX := newPosition.x;
    self.WorldY := newPosition.y;
+end;
+
+procedure T2kSpriteEngine.setBG(name: string; x, y: integer; autoX, autoY: boolean);
+var
+   filename, bgName: string;
+begin
+   bgName := 'Background ' + name;
+   if assigned(FBgImage) and (FBgImage.ImageName <> bgName) then
+      freeAndNil(FBgImage);
+   if name = '' then
+      Exit;
+
+   filename := name;
+   findGraphic(filename, 'panorama');
+   if filename = '' then
+      raise EFileNotFoundException.createFmt('Background image %s not found!', [name]);
+   if not assigned(FBgImage) then
+   begin
+      Self.Images.EnsureBGImage(filename, bgName);
+      FBgImage := TBackgroundSprite.Create(FEngine, x, y, autoX, autoY)
+   end
+   else begin
+      FBgImage.scrollData.x := x;
+      FBgImage.scrollData.y := y;
+      FBgImage.scrollData.autoX := autoX;
+      FBgImage.scrollData.autoY := autoY;
+   end;
+   FBgImage.ImageName := bgName;
 end;
 
 procedure T2kSpriteEngine.SetCurrentParty(const Value: TCharSprite);

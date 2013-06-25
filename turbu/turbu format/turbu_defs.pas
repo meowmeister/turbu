@@ -69,14 +69,14 @@ type
 
    TBgmTypes = (bgmBattle, bgmVictory, bgmInn, bgmGameOver, bgmTitle, bgmBossBattle);
 
-   TTransitionTypes = (trn_MapExit, trn_MapEnter, trn_BattleStartErase, trn_BattleStartShow,
-                trn_BattleEndErase, trn_BattleEndShow);
+   TTransitionTypes = (trnMapExit, trnMapEnter, trnBattleStartErase, trnBattleStartShow,
+                trnBattleEndErase, trnBattleEndShow);
 
-   TTransitions = (trn_Default, trn_FadeOut, trn_Blocks, trn_BlockUp, trn_BlockDn,
-                   trn_Blinds, trn_StripeHiLo, trn_StripeLR, trn_OutIn, trn_InOut,
-                   trn_ScrollUp, trn_ScrollDn, trn_ScrollLeft, trn_ScrollRight,
-                   trn_DivHiLow, trn_DivLR, trn_DivQuarters, trn_Zoom, trn_Mosaic,
-                   trn_Ripple, trn_Instant, trn_None);
+   TTransitions = (trnDefault, trnFadeOut, trnBlocks, trnBlockUp, trnBlockDn,
+                   trnBlinds, trnStripeHiLo, trnStripeLR, trnutIn, trnInOut,
+                   trnScrollUp, trnScrollDn, trnScrollLeft, trnScrollRight,
+                   trnDivHiLow, trnDivLR, trnDivQuarters, trnZoom, trnMosaic,
+                   trnRipple, trnInstant, trnNone);
 
    TShopTypes = (st_BuySell, st_Buy, st_Sell);
 

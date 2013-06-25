@@ -63,12 +63,12 @@ uses
    turbu_pathing, turbu_2k_char_sprites, turbu_map_sprites;
 
 var
-   FDefaultTransitions: array[TTransitionTypes] of TTransitions;
+   LDefaultTransitions: array[TTransitionTypes] of TTransitions;
 
 procedure Teleport(mapID, x, y, facing: integer);
 var newpoint: TPoint;
 begin
-   eraseScreen(trn_Default);
+   eraseScreen(trnDefault);
 
    if mapID = GSpriteEngine.MapID then
    begin
@@ -80,7 +80,7 @@ begin
          GSpriteEngine.centerOn(x, y);
       end;
    end else GGameEngine.changeMaps(mapID, point(x, y));
-   showScreen(trn_Default);
+   showScreen(trnDefault);
 end;
 
 procedure teleportEvent(which: TRpgEvent; x, y: integer);
@@ -164,11 +164,10 @@ end;
 
 procedure setTransition(const which: TTransitionTypes; const newTransition: TTransitions);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   if newTransition = trnDefault then
+   if newTransition = trnDefault then
       Exit;
 
-   FDefaultTransitions[which] := newTransition;}
+   LDefaultTransitions[which] := newTransition;
 end;
 
 function waitForBlank: boolean;
@@ -180,9 +179,9 @@ procedure eraseScreen(whichTransition: TTransitions);
 begin
 {$MESSAGE WARN 'Commented out code in live unit'}
 {   if whichTransition = trnDefault then
-      eraseScreen(FDefaultTransitions[trnMapExit])
+      eraseScreen(LDefaultTransitions[trnMapExit])
    else transitions.erase(whichTransition);
-   GWaiting := waitForBlank;}
+   GScriptEngine.SetWaiting(waitForBlank);}
 end;
 
 function waitForFadeEnd: boolean;
@@ -196,7 +195,7 @@ procedure showScreen(whichTransition: TTransitions);
 begin
 {$MESSAGE WARN 'Commented out code in live unit'}
 {   if whichTransition = trnDefault then
-      showScreen(FDefaultTransitions[trnMapEnter])
+      showScreen(LDefaultTransitions[trnMapEnter])
    else transitions.show(whichTransition);
    GWaiting := waitForFadeEnd;}
 end;
@@ -236,14 +235,12 @@ end;
 
 procedure lockScreen;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   GGameEngine.screenLocked := true;
+   GSpriteEngine.screenLocked := true;
 end;
 
 procedure unlockScreen;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   GGameEngine.screenLocked := false;
+   GSpriteEngine.screenLocked := false;
 end;
 
 procedure panScreen(direction: TFacing; distance: integer; speed: integer; wait: boolean);
@@ -331,8 +328,8 @@ end;
 
 procedure setBG(name: string; scrollX, scrollY: integer; autoX, autoY: boolean);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   GGameEngine.currentMap.setBG(name, scrollX, scrollY, autoX, autoY);
+   commons.runThreadsafe(
+      procedure begin GSpriteEngine.setBG(name, scrollX, scrollY, autoX, autoY); end);
 end;
 
 procedure LoadAnim(const filename: string);

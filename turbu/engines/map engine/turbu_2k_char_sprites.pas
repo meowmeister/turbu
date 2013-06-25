@@ -231,10 +231,9 @@ begin
       if FAnimated then
          turbu_sprites.nextPosition(FActionMatrix, FAction, FMoveFrame);
    end;
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   if (GEnvironment.Party.base = self) and (FMoved) and (not GSpriteEngine.screenLocked) then
-      T2kSpriteEngine(FEngine).moveTo(trunc(FTiles[1].X) + GSpriteEngine.displacement.x,
-                               trunc(FTiles[1].Y) + GSpriteEngine.displacement.y);}
+   if (GEnvironment.Party.base = self) and (FMoved) and (not GSpriteEngine.screenLocked) then
+      T2kSpriteEngine(FEngine).moveTo(trunc(FTiles[1].X + GSpriteEngine.DisplacementX),
+                               trunc(FTiles[1].Y + GSpriteEngine.Displacementy));
 end;
 
 procedure TVehicleSprite.reportState(which: TVehicleState);

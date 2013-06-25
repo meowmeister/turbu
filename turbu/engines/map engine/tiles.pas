@@ -89,16 +89,16 @@ type
 
    TScrollData = class(TObject)
    private
-      FX: shortint;
-      FY: shortint;
+      FX: integer;
+      FY: integer;
       FAutoX: boolean;
       FAutoY: boolean;
    public
       constructor Create(input: TRpgMap); overload;
-      constructor Create(x, y: shortint; autoX, autoY: boolean); overload;
+      constructor Create(x, y: integer; autoX, autoY: boolean); overload;
 
-      property x: shortint read FX write FX;
-      property y: shortint read FY write FY;
+      property x: integer read FX write FX;
+      property y: integer read FY write FY;
       property autoX: boolean read FAutoX write FAutoX;
       property autoY: boolean read FAutoY write FAutoY;
    end;
@@ -111,7 +111,7 @@ type
       function InVisibleRect: boolean; override;
    public
       constructor Create(parent: TSpriteEngine; input: TRpgMap); reintroduce; overload;
-      constructor Create(parent: TSpriteEngine; x, y: shortint; autoX, autoY: boolean); reintroduce; overload;
+      constructor Create(parent: TSpriteEngine; x, y: integer; autoX, autoY: boolean); reintroduce; overload;
       destructor Destroy; override;
       procedure scroll;
 
@@ -428,7 +428,7 @@ begin
    FScroll := TScrollData.Create(input);
 end;
 
-constructor TBackgroundSprite.Create(parent: TSpriteEngine; x, y: shortint; autoX, autoY: boolean);
+constructor TBackgroundSprite.Create(parent: TSpriteEngine; x, y: integer; autoX, autoY: boolean);
 begin
    inherited Create(parent);
    FScroll := TScrollData.Create(x, y, autoX, autoY);
@@ -479,7 +479,7 @@ begin
    FAutoY := input.vScroll = stAutoscroll;
 end;
 
-constructor TScrollData.Create(x, y: shortint; autoX, autoY: boolean);
+constructor TScrollData.Create(x, y: integer; autoX, autoY: boolean);
 begin
    FX := x;
    FY := y;
