@@ -92,6 +92,7 @@ type
       procedure clearDisplacement;
       procedure moveTo(x, y: integer);
       procedure ApplyDisplacement;
+      procedure InternalCenterOn(px, py: integer);
    protected
       function GetHeight: integer; override;
       function GetWidth: integer; override;
@@ -126,6 +127,8 @@ type
       procedure ResizeCanvas;
       function onMap(where: TSgPoint): boolean;
       procedure centerOn(x, y: integer);
+      procedure centerOnWorldCoords(x, y: single);
+      procedure scrollMap(const newPosition: TSgPoint);
 
       //visual effects
       procedure CopyState(base: T2kSpriteEngine);
@@ -146,7 +149,7 @@ type
       property currentLayer: integer read FCurrentLayer write FCurrentLayer;
       property maxLayer: integer read GetMaxLayer;
       property mapObj: TRpgMap read FMap;
-      property blank: boolean read IsBlank;
+      property blank: boolean read IsBlank write FBlank;
       property mapObjects: TMapSpriteList read FMapObjects;
       property CurrentParty: TCharSprite read FCurrentParty write SetCurrentParty;
       property Tile[layer, x, y: integer]: TMapTile read GetDefTile; default;
@@ -163,7 +166,7 @@ var
 
 implementation
 uses
-   SysUtils, OpenGL, Math,
+   SysUtils, OpenGL, Math, Classes,
    turbu_constants, archiveInterface, charset_data, turbu_mapchars, turbu_OpenGL,
    turbu_2k_environment,
    sdl_13;
@@ -233,6 +236,7 @@ end;
 procedure T2kSpriteEngine.adjustCoords(var x, y: integer);
 var
    halfwidth, halfheight, maxwidth, maxheight: integer;
+//   dx, dy: integer;
 begin
    halfwidth := min(round(canvas.width / 2), (width + 1) * 8);
    halfheight := min(round(canvas.height / 2), (height + 1) * 8);
@@ -248,9 +252,15 @@ begin
       y := maxheight;
 
    dec(x, halfwidth);
-   dec(x, x mod TILE_SIZE.x);
+   dec(x, halfwidth mod TILE_SIZE.x);
    dec(y, halfheight);
-   dec(y, y mod TILE_SIZE.y);
+   dec(y, halfheight mod TILE_SIZE.y);
+{
+   if Foverlapping * [facing_right, facing_left] = [] then
+      x := clamp(x, 0, canvas.Width - halfwidth);
+   if FOverlapping * [facing_up, facing_down] = [] then
+      y := clamp(y, 0, Canvas.Height - halfheight);
+}
 end;
 
 function T2kSpriteEngine.updateBorders(x, y, layer: integer): boolean;
@@ -418,10 +428,17 @@ begin
 procedure T2kSpriteEngine.Draw;
 var
    current: integer;
+   centerTile: TTile;
 begin
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    try
       FShaderEngine.UseShaderProgram(FShaderEngine.ShaderProgram('default', 'defaultF'));
+      if assigned(FCurrentParty) then
+      begin
+         centerTile := FCurrentParty.tiles[1];
+         centerOnWorldCoords(centerTile.x + (centerTile.Width div 2), centerTile.Y);
+      end;
+      ApplyDisplacement;
       if assigned(FBgImage) then
          DrawBG;
       inherited Draw;
@@ -460,14 +477,14 @@ begin
    result := (clamp(where.x, 0, width) = where.x) and (clamp(where.y, 0, height) = where.y);
 end;
 
-procedure T2kSpriteEngine.centerOn(x, y: integer);
+procedure T2kSpriteEngine.InternalCenterOn(px, py: integer);
 var
-   pX, pY: integer; //pixel coordinates
+   x, y: integer; //pixel coordinates
    aX, aY: integer; //adjusted coordinates
    dX, dY: integer; //delta
 begin
-   px := x * TILE_SIZE.x;
-   py := y * TILE_SIZE.y;
+   x := px div TILE_SIZE.x;
+   y := py div TILE_SIZE.y;
    adjustCoords(pX, pY);
    FDestination.X := pX;
    FDestination.Y := pY;
@@ -476,6 +493,22 @@ begin
    dx := x - aX;
    dy := y - aY;
    self.SetViewport(rect(aX, aY, x + dX, y + dY));
+   self.WorldX := px;
+   self.WorldY := py;
+end;
+
+procedure T2kSpriteEngine.centerOn(x, y: integer);
+var
+   pX, pY: integer; //pixel coordinates
+begin
+   px := x * TILE_SIZE.x;
+   py := y * TILE_SIZE.y;
+   InternalCenterOn(px, py);
+end;
+
+procedure T2kSpriteEngine.centerOnWorldCoords(x, y: single);
+begin
+   InternalCenterOn(round(x), round(y));
 end;
 
 procedure T2kSpriteEngine.EnsureImage(const filename: string);
@@ -571,7 +604,8 @@ end;
 
 function T2kSpriteEngine.IsBlank: boolean;
 begin
-   result := (FFadeColor[1] = 0) and (FFadeColor[2] = 0) and (FFadeColor[3] = 0);
+{$MESSAGE WARN 'Commented out code in live unit'}
+//   result := FBlank or ((FFadeColor[1] = 0) and (FFadeColor[2] = 0) and (FFadeColor[3] = 0));
    result := true;
 end;
 
@@ -636,7 +670,7 @@ var
 begin
    matrix := FTiles[index];
    size := FMap.size;
-   for y := viewport.top - 1 to viewport.top + viewport.bottom + 1 do
+   for y := viewport.top - 1 to viewport.top + viewport.bottom + 2 do
       for x := viewport.left - 1 to viewport.left + viewport.Right + 1 do
       begin
          EquivalizeCoords(x, y, equivX, equivY);
@@ -692,7 +726,8 @@ begin
    begin
       result := true;
       for sprite in sprites do
-         result := result and (sprite.baseTile.z <> character.baseTile.z);
+         if assigned(sprite.event) and assigned(sprite.event.currentPage) then
+            result := result and (sprite.baseTile.z <> character.baseTile.z);
    end;
 end;
 
@@ -821,7 +856,7 @@ begin
       dec(FShakeTime, FShakeTime div i);
    end else shakeBias := 0;
 
-   if trunc(FDestination.x + FDisplacementX) <> trunc(self.worldX) then
+{   if trunc(FDestination.x + FDisplacementX) <> trunc(self.worldX) then
    begin
       delta := min(abs(FDestination.x + FDisplacementX - worldX), FPanSpeed);
       if FDestination.x + FDisplacementX < self.worldX then
@@ -836,7 +871,9 @@ begin
       if FDestination.Y + FDisplacementY < worldY then
          delta := -delta;
       worldY := worldY + delta;
-   end;
+   end;}
+   WorldX := WorldX + FDisplacementX - shakeBias;
+   WorldY := WorldY + FDisplacementY;
 end;
 
 procedure T2kSpriteEngine.CheckDisplacement;
@@ -883,7 +920,8 @@ begin
       for sprite in FMapObjects do
       begin
          sprite.place;
-         sprite.MoveTick;
+         if GMenuEngine.state <> msExclusiveShared then
+            sprite.MoveTick;
       end;
    finally
       TMonitor.Exit(FMapObjects);
@@ -895,7 +933,6 @@ begin
    end;
 
    CheckDisplacement;
-   ApplyDisplacement;
 //TODO: calculate map shaking, fading, and overlay colors
 end;
 
@@ -915,6 +952,16 @@ begin
    self.Canvas.Resize;
    self.VisibleWidth := canvas.Width;
    self.VisibleHeight := canvas.Height;
+end;
+
+procedure T2kSpriteEngine.scrollMap(const newPosition: TSgPoint);
+var
+   reducedPosition: TSgPoint;
+begin
+   reducedPosition := newPosition / TILE_SIZE;
+   self.viewport := rect(reducedPosition, self.viewport.BottomRight);
+   self.WorldX := newPosition.x;
+   self.WorldY := newPosition.y;
 end;
 
 procedure T2kSpriteEngine.SetCurrentParty(const Value: TCharSprite);
