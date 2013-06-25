@@ -47,6 +47,8 @@ type
       FList: TObjectList<TRpgItem>;
       function Count: integer;
    public
+      constructor Create;
+      destructor Destroy; override;
       procedure Add(const id, number: integer);
       procedure AddItem(const value: TRpgItem);
       function indexOf(const id: integer): integer;
@@ -120,10 +122,9 @@ begin
       materialItem: subtype := TStatItem;
       uniqueItem: subtype := TSkillItem;
       switchItem: subtype := TSwitchItem;
-      else} assert(false);
+      else} subtype := TRpgItem;
 //   end;
    result := subtype.create(item, quantity);
-   result := nil; //fill this in later
 end;
 {$WARN USE_BEFORE_DEF ON}
 
@@ -138,6 +139,18 @@ begin
 end;
 
 { TRpgInventory }
+
+constructor TRpgInventory.Create;
+begin
+   inherited Create;
+   FList := TObjectList<TRpgItem>.Create;
+end;
+
+destructor TRpgInventory.Destroy;
+begin
+   FList.Free;
+   inherited Destroy;
+end;
 
 function itemSortCompare(const item1, item2: TRpgItem): integer;
 begin
