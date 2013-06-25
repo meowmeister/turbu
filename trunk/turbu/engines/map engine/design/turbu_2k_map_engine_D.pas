@@ -1059,13 +1059,8 @@ begin
 end;
 
 procedure T2kMapEngineD.scrollMap(const newPosition: TSgPoint);
-var
-   reducedPosition: TSgPoint;
 begin
-   reducedPosition := newPosition / TILE_SIZE;
-   FCurrentMap.viewport := rect(reducedPosition, FCurrentMap.viewport.BottomRight);
-   FCurrentMap.WorldX := newPosition.x;
-   FCurrentMap.WorldY := newPosition.y;
+   FCurrentMap.ScrollMap(newPosition);
    self.repaint;
 end;
 
