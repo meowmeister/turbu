@@ -60,7 +60,8 @@ uses
    rsExec, rsCompiler,
    commons, turbu_2k_environment, turbu_2k_sprite_engine, turbu_constants,
    turbu_database, turbu_2k_map_engine, turbu_animations, turbu_2k_animations,
-   turbu_pathing, turbu_2k_char_sprites, turbu_map_sprites, turbu_2k_transitions;
+   turbu_pathing, turbu_2k_char_sprites, turbu_map_sprites, turbu_2k_transitions,
+   timing;
 
 var
    LDefaultTransitions: array[TTransitionTypes] of TTransitions;
@@ -69,6 +70,8 @@ procedure Teleport(mapID, x, y, facing: integer);
 var newpoint: TPoint;
 begin
    eraseScreen(trnDefault);
+   while GSpriteEngine.State = gs_fading do
+      sleep(TRpgTimestamp.FrameLength);
 
    if mapID = GSpriteEngine.MapID then
    begin
