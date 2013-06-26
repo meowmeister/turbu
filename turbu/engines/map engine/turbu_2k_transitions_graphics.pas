@@ -44,7 +44,7 @@ var
 
 implementation
 uses
-   windows, types, math,
+   types, math, SysUtils,
    commons, turbu_2k_transitions, turbu_2k_sprite_engine, timing, turbu_2k_distortions,
    SDL_13, SG_defs;
 
@@ -401,6 +401,7 @@ begin
          workload := GSpriteEngine.Canvas.Width div (FADETIME[1] div TRpgTimestamp.FrameLength);
          boundary := GSpriteEngine.Canvas.Width;
       end;
+      else raise Exception.Create('Invalid direction');
    end;
    i := location + workload;
    if LDirection in [facing_up, facing_left] then
