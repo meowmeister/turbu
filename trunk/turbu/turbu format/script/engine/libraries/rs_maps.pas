@@ -286,25 +286,20 @@ end;
 
 procedure setWeather(effect: TWeatherEffects; severity: integer);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   with GGameEngine.weatherEngine do
-   begin
-      weatherType := effect;
-      severity := min(severity, MAX_WEATHER);
-      intensity := severity;
-   end;}
+   GSpriteEngine.weatherEngine.weatherType := effect;
+   GSpriteEngine.weatherEngine.intensity := clamp(severity, 0, MAX_WEATHER);
 end;
 
 procedure increaseWeather;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   setWeather(GGameEngine.weatherEngine.weatherType, GGameEngine.weatherEngine.intensity + 1);
+   if GSpriteEngine.weatherEngine.intensity < MAX_WEATHER then
+      setWeather(GSpriteEngine.weatherEngine.weatherType, GSpriteEngine.weatherEngine.intensity + 1);
 end;
 
 procedure decreaseWeather;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   setWeather(GGameEngine.weatherEngine.weatherType, max(GGameEngine.weatherEngine.intensity - 1, 0));
+   if GSpriteEngine.weatherEngine.intensity > 0 then
+      setWeather(GSpriteEngine.weatherEngine.weatherType, GSpriteEngine.weatherEngine.intensity - 1);
 end;
 
 function newImage(name: string; x, y: integer; zoom, transparency: integer; pinned, mask: boolean): TRpgImage;
@@ -475,9 +470,9 @@ begin
    RegisterFunction('unlockScreen', nil);
    RegisterFunction('panScreen', @PanScreen);
    RegisterFunction('returnScreen', @ReturnScreen);
-   RegisterFunction('setWeather', nil);
-   RegisterFunction('increaseWeather', nil);
-   RegisterFunction('decreaseWeather', nil);
+   RegisterFunction('setWeather', @SetWeather);
+   RegisterFunction('increaseWeather', @increaseWeather);
+   RegisterFunction('decreaseWeather', @decreaseWeather);
    RegisterFunction('newImage', @newImage);
    RegisterFunction('setBGImage', nil);
    RegisterFunction('showBattleAnim', @ShowBattleAnim);
