@@ -23,7 +23,7 @@ uses
    commons, timing, tiles, dm_shaders,
    turbu_2k_sprite_list, turbu_2k_frames,
    turbu_maps, turbu_map_engine, turbu_2k_map_tiles, turbu_tilesets,
-   turbu_map_objects, turbu_map_sprites, turbu_defs,
+   turbu_map_objects, turbu_map_sprites, turbu_defs, turbu_2k_weather,
    sdl_sprite, sdl_canvas, SDL_ImageManager, SG_defs;
 
 type
@@ -81,6 +81,8 @@ type
       FShakeCounter: byte;
       FShakeTime: integer;
       FBaseX: single;
+
+      FWeatherEngine: TWeatherSystem;
 
       procedure SetViewport(const viewport: TRect);
       procedure loadTileMatrix(const value: TTileList; const index: integer; const viewport: TRect);
@@ -185,6 +187,7 @@ type
       property State: TGameState read FGameState;
       property transProc: TTransProc read FTransProc write FTransProc;
       property renderProc: TRenderProc read FRenderProc write FRenderProc;
+      property weatherEngine: TWeatherSystem read FWeatherEngine;
    end;
 
 var
@@ -439,10 +442,12 @@ begin
    FSpriteLocations := TSpriteLocations.Create;
    for i := 1 to 4 do
       FFadeColor[i] := 1;
+   FWeatherEngine := TWeatherSystem.Create(self, images);
 end;
 
 destructor T2kSpriteEngine.Destroy;
 begin
+   FWeatherEngine := nil;
    FreeAndNil(FFadeTime);
    FSpriteLocations.Free;
    FMapObjects.Free;
