@@ -49,7 +49,10 @@ contains
   turbu_2k_frames in 'turbu_2k_frames.pas',
   rs_characters in '..\..\turbu format\script\engine\libraries\rs_characters.pas',
   turbu_2k_animations in 'turbu_2k_animations.pas',
-  turbu_2k_image_engine in 'turbu_2k_image_engine.pas';
+  turbu_2k_image_engine in 'turbu_2k_image_engine.pas',
+  turbu_2k_message_boxes in 'turbu_2k_message_boxes.pas',
+  turbu_2k_transitions in 'turbu_2k_transitions.pas',
+  turbu_2k_transitions_graphics in 'turbu_2k_transitions_graphics.pas';
 
 end.
 
