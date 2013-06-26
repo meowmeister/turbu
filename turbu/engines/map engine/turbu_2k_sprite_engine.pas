@@ -29,6 +29,8 @@ uses
 type
    TTileMatrix = TMatrix<TMapTile>;
    TTileMatrixList = class(TObjectList<TTileMatrix>);
+   TTransProc = procedure(var location: integer);
+   TRenderProc = procedure;
 
    T2kSpriteEngine = class(TSpriteEngine)
    private
@@ -44,6 +46,8 @@ type
       FMapObjects: TMapSpriteList;
       FSpriteLocations: TSpriteLocations;
       FCurrentParty: TCharSprite;
+      FGameState: TGameState;
+      FSavedState: TGameState;
 
       //visual effects
       FShaderEngine: TdmShaders;
@@ -54,6 +58,12 @@ type
       FFlashColor: TGLColor;
       FFlashTime: TRpgTimestamp;
       FFlashDuration: integer;
+
+      //transition control
+      FTransProc: TTransProc;
+      FTransitionProgress: integer;
+      FRenderProc: TRenderProc;
+      FInitialRender: boolean;
 
       //displacement control
       FPanSpeed: single;
@@ -88,6 +98,7 @@ type
       procedure adjustCoords(var x, y: integer);
       function IsBlank: boolean;
       procedure SetCurrentParty(const Value: TCharSprite);
+      procedure EndTransition;
 
       procedure CheckDisplacement;
       procedure clearDisplacement;
@@ -137,6 +148,11 @@ type
       property SystemGraphic: TSystemImages read FSystemGraphic;
       function Fade: boolean;
       procedure FlashScreen(r, g, b, power, duration: integer);
+      procedure fadeOut(time: integer);
+      procedure fadeIn(time: integer);
+      procedure beginTransition;
+      procedure endErase;
+      procedure endShow;
 
       //displacement
       procedure displaceTo(x, y: integer);
@@ -152,6 +168,7 @@ type
       property maxLayer: integer read GetMaxLayer;
       property mapObj: TRpgMap read FMap;
       property blank: boolean read IsBlank write FBlank;
+      property initialRender: boolean read FInitialRender write FInitialRender;
       property mapObjects: TMapSpriteList read FMapObjects;
       property CurrentParty: TCharSprite read FCurrentParty write SetCurrentParty;
       property Tile[layer, x, y: integer]: TMapTile read GetDefTile; default;
@@ -164,6 +181,9 @@ type
       property ScreenLocked: boolean read FScreenLocked write FScreenLocked;
       property DisplacementX: single read FDisplacementX;
       property DisplacementY: single read FDisplacementY;
+      property State: TGameState read FGameState;
+      property transProc: TTransProc read FTransProc write FTransProc;
+      property renderProc: TRenderProc read FRenderProc write FRenderProc;
    end;
 
 var
@@ -173,7 +193,7 @@ implementation
 uses
    SysUtils, OpenGL, Math, Classes,
    turbu_constants, archiveInterface, charset_data, locate_files, turbu_mapchars,
-   turbu_OpenGL, turbu_2k_environment,
+   turbu_OpenGL, turbu_2k_environment, turbu_2k_transitions_graphics,
    sdl_13;
 
 const
@@ -477,6 +497,33 @@ begin
    end;
 end;
 
+procedure T2kSpriteEngine.beginTransition;
+begin
+   FSavedState := FGameState;
+   FGameState := gs_fading;
+   FBlank := false;
+end;
+
+procedure T2kSpriteEngine.EndTransition;
+begin
+   FGameState := FSavedState;
+   GCurrentTarget := -1;
+   FRenderProc := nil;
+   FTransProc := nil;
+end;
+
+procedure T2kSpriteEngine.endErase;
+begin
+   endTransition;
+   FBlank := true;
+end;
+
+procedure T2kSpriteEngine.endShow;
+begin
+   endTransition;
+   FBlank := false;
+end;
+
 function T2kSpriteEngine.onMap(where: TSgPoint): boolean;
 begin
    result := (clamp(where.x, 0, width) = where.x) and (clamp(where.y, 0, height) = where.y);
@@ -520,6 +567,16 @@ procedure T2kSpriteEngine.EnsureImage(const filename: string);
 begin
    if (filename <> '') and (not self.Images.Contains(filename)) then
       self.Images.AddSpriteFromArchive(format('mapsprite\%s.png', [filename]), filename, SPRITE_SIZE);
+end;
+
+procedure T2kSpriteEngine.fadeIn(time: integer);
+begin
+   FadeTo(255, 255, 255, 255, time);
+end;
+
+procedure T2kSpriteEngine.fadeOut(time: integer);
+begin
+   FadeTo(0, 0, 0, 255, time);
 end;
 
 procedure T2kSpriteEngine.fadeTo(r, g, b, s, time: integer);

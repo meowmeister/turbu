@@ -45,7 +45,7 @@ var
 implementation
 uses
    windows, types, math,
-   commons, turbu_2k_transitions, turbu_2k_sprite_engine, timing, //distortions,
+   commons, turbu_2k_transitions, turbu_2k_sprite_engine, timing, turbu_2k_distortions,
    SDL_13, SG_defs;
 
 const
@@ -455,8 +455,8 @@ begin
    boundary := GSpriteEngine.Canvas.Height div 2;
    workload := boundary div (FADETIME[1] div TRpgTimestamp.FrameLength);
    canvas := GSpriteEngine.Canvas;
-   Canvas.DrawRect(GRenderTargets[alternate], sgPoint(0, -workload), rect(0, 0, canvas.Width, boundary), SDL_WHITE);
-   Canvas.DrawRect(GRenderTargets[alternate], sgPoint(0, boundary + workload), rect(0, boundary, canvas.Width, canvas.Height), SDL_WHITE);
+   Canvas.DrawRect(GRenderTargets[alternate], sgPoint(0, -workload), rect(0, 0, canvas.Width, boundary));
+   Canvas.DrawRect(GRenderTargets[alternate], sgPoint(0, boundary + workload), rect(0, boundary, canvas.Width, canvas.Height));
    inc(location, workload);
    if location >= boundary then
       GSpriteEngine.endErase;
@@ -483,8 +483,8 @@ begin
    boundary := GSpriteEngine.Canvas.Width div 2;
    workload := boundary div (FADETIME[1] div TRpgTimestamp.FrameLength);
    canvas := GSpriteEngine.Canvas;
-   canvas.DrawRect(GRenderTargets[alternate], sgPoint(-workload, 0), rect(0, 0, boundary, canvas.Height), SDL_WHITE);
-   canvas.DrawRect(GRenderTargets[alternate], sgPoint(boundary + workload), rect(0, boundary, 0, canvas.Width, canvas.Height), SDL_WHITE);
+   canvas.DrawRect(GRenderTargets[alternate], sgPoint(-workload, 0), rect(0, 0, boundary, canvas.Height));
+   canvas.DrawRect(GRenderTargets[alternate], sgPoint(boundary + workload, 0), rect(boundary, 0, canvas.Width, canvas.Height));
    inc(location, workload);
    if location >= boundary then
       GSpriteEngine.endErase;
@@ -516,13 +516,13 @@ begin
    workloadV := round(workloadH / ratio);
    canvas := GSpriteEngine.Canvas;
    canvas.DrawRect(GRenderTargets[alternate], sgPoint(-workloadH, -workloadV),
-     rect(0, 0, boundaryH, boundaryV), SDL_WHITE);
+     rect(0, 0, boundaryH, boundaryV));
    canvas.DrawRect(GRenderTargets[alternate], sgPoint(-workloadH, boundaryV + workloadV),
-     rect(0, boundaryV, boundaryH, canvas.Height), SDL_WHITE);
+     rect(0, boundaryV, boundaryH, canvas.Height));
    canvas.DrawRect(GRenderTargets[alternate], sgPoint(boundaryH + workloadH, -workloadv),
-     rect(boundaryH, 0, canvas.Width, boundaryV), SDL_WHITE);
+     rect(boundaryH, 0, canvas.Width, boundaryV));
    canvas.DrawRect(GRenderTargets[alternate], sgPoint(boundaryH + workloadH, boundaryV + workloadV),
-     rect(boundaryH, boundaryV, canvas.Width, canvas.Height), SDL_WHITE);
+     rect(boundaryH, boundaryV, canvas.Width, canvas.Height));
    inc(location, workloadH);
    if location >= boundaryH then
       GSpriteEngine.endErase;
@@ -553,9 +553,9 @@ begin
    inc(location, workload);
    canvas := GSpriteEngine.Canvas;
    canvas.DrawRect(GRenderTargets[2], sgPoint(0, (boundary - location) * -1),
-     rect(0, 0, canvas.Width, boundary), SDL_WHITE);
+     rect(0, 0, canvas.Width, boundary));
    canvas.DrawRect(GRenderTargets[2], sgPoint(0, canvas.Height - location),
-     rect(0, boundary, canvas.Width, canvas.Height), SDL_WHITE);
+     rect(0, boundary, canvas.Width, canvas.Height));
    if location >= boundary then
       GSpriteEngine.endShow
 end;
@@ -573,9 +573,9 @@ begin
    inc(location, workload);
    canvas := GSpriteEngine.Canvas;
    canvas.DrawRect(GRenderTargets[2], sgPoint((boundary - location) * -1, 0),
-     rect(0, 0, boundary, canvas.Height), SDL_WHITE);
-   canvas.DrawRect(GRenderTargets[2], sgPoint(Width - location, 0),
-     rect(boundary, 0, canvas.Width, canvas.Height), SDL_WHITE);
+     rect(0, 0, boundary, canvas.Height));
+   canvas.DrawRect(GRenderTargets[2], sgPoint(canvas.Width - location, 0),
+     rect(boundary, 0, canvas.Width, canvas.Height));
    if location >= boundary then
       GSpriteEngine.endShow
 end;
@@ -586,6 +586,7 @@ var
    boundaryH, boundaryV: word;
    locationV: integer;
    ratio: single;
+   canvas: TSdlCanvas;
 begin
    if location = 0 then
       initReveal;
@@ -594,13 +595,15 @@ begin
    workload := boundaryH div (FADETIME[1] div TRpgTimestamp.FrameLength);
    boundaryV := round(boundaryH / ratio);
    locationV := round(location / ratio);
-   with GSpriteEngine.Canvas do
-   begin
-      DrawRect(GRenderTargets[2], (boundaryH - location) * -1, (boundaryV - locationV) * -1, 0, 0, boundaryH, boundaryV, SDL_WHITE);
-      DrawRect(GRenderTargets[2], (boundaryH - location) * -1, Height - locationV, 0, boundaryV, boundaryH, Height, SDL_WHITE);
-      DrawRect(GRenderTargets[2], Width - location, (boundaryV - locationV) * -1, boundaryH, 0, Width, boundaryV, SDL_WHITE);
-      DrawRect(GRenderTargets[2], Width - location, Height - locationV, boundaryH, boundaryV, Width, Height, SDL_WHITE);
-   end;
+   canvas := GSpriteEngine.Canvas;
+   canvas.DrawRect(GRenderTargets[2], sgPoint((boundaryH - location) * -1, (boundaryV - locationV) * -1),
+     rect(0, 0, boundaryH, boundaryV));
+   canvas.DrawRect(GRenderTargets[2], sgPoint((boundaryH - location) * -1, canvas.Height - locationV),
+     rect(0, boundaryV, boundaryH, canvas.Height));
+   canvas.DrawRect(GRenderTargets[2], sgPoint(canvas.Width - location, (boundaryV - locationV) * -1),
+     rect(boundaryH, 0, canvas.Width, boundaryV));
+   canvas.DrawRect(GRenderTargets[2], sgPoint(canvas.Width - location, canvas.Height - locationV),
+     rect(boundaryH, boundaryV, canvas.Width, canvas.Height));
    inc(location, workload);
    if location >= boundaryH then
       GSpriteEngine.endShow
@@ -654,7 +657,7 @@ begin
    end;
    viewRect.Left := max(round(LCurrentX), 0);
    viewRect.Top := max(round(LCurrentY), 0);
-   GSpriteEngine.Canvas.DrawRectStretch(GRenderTargets[2], 0, 0, GSpriteEngine.Canvas.Width, GSpriteEngine.Canvas.Height, viewRect, SDL_WHITE);
+   GSpriteEngine.Canvas.DrawRectTo(GRenderTargets[2], viewRect, rect(0, 0, GSpriteEngine.Canvas.Width, GSpriteEngine.Canvas.Height));
    if LShowing then
    begin
       if location >= GSpriteEngine.Canvas.Width then
@@ -682,7 +685,7 @@ var
    i, j: smallint;
    workload: word;
    endpoint: word;
-   color: cardinal;
+   color: TSDL_Color;
    width: smallint;
 begin
    if location = 0 then
@@ -701,8 +704,8 @@ begin
    repeat
       if j <= width then
          if i mod 2 = 0 then
-            GSpriteEngine.Canvas.FillRect(0, i, j, 1, color)
-         else GSpriteEngine.Canvas.FillRect(width - j, i, j, 1, color);
+            GSpriteEngine.Canvas.FillRect(rect(0, i, j, 1), color)
+         else GSpriteEngine.Canvas.FillRect(rect(width - j, i, j, 1), color);
       if (i mod 4 = 0) and (i > 0) then
          dec(j);
       inc(i);
