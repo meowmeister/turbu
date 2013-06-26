@@ -30,7 +30,6 @@ type
       procedure DrawChar(value: char); overload;
       procedure DrawChar(index: integer); overload;
       procedure DrawNextChar;
-      procedure parseText(const input: string); override;
       procedure ParseToken(const input: string; var counter: integer);
       procedure ParseParamToken(const input: string; var counter: integer);
       procedure ParseInt(const input: string; var counter: integer);
@@ -41,6 +40,8 @@ type
       function GetIntegerValue: integer;
       function GetDrawCoords: TRect;
       procedure ResetText;
+   protected
+      procedure parseText(const input: string); override;
    public
       constructor Create(parent: TMenuSpriteEngine; const coords: TRect); override;
       destructor Destroy; override;
