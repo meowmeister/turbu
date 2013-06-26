@@ -61,7 +61,7 @@ type
 
       //transition control
       FTransProc: TTransProc;
-      FTransitionProgress: integer;
+//      FTransitionProgress: integer;
       FRenderProc: TRenderProc;
       FInitialRender: boolean;
 
@@ -192,7 +192,7 @@ var
 implementation
 uses
    SysUtils, OpenGL, Math, Classes,
-   turbu_constants, archiveInterface, charset_data, locate_files, turbu_mapchars,
+   turbu_constants, archiveInterface, charset_data, ArchiveUtils, turbu_mapchars,
    turbu_OpenGL, turbu_2k_environment, turbu_2k_transitions_graphics,
    sdl_13;
 
@@ -908,7 +908,6 @@ procedure T2kSpriteEngine.ApplyDisplacement;
 const
    SHAKE_AMP = 1.8;
 var
-   delta: single;
    i: integer;
    shakeBias: single;
 begin
@@ -920,22 +919,6 @@ begin
       dec(FShakeTime, FShakeTime div i);
    end else shakeBias := 0;
 
-{   if trunc(FDestination.x + FDisplacementX) <> trunc(self.worldX) then
-   begin
-      delta := min(abs(FDestination.x + FDisplacementX - worldX), FPanSpeed);
-      if FDestination.x + FDisplacementX < self.worldX then
-         delta := -delta;
-   end
-   else delta := 0;
-   FBaseX := FBaseX + delta;
-   WorldX := FBaseX - shakeBias;
-   if trunc(FDestination.y + FDisplacementY) <> trunc(self.worldY) then
-   begin
-      delta := min(abs(FDestination.Y + FDisplacementY - worldY), FPanSpeed);
-      if FDestination.Y + FDisplacementY < worldY then
-         delta := -delta;
-      worldY := worldY + delta;
-   end;}
    WorldX := WorldX + FDisplacementX - shakeBias;
    WorldY := WorldY + FDisplacementY;
 end;
@@ -1039,8 +1022,7 @@ begin
       Exit;
 
    filename := name;
-   findGraphic(filename, 'panorama');
-   if filename = '' then
+   if not ArchiveUtils.GraphicExists(filename, 'Backgrounds') then
       raise EFileNotFoundException.createFmt('Background image %s not found!', [name]);
    if not assigned(FBgImage) then
    begin
