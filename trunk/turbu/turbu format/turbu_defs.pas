@@ -73,7 +73,7 @@ type
                 trnBattleEndErase, trnBattleEndShow);
 
    TTransitions = (trnDefault, trnFadeOut, trnBlocks, trnBlockUp, trnBlockDn,
-                   trnBlinds, trnStripeHiLo, trnStripeLR, trnutIn, trnInOut,
+                   trnBlinds, trnStripeHiLo, trnStripeLR, trnOutIn, trnInOut,
                    trnScrollUp, trnScrollDn, trnScrollLeft, trnScrollRight,
                    trnDivHiLow, trnDivLR, trnDivQuarters, trnZoom, trnMosaic,
                    trnRipple, trnInstant, trnNone);
