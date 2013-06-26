@@ -60,7 +60,7 @@ uses
    rsExec, rsCompiler,
    commons, turbu_2k_environment, turbu_2k_sprite_engine, turbu_constants,
    turbu_database, turbu_2k_map_engine, turbu_animations, turbu_2k_animations,
-   turbu_pathing, turbu_2k_char_sprites, turbu_map_sprites;
+   turbu_pathing, turbu_2k_char_sprites, turbu_map_sprites, turbu_2k_transitions;
 
 var
    LDefaultTransitions: array[TTransitionTypes] of TTransitions;
@@ -177,27 +177,23 @@ end;
 
 procedure eraseScreen(whichTransition: TTransitions);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   if whichTransition = trnDefault then
-      eraseScreen(LDefaultTransitions[trnMapExit])
-   else transitions.erase(whichTransition);
-   GScriptEngine.SetWaiting(waitForBlank);}
+   if whichTransition = trnDefault then
+      turbu_2k_transitions.erase(LDefaultTransitions[trnMapExit])
+   else turbu_2k_transitions.erase(whichTransition);
+   GScriptEngine.SetWaiting(waitForBlank);
 end;
 
 function waitForFadeEnd: boolean;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   result := GGameEngine.state <> gs_fading;
-result := true;
+   result := GSpriteEngine.state <> gs_fading;
 end;
 
 procedure showScreen(whichTransition: TTransitions);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   if whichTransition = trnDefault then
-      showScreen(LDefaultTransitions[trnMapEnter])
-   else transitions.show(whichTransition);
-   GWaiting := waitForFadeEnd;}
+   if whichTransition = trnDefault then
+      turbu_2k_transitions.show(LDefaultTransitions[trnMapEnter])
+   else turbu_2k_transitions.show(whichTransition);
+   GScriptEngine.SetWaiting(waitForFadeEnd);
 end;
 
 procedure tintScreen(r, g, b, sat: integer; duration: integer; wait: boolean);
