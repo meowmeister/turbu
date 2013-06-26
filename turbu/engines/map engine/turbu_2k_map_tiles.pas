@@ -318,7 +318,7 @@ begin
          inc(minis[4], 14);
          if nw in neighbors then
             dec(minis[1], 22)
-         else inc(minis[1], 22);
+         else inc(minis[1], 14);
       end else
    //40:
       if neighbors * [s, w] = [s, w] then
