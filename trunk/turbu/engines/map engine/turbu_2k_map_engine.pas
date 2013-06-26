@@ -682,7 +682,7 @@ begin
    commons.OutputFormattedString('Frame timestamp: %d:%d:%d.%d', [hour, min, sec, msec]);
 end;
 
-var newAG: integer;
+//var newAG: integer;
 
 {$R-}
 procedure T2kMapEngine.OnTimer(Sender: TObject);
