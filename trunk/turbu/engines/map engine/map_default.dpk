@@ -52,7 +52,8 @@ contains
   turbu_2k_image_engine in 'turbu_2k_image_engine.pas',
   turbu_2k_message_boxes in 'turbu_2k_message_boxes.pas',
   turbu_2k_transitions in 'turbu_2k_transitions.pas',
-  turbu_2k_transitions_graphics in 'turbu_2k_transitions_graphics.pas';
+  turbu_2k_transitions_graphics in 'turbu_2k_transitions_graphics.pas',
+  turbu_2k_distortions in 'turbu_2k_distortions.pas';
 
 end.
 
