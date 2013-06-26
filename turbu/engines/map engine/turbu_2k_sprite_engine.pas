@@ -859,7 +859,11 @@ begin
       for i := 1 to 4 do
          moveTowards(time, FFadeColor[i], FFadeTarget[i]);
       if time = 0 then
+      begin
          freeAndNil(FFadeTime);
+         if FGameState = gs_fading then
+            EndTransition;
+      end;
    end;
    for i := 1 to 4 do
       result := result or (FFadeColor[i] <> 1);

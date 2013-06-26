@@ -113,7 +113,7 @@ var
 
 implementation
 uses
-   FastMM4,
+//   FastMM4,
    math, Forms, Dialogs, OpenGL,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data, turbu_OpenGl,
    turbu_constants, turbu_functional, dm_database, turbu_2k_images,
@@ -238,6 +238,7 @@ var
    layout: TGameLayout;
    renderer: TSdlRenderer;
    info: sdl_13.TSDL_SysWMinfo;
+   trn: TTransitionTypes;
 begin
    if FInitialized then
       Exit(window);
@@ -303,9 +304,11 @@ begin
       GFontEngine := TFontEngine.Create(FShaderEngine);
       GFontEngine.Current := TRpgFont.Create('RMG2000_0.fon');
       GMenuEngine := TMenuSpriteEngine.Create(
-        TSystemImages.Create(FImages, GDatabase.layout.systemGraphic,
-          GDatabase.layout.wallpaperStretch, GDatabase.layout.translucentMessages),
+        TSystemImages.Create(FImages, layout.systemGraphic,
+          layout.wallpaperStretch, layout.translucentMessages),
         FCanvas, FImages);
+      for trn := Low(TTransitionTypes) to High(TTransitionTypes) do
+         rs_maps.setTransition(trn, TTransitions(layout.transition[trn] + 1));
    except
       cleanup;
       raise;
@@ -490,7 +493,7 @@ begin
             PartyButton(button);
       msShared, msExclusiveShared:
       begin
-         GMenuEngine.MessageBox.button(button);
+         GMenuEngine.button(button);
          FEnterLock := true;
       end;
       msFull:;
@@ -735,9 +738,7 @@ end;
 
 procedure T2kMapEngine.OnProcess(Sender: TObject);
 var
-   event: TSdlEvent;
    button: TButtonCode;
-   key: TMsg;
 begin
    if assigned(FTitleScreen) then
       Exit;
@@ -745,7 +746,6 @@ begin
    for button in FButtonState do
       pressButton(button);
    GMapObjectManager.Tick;
-//   GEnvironment.UpdateEvents;
    FCurrentMap.Process(sender);
 end;
 
