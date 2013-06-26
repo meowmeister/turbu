@@ -12,6 +12,7 @@ function expandSdlRect(const value: TRect; amount: integer): TRect;
 function multiplyRect(const value: TRect; amount: integer): TRect; overload;
 function multiplyRect(const value: TRect; amount: TSgPoint): TRect; overload;
 function multiplyRect(const value: TRect; amount: single): TRect; overload;
+function divideRect(const value: TRect; amount: TSgPoint): TRect;
 function pointToGridLoc(const point, cellSize: TSgPoint; const hScroll, vScroll: integer;
                         const scale: double): TSgPoint;
 function gridLocToPoint(const point, cellSize: TSgPoint; const hScroll, vScroll: integer;
@@ -69,6 +70,14 @@ begin
    result.Top := value.Top * amount.y;
    result.Right := value.Right * amount.x;
    result.Bottom := value.Bottom * amount.y;
+end;
+
+function divideRect(const value: TRect; amount: TSgPoint): TRect;
+begin
+   result.Left := round(value.Left / amount.x);
+   result.Top := round(value.Top / amount.y);
+   result.Right := round(value.Right / amount.x);
+   result.Bottom := round(value.Bottom / amount.y);
 end;
 
 function pointToGridLoc(const point, cellSize: TSgPoint; const hScroll, vScroll: integer;
