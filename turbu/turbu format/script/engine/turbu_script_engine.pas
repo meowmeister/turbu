@@ -154,8 +154,8 @@ procedure RegisterMediaE(RegisterFunction: TExecImportCall; RegisterArrayProp: T
 begin
    RegisterFunction('playMusic', @rs_media.playMusic);
    RegisterFunction('fadeOutMusic', @rs_media.FadeOutMusic);
-   RegisterFunction('memorizeBgm', nil);
-   RegisterFunction('playMemorizedBgm', nil);
+   RegisterFunction('memorizeBgm', @rs_media.MemorizeBGM);
+   RegisterFunction('playMemorizedBgm', @rs_media.PlayMemorizedBgm);
    RegisterFunction('playSound', @rs_Media.playSound);
    RegisterFunction('playMovie', nil);
 end;

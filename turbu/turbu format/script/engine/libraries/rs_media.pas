@@ -27,11 +27,13 @@ uses
    procedure PlayMusicData(music: TRpgMusic);
    procedure PlaySoundData(sound: TRpgSound);
    procedure fadeOutMusic(time: integer);
+   procedure MemorizeBGM;
+   procedure PlayMemorizedBgm;
 
 implementation
 uses
    SysUtils,
-   ArchiveInterface, ArchiveUtils,
+   commons, ArchiveInterface, ArchiveUtils,
    Disharmony;
 
 var
@@ -40,29 +42,66 @@ var
 procedure playSound(name: string; volume, tempo, balance: integer);
 begin
    if ArchiveUtils.SoundExists(name) then
-      MediaPlayer.PlaySoundEx(IncludeTrailingPathDelimiter(GArchives[SFX_ARCHIVE].root) + name, volume, tempo, balance);
+   begin
+      name := IncludeTrailingPathDelimiter(GArchives[SFX_ARCHIVE].root) + name;
+      commons.runThreadsafe(
+         procedure begin
+            MediaPlayer.PlaySoundEx(name, volume, tempo, balance);
+         end, true);
+   end;
 end;
 
 procedure StopMusic;
 begin
-   MediaPlayer.StopMusic;
+   commons.runThreadsafe(procedure begin MediaPlayer.StopMusic end);
 end;
+
+var
+   LLastMusic: string;
+   LLastTime, LLastVolume, LLastTempo, LLastBalance: integer;
+   LMemorizedBGM: TRpgMusic;
 
 procedure playMusic(name: string; time, volume, tempo, balance: integer);
 begin
    if ArchiveUtils.MusicExists(name) or (Name = '(OFF)') then
-   begin
-      mediaPlayer.PlayMusic(IncludeTrailingPathDelimiter(GArchives[MUSIC_ARCHIVE].root) + name);
-      MediaPlayer.FadeInMusic(time);
-      MediaPlayer.SetMusicVolume(volume);
-      MediaPlayer.SetMusicSpeed(tempo);
-      MediaPlayer.SetPanPos(balance);
-   end;
+      commons.runThreadsafe(
+         procedure begin
+            mediaPlayer.PlayMusic(IncludeTrailingPathDelimiter(GArchives[MUSIC_ARCHIVE].root) + name);
+            MediaPlayer.FadeInMusic(time);
+            MediaPlayer.SetMusicVolume(volume);
+            MediaPlayer.SetMusicSpeed(tempo);
+            MediaPlayer.SetPanPos(balance);
+            LLastMusic := name;
+            LLastTime := time;
+            LLastVolume := volume;
+            LLastTempo := tempo;
+            LLastBalance := balance;
+         end, true);
 end;
 
 procedure PlayMusicData(music: TRpgMusic);
 begin
    playMusic(music.filename, music.fadeIn, music.volume, music.tempo, music.balance);
+end;
+
+procedure MemorizeBGM;
+begin
+   commons.runThreadsafe(
+      procedure begin
+         LMemorizedBGM.Free;
+         LMemorizedBGM := TRpgMusic.Create;
+         LMemorizedBGM.filename := LLastMusic;
+         LMemorizedBGM.fadeIn := LLastTime;
+         LMemorizedBGM.tempo := LLastTempo;
+         LMemorizedBGM.volume := LLastVolume;
+         LMemorizedBGM.balance := LLastBalance;
+      end, true);
+end;
+
+procedure PlayMemorizedBgm;
+begin
+   if assigned(LMemorizedBGM) then
+      PlayMusicData(LMemorizedBGM);
 end;
 
 procedure PlaySoundData(sound: TRpgSound);
@@ -72,9 +111,11 @@ end;
 
 procedure fadeOutMusic(time: integer);
 begin
-   MediaPlayer.FadeOutMusic(time);
+   commons.runThreadsafe(procedure begin MediaPlayer.FadeOutMusic(time) end);
 end;
 
 initialization
    MediaPlayer := LoadDisharmony;
+finalization
+   LMemorizedBGM.Free;
 end.
