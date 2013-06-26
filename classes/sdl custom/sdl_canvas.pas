@@ -93,7 +93,8 @@ type
       * Draws a TSdlImage to the current render target.  The dest parameter
       * represents the position of the top-left corner.
       ************************************************************************}
-      procedure Draw(image: TSdlImage; dest: TSgPoint);
+      procedure Draw(image: TSdlImage; dest: TSgPoint); overload;
+      procedure Draw(target: TSdlRenderTarget; dest: TSgPoint); overload;
       procedure DrawTo(image: TSdlImage; dest: TRect);
 
       {************************************************************************
@@ -102,13 +103,15 @@ type
       ************************************************************************}
       procedure DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect); overload;
       procedure DrawRect(target: TSdlRenderTarget; dest: TSgPoint; source: TRect); overload;
-      procedure DrawRectTo(image: TSdlImage; dest, source: TRect);
+      procedure DrawRectTo(image: TSdlImage; dest, source: TRect); overload;
+      procedure DrawRectTo(target: TSdlRenderTarget; dest, source: TRect); overload;
 
       {************************************************************************
       * Draws a box on screen
       ************************************************************************}
       procedure DrawBox(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
       procedure DrawDashedBox(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
+      procedure FillRect(const region: TRect; const color: SDL_Color; const alpha: byte = $FF);
 
       procedure Clear(const color: SDL_Color; const alpha: byte = $FF); overload;
 
@@ -285,9 +288,24 @@ begin
    assert(SDL_RenderCopy(FRenderer, image.surface, nil, @dummy) = 0);
 end;
 
+procedure TSdlCanvas.Draw(target: TSdlRenderTarget; dest: TSgPoint);
+var
+   dummy: TSDLRect;
+begin
+   dummy.TopLeft := dest;
+   dummy.BottomRight := target.handle.size;
+   assert(SDL_RenderCopy(FRenderer, target.handle, nil, @dummy) = 0);
+end;
+
 procedure TSdlCanvas.DrawTo(image: TSdlImage; dest: TRect);
 begin
    assert(SDL_RenderCopy(FRenderer, image.surface, nil, @dest) = 0);
+end;
+
+procedure TSdlCanvas.FillRect(const region: TRect; const color: SDL_Color; const alpha: byte);
+begin
+   assert(SDL_SetRenderDrawColor(FRenderer, color.r, color.g, color.b, alpha) = 0);
+   SDL_RenderFillRect(FRenderer, @region);
 end;
 
 procedure TSdlCanvas.DrawBox(const region: TRect; const color: SDL_Color;
@@ -359,6 +377,12 @@ end;
 procedure TSdlCanvas.DrawRectTo(image: TSdlImage; dest, source: TRect);
 begin
    if SDL_RenderCopy(FRenderer, image.surface, @source, @dest) <> 0 then
+      raise ECanvas.CreateFmt('SDL_RenderCopy failed: %s', [AnsiString(SDL_GetError)]);
+end;
+
+procedure TSdlCanvas.DrawRectTo(target: TSdlRenderTarget; dest, source: TRect);
+begin
+   if SDL_RenderCopy(FRenderer, target.handle, @source, @dest) <> 0 then
       raise ECanvas.CreateFmt('SDL_RenderCopy failed: %s', [AnsiString(SDL_GetError)]);
 end;
 
