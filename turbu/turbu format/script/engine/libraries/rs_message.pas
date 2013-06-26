@@ -114,20 +114,17 @@ end;
 
 procedure setFlipped(const value: boolean);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   GMenuEngine.MessageBox.portrait.MirrorX := value;
+   GMenuEngine.portrait.MirrorX := value;
 end;
 
 procedure clearPortrait;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   GMenuEngine.MessageBox.portrait.Visible := false;
+   GMenuEngine.portrait.Visible := false;
 end;
 
 procedure setRightside(const value: boolean);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   GMenuEngine.MessageBox.rightside := value;
+   GMenuEngine.SetRightside(value);
 end;
 
 procedure setPortrait(filename: string; const index: integer; const rightside, flipped: boolean);
@@ -151,8 +148,7 @@ begin
       Exit;
 
    setRightside(rightside);
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   GMenuEngine.MessageBox.setPortrait(filename, index);
+   GMenuEngine.setPortrait(filename, index);
    setFlipped(flipped);
 end;
 

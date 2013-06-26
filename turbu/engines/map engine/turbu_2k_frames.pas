@@ -84,6 +84,7 @@ type
       FBoxVisible: boolean;
       procedure SetPosition(const Value: TMboxLocation);
       procedure SetBoxVisible(const Value: boolean);
+      function GetPortrait: TSprite;
    protected
       procedure EndMessage;
       function InnVocab(style: integer; const name: string; value: integer = 0): string;
@@ -95,6 +96,8 @@ type
       procedure ChoiceBox(const msg: string; responses: TArray<string>; allowCancel: boolean);
       procedure Terminate;
       procedure button(const input: TButtonCode);
+      procedure SetPortrait(const filename: string; index: integer);
+      procedure SetRightside(value: boolean);
 
       property MenuInt: integer read FMenuInt write FMenuInt;
       property Cursor: TSysFrame read FCursor;
@@ -102,6 +105,7 @@ type
       property SystemGraphic: TSystemImages read FSystemGraphic;
       property position: TMboxLocation read FPosition write SetPosition;
       property boxVisible: boolean read FBoxVisible write SetBoxVisible;
+      property portrait: TSprite read GetPortrait;
    end;
 
    TCorners = (topLeft, topRight, bottomLeft, bottomRight);
@@ -365,6 +369,16 @@ begin
    FMenuState := msNone;
 end;
 
+function TMenuSpriteEngine.GetPortrait: TSprite;
+begin
+   result := (FBoxes[mbtMessage] as TMessageBox).portrait;
+end;
+
+procedure TMenuSpriteEngine.SetPortrait(const filename: string; index: integer);
+begin
+   (FBoxes[mbtMessage] as TMessageBox).setPortrait(filename, index);
+end;
+
 function TMenuSpriteEngine.InnVocab(style: integer; const name: string; value: integer = 0): string;
 var
    key: string;
@@ -422,6 +436,11 @@ begin
    FPosition := Value;
    for box in FBoxes do
       box.position := value;
+end;
+
+procedure TMenuSpriteEngine.SetRightside(value: boolean);
+begin
+   (FBoxes[mbtMessage] as TMessageBox).rightside := value;
 end;
 
 procedure TMenuSpriteEngine.ShowMessage(const msg: string; modal: boolean);
