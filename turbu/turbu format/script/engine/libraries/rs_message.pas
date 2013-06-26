@@ -56,13 +56,12 @@ var newValue: TMboxLocation;
 begin
    oldValue := GMenuEngine.position;
    newValue := oldValue;
-{$MESSAGE WARN 'Commented out code in live unit'}
-   if FMboxCautious and {GSpriteEngine.heroIn(oldValue)} false then //TODO: fix this
+   if FMboxCautious and GSpriteEngine.heroIn(oldValue) then
    begin
       case oldValue of
          mb_top: newValue := mb_bottom;
          mb_middle:
-            if {GSpriteEngine.heroIn(mb_top)} false then
+            if GSpriteEngine.heroIn(mb_top) then
                newValue := mb_bottom
             else newValue := mb_top;
          mb_bottom: newValue := mb_top;
