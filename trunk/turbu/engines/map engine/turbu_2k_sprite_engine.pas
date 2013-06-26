@@ -115,6 +115,7 @@ type
       procedure assignTile(const x, y, layer: integer; const tile: TTileRef);
       function updateBorders(x, y, layer: integer): boolean;
       procedure Process(Sender: TObject);
+      function heroIn(const location: TMboxLocation): boolean;
       procedure AdvanceFrame;
       function GetTile(x, y, layer: integer): TMapTile;
       function GetTopTile(x, y: integer): TMapTile;
@@ -662,6 +663,20 @@ end;
 function T2kSpriteEngine.GetWidth: integer;
 begin
    result := MapObj.size.x;
+end;
+
+function T2kSpriteEngine.heroIn(const location: TMboxLocation): boolean;
+var
+   yPos, third: integer;
+begin
+   third := canvas.Height div 3;
+   yPos := (FCurrentParty.location.Y * TILE_SIZE.y) - trunc(worldY);
+   case location of
+      mb_top: result := yPos <= third + TILE_SIZE.y;
+      mb_middle: result := (yPos <= (third * 2) + TILE_SIZE.y) and (yPos > third);
+      mb_bottom: result := yPos > third * 2;
+      else raise Exception.Create('Invalid mbox location.');
+   end;
 end;
 
 function T2kSpriteEngine.IsBlank: boolean;
