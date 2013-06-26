@@ -49,7 +49,7 @@ uses
    SDL_13, SG_defs;
 
 const
-   FADETIME: array[1..2] of integer = (1200, 1800);
+   FADETIME: array[1..2] of integer = (12, 18);
 var
    LTimer: word;
    LVertical: boolean;
