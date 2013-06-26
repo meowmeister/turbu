@@ -140,7 +140,7 @@ uses
 constructor T2kEnvironment.Create(database: TRpgDatabase);
 var
    hero: THeroTemplate;
-   vehicle: TVehicleTemplate;
+//   vehicle: TVehicleTemplate;
 begin
    assert(GEnvironment = nil);
    GEnvironment := self;
@@ -153,6 +153,7 @@ begin
    setLength(FSwitches, database.switch.count + 1);
    setLength(FInts, database.variable.Count + 1);
    FVehicles := TVehicleList.Create;
+{$MESSAGE WARN 'Commented out code in live unit'}
    //TODO: Add vehicle support
 {   for vehicle in database.vehicles.Values do
       FVehicles.Add(TRpgVehicle.Create(database.mapTree, vehicle.id));}

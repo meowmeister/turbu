@@ -244,6 +244,7 @@ var
    template: THeroTemplate absolute base;
    cond: TPoint;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    inherited Create(base);
    if base = nil then
       Exit;
@@ -275,9 +276,9 @@ begin
    self.levelAdjustUp(0);
    level := template.minLevel;
    FExpTotal := FExpTable[FLevel];
-{   for I := low(FEquipment) to high(FEquipment) do
+   for I := low(FEquipment) to high(FEquipment) do
       if template.eq[i] <> 0 then
-         self.equip(template.eq[i]);}
+         self.equip(template.eq[i]);
    i := GDatabase.conditions.Count;
    setLength(FConditionModifier, i);
    setLength(FCondition, i);
@@ -299,17 +300,20 @@ end;
 
 procedure TRpgHero.AddBattleCommand(which: integer);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    //TODO: Implement this
 end;
 
 procedure TRpgHero.RemoveBattleCommand(which: integer);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    //TODO: Implement this
 end;
 
 procedure TRpgHero.ChangeClass(id: integer; retainLevel: boolean; skillChange,
   statChange: integer; showMessage: boolean);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    //TODO: Implement this
 end;
 
@@ -387,6 +391,7 @@ begin
       FEquipment[slot] := theItem;
    end;
    FParty.inventory.Remove(id, 1);
+{$MESSAGE WARN 'Commented out code in live unit'}
 {   inc(FStat[stat_eq_mod, 1], TEquipment(theItem).attack);
    inc(FStat[stat_eq_mod, 2], TEquipment(theItem).defense);
    inc(FStat[stat_eq_mod, 3], TEquipment(theItem).mind);
@@ -398,6 +403,7 @@ procedure TRpgHero.equipSlot(id, slot: integer);
    theItem: TRpgItem;
    dummy: TItemType;}
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
 {   theItem := TRpgItem.newItem(id, 1);
    assert(theItem is TEquipment);
    dummy := theItem.template.itemType;
@@ -438,6 +444,7 @@ begin
    if FEquipment[id] <> nil then
    begin
       FParty.inventory.AddItem(FEquipment[id]);
+{$MESSAGE WARN 'Commented out code in live unit'}
 {      dec(FStat[stat_eq_mod, 1], TEquipment(FEquipment[id]).attack);
       dec(FStat[stat_eq_mod, 2], TEquipment(FEquipment[id]).defense);
       dec(FStat[stat_eq_mod, 3], TEquipment(FEquipment[id]).mind);
@@ -591,18 +598,18 @@ end;
 
 procedure TRpgHero.setLevel(const value: integer);
 var
-   dummy: boolean;
+   increasing: boolean;
    oldlevel: integer;
 begin
    if FLevel = value then
       Exit;
 
-   dummy := FLevel < value;
+   increasing := FLevel < value;
    oldlevel := FLevel;
-//   FLevel := clamp(value, 0, MAXLEVEL);
+   FLevel := clamp(value, 0, MAXLEVEL);
 
    FExpTotal := FExpTable[FLevel];
-   if dummy then
+   if increasing then
       levelAdjustUp(oldlevel)
    else levelAdjustDown(oldlevel);
 end;
@@ -615,8 +622,9 @@ var
 begin
    base := template as THeroTemplate;
    for I := 1 to base.skillset.Count - 1 do
+{$MESSAGE WARN 'Commented out code in live unit'}
 {      if (base.skillset[i].level > FLevel) and (base.skillset[i].level <= before) then
-         FSkill[base.skillset[i].id] := false;}
+         FSkill[base.skillset[i].id] := false;} ;
    levelStatAdjust;
 end;
 
@@ -627,8 +635,9 @@ var
 begin
    base := template as THeroTemplate;
    for I := 1 to base.skillset.Count - 1 do
+{$MESSAGE WARN 'Commented out code in live unit'}
 {      if (base.skillset[i].level <= FLevel) and (base.skillset[i].level > before) then
-         FSkill[base.skillset[i].id] := true;}
+         FSkill[base.skillset[i].id] := true;} ;
    levelStatAdjust;
 end;
 
@@ -707,7 +716,7 @@ begin
 
    FFaceName := filename;
    FFaceNum := index;
-//   GGameEngine.loadPortrait(filename);
+   GSpriteEngine.Images.EnsureImage(filename, 'portrait', PORTRAIT_SIZE);
 end;
 
 procedure TRpgHero.setSkill(id: integer; value: boolean);
@@ -733,11 +742,18 @@ begin
 end;
 
 procedure TRpgHero.setTransparent(const Value: boolean);
+var
+   party: TCharSprite;
 begin
    FTransparent := Value;
    if FParty[1] = self then
-{   with GGameEngine.character[0] as TCharSprite do
-      update(sprite, spriteIndex, translucency >= 3);}
+   begin
+      party := GSpriteEngine.CurrentParty;
+      if value then
+         party.translucency := 3
+      else party.translucency := 0;
+      party.update(FSprite, value);
+   end;
 end;
 
 function TRpgHero.takeDamage(power: integer; defense, mDefense, variance: integer): integer;
@@ -911,8 +927,8 @@ end;
 
 procedure TRpgParty.doFlash(r, g, b, power: integer; time: integer);
 begin
-{   if assigned(GGameEngine.character[0]) then
-      GGameEngine.character[0].flash(r, g, b, power, time);}
+   if assigned(GSpriteEngine.CurrentParty) then
+      GSpriteEngine.CurrentParty.flash(r, g, b, power, time);
 end;
 
 function TRpgParty.size: integer;
