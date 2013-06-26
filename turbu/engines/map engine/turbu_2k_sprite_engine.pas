@@ -666,9 +666,7 @@ end;
 
 function T2kSpriteEngine.IsBlank: boolean;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   result := FBlank or ((FFadeColor[1] = 0) and (FFadeColor[2] = 0) and (FFadeColor[3] = 0));
-   result := true;
+   result := FBlank or ((FFadeColor[1] = 0) and (FFadeColor[2] = 0) and (FFadeColor[3] = 0));
 end;
 
 function T2kSpriteEngine.CreateNewTile(value: TTileRef): TMapTile;
@@ -1071,6 +1069,8 @@ var
    i: integer;
 begin
    assert(assigned(FMap));
+   if EqualRect(viewport, FViewport) then
+      Exit;
    FViewport := viewport;
    self.WorldX := viewport.Left * TILE_SIZE.X;
    self.WorldY := viewport.Top * TILE_SIZE.Y;
