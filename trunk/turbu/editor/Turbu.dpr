@@ -48,7 +48,6 @@ uses
   delete_map in 'delete_map.pas' {dlgDeleteMap},
   rm2_turbu_map_objects in '..\turbu format\converters\rm2_turbu_map_objects.pas',
   rm2_turbu_event_builder in '..\turbu format\converters\rm2_turbu_event_builder.pas',
-  db_create in '..\turbu format\design\db_create.pas',
   dm_ProjectBoot in 'dm_ProjectBoot.pas' {dmProjectBoot: TDataModule},
   monster in '..\monster.pas',
   rm2_turbu_monsters in '..\turbu format\converters\rm2_turbu_monsters.pas',
