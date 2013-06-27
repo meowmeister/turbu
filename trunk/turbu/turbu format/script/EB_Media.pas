@@ -62,10 +62,16 @@ type
       function GetScriptText: string; override;
    end;
 
+   TEBSysSFX = class(TEBMediaObject)
+   public
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
 implementation
 uses
-   SysUtils, Classes,
-   EB_RpgScript, EB_ObjectHelper;
+   SysUtils, Classes, TypInfo,
+   EB_RpgScript, EB_ObjectHelper, EB_Expressions, turbu_defs;
 
 { TEBPlayBGM }
 
@@ -152,7 +158,22 @@ begin
    result := format(result, [Text, Values[1], Values[2], Values[3], Values[4]]);
 end;
 
+{ TEBSysSFX }
+
+function TEBSysSFX.GetNodeText: string;
+const LINE = 'Set System SFX: %s, %s';
+begin
+   result := format(LINE, [CleanEnum(GetEnumName(TypeInfo(TSfxTypes), Values[0])), Text]);
+end;
+
+function TEBSysSFX.GetScriptText: string;
+const LINE = 'SetSystemSound(%s, %s, %d, %d, %d);';
+begin
+   result := format(LINE, [GetEnumName(TypeInfo(TSfxTypes), Values[0]), QuotedStr(Text),
+                           Values[1], Values[2], Values[3]]);
+end;
+
 initialization
    TEBObject.RegisterClasses([TEBPlayBGM, TEBFadeBGM, TEBMemBGM, TEBPlayMemBGM,
-                    TEBPlaySFX, TEBPlayMovie]);
+                    TEBPlaySFX, TEBPlayMovie, TEBSysSFX]);
 end.

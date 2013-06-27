@@ -133,6 +133,8 @@ begin
    input.ImportFunction('procedure playMemorizedBgm;');
    input.ImportFunction('procedure playSound(name: string; volume, tempo, balance: integer);');
    input.ImportFunction('procedure playMovie(name: string; posX, posY, width, height: integer);');
+   input.ImportFunction('procedure SetSystemSound(style: TSfxTypes; filename: string; volume, tempo, balance: integer);');
+   input.ImportFunction('procedure PlaySystemSound(sound: TSfxTypes);');
 end;
 
 procedure RegisterSettingsC(input: TrsTypeImporter);
@@ -140,7 +142,6 @@ begin
    input.ImportType(TypeInfo(TBgmTypes));
    input.ImportType(TypeInfo(TSfxTypes));
    input.ImportFunction('procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);');
-   input.ImportFunction('procedure SetSystemSound(style: TSfxTypes; filename: string; volume, tempo, balance: integer);');
    input.ImportFunction('procedure SetSkin(filename: string);');
 end;
 
@@ -157,13 +158,14 @@ begin
    RegisterFunction('memorizeBgm', @rs_media.MemorizeBGM);
    RegisterFunction('playMemorizedBgm', @rs_media.PlayMemorizedBgm);
    RegisterFunction('playSound', @rs_Media.playSound);
+   RegisterFunction('SetSystemSound', @rs_Media.SetSystemSound);
+   RegisterFunction('PlaySystemSound', @rs_Media.PlaySystemSound);
    RegisterFunction('playMovie', nil);
 end;
 
 procedure RegisterSettingsE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
 begin
    RegisterFunction('SetSystemMusic', nil);
-   RegisterFunction('SetSystemSound', nil);
    RegisterFunction('SetSkin', nil);
 end;
 

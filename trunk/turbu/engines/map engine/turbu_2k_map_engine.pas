@@ -239,6 +239,7 @@ var
    renderer: TSdlRenderer;
    info: sdl_13.TSDL_SysWMinfo;
    trn: TTransitionTypes;
+   sfx: TSfxTypes;
 begin
    if FInitialized then
       Exit(window);
@@ -309,6 +310,8 @@ begin
         FCanvas, FImages);
       for trn := Low(TTransitionTypes) to High(TTransitionTypes) do
          rs_maps.setTransition(trn, TTransitions(layout.transition[trn] + 1));
+      for sfx := low(TSfxTypes) to high(TSfxTypes) do
+         rs_media.SetSystemSoundData(sfx, FDatabase.sfx[sfx])
    except
       cleanup;
       raise;
