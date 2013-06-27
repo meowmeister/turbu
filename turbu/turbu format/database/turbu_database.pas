@@ -138,8 +138,9 @@ type
       procedure LoadSounds;
       procedure SaveSounds;
       function GetTileGroup(const key: string): TTileGroup;
-    procedure downloadStringList(dataset: TDataset; list: TStringList);
-    function GetVocab(const key: string): string;
+      procedure downloadStringList(dataset: TDataset; list: TStringList);
+      function GetVocab(const key: string): string;
+      function GetSFX(value: TSfxTypes): TRpgSound;
    protected
       FGlobalScriptBlock: TEBUnit;
       FSysVocab: TStringList;
@@ -210,6 +211,7 @@ type
       property battleChars: TBattleCharList read FBattleChars;
       property terrains: TTerrainList read FTerrains;
       property vocab[const key: string]: string read GetVocab;
+      property sfx[value: TSfxTypes]: TRpgSound read GetSFX;
 
       property projectName: string read getProjectName;
       property uploadedTypes: TRpgDataTypeSet read FUploadedTypes;
@@ -775,6 +777,11 @@ end;
 function TRpgDatabase.getProjectName: string;
 begin
    result := FMapTree[0].name;
+end;
+
+function TRpgDatabase.GetSFX(value: TSfxTypes): TRpgSound;
+begin
+   result := FSfx[value];
 end;
 
 function TRpgDatabase.GetTileGroup(const key: string): TTileGroup;

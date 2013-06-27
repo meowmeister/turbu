@@ -19,16 +19,19 @@ unit rs_media;
 
 interface
 uses
-   turbu_sounds;
+   turbu_sounds, turbu_defs;
 
    procedure playSound(name: string; volume, tempo, balance: integer);
    procedure StopMusic;
    procedure playMusic(name: string; time, volume, tempo, balance: integer);
    procedure PlayMusicData(music: TRpgMusic);
    procedure PlaySoundData(sound: TRpgSound);
+   procedure PlaySystemSound(sound: TSfxTypes);
    procedure fadeOutMusic(time: integer);
    procedure MemorizeBGM;
    procedure PlayMemorizedBgm;
+   procedure SetSystemSound(style: TSfxTypes; filename: string; volume, tempo, balance: integer);
+   procedure SetSystemSoundData(style: TSfxTypes; sound: TRpgSound);
 
 implementation
 uses
@@ -109,13 +112,51 @@ begin
    playSound(sound.filename, sound.volume, sound.tempo, sound.balance);
 end;
 
+var
+   LSystemSounds: array[TSfxTypes] of TRpgSound;
+
+procedure SetSystemSound(style: TSfxTypes; filename: string; volume, tempo, balance: integer);
+var
+   newSound: TRpgSound;
+begin
+   runThreadsafe(
+      procedure begin
+         newSound := TRpgSound.Create;
+         newSound.filename := filename;
+         newSound.volume := volume;
+         newSound.tempo := tempo;
+         newSound.balance := balance;
+         LSystemSounds[style].Free;
+         LSystemSounds[style] := newSound;
+      end, true);
+end;
+
+procedure SetSystemSoundData(style: TSfxTypes; sound: TRpgSound);
+begin
+   SetSystemSound(style, sound.filename, sound.volume, sound.tempo, sound.balance);
+end;
+
+procedure PlaySystemSound(sound: TSfxTypes);
+begin
+   PlaySoundData(LSystemSounds[sound]);
+end;
+
 procedure fadeOutMusic(time: integer);
 begin
    commons.runThreadsafe(procedure begin MediaPlayer.FadeOutMusic(time) end);
 end;
 
+procedure FreeSoundsAndMusic;
+var
+   sound: TSoundTemplate;
+begin
+   LMemorizedBGM.Free;
+   for sound in LSystemSounds do
+      sound.Free;
+end;
+
 initialization
    MediaPlayer := LoadDisharmony;
 finalization
-   LMemorizedBGM.Free;
+   FreeSoundsAndMusic;
 end.

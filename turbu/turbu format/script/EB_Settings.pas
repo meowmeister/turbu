@@ -38,12 +38,6 @@ type
       function GetScriptText: string; override;
    end;
 
-   TEBSysSFX = class(TEBSettingsObject)
-   public
-      function GetNodeText: string; override;
-      function GetScriptText: string; override;
-   end;
-
    TEBSysSkin = class(TEBSettingsObject)
    public
       function GetNodeText: string; override;
@@ -87,21 +81,6 @@ begin
                            Values[1], Values[2], Values[3], Values[4]]);
 end;
 
-{ TEBSysSFX }
-
-function TEBSysSFX.GetNodeText: string;
-const LINE = 'Set System SFX: %s, %s';
-begin
-   result := format(LINE, [CleanEnum(GetEnumName(TypeInfo(TSfxTypes), Values[0])), Text]);
-end;
-
-function TEBSysSFX.GetScriptText: string;
-const LINE = 'SetSystemSound(%s, %s, %d, %d, %d);';
-begin
-   result := format(LINE, [GetEnumName(TypeInfo(TSfxTypes), Values[0]), QuotedStr(Text),
-                           Values[1], Values[2], Values[3]]);
-end;
-
 { TEBSysSkin }
 
 function TEBSysSkin.GetNodeText: string;
@@ -115,5 +94,5 @@ begin
 end;
 
 initialization
-   TEBObject.RegisterClasses([TEBSysBGM, TEBSysSFX, TEBSysSkin, TEBVehicleBGM]);
+   TEBObject.RegisterClasses([TEBSysBGM, TEBSysSkin, TEBVehicleBGM]);
 end.
