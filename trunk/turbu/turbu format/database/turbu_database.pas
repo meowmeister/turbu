@@ -141,6 +141,7 @@ type
       procedure downloadStringList(dataset: TDataset; list: TStringList);
       function GetVocab(const key: string): string;
       function GetSFX(value: TSfxTypes): TRpgSound;
+      function GetBGM(value: TBgmTypes): TRpgMusic;
    protected
       FGlobalScriptBlock: TEBUnit;
       FSysVocab: TStringList;
@@ -212,6 +213,7 @@ type
       property terrains: TTerrainList read FTerrains;
       property vocab[const key: string]: string read GetVocab;
       property sfx[value: TSfxTypes]: TRpgSound read GetSFX;
+      property bgm[value: TBgmTypes]: TRpgMusic read GetBGM;
 
       property projectName: string read getProjectName;
       property uploadedTypes: TRpgDataTypeSet read FUploadedTypes;
@@ -782,6 +784,11 @@ end;
 function TRpgDatabase.GetSFX(value: TSfxTypes): TRpgSound;
 begin
    result := FSfx[value];
+end;
+
+function TRpgDatabase.GetBGM(value: TBgmTypes): TRpgMusic;
+begin
+   result := FBgm[value];
 end;
 
 function TRpgDatabase.GetTileGroup(const key: string): TTileGroup;

@@ -42,7 +42,7 @@ type
 implementation
 uses
    Variants,
-   ArchiveInterface, EB_Settings, turbu_sounds, dm_database, turbu_database;
+   ArchiveInterface, EB_Media, turbu_sounds, dm_database, turbu_database;
 
 {$R *.dfm}
 

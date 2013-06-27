@@ -182,9 +182,9 @@ const
 
 implementation
 uses
-   SysUtils, Math, OpenGL,
+   Windows, SysUtils, Math, OpenGL,
    commons, turbu_text_utils, turbu_2k_environment, turbu_OpenGL, turbu_database,
-   turbu_2k_message_boxes,
+   turbu_2k_message_boxes, turbu_2k_sprite_engine, rs_media,
    sdl_13;
 
 const
@@ -339,6 +339,7 @@ end;
 constructor TMenuSpriteEngine.Create(graphic: TSystemImages; canvas: TSdlCanvas; images: TSdlImages);
 var
    size: TRect;
+   boxtype: TMessageBoxTypes;
 begin
    assert(GMenuEngine = nil);
    GMenuEngine := self;
@@ -352,6 +353,8 @@ begin
    FBoxes[mbtChoice] := TChoiceBox.Create(self, size);
    FBoxes[mbtPrompt] := TPromptBox.Create(self, size);
    FBoxes[mbtInput] := TInputBox.Create(self, size);
+   for boxtype := Low(TMessageBoxTypes) to High(TMessageBoxTypes) do
+      FBoxes[boxtype].OnPlaySound := rs_media.PlaySystemSound;
 end;
 
 destructor TMenuSpriteEngine.Destroy;
@@ -367,6 +370,8 @@ end;
 procedure TMenuSpriteEngine.EndMessage;
 begin
    FMenuState := msNone;
+   if assigned(FCurrentBox) then
+      FCurrentBox.EndMessage;
 end;
 
 function TMenuSpriteEngine.GetPortrait: TSprite;
@@ -414,10 +419,24 @@ end;
 
 procedure TMenuSpriteEngine.ChoiceBox(const msg: string; responses: TArray<string>;
   allowCancel: boolean);
+var
+   box: TCustomMessageBox;
 begin
-   FBoxes[mbtChoice].text := msg;
-  {$MESSAGE WARN 'Commented out code in live unit'}
-  asm int 3 end;
+   if FTerminated then
+      Exit;
+   while GSpriteEngine.State = gs_fading do
+      sleep(TRpgTimestamp.FrameLength);
+   box := FBoxes[mbtChoice];
+   box.text := msg;
+   TChoiceBox(box).canCancel := allowCancel;
+   box.Visible := true;
+   FCurrentBox := box;
+   try
+      FMenuState := msExclusiveShared;
+      box.FSignal.WaitFor;
+   finally
+      FCurrentBox := nil;
+   end;
 end;
 
 procedure TMenuSpriteEngine.SetBoxVisible(const Value: boolean);
@@ -449,9 +468,8 @@ var
 begin
    if FTerminated then
       Exit;
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   while FState = gs_fading do
-      windows.sleep(GFrameLength);}
+   while GSpriteEngine.State = gs_fading do
+      sleep(TRpgTimestamp.FrameLength);
    box := FBoxes[mbtMessage];
    box.text := msg;
    box.Visible := true;

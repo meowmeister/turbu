@@ -27,16 +27,20 @@ uses
    procedure PlayMusicData(music: TRpgMusic);
    procedure PlaySoundData(sound: TRpgSound);
    procedure PlaySystemSound(sound: TSfxTypes);
+   procedure PlaySystemMusic(music: TBgmTypes; once: boolean = false);
    procedure fadeOutMusic(time: integer);
+   procedure fadeInLastMusic(time: integer);
    procedure MemorizeBGM;
    procedure PlayMemorizedBgm;
    procedure SetSystemSound(style: TSfxTypes; filename: string; volume, tempo, balance: integer);
    procedure SetSystemSoundData(style: TSfxTypes; sound: TRpgSound);
+   procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);
+   procedure SetSystemMusicData(style: TBgmTypes; music: TRpgMusic);
 
 implementation
 uses
    SysUtils,
-   commons, ArchiveInterface, ArchiveUtils,
+   commons, ArchiveInterface, ArchiveUtils, turbu_script_engine,
    Disharmony;
 
 var
@@ -62,7 +66,7 @@ end;
 var
    LLastMusic: string;
    LLastTime, LLastVolume, LLastTempo, LLastBalance: integer;
-   LMemorizedBGM: TRpgMusic;
+   LMemorizedBGM, LFadedBGM: TRpgMusic;
 
 procedure playMusic(name: string; time, volume, tempo, balance: integer);
 begin
@@ -87,18 +91,20 @@ begin
    playMusic(music.filename, music.fadeIn, music.volume, music.tempo, music.balance);
 end;
 
+procedure MemorizeMusic(var music: TRpgMusic);
+begin
+   music.Free;
+   music := TRpgMusic.Create;
+   music.filename := LLastMusic;
+   music.fadeIn := LLastTime;
+   music.tempo := LLastTempo;
+   music.volume := LLastVolume;
+   music.balance := LLastBalance;
+end;
+
 procedure MemorizeBGM;
 begin
-   commons.runThreadsafe(
-      procedure begin
-         LMemorizedBGM.Free;
-         LMemorizedBGM := TRpgMusic.Create;
-         LMemorizedBGM.filename := LLastMusic;
-         LMemorizedBGM.fadeIn := LLastTime;
-         LMemorizedBGM.tempo := LLastTempo;
-         LMemorizedBGM.volume := LLastVolume;
-         LMemorizedBGM.balance := LLastBalance;
-      end, true);
+   commons.runThreadsafe( procedure begin MemorizeMusic(LMemorizedBGM) end, true);
 end;
 
 procedure PlayMemorizedBgm;
@@ -114,6 +120,7 @@ end;
 
 var
    LSystemSounds: array[TSfxTypes] of TRpgSound;
+   LSystemMusic: array[TBgmTypes] of TRpgMusic;
 
 procedure SetSystemSound(style: TSfxTypes; filename: string; volume, tempo, balance: integer);
 var
@@ -141,9 +148,56 @@ begin
    PlaySoundData(LSystemSounds[sound]);
 end;
 
+function WaitForMusicPlayed: boolean;
+begin
+   result := MediaPlayer.GetMusicLooping > 0;
+end;
+
+procedure PlaySystemMusic(music: TBgmTypes; once: boolean);
+begin
+   PlayMusicData(LSystemMusic[music]);
+   if once then
+      GScriptEngine.SetWaiting(WaitForMusicPlayed);
+end;
+
+procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);
+var
+   newMusic: TRpgMusic;
+begin
+   runThreadsafe(
+      procedure begin
+         newMusic := TRpgMusic.Create;
+         newMusic.filename := filename;
+         newMusic.volume := volume;
+         newMusic.tempo := tempo;
+         newMusic.balance := balance;
+         newMusic.fadeIn := fadeIn;
+         LSystemMusic[style].Free;
+         LSystemMusic[style] := newMusic;
+      end, true);
+end;
+
+procedure SetSystemMusicData(style: TBgmTypes; music: TRpgMusic);
+begin
+   SetSystemMusic(style, music.filename, music.fadeIn, music.volume, music.tempo, music.balance);
+end;
+
 procedure fadeOutMusic(time: integer);
 begin
-   commons.runThreadsafe(procedure begin MediaPlayer.FadeOutMusic(time) end);
+   commons.runThreadsafe(
+      procedure begin
+         MediaPlayer.FadeOutMusic(time);
+         MemorizeMusic(LFadedBGM);
+      end);
+end;
+
+procedure fadeInLastMusic(time: integer);
+begin
+   if assigned(LFadedBGM) then
+   begin
+      LFadedBGM.fadeIn := time;
+      PlayMusicData(LFadedBGM);
+   end;
 end;
 
 procedure FreeSoundsAndMusic;
@@ -151,7 +205,10 @@ var
    sound: TSoundTemplate;
 begin
    LMemorizedBGM.Free;
+   LFadedBGM.Free;
    for sound in LSystemSounds do
+      sound.Free;
+   for sound in LSystemMusic do
       sound.Free;
 end;
 

@@ -887,7 +887,7 @@ begin
    FBgm[bgmGameOver] := TRmMusic.Create($26, input);
    for i := 0 to ord(sfxItemUsed) do
       FSfx[TSfxTypes(i)] := TRmSound.Create($29 + i, input);
-   for i := 0 to ord(trn_BattleEndShow) do
+   for i := 0 to ord(trnBattleEndShow) do
       FTransition[TTransitionTypes(i)] := getNumSec($3D + i, input, fillInZeroInt);
    FWallpaperStretch := getChboxSec($47, input, fillInZeroInt);
 

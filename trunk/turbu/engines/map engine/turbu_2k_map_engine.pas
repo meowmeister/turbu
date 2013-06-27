@@ -240,6 +240,7 @@ var
    info: sdl_13.TSDL_SysWMinfo;
    trn: TTransitionTypes;
    sfx: TSfxTypes;
+   bgm: TBgmTypes;
 begin
    if FInitialized then
       Exit(window);
@@ -311,7 +312,9 @@ begin
       for trn := Low(TTransitionTypes) to High(TTransitionTypes) do
          rs_maps.setTransition(trn, TTransitions(layout.transition[trn] + 1));
       for sfx := low(TSfxTypes) to high(TSfxTypes) do
-         rs_media.SetSystemSoundData(sfx, FDatabase.sfx[sfx])
+         rs_media.SetSystemSoundData(sfx, FDatabase.sfx[sfx]);
+      for bgm := low(TBgmTypes) to high(TBgmTypes) do
+         rs_media.SetSystemMusicData(bgm, FDatabase.bgm[bgm])
    except
       cleanup;
       raise;

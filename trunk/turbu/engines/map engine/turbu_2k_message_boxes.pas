@@ -56,7 +56,6 @@ type
 
       property portrait: TSprite read FPortrait;
       property rightside: boolean write setRightside;
-{      property canCancel: boolean  read FAcceptCancel write FAcceptCancel;}
    end;
 
    TInputBox = class(TCustomMessageBox)
@@ -70,6 +69,7 @@ type
       procedure button(const input: TButtonCode); override;
       procedure placeCursor(position: smallint); virtual;
       property OnValidate: TValidateEvent read FOnValidate write FOnValidate;
+      property canCancel: boolean  read FAcceptCancel write FAcceptCancel;
    end;
 
    TChoiceBox = class(TInputBox)

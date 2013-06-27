@@ -30,7 +30,7 @@ uses
    procedure messageOptions(const transparent: boolean; const position: TMboxLocation; const dontHideHero, modal: boolean);
    procedure clearPortrait;
    procedure setPortrait(filename: string; const index: integer; const rightside, flipped: boolean);
-   function choiceBox(const msg: string; const handler: integer): integer;
+   function choiceBox(const msg: string; const choices: TArray<string>; const handler: integer): integer;
    function inputNumber(const digits: integer): integer;
    function inn(messageStyle, cost: integer): boolean;
 
@@ -39,7 +39,8 @@ uses
 implementation
 uses
    SysUtils, SyncObjs,
-   commons, turbu_constants, turbu_2k_sprite_engine, turbu_2k_frames,
+   commons, turbu_constants, turbu_2k_sprite_engine, turbu_2k_frames, rs_media,
+   turbu_2k_environment,
    rsCompiler, rsExec,
    ArchiveUtils;
 
@@ -132,11 +133,7 @@ var
    valid: boolean;
 begin
    if not ArchiveUtils.GraphicExists(filename, 'portrait') then
-   begin
-      filename := filename + '.png';
-      if not ArchiveUtils.GraphicExists(filename, 'portrait') then
-         Exit;
-   end;
+      Exit;
    commons.runThreadsafe(
       procedure
       var path: string;
@@ -152,14 +149,12 @@ begin
    setFlipped(flipped);
 end;
 
-function choiceBox(const msg: string; const handler: integer): integer;
+function choiceBox(const msg: string; const choices: TArray<string>; const handler: integer): integer;
 var
    oldValue: TMboxLocation;
 begin
    prepareMbox(oldValue);
-   asm int 3 end;
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   GMenuEngine.choiceBox(msg, acceptCancel);
+   GMenuEngine.choiceBox(msg, choices, handler > 0);
    setMessageBoxPosition(oldValue);
    result := GMenuEngine.menuInt;
 end;
@@ -179,7 +174,7 @@ end;
 function inn(messageStyle, cost: integer): boolean;
 var
    oldValue: TMboxLocation;
-//   I: Integer;
+   I: Integer;
 begin
    prepareMbox(oldValue);
    GMenuEngine.inn(messageStyle, cost);
@@ -188,20 +183,20 @@ begin
    begin
       result := true;
 {$MESSAGE WARN 'Commented out code in live unit'}
-{      GMenuEngine.cutscene := GMenuEngine.cutscene + 1;
-      for I := 1 to high(GScriptEngine.heroes) do
-         GScriptEngine.Hero[i].fullheal;
-      assert(GParty.money >= cost);
-      GParty.money := GParty.money - cost;
-      GMenuEngine.fadeOut(1500);
-      GScriptEngine.mediaPlayer.fadeOut(1500);
-      TEventThread(GCurrentThread).threadSleep(1750);
-      GScriptEngine.mediaPlayer.playSystemMusic(bgmInn);
-      TEventThread(GCurrentThread).threadSleep(MAXINNTIME);
-      GMenuEngine.fadeIn(1500);
-      GScriptEngine.mediaPlayer.fadeIn(1500);
-      TEventThread(GCurrentThread).threadSleep(1500);
-      GMenuEngine.cutscene := GMenuEngine.cutscene - 1;    }
+//      GMenuEngine.cutscene := GMenuEngine.cutscene + 1;
+      for I := 1 to GEnvironment.HeroCount do
+         GEnvironment.Heroes[i].fullheal;
+      assert(GEnvironment.money >= cost);
+      GEnvironment.money := GEnvironment.money - cost;
+      GSpriteEngine.fadeOut(1500);
+      rs_media.fadeOutMusic(1500);
+      GScriptEngine.threadSleep(1750, true);
+      rs_media.PlaySystemMusic(bgmInn, true);
+      GScriptEngine.threadWait();
+      GSpriteEngine.fadeIn(1500);
+      rs_media.fadeInLastMusic(1500);
+      GScriptEngine.threadSleep(1500, true);
+//      GMenuEngine.cutscene := GMenuEngine.cutscene - 1;    }
    end
    else result := false;
 end;
@@ -213,7 +208,7 @@ begin
    input.ImportFunction('procedure messageOptions(const transparent: boolean; const position: TMboxLocation; const dontHideHero, continueEvents: boolean);');
    input.ImportFunction('procedure clearPortrait');
    input.ImportFunction('procedure setPortrait(filename: string; const index: integer; const rightside, flipped: boolean);');
-   input.ImportFunction('function showChoice(const input: string; handler: integer): integer;');
+   input.ImportFunction('function showChoice(const input: string; const choices: array of string; handler: integer): integer;');
    input.ImportFunction('function inputNumber(const digits: integer): integer');
    input.ImportFunction('function inn(messageStyle, cost: integer): boolean;');
 
