@@ -131,6 +131,8 @@ begin
    FCancelSound := LoadProc('HarmonyCancelSound');
    FHarmonyRelease := LoadProc('HarmonyRelease');
    HarmonyCreate();
+   FInitMidi();
+   FinitWave();
    LDisharmony := self;
 end;
 

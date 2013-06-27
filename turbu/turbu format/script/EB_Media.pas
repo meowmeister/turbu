@@ -68,6 +68,12 @@ type
       function GetScriptText: string; override;
    end;
 
+   TEBSysBGM = class(TEBMediaObject)
+   public
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
 implementation
 uses
    SysUtils, Classes, TypInfo,
@@ -173,7 +179,23 @@ begin
                            Values[1], Values[2], Values[3]]);
 end;
 
+{ TEBSysBGM }
+
+function TEBSysBGM.GetNodeText: string;
+const LINE = 'Set System Music: %s, %s';
+begin
+   result := format(LINE, [CleanEnum(GetEnumName(TypeInfo(TBgmTypes), Values[0])), Text]);
+end;
+
+function TEBSysBGM.GetScriptText: string;
+const
+   LINE = 'SetSystemMusic(%s, %s, %d, %d, %d, %d);';
+begin
+   result := format(LINE, [GetEnumName(TypeInfo(TBgmTypes), Values[0]), QuotedStr(Text),
+                           Values[1], Values[2], Values[3], Values[4]]);
+end;
+
 initialization
    TEBObject.RegisterClasses([TEBPlayBGM, TEBFadeBGM, TEBMemBGM, TEBPlayMemBGM,
-                    TEBPlaySFX, TEBPlayMovie, TEBSysSFX]);
+                    TEBPlaySFX, TEBPlayMovie, TEBSysBGM, TEBSysSFX]);
 end.

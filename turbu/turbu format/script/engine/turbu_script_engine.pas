@@ -82,6 +82,7 @@ type
       procedure KillAll;
       procedure threadSleep(time: integer; block: boolean = false);
       procedure SetWaiting(value: TThreadWaitEvent);
+      procedure ThreadWait;
    end;
 
    TMapObjectManager = class
@@ -135,13 +136,13 @@ begin
    input.ImportFunction('procedure playMovie(name: string; posX, posY, width, height: integer);');
    input.ImportFunction('procedure SetSystemSound(style: TSfxTypes; filename: string; volume, tempo, balance: integer);');
    input.ImportFunction('procedure PlaySystemSound(sound: TSfxTypes);');
+   input.ImportFunction('procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);');
 end;
 
 procedure RegisterSettingsC(input: TrsTypeImporter);
 begin
    input.ImportType(TypeInfo(TBgmTypes));
    input.ImportType(TypeInfo(TSfxTypes));
-   input.ImportFunction('procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);');
    input.ImportFunction('procedure SetSkin(filename: string);');
 end;
 
@@ -160,12 +161,12 @@ begin
    RegisterFunction('playSound', @rs_Media.playSound);
    RegisterFunction('SetSystemSound', @rs_Media.SetSystemSound);
    RegisterFunction('PlaySystemSound', @rs_Media.PlaySystemSound);
+   RegisterFunction('SetSystemMusic', @rs_media.SetSystemMusic);
    RegisterFunction('playMovie', nil);
 end;
 
 procedure RegisterSettingsE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
 begin
-   RegisterFunction('SetSystemMusic', nil);
    RegisterFunction('SetSkin', nil);
 end;
 
@@ -361,6 +362,14 @@ begin
    st.InternalThreadSleep;
 {   if block then
       GGameEngine.cutscene := GGameEngine.cutscene - 1;}
+end;
+
+procedure TScriptEngine.ThreadWait;
+var
+   st: TScriptThread;
+begin
+   st := TThread.CurrentThread as TScriptThread;
+   st.scriptOnLine(nil);
 end;
 
 { TMapObjectManager }

@@ -26,12 +26,6 @@ type
    [UsesUnit('Settings')]
    TEBSettingsObject = class(TEBObject);
 
-   TEBSysBGM = class(TEBSettingsObject)
-   public
-      function GetNodeText: string; override;
-      function GetScriptText: string; override;
-   end;
-
    TEBVehicleBGM = class(TEBSettingsObject)
    public
       function GetNodeText: string; override;
@@ -48,22 +42,6 @@ implementation
 uses
    SysUtils, TypInfo, Classes,
    turbu_defs, EB_Expressions;
-
-{ TEBSysBGM }
-
-function TEBSysBGM.GetNodeText: string;
-const LINE = 'Set System Music: %s, %s';
-begin
-   result := format(LINE, [CleanEnum(GetEnumName(TypeInfo(TBgmTypes), Values[0])), Text]);
-end;
-
-function TEBSysBGM.GetScriptText: string;
-const
-   LINE = 'SetSystemMusic(%s, %s, %d, %d, %d, %d);';
-begin
-   result := format(LINE, [GetEnumName(TypeInfo(TBgmTypes), Values[0]), QuotedStr(Text),
-                           Values[1], Values[2], Values[3], Values[4]]);
-end;
 
 { TEBVehicleBGM }
 
@@ -94,5 +72,5 @@ begin
 end;
 
 initialization
-   TEBObject.RegisterClasses([TEBSysBGM, TEBSysSkin, TEBVehicleBGM]);
+   TEBObject.RegisterClasses([TEBSysSkin, TEBVehicleBGM]);
 end.
