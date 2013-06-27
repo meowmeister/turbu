@@ -1,6 +1,7 @@
 package default_format;
 
 {$R *.res}
+{$R *.dres}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -80,6 +81,7 @@ contains
   logs in '..\logs.pas',
   rs_media in 'script\engine\libraries\rs_media.pas',
   EB_ObjectHelper in 'script\EB_ObjectHelper.pas',
-  EB_Expressions_RM in 'script\EB_Expressions_RM.pas';
+  EB_Expressions_RM in 'script\EB_Expressions_RM.pas',
+  db_create in 'design\db_create.pas';
 
 end.

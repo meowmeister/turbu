@@ -8,7 +8,7 @@ procedure ExtractDB(filename: string);
 
 implementation
 uses
-   portrait_selector;
+   turbu_database;
 
 procedure ExtractDB(filename: string);
 var
@@ -17,7 +17,7 @@ var
    outfile: TFileStream;
    size: integer;
 begin
-   resource := TResourceStream.Create(FindClassHInstance(TfrmPortraitSelector), 'DB_TEMPLATE', RT_RCDATA);
+   resource := TResourceStream.Create(FindClassHInstance(TRpgDatabase), 'DB_TEMPLATE', RT_RCDATA);
    decompressor := TDecompressionStream.Create(resource);
    outfile := TFileStream.Create(filename, fmCreate);
    try
