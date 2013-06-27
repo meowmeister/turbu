@@ -53,7 +53,8 @@ contains
   turbu_2k_message_boxes in 'turbu_2k_message_boxes.pas',
   turbu_2k_transitions in 'turbu_2k_transitions.pas',
   turbu_2k_transitions_graphics in 'turbu_2k_transitions_graphics.pas',
-  turbu_2k_distortions in 'turbu_2k_distortions.pas';
+  turbu_2k_distortions in 'turbu_2k_distortions.pas',
+  turbu_2k_weather in 'turbu_2k_weather.pas';
 
 end.
 
