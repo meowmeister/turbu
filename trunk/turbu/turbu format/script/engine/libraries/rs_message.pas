@@ -208,7 +208,7 @@ begin
    input.ImportFunction('procedure messageOptions(const transparent: boolean; const position: TMboxLocation; const dontHideHero, continueEvents: boolean);');
    input.ImportFunction('procedure clearPortrait');
    input.ImportFunction('procedure setPortrait(filename: string; const index: integer; const rightside, flipped: boolean);');
-   input.ImportFunction('function showChoice(const input: string; const choices: array of string; handler: integer): integer;');
+   input.ImportFunction('function showChoice(const input: string; const choices: TStringArray; handler: integer): integer;');
    input.ImportFunction('function inputNumber(const digits: integer): integer');
    input.ImportFunction('function inn(messageStyle, cost: integer): boolean;');
 

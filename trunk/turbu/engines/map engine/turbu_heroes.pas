@@ -228,12 +228,12 @@ const
    HELMET_SLOT = 4;
    RELIC_SLOT = 5;
 
-   STAT_HP = 0;
-   STAT_MP = 1;
-   STAT_STR = 2;
-   STAT_DEF = 3;
-   STAT_MIND = 4;
-   STAT_AGI = 5;
+   STAT_HP = 1;
+   STAT_MP = 2;
+   STAT_STR = 3;
+   STAT_DEF = 4;
+   STAT_MIND = 5;
+   STAT_AGI = 6;
 
 { TRpgHero }
 
@@ -646,6 +646,8 @@ var
    base: THeroTemplate;
 begin
    base := template as THeroTemplate;
+   if base.id = 0 then
+      Exit;
    FMaxHitPoints := base.statblock[stat_hp].block[FLevel];
    FMaxManaPoints := base.statblock[stat_mp].block[FLevel];
    FStat[stat_base, 1] := base.statblock[stat_str].block[FLevel];
