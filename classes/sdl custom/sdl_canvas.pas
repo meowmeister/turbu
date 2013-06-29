@@ -190,33 +190,42 @@ begin
 end;
 
 procedure TSdlRenderTarget.DrawFull(const TopLeft: TPoint);
+var
+   xScale, yScale: single;
 begin
 glCheckError;
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
 glCheckError;
-   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, self.handle.handle);
+   self.handle.bind;
 glCheckError;
+   SDL_RenderGetScale(FParent.FRenderer, xScale, yScale);
    glBegin(GL_QUADS);
-      glTexCoord2i(0, 0); glVertex2i(topleft.X, topleft.y);
-      glTexCoord2i(Width, 0); glVertex2i(topleft.X + Width, topLeft.y);
-      glTexCoord2i(Width, Height); glVertex2i(topleft.X + Width, topleft.y + Height);
-      glTexCoord2i(0, Height); glVertex2i(topleft.X, topleft.y + Height);
+      glTexCoord2i(0, 0); glVertex2i(round(topleft.X * xScale), round(topleft.y * yScale));
+      glTexCoord2i(Width, 0); glVertex2i(round((topleft.X + Width) * xScale), round(topLeft.y * yScale));
+      glTexCoord2i(Width, Height); glVertex2i(round((topleft.X + Width) * xScale), round((topleft.y + Height) * yScale));
+      glTexCoord2i(0, Height); glVertex2i(round(topleft.X * xScale), round((topleft.y + Height) * yScale));
    glEnd;
 glCheckError;
 end;
 
 procedure TSdlRenderTarget.DrawFull;
+var
+   xScale, yScale: single;
+   lHeight, lWidth: integer;
 begin
 glCheckError;
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
 glCheckError;
-   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, self.handle.handle);
+   self.handle.bind;
 glCheckError;
+   SDL_RenderGetScale(FParent.FRenderer, xScale, yScale);
+   lWidth := round(width * xScale);
+   lHeight := round(height * yScale);
    glBegin(GL_QUADS);
       glTexCoord2i(0, 0); glVertex2i(0, 0);
-      glTexCoord2i(0, Height); glVertex2i(0, Height);
-      glTexCoord2i(Width, Height); glVertex2i(Width, Height);
-      glTexCoord2i(Width, 0); glVertex2i(Width, 0);
+      glTexCoord2i(0, Height); glVertex2i(0, lHeight);
+      glTexCoord2i(Width, Height); glVertex2i(lWidth, lHeight);
+      glTexCoord2i(Width, 0); glVertex2i(lWidth, 0);
    glEnd;
 glCheckError;
 end;
@@ -250,7 +259,7 @@ begin
       SDL_InitSubSystem(SDL_INIT_VIDEO);
 
    FWindow := SDL_CreateWindow(PAnsiChar(title), size.Left, size.Top, size.Right, size.Bottom, flags);
-   SDL_GetWindowLogicalSize(FWindow, FSize.x, FSize.y);
+   SDL_RenderGetLogicalSize(FRenderer, FSize.x, FSize.y);
    FRenderer := TSDLRenderer.Create(FWindow, SDL_RendererIndex('opengl'), [sdlrAccelerated]);
    SDL_RenderPresent(FRenderer);
    self.RenderTarget := self;
@@ -266,10 +275,10 @@ begin
       SDL_InitSubSystem(SDL_INIT_VIDEO);
 
    FWindow := value;
-   SDL_GetWindowLogicalSize(FWindow, FSize.x, FSize.y);
 
    self.RenderTarget := self;
    FRenderer := SDL_GetRenderer(value);
+   SDL_RenderGetLogicalSize(FRenderer, FSize.x, FSize.y);
    FParent := self;
 end;
 
@@ -406,7 +415,7 @@ procedure TSdlCanvas.Resize;
 var
    x, y: integer;
 begin
-   SDL_GetWindowLogicalSize(FWindow, x, y);
+   SDL_RenderGetLogicalSize(FRenderer, x, y);
    if (x <> FSize.x) or (y <> FSize.y) then
    begin
       FSize := sgPoint(x, y);

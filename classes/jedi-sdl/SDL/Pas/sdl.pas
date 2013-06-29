@@ -1468,7 +1468,8 @@ type
   PSDL_RWops = ^TSDL_RWops;
   // now the pointer to function types
   {$IFNDEF __GPC__}
-  TSeek = function( context: PSDL_RWops; offset: Integer; whence: Integer ): Integer; cdecl;
+  TSize = function( context: PSDL_RWops): int64; cdecl;
+  TSeek = function( context: PSDL_RWops; offset: Int64; whence: Integer ): Int64; cdecl;
   TRead = function( context: PSDL_RWops; Ptr: Pointer; size: Integer; maxnum : Integer ): Integer;  cdecl;
   TWrite = function( context: PSDL_RWops; Ptr: Pointer; size: Integer; num: Integer ): Integer; cdecl;
   TClose = function( context: PSDL_RWops ): Integer; cdecl;
@@ -1480,6 +1481,7 @@ type
   {$ENDIF}
   // the variant record itself
   TSDL_RWops = record
+    size: TSize;
     seek: TSeek;
     read: TRead;
     write: TWrite;
@@ -3788,19 +3790,12 @@ cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_CreateMutex'{$ELSE} SDLLi
 
 { Lock the mutex  (Returns 0, or -1 on error) }
 
- function SDL_mutexP(mutex: PSDL_mutex): Integer;
- cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_mutexP'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
-{ $ EXTERNALSYM SDL_mutexP}
-
 function SDL_LockMutex(mutex: PSDL_mutex): Integer;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_LockMutex'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_LockMutex}
 
-{ Unlock the mutex  (Returns 0, or -1 on error) }
-function SDL_mutexV(mutex: PSDL_mutex): Integer;
-cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_mutexV'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
-{$EXTERNALSYM SDL_mutexV}
-
 function SDL_UnlockMutex(mutex: PSDL_mutex): Integer;
+cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_UnlockMutex'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 {$EXTERNALSYM SDL_UnlockMutex}
 
 { Destroy a mutex }
@@ -4162,16 +4157,6 @@ function SDL_MustLock(Surface: PSDL_Surface): Boolean;
 begin
   Result := ( ( surface^.offset <> 0 ) or
            ( ( surface^.flags and ( SDL_HWSURFACE or SDL_ASYNCBLIT or SDL_RLEACCEL ) ) <> 0 ) );
-end;
-
-function SDL_LockMutex(mutex: PSDL_mutex): Integer;
-begin
-  Result := SDL_mutexP(mutex);
-end;
-
-function SDL_UnlockMutex(mutex: PSDL_mutex): Integer;
-begin
-  Result := SDL_mutexV(mutex);
 end;
 
 {$IFDEF WINDOWS}

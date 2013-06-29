@@ -21,7 +21,8 @@ interface
 uses
    Types, Classes, SyncObjs,
    turbu_defs, timing,
-   sg_defs, sdl_sprite, sdl_ImageManager, sdl_canvas;
+   sg_defs, sdl_sprite, sdl_ImageManager, sdl_canvas,
+   sdl_13;
 
 type
    TSystemRects = (srWallpaper, srFrameTL, srFrameTR, srFrameBL, srFrameBR,
@@ -57,8 +58,8 @@ type
       FStretch: boolean;
       FTranslucent: boolean;
       procedure Setup(parent: TMenuSpriteEngine);
-      function GetHandle: integer;
       function GetDrawRect(value: integer): TRect;
+      function GetHandle: TSdlTexture;
    public
       constructor Create(images: TSdlImages; const filename: string;
         stretch, translucent: boolean);
@@ -82,6 +83,7 @@ type
       FCurrentBox: TCustomMessageBox;
       FPosition: TMboxLocation;
       FBoxVisible: boolean;
+      FEnding: boolean;
       procedure SetPosition(const Value: TMboxLocation);
       procedure SetBoxVisible(const Value: boolean);
       function GetPortrait: TSprite;
@@ -184,8 +186,7 @@ implementation
 uses
    Windows, SysUtils, Math, OpenGL,
    commons, turbu_text_utils, turbu_2k_environment, turbu_OpenGL, turbu_database,
-   turbu_2k_message_boxes, turbu_2k_sprite_engine, rs_media,
-   sdl_13;
+   turbu_2k_message_boxes, turbu_2k_sprite_engine, rs_media;
 
 const
    ARROW_DISPLACEMENT: TSgPoint = (x: 8; y: 0);
@@ -370,8 +371,15 @@ end;
 procedure TMenuSpriteEngine.EndMessage;
 begin
    FMenuState := msNone;
-   if assigned(FCurrentBox) then
-      FCurrentBox.EndMessage;
+   if assigned(FCurrentBox) and not FEnding then
+   begin
+      FEnding := true;
+      try
+         FCurrentBox.EndMessage;
+      finally
+         FEnding := false;
+      end;
+   end;
 end;
 
 function TMenuSpriteEngine.GetPortrait: TSprite;
@@ -562,9 +570,9 @@ begin
    inc(result.left, result.Right * ((value - 1) mod 10));
 end;
 
-function TSystemImages.GetHandle: integer;
+function TSystemImages.GetHandle: TSdlTexture;
 begin
-   result := FBetterArrow.Image.handle;
+   result := FBetterArrow.Image.surface;
 end;
 
 procedure TSystemImages.Setup(parent: TMenuSpriteEngine);

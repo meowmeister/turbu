@@ -115,7 +115,7 @@ begin
 end;
 *)
 
-function SdlStreamSeek( context : PSDL_RWops; offset : Integer; whence : Integer ) : integer; cdecl;
+function SdlStreamSeek( context : PSDL_RWops; offset : Int64; whence : Integer ) : Int64; cdecl;
 var
   stream : TStream;
   origin : Word;

@@ -229,7 +229,7 @@ end;
 
 procedure TAnimSpriteCell.DrawSelf(center: TSgFloatPoint; halfWidth, halfHeight: single; SpriteRect: TRect);
 begin
-   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, Self.Image.surface.handle);
+   Self.Image.surface.bind;
    glEnable(GL_BLEND);
    glEnable(GL_ALPHA_TEST);
    glBegin(GL_QUADS);

@@ -42,24 +42,24 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
-			<DCC_Define>DEBUG;FullDebugMode;$(DCC_Define)</DCC_Define>
+			<DCC_Define>DEBUG;FullDebugMode;LogMemoryLeakDetailToFile;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_3)'!=''">
-			<DCC_ExeOutput>C:\Users\mason\Documents\TURBU Projects\Lavie</DCC_ExeOutput>
+			<DCC_ExeOutput>C:\Users\mason\Documents\TURBU Projects\Lavie\Player</DCC_ExeOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_Define>RELEASE;madExcept;$(DCC_Define)</DCC_Define>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="turbu_player.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="..\..\classes\FastMM4\FastMM4.pas"/>
+			<DCCReference Include="..\..\classes\FastMM4\FastMM4Messages.pas"/>
 			<DCCReference Include="mainform.pas">
 				<Form>frmMain</Form>
 			</DCCReference>
@@ -68,6 +68,7 @@
 				<DesignClass>TDataModule</DesignClass>
 			</DCCReference>
 			<DCCReference Include="..\discInterface.pas"/>
+			<DCCReference Include="..\..\classes\findfile\findfile.pas"/>
 			<RcItem Include="..\editor\shield render.png">
 				<ResourceType>RCDATA</ResourceType>
 				<ResourceId>LOGO</ResourceId>
@@ -125,12 +126,15 @@
 						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
-					<Excluded_Packages/>
+					<Excluded_Packages>
+						<Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\8.0\Bpl\JclVersionControlExpert150.bpl">JCL Integration of version control systems in the IDE</Excluded_Packages>
+					</Excluded_Packages>
 					<Source>
 						<Source Name="MainSource">turbu_player.dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="RunParams">&quot;C:\Users\mason\Documents\TURBU Projects\Lavie&quot;</Parameters>
+						<Parameters Name="RunParams">&quot;C:\Users\Mason\Documents\TURBU Projects\Lavie&quot;</Parameters>
+						<Parameters Name="DebugCWD">&quot;C:\Users\Mason\Documents\TURBU Projects\Lavie&quot;</Parameters>
 					</Parameters>
 				</Delphi.Personality>
 				<Platforms>

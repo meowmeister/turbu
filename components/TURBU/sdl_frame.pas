@@ -383,7 +383,7 @@ begin
          FLogicalHeight := aHeight;
       end
       else begin
-         SDL_GetWindowLogicalSize(FWindow, size.X, size.Y);
+         SDL_RenderGetLogicalSize(FRenderer, size.X, size.Y);
          ratioX := size.X / self.Width;
          ratioY := size.Y / self.Height;
          self.LogicalWidth := round(AWidth * ratioX);
@@ -409,7 +409,7 @@ begin
       Exit;
 
    FLogicalHeight := Value;
-   SDL_SetWindowLogicalSize(FWindow, FLogicalWidth, FLogicalHeight);
+   SDL_RenderSetLogicalSize(FRenderer, FLogicalWidth, FLogicalHeight);
    if FRendererAvailable then
       self.Flip;
 end;
@@ -421,7 +421,7 @@ begin
 
    FLogicalWidth := value.X;
    FLogicalHeight := value.Y;
-   SDL_SetWindowLogicalSize(FWindow, FLogicalWidth, FLogicalHeight);
+   SDL_RenderSetLogicalSize(FRenderer, FLogicalWidth, FLogicalHeight);
    if FRendererAvailable then
       self.Flip;
 end;
@@ -432,7 +432,7 @@ begin
       Exit;
 
    FLogicalWidth := Value;
-   SDL_SetWindowLogicalSize(FWindow, FLogicalWidth, FLogicalHeight);
+   SDL_RenderSetLogicalSize(FRenderer, FLogicalWidth, FLogicalHeight);
    if FRendererAvailable then
       self.Flip;
 end;
@@ -446,7 +446,7 @@ procedure TSdlFrame.ResetLogicalSize;
 begin
    FLogicalWidth := self.Width;
    FLogicalHeight := self.Height;
-   SDL_SetWindowLogicalSize(FWindow, FLogicalWidth, FLogicalHeight);
+   SDL_RenderSetLogicalSize(FRenderer, FLogicalWidth, FLogicalHeight);
    self.Flip;
 end;
 

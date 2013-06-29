@@ -287,7 +287,7 @@ begin
       FCanvas.OnResize := self.CanvasResize;
       FStretchRatio.x := layout.physWidth / layout.width;
       FStretchRatio.y := layout.physHeight / layout.height;
-      SDL_SetWindowLogicalSize(window, layout.width, layout.height);
+      SDL_RenderSetLogicalSize(SDL_GetRenderer(window), layout.width, layout.height);
       FImages := TSdlImages.Create(renderer);
       FImages.ArchiveCallback := aCallback;
       FImages.ArchiveLoader := aLoader;

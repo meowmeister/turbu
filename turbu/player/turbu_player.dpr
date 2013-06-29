@@ -4,10 +4,17 @@ program turbu_player;
 
 uses
   FastMM4 in '..\..\classes\FastMM4\FastMM4.pas',
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
+  FastMM4Messages in '..\..\classes\FastMM4\FastMM4Messages.pas',
   Forms,
   mainform in 'mainform.pas' {frmMain},
   dm_ProjectBoot in '..\editor\dm_ProjectBoot.pas' {dmProjectBoot: TDataModule},
-  discInterface in '..\discInterface.pas';
+  discInterface in '..\discInterface.pas',
+  findfile in '..\..\classes\findfile\findfile.pas';
 
 {$R *.res}
 
