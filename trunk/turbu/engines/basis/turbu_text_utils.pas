@@ -5,7 +5,8 @@ uses
    SysUtils, Types, Generics.Collections,
    FTGL,
    sg_defs, sdl_canvas,
-   dm_shaders;
+   dm_shaders,
+   sdl_13;
 
 type
    TRpgFont = class
@@ -26,7 +27,7 @@ type
       FShaderEngine: TdmShaders;
       FTarget: TSdlRenderTarget;
       FFonts: TObjectList<TRpgFont>;
-      FOnGetColor: TFunc<integer>;
+      FOnGetColor: TFunc<TSdlTexture>;
       FOnGetDrawRect: TFunc<integer, TRect>;
       class var
          FFontPath: string;
@@ -43,7 +44,7 @@ type
       function drawChar(text: char; x, y: single; colorIndex: integer): TSgFloatPoint;
 
       property Current: TRpgFont read FCurrent write SetCurrent;
-      property OnGetColor: TFunc<integer> read FOnGetColor write FOnGetColor;
+      property OnGetColor: TFunc<TSdlTexture> read FOnGetColor write FOnGetColor;
       property OnGetDrawRect: TFunc<integer, TRect> read FOnGetDrawRect write FOnGetDrawRect;
    end;
 
@@ -58,7 +59,7 @@ implementation
 uses
    Windows, ShlObj, OpenGL,
    turbu_OpenGL,
-   SDL, sdl_13;
+   SDL;
 
 { TRpgFont }
 
@@ -162,7 +163,7 @@ begin
    glEnable(GL_MULTISAMPLE);
    glActiveTextureARB(GL_TEXTURE1_ARB);
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
-   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, FOnGetColor);
+   FOnGetColor().bind;
    glActiveTextureARB(GL_TEXTURE0_ARB);
 
    FShaderEngine.SetUniformValue(FPass2, 'texAlpha', 0);
@@ -198,7 +199,7 @@ begin
 
    glActiveTextureARB(GL_TEXTURE0_ARB);
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
-   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, FTarget.handle.handle);
+   FTarget.handle.bind;
 
    RenderChar(text);
    DrawTargetPass1(x + 1, y + 1);

@@ -1124,7 +1124,7 @@ begin
 
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
    glCheckError;
-   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, image.handle);
+   image.surface.bind;
    glCheckError;
    glEnableClientState(GL_VERTEX_ARRAY);
    glCheckError;

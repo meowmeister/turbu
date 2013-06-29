@@ -346,7 +346,7 @@ begin
    left := trunc(self.X + OffsetX - FEngine.WorldX);
    top := trunc(self.Y + OffsetY - FEngine.WorldY);
 
-   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, Self.Image.surface.handle);
+   Self.Image.surface.bind;
    glEnable(GL_BLEND);
    glEnable(GL_ALPHA_TEST);
    glBegin(GL_QUADS);

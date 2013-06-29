@@ -69,7 +69,6 @@ type
       FTexturesPerRow: integer;
       FTextureRows: integer;
       FColorkey: TSDL_Color;
-      FHandle: integer;
 
       function getSpriteRect(index: integer): TRect;
       procedure setup(renderer: TSdlRenderer; filename, imagename: string;
@@ -145,7 +144,6 @@ type
       property count: integer read GetCount;
       property spriteRect[index: integer]: TRect read getSpriteRect;
       property Colorkey: TSDL_Color read FColorkey;
-      property handle: integer read FHandle;
    end;
 
    TSdlImageClass = class of TSdlImage;
@@ -694,7 +692,6 @@ begin
    if FSurface.ptr = nil then
       FSurface := TSdlTexture.Create(renderer, 0, LSurface);
 
-   FHandle := FSurface.handle;
    if (spriteSize.X = EMPTY.X) and (spriteSize.Y = EMPTY.Y) then
       self.textureSize := point(LSurface.width, LSurface.height)
    else self.textureSize := spriteSize;

@@ -340,16 +340,17 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     function GetSize: TPoint;
     function GetAlpha: byte;
     procedure SetAlpha(const Value: byte);
-    function GetHandle: integer;
   public
     constructor Create(renderer: TSdlRenderer; format: Uint32; access: TSdlTextureAccess; w, h: integer); overload;
     constructor Create(renderer: TSdlRenderer; format: Uint32; surface: PSdlSurface); overload;
     procedure Free;
 
+    procedure bind;
+    procedure unbind;
+
     property ptr: pointer read FPtr;
     property size: TPoint read GetSize;
     property alpha: byte read GetAlpha write SetAlpha;
-    property handle: integer read GetHandle;
   end;
 
 {$HINTS ON}
@@ -695,20 +696,75 @@ procedure SDL_GetWindowSize(windowID: TSdlWindow; var w, h: integer); cdecl; ext
 {$EXTERNALSYM SDL_GetWindowSize}
 
 (**
- * SDL_SetWindowLogicalSize
+ *  \brief Set device independent resolution for rendering
  *
- * Sets the logical size of the window.
+ *  \param renderer The renderer for which resolution should be set.
+ *  \param w      The width of the logical resolution
+ *  \param h      The height of the logical resolution
+ *
+ *  This function uses the viewport and scaling functionality to allow a fixed logical
+ *  resolution for rendering, regardless of the actual output resolution.  If the actual
+ *  output resolution doesn't have the same aspect ratio the output rendering will be
+ *  centered within the output display.
+ *
+ *  If the output display is a window, mouse events in the window will be filtered
+ *  and scaled so they seem to arrive within the logical resolution.
+ *
+ *  \note If this function results in scaling or subpixel drawing by the
+ *        rendering backend, it will be handled using the appropriate
+ *        quality hints.
+ *
+ *  \sa SDL_RenderGetLogicalSize()
+ *  \sa SDL_RenderSetScale()
+ *  \sa SDL_RenderSetViewport()
  *)
-function SDL_SetWindowLogicalSize(windowID: TSdlWindow; w, h: integer): integer; cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_SetWindowLogicalSize}
+function SDL_RenderSetLogicalSize(renderer: TSdlRenderer; w, h: integer): integer; cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderSetLogicalSize}
 
 (**
- * SDL_GetWindowLogicalSize
+ *  \brief Get device independent resolution for rendering
  *
- * Gets the logical size of the window.
+ *  \param renderer The renderer from which resolution should be queried.
+ *  \param w      A pointer filled with the width of the logical resolution
+ *  \param h      A pointer filled with the height of the logical resolution
+ *
+ *  \sa SDL_RenderSetLogicalSize()
  *)
-procedure SDL_GetWindowLogicalSize(windowID: TSdlWindow; var w, h: integer); cdecl; external SDLLibName;
-{$EXTERNALSYM SDL_GetWindowLogicalSize}
+procedure SDL_RenderGetLogicalSize(renderer: TSdlRenderer; out w, h: integer);  cdecl; external SDLLibName;
+{$EXTERNALSYM SDL_RenderGetLogicalSize}
+
+(**
+ *  \brief Set the drawing scale for rendering on the current target.
+ *
+ *  \param renderer The renderer for which the drawing scale should be set.
+ *  \param scaleX The horizontal scaling factor
+ *  \param scaleY The vertical scaling factor
+ *
+ *  The drawing coordinates are scaled by the x/y scaling factors
+ *  before they are used by the renderer.  This allows resolution
+ *  independent drawing with a single coordinate system.
+ *
+ *  \note If this results in scaling or subpixel drawing by the
+ *        rendering backend, it will be handled using the appropriate
+ *        quality hints.  For best results use integer scaling factors.
+ *
+ *  \sa SDL_RenderGetScale()
+ *  \sa SDL_RenderSetLogicalSize()
+ *)
+function SDL_RenderSetScale(renderer: TSdlRenderer; scaleX, scaleY: single): integer;  cdecl;
+external SDLLibName;
+
+(**
+ *  \brief Get the drawing scale for the current target.
+ *
+ *  \param renderer The renderer from which drawing scale should be queried.
+ *  \param scaleX A pointer filled in with the horizontal scaling factor
+ *  \param scaleY A pointer filled in with the vertical scaling factor
+ *
+ *  \sa SDL_RenderSetScale()
+ *)
+procedure SDL_RenderGetScale(renderer: TSdlRenderer; out scaleX, scaleY: single); cdecl;
+external SDLLibName;
 
 function SDL_GetNumRenderDrivers(): integer; cdecl; external SDLLibName;
 {$EXTERNALSYM SDL_GetNumRenderDrivers}
@@ -815,7 +871,34 @@ function SDL_GetTextureAlphaMod(textureID: TSdlTexture; var alpha: byte): intege
 external SDLLibName;
 {$EXTERNALSYM SDL_GetTextureAlphaMod}
 
-function SDL_GetTextureHandle(texture: TSdlTexture): integer; cdecl; external SDLLibName;
+(**
+ *  SDL_GL_BindTexture
+ *
+ *  Binds the texture to the current OpenGL/ES/ES2 context for use with
+ *  OpenGL instructions.
+ *
+ *  texture:  The SDL texture to bind
+ *  texw:     A pointer to a float that will be filled with the texture width
+ *  texh:     A pointer to a float that will be filled with the texture height
+ *
+ *  return 0 on success, or -1 if the operation is not supported
+ *)
+function SDL_GL_BindTexture(texture: TSdlTexture; texw, texh: PSingle): integer; cdecl;
+external SDLLibName;
+{$EXTERNALSYM SDL_GL_BindTexture}
+
+function SDL_BindTexture(texture: TSdlTexture): integer;
+
+(**
+ *  \brief Unbind a texture from the current OpenGL/ES/ES2 context.
+ *
+ *  \param texture  The SDL texture to unbind
+ *
+ *  \return 0 on success, or -1 if the operation is not supported
+ *)
+function SDL_GL_UnbindTexture(texture: TSdlTexture): integer; cdecl;
+external SDLLibName;
+{$EXTERNALSYM SDL_GL_UnbindTexture}
 
 (**
  * SDL_SetTextureBlendMode
@@ -1281,6 +1364,9 @@ cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetHint'{$ELSE} SDLLibNam
 function SDL_GetWindowWMInfo(window: TSdlWindow; var info : TSDL_SysWMinfo) : SDL_bool;
 cdecl; external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_GetWMInfo'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
 
+procedure SDL_SetMainReady; cdecl;
+external {$IFNDEF NDS}{$IFDEF __GPC__}name 'SDL_SetMainReady'{$ELSE} SDLLibName{$ENDIF __GPC__}{$ENDIF};
+
 procedure SDL_VERSION(var X: TSDL_Version);
 
 // Private error message function - used internally
@@ -1411,6 +1497,11 @@ begin
     raise EBadHandle.Create(string(SDL_GetError));
 end;
 
+procedure TSdlTexture.bind;
+begin
+   SDL_GL_BindTexture(Self, nil, nil);
+end;
+
 constructor TSdlTexture.Create(renderer: TSdlRenderer; format: Uint32; surface: PSdlSurface);
 begin
   self := SDL_CreateTextureFromSurface(renderer, surface);
@@ -1439,17 +1530,15 @@ begin
       raise EBadHandle.Create('Alpha not supported for this texture.');
 end;
 
-function TSdlTexture.GetHandle: integer;
-begin
-   result := SDL_GetTextureHandle(self);
-   if result = -1 then
-      raise EBadHandle.CreateFmt('Unable to retrieve the handle for this texture: %s', [AnsiString(SDL_GetError)]);
-end;
-
 procedure TSdlTexture.SetAlpha(const Value: byte);
 begin
    if SDL_SetTextureAlphaMod(self, Value) <> 0 then
       raise EBadHandle.Create('Alpha not supported for this texture.');
+end;
+
+procedure TSdlTexture.unbind;
+begin
+  SDL_GL_UnbindTexture(self);
 end;
 
 procedure SDL_OutOfMemory;
@@ -1511,6 +1600,11 @@ begin
    result := SDL_SetRenderTarget(renderer, NIL_TEX);
 end;
 
+function SDL_BindTexture(texture: TSdlTexture): integer;
+begin
+   result := SDL_GL_BindTexture(texture, nil, nil);
+end;
+
 procedure SDL_VERSION(var X: TSDL_Version);
 begin
   X.major := SDL_MAJOR_VERSION;
@@ -1562,6 +1656,6 @@ begin
 end;
 
 initialization
-sdl_getError; //do not smartlink this out!
-
+   sdl_getError; //do not smartlink this out!
+   SDL_SetMainReady; //this needs to be called to satisfy SDL, even though we don't use SDL_Main
 end.
