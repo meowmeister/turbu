@@ -128,6 +128,8 @@ end;
 
 procedure RegisterMediaC(input: TrsTypeImporter);
 begin
+   input.ImportType(TypeInfo(TSfxTypes));
+   input.ImportType(TypeInfo(TBgmTypes));
    input.ImportFunction('procedure playMusic(name: string; fadeIn, volume, tempo, balance: integer);');
    input.ImportFunction('procedure fadeOutMusic(time: integer);');
    input.ImportFunction('procedure memorizeBgm;');
