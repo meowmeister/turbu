@@ -196,6 +196,8 @@ type
       property areaMedicine: boolean read FAreaMedicine write FAreaMedicine;
       property hpPercent: shortint read FHpPercent write FHPPercent;
       property mpPercent: shortint read FMpPercent write FMPPercent;
+      property hpHeal: integer read FStat[1] write FStat[1];
+      property mpHeal: integer read FStat[2] write FStat[2];
       property deadOnly: boolean read FDeadHeroesOnly write FDeadHeroesOnly;
    end;
 

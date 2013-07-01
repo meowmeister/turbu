@@ -50,12 +50,13 @@ type
       FOnCreate: TScriptEvent;
       FOnDestroy: TScriptEvent;
    protected
-      property Template: TRpgDatafile read FTemplate;
       class function templateClass: TDatafileClass; virtual; abstract;
    public
       //marked as overload to allow access to TObject.Create
       [NoImport]
       constructor Create(base: TRpgDatafile); overload;
+      [NoImport]
+      property Template: TRpgDatafile read FTemplate;
    published
       property OnCreate: TScriptEvent read FOnCreate write FOnCreate;
       property OnDestroy: TScriptEvent read FOnDestroy write FOnDestroy;

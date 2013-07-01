@@ -55,7 +55,8 @@ contains
   turbu_2k_transitions_graphics in 'turbu_2k_transitions_graphics.pas',
   turbu_2k_distortions in 'turbu_2k_distortions.pas',
   turbu_2k_weather in 'turbu_2k_weather.pas',
-  turbu_2k_savegames in 'turbu_2k_savegames.pas';
+  turbu_2k_savegames in 'turbu_2k_savegames.pas',
+  turbu_2k_item_types in 'turbu_2k_item_types.pas';
 
 end.
 
