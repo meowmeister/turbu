@@ -1,3 +1,20 @@
+{*****************************************************************************
+* The contents of this file are used with permission, subject to
+* the Mozilla Public License Version 1.1 (the "License"); you may
+* not use this file except in compliance with the License. You may
+* obtain a copy of the License at
+* http://www.mozilla.org/MPL/MPL-1.1.html
+*
+* Software distributed under the License is distributed on an
+* "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+* implied. See the License for the specific language governing
+* rights and limitations under the License.
+*
+*****************************************************************************
+*
+* This file was created by Mason Wheeler.  He can be reached for support at
+* www.turbu-rpg.com.
+*****************************************************************************}
 unit turbu_2k_items;
 
 interface
@@ -67,9 +84,9 @@ const
 
 implementation
 uses
-   math, Generics.Defaults,
+   SysUtils, math, Generics.Defaults,
    commons,
-   turbu_database, turbu_classes;
+   turbu_database, turbu_classes, turbu_2k_item_types;
 
 type
    TItemClass = class of TRpgItem;
@@ -108,29 +125,22 @@ begin
    result := FQuantity;
 end;
 
-{$WARN USE_BEFORE_DEF OFF}
 class function TRpgItem.newItem(const item, quantity: integer): TRpgItem;
 var
    subtype: TItemClass;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   case GDatabase.findItem(item).itemType of
+   case GDatabase.findItem(item).itemType of
       it_junk: subtype := TJunkItem;
-      weaponItem: subtype := TWeapon;
-      shieldItem: subtype := TShield;
-      armorItem: subtype := TArmor;
-      helmetItem: subtype := THelmet;
-      accessoryItem: subtype := TRelic;
-      medicineItem: subtype := TRecoveryItem;
-      bookItem: subtype := TBookItem;
-      materialItem: subtype := TStatItem;
-      uniqueItem: subtype := TSkillItem;
-      switchItem: subtype := TSwitchItem;
-      else} subtype := TRpgItem;
-//   end;
+      it_weapon, it_armor: subtype := TEquipment;
+      it_medicine: subtype := TRecoveryItem;
+      it_book: subtype := TBookItem;
+      it_upgrade: subtype := TStatItem;
+      it_skill: subtype := TSkillItem;
+      it_variable: subtype := TSwitchItem;
+      else raise Exception.Create('Invalid item type');
+   end;
    result := subtype.create(item, quantity);
 end;
-{$WARN USE_BEFORE_DEF ON}
 
 procedure TRpgItem.setUses(const Value: integer);
 begin
@@ -183,53 +193,51 @@ end;
 procedure TRpgInventory.Add(const id, number: integer);
 var
   i: Integer;
-  dummy: TRpgItem;
+  item: TRpgItem;
 begin
    if not IsBetween(id, 1, GDatabase.items) then
       Exit;
 
-   dummy := nil;
+   item := nil;
    i := 0;
-   while (dummy = nil) and (i < count) do
+   while (item = nil) and (i < count) do
    begin
       if FList[i].FTemplate = GDatabase.FindItem(id) then
-         dummy := FList[i];
+         item := FList[i];
       inc(i);
    end;
-   if dummy = nil then
+   if item = nil then
    begin
       FList.Add(TRpgItem.newItem(id, number));
       FSorted := false;
    end
-   else
-      dummy.FQuantity := min(MAXITEMS, dummy.FQuantity + number);
-   //end if
+   else item.FQuantity := min(MAXITEMS, item.FQuantity + number);
 end;
 
 procedure TRpgInventory.AddItem(const value: TRpgItem);
 var
   i: Integer;
-  dummy: TRpgItem;
+  item: TRpgItem;
   total: integer;
 begin
-   dummy := nil;
+   item := nil;
    i := 0;
-   while (dummy = nil) and (i < count) do
+   while (item = nil) and (i < count) do
    begin
       if FList[i].FTemplate = value.FTemplate then
-         dummy := FList[i];
+         item := FList[i];
       inc(i);
    end;
-   if dummy = nil then
+   if item = nil then
    begin
       FList.Add(value);
       FSorted := false;
    end
    else begin
-      total := value.quantity + dummy.quantity;
+      total := value.quantity + item.quantity;
       if total > MAXITEMS then
          dec(value.FQuantity, total - MAXITEMS);
-      inc(dummy.FQuantity, value.FQuantity);
+      inc(item.FQuantity, value.FQuantity);
    end;
 end;
 
@@ -259,35 +267,36 @@ begin
 end;
 
 function TRpgInventory.quantityOf(const id: integer): integer;
-var dummy: integer;
+var idx: integer;
 begin
-   dummy := indexOf(id);
-   if dummy = -1 then
+   idx := indexOf(id);
+   if idx = -1 then
       result := 0
-   else result := FList[dummy].quantity;
+   else result := FList[idx].quantity;
 end;
 
 procedure TRpgInventory.Remove(const id, number: integer);
 var
   i: Integer;
-  dummy: TRpgItem;
+  item: TRpgItem;
 begin
    if (id < 1) or (id > GDatabase.items) then
       Exit;
 
-   dummy := nil;
+   item := nil;
    i := 0;
-   while (dummy = nil) and (i < count) do
+   while (item = nil) and (i < count) do
    begin
       if FList[i].FTemplate = GDatabase.findItem(id) then
-         dummy := FList[i];
+         item := FList[i];
       inc(i);
    end;
-   if dummy <> nil then
-      if dummy.FQuantity <= number then
-         FList.remove(dummy)
-      else
-         dec(dummy.FQuantity, number);
+   if item <> nil then
+   begin
+      if item.FQuantity <= number then
+         FList.remove(item)
+      else dec(item.FQuantity, number);
+   end;
 end;
 
 procedure TRpgInventory.sort;
