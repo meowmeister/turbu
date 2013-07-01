@@ -3,7 +3,8 @@ unit turbu_pathing;
 interface
 uses
    Generics.Collections, Classes,
-   turbu_defs;
+   turbu_defs,
+   dwsJSON;
 
 type
    TMoveStep = record
@@ -33,6 +34,7 @@ type
       procedure Save(savefile: TStream);
       destructor Destroy; override;
       function Clone: TPath;
+      procedure Serialize(writer: TdwsJSONWriter);
 
       function nextCommand: TMoveStep;
       procedure setDirection(direction: TFacing);
@@ -177,6 +179,15 @@ procedure TPath.Save(savefile: TStream);
 begin
    savefile.writeString(FBase);
    savefile.writeBool(FLoop);
+end;
+
+procedure TPath.Serialize(writer: TdwsJSONWriter);
+begin
+   writer.BeginObject;
+      writer.CheckWrite('Path', FBase, '');
+      writer.CheckWrite('Cursor', FCursor, 0);
+      writer.CheckWrite('Looped', FLooped, false);
+   writer.EndObject;
 end;
 
 procedure TPath.setDirection(direction: TFacing);

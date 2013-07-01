@@ -3,7 +3,8 @@ unit turbu_2k_images;
 interface
 uses
    rsImport,
-   commons, sg_defs, sdl_sprite, timing;
+   commons, sg_defs, sdl_sprite, timing,
+   dwsJson;
 
 type
    TImageEffects = (ie_none, ie_rotate, ie_wave);
@@ -39,6 +40,8 @@ type
       procedure update;
       function getZoom: integer;
       procedure DrawQuad;
+
+      procedure Serialize(writer: TdwsJSONWriter);
    protected
       procedure DoDraw; override;
    public
@@ -70,6 +73,9 @@ type
       constructor Create(engine: TSpriteEngine; const name: string; x, y: integer;
         zoom: integer; pinned, masked: boolean); reintroduce;
       destructor Destroy; override;
+      [NoImport]
+      procedure Serialize(writer: TdwsJSONWriter);
+
       procedure applyImageColors(r, g, b, sat: integer);
       procedure applyImageEffect(which: TImageEffects; power: integer);
       procedure moveTo(x, y: integer; zoom, opacity, duration: integer);
@@ -86,7 +92,7 @@ type
 implementation
 uses
    sysUtils, Math, OpenGL, Types,
-   turbu_2k_environment, turbu_OpenGL, dm_shaders, turbu_2k_sprite_engine,
+   turbu_2k_environment, turbu_OpenGL, dm_shaders, turbu_2k_sprite_engine, turbu_classes,
    sdl_13, SDL_ImageManager;
 
 const
@@ -242,6 +248,44 @@ begin
    self.opacity := 100 - min(opacity, 100);
 end;
 
+procedure TRpgImageSprite.Serialize(writer: TdwsJSONWriter);
+const MaxCardinal: cardinal = $FFFFFFFF;
+begin
+   writer.BeginObject;
+      writer.CheckWrite('Masked', FMasked, false);
+      writer.CheckWrite('Pinned', self.Pinned, false);
+      writer.WriteName('name'); writer.WriteString(self.ImageName);
+      writer.WriteName('RefPoint');
+      writer.BeginArray;
+         writer.WriteNumber(FRefPoint.x);
+         writer.WriteNumber(FRefPoint.y);
+      writer.EndArray;
+      if FRefPoint <> FRefTarget then
+      begin
+         writer.WriteName('RefTarget');
+         writer.BeginArray;
+            writer.WriteNumber(FRefTarget.x);
+            writer.WriteNumber(FRefTarget.y);
+         writer.EndArray;
+      end;
+      writer.CheckWrite('Alpha', self.Alpha, 255);
+      writer.CheckWrite('AlphaTarget', FAlphaTarget, self.Alpha);
+      writer.CheckWrite('Saturation', FSaturation, 255);
+      if assigned(FTransitionTimer) then
+         writer.CheckWrite('Transition', FTransitionTimer.timeRemaining, 0);
+      writer.CheckWrite('Color', FColor.color, MaxCardinal);
+      writer.CheckWrite('ColorTarget', FColorTarget.color, FColor.color);
+      writer.CheckWrite('Zoom', self.ScaleX, 1);
+      writer.CheckWrite('ZoomTarget', FZoomTarget, self.ScaleX);
+      writer.CheckWrite('RotationPower', FRotationPower, 0);
+      writer.CheckWrite('WavePower', FWavePower, 0);
+      writer.CheckWrite('Rotation', FRotation, 0);
+      writer.CheckWrite('RotationTarget', FRotationTarget, 0);
+      writer.CheckWrite('WaveTarget', FWaveTarget, 0);
+      writer.CheckWrite('Tag', FTag, 0);
+   writer.EndObject;
+end;
+
 function TRpgImageSprite.getOpaque: integer;
 begin
    result := commons.round(self.Alpha / 2.55);
@@ -375,6 +419,11 @@ procedure TRpgImage.moveTo(x, y: integer; zoom, opacity, duration: integer);
 begin
    FSprite.moveTo(x, y, zoom, opacity);
    FSprite.timer := duration * 100;
+end;
+
+procedure TRpgImage.Serialize(writer: TdwsJSONWriter);
+begin
+   FSprite.Serialize(writer);
 end;
 
 procedure TRpgImage.setOpaque(const Value: integer);

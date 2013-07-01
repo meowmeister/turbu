@@ -22,7 +22,8 @@ uses
    types,
    rsImport,
    turbu_classes, turbu_containers, turbu_defs, turbu_mapchars,
-   turbu_characters, turbu_map_sprites, turbu_2k_items, turbu_constants;
+   turbu_characters, turbu_map_sprites, turbu_2k_items, turbu_constants,
+   dwsJSON;
 
 type
    TStatComponents = (stat_base, stat_bonus, stat_eq_mod);
@@ -47,20 +48,20 @@ type
       FComputerControlled: boolean;
       FStrongDefense: boolean;
 
-      FExpTable: array of integer;
+      FExpTable: TArray<integer>;
       FExpTotal: integer;
       FEquipment: array[1..5] of TRpgItem;
       FStat: array[TStatComponents, 1..4] of integer;
-      FConditionModifier: array of integer;
-      FCondition: array of boolean;
-      FDtypeModifiers: array of integer;
+      FConditionModifier: TArray<integer>;
+      FCondition: TArray<boolean>;
+      FDtypeModifiers: TArray<integer>;
       FHitPoints: integer;
       FManaPoints: integer;
       FMaxHitPoints: integer;
       FMaxManaPoints: integer;
       FHpModifier: integer;
       FMpModifier: integer;
-      FSkill: array of boolean;
+      FSkill: TArray<boolean>;
 
       FLevelUpdated: boolean;
       function countSkills: integer;
@@ -97,6 +98,8 @@ type
       [NoImport]
       constructor Create(base: TClassTemplate; party: TRpgParty);
       destructor Destroy; override;
+      [NoImport]
+      procedure Serialize(writer: TdwsJSONWriter);
 
       procedure equip(id: integer);
       procedure equipSlot(id, slot: integer);
@@ -175,6 +178,9 @@ type
       [NoImport]
       constructor Create;
       destructor Destroy; override;
+      [NoImport]
+      procedure Serialize(writer: TdwsJSONWriter);
+
       procedure addItem(const id, number: integer);
       procedure removeItem(const id, number: integer);
       procedure addExp(const id: integer; number: integer);
@@ -296,6 +302,47 @@ end;
 class function TRpgHero.templateClass: TDatafileClass;
 begin
    result := TClassTemplate;
+end;
+
+procedure TRpgHero.Serialize(writer: TdwsJSONWriter);
+var
+   base: THeroTemplate;
+   i: integer;
+begin
+   base := self.Template as THeroTemplate;
+   writer.BeginObject;
+      writer.CheckWrite('Name', FName, base.name);
+      writer.CheckWrite('Class', FClass, base.clsName);
+      writer.CheckWrite('Sprite', FSprite, base.mapSprite);
+      writer.CheckWrite('Transparent', FTransparent, base.translucent);
+      writer.CheckWrite('Level', FLevel, base.minLevel);
+      writer.CheckWrite('FaceName', FFaceName, base.portrait);
+      writer.CheckWrite('FaceNum', FFaceNum, base.portraitIndex);
+      writer.CheckWrite('ExpTotal', FExpTotal, 0);
+      writer.WriteName('Equipment');
+      writer.BeginArray;
+         for i := 1 to 5 do
+            if FEquipment[i] = nil then
+               writer.WriteNull
+            else writer.WriteInteger(FEquipment[i].id);
+      writer.EndArray;
+      writer.WriteName('Stat');
+      writer.BeginArray;
+         for i := 1 to 4 do
+            writer.WriteInteger(FStat[stat_bonus][i]);
+      writer.EndArray;
+      writer.WriteName('Condition');
+      writer.BeginArray;
+         for i := 1 to High(FCondition) do
+            if FCondition[i] then
+               writer.WriteInteger(i);
+      writer.EndArray;
+      writer.CheckWrite('HitPoints', FHitPoints, FMaxHitPoints + FHpModifier);
+      writer.CheckWrite('ManaPoints', FManaPoints, FMaxManaPoints + FMpModifier);
+      writer.CheckWrite('HpModifier', FHpModifier, 0);
+      writer.CheckWrite('MpModifier', FMpModifier, 0);
+      writer.WriteArray('Skill', FSkill);
+   writer.EndObject;
 end;
 
 procedure TRpgHero.AddBattleCommand(which: integer);
@@ -996,6 +1043,37 @@ begin
          end;
    end else
       self[id].level := self[id].level - number;
+end;
+
+procedure TRpgParty.Serialize(writer: TdwsJSONWriter);
+var
+   i: integer;
+begin
+   writer.BeginObject;
+      writer.WriteName('Heroes');
+      writer.BeginArray;
+         for i := 1 to MAXPARTYSIZE do
+            if assigned(FParty[i]) then
+               writer.WriteInteger(FParty[i].Template.id)
+            else writer.WriteNull;
+      writer.EndArray;
+      writer.CheckWrite('Cash', FCash, 0);
+      writer.WriteName('Inventory');
+      FInventory.Serialize(writer);
+      writer.WriteName('X');
+      writer.WriteInteger(getX);
+      writer.WriteName('Y');
+      writer.WriteInteger(getY);
+      writer.WriteName('Facing');
+      writer.WriteInteger(getFacing);
+      if assigned(FSprite.moveOrder) then
+      begin
+         writer.WriteName('Path');
+         FSprite.moveOrder.serialize(writer);
+      end;
+      writer.CheckWrite('MoveFreq', FSprite.moveFreq, 1);
+      writer.CheckWrite('MoveRate', FSprite.moveRate, 1);
+   writer.EndObject;
 end;
 
 procedure TRpgParty.setFacing(const Value: integer);
