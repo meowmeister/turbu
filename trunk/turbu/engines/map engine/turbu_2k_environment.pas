@@ -23,7 +23,8 @@ uses
    rsCompiler, rsImport, rsExec,
    turbu_defs, turbu_heroes, turbu_database, turbu_mapchars, turbu_2k_images,
    turbu_2k_map_timer, turbu_map_sprites, turbu_map_objects, turbu_operators,
-   sdl_sprite;
+   sdl_sprite,
+   dwsJSON;
 
 type
    TKeyRange = 0..24;
@@ -42,6 +43,7 @@ type
       FParty: TRpgParty;
       FMenuEnabled: boolean;
       FEventMap: TDictionary<TRpgMapObject, TRpgCharacter>;
+      FSaveCount: integer;
 
       function GetSwitch(const i: integer): boolean;
       procedure SetSwitch(const i: integer; const Value: boolean);
@@ -56,7 +58,6 @@ type
       procedure enableMenu(const Value: boolean);
       function getCash: integer;
       function getPartySize: integer;
-      function getSaveCount: integer;
       function isMenuEnabled: boolean;
       procedure notifyOnLevelGain(const Value: boolean);
       procedure setCash(const Value: integer);
@@ -71,6 +72,12 @@ type
       function GetInt(const i: integer): integer;
       procedure SetInt(const i, Value: integer);
       function GetMapObjectCount: integer;
+
+      //serialization
+      procedure SerializeVariables(writer: TdwsJSONWriter);
+      procedure SerializeHeroes(writer: TdwsJSONWriter);
+      procedure SerializeImages(writer: TdwsJSONWriter);
+      procedure SerializeMapObjects(writer: TdwsJSONWriter);
    public
       [NoImport]
       constructor Create(database: TRpgDatabase);
@@ -96,6 +103,8 @@ type
       procedure ClearEvents();
       [NoImport]
       procedure UpdateEvents;
+      [NoImport]
+      procedure Serialize(writer: TdwsJSONWriter; explicitSave: boolean);
 
       property Heroes[const i: integer]: TRpgHero read GetHero;
       property HeroCount: integer read GetHeroCount;
@@ -109,7 +118,7 @@ type
 
       property money: integer read getCash write setCash;
       property partySize: integer read getPartySize;
-      property saveCount: integer read getSaveCount;
+      property saveCount: integer read FSaveCount;
       property battleCount: integer read getBattleCount;
       property victories: integer read battleVictories;
       property losses: integer read battleLosses;
@@ -132,7 +141,7 @@ uses
    Windows, SysUtils, Math, RTTI, Classes,
    Commons,
    turbu_characters, turbu_script_engine, turbu_2k_sprite_engine, turbu_constants,
-   turbu_2k_map_engine,
+   turbu_2k_map_engine, turbu_classes,
    rsDefs;
 
 { T2kEnvironment }
@@ -254,11 +263,6 @@ begin
          inc(result);
 end;
 
-function T2kEnvironment.getSaveCount: integer;
-begin
-   result := 0;
-end;
-
 procedure T2kEnvironment.enableMenu(const Value: boolean);
 begin
    FMenuEnabled := value;
@@ -340,6 +344,80 @@ begin
    for I := 0 to high(FImages) do
       if FImages[i] = image then
          FImages[i] := nil;
+end;
+
+procedure T2kEnvironment.SerializeVariables(writer: TdwsJSONWriter);
+var
+   i: integer;
+begin
+   writer.WriteName('switch');
+   writer.BeginArray;
+      for i := 1 to High(FSwitches) do
+         if FSwitches[i] then
+            writer.WriteInteger(i);
+   writer.EndArray;
+   writer.WriteName('int');
+   writer.BeginArray;
+      for i := 1 to High(FInts) do
+         if FInts[i] <> 0 then
+         begin
+            writer.WriteInteger(i);
+            writer.WriteInteger(FInts[i]);
+         end;
+   writer.EndArray;
+end;
+
+procedure T2kEnvironment.SerializeHeroes(writer: TdwsJSONWriter);
+var
+   i: integer;
+begin
+   writer.WriteName('Heroes');
+   writer.BeginArray;
+      for i := 1 to high(FHeroes) do
+         FHeroes[i].Serialize(writer);
+   writer.EndArray;
+end;
+
+procedure T2kEnvironment.SerializeImages(writer: TdwsJSONWriter);
+var
+   i: integer;
+begin
+   writer.WriteName('Images');
+   writer.BeginArray;
+      for i := 1 to high(FImages) do
+         if assigned(FImages[i]) then
+         begin
+            writer.WriteName(IntToStr(i));
+            FImages[i].Serialize(writer);
+         end;
+   writer.EndArray;
+end;
+
+procedure T2kEnvironment.SerializeMapObjects(writer: TdwsJSONWriter);
+var
+   i: integer;
+begin
+   writer.WriteName('MapObjects');
+   writer.BeginArray;
+      for i := 1 to high(FEvents) do
+         if assigned(FEvents[i]) then
+            FEvents[i].Serialize(writer)
+         else writer.WriteNull;
+   writer.EndArray;
+end;
+
+procedure T2kEnvironment.Serialize(writer: TdwsJSONWriter; explicitSave: boolean);
+begin
+   writer.BeginObject;
+      SerializeVariables(writer);
+      SerializeHeroes(writer);
+      SerializeImages(writer);
+      SerializeMapObjects(writer);
+      writer.CheckWrite('MenuEnabled', FMenuEnabled, false);
+      if explicitSave then
+         inc(FSaveCount);
+      writer.CheckWrite('SaveCount', FSaveCount, 0);
+   writer.EndObject;
 end;
 
 function T2kEnvironment.GetHero(const i: integer): TRpgHero;

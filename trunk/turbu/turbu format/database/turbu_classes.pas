@@ -22,7 +22,8 @@ uses
    classes, sysUtils, generics.collections, DB, RTTI, SimpleDS,
    DSharp.Core.Lambda,
    rsImport,
-   turbu_containers, turbu_defs, turbu_constants, turbu_serialization;
+   turbu_containers, turbu_defs, turbu_constants, turbu_serialization,
+   dwsJSON;
 
 type
    TRpgDecl = class;
@@ -295,6 +296,16 @@ type
    end;
 
    ERpgLoadError = class(Exception);
+
+   TJSONHelper = class helper for TdwsJSONWriter
+   public
+      procedure CheckWrite(const name, value, base: string); overload;
+      procedure CheckWrite(const name: string; const value, base: integer); overload;
+      procedure CheckWrite(const name: string; const value, base: single); overload;
+      procedure CheckWrite(const name: string; const value, base: boolean); overload;
+      procedure WriteArray(const name: string; const value: TArray<integer>); overload;
+      procedure WriteArray(const name: string; const value: TArray<boolean>); overload;
+   end;
 
    procedure lassert(cond: boolean);
 
@@ -1185,6 +1196,66 @@ function TRpgDataDict<T>.TValueEnumerator.MoveNext: Boolean;
 begin
    inc(FIndex);
    result := FIndex < length(FValues);
+end;
+
+{ TJSONHelper }
+
+procedure TJSONHelper.CheckWrite(const name, value, base: string);
+begin
+   if value <> base then
+   begin
+      self.WriteName(name);
+      self.WriteString(value);
+   end;
+end;
+
+procedure TJSONHelper.CheckWrite(const name: string; const value, base: integer);
+begin
+   if value <> base then
+   begin
+      self.WriteName(name);
+      self.WriteInteger(value);
+   end;
+end;
+
+procedure TJSONHelper.CheckWrite(const name: string; const value, base: boolean);
+begin
+   if value <> base then
+   begin
+      self.WriteName(name);
+      self.WriteBoolean(value);
+   end;
+end;
+
+procedure TJSONHelper.CheckWrite(const name: string; const value, base: single);
+begin
+   if value <> base then
+   begin
+      self.WriteName(name);
+      self.WriteNumber(value);
+   end;
+end;
+
+procedure TJSONHelper.WriteArray(const name: string; const value: TArray<integer>);
+var
+   int: integer;
+begin
+   self.WriteName(name);
+   self.BeginArray;
+      for int in value do
+         self.WriteInteger(int);
+   self.EndArray;
+end;
+
+procedure TJSONHelper.WriteArray(const name: string; const value: TArray<boolean>);
+var
+   bool: boolean;
+begin
+   self.WriteName(name);
+   self.BeginArray;
+      for bool in value do
+         self.WriteBoolean(bool);
+   self.EndArray;
 end;
 
 end.

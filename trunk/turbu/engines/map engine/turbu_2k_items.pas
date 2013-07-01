@@ -4,7 +4,8 @@ interface
 uses
    Generics.collections,
    rsImport,
-   turbu_items;
+   turbu_items,
+   dwsJSON;
 
 type
    TRpgItem = class(TObject)
@@ -49,6 +50,9 @@ type
    public
       constructor Create;
       destructor Destroy; override;
+      [NoImport]
+      procedure Serialize(writer: TdwsJSONWriter);
+
       procedure Add(const id, number: integer);
       procedure AddItem(const value: TRpgItem);
       function indexOf(const id: integer): integer;
@@ -65,7 +69,7 @@ implementation
 uses
    math, Generics.Defaults,
    commons,
-   turbu_database;
+   turbu_database, turbu_classes;
 
 type
    TItemClass = class of TRpgItem;
@@ -150,6 +154,25 @@ destructor TRpgInventory.Destroy;
 begin
    FList.Free;
    inherited Destroy;
+end;
+
+procedure TRpgInventory.Serialize(writer: TdwsJSONWriter);
+var
+   item: TRpgItem;
+begin
+   Sort;
+   writer.BeginArray;
+      for item in FList do
+      begin
+         writer.BeginObject;
+            writer.WriteName('ID');
+            writer.WriteInteger(item.id);
+            writer.WriteName('Quantity');
+            writer.WriteInteger(item.FQuantity);
+            writer.CheckWrite('Uses', item.getUses, item.FQuantity);
+         writer.EndObject;
+      end;
+   writer.EndArray;
 end;
 
 function itemSortCompare(const item1, item2: TRpgItem): integer;

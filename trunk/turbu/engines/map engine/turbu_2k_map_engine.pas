@@ -89,6 +89,7 @@ type
       procedure cleanup; override;
       procedure AfterPaint; virtual;
       function GetValidateProc: TProc<TSqlQuery>; virtual;
+      procedure Quicksave;
    public
       constructor Create; override;
       destructor Destroy; override;
@@ -115,9 +116,9 @@ var
 implementation
 uses
 //   FastMM4,
-   math, Forms, Dialogs, OpenGL,
+   math, Forms, Dialogs, OpenGL, IOUtils,
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data, turbu_OpenGl,
-   turbu_constants, turbu_functional, dm_database, turbu_2k_images,
+   turbu_constants, turbu_functional, dm_database, turbu_2k_images, turbu_2k_savegames,
    turbu_map_objects, turbu_2k_map_locks, turbu_2k_frames, turbu_text_utils,
    turbu_2k_transitions_graphics,
    rs_maps, rs_message, rs_characters, rs_media, archiveUtils,
@@ -508,6 +509,14 @@ begin
    end;
 end;
 
+procedure T2kMapEngine.Quicksave;
+var
+   savefile: string;
+begin
+   savefile := TPath.Combine(ExtractFilePath(ParamStr(0)), 'quicksave.tsg');
+   turbu_2k_savegames.SaveTo(savefile, GEnvironment.Party.mapID, false);
+end;
+
 function KeyIsPressed(value: integer): boolean;
 begin
    result := GetAsyncKeyState(value) <> 0;
@@ -753,6 +762,8 @@ begin
    FButtonState := ReadKeyboardState;
    for button in FButtonState do
       pressButton(button);
+{   if KeyIsPressed(VK_F2) then
+      Quicksave;}
    GMapObjectManager.Tick;
    FCurrentMap.Process(sender);
 end;

@@ -5,7 +5,8 @@ uses
    sdl_sprite, sg_defs,
    rsImport,
    charset_data,
-   turbu_map_sprites, turbu_map_objects, turbu_map_metadata, turbu_defs;
+   turbu_map_sprites, turbu_map_objects, turbu_map_metadata, turbu_defs,
+   dwsJSON;
 
 type
    TRpgCharacter = class(TObject)
@@ -61,6 +62,8 @@ type
       [NoImport]
       constructor create(base: TMapSprite);
       destructor Destroy; override;
+      [NoImport]
+      procedure Serialize(writer: TdwsJSONWriter);
       [NoImport]
       procedure update;
       [NoImport]
@@ -134,7 +137,7 @@ uses
    types, Classes, SysUtils,
    commons, turbu_constants, tiles, turbu_2k_char_sprites,
    turbu_database, turbu_2k_sprite_engine, turbu_2k_environment, ArchiveUtils,
-   turbu_pathing, turbu_script_engine;
+   turbu_pathing, turbu_script_engine, turbu_classes;
 
 { TRpgCharacter }
 
@@ -246,6 +249,33 @@ begin
    FEvent.currentPage.overrideSprite(FChangeSpriteName, FChangeSpriteTranslucent);
    switchType;
    FChangeSprite := false;
+end;
+
+procedure TRpgEvent.Serialize(writer: TdwsJSONWriter);
+const TRANSLUCENCIES: array[boolean] of integer = (0, 3);
+begin
+   writer.BeginObject;
+      if FBase.location <> FEvent.location then
+      begin
+         writer.WriteName('Location');
+         writer.BeginArray;
+            writer.WriteInteger(FBase.location.x);
+            writer.WriteInteger(FBase.location.y);
+         writer.EndArray;
+      end;
+      if assigned(FEvent.currentPage) then
+      begin
+         writer.CheckWrite('SpriteName', FBase.baseTile.ImageName, FEvent.currentPage.baseFilename);
+         writer.CheckWrite('Transparent', FBase.translucency, TRANSLUCENCIES[FEvent.currentPage.baseTransparent]);
+         if assigned(FBase.moveOrder) then
+         begin
+            writer.WriteName('Path');
+            FBase.moveOrder.serialize(writer);
+         end;
+         writer.CheckWrite('MoveFreq', FBase.moveFreq, 1);
+         writer.CheckWrite('MoveRate', FBase.moveRate, 1);
+      end;
+   writer.EndObject;
 end;
 
 procedure TRpgEvent.ChangeSprite(name: string; translucent: boolean);
