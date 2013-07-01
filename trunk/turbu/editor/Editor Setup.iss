@@ -41,6 +41,7 @@ Source: ..\bin\Turbu.exe; DestDir: {app}; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 Source: ..\..\dlls\dbxdrivers.ini; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\dbxfb4d15.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\ftgl.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\fbclient.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\ib_util.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\icudt30.dll; DestDir: {app}; Flags: ignoreversion
