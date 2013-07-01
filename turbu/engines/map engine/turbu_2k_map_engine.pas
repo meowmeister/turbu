@@ -54,7 +54,6 @@ type
       FPartySprite: THeroSprite;
       FGameEnvironment: T2kEnvironment;
       FObjectManager: TMapObjectManager;
-      FRenderTargets: TSdlRenderTargets;
       FShaderEngine: TdmShaders;
       FImageEngine: TImageEngine;
       FWeatherEngine: TWeatherSystem;
@@ -120,6 +119,7 @@ uses
    archiveInterface, commons, turbu_plugin_interface, turbu_game_data, turbu_OpenGl,
    turbu_constants, turbu_functional, dm_database, turbu_2k_images,
    turbu_map_objects, turbu_2k_map_locks, turbu_2k_frames, turbu_text_utils,
+   turbu_2k_transitions_graphics,
    rs_maps, rs_message, rs_characters, rs_media, archiveUtils,
    sdlstreams, sdl_sprite, sg_utils;
 
@@ -157,9 +157,9 @@ procedure T2kMapEngine.CanvasResize(sender: TSdlCanvas);
 var
    i: integer;
 begin
-   FRenderTargets.Clear;
+   GRenderTargets.Clear;
    for i := 1 to 4 do
-      FRenderTargets.Add(TSdlRenderTarget.Create(FCanvas.size));
+      GRenderTargets.Add(TSdlRenderTarget.Create(FCanvas.size));
 end;
 
 procedure T2kMapEngine.cleanup;
@@ -201,7 +201,6 @@ begin
    self.data := TMapEngineData.Create('TURBU basic map engine', TVersion.Create(0, 1, 0));
    FTimer := TAsphyreTimer.Create;
    FTimer.MaxFPS := 60;
-   FRenderTargets := TSdlRenderTargets.Create(true);
 end;
 
 function T2kMapEngine.CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
@@ -230,7 +229,6 @@ end;
 
 destructor T2kMapEngine.Destroy;
 begin
-   FRenderTargets.Free;
    FTimer.Free;
    FTitleScreen.Free;
    inherited;
@@ -726,9 +724,9 @@ begin
    end; }
    SDL_SetRenderDrawColor(FCanvas.renderer, 0, 0, 0, 255);
    FCanvas.Clear;
-   FRenderTargets.RenderOn(RENDERER_MAIN, standardRender, 0, true);
+   GRenderTargets.RenderOn(RENDERER_MAIN, standardRender, 0, true);
 
-   DrawRenderTarget(FRenderTargets[RENDERER_MAIN]);
+   DrawRenderTarget(GRenderTargets[RENDERER_MAIN]);
 
    if (GMenuEngine.State <> msFull) and assigned(FImageEngine) then
       FImageEngine.Draw;

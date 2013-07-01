@@ -756,8 +756,8 @@ end;
 {$ENDREGION}
 
 initialization
-begin
    GCurrentTarget := -1;
-end;
-
+   GRenderTargets := TSdlRenderTargets.Create;
+finalization
+   GRenderTargets.Free;
 end.
