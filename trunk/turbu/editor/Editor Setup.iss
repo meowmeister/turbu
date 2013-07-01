@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "TURBU"
-#define MyAppVerName "TURBU Editor 0.9.3"
+#define MyAppVerName "TURBU Editor 0.9.4"
 #define MyAppPublisher "Dragon Slayers, Inc."
 #define MyAppURL "http://www.turbu-rpg.com/"
 #define MyAppExeName "Turbu.exe"
@@ -18,7 +18,7 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=.\setup
-OutputBaseFilename=TURBU_Editor_0.9.3
+OutputBaseFilename=TURBU_Editor_0.9.4
 Compression=lzma
 SolidCompression=yes
 ChangesAssociations=yes
@@ -47,11 +47,11 @@ Source: ..\..\dlls\icudt30.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\icuuc30.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\disharmony.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\libdiscord.dll; DestDir: {app}; Flags: ignoreversion
-Source: ..\..\dlls\libpng15.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\libpng16.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\msvcp80.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\msvcr80.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\SDL2.dll; DestDir: {app}; Flags: ignoreversion
-Source: ..\..\dlls\sdl_image.dll; DestDir: {app}; Flags: ignoreversion
+Source: ..\..\dlls\sdl2_image.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\..\dlls\zlib1.dll; DestDir: {app}; Flags: ignoreversion
 Source: ..\bin\design\scripts\general\battle_algorithms.trs; DestDir: {app}\design\scripts\general
 Source: ..\bin\design\scripts\general\dt_algorithms.trs; DestDir: {app}\design\scripts\general

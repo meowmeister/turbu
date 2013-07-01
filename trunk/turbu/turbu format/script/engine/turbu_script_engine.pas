@@ -80,6 +80,7 @@ type
       procedure RunScript(const name: string; const args: TArray<TValue>); overload;
       procedure RunObjectScript(obj: TRpgMapObject; page: integer); overload;
       procedure KillAll;
+      procedure AbortThread;
       procedure threadSleep(time: integer; block: boolean = false);
       procedure SetWaiting(value: TThreadWaitEvent);
       procedure ThreadWait;
@@ -110,7 +111,7 @@ var
 implementation
 uses
    Math, Forms,
-   turbu_defs, turbu_battle_engine, logs,
+   turbu_defs, turbu_battle_engine, //logs,
    rs_media,
    SDL;
 
@@ -242,6 +243,18 @@ begin
    until done;
 end;
 
+procedure TScriptEngine.AbortThread;
+var
+   curr: TThread;
+begin
+   curr := TThread.CurrentThread;
+   if curr is TScriptThread then
+   begin
+      curr.Terminate;
+      Abort;
+   end;
+end;
+
 procedure TScriptEngine.AddScriptThread(thread: TScriptThread);
 begin
    FThreadLock.Enter;
@@ -284,7 +297,7 @@ var
    pair: TPair<string, TrsExecImportProc>;
    tempCompiler: TrsCompiler;
 begin
-   logs.logText(script);
+//   logs.logText(script);
    if context is TScriptThread then
    begin
       TScriptThread(context).FOwnedExec := FExec;

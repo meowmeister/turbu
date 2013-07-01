@@ -24,7 +24,7 @@ uses
    turbu_database_interface, turbu_map_interface, turbu_sdl_image, turbu_2k_char_sprites,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine, turbu_defs,
    turbu_2k_environment, turbu_script_engine, turbu_map_metadata, dm_shaders,
-   turbu_2k_image_engine,
+   turbu_2k_image_engine, turbu_2k_weather,
    timing, AsphyreTimer, SG_defs, SDL_ImageManager, sdl_canvas, SDL, sdl_13;
 
 type
@@ -57,6 +57,7 @@ type
       FRenderTargets: TSdlRenderTargets;
       FShaderEngine: TdmShaders;
       FImageEngine: TImageEngine;
+      FWeatherEngine: TWeatherSystem;
 
       function retrieveImage(const folder, filename: string): TRpgSdlImage;
 
@@ -104,6 +105,7 @@ type
 
       property PartySprite: THeroSprite read FPartySprite;
       property ImageEngine: TImageEngine read FImageEngine;
+      property WeatherEngine: TWeatherSystem read FWeatherEngine;
       property TransProc: TTransProc write FTransProc;
       property CurrentMap: T2kSpriteEngine read FCurrentMap;
    end;
@@ -176,6 +178,7 @@ begin
    FreeAndNil(FImages);
    FreeAndNil(FSignal);
    FreeAndNil(FImageEngine);
+   FreeAndNil(FWeatherEngine);
    for I := 0 to high(FMaps) do
       FMaps[i].Free;
    setLength(FMaps, 0);
@@ -292,6 +295,7 @@ begin
       FImages.ArchiveCallback := aCallback;
       FImages.ArchiveLoader := aLoader;
       FImages.SpriteClass := TRpgSdlImage;
+      FWeatherEngine := TWeatherSystem.Create(nil, FImages, FCanvas);
       setLength(FMaps, FDatabase.mapTree.lookupCount);
       FSignal := TSimpleEvent.Create;
       FSignal.SetEvent;

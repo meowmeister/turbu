@@ -350,6 +350,7 @@ begin
    graphic.Setup(self);
    FCursor := TSysFrame.Create(self, FRAME_DISPLACEMENT, 2, NULLRECT);
    size := rect(0, 0, 320, 80);
+   FPosition := mb_bottom;
    FBoxes[mbtMessage] := TMessageBox.Create(self, size);
    FBoxes[mbtChoice] := TChoiceBox.Create(self, size);
    FBoxes[mbtPrompt] := TPromptBox.Create(self, size);

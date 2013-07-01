@@ -20,7 +20,7 @@ unit turbu_2k_weather;
 interface
 uses
    turbu_defs,
-   SDL_13, SDL_ImageManager, SDL_sprite;
+   SDL_13, SDL_ImageManager, SDL_sprite, sdl_canvas;
 
 type
    TWeatherSprite = class(TParticleSprite)
@@ -47,9 +47,9 @@ type
       function CreateSnow(r, g, b: byte): PSdlSurface;
       procedure LoadFog;
       procedure WrapFog;
-    procedure EnsureFogSprite;
+      procedure EnsureFogSprite;
    public
-      constructor Create(parent: TSpriteEngine; images: TSdlImages);
+      constructor Create(parent: TSpriteEngine; images: TSdlImages; canvas: TSdlCanvas);
       procedure Draw; override;
 
       property weatherType: TWeatherEffects read FType write setType;
@@ -74,11 +74,11 @@ const
 
 { TWeatherSystem }
 
-constructor TWeatherSystem.Create(parent: TSpriteEngine; images: TSdlImages);
+constructor TWeatherSystem.Create(parent: TSpriteEngine; images: TSdlImages; canvas: TSdlCanvas);
 var
    i: integer;
 begin
-   inherited Create(parent, parent.Canvas);
+   inherited Create(parent, Canvas);
    self.Z := 21; //one higher than TRpgImage's 20
    self.Images := images;
    for i := 1 to 6 do

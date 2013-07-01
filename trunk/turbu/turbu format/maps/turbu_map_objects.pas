@@ -138,7 +138,7 @@ type
    end;
 
    TRpgEventPage = class(TRpgDatafile)
-   private
+   protected
       FFrame: word;
       FTransparent: boolean;
       FDirection: TFacing;
@@ -157,7 +157,7 @@ type
       FOverrideFile: string;
       FOverrideTransparency: boolean;
       FOverrideSprite: boolean;
-
+   private
       function isValid: boolean; inline;
 
       function hasScriptFunction: boolean; inline;
@@ -166,6 +166,7 @@ type
       function GetFilename: string;
       function GetTransparent: boolean;
       procedure SetName(const Value: string);
+      function GetBaseFilename: string;
    protected
       [NoUpload]
       FConditions: TRpgEventConditions;
@@ -185,10 +186,12 @@ type
       procedure overrideSprite(const filename: string; transparent: boolean);
 
       property name: string read GetFilename write SetName;
+      property baseFilename: string read GetBaseFilename;
       property conditionBlock: TRpgEventConditions read FConditions;
       property whichTile: word read FFrame write FFrame;
       property direction: TFacing read FDirection write FDirection;
-      property transparent: boolean read GetTransparent write FTransparent;
+      property transparent: boolean read GetTransparent;
+      property baseTransparent: boolean read FTransparent;
       property path: TPath read FPath write FPath;
       property moveIgnore: boolean read FMoveIgnore write FMoveIgnore;
       property moveType: TMoveType read FMoveType write FMoveType;
@@ -487,6 +490,11 @@ procedure TRpgEventPage.SetName(const Value: string);
 begin
    FOverrideSprite := false;
    FName := value;
+end;
+
+function TRpgEventPage.GetBaseFilename: string;
+begin
+   result := inherited name;
 end;
 
 function TRpgEventPage.GetFilename: string;

@@ -65,25 +65,32 @@ uses
 
 var
    LDefaultTransitions: array[TTransitionTypes] of TTransitions;
+   LTeleportLock: TCriticalSection;
 
 procedure Teleport(mapID, x, y, facing: integer);
 var newpoint: TPoint;
 begin
-   eraseScreen(trnDefault);
-   while GSpriteEngine.State = gs_fading do
-      sleep(TRpgTimestamp.FrameLength);
+   if not LTeleportLock.TryEnter then
+      GScriptEngine.AbortThread;
+   try
+      eraseScreen(trnDefault);
+      while GSpriteEngine.State = gs_fading do
+         sleep(TRpgTimestamp.FrameLength);
 
-   if mapID = GSpriteEngine.MapID then
-   begin
-      newpoint := point(x, y);
-      if GSpriteEngine.onMap(newpoint) then
+      if mapID = GSpriteEngine.MapID then
       begin
-         GEnvironment.Party.Sprite.leaveTile;
-         GEnvironment.Party.Sprite.location := newpoint;
-         GSpriteEngine.centerOn(x, y);
-      end;
-   end else GGameEngine.changeMaps(mapID, point(x, y));
-   showScreen(trnDefault);
+         newpoint := point(x, y);
+         if GSpriteEngine.onMap(newpoint) then
+         begin
+            GEnvironment.Party.Sprite.leaveTile;
+            GEnvironment.Party.Sprite.location := newpoint;
+            GSpriteEngine.centerOn(x, y);
+         end;
+      end else GGameEngine.changeMaps(mapID, point(x, y));
+      showScreen(trnDefault);
+   finally
+      LTeleportLock.Leave;
+   end;
 end;
 
 procedure teleportEvent(which: TRpgEvent; x, y: integer);
@@ -286,20 +293,20 @@ end;
 
 procedure setWeather(effect: TWeatherEffects; severity: integer);
 begin
-   GSpriteEngine.weatherEngine.weatherType := effect;
-   GSpriteEngine.weatherEngine.intensity := clamp(severity, 0, MAX_WEATHER);
+   GGameEngine.weatherEngine.weatherType := effect;
+   GGameEngine.weatherEngine.intensity := clamp(severity, 0, MAX_WEATHER);
 end;
 
 procedure increaseWeather;
 begin
-   if GSpriteEngine.weatherEngine.intensity < MAX_WEATHER then
-      setWeather(GSpriteEngine.weatherEngine.weatherType, GSpriteEngine.weatherEngine.intensity + 1);
+   if GGameEngine.weatherEngine.intensity < MAX_WEATHER then
+      setWeather(GGameEngine.weatherEngine.weatherType, GGameEngine.weatherEngine.intensity + 1);
 end;
 
 procedure decreaseWeather;
 begin
-   if GSpriteEngine.weatherEngine.intensity > 0 then
-      setWeather(GSpriteEngine.weatherEngine.weatherType, GSpriteEngine.weatherEngine.intensity - 1);
+   if GGameEngine.weatherEngine.intensity > 0 then
+      setWeather(GGameEngine.weatherEngine.weatherType, GGameEngine.weatherEngine.intensity - 1);
 end;
 
 function newImage(name: string; x, y: integer; zoom, transparency: integer; pinned, mask: boolean): TRpgImage;
@@ -330,8 +337,8 @@ procedure LoadAnim(const filename: string);
 begin
    commons.runThreadsafe(
       procedure begin
-      GSpriteEngine.Images.EnsureImage(format('animation\%s.png', [filename]), 'Anim '+ filename) end,
-      true);
+         GSpriteEngine.Images.EnsureImage(format('animation\%s.png', [filename]), 'Anim '+ filename)
+      end, true);
 end;
 
 threadvar
@@ -490,4 +497,8 @@ begin
    engine.RegisterUnit('maps', RegisterMapsC, RegisterMapsE);
 end;
 
+initialization
+   LTeleportLock := TCriticalSection.Create;
+finalization
+   LTeleportLock.Free;
 end.

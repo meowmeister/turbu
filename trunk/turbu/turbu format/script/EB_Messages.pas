@@ -50,9 +50,17 @@ type
 
    [UsesUnit('Messages')]
    TEBChoiceExpr = class(TEBExpression)
+   private
+      FChoices: TArray<string>;
+   protected
+      procedure SerializeProps(list: TStringList; depth: integer); override;
+      procedure AssignProperty(const key, value: string); override;
+      function GetChoiceList: string;
    public
       function GetScriptText: string; override;
       function GetNodeText: string; override;
+
+      property Choices: TArray<string> read FChoices write FChoices;
    end;
 
    [UsesUnit('Messages')]
@@ -108,7 +116,7 @@ type
 
 implementation
 uses
-   SysUtils, TypInfo,
+   SysUtils, TypInfo, StrUtils,
    turbu_defs, EB_Expressions,
    EB_ObjectHelper;
 
@@ -229,15 +237,52 @@ end;
 
 { TEBChoiceExpr }
 
+function TEBChoiceExpr.GetChoiceList: string;
+var
+   i: integer;
+begin
+   result := '';
+   for i := 0 to High(FChoices) do
+   begin
+      if i > 0 then
+         result := result + ', ';
+      result := result + QuotedStr(FChoices[i]);
+   end;
+   result := '[' + result + ']';
+end;
+
 function TEBChoiceExpr.GetNodeText: string;
 begin
-   result := 'Show Choice: ' + self.Text;
+   result := 'Show Choice: ' + self.Text + ' ' + GetChoiceList;
 end;
 
 function TEBChoiceExpr.GetScriptText: string;
-const LINE = 'ShowChoice(%s, %d)';
+const LINE = 'ShowChoice(%s, %s, %d)';
 begin
-   result := format(LINE, [QuotedStr(Text), Values[0]]);
+   result := format(LINE, [QuotedStr(Text), GetChoiceList, Values[0]]);
+end;
+
+procedure TEBChoiceExpr.SerializeProps(list: TStringList; depth: integer);
+var
+   i: integer;
+begin
+   for i := 0 to High(FChoices) do
+      list.Add(IndentString(depth) + format('Choices%d = %s', [i + 1, FChoices[i]]));
+   inherited SerializeProps(list, depth);
+end;
+
+procedure TEBChoiceExpr.AssignProperty(const key, value: string);
+var
+   index: integer;
+begin
+   if StartsText('Choices', key) then
+   begin
+      index := StrToInt(copy(key, 8));
+      if index > high(FChoices) then
+         SetLength(FChoices, index + 1);
+      FChoices[index] := value;
+   end
+   else inherited AssignProperty(key, value);
 end;
 
 { TEBChoiceMessage }

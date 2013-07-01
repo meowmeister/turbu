@@ -199,8 +199,19 @@ begin
 end;
 
 function ConvertCase(converter: TScriptConverter; opcode: TEventCommand; parent: TEBObject): TEBObject;
+var
+   sub: TEBChoiceExpr;
+   sl: TStringList;
 begin
-   result := objectFactory(TEBChoiceMessage, opcode, parent);
+   sub := TEBChoiceExpr.Create(nil);
+   sl := TStringList.Create;
+   sl.Delimiter := '/';
+   sl.StrictDelimiter := true;
+   sl.DelimitedText := string(opcode.name);
+   sub.Choices := sl.ToStringArray;
+   sl.Free;
+   sub.Values.AddRange(opcode.data);
+   result := TEBChoiceMessage.Create(parent, sub);
    converter.blockStack.Push(0);
 end;
 
