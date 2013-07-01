@@ -182,7 +182,7 @@ begin
       self.whichTile := WHICH_TILE[ord(base.animFrame)];
    end;
    self.direction := base.direction;
-   self.transparent := base.transparent;
+   Ftransparent := base.transparent;
    if assigned(base.moveBlock) then
    begin
       self.path.Free;

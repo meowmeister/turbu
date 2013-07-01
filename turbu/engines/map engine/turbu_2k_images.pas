@@ -87,7 +87,7 @@ implementation
 uses
    sysUtils, Math, OpenGL, Types,
    turbu_2k_environment, turbu_OpenGL, dm_shaders, turbu_2k_sprite_engine,
-   SDL_ImageManager;
+   sdl_13, SDL_ImageManager;
 
 const
    ROTATE_FACTOR = 30;
@@ -179,6 +179,7 @@ var
    drawrect: TRect;
    current: integer;
    shaders: TdmShaders;
+   xScale, yScale: single;
 begin
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    glPushAttrib(GL_CURRENT_BIT);
@@ -186,7 +187,7 @@ begin
    if FMasked then
       shaders.UseShaderProgram(shaders.ShaderProgram('default', 'defaultF'))
    else shaders.UseShaderProgram(shaders.ShaderProgram('default', 'noAlpha'));
-   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, Self.Image.surface.handle);
+   Self.Image.surface.bind;
    glColor4f(1, 1, 1, self.alpha / 255);
    halfWidth := (self.Width / 2);
    halfheight := (self.Height / 2);
@@ -200,15 +201,16 @@ begin
       cy := FCenterY;
    end;
    drawrect := self.GetDrawRect;
+   SDL_RenderGetScale(FEngine.Canvas.Renderer, xScale, yScale);
    glBegin(GL_QUADS);
-      glTexCoord2i(drawRect.Left,                  drawRect.Top);
-      glVertex2f(cx - halfWidth * Self.ScaleX,     cy - halfHeight * Self.ScaleY);
-      glTexCoord2i(drawRect.Left,                  drawRect.Top + drawRect.Bottom);
-      glVertex2f(cx - halfWidth * Self.ScaleX,     cy + halfHeight * Self.ScaleY);
-      glTexCoord2i(drawRect.Left + drawRect.Right, drawRect.Top + drawRect.Bottom);
-      glVertex2f(cx + halfWidth * Self.ScaleX,     cy + halfHeight * Self.ScaleY);
-      glTexCoord2i(drawRect.Left + drawRect.Right, drawRect.Top);
-      glVertex2f(cx + halfWidth * Self.ScaleX,     cy - halfHeight * Self.ScaleY);
+      glTexCoord2i(drawRect.Left,                                drawRect.Top);
+      glVertex2f(round((cx - halfWidth * Self.ScaleX) * xScale), round((cy - halfHeight * Self.ScaleY) * yScale));
+      glTexCoord2i(drawRect.Left,                                drawRect.Top + drawRect.Bottom);
+      glVertex2f(round((cx - halfWidth * Self.ScaleX) * xScale), round((cy + halfHeight * Self.ScaleY) * yScale));
+      glTexCoord2i(drawRect.Left + drawRect.Right,               drawRect.Top + drawRect.Bottom);
+      glVertex2f(round((cx + halfWidth * Self.ScaleX) * xScale), round((cy + halfHeight * Self.ScaleY) * yScale));
+      glTexCoord2i(drawRect.Left + drawRect.Right,               drawRect.Top);
+      glVertex2f(round((cx + halfWidth * Self.ScaleX) * xScale), round((cy - halfHeight * Self.ScaleY) * yScale));
    glEnd;
    glPopAttrib;
    shaders.UseShaderProgram(current);

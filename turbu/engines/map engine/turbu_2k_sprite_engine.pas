@@ -23,7 +23,7 @@ uses
    commons, timing, tiles, dm_shaders,
    turbu_2k_sprite_list, turbu_2k_frames,
    turbu_maps, turbu_map_engine, turbu_2k_map_tiles, turbu_tilesets,
-   turbu_map_objects, turbu_map_sprites, turbu_defs, turbu_2k_weather,
+   turbu_map_objects, turbu_map_sprites, turbu_defs,
    sdl_sprite, sdl_canvas, SDL_ImageManager, SG_defs;
 
 type
@@ -81,8 +81,6 @@ type
       FShakeCounter: byte;
       FShakeTime: integer;
       FBaseX: single;
-
-      FWeatherEngine: TWeatherSystem;
 
       procedure SetViewport(const viewport: TRect);
       procedure loadTileMatrix(const value: TTileList; const index: integer; const viewport: TRect);
@@ -187,7 +185,6 @@ type
       property State: TGameState read FGameState;
       property transProc: TTransProc read FTransProc write FTransProc;
       property renderProc: TRenderProc read FRenderProc write FRenderProc;
-      property weatherEngine: TWeatherSystem read FWeatherEngine;
    end;
 
 var
@@ -284,12 +281,11 @@ begin
    dec(x, halfwidth mod TILE_SIZE.x);
    dec(y, halfheight);
    dec(y, halfheight mod TILE_SIZE.y);
-{
-   if Foverlapping * [facing_right, facing_left] = [] then
-      x := clamp(x, 0, canvas.Width - halfwidth);
-   if FOverlapping * [facing_up, facing_down] = [] then
-      y := clamp(y, 0, Canvas.Height - halfheight);
-}
+
+   if not (wrHorizontal in FMap.wraparound) then
+      x := clamp(x, 0, (self.width * TILE_SIZE.x) - canvas.Width);
+   if not (wrVertical in FMap.wraparound) then
+      y := clamp(y, 0, (self.height * TILE_SIZE.Y) - Canvas.Height);
 end;
 
 function T2kSpriteEngine.updateBorders(x, y, layer: integer): boolean;
@@ -442,12 +438,10 @@ begin
    FSpriteLocations := TSpriteLocations.Create;
    for i := 1 to 4 do
       FFadeColor[i] := 1;
-   FWeatherEngine := TWeatherSystem.Create(self, images);
 end;
 
 destructor T2kSpriteEngine.Destroy;
 begin
-   FWeatherEngine := nil;
    FreeAndNil(FFadeTime);
    FSpriteLocations.Free;
    FMapObjects.Free;
@@ -467,7 +461,7 @@ begin
       if assigned(FCurrentParty) then
       begin
          centerTile := FCurrentParty.tiles[1];
-         centerOnWorldCoords(centerTile.x + (centerTile.Width div 2), centerTile.Y);
+         centerOnWorldCoords(centerTile.x + ((centerTile.Width + TILE_SIZE.x) div 2), centerTile.Y + TILE_SIZE.y);
       end;
       ApplyDisplacement;
       if assigned(FBgImage) then
@@ -539,7 +533,6 @@ procedure T2kSpriteEngine.InternalCenterOn(px, py: integer);
 var
    x, y: integer; //pixel coordinates
    aX, aY: integer; //adjusted coordinates
-   dX, dY: integer; //delta
 begin
    x := px div TILE_SIZE.x;
    y := py div TILE_SIZE.y;
@@ -548,9 +541,7 @@ begin
    FDestination.Y := pY;
    aX := px div TILE_SIZE.x;
    aY := py div TILE_SIZE.y;
-   dx := x - aX;
-   dy := y - aY;
-   self.SetViewport(rect(aX, aY, x + dX, y + dY));
+   self.SetViewport(rect(aX, aY, ax + (canvas.width div TILE_SIZE.x), ay + (canvas.Height div TILE_SIZE.y)));
    self.WorldX := px;
    self.WorldY := py;
 end;

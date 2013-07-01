@@ -269,7 +269,11 @@ end;
 
 procedure TRpgInventory.sort;
 begin
-   FList.sort(TComparer<TRpgItem>.Construct(itemSortCompare));
+   if not FSorted then
+   begin
+      FList.sort(TComparer<TRpgItem>.Construct(itemSortCompare));
+      FSorted := true;
+   end;
 end;
 
 end.
