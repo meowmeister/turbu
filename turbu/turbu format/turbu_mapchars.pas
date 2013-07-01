@@ -61,7 +61,6 @@ type
    public
       [NoImport]
       constructor create(base: TMapSprite);
-      destructor Destroy; override;
       [NoImport]
       procedure Serialize(writer: TdwsJSONWriter);
       [NoImport]
@@ -218,30 +217,6 @@ begin
    FEvent := FBase.event;
    if FEvent <> nil then
       FID := FBase.event.id;
-end;
-
-(* destructor TRpgEvent.delete;
-var i: smallint;
-begin
-{   GGameEngine.currentMap.deleteEvent(FBase);
-   FBase.leaveTile;
-   FBase.Free;
-   i := min(FID, high(GRpgEvents));
-   while (i >= 0) and (GRpgEvents[i] <> self) do
-      dec(i);
-   assert(i <> -1);
-   for I := i to high(GRpgEvents) - 1 do
-      GRpgEvents[i] := GRpgEvents[i + 1];
-   setLength(GRpgEvents, length(GRpgEvents) - 1);}
-   inherited Destroy;
-end; *)
-
-destructor TRpgEvent.Destroy;
-begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   if FBase is TNullEvent then
-      FBase.free;}
-   inherited;
 end;
 
 procedure TRpgEvent.InternalChangeSprite;
@@ -425,6 +400,7 @@ begin
       FY := loc.y;
    end;
    setSprite(GDatabase.vehicles[which].mapSprite, self.translucency > 3);
+
 {$MESSAGE WARN 'Commented out code in live unit'}
 {   case which of
       vh_boat, vh_ship: newSprite := TGroundVehicleSprite;

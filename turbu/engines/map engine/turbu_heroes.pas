@@ -275,10 +275,6 @@ begin
    FStaticEq := template.staticEq;
    setLength(FSkill, GDatabase.skill.count + 1);
    FLevel := 1;
-//needs script support
-{   for I := 1 to template.skillset.count do
-      if template.skillset[i].le <= FLevel then
-         FSkill[template.skill[i].id] := true;}
    self.levelAdjustUp(0);
    level := template.minLevel;
    FExpTotal := FExpTable[FLevel];
