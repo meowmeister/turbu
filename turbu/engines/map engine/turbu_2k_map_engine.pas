@@ -102,6 +102,8 @@ type
       procedure changeMaps(newmap: word; newLocation: TSgPoint);
       procedure loadRpgImage(filename: string; mask: boolean);
       procedure TitleScreen; virtual;
+      procedure EnterCutscene;
+      procedure LeaveCutscene;
 
       property PartySprite: THeroSprite read FPartySprite;
       property ImageEngine: TImageEngine read FImageEngine;
@@ -259,6 +261,8 @@ begin
          if not assigned(FDatabase) then
             raise ERpgPlugin.Create('Incompatible project database');
          FObjectManager := TMapObjectManager.Create;
+         GScriptEngine.OnEnterCutscene := self.EnterCutscene;
+         GScriptEngine.OnLeaveCutscene := self.LeaveCutscene;
          GGameEngine := self;
       end
       else begin
@@ -689,6 +693,18 @@ begin
    SDL_GetRenderDrawColor(target.parent.Renderer, r, g, b, a);
    glColor4f(r / 255, g / 255, b / 255, a / 255);
    glUseProgram(current);
+end;
+
+procedure T2kMapEngine.EnterCutscene;
+begin
+   Inc(FCutscene);
+end;
+
+procedure T2kMapEngine.LeaveCutscene;
+begin
+   if FCutscene <= 0 then
+      raise Exception.Create('Mismatched call to T2kMapEngine.LeaveCutscene');
+   dec(FCutscene);
 end;
 
 procedure WriteTimestamp;

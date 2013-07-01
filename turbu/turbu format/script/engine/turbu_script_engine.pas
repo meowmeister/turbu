@@ -27,6 +27,7 @@ uses
 type
    TRegisterEnvironmentProc = procedure(compiler: TrsCompiler; importer: TrsTypeImporter; exec: TrsExec);
    TThreadWaitEvent = function: boolean;
+   TCutsceneEvent = procedure of object;
 
    TScriptEngine = class;
 
@@ -63,6 +64,8 @@ type
       FThreadLock: TCriticalSection;
       FImports: TArray<TPair<string, TrsExecImportProc>>;
       FEnvProc: TRegisterEnvironmentProc;
+      FEnterCutscene: TCutsceneEvent;
+      FLeaveCutscene: TCutsceneEvent;
 
       procedure AddScriptThread(thread: TScriptThread);
       procedure ClearScriptThread(thread: TScriptThread);
@@ -84,6 +87,9 @@ type
       procedure threadSleep(time: integer; block: boolean = false);
       procedure SetWaiting(value: TThreadWaitEvent);
       procedure ThreadWait;
+
+      property OnEnterCutscene: TCutsceneEvent read FEnterCutscene write FEnterCutscene;
+      property OnLeaveCutscene: TCutsceneEvent read FLeaveCutscene write FLeaveCutscene;
    end;
 
    TMapObjectManager = class
@@ -114,9 +120,6 @@ uses
    turbu_defs, turbu_battle_engine, //logs,
    rs_media,
    SDL;
-
-threadvar
-   GOnHold: boolean;
 
 procedure RegisterBattlesC(input: TrsTypeImporter);
 begin
@@ -372,11 +375,14 @@ var
 begin
    st := TThread.CurrentThread as TScriptThread;
    st.FDelay := TRpgTimestamp.Create(time);
-{   if block then
-      GGameEngine.cutscene := GGameEngine.cutscene + 1;}
-   st.InternalThreadSleep;
-{   if block then
-      GGameEngine.cutscene := GGameEngine.cutscene - 1;}
+   if block then
+      FEnterCutscene();
+   try
+      st.InternalThreadSleep;
+   finally
+      if block then
+         FLeaveCutscene();
+   end;
 end;
 
 procedure TScriptEngine.ThreadWait;
@@ -482,6 +488,8 @@ end;
 
 procedure TScriptThread.Execute;
 begin
+   if FPage.startCondition = automatic then
+      GScriptEngine.FEnterCutscene();
    try
       if FPage.scriptName <> '' then
       begin
@@ -490,6 +498,8 @@ begin
       end;
    finally
       FPage.parent.playing := false;
+      if FPage.startCondition = automatic then
+         GScriptEngine.FLeaveCutscene();
    end;
 end;
 
@@ -537,15 +547,7 @@ begin
    else if assigned(FDelay) then
       if (FDelay.timeRemaining > 0) then
          threadSleep(sender)
-      else
-      begin
-         freeAndNil(FDelay);
-         if GOnHold then
-         begin
-//            GGameEngine.cutscene := GGameEngine.cutscene - 1;
-            GOnHold := false;
-         end;
-      end;
+      else freeAndNil(FDelay);
    if Self.Terminated then
       Abort;
 end;

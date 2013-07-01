@@ -40,7 +40,7 @@ implementation
 uses
    SysUtils, SyncObjs,
    commons, turbu_constants, turbu_2k_sprite_engine, turbu_2k_frames, rs_media,
-   turbu_2k_environment,
+   turbu_2k_environment, turbu_2k_map_engine,
    rsCompiler, rsExec,
    ArchiveUtils;
 
@@ -182,21 +182,23 @@ begin
    if GMenuEngine.menuInt = 1 then
    begin
       result := true;
-{$MESSAGE WARN 'Commented out code in live unit'}
-//      GMenuEngine.cutscene := GMenuEngine.cutscene + 1;
-      for I := 1 to GEnvironment.HeroCount do
-         GEnvironment.Heroes[i].fullheal;
-      assert(GEnvironment.money >= cost);
-      GEnvironment.money := GEnvironment.money - cost;
-      GSpriteEngine.fadeOut(1500);
-      rs_media.fadeOutMusic(1500);
-      GScriptEngine.threadSleep(1750, true);
-      rs_media.PlaySystemMusic(bgmInn, true);
-      GScriptEngine.threadWait();
-      GSpriteEngine.fadeIn(1500);
-      rs_media.fadeInLastMusic(1500);
-      GScriptEngine.threadSleep(1500, true);
-//      GMenuEngine.cutscene := GMenuEngine.cutscene - 1;    }
+      GGameEngine.enterCutscene;
+      try
+         for I := 1 to GEnvironment.HeroCount do
+            GEnvironment.Heroes[i].fullheal;
+         assert(GEnvironment.money >= cost);
+         GEnvironment.money := GEnvironment.money - cost;
+         GSpriteEngine.fadeOut(1500);
+         rs_media.fadeOutMusic(1500);
+         GScriptEngine.threadSleep(1750, true);
+         rs_media.PlaySystemMusic(bgmInn, true);
+         GScriptEngine.threadWait();
+         GSpriteEngine.fadeIn(1500);
+         rs_media.fadeInLastMusic(1500);
+         GScriptEngine.threadSleep(1500, true);
+      finally
+         GGameEngine.LeaveCutscene;
+      end;
    end
    else result := false;
 end;
