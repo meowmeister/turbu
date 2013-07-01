@@ -1,0 +1,60 @@
+package map_default;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  default_format;
+
+contains
+  map_default_plugin in 'map_default_plugin.pas',
+  turbu_2k_map_engine in 'turbu_2k_map_engine.pas',
+  turbu_2k_sprite_engine in 'turbu_2k_sprite_engine.pas',
+  turbu_2k_map_tiles in 'turbu_2k_map_tiles.pas',
+  tiles in 'tiles.pas',
+  turbu_map_sprites in 'turbu_map_sprites.pas',
+  turbu_2k_map_locks in 'turbu_2k_map_locks.pas',
+  turbu_heroes in 'turbu_heroes.pas',
+  turbu_mapchars in '..\..\turbu format\turbu_mapchars.pas',
+  turbu_2k_char_sprites in 'turbu_2k_char_sprites.pas',
+  turbu_2k_sprite_list in 'turbu_2k_sprite_list.pas',
+  turbu_2k_environment in 'turbu_2k_environment.pas',
+  turbu_2k_images in 'turbu_2k_images.pas',
+  turbu_2k_items in 'turbu_2k_items.pas',
+  turbu_2k_map_timer in 'turbu_2k_map_timer.pas',
+  rs_maps in '..\..\turbu format\script\engine\libraries\rs_maps.pas',
+  rs_message in '..\..\turbu format\script\engine\libraries\rs_message.pas',
+  turbu_2k_frames in 'turbu_2k_frames.pas',
+  rs_characters in '..\..\turbu format\script\engine\libraries\rs_characters.pas',
+  turbu_2k_animations in 'turbu_2k_animations.pas',
+  turbu_2k_image_engine in 'turbu_2k_image_engine.pas',
+  turbu_2k_message_boxes in 'turbu_2k_message_boxes.pas',
+  turbu_2k_transitions in 'turbu_2k_transitions.pas',
+  turbu_2k_transitions_graphics in 'turbu_2k_transitions_graphics.pas',
+  turbu_2k_distortions in 'turbu_2k_distortions.pas',
+  turbu_2k_weather in 'turbu_2k_weather.pas';
+
+end.
+

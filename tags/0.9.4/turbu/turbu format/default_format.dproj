@@ -1,0 +1,193 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{9B549F32-02B6-4740-A05A-18AD3E3EC502}</ProjectGuid>
+			<MainSource>default_format.dpk</MainSource>
+			<ProjectVersion>12.3</ProjectVersion>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+			<Base>True</Base>
+			<Platform>Win32</Platform>
+			<AppType>Package</AppType>
+			<FrameworkType>None</FrameworkType>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
+			<RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+			<DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
+			<DCC_DcuOutput>..\dcus\</DCC_DcuOutput>
+			<DesignOnlyPackage>false</DesignOnlyPackage>
+			<DCC_UnitSearchPath>..\bin\;..\dcus\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_BplOutput>..\bin\</DCC_BplOutput>
+			<DCC_DcpOutput>..\dcus\</DCC_DcpOutput>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<GenPackage>true</GenPackage>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_Platform>x86</DCC_Platform>
+			<DCC_DependencyCheckOutputName>..\bin\default_format.bpl</DCC_DependencyCheckOutputName>
+			<DCC_N>false</DCC_N>
+			<DCC_S>false</DCC_S>
+			<GenDll>true</GenDll>
+			<DCC_E>false</DCC_E>
+			<DCC_F>false</DCC_F>
+			<DCC_K>false</DCC_K>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_MapFile>3</DCC_MapFile>
+			<DCC_Optimize>false</DCC_Optimize>
+			<DCC_DebugDCUs>true</DCC_DebugDCUs>
+			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+			<DCC_SymbolReferenceInfo>2</DCC_SymbolReferenceInfo>
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="default_format.dpk">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="*.dres"/>
+			<DCCReference Include="EngineBasis.dcp"/>
+			<DCCReference Include="database\turbu_database.pas"/>
+			<DCCReference Include="database\turbu_characters.pas"/>
+			<DCCReference Include="database\turbu_classes.pas"/>
+			<DCCReference Include="database\turbu_animations.pas"/>
+			<DCCReference Include="database\turbu_items.pas"/>
+			<DCCReference Include="database\turbu_resists.pas"/>
+			<DCCReference Include="database\turbu_skills.pas"/>
+			<DCCReference Include="database\turbu_sounds.pas"/>
+			<DCCReference Include="..\editor\dm_database.pas">
+				<Form>dmDatabase</Form>
+				<DesignClass>TDataModule</DesignClass>
+			</DCCReference>
+			<DCCReference Include="turbu_sprites.pas"/>
+			<DCCReference Include="turbu_defs.pas"/>
+			<DCCReference Include="turbu_decl_utils.pas"/>
+			<DCCReference Include="turbu_constants.pas"/>
+			<DCCReference Include="database\turbu_game_data.pas"/>
+			<DCCReference Include="database\turbu_map_metadata.pas"/>
+			<DCCReference Include="maps\turbu_maps.pas"/>
+			<DCCReference Include="database\turbu_tilesets.pas"/>
+			<DCCReference Include="..\mapview\libs\timing.pas"/>
+			<DCCReference Include="maps\turbu_map_objects.pas"/>
+			<DCCReference Include="..\charset_data.pas"/>
+			<DCCReference Include="turbu_pathing.pas"/>
+			<DCCReference Include="script\EB_Messages.pas"/>
+			<DCCReference Include="script\EB_Maps.pas"/>
+			<DCCReference Include="script\EB_System.pas"/>
+			<DCCReference Include="script\EB_Characters.pas"/>
+			<DCCReference Include="script\EB_Settings.pas"/>
+			<DCCReference Include="script\EB_Media.pas"/>
+			<DCCReference Include="..\..\components\TURBU\FirebirdDataset.pas"/>
+			<DCCReference Include="database\turbu_monsters.pas"/>
+			<DCCReference Include="script\EB_Battle.pas"/>
+			<DCCReference Include="database\turbu_terrain.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsDefsBackend.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsEnex.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsExec.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsImport.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsLexer.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsLinker.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsParser.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsSystemUnit.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsCodegen.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsCompiler.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\rsDefs.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\RTTI Creation\vmtBuilder.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\RTTI Creation\vmtStructure.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\RTTI Creation\newClass.pas"/>
+			<DCCReference Include="..\..\classes\RPG Script\RTTI Creation\rttiPackage.pas"/>
+			<DCCReference Include="script\engine\turbu_script_engine.pas"/>
+			<DCCReference Include="..\logs.pas"/>
+			<DCCReference Include="script\engine\libraries\rs_media.pas"/>
+			<DCCReference Include="script\EB_ObjectHelper.pas"/>
+			<DCCReference Include="script\EB_Expressions_RM.pas"/>
+			<DCCReference Include="design\db_create.pas"/>
+			<RcItem Include="design\Turbu.cdb">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCDATA</ResourceType>
+				<ResourceId>db_template</ResourceId>
+			</RcItem>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
+		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
+		<PropertyGroup>
+			<PostBuildEvent><![CDATA[copy "$(OUTPUTPATH)" "$(OUTPUTDIR)$(OUTPUTNAME).tep" /Y]]></PostBuildEvent>
+		</PropertyGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType>Package</Borland.ProjectType>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">default_format.dpk</Source>
+					</Source>
+					<Parameters>
+						<Parameters Name="HostApplication">C:\Users\Mason\Documents\RAD Studio Fulcrum\Projects\turbu\turbu\bin\Turbu.exe</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
+						<VersionInfo Name="CodePage">1252</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<isVersionControl>
+						<isVersionControl Name="isVersionControlID"/>
+					</isVersionControl>
+				</Delphi.Personality>
+				<Platforms>
+					<Platform value="Win32">True</Platform>
+				</Platforms>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

@@ -1,0 +1,104 @@
+package EngineBasis;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+{$DEFINE PS_USESSUPPORT}
+{$DEFINE no_smpeg}
+
+requires
+  dbrtl,
+  vcl,
+  dsnap,
+  DbxCommonDriver,
+  vclimg,
+  Jcl,
+  JvCore;
+
+contains
+  turbu_versioning in '..\..\turbu format\turbu_versioning.pas',
+  turbu_battle_engine in '..\..\turbu format\turbu_battle_engine.pas',
+  turbu_map_engine in '..\..\turbu format\turbu_map_engine.pas',
+  sdl in '..\..\..\classes\jedi-sdl\SDL\Pas\sdl.pas',
+  sdl_13 in '..\..\..\classes\jedi-sdl\SDL\Pas\sdl_13.pas',
+  sdl_image in '..\..\..\classes\jedi-sdl\SDL_Image\Pas\sdl_image.pas',
+  turbu_database_interface in '..\..\turbu format\turbu_database_interface.pas',
+  sdl_canvas in '..\..\..\classes\sdl custom\sdl_canvas.pas',
+  SDL_ImageManager in '..\..\..\classes\sdl custom\SDL_ImageManager.pas',
+  SDL_rwStream in '..\..\..\classes\sdl custom\SDL_rwStream.pas',
+  sdl_sprite in '..\..\..\classes\sdl custom\sdl_sprite.pas',
+  SG_defs in '..\..\..\classes\sdl custom\SG_defs.pas',
+  turbu_map_interface in '..\..\turbu format\turbu_map_interface.pas',
+  sdlstreams in '..\..\..\classes\jedi-sdl\SDL\Pas\sdlstreams.pas',
+  turbu_plugin_interface in '..\..\turbu format\plugins\turbu_plugin_interface.pas',
+  turbu_sdl_image in '..\..\turbu format\turbu_sdl_image.pas',
+  turbu_engines in '..\..\turbu format\turbu_engines.pas',
+  sg_utils in '..\..\..\classes\sdl custom\sg_utils.pas',
+  archiveInterface in '..\..\archiveInterface.pas',
+  SqlConst,
+  SqlExpr,
+  SimpleDS,
+  DBConnAdmin,
+  midaslib,
+  crtl,
+  JvPlugin,
+  JvPluginManager,
+  JvStringHolder,
+  AsphyreTimer in '..\..\..\classes\Asphyre\AsphyreTimer.pas',
+  turbu_tbi_lib in '..\..\turbu format\turbu_tbi_lib.pas',
+  EventBuilder in '..\..\turbu format\EventBuilder.pas',
+  turbu_serialization in '..\..\turbu_serialization.pas',
+  rttiHelper in '..\..\rttiHelper.pas',
+  turbu_containers in '..\..\turbu format\turbu_containers.pas',
+  turbu_functional in '..\..\turbu_functional.pas',
+  finalizer_hack in 'finalizer_hack.pas',
+  uDataSetHelper in '..\..\..\classes\uDataSetHelper.pas',
+  DSharp.Core.Variants in '..\..\..\classes\DSharp\Core\DSharp.Core.Variants.pas',
+  DSharp.Linq.QueryProvider in '..\..\..\classes\DSharp\Core\DSharp.Linq.QueryProvider.pas',
+  DSharp.Linq.QueryProvider.SQL in '..\..\..\classes\DSharp\Core\DSharp.Linq.QueryProvider.SQL.pas',
+  DSharp.Core.Expressions in '..\..\..\classes\DSharp\Core\DSharp.Core.Expressions.pas',
+  DSharp.Core.Lambda in '..\..\..\classes\DSharp\Core\DSharp.Core.Lambda.pas',
+  PackageRegistry in '..\..\..\classes\PackageRegistry.pas',
+  engine_manager in 'engine_manager.pas' {dmEngineManager: TDataModule},
+  disharmony in 'disharmony.pas',
+  dm_shaders in '..\..\turbu format\database\dm_shaders.pas',
+  turbu_multimaps in '..\..\turbu_multimaps.pas',
+  turbu_script_interface in '..\..\turbu format\turbu_script_interface.pas',
+  ArchiveUtils in '..\..\ArchiveUtils.pas',
+  turbu_text_utils in 'turbu_text_utils.pas',
+  StringListComp in '..\..\..\classes\StringListComp.pas',
+  ftgl in '..\..\..\classes\ftgl.pas',
+  turbu_OpenGL in 'turbu_OpenGL.pas',
+  project_folder in 'project_folder.pas',
+  delayedAction in 'delayedAction.pas',
+  turbu_operators in '..\..\turbu format\turbu_operators.pas',
+  EB_Expressions in '..\..\turbu format\script\EB_Expressions.pas',
+  EB_RpgScript in '..\..\turbu format\script\EB_RpgScript.pas',
+  turbu_vartypes in '..\..\turbu format\turbu_vartypes.pas',
+  commons in '..\..\commons.pas',
+  EB_GotoRemoval in '..\..\turbu format\script\EB_GotoRemoval.pas',
+  EB_Optimizations in '..\..\turbu format\script\EB_Optimizations.pas',
+  EB_NestedIfOptimization in '..\..\turbu format\script\EB_NestedIfOptimization.pas';
+
+end.

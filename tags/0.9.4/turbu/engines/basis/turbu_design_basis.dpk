@@ -1,0 +1,70 @@
+package turbu_design_basis;
+
+{$R *.res}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  EngineBasis,
+  dbrtl,
+  vcldb,
+  vclimg,
+  Jcl,
+  JvCore,
+  JvStdCtrls;
+
+contains
+  turbu_listGrid in '..\..\..\components\TURBU\turbu_listGrid.pas',
+  sdl_ScrollFrame in '..\..\..\components\TURBU\sdl_ScrollFrame.pas',
+  sdl_frame in '..\..\..\components\TURBU\sdl_frame.pas',
+  DBIndexComboBox in '..\..\..\components\TURBU\DBIndexComboBox.pas',
+  extensible_cds in '..\..\..\components\TURBU\extensible_cds.pas',
+  ClipboardWatcher in 'ClipboardWatcher.pas',
+  IDLookupCombo in '..\..\..\components\TURBU\IDLookupCombo.pas',
+  MusicSelector in 'MusicSelector.pas',
+  button_edit in '..\..\..\components\TURBU\button_edit.pas',
+  map_tree_controller in '..\..\editor\map_tree_controller.pas',
+  scrollbox_manager in '..\..\editor\scrollbox_manager.pas',
+  JVDBSpinEdit,
+  JVDBLookup,
+  JVDBGridSelectColumnForm,
+  JVExDBGrids,
+  JVDBUltimGrid,
+  JVDBGrid,
+  JVDBUtils,
+  EBListView in '..\..\turbu format\design\EBListView.pas',
+  EbEdit in '..\..\turbu format\design\EB Editors\EbEdit.pas' {frmEbEditBase},
+  array_editor in '..\map engine\design\array_editor.pas' {frmArrayEdit},
+  ebSelector in '..\..\turbu format\design\EB Editors\ebSelector.pas' {frmEBSelector},
+  dbTabControl in '..\..\..\components\TURBU\dbTabControl.pas',
+  EditNull in '..\..\turbu format\design\EB Editors\Basics\EditNull.pas' {frmEBEditNull},
+  EditIf in '..\..\turbu format\design\EB Editors\Basics\EditIf.pas' {frmEBEditIf},
+  EditComparisonInt in '..\..\turbu format\design\EB Editors\Basics\EditComparisonInt.pas' {frmEBEditComparisonInt},
+  fr_EditCondition in '..\..\turbu format\design\EB Editors\Basics\fr_EditCondition.pas' {frEditCondition: TFrame},
+  EditConditional in '..\..\turbu format\design\EB Editors\Basics\EditConditional.pas' {frmConditionEdit},
+  variable_selector in '..\..\..\components\TURBU\variable_selector.pas',
+  conversion_report in '..\..\turbu format\converters\conversion_report.pas',
+  dbCheckListBox in '..\..\..\components\TURBU\dbCheckListBox.pas';
+
+end.

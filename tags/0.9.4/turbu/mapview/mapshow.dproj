@@ -1,0 +1,199 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{c1a2dbe6-0263-48fd-bdc7-fbceceb49bca}</ProjectGuid>
+			<MainSource>mapshow.dpr</MainSource>
+			<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+			<DCC_DependencyCheckOutputName>mapshow.exe</DCC_DependencyCheckOutputName>
+			<ProjectVersion>12.3</ProjectVersion>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<Base>True</Base>
+			<Platform>Win32</Platform>
+			<AppType>Application</AppType>
+			<FrameworkType>VCL</FrameworkType>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_ExeOutput>..\bin</DCC_ExeOutput>
+			<DCC_Inlining>off</DCC_Inlining>
+			<DCC_Define>PS_USESSUPPORT;$(DCC_Define)</DCC_Define>
+			<DCC_DcuOutput>..\dcus</DCC_DcuOutput>
+			<DCC_DcpOutput>..\dcus</DCC_DcpOutput>
+			<DCC_UnitSearchPath>..\..\classes\sdl custom;..\turbu format;..\turbu format\database;..\editor;..\turbu format\plugins;..\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_DependencyCheckOutputName>..\bin\mapshow.exe</DCC_DependencyCheckOutputName>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<Version>7.0</Version>
+			<DCC_DebugInformation>False</DCC_DebugInformation>
+			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+			<DCC_Optimize>False</DCC_Optimize>
+			<DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
+			<DCC_RangeChecking>True</DCC_RangeChecking>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_UnitSearchPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\sprite\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\streamroutines;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\tempfile;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\general graphics;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\map engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\script engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x\upsi;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ResourcePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\sprite\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\streamroutines;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\tempfile;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\general graphics;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\map engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\script engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x\upsi;$(DCC_ResourcePath)</DCC_ResourcePath>
+			<DCC_ObjPath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\sprite\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\streamroutines;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\tempfile;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\general graphics;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\map engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\script engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x\upsi;$(DCC_ObjPath)</DCC_ObjPath>
+			<DCC_IncludePath>$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\sprite\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\streamroutines;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\tempfile;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\general graphics;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\map engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\script engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x\upsi;$(DCC_IncludePath)</DCC_IncludePath>
+			<DCC_Define>PS_SAFE_ZDIV; PS_LINE_OBJECT; ENGINE;WINDOWS;RELEASE;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<Version>7.0</Version>
+			<DCC_Optimize>False</DCC_Optimize>
+			<DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
+			<DCC_RangeChecking>True</DCC_RangeChecking>
+			<DCC_UnitSearchPath>$(BDS)\RaveReports\Lib;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d11\debug;$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\sprite\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\streamroutines;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\tempfile;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\general graphics;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\map engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\script engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x\upsi;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ResourcePath>$(BDS)\RaveReports\Lib;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d11\debug;$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\sprite\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\streamroutines;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\tempfile;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\general graphics;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\map engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\script engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x\upsi;$(DCC_ResourcePath)</DCC_ResourcePath>
+			<DCC_ObjPath>$(BDS)\RaveReports\Lib;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d11\debug;$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\sprite\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\streamroutines;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\tempfile;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\general graphics;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\map engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\script engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x\upsi;$(DCC_ObjPath)</DCC_ObjPath>
+			<DCC_IncludePath>$(BDS)\RaveReports\Lib;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d11\debug;$(BDS)\lib\Debug;$(BDS)\Lib\Debug\Indy10;C:\DOCUME~1\Owner\MYDOCU~1\BORLAN~1\COMPON~1\jvcl\jcl\lib\d10\debug;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\sprite\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\xtreme\Source;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\streamroutines;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\classes\tempfile;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\general graphics;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\map engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\script engine;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x;C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\mapview\libs\menus\rm2x\upsi;$(DCC_IncludePath)</DCC_IncludePath>
+			<DCC_Define>PS_SAFE_ZDIV;PS_LINE_OBJECT;ENGINE;DEBUG;WINDOWS;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="mapshow.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="mapview.pas">
+				<Form>frmGameForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\LMU.pas"/>
+			<DCCReference Include="..\LDB.pas"/>
+			<DCCReference Include="..\LMT.pas"/>
+			<DCCReference Include="openformThrowaway.pas">
+				<Form>openForm</Form>
+			</DCCReference>
+			<DCCReference Include="..\events.pas"/>
+			<DCCReference Include="..\locate_files.pas"/>
+			<DCCReference Include="console.pas">
+				<Form>frmConsole</Form>
+			</DCCReference>
+			<DCCReference Include="..\rm_sound.pas"/>
+			<DCCReference Include="..\item_code.pas"/>
+			<DCCReference Include="..\skill_code.pas"/>
+			<DCCReference Include="libs\menus\rm2x\rm2x_skill_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\rm2x_inventory_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\rm2x_item_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\rm2x_main_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\rm2X_menu_components.pas"/>
+			<DCCReference Include="libs\menus\rm2x\rm2X_menu_engine.pas"/>
+			<DCCReference Include="libs\menus\rm2x\rm2x_party_target_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\rm2x_shop_menu.pas"/>
+			<DCCReference Include="libs\menus\menu_basis.pas"/>
+			<DCCReference Include="..\shop_data.pas"/>
+			<DCCReference Include="libs\menus\rm2x\rm2x_name_menu.pas"/>
+			<DCCReference Include="libs\map engine\addition_sprite.pas"/>
+			<DCCReference Include="libs\map engine\charset_graphics.pas"/>
+			<DCCReference Include="libs\map engine\chipset_graphics.pas"/>
+			<DCCReference Include="libs\script engine\script_engine.pas"/>
+			<DCCReference Include="..\engines\map engine\tiles.pas"/>
+			<DCCReference Include="libs\script engine\uPSI_script_interface.pas"/>
+			<DCCReference Include="libs\script engine\rpg_list.pas"/>
+			<DCCReference Include="libs\script engine\script_backend.pas"/>
+			<DCCReference Include="libs\script engine\script_interface.pas"/>
+			<DCCReference Include="libs\script engine\RPG Script library\rs_system.pas"/>
+			<DCCReference Include="libs\script engine\RPG Script library\rs_message.pas"/>
+			<DCCReference Include="libs\script engine\RPG Script library\rs_menu.pas"/>
+			<DCCReference Include="libs\map engine\transitions.pas"/>
+			<DCCReference Include="libs\map engine\transition_graphics.pas"/>
+			<DCCReference Include="libs\map engine\distortions.pas"/>
+			<DCCReference Include="libs\general graphics\weather.pas"/>
+			<DCCReference Include="libs\general graphics\rpg_image.pas"/>
+			<DCCReference Include="libs\menus\frames.pas"/>
+			<DCCReference Include="libs\timing.pas"/>
+			<DCCReference Include="libs\general graphics\rpg_anim.pas"/>
+			<DCCReference Include="..\xyz_lib.pas"/>
+			<DCCReference Include="..\move_data.pas"/>
+			<DCCReference Include="libs\map engine\map_unit.pas"/>
+			<DCCReference Include="..\formats.pas"/>
+			<DCCReference Include="..\logs.pas"/>
+			<DCCReference Include="..\..\classes\sdl custom\SG_defs.pas"/>
+			<DCCReference Include="..\..\classes\sdl custom\sdl_sprite.pas"/>
+			<DCCReference Include="libs\general graphics\text_graphics.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_heroes.pas"/>
+			<DCCReference Include="..\archiveInterface.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_shop_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_item_code.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_item_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_menu_components.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_menus.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_party_target_menu.pas"/>
+			<DCCReference Include="libs\menus\rm2x\upsi\uPSI_rm2x_inventory_menu.pas"/>
+			<DCCReference Include="..\engines\map engine\turbu_2k_sprite_engine.pas"/>
+			<None Include="libs\menus\rm2x\menuscripts.txt"/>
+			<None Include="mapshow.todo"/>
+			<None Include="scripts\battle_algorithms"/>
+			<None Include="scripts\menuscripts"/>
+			<None Include="scripts\plugins"/>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
+		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Parameters>
+						<Parameters Name="DebugSourceDirs">C:\Program Files\Borland\BDS\4.0\source\Win32\rtl\sys\;C:\Program Files\Borland\BDS\4.0\source\Win32\rtl\common\;C:\Program Files\Borland\BDS\4.0\source\Win32\vcl\</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">True</VersionInfo>
+						<VersionInfo Name="MajorVer">0</VersionInfo>
+						<VersionInfo Name="MinorVer">6</VersionInfo>
+						<VersionInfo Name="Release">3</VersionInfo>
+						<VersionInfo Name="Build">250</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">True</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
+						<VersionInfo Name="CodePage">1252</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName">Dragon Slayers, Inc.</VersionInfoKeys>
+						<VersionInfoKeys Name="FileDescription">Map viewer</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">0.6.3.250</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName">TURBU game engine alpha</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright">Copyright © 2007-2008 Mason Wheeler.</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">0.4</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments">If you find any bugs, please let me know.  Include the map number, the project name, and what error message you got, if any.</VersionInfoKeys>
+					</VersionInfoKeys>
+					<Excluded_Packages>
+						<Excluded_Packages Name="C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\components\Pascal Script\Dcu\D9\PascalScript_Core_D9.bpl">RemObjects Pascal Script - Core Package</Excluded_Packages>
+					</Excluded_Packages>
+					<Source>
+						<Source Name="MainSource">mapshow.dpr</Source>
+					</Source>
+				</Delphi.Personality>
+				<Platforms>
+					<Platform value="Win32">True</Platform>
+				</Platforms>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>
