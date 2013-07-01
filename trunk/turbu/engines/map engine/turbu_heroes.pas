@@ -219,7 +219,7 @@ implementation
 uses
    Math, SysUtils,
    ArchiveUtils, turbu_database, dm_database, commons, turbu_items,
-   turbu_2k_environment, turbu_2k_sprite_engine, turbu_script_engine;
+   turbu_2k_environment, turbu_2k_sprite_engine, turbu_script_engine, turbu_skills;
 
 const
    WEAPON_SLOT = 1;
@@ -619,12 +619,15 @@ procedure TRpgHero.levelAdjustDown(before: integer);
 var
    i: integer;
    base: THeroTemplate;
+   skill: TSkillGainInfo;
 begin
    base := template as THeroTemplate;
    for I := 1 to base.skillset.Count - 1 do
-{$MESSAGE WARN 'Commented out code in live unit'}
-{      if (base.skillset[i].level > FLevel) and (base.skillset[i].level <= before) then
-         FSkill[base.skillset[i].id] := false;} ;
+   begin
+      skill := base.skillset[i];
+      if (skill.style = sf_level) and ((skill.num[1] > FLevel) and (skill.num[1] <= before)) then
+         FSkill[base.skillset[i].id] := false;
+   end;
    levelStatAdjust;
 end;
 
@@ -632,12 +635,15 @@ procedure TRpgHero.levelAdjustUp(before: integer);
 var
    i: integer;
    base: THeroTemplate;
+   skill: TSkillGainInfo;
 begin
    base := template as THeroTemplate;
    for I := 1 to base.skillset.Count - 1 do
-{$MESSAGE WARN 'Commented out code in live unit'}
-{      if (base.skillset[i].level <= FLevel) and (base.skillset[i].level > before) then
-         FSkill[base.skillset[i].id] := true;} ;
+   begin
+      skill := base.skillset[i];
+      if (skill.style = sf_level) and ((skill.num[1] <= FLevel) and (skill.num[1] > before)) then
+         FSkill[base.skillset[i].id] := false;
+   end;
    levelStatAdjust;
 end;
 
