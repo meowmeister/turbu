@@ -61,7 +61,7 @@ type
 
       //transition control
       FTransProc: TTransProc;
-//      FTransitionProgress: integer;
+      FTransitionProgress: integer;
       FRenderProc: TRenderProc;
       FInitialRender: boolean;
 
@@ -104,6 +104,11 @@ type
       procedure clearDisplacement;
       procedure ApplyDisplacement;
       procedure InternalCenterOn(px, py: integer);
+
+      procedure DrawNormal;
+      procedure DrawFading;
+      procedure transDrawSelf(sender: TObject);
+      procedure transDrawProc(sender: TObject);
    protected
       function GetHeight: integer; override;
       function GetWidth: integer; override;
@@ -450,7 +455,7 @@ begin
    inherited;
  end;
 
-procedure T2kSpriteEngine.Draw;
+procedure T2kSpriteEngine.DrawNormal;
 var
    current: integer;
    centerTile: TTile;
@@ -469,6 +474,33 @@ begin
       inherited Draw;
    finally
       glUseProgram(current);
+   end;
+end;
+
+procedure T2kSpriteEngine.DrawFading;
+begin
+   if assigned(FTransProc) then
+   begin
+      if GCurrentTarget = -1 then
+      begin
+         GCurrentTarget := 0;
+         FTransitionProgress := 0;
+      end;
+      if FInitialRender then
+      begin
+         GRenderTargets.RenderOn(2, transDrawSelf);
+         FInitialRender := false;
+      end else GRenderTargets.RenderOn(GCurrentTarget, self.transDrawProc);
+   end
+   else transDrawSelf(self);
+end;
+
+procedure T2kSpriteEngine.Draw;
+begin
+   case self.state of
+      gs_map, gs_message: DrawNormal;
+      gs_menu, gs_battle, gs_minigame, gs_sleeping: raise Exception.Create('Unsupported game state');
+      gs_fading: DrawFading;
    end;
 end;
 
@@ -531,11 +563,8 @@ end;
 
 procedure T2kSpriteEngine.InternalCenterOn(px, py: integer);
 var
-   x, y: integer; //pixel coordinates
    aX, aY: integer; //adjusted coordinates
 begin
-   x := px div TILE_SIZE.x;
-   y := py div TILE_SIZE.y;
    adjustCoords(pX, pY);
    FDestination.X := pX;
    FDestination.Y := pY;
@@ -820,6 +849,23 @@ begin
    gla[3] := 1;
    FShaderEngine.SetUniformValue(handle, 'rgbValues', gla);
    FShaderEngine.SetUniformValue(handle, 'satMult', FFadeColor[4]);
+end;
+
+procedure T2kSpriteEngine.transDrawProc(sender: TObject);
+begin
+   FTransProc(FTransitionProgress);
+end;
+
+procedure T2kSpriteEngine.transDrawSelf(sender: TObject);
+begin
+   FGameState := FSavedState;
+   FSavedState := gs_fading;
+   self.Draw;
+   if not FBlank then
+   begin
+      FSavedState := FGameState;
+      FGameState := gs_fading;
+   end else FSavedState := FGameState;
 end;
 
 procedure T2kSpriteEngine.Flash();
