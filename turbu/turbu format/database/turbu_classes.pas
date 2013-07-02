@@ -223,6 +223,10 @@ type
          function GetEnumerator: TValueEnumerator; reintroduce;
       end;
 
+      TGetNewObject = function(sender: TRpgDataDict<T>): T of object;
+
+   private
+      FOnGetNewObject: TGetNewObject;
       function GetValues: TValueCollection;
    protected
       function GetNewItem: TRpgDatafile; override;
@@ -232,6 +236,7 @@ type
       function FirstWhere(filter: TFunc<T, boolean>): T;
       property Items[const Key: integer]: T read GetItem; default;
       property Values: TValueCollection read GetValues;
+      property OnGetNewObject: TGetNewObject read FOnGetNewObject write FOnGetNewObject;
    end;
 
    TNameTypeList = TList<TNameType>;
@@ -1160,7 +1165,9 @@ end;
 
 function TRpgDataDict<T>.GetNewItem: TRpgDatafile;
 begin
-   result := T.Create;
+   if assigned(FOnGetNewObject) then
+      result := FOnGetNewObject(self)
+   else result := T.Create;
 end;
 
 function TRpgDataDict<T>.GetValues: TValueCollection;

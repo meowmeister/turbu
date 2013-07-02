@@ -142,6 +142,8 @@ type
       function GetVocab(const key: string): string;
       function GetSFX(value: TSfxTypes): TRpgSound;
       function GetBGM(value: TBgmTypes): TRpgMusic;
+      function NewItem(sender: TRpgDataDict<TItemTemplate>): TItemTemplate;
+      function CreateNewItem(slot: TItemType): TItemTemplate;
    protected
       FGlobalScriptBlock: TEBUnit;
       FSysVocab: TStringList;
@@ -276,7 +278,10 @@ begin
    FSerializer.OnReleaseClosedDataset := dmDatabase.OnReleaseClosedDataset;
 
    for I := low(TItemType) to high(TItemType) do
+   begin
       FItems[i] := TItemList.Create(dmDatabase.items, FSerializer);
+      FItems[i].OnGetNewObject := self.NewItem;
+   end;
    FAttributes := TAttribList.Create(dmDatabase.attributes, FSerializer);
    FConditions := TConditionList.Create(dmDatabase.conditions, FSerializer);
    FBattleStyle := TBattleEngineList.Create(false);
@@ -858,26 +863,38 @@ begin
    FHero.Add(THeroTemplate.Create);
 end;
 
-{$WARN USE_BEFORE_DEF OFF}
+function TRpgDatabase.CreateNewItem(slot: TItemType): TItemTemplate;
+begin
+   case slot of
+      it_junk: result := TJunkTemplate.Create;
+      it_weapon: result := TWeaponTemplate.Create;
+      it_armor: result := TArmorTemplate.Create;
+      it_medicine: result := TMedicineTemplate.Create;
+      it_upgrade: result := TStatItemTemplate.Create;
+      it_book: result := TSkillBookTemplate.Create;
+      it_skill: result := TSkillItemTemplate.Create;
+      it_variable: result := TVariableItemTemplate.Create;
+      it_script: result := TScriptItemTemplate.Create;
+      else raise Exception.Create('Invalid item slot');
+   end;
+end;
+
+function TRpgDatabase.NewItem(sender: TRpgDataDict<TItemTemplate>): TItemTemplate;
+var
+   slot: TItemType;
+begin
+   for slot := Low(TItemType) to High(TItemType) do
+      if sender = FItems[slot] then
+         exit(CreateNewItem(slot));
+end;
+
 procedure TRpgDatabase.addItem(slot: TItemType);
 var
    newItem: TItemTemplate;
 begin
-   case slot of
-      it_junk: newItem := TJunkTemplate.Create;
-      it_weapon: newItem := TWeaponTemplate.Create;
-      it_armor: newItem := TArmorTemplate.Create;
-      it_medicine: newItem := TMedicineTemplate.Create;
-      it_upgrade: newItem := TStatItemTemplate.Create;
-      it_book: newItem := TSkillBookTemplate.Create;
-      it_skill: newItem := TSkillItemTemplate.Create;
-      it_variable: newItem := TVariableItemTemplate.Create;
-      it_script: newItem := TScriptItemTemplate.Create;
-      else assert(false);
-   end;
+   newItem := CreateNewItem(slot);
    FItems[slot].Add(newItem);
 end;
-{$WARN USE_BEFORE_DEF ON}
 
 procedure TRpgDatabase.AddLegacy(const name: string; id, section: integer;
   const data: RawByteString);
