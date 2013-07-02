@@ -19,7 +19,7 @@ unit turbu_2k_sprite_engine;
 
 interface
 uses
-   types, Generics.Collections,
+   Types, Generics.Collections,
    commons, timing, tiles, dm_shaders,
    turbu_2k_sprite_list, turbu_2k_frames,
    turbu_maps, turbu_map_engine, turbu_2k_map_tiles, turbu_tilesets,
@@ -978,6 +978,9 @@ begin
 
    WorldX := WorldX + FDisplacementX - shakeBias;
    WorldY := WorldY + FDisplacementY;
+   if (FDisplacementX - shakeBias <> 0) or (FDisplacementY <> 0) then
+      for i := low(FMap.tileMap) to high(FMap.tileMap) do
+         loadTileMatrix(FMap.tileMap[i], i, rect(trunc(WorldX / TILE_SIZE.x), trunc(WorldY / TILE_SIZE.y), FViewport.Bottom, FViewport.Right));
 end;
 
 procedure T2kSpriteEngine.CheckDisplacement;
