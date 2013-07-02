@@ -645,6 +645,7 @@ var
    convertedImage: TStream;
    writename: string;
 begin
+   image.ColorKey := 0;
    framesPerSprite := sprite.X * sprite.Y;
    blitSurface := TSdlSurface.Create(frame.X, frame.Y * framesPerSprite, 8, 0, 0, 0, 0);
    try
