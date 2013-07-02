@@ -62,17 +62,11 @@ begin
    if peekAhead(theLDB, 0) = false then //blank chipset records just contain an x00 and nothing else
    begin
       name := getStrSec(1, theLDB, fillInBlankStr);
-      if peekAhead(theLDB, 0) then
-      begin
+      if peekAhead(theLDB) = 0 then
          incomplete := true;
-         exit
-      end;
       filename := getStrSec(2, theLDB, fillInBlankStr);
-      if peekAhead(theLDB, 0) then
-      begin
+      if peekAhead(theLDB) = 0 then
          incomplete := true;
-         exit
-      end;
       if peekAhead(theLDB, 3) then
       begin
          converter := TBerConverter.Create(theLDB);
@@ -80,8 +74,7 @@ begin
          for dummy := 0 to 161 do
             read(terrain[dummy], 2);
       end
-      else
-         incomplete := true;
+      else incomplete := true;
       if peekAhead(theLDB, 4) then
       begin
          converter := TBerConverter.Create(theLDB);
@@ -89,8 +82,7 @@ begin
          for dummy := 0 to 161 do
             read(blockData[dummy], 1);
       end
-      else
-      begin
+      else begin
          incomplete := true;
          for dummy := 0 to 161 do
             blockData[dummy] := $0F;
@@ -102,8 +94,7 @@ begin
          for dummy := 0 to 143 do
             read(ublockData[dummy], 1);
       end
-      else
-      begin
+      else begin
          incomplete := true;
          ublockData[1] := $1F;
          for dummy := 2 to 143 do
@@ -113,9 +104,8 @@ begin
       hispeed := getChboxSec($0c, theLDB, fillInChipsetBool);
       if not peekAhead(theLDB, 0) then
          raise EParseMessage.createFmt('Chipset section %d final 0 not found', [id]);
-   end //end of IF block
-   else
-   begin
+   end
+   else begin
       incomplete := true;
       for dummy := 0 to 161 do
          blockData[dummy] := $0F;
