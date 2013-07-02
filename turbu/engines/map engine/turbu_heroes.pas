@@ -1090,7 +1090,8 @@ begin
       Exit;
 
    FParty[x] := value;
-   FParty[x].FParty := self;
+   if assigned(value) then
+      FParty[x].FParty := self;
    h1 := self.First;
    commons.runThreadsafe(
       procedure begin self.ChangeSprite(h1.sprite, h1.transparent) end, true);
