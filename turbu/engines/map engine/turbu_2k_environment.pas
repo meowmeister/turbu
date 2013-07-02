@@ -173,6 +173,7 @@ end;
 
 procedure T2kEnvironment.DeleteObject(permanant: boolean);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    //TODO: implement this
 end;
 
@@ -266,11 +267,13 @@ end;
 procedure T2kEnvironment.enableMenu(const Value: boolean);
 begin
    FMenuEnabled := value;
+{$MESSAGE WARN 'Commented out code in live unit'}
    //TODO: Do more here
 end;
 
 procedure T2kEnvironment.EnableSave(value: boolean);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    //TODO: implement this
 end;
 
@@ -295,6 +298,7 @@ function T2kEnvironment.EvalConditions(value: TRpgEventConditions): boolean;
 var
    cond: TPageConditions;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    result := true;
    for cond in value.conditions do
    begin
@@ -316,6 +320,7 @@ end;
 
 procedure T2kEnvironment.GameOver;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    //TODO: implement this
 end;
 
@@ -501,11 +506,13 @@ end;
 
 function T2kEnvironment.getTimer: TRpgTimer;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    result := nil; //TODO: implement this
 end;
 
 function T2kEnvironment.getTimer2: TRpgTimer;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    result := nil; //TODO: implement this
 end;
 
@@ -524,15 +531,14 @@ begin
    if clamp(id, 0, GDatabase.items) <> id then
       Exit;
 
-   case equipped of
-      false: result := 0 {FParty.inventory.quantityOf(id)};    //TODO: implement this
-      true:
-      begin
-         for I := 1 to MAXPARTYSIZE do
-            if (FParty[i] <> FHeroes[0]) and (FParty[i].equipped(id)) then
-               inc(result);
-      end;
-   end;
+{$MESSAGE WARN 'Commented out code in live unit'}
+   if equipped then
+   begin
+      for I := 1 to MAXPARTYSIZE do
+         if (FParty[i] <> FHeroes[0]) and (FParty[i].equipped(id)) then
+            inc(result);
+   end
+   else result := 0 {FParty.inventory.quantityOf(id)};    //TODO: implement this
 end;
 
 function T2kEnvironment.HeroPresent(id: integer): boolean;
@@ -542,12 +548,13 @@ end;
 
 function T2kEnvironment.keyScan(mask: TKeyMask; wait: boolean): integer;
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    result := 0; //not implemented  yet.
 end;
 
-procedure T2kEnvironment.Shop(shopType: TShopTypes; messageSet: integer;
-  inventory: TIntArray);
+procedure T2kEnvironment.Shop(shopType: TShopTypes; messageSet: integer; inventory: TIntArray);
 begin
+{$MESSAGE WARN 'Commented out code in live unit'}
    //TODO: implement this
 end;
 
@@ -572,7 +579,7 @@ end;
 
 procedure T2kEnvironment.wait(duration: integer);
 begin
-   windows.sleep(duration * 100); //TODO: implement this right
+   GScriptEngine.threadSleep(duration * 100);
 end;
 
 function ReadHeroStat(const selfValue: TValue; const index: TArray<TValue>): TValue;
