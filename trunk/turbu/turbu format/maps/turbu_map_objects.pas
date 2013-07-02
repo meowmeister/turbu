@@ -154,8 +154,11 @@ type
       FMoveIgnore: boolean;
       FMatrix: word;
 
+      [NoUpload]
       FOverrideFile: string;
+      [NoUpload]
       FOverrideTransparency: boolean;
+      [NoUpload]
       FOverrideSprite: boolean;
    private
       function isValid: boolean; inline;

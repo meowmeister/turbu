@@ -26,8 +26,6 @@ type
    TRpgSdlImage = class(TSdlImage)
    private
       FOrigSurface: PSdlSurface;
-    FSurface: TSdlTexture;
-
    protected
       procedure processImage(image: PSdlSurface); override;
    public
