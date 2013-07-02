@@ -93,10 +93,11 @@ type
       FUsableByHero: TByteSet;
       [TUploadByteSet]
       FUsableByClass: TByteSet;
-      FStat: TStatArray;
 
       function getStat(i: byte): integer;
       procedure setStat(i: byte; const Value: integer);
+   protected
+      FStat: TStatArray;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
@@ -256,7 +257,7 @@ type
 
 implementation
 uses
-   RTTI,
+   RTTI, SysUtils,
    rttiHelper,
    types;
 
@@ -267,7 +268,8 @@ var
    att: ItemTypeAttribute;
 begin
    att := ItemTypeAttribute(TRttiContext.Create.GetType(self.ClassInfo).GetAttribute(ItemTypeAttribute));
-   assert(assigned(att));
+   if not assigned(att) then
+      raise Exception.CreateFmt('No ItemTypeAttr found on %s.', [self.ClassName]);
    result := att.itemType;
 end;
 
