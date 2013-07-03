@@ -147,6 +147,7 @@ type
       procedure centerOnWorldCoords(x, y: single);
       procedure scrollMap(const newPosition: TSgPoint);
       procedure setBG(name: string; x, y: integer; autoX, autoY: boolean); overload;
+      procedure ChangeTileset(value: TTileset);
 
       //visual effects
       procedure CopyState(base: T2kSpriteEngine);
@@ -981,6 +982,28 @@ begin
    if (FDisplacementX - shakeBias <> 0) or (FDisplacementY <> 0) then
       for i := low(FMap.tileMap) to high(FMap.tileMap) do
          loadTileMatrix(FMap.tileMap[i], i, rect(trunc(WorldX / TILE_SIZE.x), trunc(WorldY / TILE_SIZE.y), FViewport.Bottom, FViewport.Right));
+end;
+
+procedure T2kSpriteEngine.ChangeTileset(value: TTileset);
+var
+   size: TsgPoint;
+   i: integer;
+   oldViewport: TRect;
+begin
+   if value = FTileset then
+      Exit;
+   assert(TThread.CurrentThread.ThreadID = MainThreadID);
+   FTileset := value;
+   FTiles.Free;
+   FTiles := TTileMatrixList.Create;
+   size := FMap.size;
+   //create layers
+   for i := low(FMap.tileMap) to high(FMap.tileMap) do
+      FTiles.add(TTileMatrix.Create(size));
+   oldViewport := FViewport;
+   //set viewport and populate it with initial tiles
+   FViewport.Right := -1; //invalidate viewport
+   self.SetViewport(oldViewport);
 end;
 
 procedure T2kSpriteEngine.CheckDisplacement;
