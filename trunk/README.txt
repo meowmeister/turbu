@@ -29,11 +29,10 @@ The TURBU project uses the JEDI-SDL header library and a handful of other librar
 \clases\sdl custom
 \classes\jedi-sdl\SDL\Pas
 \classes\jedi-sdl\SDL_image\Pas
-\classes\jedi-sdl\SDL_mixer\Pas
 
 4. JVCL
 ----------------------
-The TURBU project requires the JEDI VCL.  It's a fairly large download and gets updated often enough that I'm not even going to bother trying to mirror it here.  You can download it at http://sourceforge.net/project/showfiles.php?group_id=45786 and install it.
+The TURBU project requires the JCL and the JVCL.  BOth are fairly large downloads, and they get updated often enough that I'm not even going to bother trying to mirror it here.  You can find them at https://github.com/project-jedi and install them either as downloads or by cloning the repositories.
 
 5. Build
 ----------------------
