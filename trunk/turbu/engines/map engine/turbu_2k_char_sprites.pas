@@ -471,6 +471,8 @@ constructor THeroSprite.create(const AParent: TSpriteEngine; whichHero: TRpgHero
 const x = 1; y = 1;
 begin
    inherited create(nil, AParent);
+   FTiles[2].Z := 5;
+   FTiles[1].Z := 4;
    party.SetSprite(self);
    self.OnChangeSprite := party.ChangeSprite;
    FTemplate := whichHero;
