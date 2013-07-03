@@ -73,6 +73,7 @@ type
       FDispGoalX, FDispGoalY: single;
       FDisplacementX, FDisplacementY: single;
       FDisplacementSpeed: single;
+{$MESSAGE WARN 'Incomplete feature in live unit'}
       FScreenLocked: boolean;
 
       //shake control
