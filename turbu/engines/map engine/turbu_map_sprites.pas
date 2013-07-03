@@ -1008,10 +1008,9 @@ begin
       self.facing := base.currentPage.direction;
       updatePage(base.currentPage);
       setLocation(point(base.location.X, base.location.Y));
+      FTiles[2].z := FTiles[1].z + 1;
    end
    else FActionMatrix := GDatabase.moveMatrix[0];
-   FTiles[2].Z := 5;
-   FTiles[1].Z := 4;
    FUnderConstruction := false;
    self.SetFlashEvents(FTiles[1]);
    self.SetFlashEvents(FTiles[2]);
