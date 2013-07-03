@@ -767,14 +767,15 @@ begin
       else FreeAndNil(FPause);
    end;
 
-   if assigned(FMoveQueue) and not FPaused then
-   begin
-      if not doMove(FMoveQueue) then
-         freeAndNil(FMoveQueue);
-   end else if assigned(FMoveAssignment) then
+   if assigned(FMoveAssignment) then
    begin
       if not doMove(FMoveAssignment) then
          freeAndNil(FMoveAssignment);
+   end
+   else if assigned(FMoveQueue) and not FPaused then
+   begin
+      if not doMove(FMoveQueue) then
+         freeAndNil(FMoveQueue);
    end
    else if (not FPaused) and self.hasPage then
       case FMapObj.currentPage.moveType of
