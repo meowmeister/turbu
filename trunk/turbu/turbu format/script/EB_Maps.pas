@@ -354,7 +354,7 @@ begin
 end;
 
 function TEBMemorizeLocation.GetScriptText: string;
-const LINE = 'MemorizeLocation(Ints[%d], Ints[%d], Ints[%d]);';
+const LINE = 'MemorizeLocation(%d, %d, %d);';
 begin
    result := format(LINE, [Values[0], Values[1], Values[2]]);
 end;
