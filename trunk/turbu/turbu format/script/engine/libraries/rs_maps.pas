@@ -356,8 +356,6 @@ procedure showBattleAnim(which: integer; target: TRpgCharacter; wait, fullscreen
 var
    dummy: TAnimTemplate;
 begin
-   if target = nil then
-      Exit;
    commons.runThreadsafe(
       procedure begin dummy := GDatabase.anim[which] end, true);
    if (dummy = nil) then

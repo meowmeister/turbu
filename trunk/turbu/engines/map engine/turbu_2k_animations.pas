@@ -163,7 +163,9 @@ begin
          fl_target:
          begin
             extractColors(currEffect, r, g, b, a);
-            FTarget.flash(r, g, b, a, 2, false);
+            if assigned(FTarget) then
+               FTarget.flash(r, g, b, a, 2, false)
+            else rs_maps.flashScreen(r, g, b, a, 2, false, false);
          end;
          fl_screen:
          begin
