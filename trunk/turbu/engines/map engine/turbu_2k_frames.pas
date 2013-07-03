@@ -96,6 +96,7 @@ type
       procedure ShowMessage(const msg: string; modal: boolean);
       procedure inn(style, cost: integer);
       procedure ChoiceBox(const msg: string; responses: TArray<string>; allowCancel: boolean);
+      procedure InputNumber(digits: integer);
       procedure Terminate;
       procedure button(const input: TButtonCode);
       procedure SetPortrait(const filename: string; index: integer);
@@ -410,6 +411,17 @@ begin
       result := StringReplace(result, '\$', IntToStr(value), [rfReplaceAll]);
 end;
 
+procedure TMenuSpriteEngine.InputNumber(digits: integer);
+begin
+   FCurrentBox := FBoxes[mbtInput];
+   TValueInputBox(FCurrentBox).setupInput(digits);
+   TValueInputBox(FCurrentBox).placeCursor(0);
+   TValueInputBox(FCurrentBox).canCancel := false;
+   TValueInputBox(FCurrentBox).setupInput(digits);
+   FBoxes[mbtInput].Visible := true;
+   FMenuState := msExclusiveShared;
+end;
+
 procedure TMenuSpriteEngine.inn(style, cost: integer);
 var
    greet1: string;
@@ -545,6 +557,7 @@ begin
    FRects[srCursorBG] := rect(72, 8, 16, 16);
 
    FRects[srTimer] := rect(32, 32, 8, 16);
+{$MESSAGE WARN 'Commented out code in live unit'}
 {   TGameMap(parent).systemTimer := TSystemTimer.Create(parent);
    TGameMap(parent).timer2 := TSystemTimer.Create(parent);}
 

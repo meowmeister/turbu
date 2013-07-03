@@ -85,6 +85,7 @@ type
       function computeInputResult: integer;
    public
       procedure button(const input: TButtonCode); override;
+      procedure setupInput(const digits: byte);
       property inputResult[x: byte]: byte read getInputResult write changeInputResult;
    end;
 
@@ -702,6 +703,21 @@ begin
    dummy := intToStr(FInputResult[0]);
    for I := 1 to high(FInputResult) do
       dummy := dummy + '  ' + intToStr(FInputResult[i]);
+   text := dummy;
+end;
+
+procedure TValueInputBox.setupInput(const digits: byte);
+var
+   dummy: string;
+   i: byte;
+begin
+   dummy := '0';
+   for I := 2 to digits do
+      dummy := dummy + '  0';
+   dummy := dummy + #3;
+   setLength(FInputResult, digits);
+   for i := 0 to high(FInputResult) do
+      FInputResult[i] := 0;
    text := dummy;
 end;
 
