@@ -11,6 +11,8 @@ type
       opcode: byte;
       name: string;
       data: array[1..3] of word;
+      constructor Create(opcode: byte); overload;
+      constructor Create(opcode: byte; value: word); overload;
    end;
 
    TMoveList = class(TList<TMoveStep>);
@@ -282,6 +284,24 @@ begin
       parseAssert(lexer, tkSem);
    end
    else assert(token.kind = tkSem);
+end;
+
+{ TMoveStep }
+
+constructor TMoveStep.Create(opcode: byte);
+begin
+   self.opcode := opcode;
+   data[1] := 0;
+   data[2] := 0;
+   data[3] := 0;
+end;
+
+constructor TMoveStep.Create(opcode: byte; value: word);
+begin
+   self.opcode := opcode;
+   data[1] := value;
+   data[2] := 0;
+   data[3] := 0;
 end;
 
 var
