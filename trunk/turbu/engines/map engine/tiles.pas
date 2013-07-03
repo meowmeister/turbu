@@ -400,7 +400,7 @@ begin
       z := Z_TABLE[newpage.zOrder];
       x := trunc(self.X / TILE_SIZE.X);
       y := trunc(self.Y / TILE_SIZE.Y);
-      self.z := max(z, engine.GetTopTile(x, y).Z + 1);
+      self.z := z;
       FGridLoc := SgPoint(x, y);
       self.Visible := true;
    end
