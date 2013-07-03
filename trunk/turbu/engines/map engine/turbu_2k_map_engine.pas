@@ -127,6 +127,7 @@ uses
    turbu_map_objects, turbu_2k_map_locks, turbu_2k_frames, turbu_text_utils,
    turbu_2k_transitions_graphics,
    rs_maps, rs_message, rs_characters, rs_media, archiveUtils,
+   logs,
    sdlstreams, sdl_sprite, sg_utils;
 
 const
@@ -175,8 +176,10 @@ begin
    FInitialized := false;
    GMenuEngine.Terminate;
    if FDatabaseOwner then
+   begin
       FObjectManager.ScriptEngine.KillAll;
-   FreeAndNil(GMenuEngine);
+      FreeAndNil(GMenuEngine);
+   end;
    FreeAndNil(FShaderEngine);
    FreeAndNil(FGameEnvironment);
    FreeAndNil(FPartySprite);
@@ -248,6 +251,7 @@ var
    trn: TTransitionTypes;
    sfx: TSfxTypes;
    bgm: TBgmTypes;
+   script: string;
 begin
    if FInitialized then
       Exit(window);
@@ -266,6 +270,15 @@ begin
          FObjectManager := TMapObjectManager.Create;
          GScriptEngine.OnEnterCutscene := self.EnterCutscene;
          GScriptEngine.OnLeaveCutscene := self.LeaveCutscene;
+         FGameEnvironment := T2kEnvironment.Create(FDatabase);
+         FObjectManager.ScriptEngine.LoadEnvironment(@turbu_2k_environment.RegisterEnvironment);
+         rs_maps.RegisterScriptUnit(FObjectManager.ScriptEngine);
+         rs_message.RegisterScriptUnit(FObjectManager.ScriptEngine);
+         rs_characters.RegisterScriptUnit(FObjectManager.ScriptEngine);
+         FObjectManager.OnUpdate := FGameEnvironment.UpdateEvents;
+         script := dmDatabase.ScriptLookup(0);
+         logs.logText(script);
+         FObjectManager.ScriptEngine.LoadLibrary(script);
          GGameEngine := self;
       end
       else begin
@@ -305,26 +318,22 @@ begin
       setLength(FMaps, FDatabase.mapTree.lookupCount);
       FSignal := TSimpleEvent.Create;
       FSignal.SetEvent;
-      FGameEnvironment := T2kEnvironment.Create(FDatabase);
-      FObjectManager.ScriptEngine.LoadEnvironment(@turbu_2k_environment.RegisterEnvironment);
-      rs_maps.RegisterScriptUnit(FObjectManager.ScriptEngine);
-      rs_message.RegisterScriptUnit(FObjectManager.ScriptEngine);
-      rs_characters.RegisterScriptUnit(FObjectManager.ScriptEngine);
-
-      FObjectManager.OnUpdate := FGameEnvironment.UpdateEvents;
       FShaderEngine := TdmShaders.Create(nil);
-      GFontEngine := TFontEngine.Create(FShaderEngine);
-      GFontEngine.Current := TRpgFont.Create('RMG2000_0.fon');
-      GMenuEngine := TMenuSpriteEngine.Create(
-        TSystemImages.Create(FImages, layout.systemGraphic,
-          layout.wallpaperStretch, layout.translucentMessages),
-        FCanvas, FImages);
-      for trn := Low(TTransitionTypes) to High(TTransitionTypes) do
-         rs_maps.setTransition(trn, TTransitions(layout.transition[trn] + 1));
-      for sfx := low(TSfxTypes) to high(TSfxTypes) do
-         rs_media.SetSystemSoundData(sfx, FDatabase.sfx[sfx]);
-      for bgm := low(TBgmTypes) to high(TBgmTypes) do
-         rs_media.SetSystemMusicData(bgm, FDatabase.bgm[bgm])
+      if FDatabaseOwner then
+      begin
+         GFontEngine := TFontEngine.Create(FShaderEngine);
+         GFontEngine.Current := TRpgFont.Create('RMG2000_0.fon');
+         GMenuEngine := TMenuSpriteEngine.Create(
+           TSystemImages.Create(FImages, layout.systemGraphic,
+             layout.wallpaperStretch, layout.translucentMessages),
+           FCanvas, FImages);
+         for trn := Low(TTransitionTypes) to High(TTransitionTypes) do
+            rs_maps.setTransition(trn, TTransitions(layout.transition[trn] + 1));
+         for sfx := low(TSfxTypes) to high(TSfxTypes) do
+            rs_media.SetSystemSoundData(sfx, FDatabase.sfx[sfx]);
+         for bgm := low(TBgmTypes) to high(TBgmTypes) do
+            rs_media.SetSystemMusicData(bgm, FDatabase.bgm[bgm])
+      end;
    except
       cleanup;
       raise;
