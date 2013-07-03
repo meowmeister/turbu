@@ -542,7 +542,8 @@ begin
    if FMoveQueued then
    begin
       FMoveQueued := false;
-      self.move(FNextMove);
+      if moveAssign = nil then
+         self.move(FNextMove);
    end;
 end;
 
