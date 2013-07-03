@@ -26,7 +26,7 @@ uses
 
 type
    TRegisterEnvironmentProc = procedure(compiler: TrsCompiler; importer: TrsTypeImporter; exec: TrsExec);
-   TThreadWaitEvent = function: boolean;
+   TThreadWaitEvent = reference to function: boolean;
    TCutsceneEvent = procedure of object;
 
    TScriptEngine = class;

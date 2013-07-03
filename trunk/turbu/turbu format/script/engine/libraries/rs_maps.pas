@@ -358,20 +358,10 @@ begin
       end, true);
 end;
 
-threadvar
-   LSignal: TSimpleEvent;
-
-function AnimWait: boolean;
-begin
-   assert(assigned(LSignal));
-   result := LSignal.WaitFor(0) = wrSignaled;
-   if result then
-      FreeAndNil(LSignal);
-end;
-
 procedure showBattleAnim(which: integer; target: TRpgCharacter; wait, fullscreen: boolean);
 var
    dummy: TAnimTemplate;
+   signal: TSimpleEvent;
 begin
    commons.runThreadsafe(
       procedure begin dummy := GDatabase.anim[which] end, true);
@@ -384,13 +374,17 @@ begin
       Exit;
    end;
    if wait then
-   begin
-      assert(LSignal = nil);
-      LSignal := TSimpleEvent.Create;
-   end;
-   TAnimSprite.Create(GSpriteEngine, dummy, target, fullscreen, LSignal);
+      signal := TSimpleEvent.Create
+   else signal := nil;
+   TAnimSprite.Create(GSpriteEngine, dummy, target, fullscreen, signal);
    if wait then
-      GScriptEngine.SetWaiting(AnimWait);
+      GScriptEngine.SetWaiting(
+         function: boolean
+         begin
+            result := signal.WaitFor(0) = wrSignaled;
+            if result then
+               signal.Free;
+         end);
 end;
 
 function allMoved: boolean;
