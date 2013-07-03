@@ -69,8 +69,10 @@ type
       destructor Destroy; override;
       [NoImport]
       procedure Serialize(writer: TdwsJSONWriter);
+      [NoImport]
+      procedure Deserialize(arr: TdwsJSONArray);
 
-      procedure Add(const id, number: integer);
+      function Add(const id, number: integer): integer;
       procedure AddItem(const value: TRpgItem);
       function indexOf(const id: integer): integer;
       function quantityOf(const id: integer): integer;
@@ -185,30 +187,55 @@ begin
    writer.EndArray;
 end;
 
+procedure TRpgInventory.Deserialize(arr: TdwsJSONArray);
+var
+   i: integer;
+   id, quantity: integer;
+   obj: TdwsJSONObject;
+begin
+   FList.clear;
+   for i := 0 to arr.ElementCount - 1 do
+   begin
+      obj := arr.Elements[i] as TdwsJSONObject;
+      obj.CheckRead('ID', id);
+      obj.CheckRead('Quantity', quantity);
+      id := self.Add(id, quantity);
+      quantity := -1;
+      obj.CheckRead('Uses', quantity);
+      if quantity <> -1 then
+         FList[id].usesLeft := quantity;
+      obj.CheckEmpty;
+   end;
+end;
+
 function itemSortCompare(const item1, item2: TRpgItem): integer;
 begin
    result := item1.template.id - item2.template.id;
 end;
 
-procedure TRpgInventory.Add(const id, number: integer);
+function TRpgInventory.Add(const id, number: integer): integer;
 var
   i: Integer;
   item: TRpgItem;
+  template: TItemTemplate;
 begin
+   result := -1;
    if not IsBetween(id, 1, GDatabase.items) then
       Exit;
-
    item := nil;
-   i := 0;
-   while (item = nil) and (i < count) do
+   template := GDatabase.FindItem(id);
+   for i := 0 to count - 1 do
    begin
-      if FList[i].FTemplate = GDatabase.FindItem(id) then
+      if FList[i].FTemplate = template then
+      begin
          item := FList[i];
-      inc(i);
+         result := i;
+         Break;
+      end;
    end;
    if item = nil then
    begin
-      FList.Add(TRpgItem.newItem(id, number));
+      result := FList.Add(TRpgItem.newItem(id, number));
       FSorted := false;
    end
    else item.FQuantity := min(MAXITEMS, item.FQuantity + number);

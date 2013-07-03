@@ -313,6 +313,18 @@ type
       procedure WriteArray(const name: string; const value: TArray<boolean>); overload;
    end;
 
+   TJSONObjectHelper = class helper for TdwsJSONObject
+   public
+      procedure CheckRead(const name: string; var value: string); overload;
+      procedure CheckRead(const name: string; var value: integer); overload;
+      procedure CheckRead(const name: string; var value: cardinal); overload;
+      procedure CheckRead(const name: string; var value: byte); overload;
+      procedure CheckRead(const name: string; var value: single); overload;
+      procedure CheckRead(const name: string; var value: boolean); overload;
+      procedure ReadArray(const name: string; var value: TArray<boolean>);
+      procedure CheckEmpty;
+   end;
+
    procedure lassert(cond: boolean);
 
 implementation
@@ -320,7 +332,7 @@ uses
 windows,
    Generics.Defaults, TypInfo, Math, Clipbrd, SqlExpr, DBClient, RtlConsts,
    DSharp.Core.Expressions, DSharp.Linq.QueryProvider.SQL,
-   commons, turbu_decl_utils, turbu_functional,
+   logs, commons, turbu_decl_utils, turbu_functional,
    rttiHelper;
 
 type
@@ -1264,6 +1276,104 @@ begin
       for bool in value do
          self.WriteBoolean(bool);
    self.EndArray;
+end;
+
+{ TJSONObjectHelper }
+
+procedure TJSONObjectHelper.CheckRead(const name: string; var value: string);
+var
+   item: TdwsJSONValue;
+begin
+   item := self.Items[name];
+   if assigned(item) then
+   begin
+      value := item.AsString;
+      item.Free;
+   end;
+end;
+
+procedure TJSONObjectHelper.CheckRead(const name: string; var value: integer);
+var
+   item: TdwsJSONValue;
+begin
+   item := self.Items[name];
+   if assigned(item) then
+   begin
+      value := item.AsInteger;
+      item.Free;
+   end;
+end;
+
+procedure TJSONObjectHelper.CheckRead(const name: string; var value: byte);
+var
+   item: TdwsJSONValue;
+begin
+   item := self.Items[name];
+   if assigned(item) then
+   begin
+      value := item.AsInteger;
+      item.Free;
+   end;
+end;
+
+procedure TJSONObjectHelper.CheckRead(const name: string; var value: cardinal);
+var
+   item: TdwsJSONValue;
+begin
+   item := self.Items[name];
+   if assigned(item) then
+   begin
+      value := item.AsInteger;
+      item.Free;
+   end;
+end;
+
+procedure TJSONObjectHelper.CheckRead(const name: string; var value: single);
+var
+   item: TdwsJSONValue;
+begin
+   item := self.Items[name];
+   if assigned(item) then
+   begin
+      value := item.AsNumber;
+      item.Free;
+   end;
+end;
+
+procedure TJSONObjectHelper.CheckEmpty;
+begin
+   if self.ElementCount > 0 then
+   begin
+      logs.logText(format('Unknown savefile data: %s', [self.ToBeautifiedString]));
+      {$IFDEF DEBUG} asm int 3 end;{$ENDIF}
+   end;
+end;
+
+procedure TJSONObjectHelper.CheckRead(const name: string; var value: boolean);
+var
+   item: TdwsJSONValue;
+begin
+   item := self.Items[name];
+   if assigned(item) then
+   begin
+      value := item.AsBoolean;
+      item.Free;
+   end;
+end;
+
+procedure TJSONObjectHelper.ReadArray(const name: string;
+  var value: TArray<boolean>);
+var
+   arr: TdwsJSONArray;
+   i: integer;
+begin
+   arr := self.Items[name] as TdwsJSONArray;
+   if assigned(arr) then
+   begin
+      for i := 0 to arr.ElementCount - 1 do
+         value[i] := arr.Elements[i].AsBoolean;
+      arr.Free;
+   end;
 end;
 
 end.

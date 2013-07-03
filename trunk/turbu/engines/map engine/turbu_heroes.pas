@@ -100,6 +100,8 @@ type
       destructor Destroy; override;
       [NoImport]
       procedure Serialize(writer: TdwsJSONWriter);
+      [NoImport]
+      procedure Deserialize(obj: TdwsJSONObject);
 
       procedure equip(id: integer);
       procedure equipSlot(id, slot: integer);
@@ -180,6 +182,8 @@ type
       destructor Destroy; override;
       [NoImport]
       procedure Serialize(writer: TdwsJSONWriter);
+      [NoImport]
+      procedure Deserialize(obj: TdwsJSONObject);
 
       procedure addItem(const id, number: integer);
       procedure removeItem(const id, number: integer);
@@ -225,7 +229,8 @@ implementation
 uses
    Math, SysUtils,
    ArchiveUtils, turbu_database, dm_database, commons, turbu_items,
-   turbu_2k_environment, turbu_2k_sprite_engine, turbu_script_engine, turbu_skills;
+   turbu_2k_environment, turbu_2k_sprite_engine, turbu_script_engine,
+   turbu_skills, turbu_pathing;
 
 const
    WEAPON_SLOT = 1;
@@ -339,6 +344,41 @@ begin
       writer.CheckWrite('MpModifier', FMpModifier, 0);
       writer.WriteArray('Skill', FSkill);
    writer.EndObject;
+end;
+
+procedure TRpgHero.Deserialize(obj: TdwsJSONObject);
+var
+   arr: TdwsJSONArray;
+   i: integer;
+begin
+   obj.CheckRead('Name', FName);
+   obj.CheckRead('Class', FClass);
+   obj.CheckRead('Sprite', FSprite);
+   obj.CheckRead('Transparent', FTransparent);
+   obj.CheckRead('Level', FLevel);
+   obj.CheckRead('FaceName', FFaceName);
+   obj.CheckRead('FaceNum', FFaceNum);
+   obj.CheckRead('ExpTotal', FExpTotal);
+   obj.CheckRead('HitPoints', FHitPoints);
+   obj.CheckRead('ManaPoints', FManaPoints);
+   obj.CheckRead('HpModifier', FHpModifier);
+   obj.CheckRead('MpModifier', FMpModifier);
+   arr := obj.Items['Equipment'] as TdwsJSONArray;
+   for i := 1 to 5 do
+      if arr.Elements[i - 1].ValueType = jvtNull then
+         self.Unequip(TSlot(i - 1))
+      else self.equipSlot(arr.Elements[i - 1].AsInteger, i);
+   arr.Free;
+   arr := obj.Items['Stat'] as TdwsJSONArray;
+   for i := 1 to 4 do
+      FStat[stat_bonus][i] := arr.Elements[i - 1].AsInteger;
+   arr.Free;
+   arr := obj.Items['Condition'] as TdwsJSONArray;
+   for i := 0 to arr.ElementCount - 1 do
+      FCondition[arr.Elements[i].AsInteger] := true;
+   arr.Free;
+   obj.readArray('Skill', FSkill);
+   obj.checkEmpty;
 end;
 
 procedure TRpgHero.AddBattleCommand(which: integer);
@@ -1072,6 +1112,51 @@ begin
    writer.EndObject;
 end;
 
+procedure TRpgParty.Deserialize(obj: TdwsJSONObject);
+var
+   i: integer;
+   value: TdwsJSONValue;
+begin
+   value := obj.Items['Heroes'];
+   for i := 1 to MAXPARTYSIZE do
+      if value.Elements[i - 1].IsNull then
+         self.setHero(i, nil)
+      else self.setHero(i, GEnvironment.Heroes[value.Elements[i].AsInteger]);
+   value.Free;
+   obj.CheckRead('Cash', FCash);
+   value := obj.Items['Inventory'];
+   FInventory.Deserialize(value as TdwsJSONArray);
+   value.Free;
+   value := obj.Items['X'];
+   SetX(value.AsInteger);
+   value.Free;
+   value := obj.Items['Y'];
+   SetY(value.AsInteger);
+   value.Free;
+   value := obj.Items['Facing'];
+   setFacing(value.AsInteger);
+   value.Free;
+   value := obj.Items['Path'];
+   if assigned(value) then
+   begin
+      FSprite.moveOrder := TPath.Deserialize(value as TdwsJSONObject);
+      value.Free;
+   end;
+   value := obj.Items['MoveFreq'];
+   if assigned(value) then
+   begin
+      FSprite.moveFreq := value.AsInteger;
+      value.Free;
+   end;
+   value := obj.Items['MoveRate'];
+   if assigned(value) then
+   begin
+      FSprite.moveRate := value.AsInteger;
+      value.Free;
+   end;
+   obj.CheckEmpty;
+end;
+
 procedure TRpgParty.setFacing(const Value: integer);
 begin
    case value of
@@ -1111,15 +1196,21 @@ end;
 procedure TRpgParty.setX(const Value: integer);
 var place: TPoint;
 begin
-   place := FSprite.location;
-   FSprite.location := point(value, place.Y);
+   if assigned(FSprite) then
+   begin
+      place := FSprite.location;
+      FSprite.location := point(value, place.Y);
+   end;
 end;
 
 procedure TRpgParty.setY(const Value: integer);
 var place: TPoint;
 begin
-   place := FSprite.location;
-   FSprite.location := point(place.x, value);
+   if assigned(FSprite) then
+   begin
+      place := FSprite.location;
+      FSprite.location := point(place.x, value);
+   end;
 end;
 
 procedure TRpgParty.Pack;

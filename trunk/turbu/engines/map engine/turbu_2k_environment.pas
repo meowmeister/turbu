@@ -76,6 +76,11 @@ type
       procedure SerializeHeroes(writer: TdwsJSONWriter);
       procedure SerializeImages(writer: TdwsJSONWriter);
       procedure SerializeMapObjects(writer: TdwsJSONWriter);
+
+      procedure DeserializeVariables(obj: TdwsJSONObject);
+      procedure DeserializeHeroes(obj: TdwsJSONObject);
+      procedure DeserializeImages(obj: TdwsJSONObject);
+      procedure DeserializeMapObjects(obj: TdwsJSONObject);
    public
       [NoImport]
       constructor Create(database: TRpgDatabase);
@@ -103,6 +108,8 @@ type
       procedure UpdateEvents;
       [NoImport]
       procedure Serialize(writer: TdwsJSONWriter; explicitSave: boolean);
+      [NoImport]
+      procedure Deserialize(obj: TdwsJSONObject);
 
       property Heroes[const i: integer]: TRpgHero read GetHero;
       property HeroCount: integer read GetHeroCount;
@@ -370,6 +377,25 @@ begin
    writer.EndArray;
 end;
 
+procedure T2kEnvironment.DeserializeVariables(obj: TdwsJSONObject);
+var
+   arr: TdwsJSONArray;
+   i: Integer;
+begin
+   arr := obj.Items['switch'] as TdwsJSONArray;
+   for i := 0 to arr.ElementCount - 1 do
+      FSwitches[arr.Elements[i].AsInteger] := true;
+   arr.Free;
+   arr := obj.Items['int'] as TdwsJSONArray;
+   i := 0;
+   while i < arr.ElementCount do
+   begin
+      FInts[arr.Elements[i].AsInteger] := arr.Elements[i + 1].AsInteger;
+      inc(i, 2);
+   end;
+   arr.Free;
+end;
+
 procedure T2kEnvironment.SerializeHeroes(writer: TdwsJSONWriter);
 var
    i: integer;
@@ -381,19 +407,50 @@ begin
    writer.EndArray;
 end;
 
+procedure T2kEnvironment.DeserializeHeroes(obj: TdwsJSONObject);
+var
+   arr: TdwsJSONArray;
+   i: Integer;
+begin
+   arr := obj.Items['Heroes'] as TdwsJSONArray;
+   for i := 0 to arr.ElementCount - 1 do
+      FHeroes[i + 1].Deserialize(arr.Elements[i] as TdwsJSONObject);
+   arr.Free;
+end;
+
 procedure T2kEnvironment.SerializeImages(writer: TdwsJSONWriter);
 var
    i: integer;
 begin
    writer.WriteName('Images');
-   writer.BeginArray;
+   writer.BeginObject;
       for i := 1 to high(FImages) do
          if assigned(FImages[i]) then
          begin
             writer.WriteName(IntToStr(i));
             FImages[i].Serialize(writer);
          end;
-   writer.EndArray;
+   writer.EndObject;
+end;
+
+procedure T2kEnvironment.DeserializeImages(obj: TdwsJSONObject);
+var
+   sub, image: TdwsJSONObject;
+   i: Integer;
+   name: string;
+   masked: boolean;
+begin
+   sub := obj.Items['Images'] as TdwsJSONObject;
+   i := 0;
+   for i := 0 to sub.ElementCount - 1 do
+   begin
+      image := sub.Elements[i] as TdwsJSONObject;
+      masked := image.items['Masked'].AsBoolean;
+      name := image.items['name'].AsString;
+      GGameEngine.loadRpgImage(name, masked);
+      self.Image[StrToInt(sub.Names[i])] := TRpgImage.Deserialize(GGameEngine.ImageEngine, image);
+   end;
+   sub.Free;
 end;
 
 procedure T2kEnvironment.SerializeMapObjects(writer: TdwsJSONWriter);
@@ -409,6 +466,21 @@ begin
    writer.EndArray;
 end;
 
+procedure T2kEnvironment.DeserializeMapObjects(obj: TdwsJSONObject);
+var
+   arr: TdwsJSONArray;
+   i: Integer;
+begin
+   arr := obj.Items['MapObjects'] as TdwsJSONArray;
+   for i := 0 to arr.ElementCount - 1 do
+      if arr.Elements[i].IsNull then
+         FreeAndNil(FEvents[i + 1])
+      else FEvents[i + 1].Deserialize(arr.Elements[i] as TdwsJSONObject);
+      //TODO: in the future, when it's possible to dynamically create map objects,
+      //this will have to be completely reworked
+   arr.Free;
+end;
+
 procedure T2kEnvironment.Serialize(writer: TdwsJSONWriter; explicitSave: boolean);
 begin
    writer.BeginObject;
@@ -416,11 +488,30 @@ begin
       SerializeHeroes(writer);
       SerializeImages(writer);
       SerializeMapObjects(writer);
+      writer.WriteName('Party');
+      FParty.Serialize(writer);
       writer.CheckWrite('MenuEnabled', FMenuEnabled, false);
       if explicitSave then
          inc(FSaveCount);
       writer.CheckWrite('SaveCount', FSaveCount, 0);
    writer.EndObject;
+end;
+
+procedure T2kEnvironment.Deserialize(obj: TdwsJSONObject);
+var
+   value: TdwsJSONValue;
+begin
+   DeserializeVariables(obj);
+   DeserializeHeroes(obj);
+   DeserializeImages(obj);
+   DeserializeMapObjects(obj);
+   value := obj.Items['Party'];
+   assert(assigned(value));
+   FParty.Deserialize(value as TdwsJSONObject);
+   value.Free;
+   obj.CheckRead('MenuEnabled', FMenuEnabled);
+   obj.CheckRead('SaveCount', FSaveCount);
+   obj.checkEmpty;
 end;
 
 function T2kEnvironment.GetHero(const i: integer): TRpgHero;

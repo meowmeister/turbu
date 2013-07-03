@@ -1,3 +1,20 @@
+{*****************************************************************************
+* The contents of this file are used with permission, subject to
+* the Mozilla Public License Version 1.1 (the "License"); you may
+* not use this file except in compliance with the License. You may
+* obtain a copy of the License at
+* http://www.mozilla.org/MPL/MPL-1.1.html
+*
+* Software distributed under the License is distributed on an
+* "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+* implied. See the License for the specific language governing
+* rights and limitations under the License.
+*
+*****************************************************************************
+*
+* This file was created by Mason Wheeler.  He can be reached for support at
+* www.turbu-rpg.com.
+*****************************************************************************}
 unit turbu_mapchars;
 
 interface
@@ -53,6 +70,7 @@ type
       function getFacing: integer;
       procedure InternalChangeSprite;
       function GetTFacing: TFacing;
+      procedure DeserializeBase(obj: TdwsJSONObject);
    protected
       function getX: integer; override;
       function getY: integer; override;
@@ -63,6 +81,8 @@ type
       constructor create(base: TMapSprite);
       [NoImport]
       procedure Serialize(writer: TdwsJSONWriter);
+      [NoImport]
+      procedure Deserialize(obj: TdwsJSONObject);
       [NoImport]
       procedure update;
       [NoImport]
@@ -240,17 +260,82 @@ begin
       end;
       if assigned(FEvent.currentPage) then
       begin
-         writer.CheckWrite('SpriteName', FBase.baseTile.ImageName, FEvent.currentPage.baseFilename);
-         writer.CheckWrite('Transparent', FBase.translucency, TRANSLUCENCIES[FEvent.currentPage.baseTransparent]);
-         if assigned(FBase.moveOrder) then
-         begin
-            writer.WriteName('Path');
-            FBase.moveOrder.serialize(writer);
-         end;
-         writer.CheckWrite('MoveFreq', FBase.moveFreq, 1);
-         writer.CheckWrite('MoveRate', FBase.moveRate, 1);
+         writer.WriteName('Base');
+         writer.BeginObject;
+            writer.WriteName('PageID'); writer.WriteInteger(FEvent.currentPage.id);
+            writer.CheckWrite('SpriteName', FBase.baseTile.ImageName, FEvent.currentPage.baseFilename);
+            writer.CheckWrite('Transparent', FBase.translucency, TRANSLUCENCIES[FEvent.currentPage.baseTransparent]);
+            if assigned(FBase.moveOrder) then
+            begin
+               writer.WriteName('Path');
+               FBase.moveOrder.serialize(writer);
+            end;
+            writer.CheckWrite('MoveFreq', FBase.moveFreq, 1);
+            writer.CheckWrite('MoveRate', FBase.moveRate, 1);
+         writer.EndObject;
       end;
    writer.EndObject;
+end;
+
+procedure TRpgEvent.DeserializeBase(obj: TdwsJSONObject);
+var
+   value: TdwsJSONValue;
+begin
+   value := obj.Items['SpriteName'];
+   if assigned(value) then
+   begin
+      FBase.baseTile.ImageName := value.AsString;
+      value.Free;
+   end;
+   value := obj.Items['Transparent'];
+   if assigned(value) then
+   begin
+      FBase.translucency := value.AsInteger;
+      value.Free;
+   end;
+   value := obj.Items['Path'];
+   if assigned(value) then
+   begin
+      FBase.moveOrder := TPath.Deserialize(value as TdwsJSONObject);
+      value.Free;
+   end;
+   value := obj.Items['MoveFreq'];
+   if assigned(value) then
+   begin
+      FBase.moveFreq := value.AsInteger;
+      value.Free;
+   end;
+   value := obj.Items['MoveRate'];
+   if assigned(value) then
+   begin
+      FBase.moveRate := value.AsInteger;
+      value.Free;
+   end;
+   obj.CheckEmpty;
+end;
+
+procedure TRpgEvent.Deserialize(obj: TdwsJSONObject);
+var
+   value: TdwsJSONValue;
+   id: integer;
+begin
+   value := obj.Items['Location'];
+   if assigned(value) then
+   begin
+      FBase.location := sgPoint(value.Elements[0].AsInteger, value.Elements[1].AsInteger);
+      value.Free;
+   end;
+   FEvent.UpdateCurrentPage;
+   if assigned(FEvent.currentPage) then
+   begin
+      value := obj.Items['Base'] as TdwsJSONObject;
+      id := value.Items['PageID'].AsInteger;
+      if id <> FEvent.currentPage.id then
+         raise Exception.CreateFmt('Expected FEvent.currentPage.id of %d but got %d instead.', [id, FEvent.currentPage.id]);
+      value.Items['PageID'].Free;
+      DeserializeBase(TdwsJSONObject(value));
+   end;
+   obj.CheckEmpty;
 end;
 
 procedure TRpgEvent.ChangeSprite(name: string; translucent: boolean);
