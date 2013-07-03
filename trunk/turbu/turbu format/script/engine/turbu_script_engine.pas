@@ -40,6 +40,7 @@ type
       FOwnedProgram: TrsProgram;
       FDelay: TRpgTimestamp;
       FWaiting: TThreadWaitEvent;
+      FSignal: TSimpleEvent;
 
       procedure scriptOnLine(Sender: TrsVM);
       procedure InternalThreadSleep();
@@ -53,6 +54,7 @@ type
       constructor Create(page: TRpgEventPage; parent: TScriptEngine);
       destructor Destroy; override;
       function CurrentObject: TRpgMapObject;
+      property Terminated;
    end;
 
    TScriptEngine = class
@@ -66,12 +68,15 @@ type
       FEnvProc: TRegisterEnvironmentProc;
       FEnterCutscene: TCutsceneEvent;
       FLeaveCutscene: TCutsceneEvent;
+      FThreadPool: TQueue<TScriptThread>;
 
       procedure AddScriptThread(thread: TScriptThread);
       procedure ClearScriptThread(thread: TScriptThread);
       procedure CreateExec;
       procedure InternalLoadEnvironment(compiler: TRsCompiler);
       procedure OnRunLine(Sender: TrsVM; const line: TrsDebugLineInfo);
+      function GetThread(page: TRpgEventPage): TScriptThread;
+      procedure SaveToPool(thread: TScriptThread);
    public
       constructor Create;
       destructor Destroy; override;
@@ -186,6 +191,7 @@ begin
    GScriptEngine := self;
    FThreads := TList<TScriptThread>.Create;
    FThreadLock := TCriticalSection.Create;
+   FThreadPool := TQueue<TScriptThread>.Create;
 
    FCompiler.RegisterStandardUnit('battles', RegisterBattlesC);
    FCompiler.RegisterStandardUnit('media', RegisterMediaC);
@@ -197,11 +203,42 @@ destructor TScriptEngine.Destroy;
 begin
    GScriptEngine := nil;
    FThreads.Free;
+   FThreadPool.free;
    FThreadLock.Free;
    FCompiler.Free;
    FCurrentProgram.Free;
    FExec.Free;
    inherited Destroy;
+end;
+
+function TScriptEngine.GetThread(page: TRpgEventPage): TScriptThread;
+begin
+   FThreadLock.Enter;
+   try
+      if FThreadPool.count > 0 then
+      begin
+         result := FThreadPool.Dequeue;
+         result.FPage := page;
+         result.FSignal.SetEvent;
+      end
+      else begin
+         result := TScriptThread.Create(page, self);
+         result.FreeOnTerminate := true;
+         result.start;
+      end;
+   finally
+      FThreadLock.Leave;
+   end;
+end;
+
+procedure TScriptEngine.SaveToPool(thread: TScriptThread);
+begin
+   FThreadLock.Enter;
+   try
+      FThreadPool.Enqueue(thread);
+   finally
+      FThreadLock.Leave;
+   end;
 end;
 
 procedure TScriptEngine.CreateExec;
@@ -233,7 +270,10 @@ begin
    FThreadLock.Enter;
    for thread in FThreads do
       if thread <> curr then
+      begin
          thread.Terminate;
+         (thread as TScriptThread).FSignal.SetEvent;
+      end;
    FThreadLock.Leave;
 
    repeat
@@ -244,6 +284,7 @@ begin
       if TThread.CurrentThread.ThreadID = MainThreadID then
          CheckSynchronize();
    until done;
+   FThreadPool.Clear;
 end;
 
 procedure TScriptEngine.AbortThread;
@@ -435,12 +476,10 @@ var
    thread: TScriptThread;
 begin
    page.parent.playing := true;
-   thread := TScriptThread.Create(page, FScriptEngine);
-   thread.FreeOnTerminate := true;
+   thread := FScriptEngine.GetThread(page);
    {$IFDEF DEBUG}
-   TThread.NameThreadForDebugging(AnsiString(format('Script thread: %s', [page.ScriptName])), thread.ThreadID);
+   TThread.NameThreadForDebugging(AnsiString(format('TURBU Script thread: %s', [page.ScriptName])), thread.ThreadID);
    {$ENDIF}
-   thread.Start;
 end;
 
 procedure TMapObjectManager.Tick;
@@ -470,6 +509,7 @@ begin
    FPage := page;
    FParent := parent;
    parent.AddScriptThread(self);
+   FSignal := TSimpleEvent.Create;
 end;
 
 function TScriptThread.CurrentObject: TRpgMapObject;
@@ -479,6 +519,7 @@ end;
 
 destructor TScriptThread.Destroy;
 begin
+   FSignal.Free;
    FOwnedExec.Free;
    FOwnedProgram.Free;
    FParent.ClearScriptThread(self);
@@ -488,18 +529,27 @@ end;
 
 procedure TScriptThread.Execute;
 begin
-   if FPage.startCondition = automatic then
-      GScriptEngine.FEnterCutscene();
-   try
-      if FPage.scriptName <> '' then
-      begin
-         NameThreadForDebugging('TURBU Script Thread');
-         FParent.RunScript(FPage.scriptName);
-      end;
-   finally
-      FPage.parent.playing := false;
+   while not Terminated do
+   begin
       if FPage.startCondition = automatic then
-         GScriptEngine.FLeaveCutscene();
+         GScriptEngine.FEnterCutscene();
+      try
+         if FPage.scriptName <> '' then
+         begin
+//            NameThreadForDebugging('TURBU Script Thread');
+            FParent.RunScript(FPage.scriptName);
+         end;
+      finally
+         FPage.parent.playing := false;
+         if FPage.startCondition = automatic then
+            GScriptEngine.FLeaveCutscene();
+      end;
+      if not Terminated then
+      begin
+         FSignal.ResetEvent;
+         FParent.SaveToPool(self);
+         FSignal.WaitFor;
+      end;
    end;
 end;
 
