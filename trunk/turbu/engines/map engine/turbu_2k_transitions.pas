@@ -255,7 +255,7 @@ begin
       trnZoom: turbu_2k_transitions_graphics.zoom(false);
 //      trnTwist: turbu_2k_transitions_graphics.bof2(false);
       trnRipple: turbu_2k_transitions_graphics.wave(false);
-      trnNone: GSpriteEngine.endShow;
+      trnNone, trnInstant: GSpriteEngine.endShow;
       else assert(false);
    end;
 end;
