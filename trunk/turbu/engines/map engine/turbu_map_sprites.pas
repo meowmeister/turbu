@@ -395,7 +395,7 @@ end;
 
 function TMapSprite.canJump(which: TPath): boolean;
 
-   procedure processJumpMove(const opcode: byte; var location: TSgPoint);
+   procedure processJumpMove(const opcode: TMoveStep; var location: TSgPoint);
    const
       UP_LEFT: TSgPoint = (x: 1; y: -1);
       UP_RIGHT: TSgPoint = (x: 1; y: 1);
@@ -403,43 +403,51 @@ function TMapSprite.canJump(which: TPath): boolean;
       DOWN_RIGHT: TSgPoint = (x: -1; y: 1);
    var
       dummy: byte;
+      op: byte;
+      magnitude: word;
+      i: integer;
    begin
-      if opcode in [0..7] then
-         FLastJumpOp := opcode
-      else if opcode in [8..$A] then
+      op := opcode.opcode;
+      magnitude := max(opcode.data[1], 1);
+      if op in [0..7] then
+         FLastJumpOp := op
+      else if op in [8..$A] then
          FLastJumpOp := -1;
-      case opcode of
-         0: dec(location.Y);
-         1: inc(location.X);
-         2: inc(location.y);
-         3: dec(location.x);
+      case op of
+         0: dec(location.Y, magnitude);
+         1: inc(location.X, magnitude);
+         2: inc(location.y, magnitude);
+         3: dec(location.x, magnitude);
          4: location := location + UP_LEFT;
          5: location := location + UP_RIGHT;
          6: location := location + DOWN_LEFT;
          7: location := location + DOWN_RIGHT;
          8:
          begin
-            dummy := random(4);
-            processJumpMove(dummy, location);
+            for i := 1 to magnitude do
+            begin
+               dummy := random(4);
+               processJumpMove(TMoveStep.Create(dummy), location);
+            end;
             FMoveDir := TFacing(dummy);
          end;
          9:
          begin
             dummy := ord(towardsHero);
-            processJumpMove(dummy, location);
+            processJumpMove(TMoveStep.Create(dummy, magnitude), location);
             FMoveDir := TFacing(dummy);
          end;
          $A:
          begin
             dummy := ord(opposite_facing(towardsHero));
-            processJumpMove(dummy, location);
+            processJumpMove(TMoveStep.Create(dummy, magnitude), location);
             FMoveDir := TFacing(dummy);
          end;
          $B:
          begin
             if FLastJumpOp = -1 then
-               processJumpMove(ord(FMoveDir), location)
-            else processJumpMove(FLastJumpOp, location);
+               processJumpMove(TMoveStep.Create(ord(FMoveDir)), location)
+            else processJumpMove(TMoveStep.Create(FLastJumpOp), location);
          end;
       end;
    end;
@@ -455,11 +463,11 @@ begin
    while (i <= which.last) and (which.opcodes[i].opcode <> $19) do
    begin
       if which.opcodes[i].opcode in [0..$B] then
-         processJumpMove(which.opcodes[i].opcode, target);
+         processJumpMove(which.opcodes[i], target);
       inc(i);
    end;
    if (i <= which.last) and (pointInRect(target, rect(0, 0, FEngine.width, FEngine.height)))
-      and currentTile.canEnter then
+      and (FSlipThrough or T2kSpriteEngine(FEngine).Passable(target.x, target.y)) then
    begin
       result := true;
       FJumpTarget := target;
