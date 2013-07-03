@@ -99,11 +99,14 @@ type
       function MapTree: IMapTree; override;
       procedure NewGame; override;
       procedure changeMaps(newmap: word; newLocation: TSgPoint);
+
+      //script-accessible functions
       procedure loadRpgImage(filename: string; mask: boolean);
       procedure TitleScreen; virtual;
       procedure EnterCutscene;
       procedure LeaveCutscene;
       function ReadKeyboardState: TButtonCodes;
+      function EnsureTileset(id: integer): boolean;
 
       property PartySprite: THeroSprite read FPartySprite;
       property ImageEngine: TImageEngine read FImageEngine;
@@ -408,7 +411,7 @@ begin
    viewport := createViewport(FWaitingMap, FScrollPosition);
    if not assigned(FMaps[FWaitingMap.id]) then
    begin
-      loadTileset(FDatabase.tileset[FWaitingMap.tileset]);
+      ensureTileset(FWaitingMap.tileset);
       FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
                                FShaderEngine, FCanvas, FDatabase.tileset[FWaitingMap.tileset],
                                FImages);
@@ -693,6 +696,17 @@ begin
    SDL_GetRenderDrawColor(target.parent.Renderer, r, g, b, a);
    glColor4f(r / 255, g / 255, b / 255, a / 255);
    glUseProgram(current);
+end;
+
+function T2kMapEngine.EnsureTileset(id: integer): boolean;
+begin
+   if not FDatabase.tileset.ContainsKey(id) then
+   try
+      loadTileset(FDatabase.tileset[id]);
+      result := true;
+   except
+      result := false;
+   end;
 end;
 
 procedure T2kMapEngine.EnterCutscene;

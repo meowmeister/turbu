@@ -48,6 +48,7 @@ uses
    procedure showBattleAnim(which: integer; target: TRpgCharacter; wait, fullscreen: boolean);
    procedure waitUntilMoved;
    procedure stopMoveScripts;
+   procedure changeTileset(which: integer);
 
    procedure RegisterScriptUnit(engine: TScriptEngine);
 
@@ -61,6 +62,7 @@ uses
    commons, turbu_2k_environment, turbu_2k_sprite_engine, turbu_constants,
    turbu_database, turbu_2k_map_engine, turbu_animations, turbu_2k_animations,
    turbu_pathing, turbu_2k_char_sprites, turbu_map_sprites, turbu_2k_transitions,
+   turbu_tilesets,
    timing;
 
 var
@@ -419,6 +421,15 @@ begin
    GEnvironment.Party.base.stop;
 end;
 
+procedure changeTileset(which: integer);
+begin
+   runThreadsafe(
+      procedure begin
+         if GGameEngine.EnsureTileset(which) then
+            GSpriteEngine.ChangeTileset(GDatabase.tileset[which]);
+      end, true);
+end;
+
 procedure RegisterMapsC(input: TrsTypeImporter);
 begin
    input.ImportType(TypeInfo(TTransitionTypes));
@@ -489,7 +500,7 @@ begin
    RegisterFunction('showBattleAnim', @ShowBattleAnim);
    RegisterFunction('waitUntilMoved', @waitUntilMoved);
    RegisterFunction('stopMoveScripts', @stopMoveScripts);
-   RegisterFunction('changeTileset', nil);
+   RegisterFunction('changeTileset', @changeTileset);
    RegisterFunction('SetEncounterRate', nil);
    RegisterFunction('AddTeleport', nil);
    RegisterFunction('DeleteTeleport', nil);
