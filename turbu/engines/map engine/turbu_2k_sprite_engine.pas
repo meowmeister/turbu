@@ -1167,6 +1167,7 @@ begin
    adjustCoords(x, y);
    FDispGoalX := FDispGoalX + x - worldX;
    FDispGoalY := FDispGoalY + y - worldY;
+   FDisplacing := true;
 end;
 
 procedure T2kSpriteEngine.setDispSpeed(speed: byte);
