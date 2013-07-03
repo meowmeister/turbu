@@ -164,9 +164,7 @@ var
    oldValue: TMboxLocation;
 begin
    prepareMbox(oldValue);
-   asm int 3 end;
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   GMenuEngine.inputNumber(digits);
+   GMenuEngine.inputNumber(digits);
    setMessageBoxPosition(oldValue);
    result := GMenuEngine.menuInt;
 end;
