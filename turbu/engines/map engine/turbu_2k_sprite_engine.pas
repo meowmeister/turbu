@@ -123,7 +123,6 @@ type
       function heroIn(const location: TMboxLocation): boolean;
       procedure AdvanceFrame;
       function GetTile(x, y, layer: integer): TMapTile;
-      function GetTopTile(x, y: integer): TMapTile;
       function tileInFrontOf(var location: TSgPoint; direction: TFacing): TMapTile;
       procedure RecreateTileMatrix;
       function AddMapObject(obj: TRpgMapObject): TMapSprite;
@@ -668,22 +667,6 @@ begin
       for I := 0 to FTiles.Count - 1 do
          FTiles[i][x, y] := FullCreateNewTile(x, y, i);
    result := FTiles[layer][x, y];
-end;
-
-function T2kSpriteEngine.GetTopTile(x, y: integer): TMapTile;
-var
-   i: integer;
-begin
-   result := GetTile(x, y, GetMaxLayer);
-   if assigned(result) then
-      Exit;
-   for i := self.MaxLayer - 1 downto 0 do
-   begin
-      result := FTiles[i][x, y];
-      if assigned(result) then
-         Exit;
-   end;
-   assert(false); //should not reach this point
 end;
 
 function T2kSpriteEngine.GetWidth: integer;
