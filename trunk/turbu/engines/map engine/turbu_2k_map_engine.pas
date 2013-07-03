@@ -19,7 +19,7 @@ unit turbu_2k_map_engine;
 
 interface
 uses
-   types, syncObjs, Generics.Collections, classes, sysUtils, SqlExpr, Windows, Messages,
+   types, SyncObjs, Generics.Collections, classes, sysUtils, SqlExpr, Windows, Messages,
    turbu_map_engine, turbu_versioning, turbu_map_sprites, turbu_classes, turbu_heroes,
    turbu_database_interface, turbu_map_interface, turbu_sdl_image, turbu_2k_char_sprites,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine, turbu_defs,
@@ -41,7 +41,6 @@ type
       FTeleportThread: TThread;
       FTitleScreen: TRpgTimestamp;
       FHWND: HWND;
-      function ReadKeyboardState: TButtonCodes;
    protected
       FDatabase: TRpgDatabase;
       FCanvas: TSdlCanvas;
@@ -104,6 +103,7 @@ type
       procedure TitleScreen; virtual;
       procedure EnterCutscene;
       procedure LeaveCutscene;
+      function ReadKeyboardState: TButtonCodes;
 
       property PartySprite: THeroSprite read FPartySprite;
       property ImageEngine: TImageEngine read FImageEngine;

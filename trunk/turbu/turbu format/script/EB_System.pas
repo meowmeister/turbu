@@ -269,13 +269,12 @@ begin
       mask := 'KS_ALL'
    else begin
       if boolean(Values[2]) then
-         AddMask('KS_DIRS');
+         AddMask('btn_down, btn_left, btn_right, btn_up');
       if boolean(Values[3]) then
-         AddMask('KS_ACTION');
+         AddMask('btn_enter');
       if boolean(Values[4]) then
-         AddMask('KS_CANCEL');
-      if mask = '' then
-         mask := '[]';
+         AddMask('btn_cancel');
+      mask := '[' + mask + ']';
    end;
    result := format(LINE, [Values[0], mask, BOOL_STR[Values[1]]]);
 end;

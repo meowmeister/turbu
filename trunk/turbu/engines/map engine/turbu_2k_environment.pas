@@ -27,8 +27,6 @@ uses
    dwsJSON;
 
 type
-   TKeyRange = 0..24;
-   TKeyMask = set of TKeyRange;
    TVehicleList = class(TObjectList<TRpgVehicle>);
 
    T2kEnvironment = class
@@ -83,7 +81,7 @@ type
       constructor Create(database: TRpgDatabase);
       destructor Destroy; override;
 
-      function keyScan(mask: TKeyMask; wait: boolean): integer;
+      function keyScan(mask: TButtonCodes; wait: boolean): integer;
       procedure wait(duration: integer);
       function HeldItems(id: integer; equipped: boolean): integer;
       procedure Shop(shopType: TShopTypes; messageSet: integer; inventory: TIntArray);
@@ -141,7 +139,7 @@ uses
    Windows, SysUtils, Math, RTTI, Classes,
    Commons,
    turbu_characters, turbu_script_engine, turbu_2k_sprite_engine, turbu_constants,
-   turbu_2k_map_engine, turbu_classes,
+   turbu_2k_map_engine, turbu_classes, timing,
    rsDefs;
 
 { T2kEnvironment }
@@ -546,10 +544,36 @@ begin
    result := FParty.indexOf(self.Heroes[id]) > 0;
 end;
 
-function T2kEnvironment.keyScan(mask: TKeyMask; wait: boolean): integer;
+function WaitForKeyPress: boolean;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-   result := 0; //not implemented  yet.
+   result := GGameEngine.ReadKeyboardState <> [];
+end;
+
+function T2kEnvironment.keyScan(mask: TButtonCodes; wait: boolean): integer;
+var
+   scan: TButtonCodes;
+   thread: TScriptThread;
+   btn: TButtonCode;
+begin
+   assert(TThread.CurrentThread.ThreadID <> MainThreadID);
+   thread := TThread.CurrentThread as TScriptThread;
+   scan := GGameEngine.ReadKeyboardState;
+   Sleep(TRpgTimestamp.FrameLength);
+   scan := scan + GGameEngine.ReadKeyboardState;
+
+   scan := scan * mask;
+   if wait and (scan = []) then
+   begin
+      GScriptEngine.SetWaiting(WaitForKeyPress);
+      repeat
+         GScriptEngine.ThreadWait;
+         scan := GGameEngine.ReadKeyboardState * mask
+      until (scan <> []) or (thread.Terminated);
+   end;
+   if scan = [] then
+      result := 0
+   else for btn in scan do
+      exit(ord(btn)); //return lowest value found in set
 end;
 
 procedure T2kEnvironment.Shop(shopType: TShopTypes; messageSet: integer; inventory: TIntArray);
@@ -696,10 +720,9 @@ begin
    if not defined then
       ext.AddArrayProp('hero', 'integer', 'TRpgHero', true, true, true);
 
-   importer.ImportConstant('KS_DIRS', TValue.From<TKeyMask>([1..4]));
-   importer.importConstant('KS_ACTION', TValue.From<TKeyMask>([5]));
-   importer.importConstant('KS_CANCEL', TValue.From<TKeyMask>([6]));
-   importer.ImportConstant('KS_ALL', TValue.From<TKeyMask>([1..24]));
+   importer.ImportType(TypeInfo(TButtonCode));
+   importer.ImportType(TypeInfo(TButtonCodes));
+   importer.ImportConstant('KS_ALL', TValue.From<TButtonCodes>([low(TButtonCode)..high(TButtonCode)]));
 
    ext := compiler.RegisterEnvironment(T2kEnvironment);
    if not defined then
