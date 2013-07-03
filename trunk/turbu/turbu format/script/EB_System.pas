@@ -272,7 +272,7 @@ begin
          AddMask('KS_DIRS');
       if boolean(Values[3]) then
          AddMask('KS_ACTION');
-      if boolean(Values[3]) then
+      if boolean(Values[4]) then
          AddMask('KS_CANCEL');
       if mask = '' then
          mask := '[]';
