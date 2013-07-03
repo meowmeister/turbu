@@ -386,9 +386,6 @@ begin
    partyMove := GEnvironment.Party.Sprite.moveOrder;
    if assigned(partyMove) and not (partYMove.looped) then
       result := false;
-   for i := 1 to GEnvironment.MapObjectCount do
-      if assigned(GenVironment.MapObject[i]) then
-         GEnvironment.MapObject[i].base.CheckMoveChange;
    i := 0;
    while result and (I <= GEnvironment.MapObjectCount) do
    begin
@@ -400,7 +397,13 @@ begin
 end;
 
 procedure waitUntilMoved;
+var
+   I: Integer;
 begin
+   GEnvironment.Party.Sprite.CheckMoveChange;
+   for i := 1 to GEnvironment.MapObjectCount do
+      if assigned(GenVironment.MapObject[i]) then
+         GEnvironment.MapObject[i].base.CheckMoveChange;
    GScriptEngine.SetWaiting(allMoved);
 end;
 
@@ -466,7 +469,7 @@ begin
    RegisterFunction('swapEvents', nil);
    RegisterFunction('getTerrainID', nil);
    RegisterFunction('getEventID', nil);
-   RegisterFunction('setTransition', nil);
+   RegisterFunction('setTransition', @SetTransition);
    RegisterFunction('eraseScreen', @eraseScreen);
    RegisterFunction('showScreen', @showScreen);
    RegisterFunction('tintScreen', @tintScreen);
@@ -485,7 +488,7 @@ begin
    RegisterFunction('setBGImage', nil);
    RegisterFunction('showBattleAnim', @ShowBattleAnim);
    RegisterFunction('waitUntilMoved', @waitUntilMoved);
-   RegisterFunction('stopMoveScripts', nil);
+   RegisterFunction('stopMoveScripts', @stopMoveScripts);
    RegisterFunction('changeTileset', nil);
    RegisterFunction('SetEncounterRate', nil);
    RegisterFunction('AddTeleport', nil);
