@@ -134,7 +134,7 @@ type
       property baseTile: TSprite read getBaseTile;
       property visible: boolean read FVisible write setVisible;
       property facing: TFacing read FFacing write setFacing;
-      property moveOrder: TPath read FMoveAssignment write setMoveOrder;
+      property moveOrder: TPath read FMoveAssignment;
       property canSkip: boolean read getCanSkip write FCanSkip;
       property moveLoop: boolean read FMoveLoop write FMoveLoop;
       property translucency: byte read FTransparencyFactor write setTranslucency;
@@ -353,7 +353,7 @@ procedure TMapSprite.CheckMoveChange;
 begin
    if assigned(FMoveChange) then
    begin
-      self.moveOrder := FMoveChange.FPath;
+      SetMoveOrder(FMoveChange.FPath);
       self.canSkip := FMoveChange.FSkip;
       self.moveLoop := FMoveChange.FLoop;
       self.moveFreq := FMoveChange.Ffrequency;
