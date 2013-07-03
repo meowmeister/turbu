@@ -93,7 +93,8 @@ type
       constructor Create; override;
       destructor Destroy; override;
       function initialize(window: TSdlWindow; const database: string): TSdlWindow; override;
-      procedure loadMap(map: IMapMetadata); override;
+      procedure loadMap(map: IMapMetadata); overload; override;
+      procedure loadMap(id: integer); overload;
       procedure Play; override;
       function Playing: boolean; override;
       function MapTree: IMapTree; override;
@@ -730,6 +731,16 @@ begin
    if FCutscene <= 0 then
       raise Exception.Create('Mismatched call to T2kMapEngine.LeaveCutscene');
    dec(FCutscene);
+end;
+
+procedure T2kMapEngine.loadMap(id: integer);
+begin
+   try
+      if id <> GEnvironment.Party.mapID then
+         loadMap(GDatabase.mapTree[id])
+   except
+      raise Exception.CreateFmt('Invalid map ID: %d', [id]);
+   end;
 end;
 
 procedure WriteTimestamp;

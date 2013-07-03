@@ -6,9 +6,9 @@ procedure SaveTo(const filename: string; mapID: integer; explicit: boolean);
 
 implementation
 uses
-   SysUtils, IOUtils,
-   Windows, Diagnostics,
-   turbu_2k_environment,
+   SysUtils, IOUtils, Windows, Diagnostics,
+   logs,
+   turbu_2k_environment, turbu_2k_map_engine, turbu_classes,
    dwsJSON;
 
 procedure SaveTo(const filename: string; mapID: integer; explicit: boolean);
@@ -30,6 +30,26 @@ begin
       OutputDebugString(PChar(format('Saved to %s in %d milliseconds', [filename, timer.ElapsedMilliseconds])));
    finally
       writer.Free;
+   end;
+end;
+
+procedure Load(const filename: string);
+var
+   obj: TdwsJSONObject;
+   value: TdwsJSONValue;
+begin
+   obj := TdwsJSONObject.ParseFile(filename) as TdwsJSONObject;
+   try
+      value := obj.Items['Map'];
+      GGameEngine.loadMap(value.AsInteger);
+      value.Free;
+      value := obj.Items['Environment'];
+      GEnvironment.Deserialize(value as TdwsJSONObject);
+      if value.ElementCount = 0 then
+         value.free;
+      obj.checkEmpty;
+   finally
+      obj.Free;
    end;
 end;
 

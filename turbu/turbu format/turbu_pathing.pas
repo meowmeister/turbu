@@ -37,6 +37,7 @@ type
       destructor Destroy; override;
       function Clone: TPath;
       procedure Serialize(writer: TdwsJSONWriter);
+      constructor Deserialize(obj: TdwsJSONObject);
 
       function nextCommand: TMoveStep;
       procedure setDirection(direction: TFacing);
@@ -190,6 +191,14 @@ begin
       writer.CheckWrite('Cursor', FCursor, 0);
       writer.CheckWrite('Looped', FLooped, false);
    writer.EndObject;
+end;
+
+constructor TPath.Deserialize(obj: TdwsJSONObject);
+begin
+   obj.CheckRead('Path', FBase);
+   obj.CheckRead('Cursor', FCursor);
+   obj.CheckRead('Looped', FLooped);
+   obj.CheckEmpty;
 end;
 
 procedure TPath.setDirection(direction: TFacing);

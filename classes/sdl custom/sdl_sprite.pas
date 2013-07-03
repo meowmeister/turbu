@@ -48,7 +48,7 @@ type
    end;
 
    TSprite = class(TObject)
-   private
+   protected
       FDead: Boolean;
       FWidth: Integer;
       FHeight: Integer;
