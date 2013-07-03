@@ -23,8 +23,8 @@ uses
 
    procedure Teleport(mapID, x, y, facing: integer);
    procedure teleportVehicle(which: TRpgVehicle; map, x, y: integer);
-   procedure teleportEvent(which: TRpgEvent; x, y: integer);
-   procedure memorizeLocation(var map, x, y: integer);
+   procedure teleportMapObject(which: TRpgEvent; x, y: integer);
+   procedure memorizeLocation(map, x, y: integer);
    procedure swapEvents(first, second: TRpgEvent);
    procedure rideVehicle;
    function getTerrainID(x, y: integer): integer;
@@ -34,7 +34,9 @@ uses
    procedure showScreen(whichTransition: TTransitions);
    procedure tintScreen(r, g, b, sat: integer; duration: integer; wait: boolean);
    procedure flashScreen(r, g, b, power: integer; duration: integer; wait, continuous: boolean);
+   procedure endFlashScreen;
    procedure shakeScreen(power, speed: integer; duration: integer; wait, continuous: boolean);
+   procedure endShakeScreen;
    procedure lockScreen;
    procedure unlockScreen;
    procedure panScreen(direction: TFacing; distance: integer; speed: integer; wait: boolean);
@@ -44,7 +46,7 @@ uses
    procedure increaseWeather;
    procedure decreaseWeather;
    function newImage(name: string; x, y: integer; zoom, transparency: integer; pinned, mask: boolean): TRpgImage;
-   procedure setBG(name: string; scrollX, scrollY: integer; autoX, autoY: boolean);
+   procedure setBGImage(name: string; scrollX, scrollY: integer; autoX, autoY: boolean);
    procedure showBattleAnim(which: integer; target: TRpgCharacter; wait, fullscreen: boolean);
    procedure waitUntilMoved;
    procedure stopMoveScripts;
@@ -95,7 +97,7 @@ begin
    end;
 end;
 
-procedure teleportEvent(which: TRpgEvent; x, y: integer);
+procedure teleportMapObject(which: TRpgEvent; x, y: integer);
 var newpoint: TPoint;
 begin
    newpoint := point(x, y);
@@ -118,18 +120,18 @@ begin
    end;
 end;
 
-procedure memorizeLocation(var map, x, y: integer);
+procedure memorizeLocation(map, x, y: integer);
 begin
    if not assigned(GEnvironment.Party) then
    begin
-      map := 0;
-      x := 0;
-      y := 0;
+      GEnvironment.Ints[map] := 0;
+      GEnvironment.Ints[x] := 0;
+      GEnvironment.Ints[y] := 0;
    end
    else begin
-      map := GGameEngine.currentMap.mapID;
-      x := GEnvironment.Party.Sprite.location.x;
-      y := GEnvironment.Party.Sprite.location.y;
+      GEnvironment.Ints[map] := GGameEngine.currentMap.mapID;
+      GEnvironment.Ints[x] := GEnvironment.Party.Sprite.location.x;
+      GEnvironment.Ints[y] := GEnvironment.Party.Sprite.location.y;
    end;
 end;
 
@@ -232,6 +234,14 @@ begin
    GSpriteEngine.flashScreen(r, g, b, power, duration);
    if wait then
       GScriptEngine.threadSleep(duration * 100, true);
+{$MESSAGE WARN 'Incomplete feature in live unit'}
+   if continuous then
+      //TODO: implement this
+end;
+
+procedure endFlashScreen;
+begin
+   GSpriteEngine.FlashScreen(0, 0, 0, 0, 0);
 end;
 
 procedure shakeScreen(power, speed: integer; duration: integer; wait, continuous: boolean);
@@ -239,6 +249,11 @@ begin
    GSpriteEngine.shakeScreen(power, speed, duration * 100);
    if wait then
       GScriptEngine.threadSleep(duration * 100, true);
+end;
+
+procedure endShakeScreen;
+begin
+   GSpriteEngine.shakeScreen(0, 0, 0);
 end;
 
 procedure lockScreen;
@@ -329,7 +344,7 @@ begin
    result := image;
 end;
 
-procedure setBG(name: string; scrollX, scrollY: integer; autoX, autoY: boolean);
+procedure setBGImage(name: string; scrollX, scrollY: integer; autoX, autoY: boolean);
 begin
    commons.runThreadsafe(
       procedure begin GSpriteEngine.setBG(name, scrollX, scrollY, autoX, autoY); end);
@@ -436,7 +451,7 @@ begin
    input.ImportType(TypeInfo(TTransitions));
    input.ImportType(TypeInfo(TWeatherEffects));
    input.ImportFunction('procedure Teleport(mapID, x, y, facing: integer);');
-   input.ImportFunction('procedure memorizeLocation(var map, x, y: integer);');
+   input.ImportFunction('procedure memorizeLocation(map, x, y: integer);');
    input.ImportFunction('procedure rideVehicle;');
    input.ImportFunction('procedure teleportVehicle(which, map, x, y: integer);');
    input.ImportFunction('procedure teleportMapObject(which: TRpgEvent; x, y: integer);');
@@ -473,30 +488,30 @@ end;
 procedure RegisterMapsE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
 begin
    RegisterFunction('Teleport', @teleport);
-   RegisterFunction('memorizeLocation', nil);
-   RegisterFunction('rideVehicle', nil);
-   RegisterFunction('teleportVehicle', nil);
-   RegisterFunction('teleportMapObject', nil);
-   RegisterFunction('swapEvents', nil);
-   RegisterFunction('getTerrainID', nil);
-   RegisterFunction('getEventID', nil);
+   RegisterFunction('memorizeLocation', @memorizeLocation);
+   RegisterFunction('rideVehicle', @rideVehicle);
+   RegisterFunction('teleportVehicle', @teleportVehicle);
+   RegisterFunction('teleportMapObject', @teleportMapObject);
+   RegisterFunction('swapEvents', @swapEvents);
+   RegisterFunction('getTerrainID', @getTerrainID);
+   RegisterFunction('getEventID', @getEventID);
    RegisterFunction('setTransition', @SetTransition);
    RegisterFunction('eraseScreen', @eraseScreen);
    RegisterFunction('showScreen', @showScreen);
    RegisterFunction('tintScreen', @tintScreen);
    RegisterFunction('flashScreen', @flashScreen);
    RegisterFunction('shakeScreen', @shakeScreen);
-   RegisterFunction('endFlashScreen', nil);
-   RegisterFunction('endShakeScreen', nil);
-   RegisterFunction('lockScreen', nil);
-   RegisterFunction('unlockScreen', nil);
+   RegisterFunction('endFlashScreen', @endFlashScreen);
+   RegisterFunction('endShakeScreen', @endShakeScreen);
+   RegisterFunction('lockScreen', @lockScreen);
+   RegisterFunction('unlockScreen', @unlockScreen);
    RegisterFunction('panScreen', @PanScreen);
    RegisterFunction('returnScreen', @ReturnScreen);
    RegisterFunction('setWeather', @SetWeather);
    RegisterFunction('increaseWeather', @increaseWeather);
    RegisterFunction('decreaseWeather', @decreaseWeather);
    RegisterFunction('newImage', @newImage);
-   RegisterFunction('setBGImage', nil);
+   RegisterFunction('setBGImage', @setBGImage);
    RegisterFunction('showBattleAnim', @ShowBattleAnim);
    RegisterFunction('waitUntilMoved', @waitUntilMoved);
    RegisterFunction('stopMoveScripts', @stopMoveScripts);

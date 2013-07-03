@@ -35,6 +35,7 @@ type
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
+      function ValidateForm: boolean; override;
    end;
 
    TfrmMemorizedLocation<T: TEBObject> = class(TfrmMemorizedLocation)
@@ -78,6 +79,18 @@ begin
    cboMapID.ID := obj.Values[0];
    cboXVar.ID := obj.Values[1];
    cboYVar.ID := obj.Values[2];
+end;
+
+function TfrmMemorizedLocation.ValidateForm: boolean;
+const GLOBALS_ONLY = 'This command requires slots from the global ints array';
+begin
+   if cboMapID.ID <= 0 then
+      ValidateError(cboMapID, GLOBALS_ONLY);
+   if cboXVar.ID <= 0 then
+      ValidateError(cboXVar, GLOBALS_ONLY);
+   if cboYVar.ID <= 0 then
+      ValidateError(cboYVar, GLOBALS_ONLY);
+   result := true;
 end;
 
 { TfrmMemorizeLocation }
