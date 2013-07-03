@@ -92,7 +92,8 @@ type
 implementation
 uses
    sysUtils, Math, OpenGL, Types,
-   turbu_2k_environment, turbu_OpenGL, dm_shaders, turbu_2k_sprite_engine, turbu_classes,
+   turbu_2k_environment, turbu_OpenGL, dm_shaders, turbu_2k_sprite_engine,
+   turbu_classes, turbu_script_engine,
    sdl_13, SDL_ImageManager;
 
 const
@@ -311,7 +312,7 @@ end;
 procedure TRpgImageSprite.setTimer(const Value: integer);
 begin
    if assigned(FTransitionTimer) then
-      FTransitionTimer.Free;
+      FreeAndNil(FTransitionTimer);
    FTransitionTimer := TRpgTimestamp.create(value);
 end;
 
@@ -443,7 +444,7 @@ end;
 
 procedure TRpgImage.Waitfor;
 begin
-   //TODO: Implement this
+   GScriptEngine.SetWaiting(function: boolean begin result := FSprite.timer = 0 end);
 end;
 
 end.
