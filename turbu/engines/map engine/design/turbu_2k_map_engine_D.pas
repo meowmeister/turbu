@@ -218,10 +218,6 @@ begin
       FObjectContainers.Free;
       FObjectContainers := TMapObjectContainerList.Create;
 
-      script := dmDatabase.ScriptLookup(0);
-      logs.logText(script);
-      FObjectManager.ScriptEngine.LoadLibrary(script);
-
       FBeingDrawn := TDictionary<TTriple, TTileRef>.Create;
       FUndoStack := TStack<TUndoFrame>.Create;
       //do more
