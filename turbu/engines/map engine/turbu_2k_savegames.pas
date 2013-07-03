@@ -3,6 +3,7 @@ unit turbu_2k_savegames;
 interface
 
 procedure SaveTo(const filename: string; mapID: integer; explicit: boolean);
+procedure Load(const filename: string);
 
 implementation
 uses

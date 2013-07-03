@@ -89,6 +89,7 @@ type
       procedure AfterPaint; virtual;
       function GetValidateProc: TProc<TSqlQuery>; virtual;
       procedure Quicksave;
+      procedure Quickload;
    public
       constructor Create; override;
       destructor Destroy; override;
@@ -534,6 +535,21 @@ var
 begin
    savefile := TPath.Combine(ExtractFilePath(ParamStr(0)), 'quicksave.tsg');
    turbu_2k_savegames.SaveTo(savefile, GEnvironment.Party.mapID, false);
+end;
+
+procedure T2kMapEngine.Quickload;
+var
+   savefile: string;
+begin
+   savefile := TPath.Combine(ExtractFilePath(ParamStr(0)), 'quicksave.tsg');
+   if not FileExists(savefile) then
+      Exit;
+   FTimer.Enabled := false;
+   GScriptEngine.KillAll;
+   GEnvironment.Free;
+   GEnvironment := T2kEnvironment.Create(FDatabase);
+   turbu_2k_savegames.Load(savefile);
+   Play;
 end;
 
 function KeyIsPressed(value: integer): boolean;
