@@ -122,7 +122,7 @@ var
 implementation
 uses
    Math, Forms,
-   turbu_defs, turbu_battle_engine, //logs,
+   turbu_defs, turbu_battle_engine, {$IFDEF DEBUG}logs,{$ENDIF}
    rs_media,
    SDL;
 
@@ -341,7 +341,9 @@ var
    pair: TPair<string, TrsExecImportProc>;
    tempCompiler: TrsCompiler;
 begin
-//   logs.logText(script);
+   {$IFDEF DEBUG}
+   logs.logText(script);
+   {$ENDIF}
    if context is TScriptThread then
    begin
       TScriptThread(context).FOwnedExec := FExec;

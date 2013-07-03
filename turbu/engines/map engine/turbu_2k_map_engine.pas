@@ -277,7 +277,9 @@ begin
          rs_characters.RegisterScriptUnit(FObjectManager.ScriptEngine);
          FObjectManager.OnUpdate := FGameEnvironment.UpdateEvents;
          script := dmDatabase.ScriptLookup(0);
+         {$IFDEF DEBUG}
          logs.logText(script);
+         {$ENDIF}
          FObjectManager.ScriptEngine.LoadLibrary(script);
          GGameEngine := self;
       end
