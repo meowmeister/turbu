@@ -388,6 +388,9 @@ begin
    partyMove := GEnvironment.Party.Sprite.moveOrder;
    if assigned(partyMove) and not (partYMove.looped) then
       result := false;
+   for i := 1 to GEnvironment.MapObjectCount do
+      if assigned(GenVironment.MapObject[i]) then
+         GEnvironment.MapObject[i].base.CheckMoveChange;
    i := 0;
    while result and (I <= GEnvironment.MapObjectCount) do
    begin
