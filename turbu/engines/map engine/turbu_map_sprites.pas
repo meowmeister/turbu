@@ -441,6 +441,7 @@ function TMapSprite.canJump(which: TPath): boolean;
          7: location := location + DOWN_RIGHT;
          8:
          begin
+            dummy := 0;
             for i := 1 to magnitude do
             begin
                dummy := random(4);

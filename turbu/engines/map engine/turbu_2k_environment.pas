@@ -441,7 +441,6 @@ var
    masked: boolean;
 begin
    sub := obj.Items['Images'] as TdwsJSONObject;
-   i := 0;
    for i := 0 to sub.ElementCount - 1 do
    begin
       image := sub.Elements[i] as TdwsJSONObject;
@@ -620,14 +619,13 @@ begin
    if clamp(id, 0, GDatabase.items) <> id then
       Exit;
 
-{$MESSAGE WARN 'Commented out code in live unit'}
    if equipped then
    begin
       for I := 1 to MAXPARTYSIZE do
          if (FParty[i] <> FHeroes[0]) and (FParty[i].equipped(id)) then
             inc(result);
    end
-   else result := 0 {FParty.inventory.quantityOf(id)};    //TODO: implement this
+   else result := FParty.inventory.quantityOf(id);
 end;
 
 function T2kEnvironment.HeroPresent(id: integer): boolean;
@@ -661,8 +659,9 @@ begin
          scan := GGameEngine.ReadKeyboardState * mask
       until (scan <> []) or (thread.Terminated);
    end;
+   result := 0;
    if scan = [] then
-      result := 0
+      exit
    else for btn in scan do
       exit(ord(btn)); //return lowest value found in set
 end;

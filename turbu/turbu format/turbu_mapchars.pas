@@ -491,13 +491,14 @@ begin
       vh_boat, vh_ship: newSprite := TGroundVehicleSprite;
       vh_airship: newSprite := TAirshipSprite;
       else raise ESpriteError.Create('Bad vehicle type');
-   end;}
+   end;
    FGameSprite := newSprite.Create(GSpriteEngine, self, nil);
    if FMap = GSpriteEngine.mapID then
       FGameSprite.location := point(FX, FY)
    else FGameSprite.location := point(0, -1);
    FGameSprite.facing := facing_left;
    (FGameSprite as TVehicleSprite).update(FSprite, false);
+}
 end;
 
 destructor TRpgVehicle.Destroy;

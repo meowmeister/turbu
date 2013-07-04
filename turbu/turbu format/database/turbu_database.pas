@@ -886,6 +886,7 @@ begin
    for slot := Low(TItemType) to High(TItemType) do
       if sender = FItems[slot] then
          exit(CreateNewItem(slot));
+   raise Exception.Create('Invalid New Item slot'); //should not see this
 end;
 
 procedure TRpgDatabase.addItem(slot: TItemType);

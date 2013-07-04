@@ -292,7 +292,6 @@ begin
    obj.CheckRead('Saturation', FSaturation);
    obj.CheckRead('Color', FColor.color);
    obj.CheckRead('ColorTarget', FColorTarget.color);
-   obj.CheckRead('Zoom', self.FScaleX);
    obj.CheckRead('ZoomTarget', FZoomTarget);
    obj.CheckRead('RotationPower', FRotationPower);
    obj.CheckRead('WavePower', FWavePower);
@@ -414,6 +413,7 @@ begin
    obj.CheckRead('name', name);
    obj.CheckRead('X', x);
    obj.CheckRead('Y', x);
+   obj.CheckRead('Zoom', zoom);
    self.Create(engine, name, x, y, zoom, pinned, masked);
    FSprite.Deserialize(obj);
    obj.CheckEmpty;

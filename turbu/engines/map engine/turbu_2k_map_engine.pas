@@ -95,7 +95,7 @@ type
       destructor Destroy; override;
       function initialize(window: TSdlWindow; const database: string): TSdlWindow; override;
       procedure loadMap(map: IMapMetadata); overload; override;
-      procedure loadMap(id: integer); overload;
+      procedure loadMap(id: integer); overload; reintroduce;
       procedure Play; override;
       function Playing: boolean; override;
       function MapTree: IMapTree; override;
@@ -728,12 +728,12 @@ end;
 
 function T2kMapEngine.EnsureTileset(id: integer): boolean;
 begin
-   if not FDatabase.tileset.ContainsKey(id) then
+   result := FDatabase.tileset.ContainsKey(id);
+   if not result then
    try
       loadTileset(FDatabase.tileset[id]);
       result := true;
    except
-      result := false;
    end;
 end;
 
