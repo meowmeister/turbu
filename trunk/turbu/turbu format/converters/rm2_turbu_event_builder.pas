@@ -773,7 +773,7 @@ begin
    if high(opcode.data) = 16 then
       result.Values.Add(opcode.data[16])
    else result.Values.Add(-1);
-   if (opcode.data[8] <> 0) or (opcode.data[9] <> 0) or (opcode.data[10] <> 0)
+   if (opcode.data[8] <> 100) or (opcode.data[9] <> 100) or (opcode.data[10] <> 100)
       or (opcode.data[11] <> 100) then
    begin
       sub := TEBImageColor.Create(result);
