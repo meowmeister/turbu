@@ -103,7 +103,8 @@ type
 
 implementation
 uses
-   turbu_items, turbu_constants, turbu_defs, turbu_2k_environment, turbu_database;
+   turbu_items, turbu_constants, turbu_defs, turbu_2k_environment, turbu_database,
+   turbu_2k_sprite_engine;
 
 { TEquipment }
 
@@ -162,6 +163,12 @@ end;
 function TAppliedItem.usableBy(hero: integer): boolean;
 begin
    result := hero in TUsableItemTemplate(template).usableByHero;
+   case (template as TUsableItemTemplate).usableWhere of
+      us_none: result := false;
+      us_field: result := result and (GSpriteEngine.state <> gs_battle);
+      us_battle: result := result and (GSpriteEngine.state = gs_battle);
+      us_both: ;
+   end;
 {$MESSAGE WARN 'Commented out code in live unit'}
 {   if GEnvironment.heroes[hero].dead then
       result := result and template.condition[CTN_DEAD]
@@ -201,9 +208,6 @@ begin
          result := result or (GEnvironment.Party[hero].hp < GEnvironment.Party[hero].maxHp);
       if (med.mpPercent > 0) or (med.mpHeal > 0) then
          result := result or (GEnvironment.Party[hero].mp < GEnvironment.Party[hero].maxMp);
-{$MESSAGE WARN 'Commented out code in live unit'}
-//      if (med.outOfBattle) then
-//         result := result and (GGameEngine.state <> in_battle);
    end;
 end;
 
