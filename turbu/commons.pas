@@ -102,7 +102,7 @@ var
    ct: TThread;
 begin
    ct := TThread.CurrentThread;
-   if ct.Handle <> System.MainThreadID then
+   if ct.ThreadID <> System.MainThreadID then
    begin
       if synchronous then
          TThread.Synchronize(ct, closure)
