@@ -102,6 +102,7 @@ type
    TMapObjectManager = class
    private
       FMapObjects: TList<TRpgMapObject>;
+      FGlobalScripts: TList<TRpgEventPage>;
       FScriptEngine: TScriptEngine;
       FPlaylist: TList<TRpgEventPage>;
       FOnUpdate: TProc;
@@ -109,6 +110,7 @@ type
       constructor Create;
       destructor Destroy; override;
 
+      procedure LoadGlobalScripts(list: TMapObjectList);
       procedure LoadMap(const map: IRpgMap; context: TThread = nil);
       procedure Tick;
       procedure RunPageScript(page: TRpgEventPage);
@@ -461,6 +463,7 @@ begin
    assert(GMapObjectManager = nil);
    GMapObjectManager := self;
    FMapObjects := TList<TRpgMapObject>.Create;
+   FGlobalScripts := TList<TRpgEventPage>.Create;
    FScriptEngine := TScriptEngine.Create;
    FPlaylist := TList<TRpgEventPage>.Create;
 end;
@@ -471,7 +474,22 @@ begin
    FPlaylist.Free;
    FScriptEngine.Free;
    FMapObjects.Free;
+   FGlobalScripts.Free;
    inherited Destroy;
+end;
+
+procedure TMapObjectManager.LoadGlobalScripts(list: TMapObjectList);
+var
+   i: integer;
+   page: TRpgEventPage;
+begin
+   assert(FGlobalScripts.Count = 0);
+   for i := 0 to list.Count - 1 do
+   begin
+      page := list[i].pages[0];
+      if page.startCondition <> on_call then
+         FGlobalScripts.Add(page);
+   end;
 end;
 
 procedure TMapObjectManager.LoadMap(const map: IRpgMap; context: TThread = nil);
@@ -516,6 +534,14 @@ begin
       if assigned(obj.currentPage) and obj.currentPage.hasScript and (not obj.locked) and (not obj.playing)
          and (obj.currentPage.startCondition in [automatic, parallel]) then
          FPlaylist.Add(obj.currentPage);
+   end;
+   for page in FGlobalScripts do
+   begin
+      obj := page.parent;
+      if obj.locked or obj.playing then
+         Continue;
+      if page.valid then
+         FPlaylist.Add(page);
    end;
    if assigned(FOnUpdate) then
       FOnUpdate;

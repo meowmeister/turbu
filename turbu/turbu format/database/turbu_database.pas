@@ -25,7 +25,7 @@ uses
    turbu_battle_engine, turbu_map_engine, turbu_sprites, turbu_animations,
    turbu_containers, turbu_script_interface, turbu_game_data, turbu_terrain,
    turbu_map_metadata, turbu_tilesets, turbu_maps, turbu_monsters, turbu_sounds,
-   turbu_serialization, turbu_defs;
+   turbu_serialization, turbu_defs, turbu_map_objects;
 
 type
    TCharClassList = TRpgDataDict<TClassTemplate>;
@@ -126,6 +126,7 @@ type
 
       procedure uploadStringList(dataset: TDataset; list: TStringList);
       procedure UploadGlobalEvents(db: TdmDatabase);
+      procedure DownloadGlobalEvents(ds: TDataset);
       procedure UploadVocab(db: TdmDatabase);
       procedure UploadTileGroups(db: TdmDatabase);
 
@@ -240,7 +241,7 @@ uses
    math, TypInfo,
    archiveInterface, commons,
    turbu_constants, turbu_engines, turbu_versioning, turbu_plugin_interface,
-   turbu_functional, turbu_map_objects,
+   turbu_functional,
    uDatasetHelper;
 
 { TLegacyData }
@@ -401,6 +402,7 @@ begin
    LoadSounds;
    DownloadStringList(dm.Switches, FSwitches);
    DownloadStringList(dm.Variables, FVariables);
+   DownloadGlobalEvents(dm.GlobalScripts);
 end;
 
 procedure TRpgDatabase.save(dm: TDmDatabase);
@@ -670,6 +672,42 @@ begin
          hasSwitchField.Value := pc_switch1 in page.conditionBlock.conditions;
          switchField.Value := page.conditionBlock.switch1Set;
          ds.Post;
+      end;
+   finally
+      ds.EnableControls;
+   end;
+end;
+
+procedure TRpgDatabase.DownloadGlobalEvents(ds: TDataset);
+var
+   obj: TRpgMapObject;
+   page: TRpgEventPage;
+   idField: TIntegerField;
+   nameField: TWideStringField;
+   condField: TIntegerField;
+   hasSwitchField: TBooleanField;
+   switchField: TIntegerField;
+begin
+   ds.DisableControls;
+   try
+      idField := ds.FieldByName('id') as TIntegerField;
+      nameField := ds.FieldByName('Name') as TWideStringField;
+      condField := ds.FieldByName('StartCondition') as TIntegerField;
+      hasSwitchField := ds.FieldByName('HasSwitch') as TBooleanField;
+      switchField := ds.FieldByName('switch') as TIntegerField;
+      ds.First;
+      while not ds.eof do
+      begin
+         obj := TRpgMapObject.Create;
+         FGlobalEvents.Add(obj);
+         page := TRpgEventPage.Create(obj, 1);
+         obj.AddPage(page);
+         page.scriptName := nameField.Value;
+         page.startCondition := TStartCondition(condField.Value);
+         if hasSwitchField.Value then
+            page.conditionBlock.conditions := [pc_switch1];
+         page.conditionBlock.switch1Set := switchField.Value;
+         ds.next;
       end;
    finally
       ds.EnableControls;
