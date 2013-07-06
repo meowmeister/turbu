@@ -521,6 +521,13 @@ begin
    destLoop.Insert(1, parentIf);
 end;
 
+procedure MoveIntoRepeatLoop(parentIf: TEBIf; destLoop: TEBRepeatLoop);
+begin
+   if destLoop.children[0] is TEBExpression then
+      destLoop.Insert(1, parentIf)
+   else destLoop.Insert(0, parentIf);
+end;
+
 function MoveGotoDown(routine: TEBRoutine; parentIf: TEBIf; labelParent, gotoParent: TEBObject): TEBObject;
 var
    ancestors: TArray<TEBObject>;
@@ -539,6 +546,8 @@ begin
       MoveIntoCase(parentIf, TEBCase(anc1), anc2)
    else if anc1 is TEBWhileLoop then
       MoveIntoWhileLoop(parentIf, TEBWhileLoop(anc1))
+   else if anc1 is TEBRepeatLoop then
+      MoveIntoRepeatLoop(parentIf, TEBRepeatLoop(anc1))
    else anc1.Insert(0, parentIf);
    result := anc2;
 end;
