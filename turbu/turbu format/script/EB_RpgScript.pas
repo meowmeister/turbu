@@ -79,7 +79,10 @@ type
       function GetScriptText: string; override;
    end;
 
-   TEBMap = class(TEBProgram);
+   TEBMap = class(TEBProgram)
+   protected
+      procedure ScanUsesList(list: TStringList); override;
+   end;
 
    TEBExtension = class(TEBObject)
    public
@@ -1352,6 +1355,14 @@ procedure TEBMaybeIf.Setup(const blockName: string);
 begin
    self.add(TEBBooleanValue.Create(true));
    TEBCodeBlock.Create(self).Name := blockName;
+end;
+
+{ TEBMap }
+
+procedure TEBMap.ScanUsesList(list: TStringList);
+begin
+   list.Add('globalevents');
+   inherited ScanUsesList(list);
 end;
 
 initialization
