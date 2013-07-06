@@ -108,6 +108,8 @@ var
 begin
    bumper := character as TMapSprite;
    lEvent := self.event;
+   if assigned(bumper.event) and (bumper.event.playing) then
+      Exit;
    if bumper = GEnvironment.Party.Sprite then
       for dummy in lEvent do
       begin

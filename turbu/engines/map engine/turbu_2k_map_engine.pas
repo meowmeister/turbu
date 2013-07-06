@@ -51,7 +51,6 @@ type
       FScrollPosition: TSgPoint;
       FTimer: TAsphyreTimer;
       FPartySprite: THeroSprite;
-      FGameEnvironment: T2kEnvironment;
       FObjectManager: TMapObjectManager;
       FShaderEngine: TdmShaders;
       FImageEngine: TImageEngine;
@@ -72,6 +71,7 @@ type
       FFrame: integer;
       FHeartbeat: integer;
       FEnterLock: boolean;
+      FSaveLock: boolean;
       FDontLockEnter: boolean;
       FCutscene: integer;
       FTransProc: TTransProc;
@@ -83,6 +83,7 @@ type
       procedure Validate(query: TSqlQuery);
       procedure PlayMapMusic(metadata: TMapMetadata);
       procedure DrawRenderTarget(target: TSdlRenderTarget);
+      procedure SetupScriptImports;
    protected
       FDatabaseOwner: boolean;
       procedure cleanup; override;
@@ -95,7 +96,7 @@ type
       destructor Destroy; override;
       function initialize(window: TSdlWindow; const database: string): TSdlWindow; override;
       procedure loadMap(map: IMapMetadata); overload; override;
-      procedure loadMap(id: integer); overload; reintroduce;
+      procedure loadMap(id: integer); reintroduce; overload;
       procedure Play; override;
       function Playing: boolean; override;
       function MapTree: IMapTree; override;
@@ -176,14 +177,13 @@ var i: integer;
 begin
    assert(FInitialized);
    FInitialized := false;
-   GMenuEngine.Terminate;
    if FDatabaseOwner then
    begin
       FObjectManager.ScriptEngine.KillAll;
       FreeAndNil(GMenuEngine);
    end;
    FreeAndNil(FShaderEngine);
-   FreeAndNil(FGameEnvironment);
+   FreeAndNil(GEnvironment);
    FreeAndNil(FPartySprite);
    FreeAndNil(FCanvas);
    FreeAndNil(FImages);
@@ -253,7 +253,6 @@ var
    trn: TTransitionTypes;
    sfx: TSfxTypes;
    bgm: TBgmTypes;
-   script: string;
 begin
    if FInitialized then
       Exit(window);
@@ -272,17 +271,9 @@ begin
          FObjectManager := TMapObjectManager.Create;
          GScriptEngine.OnEnterCutscene := self.EnterCutscene;
          GScriptEngine.OnLeaveCutscene := self.LeaveCutscene;
-         FGameEnvironment := T2kEnvironment.Create(FDatabase);
-         FObjectManager.ScriptEngine.LoadEnvironment(@turbu_2k_environment.RegisterEnvironment);
-         rs_maps.RegisterScriptUnit(FObjectManager.ScriptEngine);
-         rs_message.RegisterScriptUnit(FObjectManager.ScriptEngine);
-         rs_characters.RegisterScriptUnit(FObjectManager.ScriptEngine);
-         FObjectManager.OnUpdate := FGameEnvironment.UpdateEvents;
-         script := dmDatabase.ScriptLookup(0);
-         {$IFDEF DEBUG}
-         logs.logText(script);
-         {$ENDIF}
-         FObjectManager.ScriptEngine.LoadLibrary(script);
+         GEnvironment := T2kEnvironment.Create(FDatabase);
+         SetupScriptImports;
+         FObjectManager.OnUpdate := GEnvironment.UpdateEvents;
          GGameEngine := self;
       end
       else begin
@@ -350,9 +341,9 @@ var
    i: integer;
    party: TRpgParty;
 begin
-   party := FGameEnvironment.Party;
+   party := GEnvironment.Party;
    for I := 1 to FDatabase.layout.startingHeroes do
-      party.hero[i] := FGameEnvironment.heroes[FDatabase.layout.startingHero[i]];
+      party.hero[i] := GEnvironment.heroes[FDatabase.layout.startingHero[i]];
    FPartySprite := THeroSprite.create(FCurrentMap, party.hero[1], party);
 end;
 
@@ -398,7 +389,7 @@ begin
    FTeleportThread := TThread.CurrentThread;
    try
       TThread.Synchronize(TThread.CurrentThread,
-         procedure begin self.loadMap(metadata) end);
+         procedure begin if FInitialized then self.loadMap(metadata) end);
    finally
       FTeleportThread := nil;
    end;
@@ -540,6 +531,7 @@ end;
 procedure T2kMapEngine.Quickload;
 var
    savefile: string;
+   hero: THeroSprite;
 begin
    savefile := TPath.Combine(ExtractFilePath(ParamStr(0)), 'quicksave.tsg');
    if not FileExists(savefile) then
@@ -547,8 +539,16 @@ begin
    FTimer.Enabled := false;
    GScriptEngine.KillAll;
    GEnvironment.Free;
+   FPartySprite := nil;
    GEnvironment := T2kEnvironment.Create(FDatabase);
+   GScriptEngine.Reset;
+   SetupScriptImports;
+   initializeParty;
+   hero := GEnvironment.Party.Sprite as THeroSprite;
+   hero.packUp;
    turbu_2k_savegames.Load(savefile);
+   hero.settleDown(FCurrentMap);
+   FCurrentMap.CurrentParty := hero;
    Play;
 end;
 
@@ -593,6 +593,21 @@ begin
    if not FImages.contains(filename) then
       FImages.AddFromFile(format('%s\%s.png', [folder,filename]), filename);
    result := FImages.Image[filename] as TRpgSdlImage;
+end;
+
+procedure T2kMapEngine.SetupScriptImports;
+var
+   script: string;
+begin
+   FObjectManager.ScriptEngine.LoadEnvironment(@turbu_2k_environment.RegisterEnvironment);
+   rs_maps.RegisterScriptUnit(FObjectManager.ScriptEngine);
+   rs_message.RegisterScriptUnit(FObjectManager.ScriptEngine);
+   rs_characters.RegisterScriptUnit(FObjectManager.ScriptEngine);
+   script := dmDatabase.ScriptLookup(0);
+   {$IFDEF DEBUG}
+   logs.logText(script);
+   {$ENDIF}
+   FObjectManager.ScriptEngine.LoadLibrary(script);
 end;
 
 procedure T2kMapEngine.Validate(query: TSqlQuery);
@@ -825,13 +840,25 @@ procedure T2kMapEngine.OnProcess(Sender: TObject);
 var
    button: TButtonCode;
 begin
-   if assigned(FTitleScreen) then
+   if assigned(FTitleScreen) or (FSwitchState <> sw_noSwitch) then
       Exit;
    FButtonState := ReadKeyboardState;
    for button in FButtonState do
       pressButton(button);
-{   if KeyIsPressed(VK_F2) then
-      Quicksave;}
+   if not FSaveLock then
+   begin
+      if KeyIsPressed(VK_F2) then
+      begin
+         Quicksave;
+         FSaveLock := true;
+      end
+      else if KeyIsPressed(VK_F6) then
+      begin
+         Quickload;
+         FSaveLock := true;
+      end;
+   end
+   else FSaveLock := KeyIsPressed(VK_F2) or KeyIsPressed(VK_F6);
    GMapObjectManager.Tick;
    FCurrentMap.Process(sender);
 end;

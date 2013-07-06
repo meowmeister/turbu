@@ -334,6 +334,7 @@ begin
          raise Exception.CreateFmt('Expected FEvent.currentPage.id of %d but got %d instead.', [id, FEvent.currentPage.id]);
       value.Items['PageID'].Free;
       DeserializeBase(TdwsJSONObject(value));
+      value.free;
    end;
    obj.CheckEmpty;
 end;
