@@ -274,6 +274,7 @@ begin
          GScriptEngine.OnLeaveCutscene := self.LeaveCutscene;
          GEnvironment := T2kEnvironment.Create(FDatabase);
          SetupScriptImports;
+         FObjectManager.LoadGlobalScripts(GDatabase.globalEvents);
          FObjectManager.OnUpdate := GEnvironment.UpdateEvents;
          GGameEngine := self;
       end
