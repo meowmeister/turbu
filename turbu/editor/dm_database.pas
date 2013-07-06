@@ -157,7 +157,6 @@ type
       charClassescommands: TByteField;
       skillsmagnitude: TSmallintField;
       heroesportraitShiftFHue: TShortintField;
-    syslayoutCommands_8: TByteField;
 
       procedure DataModuleCreate(Sender: TObject);
       procedure restoreClone(DataSet: TDataSet);
