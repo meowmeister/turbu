@@ -670,7 +670,7 @@ begin
    if scan = [] then
       exit
    else for btn in scan do
-      exit(ord(btn)); //return lowest value found in set
+      exit(ord(btn) + 1); //return lowest value found in set
 end;
 
 procedure T2kEnvironment.Shop(shopType: TShopTypes; messageSet: integer; inventory: TIntArray);
