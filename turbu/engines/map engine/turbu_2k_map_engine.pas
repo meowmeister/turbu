@@ -183,7 +183,8 @@ begin
       FreeAndNil(GMenuEngine);
    end;
    FreeAndNil(FShaderEngine);
-   FreeAndNil(GEnvironment);
+   GEnvironment.Free;   //FreeAndNil sets the reference to nil first, which will
+   GEnvironment := nil; //break things that require the global for cleanup
    FreeAndNil(FPartySprite);
    FreeAndNil(FCanvas);
    FreeAndNil(FImages);
