@@ -77,6 +77,7 @@ type
       procedure OnRunLine(Sender: TrsVM; const line: TrsDebugLineInfo);
       function GetThread(page: TRpgEventPage): TScriptThread;
       procedure SaveToPool(thread: TScriptThread);
+      procedure RegisterImports;
    public
       constructor Create;
       destructor Destroy; override;
@@ -92,6 +93,7 @@ type
       procedure threadSleep(time: integer; block: boolean = false);
       procedure SetWaiting(value: TThreadWaitEvent);
       procedure ThreadWait;
+      procedure Reset;
 
       property OnEnterCutscene: TCutsceneEvent read FEnterCutscene write FEnterCutscene;
       property OnLeaveCutscene: TCutsceneEvent read FLeaveCutscene write FLeaveCutscene;
@@ -124,6 +126,7 @@ uses
    Math, Forms,
    turbu_defs, turbu_battle_engine, {$IFDEF DEBUG}logs,{$ENDIF}
    rs_media,
+   rsDefs,
    SDL;
 
 procedure RegisterBattlesC(input: TrsTypeImporter);
@@ -192,11 +195,7 @@ begin
    FThreads := TList<TScriptThread>.Create;
    FThreadLock := TCriticalSection.Create;
    FThreadPool := TQueue<TScriptThread>.Create;
-
-   FCompiler.RegisterStandardUnit('battles', RegisterBattlesC);
-   FCompiler.RegisterStandardUnit('media', RegisterMediaC);
-   FCompiler.RegisterStandardUnit('settings', RegisterSettingsC);
-
+   RegisterImports;
 end;
 
 destructor TScriptEngine.Destroy;
@@ -394,6 +393,13 @@ begin
    end;
 end;
 
+procedure TScriptEngine.RegisterImports;
+begin
+   FCompiler.RegisterStandardUnit('battles', RegisterBattlesC);
+   FCompiler.RegisterStandardUnit('media', RegisterMediaC);
+   FCompiler.RegisterStandardUnit('settings', RegisterSettingsC);
+end;
+
 procedure TScriptEngine.RegisterUnit(const name: string;
   const comp: TrsCompilerRegisterProc; const exec: TrsExecImportProc);
 begin
@@ -401,6 +407,18 @@ begin
    FExec.RegisterStandardUnit(name, exec);
    SetLength(FImports, length(FImports) + 1);
    FImports[high(FImports)] := TPair<string, TrsExecImportProc>.Create(name, exec);
+end;
+
+procedure TScriptEngine.Reset;
+begin
+   FCompiler.Free;
+   FExec.free;
+   rsDefs.ResetTables;
+   FImports := nil;
+
+   FCompiler := TrsCompiler.Create;
+   CreateExec;
+   RegisterImports;
 end;
 
 {$O-}
@@ -477,6 +495,8 @@ procedure TMapObjectManager.RunPageScript(page: TRpgEventPage);
 var
    thread: TScriptThread;
 begin
+   if page.parent.playing then
+      Exit;
    page.parent.playing := true;
    thread := FScriptEngine.GetThread(page);
    {$IFDEF DEBUG}
@@ -593,7 +613,7 @@ begin
    begin
       repeat
          sleep(TRpgTimestamp.FrameLength);
-      until (FWaiting() = true) or (self.Terminated);
+      until (self.Terminated) or (FWaiting() = true);
       FWaiting := nil;
    end
    else if assigned(FDelay) then

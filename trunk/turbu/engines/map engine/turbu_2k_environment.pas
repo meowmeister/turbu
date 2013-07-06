@@ -81,6 +81,7 @@ type
       procedure DeserializeHeroes(obj: TdwsJSONObject);
       procedure DeserializeImages(obj: TdwsJSONObject);
       procedure DeserializeMapObjects(obj: TdwsJSONObject);
+      function GetImageCount: integer;
    public
       [NoImport]
       constructor Create(database: TRpgDatabase);
@@ -117,6 +118,7 @@ type
       property Ints[const i: integer]: integer read GetInt write SetInt;
       property Vehicle[i: integer]: TRpgVehicle read GetVehicle;
       property Image[i: integer]: TRpgImage read GetImage write SetImage;
+      property ImageCount: integer read GetImageCount;
       property MapObject[i: integer]: TRpgEvent read GetMapObject;
       property MapObjectCount: integer read GetMapObjectCount;
       property Party: TRpgParty read FParty;
@@ -533,6 +535,11 @@ begin
    if FImages[i] = nil then
       FImages[i] := TRpgImage.Create(GSpriteEngine, '', 0, 0, 0, false, false);
    result := FImages[i];
+end;
+
+function T2kEnvironment.GetImageCount: integer;
+begin
+   result := high(FImages);
 end;
 
 procedure T2kEnvironment.SetImage(i: integer; const Value: TRpgImage);

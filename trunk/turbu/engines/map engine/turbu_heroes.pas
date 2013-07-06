@@ -1121,7 +1121,7 @@ begin
    for i := 1 to MAXPARTYSIZE do
       if value.Elements[i - 1].IsNull then
          self.setHero(i, nil)
-      else self.setHero(i, GEnvironment.Heroes[value.Elements[i].AsInteger]);
+      else self.setHero(i, GEnvironment.Heroes[value.Elements[i - 1].AsInteger]);
    value.Free;
    obj.CheckRead('Cash', FCash);
    value := obj.Items['Inventory'];

@@ -1150,7 +1150,8 @@ end;
 
 procedure TCharSprite.update(filename: string; transparent: boolean);
 begin
-   loadCharset(filename);
+   if filename <> '' then
+      loadCharset(filename);
    FTiles[2].ImageName := filename;
    FTiles[1].ImageName := filename;
    if transparent then
