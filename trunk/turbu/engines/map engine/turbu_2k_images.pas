@@ -436,7 +436,22 @@ end;
 
 procedure TRpgImage.Erase;
 begin
-   self.Free;
+   runThreadsafe(
+   procedure
+   var
+      i, idx: integer;
+   begin
+      idx := -1;
+      for i := 1 to GEnvironment.ImageCount do
+         if GEnvironment.Image[i] = self then
+         begin
+            idx := i;
+            break;
+         end;
+      if idx = -1 then
+         Exit;
+      GEnvironment.Image[idx].Free;
+   end, true);
 end;
 
 procedure TRpgImage.applyImageColors(r, g, b, sat: integer);
@@ -486,8 +501,25 @@ begin
 end;
 
 procedure TRpgImage.Waitfor;
+var
+   i, idx: integer;
 begin
-   GScriptEngine.SetWaiting(function: boolean begin result := FSprite.timer = 0 end);
+   idx := -1;
+   for i := 1 to GEnvironment.ImageCount do
+      if GEnvironment.Image[i] = self then
+      begin
+         idx := i;
+         break;
+      end;
+   if idx = -1 then
+      Exit;
+   GScriptEngine.SetWaiting(
+      function: boolean
+      begin
+         if assigned(GEnvironment.Image[idx]) then
+            result := GEnvironment.Image[idx].timer = 0
+         else result := true;
+      end);
 end;
 
 end.
