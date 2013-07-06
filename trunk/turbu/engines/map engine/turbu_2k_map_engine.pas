@@ -129,7 +129,7 @@ uses
    turbu_constants, turbu_functional, dm_database, turbu_2k_images, turbu_2k_savegames,
    turbu_map_objects, turbu_2k_map_locks, turbu_2k_frames, turbu_text_utils,
    turbu_2k_transitions_graphics,
-   rs_maps, rs_message, rs_characters, rs_media, archiveUtils,
+   rs_maps, rs_message, rs_characters, rs_media, archiveUtils, project_folder,
    logs,
    sdlstreams, sdl_sprite, sg_utils;
 
@@ -526,7 +526,7 @@ procedure T2kMapEngine.Quicksave;
 var
    savefile: string;
 begin
-   savefile := TPath.Combine(ExtractFilePath(ParamStr(0)), 'quicksave.tsg');
+   savefile := TPath.Combine(GProjectFolder, 'quicksave.tsg');
    turbu_2k_savegames.SaveTo(savefile, GEnvironment.Party.mapID, false);
 end;
 
@@ -535,7 +535,7 @@ var
    savefile: string;
    hero: THeroSprite;
 begin
-   savefile := TPath.Combine(ExtractFilePath(ParamStr(0)), 'quicksave.tsg');
+   savefile := TPath.Combine(GProjectFolder, 'quicksave.tsg');
    if not FileExists(savefile) then
       Exit;
    FTimer.Enabled := false;

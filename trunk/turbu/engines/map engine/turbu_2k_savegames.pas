@@ -40,6 +40,8 @@ var
    value: TdwsJSONValue;
 begin
    obj := TdwsJSONObject.ParseFile(filename) as TdwsJSONObject;
+   if obj = nil then
+      raise Exception.Create('Invalid save file');
    try
       value := obj.Items['Map'];
       GGameEngine.loadMap(value.AsInteger);
