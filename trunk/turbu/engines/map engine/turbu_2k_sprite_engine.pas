@@ -1093,7 +1093,7 @@ begin
       raise EFileNotFoundException.createFmt('Background image %s not found!', [name]);
    if not assigned(FBgImage) then
    begin
-      Self.Images.EnsureBGImage(filename, bgName);
+      Self.Images.EnsureBGImage('Backgrounds\' + filename, bgName);
       FBgImage := TBackgroundSprite.Create(FEngine, x, y, autoX, autoY)
    end
    else begin
