@@ -78,7 +78,6 @@ type
       FMenuInt: integer;
       FCursor: TSysFrame;
       FMenuState: TMenuState;
-      FTerminated: boolean;
       FBoxes: array[TMessageBoxTypes] of TCustomMessageBox;
       FCurrentBox: TCustomMessageBox;
       FPosition: TMboxLocation;
@@ -97,7 +96,6 @@ type
       procedure inn(style, cost: integer);
       procedure ChoiceBox(const msg: string; responses: TArray<string>; allowCancel: boolean);
       procedure InputNumber(digits: integer);
-      procedure Terminate;
       procedure button(const input: TButtonCode);
       procedure SetPortrait(const filename: string; index: integer);
       procedure SetRightside(value: boolean);
@@ -187,7 +185,7 @@ implementation
 uses
    Windows, SysUtils, Math, OpenGL,
    commons, turbu_text_utils, turbu_2k_environment, turbu_OpenGL, turbu_database,
-   turbu_2k_message_boxes, turbu_2k_sprite_engine, rs_media;
+   turbu_2k_message_boxes, turbu_2k_sprite_engine, turbu_script_engine, rs_media;
 
 const
    ARROW_DISPLACEMENT: TSgPoint = (x: 8; y: 0);
@@ -382,6 +380,7 @@ begin
          FEnding := false;
       end;
    end;
+   FCurrentBox := nil;
 end;
 
 function TMenuSpriteEngine.GetPortrait: TSprite;
@@ -443,8 +442,6 @@ procedure TMenuSpriteEngine.ChoiceBox(const msg: string; responses: TArray<strin
 var
    box: TCustomMessageBox;
 begin
-   if FTerminated then
-      Exit;
    while GSpriteEngine.State = gs_fading do
       sleep(TRpgTimestamp.FrameLength);
    box := FBoxes[mbtChoice];
@@ -456,7 +453,7 @@ begin
       FMenuState := msExclusiveShared;
       box.FSignal.WaitFor;
    finally
-      FCurrentBox := nil;
+      endMessage;
    end;
 end;
 
@@ -487,8 +484,6 @@ procedure TMenuSpriteEngine.ShowMessage(const msg: string; modal: boolean);
 var
    box: TCustomMessageBox;
 begin
-   if FTerminated then
-      Exit;
    while GSpriteEngine.State = gs_fading do
       sleep(TRpgTimestamp.FrameLength);
    box := FBoxes[mbtMessage];
@@ -499,16 +494,12 @@ begin
       if modal then
          FMenuState := msExclusiveShared
       else FMenuState := msShared;
-      box.FSignal.WaitFor;
+      GScriptEngine.SetWaiting(
+         function: boolean begin result := box.FSignal.WaitFor(0) = wrSignaled end);
+      GScriptEngine.ThreadWait;
    finally
-      FCurrentBox := nil;
+      endMessage;
    end;
-end;
-
-procedure TMenuSpriteEngine.Terminate;
-begin
-   FTerminated := true;
-   EndMessage;
 end;
 
 { TSystemImages }
