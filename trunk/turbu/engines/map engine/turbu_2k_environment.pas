@@ -42,6 +42,7 @@ type
       FMenuEnabled: boolean;
       FEventMap: TDictionary<TRpgMapObject, TRpgCharacter>;
       FSaveCount: integer;
+      FKeyLock: boolean;
 
       function GetSwitch(const i: integer): boolean;
       procedure SetSwitch(const i: integer; const Value: boolean);
@@ -653,6 +654,8 @@ var
 begin
    assert(TThread.CurrentThread.ThreadID <> MainThreadID);
    thread := TThread.CurrentThread as TScriptThread;
+   while wait and FKeyLock do
+      GScriptEngine.threadSleep(TRpgTimestamp.FrameLength);
    scan := GGameEngine.ReadKeyboardState;
    Sleep(TRpgTimestamp.FrameLength);
    scan := scan + GGameEngine.ReadKeyboardState;
@@ -665,6 +668,7 @@ begin
          GScriptEngine.ThreadWait;
          scan := GGameEngine.ReadKeyboardState * mask
       until (scan <> []) or (thread.Terminated);
+      FKeyLock := true;
    end;
    result := 0;
    if scan = [] then
@@ -696,6 +700,8 @@ begin
 
    if assigned(FParty) then
       FParty.base.CheckMoveChange;
+   if FKeyLock and (GGameEngine.ReadKeyboardState = []) then
+      FKeyLock := false;
 end;
 
 procedure T2kEnvironment.wait(duration: integer);
