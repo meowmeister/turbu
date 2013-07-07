@@ -335,10 +335,11 @@ begin
       begin
          try
             GGameEngine.loadRpgImage(name, mask);
-            image := TRpgImage.Create(GGameEngine.ImageEngine, name, x, y, zoom, pinned, mask);
+            image := TRpgImage.Create(GGameEngine.ImageEngine, name, x, y,
+               GSpriteEngine.WorldX, GSpriteEngine.WorldY, zoom, pinned, mask);
             image.opacity := 100 - min(transparency, 100);
          except //if the file doesn't load
-            image := TRpgImage.Create(GSpriteEngine, '', 0, 0, 0, false, false);
+            image := TRpgImage.Create(GSpriteEngine, '', 0, 0, 0, 0, 0, false, false);
          end;
       end, true);
    result := image;

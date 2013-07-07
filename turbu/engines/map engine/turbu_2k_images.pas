@@ -29,6 +29,7 @@ type
       FCenterX, FCenterY: single;
       FMasked: boolean;
       FImage: TRpgImage;
+      FBaseWX, FBaseWY: single;
 
       function getTimer: integer;
       procedure setTimer(const Value: integer);
@@ -45,9 +46,10 @@ type
       procedure Deserialize(obj: TdwsJSONObject);
    protected
       procedure DoDraw; override;
+      function InVisibleRect: boolean; override;
    public
       constructor Create(engine: TSpriteEngine; image: TRpgImage; const name: string; x, y: integer;
-        zoom: integer; pinned, masked: boolean); reintroduce;
+        baseWX, baseWY: single; zoom: integer; pinned, masked: boolean); reintroduce;
       destructor Destroy; override;
       procedure applyImageColors(r, g, b, sat: integer);
       procedure applyImageEffect(which: TImageEffects; power: integer);
@@ -72,7 +74,7 @@ type
    public
       [NoImport]
       constructor Create(engine: TSpriteEngine; const name: string; x, y: integer;
-        zoom: integer; pinned, masked: boolean); reintroduce;
+        baseWX, baseWY: single; zoom: integer; pinned, masked: boolean); reintroduce;
       [NoImport]
       constructor Deserialize(engine: TSpriteEngine; obj: TdwsJSONObject);
       destructor Destroy; override;
@@ -105,7 +107,7 @@ const
 { TRpgImage }
 
 constructor TRpgImageSprite.Create(engine: TSpriteEngine; image: TRpgImage; const name: string;
-  x, y: integer; zoom: integer; pinned, masked: boolean);
+  x, y: integer; baseWX, baseWY: single; zoom: integer; pinned, masked: boolean);
 begin
    inherited Create(engine);
    imageName := name;
@@ -122,6 +124,8 @@ begin
    self.Alpha := 255;
    FAlphaTarget := 255;
    FImage := image;
+   FBaseWX := baseWX;
+   FBaseWY := baseWY;
 end;
 
 procedure TRpgImageSprite.Dead;
@@ -203,13 +207,14 @@ begin
    halfheight := (self.Height / 2);
    if Pinned then
    begin
-      cx := FCenterX - engine.worldX;
-      cy := FCenterY - engine.WorldY;
-   end
-   else begin
       cx := FCenterX;
       cy := FCenterY;
+   end
+   else begin
+      cx := FCenterX + engine.WorldX - FBaseWX;
+      cy := FCenterY + Engine.WorldY - FBaseWY;
    end;
+
    drawrect := self.GetDrawRect;
    SDL_RenderGetScale(FEngine.Canvas.Renderer, xScale, yScale);
    glBegin(GL_QUADS);
@@ -245,6 +250,11 @@ begin
    result := commons.round(scaleX * 100);
 end;
 
+function TRpgImageSprite.InVisibleRect: boolean;
+begin
+   result := true;
+end;
+
 procedure TRpgImageSprite.moveTo(x, y: integer; zoom, opacity: integer);
 begin
    FRefTarget := sgPointF(x, y);
@@ -261,6 +271,8 @@ begin
       writer.WriteName('name'); writer.WriteString(self.ImageName);
       writer.CheckWrite('X', FRefPoint.x, 0);
       writer.CheckWrite('Y', FRefPoint.y, 0);
+      writer.CheckWrite('WorldX', FBaseWX, 0);
+      writer.CheckWrite('WorldY', FBaseWY, 0);
       writer.CheckWrite('TargetX', FRefTarget.x, FRefPoint.x);
       writer.CheckWrite('TargetY', FRefTarget.y, FRefPoint.y);
       writer.CheckWrite('Alpha', self.Alpha, 255);
@@ -391,15 +403,16 @@ end;
 { TRpgImage }
 
 constructor TRpgImage.Create(engine: TSpriteEngine; const name: string; x, y: integer;
-  zoom: integer; pinned, masked: boolean);
+  baseWX, baseWY: single; zoom: integer; pinned, masked: boolean);
 begin
-   FSprite := TRpgImageSprite.Create(engine, self, name, x, y, zoom, pinned, masked);
+   FSprite := TRpgImageSprite.Create(engine, self, name, x, y, baseWX, baseWY, zoom, pinned, masked);
 end;
 
 constructor TRpgImage.Deserialize(engine: TSpriteEngine; obj: TdwsJSONObject);
 var
    name: string;
    x, y: integer;
+   wx, wy: single;
    zoom: integer;
    pinned, masked: boolean;
 begin
@@ -414,7 +427,9 @@ begin
    obj.CheckRead('X', x);
    obj.CheckRead('Y', x);
    obj.CheckRead('Zoom', zoom);
-   self.Create(engine, name, x, y, zoom, pinned, masked);
+   obj.CheckRead('WorldX', wx);
+   obj.CheckRead('WorldY', wy);
+   self.Create(engine, name, x, y, wx, wy, zoom, pinned, masked);
    FSprite.Deserialize(obj);
    obj.CheckEmpty;
 end;

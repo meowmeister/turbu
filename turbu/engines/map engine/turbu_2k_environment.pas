@@ -533,7 +533,7 @@ begin
    if i >= length(FImages) then
       SetLength(FImages, i + 1);
    if FImages[i] = nil then
-      FImages[i] := TRpgImage.Create(GSpriteEngine, '', 0, 0, 0, false, false);
+      FImages[i] := TRpgImage.Create(GSpriteEngine, '', 0, 0, 0, 0, 0, false, false);
    result := FImages[i];
 end;
 
