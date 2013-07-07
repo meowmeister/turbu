@@ -42,6 +42,9 @@ type
 
       function drawText(const text: string; x, y: single; colorIndex: integer): TsgFloatPoint;
       function drawChar(text: char; x, y: single; colorIndex: integer): TSgFloatPoint;
+      function drawTextRightAligned(const text: string; x, y: single; colorIndex: integer): TsgFloatPoint;
+      function drawTextCentered(const text: string; x, y: single;
+        width, colorIndex: integer): TsgFloatPoint;
 
       property Current: TRpgFont read FCurrent write SetCurrent;
       property OnGetColor: TFunc<TSdlTexture> read FOnGetColor write FOnGetColor;
@@ -106,6 +109,8 @@ end;
 
 destructor TFontEngine.Destroy;
 begin
+   assert(GFontEngine = self);
+   GFontEngine := nil;
    FFonts.Free;
    FTarget.Free;
    inherited;
@@ -215,6 +220,24 @@ begin
    result := sgPointF(x, y);
    for aChar in text do
       result := drawChar(aChar, result.x, result.y, colorIndex);
+end;
+
+function TFontEngine.drawTextCentered(const text: string; x, y: single;
+  width, colorIndex: integer): TsgFloatPoint;
+var
+   textWidth: integer;
+   midpoint: single;
+begin
+   textWidth := (length(text) * TEXT_WIDTH);
+   midpoint := x + (width / 2);
+   drawText(text, midpoint - (textWidth div 2), y, colorIndex);
+end;
+
+function TFontEngine.drawTextRightAligned(const text: string; x, y: single;
+  colorIndex: integer): TsgFloatPoint;
+begin
+   result := sgPointF(x - (length(text) * TEXT_WIDTH), y);
+   drawText(text, result.x, result.y, colorIndex);
 end;
 
 initialization
