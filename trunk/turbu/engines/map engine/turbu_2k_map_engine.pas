@@ -551,6 +551,8 @@ begin
    turbu_2k_savegames.Load(savefile);
    hero.settleDown(FCurrentMap);
    FCurrentMap.CurrentParty := hero;
+   FreeAndNil(FImageEngine);
+   FImageEngine := TImageEngine.Create(GSpriteEngine, FCanvas, FImages);
    Play;
 end;
 
@@ -711,7 +713,7 @@ begin
    try
       FImageEngine.Clear;
       FImages.EnsureImage(format('Special Images\%s.png', [FDatabase.layout.titleScreen]), '*TitleScreen');
-      GEnvironment.Image[0] := TRpgImage.Create(FImageEngine, '*TitleScreen', FCanvas.Width div 2, FCanvas.Height div 2, 100, false, false);
+      GEnvironment.Image[0] := TRpgImage.Create(FImageEngine, '*TitleScreen', FCanvas.Width div 2, FCanvas.Height div 2, 0, 0, 100, false, false);
       FTitleScreen := TRpgTimestamp.Create(5000);
    finally
       FImages.SpriteClass := cls;
