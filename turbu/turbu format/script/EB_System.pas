@@ -258,7 +258,7 @@ var
    procedure AddMask(const value: string);
    begin
       if mask <> '' then
-         mask := mask + ' + ';
+         mask := mask + ' , ';
       mask := mask + value;
    end;
 
