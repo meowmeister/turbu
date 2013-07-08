@@ -130,7 +130,7 @@ uses
    turbu_map_objects, turbu_2k_map_locks, turbu_2k_frames, turbu_text_utils,
    turbu_2k_transitions_graphics,
    rs_maps, rs_message, rs_characters, rs_media, archiveUtils, project_folder,
-   logs,
+   logs, EventBuilder,
    sdlstreams, sdl_sprite, sg_utils;
 
 const
@@ -608,6 +608,8 @@ begin
    rs_message.RegisterScriptUnit(FObjectManager.ScriptEngine);
    rs_characters.RegisterScriptUnit(FObjectManager.ScriptEngine);
    script := dmDatabase.ScriptLookup(0);
+   if script = BAD_LOOKUP then
+      script := GDatabase.scriptBlock.GetScript(0);
    {$IFDEF DEBUG}
    logs.logText(script);
    {$ENDIF}
