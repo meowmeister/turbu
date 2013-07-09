@@ -437,6 +437,7 @@ var
    st: TScriptThread;
 begin
    st := TThread.CurrentThread as TScriptThread;
+   st.FDelay.Free;
    st.FDelay := TRpgTimestamp.Create(time);
    if block then
       FEnterCutscene();
