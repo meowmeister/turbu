@@ -208,6 +208,8 @@ begin
    sl.Delimiter := '/';
    sl.StrictDelimiter := true;
    sl.DelimitedText := string(opcode.name);
+   if (sl.Count > 0) and (sl[0] = '') and (opcode.name[1] <> '/') then
+      sl.Delete(0);
    sub.Choices := sl.ToStringArray;
    sl.Free;
    sub.Values.AddRange(opcode.data);
