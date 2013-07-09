@@ -541,7 +541,7 @@ begin
    FTimer.Enabled := false;
    GScriptEngine.KillAll;
    GEnvironment.Free;
-   FPartySprite := nil;
+   FPartySprite.Free;
    GEnvironment := T2kEnvironment.Create(FDatabase);
    GScriptEngine.Reset;
    SetupScriptImports;
