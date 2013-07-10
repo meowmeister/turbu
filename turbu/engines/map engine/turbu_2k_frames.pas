@@ -71,6 +71,7 @@ type
    end;
 
    TMessageBoxTypes = (mbtMessage, mbtChoice, mbtPrompt, mbtInput);
+   TValidateEvent = reference to function(const text: string): boolean;
 
    TMenuSpriteEngine = class(TSpriteEngine)
    private
@@ -94,7 +95,8 @@ type
       destructor Destroy; override;
       procedure ShowMessage(const msg: string; modal: boolean);
       procedure inn(style, cost: integer);
-      procedure ChoiceBox(const msg: string; const responses: TArray<string>; allowCancel: boolean);
+      procedure ChoiceBox(const msg: string; const responses: TArray<string>;
+        allowCancel: boolean; const OnValidate: TValidateEvent = nil);
       procedure InputNumber(digits: integer);
       procedure button(const input: TButtonCode);
       procedure SetPortrait(const filename: string; index: integer);
@@ -129,7 +131,6 @@ type
 
    TMessageState = (mb_display, mb_choice, mb_input, mb_prompt);
    TPlaySoundEvent = reference to procedure(which: TSfxTypes);
-   TValidateEvent = reference to function(const text: string): boolean;
 
    TCustomMessageBox = class abstract(TSysFrame)
    private
@@ -448,7 +449,13 @@ var
 begin
    greet1 := innVocab(style, 'Greet', cost);
    choices := TArray<string>.Create(innVocab(style, 'Stay'), innVocab(style, 'Cancel'));
-   choiceBox(greet1, choices, true);
+   choiceBox(greet1, choices, true,
+      function (const line: string): boolean
+      begin
+         if line = choices[0] then
+            result := GEnvironment.money >= cost
+         else result := true;
+      end);
 end;
 
 procedure TMenuSpriteEngine.button(const input: TButtonCode);
@@ -458,7 +465,7 @@ begin
 end;
 
 procedure TMenuSpriteEngine.ChoiceBox(const msg: string; const responses: TArray<string>;
-  allowCancel: boolean);
+  allowCancel: boolean; const OnValidate: TValidateEvent);
 var
    box: TCustomMessageBox;
 begin
@@ -469,6 +476,7 @@ begin
    TChoiceBox(box).SetChoices(responses);
    TChoiceBox(box).canCancel := allowCancel;
    TChoiceBox(box).placeCursor(0);
+   TChoiceBox(box).OnValidate := OnValidate;
    box.Visible := true;
    FCurrentBox := box;
    try
