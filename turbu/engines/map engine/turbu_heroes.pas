@@ -499,11 +499,11 @@ begin
    begin
       unequip(eq_weapon);
       unequip(eq_shield);
-      FEquipment[eq_weapon] := theItem;
-      FEquipment[eq_shield] := theItem;
+      FEquipment[ord(eq_weapon) + 1] := theItem;
+      FEquipment[ord(eq_shield) + 1] := theItem;
    end
    else begin
-      unequip(integer(itemType) - 1);
+      unequip(TSlot((theItem.template as TArmorTemplate).slot));
       FEquipment[slot] := theItem;
    end;
    GEnvironment.Party.inventory.Remove(id, 1);
