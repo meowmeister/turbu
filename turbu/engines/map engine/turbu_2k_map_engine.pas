@@ -395,6 +395,8 @@ begin
    finally
       FTeleportThread := nil;
    end;
+   if not GEnvironment.preserveSpriteOnTeleport then
+      GEnvironment.Party.ResetSprite;
    FCurrentMap.CurrentParty := hero;
    FCurrentMap.CopyState(oldEngine);
    if assigned(hero) then
