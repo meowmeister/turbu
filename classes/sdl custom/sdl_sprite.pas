@@ -1006,7 +1006,7 @@ begin
    else alphaSet := false;
    if (FFillArea.Bottom = 0) or (FFillArea.Right = 0) then
       inherited DoDraw
-   else if FStretch then
+   else if FStretch or (FFillArea.Right < FWidth) or (FFillArea.bottom < FHeight) then
       FImage.DrawRectTo(FFillArea, self.DrawRect)
    else begin
       drawpoint := FFillArea.TopLeft;

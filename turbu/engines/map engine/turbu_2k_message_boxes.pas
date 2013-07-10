@@ -15,37 +15,23 @@ type
 
       procedure setRightside(const value: boolean);
    private //drawing section
-      FTextTarget: TsdlRenderTarget;
       FTextRate: single;
       FRemainder: single;
-      FTextCounter: integer;
-      FTextPosX: single;
-      FTextPosY: single;
-      FTextColor: integer;
-      FTextLine: integer;
       FSpecialText: string;
       FSpecialIndex: integer;
       FImmediate: boolean;
 
-      procedure DrawChar(value: char); overload;
-      procedure DrawChar(index: integer); overload;
       procedure DrawNextChar;
-      procedure ParseToken(const input: string; var counter: integer);
-      procedure ParseParamToken(const input: string; var counter: integer);
-      procedure ParseInt(const input: string; var counter: integer);
-      procedure NewLine;
-      procedure DrawSpecialChar(const line: string);
       procedure SetTextRate(value: integer);
       function GetHeroName(value: integer): string;
-      function GetIntegerValue: integer;
-      function GetDrawCoords: TRect;
-      procedure ResetText;
    protected
+      procedure NewLine; override;
+      procedure DrawSpecialChar(const line: string); override;
       procedure parseText(const input: string); override;
+      procedure DoDraw; override;
+      procedure ResetText; override;
    public
       constructor Create(parent: TMenuSpriteEngine; const coords: TRect); override;
-      destructor Destroy; override;
-      procedure Draw; override;
       procedure button(const input: TButtonCode); override;
       procedure moveTo(coords: TRect); override;
 {      procedure realign; inline;
@@ -63,9 +49,13 @@ type
       FAcceptCancel: boolean;
       FOnValidate: TValidateEvent;
       FCursorPosition: smallint;
+      FPromptLines: integer;
       function Validate(const text: string): boolean;
+   protected
+      procedure PrepareText; virtual; abstract;
+      procedure DrawText; virtual; abstract;
+      procedure DoDraw; override;
    public
-      procedure Draw; override;
       procedure button(const input: TButtonCode); override;
       procedure placeCursor(position: smallint); virtual;
       property OnValidate: TValidateEvent read FOnValidate write FOnValidate;
@@ -73,8 +63,16 @@ type
    end;
 
    TChoiceBox = class(TInputBox)
+   private
+      FChoices: TArray<string>;
+      FTextDrawn: boolean;
+   protected
+      procedure PrepareText; override;
+      procedure DrawText; override;
+      procedure parseText(const input: string); override;
    public
       procedure button(const input: TButtonCode); override;
+      procedure SetChoices(const choices: TArray<string>);
    end;
 
    TValueInputBox = class(TInputBox)
@@ -96,14 +94,13 @@ type
 
 implementation
 uses
-   SysUtils, Character,
+   SysUtils, Math,
    sdl_13, sg_defs, SDL_ImageManager,
    commons, timing, turbu_text_utils, turbu_2k_environment;
 
 { TMessageBox }
 
 constructor TMessageBox.Create(parent: TMenuSpriteEngine; const coords: TRect);
-const BORDER_THICKNESS = 16;
 begin
    //these lines go before the inherited constructor because they're
    //needed (the first, at least) by the virtual MoveTo function that gets
@@ -120,29 +117,12 @@ begin
       FBackground.Alpha := 200;
    end;
 
-   FTextColor := 1;
    SetTextRate(1);
    SetPosition(mb_top);
 
-   FTextTarget := TSdlRenderTarget.Create(sgPoint(self.Width - BORDER_THICKNESS, self.Height - BORDER_THICKNESS));
-   ClearTarget(FTextTarget);
 end;
 
-destructor TMessageBox.Destroy;
-begin
-   FTextTarget.Free;
-   inherited Destroy;
-end;
-
-function TMessageBox.GetDrawCoords: TRect;
-begin
-   result.Left := 0;
-   result.Right := FTextTarget.parent.Width;
-   result.Bottom := FTextTarget.parent.Height div 3;
-   result.Top := result.Bottom * ord(FPosition);
-end;
-
-procedure TMessageBox.Draw;
+procedure TMessageBox.DoDraw;
 const
    TEXTV = 0.1;
    TEXTH = 0.025;
@@ -150,7 +130,7 @@ var
    xVal, yVal: single;
    dest: TRect;
 begin
-   inherited Draw;
+   inherited DoDraw;
 
    FTextTarget.parent.pushRenderTarget;
    FTextTarget.SetRenderer;
@@ -174,15 +154,6 @@ begin
       FNextArrow.Draw;
 end;
 
-procedure TMessageBox.DrawChar(value: char);
-var
-   newPos: TSgFloatPoint;
-begin
-   newPos := GFontEngine.drawChar(value, FTextPosX, FTextPosY, FTextColor);
-   FTextPosX := newPos.x;
-   FTextPosY := newPos.y;
-end;
-
 procedure TMessageBox.NewLine;
 const
    TOP_MARGIN = 3;
@@ -193,15 +164,6 @@ begin
    else FTextPosX := 3;
    inc(FTextLine);
    FTextPosY := (LINE_HEIGHT * FTextLine) + TOP_MARGIN;
-end;
-
-function TMessageBox.GetIntegerValue: integer;
-begin
-   inc(FTextCounter);
-   if FParsedText[FTextCounter] = '\V' then
-      result := GEnvironment.Ints[GetIntegerValue]
-   else if not TryStrToInt(FParsedText[FTextCounter], result) then
-      Abort;
 end;
 
 procedure TMessageBox.moveTo(coords: TRect);
@@ -263,18 +225,6 @@ begin
       FSpecialIndex := 1;
 end;
 
-procedure TMessageBox.DrawChar(index: integer);
-var
-   value: string;
-begin
-   value := FParsedText[index];
-   if length(value) = 1 then
-      drawChar(value[1])
-   else if value = #13#10 then
-      NewLine
-   else DrawSpecialChar(value);
-end;
-
 procedure TMessageBox.DrawNextChar;
 begin
    if FTextCounter >= FParsedText.Count then
@@ -297,7 +247,7 @@ begin
                   FSpecialIndex := 0;
                   FSpecialText := '';
                end;
-               DrawChar(FTextCounter);
+               DrawChar(FParsedText[FTextCounter]);
                inc(FTextCounter);
             end;
             if not FImmediate then
@@ -322,67 +272,6 @@ begin
    end;
 end;
 
-procedure TMessageBox.ParseInt(const input: string; var counter: integer);
-var
-   start: integer;
-begin
-   inc(counter);
-   start := counter;
-   if UpperCase(copy(input, start, 3)) = '\V[' then
-   begin
-      FParsedText.Add('\V');
-      inc(counter);
-      ParseInt(input, counter);
-   end
-   else begin
-      while (counter <= length(input)) and (TCharacter.IsDigit(input[counter])) do
-         inc(counter);
-      if (counter > length(input)) or (input[counter] <> ']') then
-      begin
-         FParsedText.Add('\e');
-         counter := start;
-      end
-      else begin
-         FParsedText.Add(copy(input, start, counter - start));
-//         inc(counter);
-      end;
-   end;
-end;
-
-procedure TMessageBox.ParseParamToken(const input: string; var counter: integer);
-var
-   token: char;
-begin
-   token := UpCase(input[counter]);
-   FParsedText.Add('\' + token);
-   case token of
-      'C','S','N','V','T','F':
-      begin
-         inc(counter);
-         if input[counter] = '[' then
-            ParseInt(input, counter)
-         else FParsedText.Add('\E' + input[counter]);
-      end;
-      'O': FParsedText.Add('\E' + input[counter]); //TODO: support \O for vocab
-      else assert(false);
-   end;
-end;
-
-procedure TMessageBox.ParseToken(const input: string; var counter: integer);
-var
-   token: char;
-begin
-   assert(input[counter] = '\');
-   inc(counter);
-   token := UpCase(input[counter]);
-   case token of
-      '\': FParsedText.Add('\');
-      '$','!','.','|','>','<','^','_': FParsedText.Add('\' + token);
-      'C','S','N','V','T','F','O': ParseParamToken(input, counter);
-      else FParsedText.Add('\E' + input[counter]);
-   end;
-end;
-
 procedure TMessageBox.setPortrait(const filename: string; const index: byte);
 var
    image: TSdlImage;
@@ -404,17 +293,13 @@ end;
 
 procedure TMessageBox.ResetText;
 begin
-   FSignal.ResetEvent;
+   inherited ResetText;
    FParsedText.Clear;
-   runThreadsafe(procedure begin ClearTarget(FTextTarget) end, true);
-   FTextCounter := 0;
    FSpecialText := '';
    FSpecialIndex := 0;
    FImmediate := false;
    FRemainder := 0;
-   FTextLine := -1;
    SetTextRate(1);
-   NewLine;
 end;
 
 procedure TMessageBox.parseText(const input: string);
@@ -435,7 +320,7 @@ begin
          end
          else if input[counter] <> '\' then
             FParsedText.Add(input[counter])
-         else ParseToken(input, counter);
+         else FParsedText.Add(ParseToken(input, counter));
          inc(counter);
       end;
    finally
@@ -452,17 +337,17 @@ var
 begin
    if (FCursorPosition = -1) and (input in [btn_up, btn_down, btn_left, btn_right]) then
       Exit;
-   if FParsedText.Count = 0 then
+   if length(FOptionEnabled) = 0 then
       Exit;
    if assigned(FButtonLock) then
    begin
       if FButtonLock.timeRemaining = 0 then
-         freeAndNil(FButtonLock);
-      Exit;
+         freeAndNil(FButtonLock)
+      else Exit;
    end;
 
    lPosition := FCursorPosition; //to suppress a compiler warning
-   max := (FParsedText.Count - 1) - (FPromptLines + FLastLineColumns);
+   max := high(FOptionEnabled) - (FPromptLines + FLastLineColumns);
    absMax := max + FLastLineColumns;
    case input of
       btn_enter:
@@ -497,7 +382,7 @@ begin
          end else if FCursorPosition >= FColumns then
             lPosition := FCursorPosition - FColumns
          else if FColumns = 1 then
-            lPosition := FParsedText.Count - 1;
+            lPosition := high(FOptionEnabled);
       end;
       btn_right:
       begin
@@ -519,10 +404,12 @@ begin
    end;
 end;
 
-procedure TInputBox.Draw;
+procedure TInputBox.DoDraw;
 begin
-   inherited Draw;
+   inherited DoDraw;
+   PrepareText;
    TMenuSpriteEngine(Engine).cursor.Draw;
+   DrawText;
 end;
 
 procedure TInputBox.placeCursor(position: smallint);
@@ -535,7 +422,7 @@ begin
    if self.FDontChangeCursor then
       position := (self.FCursorPosition);
    FCursorPosition := position;
-   max := (FParsedText.Count - 1) - (FPromptLines + FLastLineColumns);
+   max := high(FOptionEnabled) - (FPromptLines + FLastLineColumns);
    if (position > max) and (FLastLineColumns > 0) then
    begin
       columns := FLastLineColumns;
@@ -545,17 +432,17 @@ begin
       columns := FColumns;
       width := columnWidth;
    end;
-   if FParsedText.Count = 0 then
+   if length(FOptionEnabled) = 0 then
       position := 0
-   else if position >= FParsedText.Count then
-      position := FParsedText.Count - 1;
+   else position := min(position, high(FOptionEnabled));
    if position > max then
       dec(position, max + 1);
    column := position mod columns;
    inc(position, FPromptLines * columns);
    coords := rect(8 + (column * (width + SEPARATOR)),
-                  (position div columns) * 15 + origin.y + 8,
+                  (position div columns) * 15 + FBounds.Top + (ord(FPosition) * 80) + 8,
                   width, 18);
+   inc(coords.Bottom, coords.Top);
    if FCursorPosition > max then
       inc(coords.top, (FCursorPosition div FColumns) * 15);
 
@@ -627,10 +514,74 @@ begin
       end;
       else begin
          inherited button(input);
-         if input = btn_enter then
+         if (input = btn_enter) and (FOptionEnabled[FCursorPosition]) then
             endMessage;
       end;
    end;
+end;
+
+procedure TChoiceBox.PrepareText;
+var
+   value, line: string;
+   i: integer;
+begin
+   if not FTextDrawn then
+   begin
+      FTextTarget.parent.pushRenderTarget;
+      FTextTarget.SetRenderer;
+      try
+         ResetText;
+         for value in FParsedText do
+            DrawLine(value);
+         FPromptLines:= FTextLine;
+         if FParsedText.Count > 0 then
+            NewLine;
+         for i := 0 to high(FChoices) do
+         begin
+            value := FChoices[i];
+            FOptionEnabled[i] := validate(value);
+            parseText(value);
+            for line in FParsedText do
+            begin
+               DrawLine(line);
+            end;
+            NewLine;
+         end;
+      finally
+         FTextTarget.parent.popRenderTarget;
+      end;
+      FTextDrawn := true;
+   end;
+end;
+
+procedure TChoiceBox.DrawText;
+const
+   TEXTV = 0.1;
+   TEXTH = 0.025;
+var
+   dest: TRect;
+   xVal, yVal: single;
+begin
+   dest := GetDrawCoords;
+   xVal := dest.right * TEXTH;
+   yVal := dest.Bottom * TEXTV;
+   inc(dest.Left, round(xVal));
+   dec(dest.right, round(xVal * 2));
+   inc(dest.Top, round(yVal));
+   dec(dest.Bottom, round(yVal * 2));
+   SDL_RenderCopy(FTextTarget.parent.Renderer, FTextTarget.handle, nil, @dest);
+end;
+
+procedure TChoiceBox.parseText(const input: string);
+begin
+   inherited ParseText(input);
+   FTextDrawn := false;
+end;
+
+procedure TChoiceBox.SetChoices(const choices: TArray<string>);
+begin
+   FChoices := choices;
+   SetLength(FOptionEnabled, length(choices));
 end;
 
 { TValueInputBox }

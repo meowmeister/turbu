@@ -94,7 +94,7 @@ type
       destructor Destroy; override;
       procedure ShowMessage(const msg: string; modal: boolean);
       procedure inn(style, cost: integer);
-      procedure ChoiceBox(const msg: string; responses: TArray<string>; allowCancel: boolean);
+      procedure ChoiceBox(const msg: string; const responses: TArray<string>; allowCancel: boolean);
       procedure InputNumber(digits: integer);
       procedure button(const input: TButtonCode);
       procedure SetPortrait(const filename: string; index: integer);
@@ -146,11 +146,16 @@ type
       FParsedText: TStringList;
       FOptionEnabled: array of boolean;
       FColumns: byte;
-      FPromptLines: byte;
       FDontChangeCursor: boolean;
       FButtonLock: TRpgTimestamp;
       FLastLineColumns: byte;
       FPosition: TMboxLocation;
+      FTextTarget: TsdlRenderTarget;
+      FTextPosX: single;
+      FTextPosY: single;
+      FTextCounter: integer;
+      FTextColor: integer;
+      FTextLine: integer;
 
       function columnWidth: word;
       function lastColumnWidth: word;
@@ -159,6 +164,20 @@ type
       procedure ClearTarget(target: TSdlRenderTarget);
       procedure SetPosition(const Value: TMboxLocation);
       procedure EndMessage;
+
+      procedure DoDraw; override;
+      procedure DrawChar(value: char); overload;
+      procedure DrawChar(const value: string); overload;
+      procedure DrawLine(const value: string);
+      procedure NewLine; virtual;
+      procedure DrawSpecialChar(const line: string); virtual;
+      function GetIntegerValue: integer;
+      function GetDrawCoords: TRect;
+      procedure ResetText; virtual;
+
+      function ParseToken(const input: string; var counter: integer): string;
+      function ParseParamToken(const input: string; var counter: integer): string;
+      function ParseInt(const input: string; var counter: integer): string;
    public
       constructor Create(parent: TMenuSpriteEngine; const coords: TRect); virtual;
       destructor Destroy; override;
@@ -183,7 +202,7 @@ const
 
 implementation
 uses
-   Windows, SysUtils, Math, OpenGL,
+   Windows, SysUtils, Math, OpenGL, Character,
    commons, turbu_text_utils, turbu_2k_environment, turbu_OpenGL, turbu_database,
    turbu_2k_message_boxes, turbu_2k_sprite_engine, turbu_script_engine, rs_media;
 
@@ -272,7 +291,7 @@ begin
       fill.bottom := br.y - tl.y;
       FBorders[facing_right].FillArea := fill;
 
-      FBackground.FillArea := coords;
+      FBackground.FillArea := TRectToSdlRect(coords);
       FBackground.ScaleX := coords.Right / 16;
       FBackground.ScaleY := coords.Bottom / 16;
       FFrameSize := coords.BottomRight;
@@ -379,6 +398,7 @@ begin
       finally
          FEnding := false;
       end;
+      FCursor.Visible := false;
    end;
    FCurrentBox := nil;
 end;
@@ -437,7 +457,7 @@ begin
    FCurrentBox.button(input);
 end;
 
-procedure TMenuSpriteEngine.ChoiceBox(const msg: string; responses: TArray<string>;
+procedure TMenuSpriteEngine.ChoiceBox(const msg: string; const responses: TArray<string>;
   allowCancel: boolean);
 var
    box: TCustomMessageBox;
@@ -446,7 +466,9 @@ begin
       sleep(TRpgTimestamp.FrameLength);
    box := FBoxes[mbtChoice];
    box.text := msg;
+   TChoiceBox(box).SetChoices(responses);
    TChoiceBox(box).canCancel := allowCancel;
+   TChoiceBox(box).placeCursor(0);
    box.Visible := true;
    FCurrentBox := box;
    try
@@ -603,16 +625,19 @@ end;
 { TCustomMessageBox }
 
 constructor TCustomMessageBox.Create(parent: TMenuSpriteEngine; const coords: TRect);
+const BORDER_THICKNESS = 16;
 begin
    inherited Create(parent, ORIGIN, 1, coords);
    FColumns := 1;
-   FPromptLines := 0;
    FParsedText := TStringList.Create;
    FParsedText.Duplicates := dupAccept;
    FSignal := TSimpleEvent.Create;
    FBoxVisible := true;
    FFrameTarget := TSdlRenderTarget.Create(sgPoint(self.Width, self.Height));
    ClearTarget(FFrameTarget);
+   FTextTarget := TSdlRenderTarget.Create(sgPoint(self.Width - BORDER_THICKNESS, self.Height - BORDER_THICKNESS));
+   ClearTarget(FTextTarget);
+   FTextColor := 1;
 end;
 
 destructor TCustomMessageBox.Destroy;
@@ -621,7 +646,17 @@ begin
    FSignal.Free;
    FParsedText.free;
    FFrameTarget.Free;
+   FTextTarget.Free;
    inherited;
+end;
+
+procedure TCustomMessageBox.DrawChar(value: char);
+var
+   newPos: TSgFloatPoint;
+begin
+   newPos := GFontEngine.drawChar(value, FTextPosX, FTextPosY, FTextColor);
+   FTextPosX := newPos.x;
+   FTextPosY := newPos.y;
 end;
 
 procedure TCustomMessageBox.DrawFrame;
@@ -633,13 +668,29 @@ begin
       SDL_SetRenderDrawColor(FFrameTarget.parent.Renderer, 0, 0, 0, 0);
       FFrameTarget.Clear;
       SDL_SetRenderDrawColor(FFrameTarget.parent.Renderer, 1, 1, 1, 1);
-      inherited Draw;
+      inherited DoDraw;
       FFrameTarget.parent.popRenderTarget;
       FFrameDrawn := true;
       SDL_SetTextureBlendMode(FFrameTarget.handle, [sdlbBlend]);
    end;
 //   FFrameTarget.DrawFull(FCoords.TopLeft);
    SDL_RenderCopy(FFrameTarget.parent.Renderer, FFrameTarget.handle, nil, @FCoords);
+end;
+
+function TCustomMessageBox.GetDrawCoords: TRect;
+begin
+   result.Left := 0;
+   result.Right := FTextTarget.parent.Width;
+   result.Bottom := FTextTarget.parent.Height div 3;
+   result.Top := result.Bottom * ord(FPosition);
+end;
+
+procedure TCustomMessageBox.DrawLine(const value: string);
+var
+   ch: char;
+begin
+   for ch in value do
+      DrawChar(ch);
 end;
 
 procedure TCustomMessageBox.EndMessage;
@@ -649,7 +700,102 @@ begin
    FSignal.SetEvent;
 end;
 
+function TCustomMessageBox.GetIntegerValue: integer;
+begin
+   inc(FTextCounter);
+   if FParsedText[FTextCounter] = '\V' then
+      result := GEnvironment.Ints[GetIntegerValue]
+   else if not TryStrToInt(FParsedText[FTextCounter], result) then
+      Abort;
+end;
+
+function TCustomMessageBox.ParseInt(const input: string; var counter: integer): string;
+var
+   start: integer;
+begin
+   inc(counter);
+   start := counter;
+   if UpperCase(copy(input, start, 3)) = '\V[' then
+   begin
+      inc(counter);
+      result := '\V' + ParseInt(input, counter);
+   end
+   else begin
+      while (counter <= length(input)) and (TCharacter.IsDigit(input[counter])) do
+         inc(counter);
+      if (counter > length(input)) or (input[counter] <> ']') then
+      begin
+         result := '\e';
+         counter := start;
+      end
+      else begin
+         result := copy(input, start, counter - start);
+//         inc(counter);
+      end;
+   end;
+end;
+
+function TCustomMessageBox.ParseParamToken(const input: string; var counter: integer): string;
+var
+   token: char;
+begin
+   token := UpCase(input[counter]);
+   result := '\' + token;
+   case token of
+      'C','S','N','V','T','F':
+      begin
+         inc(counter);
+         if input[counter] = '[' then
+            result := ParseInt(input, counter)
+         else result := '\E' + input[counter];
+      end;
+      'O': result := '\E' + input[counter]; //TODO: support \O for vocab
+      else assert(false);
+   end;
+end;
+
+function TCustomMessageBox.ParseToken(const input: string; var counter: integer): string;
+var
+   token: char;
+begin
+   assert(input[counter] = '\');
+   inc(counter);
+   token := UpCase(input[counter]);
+   case token of
+      '\': result := '\';
+      '$','!','.','|','>','<','^','_': result := '\' + token;
+      'C','S','N','V','T','F','O': result := ParseParamToken(input, counter);
+      else result := '\E' + input[counter];
+   end;
+end;
+
+procedure TCustomMessageBox.DrawSpecialChar(const line: string);
+const HALF_CHAR = 3;
+begin
+   assert(line[1] = '\');
+   case line[2] of
+      '$': DrawLine(IntToStr(GEnvironment.money));
+      '_': FTextPosX := FTextPosX + HALF_CHAR;
+      'C': FTextColor := clamp(GetIntegerValue, 1, 20);
+      'V': DrawLine(IntToStr(GEnvironment.Ints[GetIntegerValue]));
+   end;
+end;
+
 procedure TCustomMessageBox.Draw;
+begin
+   if self.Visible then
+      DoDraw;
+end;
+
+procedure TCustomMessageBox.DrawChar(const value: string);
+begin
+   if length(value) = 1 then
+      drawChar(value[1])
+   else if value = #13#10 then
+      NewLine
+   else DrawSpecialChar(value);
+end;
+procedure TCustomMessageBox.DoDraw;
 begin
    if boxVisible then
       DrawFrame;
@@ -687,6 +833,16 @@ begin
    self.Height := coords.Bottom;
 end;
 
+procedure TCustomMessageBox.NewLine;
+const
+   TOP_MARGIN = 3;
+   LINE_HEIGHT = 16;
+begin
+   FTextPosX := 3;
+   inc(FTextLine);
+   FTextPosY := (LINE_HEIGHT * FTextLine) + TOP_MARGIN;
+end;
+
 procedure TCustomMessageBox.parseText(const input: string);
 begin
    FSignal.ResetEvent;
@@ -698,6 +854,15 @@ procedure TCustomMessageBox.PlaySound(which: TSfxTypes);
 begin
    if assigned(FPlaySound) then
       FPlaySound(which);
+end;
+
+procedure TCustomMessageBox.ResetText;
+begin
+   FSignal.ResetEvent;
+   runThreadsafe(procedure begin ClearTarget(FTextTarget) end, true);
+   FTextCounter := 0;
+   FTextLine := -1;
+   NewLine;
 end;
 
 procedure TCustomMessageBox.SetPosition(const Value: TMboxLocation);
