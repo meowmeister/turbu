@@ -638,7 +638,7 @@ end;
 
 function T2kEnvironment.GetVehicleCount: integer;
 begin
-   result := high(FVehicles);
+   result := FVehicles.Count - 1;
 end;
 
 function T2kEnvironment.HeldItems(id: integer; equipped: boolean): integer;
