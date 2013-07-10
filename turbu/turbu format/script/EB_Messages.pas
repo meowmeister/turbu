@@ -278,9 +278,9 @@ begin
    if StartsText('Choices', key) then
    begin
       index := StrToInt(copy(key, 8));
-      if index > high(FChoices) then
-         SetLength(FChoices, index + 1);
-      FChoices[index] := value;
+      if index >= high(FChoices) then
+         SetLength(FChoices, index);
+      FChoices[index - 1] := value;
    end
    else inherited AssignProperty(key, value);
 end;
