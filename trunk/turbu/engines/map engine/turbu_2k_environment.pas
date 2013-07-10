@@ -40,6 +40,7 @@ type
       FEvents: TArray<TRpgEvent>;
       FParty: TRpgParty;
       FMenuEnabled: boolean;
+      FSaveEnabled: boolean;
       FEventMap: TDictionary<TRpgMapObject, TRpgCharacter>;
       FSaveCount: integer;
       FKeyLock: boolean;
@@ -84,6 +85,7 @@ type
       procedure DeserializeImages(obj: TdwsJSONObject);
       procedure DeserializeMapObjects(obj: TdwsJSONObject);
       function GetImageCount: integer;
+      function GetVehicleCount: integer;
    public
       [NoImport]
       constructor Create(database: TRpgDatabase);
@@ -119,6 +121,7 @@ type
       property Switch[const i: integer]: boolean read GetSwitch write SetSwitch;
       property Ints[const i: integer]: integer read GetInt write SetInt;
       property Vehicle[i: integer]: TRpgVehicle read GetVehicle;
+      property VehicleCount: integer read GetVehicleCount;
       property Image[i: integer]: TRpgImage read GetImage write SetImage;
       property ImageCount: integer read GetImageCount;
       property MapObject[i: integer]: TRpgEvent read GetMapObject;
@@ -182,8 +185,19 @@ begin
 end;
 
 procedure T2kEnvironment.DeleteObject(permanant: boolean);
+var
+   obj: TRpgCharacter;
+   i: integer;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
+   obj := thisObject;
+   for i := 1 to High(FEvents) do
+      if FEvents[i] = obj then
+      begin
+         runThreadsafe(procedure begin FreeAndNil(FEvents[i]) end, true);
+         Break;
+      end;
+   if permanant then
+{$MESSAGE WARN 'Incomplete feature in live unit'}
    //TODO: implement this
 end;
 
@@ -277,14 +291,11 @@ end;
 procedure T2kEnvironment.enableMenu(const Value: boolean);
 begin
    FMenuEnabled := value;
-{$MESSAGE WARN 'Commented out code in live unit'}
-   //TODO: Do more here
 end;
 
 procedure T2kEnvironment.EnableSave(value: boolean);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-   //TODO: implement this
+   FSaveEnabled := value;
 end;
 
 function T2kEnvironment.EvalVar(index, value: integer; op: TComparisonOp): boolean;
@@ -308,7 +319,7 @@ function T2kEnvironment.EvalConditions(value: TRpgEventConditions): boolean;
 var
    cond: TPageConditions;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
+{$MESSAGE WARN 'Incomplete feature in live unit'}
    result := true;
    for cond in value.conditions do
    begin
@@ -499,6 +510,7 @@ begin
          inc(FSaveCount);
       writer.CheckWrite('SaveCount', FSaveCount, 0);
       writer.CheckWrite('PreserveSpriteOnTeleport', FPreserveSpriteOnTeleport, false);
+      writer.CheckWrite('SaveEnabled', FSaveEnabled, false);
    writer.EndObject;
 end;
 
@@ -517,6 +529,7 @@ begin
    obj.CheckRead('MenuEnabled', FMenuEnabled);
    obj.CheckRead('SaveCount', FSaveCount);
    obj.CheckRead('PreserveSpriteOnTeleport', FPreserveSpriteOnTeleport);
+   obj.CheckRead('SaveEnabled', FSaveEnabled);
    obj.checkEmpty;
 end;
 
@@ -621,6 +634,11 @@ begin
    if clamp(i, 0, FVehicles.Count) = i then
       result := FVehicles[i]
    else result := FVehicles[0];
+end;
+
+function T2kEnvironment.GetVehicleCount: integer;
+begin
+   result := high(FVehicles);
 end;
 
 function T2kEnvironment.HeldItems(id: integer; equipped: boolean): integer;

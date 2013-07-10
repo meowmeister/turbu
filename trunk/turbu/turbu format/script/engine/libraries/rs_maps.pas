@@ -425,11 +425,11 @@ procedure stopMoveScripts;
 var
    I: Integer;
 begin
-   for I := 1 to GEnvironment.MapObjectCount - 1 do
+   for I := 1 to GEnvironment.MapObjectCount do
       GEnvironment.MapObject[i].base.stop;
-{   for i := 0 to high(GVehicles) do
-      GVehicles[i].base.stop;}
-{$MESSAGE WARN 'Commented out code in live unit'}
+   for i := 1 to GEnvironment.VehicleCount do
+      if assigned(GEnvironment.Vehicle[i]) then
+         GEnvironment.Vehicle[i].base.stop;
    GEnvironment.Party.base.stop;
 end;
 

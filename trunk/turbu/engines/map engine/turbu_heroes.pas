@@ -231,7 +231,7 @@ uses
    Math, SysUtils,
    ArchiveUtils, turbu_database, dm_database, commons, turbu_items,
    turbu_2k_environment, turbu_2k_sprite_engine, turbu_script_engine,
-   turbu_skills, turbu_pathing;
+   turbu_skills, turbu_pathing, turbu_2k_item_types;
 
 const
    WEAPON_SLOT = 1;
@@ -384,20 +384,20 @@ end;
 
 procedure TRpgHero.AddBattleCommand(which: integer);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
+{$MESSAGE WARN 'Missing feature in live unit'}
    //TODO: Implement this
 end;
 
 procedure TRpgHero.RemoveBattleCommand(which: integer);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
+{$MESSAGE WARN 'Missing feature in live unit'}
    //TODO: Implement this
 end;
 
 procedure TRpgHero.ChangeClass(id: integer; retainLevel: boolean; skillChange,
   statChange: integer; showMessage: boolean);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
+{$MESSAGE WARN 'Missing feature in live unit'}
    //TODO: Implement this
 end;
 
@@ -475,41 +475,42 @@ begin
       FEquipment[slot] := theItem;
    end;
    FParty.inventory.Remove(id, 1);
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   inc(FStat[stat_eq_mod, 1], TEquipment(theItem).attack);
-   inc(FStat[stat_eq_mod, 2], TEquipment(theItem).defense);
-   inc(FStat[stat_eq_mod, 3], TEquipment(theItem).mind);
-   inc(FStat[stat_eq_mod, 4], TEquipment(theItem).speed);}
-end;
-
-procedure TRpgHero.equipSlot(id, slot: integer);
-{var
-   theItem: TRpgItem;
-   dummy: TItemType;}
-begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   theItem := TRpgItem.newItem(id, 1);
-   assert(theItem is TEquipment);
-   dummy := theItem.template.itemType;
-   if not (theItem.template.usableBy[FTemplate.id]) then
-      Exit;
-
-   if (dummy = weaponItem) and (theItem.template.twoHanded) then
-   begin
-      unequip(integer(weaponItem) - 1);
-      unequip(integer(shieldItem) - 1);
-      FEquipment[integer(weaponItem)] := theItem;
-      FEquipment[integer(shieldItem)] := theItem;
-   end
-   else begin
-      unequip(integer(dummy) - 1);
-      FEquipment[slot] := theItem;
-   end;
-   GParty.inventory.Remove(id, 1);
    inc(FStat[stat_eq_mod, 1], TEquipment(theItem).attack);
    inc(FStat[stat_eq_mod, 2], TEquipment(theItem).defense);
    inc(FStat[stat_eq_mod, 3], TEquipment(theItem).mind);
-   inc(FStat[stat_eq_mod, 4], TEquipment(theItem).speed);}
+   inc(FStat[stat_eq_mod, 4], TEquipment(theItem).speed);
+end;
+
+procedure TRpgHero.equipSlot(id, slot: integer);
+var
+   theItem: TRpgItem;
+   itemType: TItemType;
+begin
+   theItem := TRpgItem.newItem(id, 1);
+   assert(theItem is TEquipment);
+   itemType := theItem.template.itemType;
+   if not ((theItem.template is TEquipmentTemplate) and (Template.id in (TEquipmentTemplate(theItem.template).usableByHero))) then
+   begin
+      theItem.free;
+      Exit;
+   end;
+
+   if (itemType = it_weapon) and ((theItem.template as TWeaponTemplate).twoHanded) then
+   begin
+      unequip(eq_weapon);
+      unequip(eq_shield);
+      FEquipment[eq_weapon] := theItem;
+      FEquipment[eq_shield] := theItem;
+   end
+   else begin
+      unequip(integer(itemType) - 1);
+      FEquipment[slot] := theItem;
+   end;
+   GEnvironment.Party.inventory.Remove(id, 1);
+   inc(FStat[stat_eq_mod, 1], TEquipment(theItem).attack);
+   inc(FStat[stat_eq_mod, 2], TEquipment(theItem).defense);
+   inc(FStat[stat_eq_mod, 3], TEquipment(theItem).mind);
+   inc(FStat[stat_eq_mod, 4], TEquipment(theItem).speed);
 end;
 
 procedure TRpgHero.unequip(slot: TSlot);
@@ -528,13 +529,12 @@ begin
    if FEquipment[id] <> nil then
    begin
       FParty.inventory.AddItem(FEquipment[id]);
-{$MESSAGE WARN 'Commented out code in live unit'}
-{      dec(FStat[stat_eq_mod, 1], TEquipment(FEquipment[id]).attack);
+      dec(FStat[stat_eq_mod, 1], TEquipment(FEquipment[id]).attack);
       dec(FStat[stat_eq_mod, 2], TEquipment(FEquipment[id]).defense);
       dec(FStat[stat_eq_mod, 3], TEquipment(FEquipment[id]).mind);
       dec(FStat[stat_eq_mod, 4], TEquipment(FEquipment[id]).speed);
-      if (id in [1, 2]) and (FEquipment[id].template.twoHanded) then
-         FEquipment[3 - id] := nil;}
+      if (id in [1, 2]) and ((FEquipment[id].template as TWeaponTemplate).twoHanded) then
+         FEquipment[3 - id] := nil;
       FEquipment[id] := nil;
    end;
 end;
