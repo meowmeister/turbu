@@ -197,6 +197,7 @@ type
       procedure ChangeSprite(name: string; translucent: boolean); override;
       [NoImport]
       procedure SetSprite(value: TMapSprite);
+      procedure ResetSprite;
 
       function takeDamage(power: integer; defense, mDefense, variance: integer): integer;
       function openSlot: integer;
@@ -1081,6 +1082,15 @@ begin
       self[id].level := self[id].level - number;
 end;
 
+procedure TRpgParty.ResetSprite;
+var
+   h1: TRpgHero;
+begin
+   h1 := self.First;
+   commons.runThreadsafe(
+      procedure begin self.ChangeSprite(h1.sprite, h1.transparent) end, true);
+end;
+
 procedure TRpgParty.Serialize(writer: TdwsJSONWriter);
 var
    i: integer;
@@ -1168,8 +1178,6 @@ begin
 end;
 
 procedure TRpgParty.setHero(x: integer; value: TRpgHero);
-var
-   h1: TRpgHero;
 begin
    if (x = 0) or (x > MAXPARTYSIZE) then
       Exit;
@@ -1177,9 +1185,7 @@ begin
    FParty[x] := value;
    if assigned(value) then
       FParty[x].FParty := self;
-   h1 := self.First;
-   commons.runThreadsafe(
-      procedure begin self.ChangeSprite(h1.sprite, h1.transparent) end, true);
+   ResetSprite;
 end;
 
 procedure TRpgParty.SetSprite(value: TMapSprite);

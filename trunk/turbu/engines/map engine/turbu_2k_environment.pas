@@ -43,6 +43,7 @@ type
       FEventMap: TDictionary<TRpgMapObject, TRpgCharacter>;
       FSaveCount: integer;
       FKeyLock: boolean;
+      FPreserveSpriteOnTeleport: boolean;
 
       function GetSwitch(const i: integer): boolean;
       procedure SetSwitch(const i: integer; const Value: boolean);
@@ -137,6 +138,7 @@ type
       property deathPossible: boolean write canDieOnHpChange;
       property menuEnabled: boolean read isMenuEnabled write enableMenu;
       property thisObject: TRpgCharacter read GetThisObject;
+      property preserveSpriteOnTeleport: boolean read FPreserveSpriteOnTeleport write FPreserveSpriteOnTeleport;
    end;
 
 procedure RegisterEnvironment(compiler: TrsCompiler; importer: TrsTypeImporter; exec: TrsExec);
@@ -496,6 +498,7 @@ begin
       if explicitSave then
          inc(FSaveCount);
       writer.CheckWrite('SaveCount', FSaveCount, 0);
+      writer.CheckWrite('PreserveSpriteOnTeleport', FPreserveSpriteOnTeleport, false);
    writer.EndObject;
 end;
 
@@ -513,6 +516,7 @@ begin
    value.Free;
    obj.CheckRead('MenuEnabled', FMenuEnabled);
    obj.CheckRead('SaveCount', FSaveCount);
+   obj.CheckRead('PreserveSpriteOnTeleport', FPreserveSpriteOnTeleport);
    obj.checkEmpty;
 end;
 
