@@ -120,6 +120,7 @@
 			<DCCReference Include="script\EB_ObjectHelper.pas"/>
 			<DCCReference Include="script\EB_Expressions_RM.pas"/>
 			<DCCReference Include="design\db_create.pas"/>
+			<DCCReference Include="script\EB_MessagePromptCollapser.pas"/>
 			<RcItem Include="design\Turbu.cdb">
 				<ContainerId>ResourceItem</ContainerId>
 				<ResourceType>RCDATA</ResourceType>
