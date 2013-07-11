@@ -82,6 +82,7 @@ contains
   rs_media in 'script\engine\libraries\rs_media.pas',
   EB_ObjectHelper in 'script\EB_ObjectHelper.pas',
   EB_Expressions_RM in 'script\EB_Expressions_RM.pas',
-  db_create in 'design\db_create.pas';
+  db_create in 'design\db_create.pas',
+  EB_MessagePromptCollapser in 'script\EB_MessagePromptCollapser.pas';
 
 end.

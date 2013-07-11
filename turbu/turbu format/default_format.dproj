@@ -64,6 +64,8 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="*.dres"/>
+			<DCCReference Include="*.dres"/>
+			<DCCReference Include="*.dres"/>
 			<DCCReference Include="EngineBasis.dcp"/>
 			<DCCReference Include="database\turbu_database.pas"/>
 			<DCCReference Include="database\turbu_characters.pas"/>
@@ -120,6 +122,7 @@
 			<DCCReference Include="script\EB_ObjectHelper.pas"/>
 			<DCCReference Include="script\EB_Expressions_RM.pas"/>
 			<DCCReference Include="design\db_create.pas"/>
+			<DCCReference Include="script\EB_MessagePromptCollapser.pas"/>
 			<RcItem Include="design\Turbu.cdb">
 				<ContainerId>ResourceItem</ContainerId>
 				<ResourceType>RCDATA</ResourceType>

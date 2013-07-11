@@ -147,7 +147,7 @@ begin
 end;
 
 initialization
-   RegisterEbEditor(TEBChoiceMessage, TfrmShowChoice);
-finalization
+   RegisterEbEditor(TEBChoiceMessage, TfrmShowChoice); //fix this to deal with the inner expression
+finalization                                           //then fix the converter too
    UnRegisterEbEditor(TEBChoiceMessage);
 end.
