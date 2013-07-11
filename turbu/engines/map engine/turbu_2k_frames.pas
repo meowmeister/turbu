@@ -87,6 +87,7 @@ type
       procedure SetPosition(const Value: TMboxLocation);
       procedure SetBoxVisible(const Value: boolean);
       function GetPortrait: TSprite;
+      procedure WaitForCurrentBox;
    protected
       procedure EndMessage;
       function InnVocab(style: integer; const name: string; value: integer = 0): string;
@@ -97,7 +98,7 @@ type
       procedure inn(style, cost: integer);
       procedure ChoiceBox(const msg: string; const responses: TArray<string>;
         allowCancel: boolean; const OnValidate: TValidateEvent = nil);
-      procedure InputNumber(digits: integer);
+      procedure InputNumber(const msg: string; digits: integer);
       procedure button(const input: TButtonCode);
       procedure SetPortrait(const filename: string; index: integer);
       procedure SetRightside(value: boolean);
@@ -431,15 +432,28 @@ begin
       result := StringReplace(result, '\$', IntToStr(value), [rfReplaceAll]);
 end;
 
-procedure TMenuSpriteEngine.InputNumber(digits: integer);
+procedure TMenuSpriteEngine.WaitForCurrentBox;
+begin
+   GScriptEngine.SetWaiting(
+      function: boolean begin result := (FCurrentBox = nil) or (FCurrentBox.FSignal.WaitFor(0) = wrSignaled) end);
+   GScriptEngine.ThreadWait;
+end;
+
+procedure TMenuSpriteEngine.InputNumber(const msg: string; digits: integer);
 begin
    FCurrentBox := FBoxes[mbtInput];
+   FCurrentBox.text := msg;
    TValueInputBox(FCurrentBox).setupInput(digits);
    TValueInputBox(FCurrentBox).placeCursor(0);
    TValueInputBox(FCurrentBox).canCancel := false;
    TValueInputBox(FCurrentBox).setupInput(digits);
    FBoxes[mbtInput].Visible := true;
-   FMenuState := msExclusiveShared;
+   try
+      FMenuState := msExclusiveShared;
+      WaitForCurrentBox;
+   finally
+      endMessage;
+   end;
 end;
 
 procedure TMenuSpriteEngine.inn(style, cost: integer);
@@ -481,7 +495,7 @@ begin
    FCurrentBox := box;
    try
       FMenuState := msExclusiveShared;
-      box.FSignal.WaitFor;
+      WaitForCurrentBox;
    finally
       endMessage;
    end;
@@ -524,9 +538,7 @@ begin
       if modal then
          FMenuState := msExclusiveShared
       else FMenuState := msShared;
-      GScriptEngine.SetWaiting(
-         function: boolean begin result := box.FSignal.WaitFor(0) = wrSignaled end);
-      GScriptEngine.ThreadWait;
+      WaitForCurrentBox;
    finally
       endMessage;
    end;
@@ -754,7 +766,7 @@ begin
       begin
          inc(counter);
          if input[counter] = '[' then
-            result := ParseInt(input, counter)
+            result := result + ParseInt(input, counter)
          else result := '\E' + input[counter];
       end;
       'O': result := '\E' + input[counter]; //TODO: support \O for vocab

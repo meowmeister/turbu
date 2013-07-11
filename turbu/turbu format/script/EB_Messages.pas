@@ -223,16 +223,16 @@ end;
 
 function TEBInputNumber.GetNodeText: string;
 const
-   LINE = 'Input Number: %d Digits, Var[%d]';
+   LINE = 'Input Number: "%s", %d Digits, Var[%d]';
 begin
-   result := format(LINE, [Values[0], Values[1]]);
+   result := format(LINE, [text, Values[0], Values[1]]);
 end;
 
 function TEBInputNumber.GetScriptText: string;
 const
-   LINE = 'Ints[%d] := inputNumber(%d);';
+   LINE = 'Ints[%d] := inputNumber(%s, %d);';
 begin
-   result := format(LINE, [Values[1], Values[0]]);
+   result := format(LINE, [Values[1], QuotedStr(text), Values[0]]);
 end;
 
 { TEBChoiceExpr }
