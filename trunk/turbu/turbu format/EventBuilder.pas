@@ -1,3 +1,21 @@
+{*****************************************************************************
+* The contents of this file are used with permission, subject to
+* the Mozilla Public License Version 1.1 (the "License"); you may
+* not use this file except in compliance with the License. You may
+* obtain a copy of the License at
+* http://www.mozilla.org/MPL/MPL-1.1.html
+*
+* Software distributed under the License is distributed on an
+* "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+* implied. See the License for the specific language governing
+* rights and limitations under the License.
+*
+*****************************************************************************
+*
+* This file was created by Mason Wheeler.  He can be reached for support at
+* www.turbu-rpg.com.
+*****************************************************************************}
+
 unit EventBuilder;
 
 interface
@@ -366,7 +384,7 @@ var
    dummy, lText: string;
 begin
    ValidateAssignment(line, dummy, lText);
-   self.Text := AnsiDequotedStr(lText, '''');
+   self.Text := StringReplace(AnsiDequotedStr(lText, ''''), '#13#10', #13#10, [rfReplaceAll]);
 end;
 
 procedure TEBObject.SetValues(const line: string);
@@ -629,7 +647,7 @@ begin
       Exit;
    indent2 := indent + '  ';
    if HasText then
-      list.Add(indent2 + format('Text = %s', [QuotedStr(Text)]));
+      list.Add(indent2 + format('Text = %s', [QuotedStr(StringReplace(Text, #13#10, '#13#10', [rfReplaceAll]))]));
    if Values.Count > 0 then
       list.Add(indent2 + format('Values = (%s)', [GetArgList]));
    SerializeProps(list, depth + 1);
