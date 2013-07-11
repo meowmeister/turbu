@@ -31,7 +31,7 @@ uses
    procedure clearPortrait;
    procedure setPortrait(filename: string; const index: integer; const rightside, flipped: boolean);
    function choiceBox(const msg: string; const choices: TArray<string>; const handler: integer): integer;
-   function inputNumber(const digits: integer): integer;
+   function inputNumber(const msg: string; digits: integer): integer;
    function inn(messageStyle, cost: integer): boolean;
 
    procedure RegisterScriptUnit(engine: TScriptEngine);
@@ -159,12 +159,12 @@ begin
    result := GMenuEngine.menuInt;
 end;
 
-function inputNumber(const digits: integer): integer;
+function inputNumber(const msg: string; digits: integer): integer;
 var
    oldValue: TMboxLocation;
 begin
    prepareMbox(oldValue);
-   GMenuEngine.inputNumber(digits);
+   GMenuEngine.inputNumber(msg, digits);
    setMessageBoxPosition(oldValue);
    result := GMenuEngine.menuInt;
 end;
@@ -209,7 +209,7 @@ begin
    input.ImportFunction('procedure clearPortrait');
    input.ImportFunction('procedure setPortrait(filename: string; const index: integer; const rightside, flipped: boolean);');
    input.ImportFunction('function showChoice(const input: string; const choices: TStringArray; handler: integer): integer;');
-   input.ImportFunction('function inputNumber(const digits: integer): integer');
+   input.ImportFunction('function inputNumber(const msg: string; digits: integer): integer');
    input.ImportFunction('function inn(messageStyle, cost: integer): boolean;');
 
    input.ImportFunction('function inputText(const base: string; portrait: integer): string');

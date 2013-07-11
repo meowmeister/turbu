@@ -1,3 +1,21 @@
+{*****************************************************************************
+* The contents of this file are used with permission, subject to
+* the Mozilla Public License Version 1.1 (the "License"); you may
+* not use this file except in compliance with the License. You may
+* obtain a copy of the License at
+* http://www.mozilla.org/MPL/MPL-1.1.html
+*
+* Software distributed under the License is distributed on an
+* "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+* implied. See the License for the specific language governing
+* rights and limitations under the License.
+*
+*****************************************************************************
+*
+* This file was created by Mason Wheeler.  He can be reached for support at
+* www.turbu-rpg.com.
+*****************************************************************************}
+
 unit turbu_2k_message_boxes;
 
 interface
@@ -50,6 +68,7 @@ type
       FOnValidate: TValidateEvent;
       FCursorPosition: smallint;
       FPromptLines: integer;
+      FTextDrawn: boolean;
       function Validate(const text: string): boolean;
    protected
       procedure PrepareText; virtual; abstract;
@@ -65,7 +84,6 @@ type
    TChoiceBox = class(TInputBox)
    private
       FChoices: TArray<string>;
-      FTextDrawn: boolean;
    protected
       procedure PrepareText; override;
       procedure DrawText; override;
@@ -81,6 +99,8 @@ type
       procedure changeInputResult(digit, value: byte);
       function getInputResult(digit: byte): byte;
       function computeInputResult: integer;
+   protected
+      procedure PrepareText; override;
    public
       procedure button(const input: TButtonCode); override;
       procedure setupInput(const digits: byte);
@@ -346,8 +366,8 @@ begin
       else Exit;
    end;
 
-   lPosition := FCursorPosition; //to suppress a compiler warning
-   max := high(FOptionEnabled) - (FPromptLines + FLastLineColumns);
+   lPosition := FCursorPosition;
+   max := high(FOptionEnabled) - FLastLineColumns;
    absMax := max + FLastLineColumns;
    case input of
       btn_enter:
@@ -422,7 +442,7 @@ begin
    if self.FDontChangeCursor then
       position := (self.FCursorPosition);
    FCursorPosition := position;
-   max := high(FOptionEnabled) - (FPromptLines + FLastLineColumns);
+   max := length(FOptionEnabled) - (FPromptLines + FLastLineColumns);
    if (position > max) and (FLastLineColumns > 0) then
    begin
       columns := FLastLineColumns;
@@ -533,23 +553,22 @@ begin
          ResetText;
          for value in FParsedText do
             DrawLine(value);
-         FPromptLines:= FTextLine;
          if FParsedText.Count > 0 then
             NewLine;
+         FPromptLines:= FTextLine;
          for i := 0 to high(FChoices) do
          begin
             value := FChoices[i];
             FOptionEnabled[i] := validate(value);
             parseText(value);
             for line in FParsedText do
-            begin
                DrawLine(line);
-            end;
             NewLine;
          end;
       finally
          FTextTarget.parent.popRenderTarget;
       end;
+      placeCursor(0);
       FTextDrawn := true;
    end;
 end;
@@ -640,6 +659,29 @@ begin
    result := FInputResult[digit];
 end;
 
+procedure TValueInputBox.PrepareText;
+var
+   value, line: string;
+   i: integer;
+begin
+   if not FTextDrawn then
+   begin
+      FTextTarget.parent.pushRenderTarget;
+      FTextTarget.SetRenderer;
+      try
+         ResetText;
+         for value in FParsedText do
+            DrawLine(value);
+         FPromptLines:= FTextLine;
+         if FParsedText.Count > 0 then
+            NewLine;
+      finally
+         FTextTarget.parent.popRenderTarget;
+      end;
+      FTextDrawn := true;
+   end;
+end;
+
 procedure TValueInputBox.changeInputResult(digit, value: byte);
 var
    dummy: string;
@@ -658,18 +700,9 @@ begin
 end;
 
 procedure TValueInputBox.setupInput(const digits: byte);
-var
-   dummy: string;
-   i: byte;
 begin
-   dummy := '0';
-   for I := 2 to digits do
-      dummy := dummy + '  0';
-   dummy := dummy + #3;
+   FInputResult := nil;
    setLength(FInputResult, digits);
-   for i := 0 to high(FInputResult) do
-      FInputResult[i] := 0;
-   text := dummy;
 end;
 
 end.
