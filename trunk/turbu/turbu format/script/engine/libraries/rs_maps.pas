@@ -86,11 +86,15 @@ begin
          newpoint := point(x, y);
          if GSpriteEngine.onMap(newpoint) then
          begin
-            if not GEnvironment.preserveSpriteOnTeleport then
-               GEnvironment.Party.ResetSprite;
-            GEnvironment.Party.Sprite.leaveTile;
-            GEnvironment.Party.Sprite.location := newpoint;
-            GSpriteEngine.centerOn(x, y);
+            RunThreadsafe(
+               procedure
+               begin
+                  if not GEnvironment.preserveSpriteOnTeleport then
+                     GEnvironment.Party.ResetSprite;
+                  GEnvironment.Party.Sprite.leaveTile;
+                  GEnvironment.Party.Sprite.location := newpoint;
+                  GSpriteEngine.centerOn(x, y);
+               end, true);
          end;
       end else GGameEngine.changeMaps(mapID, point(x, y));
       showScreen(trnDefault);
