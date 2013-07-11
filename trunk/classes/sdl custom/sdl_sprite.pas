@@ -567,8 +567,6 @@ begin
 
    if FList = nil then
       FList := TSpriteList.Create(false);
-   if sprite = nil then
-      asm int 3 end;
    FList.Add(Sprite);
    if Sprite.Z <> 0 then
    begin
