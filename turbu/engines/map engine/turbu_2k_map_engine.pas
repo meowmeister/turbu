@@ -417,8 +417,9 @@ var
 begin
    prepareMap(map);
    viewport := createViewport(FWaitingMap, FScrollPosition);
-   if not assigned(FMaps[FWaitingMap.id]) then
-   begin
+   if assigned(FMaps[FWaitingMap.id]) then
+      FMaps[FWaitingMap.id].ReloadMapObjects
+   else begin
       ensureTileset(FWaitingMap.tileset);
       FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
                                FShaderEngine, FCanvas, FDatabase.tileset[FWaitingMap.tileset],

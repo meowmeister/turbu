@@ -127,6 +127,7 @@ type
       function tileInFrontOf(var location: TSgPoint; direction: TFacing): TMapTile;
       procedure RecreateTileMatrix;
       function AddMapObject(obj: TRpgMapObject): TMapSprite;
+      procedure ReloadMapObjects;
       procedure DeleteMapObject(obj: TMapSprite);
       procedure SwapMapSprite(old, new: TMapSprite);
       function Passable(x, y: integer; direction: TFacing): boolean; overload;
@@ -376,6 +377,19 @@ begin
    try
       FSpriteLocations.RemovePair(obj.location, obj);
       FMapObjects.Remove(obj);
+   finally
+      TMonitor.Exit(FMapObjects);
+   end;
+end;
+
+procedure T2kSpriteEngine.ReloadMapObjects;
+var
+   sprite: TMapSprite;
+begin
+   TMonitor.Enter(FMapObjects);
+   try
+      for sprite in FMapObjects do
+         GEnvironment.AddEvent(sprite);
    finally
       TMonitor.Exit(FMapObjects);
    end;
