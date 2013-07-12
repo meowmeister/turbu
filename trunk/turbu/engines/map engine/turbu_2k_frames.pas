@@ -173,7 +173,7 @@ type
       procedure DrawLine(const value: string);
       procedure NewLine; virtual;
       procedure DrawSpecialChar(const line: string); virtual;
-      function GetIntegerValue: integer;
+      function GetIntegerValue(const value: string): integer;
       function GetDrawCoords: TRect;
       procedure ResetText; virtual;
 
@@ -204,7 +204,7 @@ const
 
 implementation
 uses
-   Windows, SysUtils, Math, OpenGL, Character,
+   Windows, SysUtils, StrUtils, Math, OpenGL, Character,
    commons, turbu_text_utils, turbu_2k_environment, turbu_OpenGL, turbu_database,
    turbu_2k_message_boxes, turbu_2k_sprite_engine, turbu_script_engine, rs_media;
 
@@ -680,6 +680,8 @@ begin
 end;
 
 procedure TCustomMessageBox.DrawFrame;
+var
+   i: integer;
 begin
    if not FFrameDrawn then
    begin
@@ -688,7 +690,8 @@ begin
       SDL_SetRenderDrawColor(FFrameTarget.parent.Renderer, 0, 0, 0, 0);
       FFrameTarget.Clear;
       SDL_SetRenderDrawColor(FFrameTarget.parent.Renderer, 1, 1, 1, 1);
-      inherited DoDraw;
+      for i := 0 to FSpriteList.Count - 1 do
+         FSpriteList[i].Draw;
       FFrameTarget.parent.popRenderTarget;
       FFrameDrawn := true;
       SDL_SetTextureBlendMode(FFrameTarget.handle, [sdlbBlend]);
@@ -720,12 +723,15 @@ begin
    FSignal.SetEvent;
 end;
 
-function TCustomMessageBox.GetIntegerValue: integer;
+function TCustomMessageBox.GetIntegerValue(const value: string): integer;
+var
+   head, tail: string;
 begin
-   inc(FTextCounter);
-   if FParsedText[FTextCounter] = '\V' then
-      result := GEnvironment.Ints[GetIntegerValue]
-   else if not TryStrToInt(FParsedText[FTextCounter], result) then
+   head := copy(value, 1, 2);
+   tail := copy(value, 3);
+   if AnsiStartsStr('\V', tail) then
+      result := GEnvironment.Ints[GetIntegerValue(tail)]
+   else if not TryStrToInt(tail, result) then
       Abort;
 end;
 
@@ -796,8 +802,8 @@ begin
    case line[2] of
       '$': DrawLine(IntToStr(GEnvironment.money));
       '_': FTextPosX := FTextPosX + HALF_CHAR;
-      'C': FTextColor := clamp(GetIntegerValue, 1, 20);
-      'V': DrawLine(IntToStr(GEnvironment.Ints[GetIntegerValue]));
+      'C': FTextColor := clamp(GetIntegerValue(line), 1, 20);
+      'V': DrawLine(IntToStr(GEnvironment.Ints[GetIntegerValue(line)]));
    end;
 end;
 
