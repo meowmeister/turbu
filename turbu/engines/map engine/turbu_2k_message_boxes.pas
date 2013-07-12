@@ -230,10 +230,10 @@ begin
          '_': FTextPosX := FTextPosX + HALF_CHAR;
          'E': Abort; //TODO: implement error reporting
          'e': Abort; //TODO: implement error reporting
-         'C': FTextColor := clamp(GetIntegerValue, 1, 20);
-         'S': SetTextRate(clamp(GetIntegerValue, 1, 20));
-         'N': FSpecialText := GetHeroName(GetIntegerValue);
-         'V': FSpecialText := IntToStr(GEnvironment.Ints[GetIntegerValue]);
+         'C': FTextColor := clamp(GetIntegerValue(FParsedText[FTextCounter]), 1, 20);
+         'S': SetTextRate(clamp(GetIntegerValue(FParsedText[FTextCounter]), 1, 20));
+         'N': FSpecialText := GetHeroName(GetIntegerValue(FParsedText[FTextCounter]));
+         'V': FSpecialText := IntToStr(GEnvironment.Ints[GetIntegerValue(FParsedText[FTextCounter])]);
          'T': Abort; //TODO: implement string array in Environment
          'F': Abort; //TODO: implement float array in Environment
          'O': Abort; //TODO: implement vocab display
