@@ -357,10 +357,10 @@ end;
 
 function T2kEnvironment.Random(low, high: integer): integer;
 var
-   dummy: integer;
+   spread: integer;
 begin
-   dummy := abs(high - low);
-   result := system.Random(dummy) + min(high, low);
+   spread := abs(high - low);
+   result := system.Random(spread) + min(high, low);
 end;
 
 procedure T2kEnvironment.RemoveImage(image: TRpgImage);
