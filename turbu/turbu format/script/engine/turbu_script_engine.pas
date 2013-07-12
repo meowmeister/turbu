@@ -385,7 +385,7 @@ var
    lPage: TRpgEventPage;
 begin
    context := TThread.CurrentThread as TScriptThread;
-   lPage := obj.pages[page];
+   lPage := obj.pages[page - 1];
    assert(assigned(context.FPage));
    context.PushPage(lPage);
    try
