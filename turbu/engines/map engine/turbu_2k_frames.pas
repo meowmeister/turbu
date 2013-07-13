@@ -374,7 +374,7 @@ begin
    FBoxes[mbtMessage] := TMessageBox.Create(self, size);
    FBoxes[mbtChoice] := TChoiceBox.Create(self, size);
    FBoxes[mbtPrompt] := TPromptBox.Create(self, size);
-   FBoxes[mbtInput] := TInputBox.Create(self, size);
+   FBoxes[mbtInput] := TValueInputBox.Create(self, size);
    for boxtype := Low(TMessageBoxTypes) to High(TMessageBoxTypes) do
       FBoxes[boxtype].OnPlaySound := rs_media.PlaySystemSound;
 end;
