@@ -35,8 +35,6 @@ type
    private //drawing section
       FTextRate: single;
       FRemainder: single;
-      FSpecialText: string;
-      FSpecialIndex: integer;
       FImmediate: boolean;
 
       procedure DrawNextChar;
@@ -45,6 +43,7 @@ type
    protected
       procedure NewLine; override;
       procedure DrawSpecialChar(const line: string); override;
+      procedure InsertText(const text: string);
       procedure parseText(const input: string); override;
       procedure DoDraw; override;
       procedure ResetText; override;
@@ -214,13 +213,21 @@ begin
    else result := GEnvironment.Heroes[value].name;
 end;
 
+procedure TMessageBox.InsertText(const text: string);
+var
+   i: integer;
+begin
+   for i := 1 to length(text) do
+      FParsedText.Insert(FTextCounter + i, text[i]);
+end;
+
 procedure TMessageBox.DrawSpecialChar(const line: string);
 const HALF_CHAR = 3;
 begin
    assert(line[1] = '\');
    try
       case line[2] of
-         '$': FSpecialText := IntToStr(GEnvironment.money);
+         '$': InsertText(IntToStr(GEnvironment.money));
          '!':; //TODO: implement this
          '.': FRemainder := FRemainder - 0.25;  //quarter-second delay
          '|': FRemainder := FRemainder - 1;     //full-second delay
@@ -232,8 +239,8 @@ begin
          'e': Abort; //TODO: implement error reporting
          'C': FTextColor := clamp(GetIntegerValue(FParsedText[FTextCounter]), 1, 20);
          'S': SetTextRate(clamp(GetIntegerValue(FParsedText[FTextCounter]), 1, 20));
-         'N': FSpecialText := GetHeroName(GetIntegerValue(FParsedText[FTextCounter]));
-         'V': FSpecialText := IntToStr(GEnvironment.Ints[GetIntegerValue(FParsedText[FTextCounter])]);
+         'N': InsertText(GetHeroName(GetIntegerValue(FParsedText[FTextCounter])));
+         'V': InsertText(IntToStr(GEnvironment.Ints[GetIntegerValue(FParsedText[FTextCounter])]));
          'T': Abort; //TODO: implement string array in Environment
          'F': Abort; //TODO: implement float array in Environment
          'O': Abort; //TODO: implement vocab display
@@ -241,8 +248,6 @@ begin
    except
       on EAbort do ;
    end;
-   if FSpecialText <> '' then
-      FSpecialIndex := 1;
 end;
 
 procedure TMessageBox.DrawNextChar;
@@ -256,20 +261,8 @@ begin
          FRemainder := FRemainder + (TRpgTimestamp.FrameLength / 1000);
          while (FTextCounter < FParsedText.Count) and (FImmediate or (FRemainder > FTextRate)) do
          begin
-            if (FSpecialIndex > 0) and (FSpecialIndex <= length(FSpecialText)) then
-            begin
-               DrawChar(FSpecialText[FSpecialIndex]);
-               inc(FSpecialIndex);
-            end
-            else begin
-               if FSpecialIndex > 0 then
-               begin
-                  FSpecialIndex := 0;
-                  FSpecialText := '';
-               end;
-               DrawChar(FParsedText[FTextCounter]);
-               inc(FTextCounter);
-            end;
+            DrawChar(FParsedText[FTextCounter]);
+            inc(FTextCounter);
             if not FImmediate then
                FRemainder := FRemainder - FTextRate;
          end;
@@ -315,8 +308,6 @@ procedure TMessageBox.ResetText;
 begin
    inherited ResetText;
    FParsedText.Clear;
-   FSpecialText := '';
-   FSpecialIndex := 0;
    FImmediate := false;
    FRemainder := 0;
    SetTextRate(1);
