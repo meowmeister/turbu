@@ -444,7 +444,6 @@ begin
    FCurrentBox := FBoxes[mbtInput];
    FCurrentBox.text := msg;
    TValueInputBox(FCurrentBox).setupInput(digits);
-   TValueInputBox(FCurrentBox).placeCursor(0);
    TValueInputBox(FCurrentBox).canCancel := false;
    TValueInputBox(FCurrentBox).setupInput(digits);
    FBoxes[mbtInput].Visible := true;

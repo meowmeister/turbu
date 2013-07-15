@@ -261,8 +261,8 @@ type
       FImages: TSdlImages;
       FCanvas: TSdlCanvas;
       FDestroying: boolean;
-      FRenderer: TSpriteRenderer;
    protected
+      FRenderer: TSpriteRenderer;
       function GetHeight: Integer; virtual;
       function GetWidth: Integer; virtual;
    public
