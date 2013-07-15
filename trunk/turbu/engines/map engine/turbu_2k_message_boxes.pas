@@ -73,6 +73,7 @@ type
       procedure PrepareText; virtual; abstract;
       procedure DrawText; virtual; abstract;
       procedure DoDraw; override;
+      procedure BasicDrawText;
    public
       procedure button(const input: TButtonCode); override;
       procedure placeCursor(position: smallint); virtual;
@@ -100,9 +101,11 @@ type
       function computeInputResult: integer;
    protected
       procedure PrepareText; override;
+      procedure DrawText; override;
    public
       procedure button(const input: TButtonCode); override;
       procedure setupInput(const digits: byte);
+      procedure placeCursor(position: smallint); override;
       property inputResult[x: byte]: byte read getInputResult write changeInputResult;
    end;
 
@@ -341,6 +344,24 @@ end;
 
 { TInputBox }
 
+procedure TInputBox.BasicDrawText;
+const
+   TEXTV = 0.1;
+   TEXTH = 0.025;
+var
+   dest: TRect;
+   xVal, yVal: single;
+begin
+   dest := GetDrawCoords;
+   xVal := dest.right * TEXTH;
+   yVal := dest.Bottom * TEXTV;
+   inc(dest.Left, round(xVal));
+   dec(dest.right, round(xVal * 2));
+   inc(dest.Top, round(yVal));
+   dec(dest.Bottom, round(yVal * 2));
+   SDL_RenderCopy(FTextTarget.parent.Renderer, FTextTarget.handle, nil, @dest);
+end;
+
 procedure TInputBox.button(const input: TButtonCode);
 var
    max, absMax, lPosition: smallint;
@@ -565,21 +586,8 @@ begin
 end;
 
 procedure TChoiceBox.DrawText;
-const
-   TEXTV = 0.1;
-   TEXTH = 0.025;
-var
-   dest: TRect;
-   xVal, yVal: single;
 begin
-   dest := GetDrawCoords;
-   xVal := dest.right * TEXTH;
-   yVal := dest.Bottom * TEXTV;
-   inc(dest.Left, round(xVal));
-   dec(dest.right, round(xVal * 2));
-   inc(dest.Top, round(yVal));
-   dec(dest.Bottom, round(yVal * 2));
-   SDL_RenderCopy(FTextTarget.parent.Renderer, FTextTarget.handle, nil, @dest);
+   BasicDrawText;
 end;
 
 procedure TChoiceBox.parseText(const input: string);
@@ -644,16 +652,48 @@ begin
       result := (result * 10) + FInputResult[i];
 end;
 
+procedure TValueInputBox.DrawText;
+begin
+   BasicDrawText;
+end;
+
 function TValueInputBox.getInputResult(digit: byte): byte;
 begin
    assert(digit < length(FInputResult));
    result := FInputResult[digit];
 end;
 
+procedure TValueInputBox.placeCursor(position: smallint);
+var
+   coords: TRect;
+   width: word;
+   max: smallint;
+begin
+   max := length(FInputResult);
+   width := SEPARATOR;
+   assert(length(FInputResult) > 0);
+   position := min(position, high(FInputResult));
+   coords := rect(8 + (position * (width + SEPARATOR)),
+                  FPromptLines * 15 + FBounds.Top + (ord(FPosition) * 80) + 11,
+                  width * 2, 18);
+   inc(coords.Bottom, coords.Top);
+   inc(coords.Right, coords.Left);
+   if FCursorPosition > max then
+      inc(coords.top, (FCursorPosition div FColumns) * 15);
+   FCursorPosition := position;
+
+   with TMenuSpriteEngine(FEngine).cursor do
+   begin
+      Visible := true;
+      layout(coords);
+   end;
+end;
+
 procedure TValueInputBox.PrepareText;
 var
    value, line: string;
    i: integer;
+   digit: Byte;
 begin
    if not FTextDrawn then
    begin
@@ -662,10 +702,14 @@ begin
       try
          ResetText;
          for value in FParsedText do
+         begin
             DrawLine(value);
-         FPromptLines:= FTextLine;
-         if FParsedText.Count > 0 then
             NewLine;
+         end;
+         FPromptLines := FTextLine;
+         for digit in FInputResult do
+            DrawLine(IntToStr(digit) + ' ');
+         placeCursor(FCursorPosition);
       finally
          FTextTarget.parent.popRenderTarget;
       end;
@@ -687,7 +731,7 @@ begin
    dummy := intToStr(FInputResult[0]);
    for I := 1 to high(FInputResult) do
       dummy := dummy + '  ' + intToStr(FInputResult[i]);
-   text := dummy;
+   FTextDrawn := false;
 end;
 
 procedure TValueInputBox.setupInput(const digits: byte);
