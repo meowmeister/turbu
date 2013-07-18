@@ -468,7 +468,7 @@ begin
    FTiles.Free;
    FMap.Free;
    inherited;
- end;
+end;
 
 procedure T2kSpriteEngine.DrawNormal;
 var
@@ -526,7 +526,9 @@ begin
    repeat
       FBgImage.Y := WorldY;
       repeat
+         FRenderer.Reset;
          FBgImage.Draw;
+         FRenderer.Render;
          FBgImage.Y := FBgImage.Y + FBgImage.PatternHeight;
       until FBgImage.y + FBgImage.OffsetY > WorldY + Canvas.Height;
       FBgImage.X := FBgImage.X + FBgImage.PatternWidth;
