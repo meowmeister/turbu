@@ -531,6 +531,7 @@ begin
    obj.CheckRead('PreserveSpriteOnTeleport', FPreserveSpriteOnTeleport);
    obj.CheckRead('SaveEnabled', FSaveEnabled);
    obj.checkEmpty;
+   self.UpdateEvents;
 end;
 
 function T2kEnvironment.GetHero(const i: integer): TRpgHero;
