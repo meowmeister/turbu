@@ -10,6 +10,7 @@ uses
    SysUtils, IOUtils, Windows, Diagnostics,
    logs,
    turbu_2k_environment, turbu_2k_map_engine, turbu_classes,
+   rs_media,
    dwsJSON;
 
 procedure SaveTo(const filename: string; mapID: integer; explicit: boolean);
@@ -25,6 +26,8 @@ begin
          writer.WriteInteger(mapID);
          writer.WriteName('Environment');
          GEnvironment.Serialize(writer, explicit);
+         writer.WriteName('Sound');
+         rs_media.SerializeSound(writer);
       writer.EndObject;
       TFile.WriteAllText(filename, writer.ToString, TEncoding.UTF8);
       timer.Stop;
@@ -50,6 +53,13 @@ begin
       GEnvironment.Deserialize(value as TdwsJSONObject);
       if value.ElementCount = 0 then
          value.free;
+      value := obj.Items['Sound'];
+      if assigned(value) then
+      begin
+         rs_media.DeserializeSound(value as TdwsJSONObject);
+         value.Free;
+      end;
+
       obj.checkEmpty;
    finally
       obj.Free;

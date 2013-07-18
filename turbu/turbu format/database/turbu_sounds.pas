@@ -20,7 +20,8 @@ unit turbu_sounds;
 interface
 uses
    classes,
-   turbu_classes;
+   turbu_classes,
+   dwsJSON;
 
 type
    TSoundTemplate = class abstract(TRpgDatafile)
@@ -37,6 +38,8 @@ type
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
       constructor assign(const source: TSoundTemplate);
+      procedure Serialize(writer: TdwsJSONWriter);
+      procedure Deserialize(obj: TdwsJSONObject);
 
       property filename: string read FName write setFilename;
       property fadeIn: integer read FFadeIn write FFadeIn;
@@ -68,6 +71,28 @@ begin
    FFadein := source.FFadein;
    FTempo := source.FTempo;
    FBalance := source.FBalance;
+   FVolume := source.FVolume;
+end;
+
+procedure TSoundTemplate.Serialize(writer: TdwsJSONWriter);
+begin
+   writer.BeginObject;
+      writer.CheckWrite('Name', FName, '');
+      writer.CheckWrite('FadeIn', FFadeIn, 0);
+      writer.CheckWrite('Tempo', FTempo, 0);
+      writer.CheckWrite('Balance', FBalance, 0);
+      writer.CheckWrite('Volume', FVolume, 0);
+   writer.EndObject;
+end;
+
+procedure TSoundTemplate.Deserialize(obj: TdwsJSONObject);
+begin
+   obj.CheckRead('Name', FName);
+   obj.CheckRead('FadeIn', FFadeIn);
+   obj.CheckRead('Tempo', FTempo);
+   obj.CheckRead('Balance', FBalance);
+   obj.CheckRead('Volume', FVolume);
+   obj.CheckEmpty;
 end;
 
 class function TSoundTemplate.keyChar: ansiChar;
