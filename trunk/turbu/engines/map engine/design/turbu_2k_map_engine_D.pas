@@ -207,8 +207,6 @@ begin
 end;
 
 function T2kMapEngineD.InitializeDesigner(window: TSdlWindow; const database: string): TSdlWindow;
-var
-   script: string;
 begin
    if FInitialized then
       Exit(window);
@@ -540,7 +538,7 @@ end;
 
 procedure T2kMapEngineD.DrawRow(y: integer; const drawRect: TRect; const predicate: TPredicate<TsgPoint>);
 var
-   x, counter: integer;
+   x, index: integer;
    offset, drawSize: TsgPoint;
    tileValue: TTileRef;
 begin
@@ -551,14 +549,11 @@ begin
          Continue;
       //(((a mod b) + b) mod b) to compensate for negative numbers
       offset := (((sgPoint(x, y) - FDrawFrom) mod drawSize) + drawSize) mod drawSize;
-      counter := (offset.y * FPaletteList[0]) + offset.x + 1;
+      index := (offset.y * FPaletteList[0]) + offset.x + 1;
 
-      tileValue := FCurrentMap.tileset.tile(FPaletteList[counter], FCurrentLayer);
+      tileValue := FCurrentMap.tileset.tile(FPaletteList[index], FCurrentLayer);
       BeingDrawn(x,y);
       FCurrentMap.assignTile(x, y, FCurrentLayer, tileValue);
-      inc(counter);
-      if counter = Length(FPaletteList) then
-         counter := 1;
    end;
 end;
 
