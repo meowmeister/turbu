@@ -19,7 +19,7 @@ unit rs_media;
 
 interface
 uses
-   turbu_sounds, turbu_defs;
+   turbu_sounds, turbu_defs, dwsJSON;
 
    procedure playSound(name: string; volume, tempo, balance: integer);
    procedure StopMusic;
@@ -37,10 +37,13 @@ uses
    procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);
    procedure SetSystemMusicData(style: TBgmTypes; music: TRpgMusic);
 
+   procedure SerializeSound(writer: TdwsJSONWriter);
+   procedure DeserializeSound(obj: TdwsJSONObject);
+
 implementation
 uses
    SysUtils,
-   commons, ArchiveInterface, ArchiveUtils, turbu_script_engine,
+   commons, ArchiveInterface, ArchiveUtils, turbu_script_engine, turbu_classes,
    Disharmony;
 
 var
@@ -198,6 +201,111 @@ begin
       LFadedBGM.fadeIn := time;
       PlayMusicData(LFadedBGM);
    end;
+end;
+
+procedure SerializeSystemSound(writer: TdwsJSONWriter);
+var
+   currentMusic: TRpgMusic;
+   currentSound: TRpgSound;
+begin
+   writer.WriteName('SystemSounds');
+   writer.BeginArray;
+      for currentSound in LSystemSounds do
+         currentSound.Serialize(writer);
+   writer.EndArray;
+   writer.WriteName('SystemMusic');
+   writer.BeginArray;
+      for currentMusic in LSystemMusic do
+         currentMusic.Serialize(writer);
+   writer.EndArray;
+end;
+
+procedure SerializeSound(writer: TdwsJSONWriter);
+var
+   current: TRpgMusic;
+begin
+   current := nil;
+   writer.BeginObject;
+      writer.WriteName('CurrentBGM');
+      try
+         MemorizeMusic(current);
+         current.Serialize(writer);
+      finally
+         current.Free;
+      end;
+      if assigned(LFadedBGM) then
+      begin
+         writer.WriteName('FadedBGM');
+         LFadedBGM.serialize(writer);
+      end;
+      if assigned(LMemorizedBGM) then
+      begin
+         writer.WriteName('MemorizedBGM');
+         LMemorizedBGM.serialize(writer);
+      end;
+      SerializeSystemSound(writer);
+   writer.EndObject;
+end;
+
+procedure DeserializeSystemSound(obj: TdwsJSONObject);
+var
+   item: TdwsJSONValue;
+   arr: TdwsJSONArray;
+   sfx: TSfxTypes;
+   bgm: TBgmTypes;
+begin
+   arr := obj.Items['SystemSounds'] as TdwsJSONArray;
+   for sfx := Low(TSfxTypes) to High(TSfxTypes) do
+   begin
+      LSystemSounds[sfx].Free;
+      LSystemSounds[sfx] := TRpgSound.Create;
+      LSystemSounds[sfx].deserialize(arr.Elements[ord(sfx)] as TdwsJSONObject);
+   end;
+   arr.Free;
+
+   arr := obj.Items['SystemMusic'] as TdwsJSONArray;
+   for bgm := Low(TBgmTypes) to High(TBgmTypes) do
+   begin
+      LSystemMusic[bgm].Free;
+      LSystemMusic[bgm] := TRpgMusic.Create;
+      LSystemMusic[bgm].deserialize(arr.Elements[ord(bgm)] as TdwsJSONObject);
+   end;
+   arr.Free;
+end;
+
+procedure DeserializeSound(obj: TdwsJSONObject);
+var
+   item: TdwsJSONValue;
+   current: TRpgMusic;
+begin
+   item := obj.Items['FadedBGM'];
+   if assigned(item) then
+   begin
+      LFadedBGM.Free;
+      LFadedBGM := TRpgMusic.Create;
+      LFadedBGM.deserialize(item as TdwsJSONObject);
+      item.Free;
+   end;
+   item := obj.Items['MemorizedBGM'];
+   if assigned(item) then
+   begin
+      LMemorizedBGM.Free;
+      LMemorizedBGM := TRpgMusic.Create;
+      LMemorizedBGM.deserialize(item as TdwsJSONObject);
+      item.Free;
+   end;
+   DeserializeSystemSound(obj);
+   item := obj.Items['CurrentBGM'];
+   assert(assigned(item));
+   current := TRpgMusic.Create;
+   try
+      current.deserialize(item as TdwsJSONObject);
+      item.Free;
+      PlayMusicData(current);
+   finally
+      current.Free;
+   end;
+   obj.CheckEmpty;
 end;
 
 procedure FreeSoundsAndMusic;
