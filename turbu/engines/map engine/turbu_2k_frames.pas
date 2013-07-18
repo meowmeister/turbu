@@ -22,7 +22,8 @@ uses
    Types, Classes, SyncObjs,
    turbu_defs, timing,
    sg_defs, sdl_sprite, sdl_ImageManager, sdl_canvas,
-   sdl_13;
+   sdl_13,
+   dwsJSON;
 
 type
    TSystemRects = (srWallpaper, srFrameTL, srFrameTR, srFrameBL, srFrameBR,
@@ -94,6 +95,9 @@ type
    public
       constructor Create(graphic: TSystemImages; canvas: TSdlCanvas; images: TSdlImages);
       destructor Destroy; override;
+      procedure SerializePortrait(writer: TdwsJSONWriter);
+      procedure DeserializePortrait(obj: TdwsJSONObject);
+
       procedure ShowMessage(const msg: string; modal: boolean);
       procedure inn(style, cost: integer);
       procedure ChoiceBox(const msg: string; const responses: TArray<string>;
@@ -206,7 +210,8 @@ implementation
 uses
    Windows, SysUtils, StrUtils, Math, OpenGL, Character,
    commons, turbu_text_utils, turbu_2k_environment, turbu_OpenGL, turbu_database,
-   turbu_2k_message_boxes, turbu_2k_sprite_engine, turbu_script_engine, rs_media;
+   turbu_2k_message_boxes, turbu_2k_sprite_engine, turbu_script_engine, rs_media,
+   turbu_classes;
 
 const
    ARROW_DISPLACEMENT: TSgPoint = (x: 8; y: 0);
@@ -387,6 +392,41 @@ begin
    FSystemGraphic.Free;
    EndMessage;
    inherited Destroy;
+end;
+
+procedure TMenuSpriteEngine.SerializePortrait(writer: TdwsJSONWriter);
+var
+   portrait: TSprite;
+begin
+   portrait := GetPortrait;
+   if (not portrait.Visible) or (portrait.ImageName = '') then
+      Exit;
+   writer.CheckWrite('Name', portrait.ImageName, '');
+   writer.CheckWrite('Index', portrait.ImageIndex, -1);
+   writer.WriteName('Flipped'); writer.WriteBoolean(portrait.MirrorX);
+   writer.WriteName('Rightside'); writer.WriteBoolean((FBoxes[mbtMessage] as TMessageBox).rightside);
+end;
+
+procedure TMenuSpriteEngine.DeserializePortrait(obj: TdwsJSONObject);
+var
+   portrait: TSprite;
+begin
+   portrait := GetPortrait;
+   if obj.ElementCount > 0 then
+   begin
+      assert(obj.ElementCount = 4);
+      portrait.Visible := true;
+      portrait.ImageName := obj.Items['Name'].AsString;
+      portrait.ImageIndex := obj.Items['Index'].AsInteger;
+      portrait.MirrorX := obj.Items['Flipped'].AsBoolean;
+      SetRightside(obj.Items['Rightside'].AsBoolean);
+      obj.Items['Name'].Free;
+      obj.Items['Index'].Free;
+      obj.Items['Flipped'].Free;
+      obj.Items['Rightside'].Free;
+      obj.CheckEmpty;
+   end
+   else portrait.Visible := false;
 end;
 
 procedure TMenuSpriteEngine.EndMessage;

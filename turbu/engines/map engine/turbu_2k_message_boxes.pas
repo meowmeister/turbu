@@ -58,7 +58,7 @@ type
 //      procedure setupInput(const digits: byte);
 
       property portrait: TSprite read FPortrait;
-      property rightside: boolean write setRightside;
+      property rightside: boolean read FRightPortrait write setRightside;
    end;
 
    TInputBox = class(TCustomMessageBox)
