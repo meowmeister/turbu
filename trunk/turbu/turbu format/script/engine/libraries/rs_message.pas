@@ -20,13 +20,13 @@ unit rs_message;
 interface
 uses
    classes,
-   turbu_defs, turbu_script_engine;
+   turbu_defs, turbu_script_engine,
+   dwsJSON;
 
    procedure showMessage(const msg: string);
    procedure setMessageBoxPosition(const position: TMboxLocation);
    procedure setMessageBoxVisible(const value: boolean);
    procedure setMessageModal(const value: boolean);
-   procedure prepareMbox(out oldValue: TMboxLocation);
    procedure messageOptions(const transparent: boolean; const position: TMboxLocation; const dontHideHero, modal: boolean);
    procedure clearPortrait;
    procedure setPortrait(filename: string; const index: integer; const rightside, flipped: boolean);
@@ -35,12 +35,14 @@ uses
    function inn(messageStyle, cost: integer): boolean;
 
    procedure RegisterScriptUnit(engine: TScriptEngine);
+   procedure SerializeMessageState(writer: TdwsJSONWriter);
+   procedure DeserializeMessageState(obj: TdwsJSONObject);
 
 implementation
 uses
    SysUtils, SyncObjs,
    commons, turbu_constants, turbu_2k_sprite_engine, turbu_2k_frames, rs_media,
-   turbu_2k_environment, turbu_2k_map_engine,
+   turbu_2k_environment, turbu_2k_map_engine, turbu_classes,
    rsCompiler, rsExec,
    ArchiveUtils;
 
@@ -238,6 +240,36 @@ end;
 procedure RegisterScriptUnit(engine: TScriptEngine);
 begin
    engine.RegisterUnit('messages', RegisterMessagesC, RegisterMessagesE);
+end;
+
+procedure SerializeMessageState(writer: TdwsJSONWriter);
+begin
+   writer.BeginObject;
+      writer.WriteName('Visible'); writer.WriteBoolean(GMenuEngine.boxVisible);
+      writer.WriteName('Position'); writer.WriteInteger(ord(GMenuEngine.position));
+      writer.WriteName('Cautious'); writer.WriteBoolean(FMboxCautious);
+      writer.WriteName('Modal'); writer.WriteBoolean(FMboxModal);
+      writer.WriteName('Portrait');
+      writer.BeginObject;
+         GMenuEngine.SerializePortrait(writer);
+      writer.EndObject;
+   writer.EndObject;
+end;
+
+procedure DeserializeMessageState(obj: TdwsJSONObject);
+var
+   portrait: TdwsJSONObject;
+begin
+   GMenuEngine.boxVisible := obj.Items['Visible'].AsBoolean;
+   setMessageBoxPosition(TMboxLocation(obj.Items['Position'].AsInteger));
+   obj.Items['Visible'].Free;
+   obj.Items['Position'].Free;
+   obj.CheckRead('Cautious', FMboxCautious);
+   obj.CheckRead('Modal', FMboxModal);
+   portrait := obj.Items['Portrait'] as TdwsJSONObject;
+   GMenuEngine.DeserializePortrait(portrait);
+   portrait.Free;
+   obj.CheckEmpty;
 end;
 
 initialization
