@@ -595,9 +595,13 @@ begin
       end;
       if not Terminated then
       begin
-         FSignal.ResetEvent;
-         FParent.SaveToPool(self);
-         FSignal.WaitFor;
+         if assigned(FOwnedExec) then
+            Terminate
+         else begin
+            FSignal.ResetEvent;
+            FParent.SaveToPool(self);
+            FSignal.WaitFor;
+         end;
       end;
    end;
 end;
