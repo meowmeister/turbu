@@ -85,7 +85,7 @@ type
       procedure LoadLibrary(const script: string);
       procedure LoadEnvironment(proc: TRegisterEnvironmentProc);
       procedure RegisterUnit(const name: string; const comp: TrsCompilerRegisterProc; const exec: TrsExecImportProc);
-      procedure RunScript(const name: string); overload; inline;
+      procedure RunScript(const name: string); overload;
       procedure RunScript(const name: string; const args: TArray<TValue>); overload;
       procedure RunObjectScript(obj: TRpgMapObject; page: integer); overload;
       procedure KillAll;
@@ -125,7 +125,7 @@ var
 
 implementation
 uses
-   Math, Forms,
+   Math,
    turbu_defs, turbu_battle_engine, {$IFDEF DEBUG}logs,{$ENDIF}
    rs_media,
    rsDefs,
@@ -285,7 +285,12 @@ begin
       if TThread.CurrentThread.ThreadID = MainThreadID then
          CheckSynchronize();
    until done;
-   FThreadPool.Clear;
+   FThreadLock.Enter;
+   try
+      FThreadPool.Clear;
+   finally
+      FThreadLock.Leave;
+   end;
 end;
 
 procedure TScriptEngine.AbortThread;
