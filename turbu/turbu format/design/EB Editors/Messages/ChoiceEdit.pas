@@ -22,7 +22,7 @@ interface
 
 uses
   ExtCtrls, StdCtrls, Classes, Controls,
-  EbEdit, EventBuilder;
+  EbEdit, EventBuilder, EB_Messages;
 
 type
    [EditorCategory('Messages', 'Show Choice')]
@@ -32,22 +32,27 @@ type
       txtChoice2: TEdit;
       txtChoice3: TEdit;
       txtChoice4: TEdit;
-      grpCancel: TRadioGroup;
       GroupBox1: TGroupBox;
+      grpCancel: TRadioGroup;
+      txtLines: TMemo;
       procedure FormCreate(Sender: TObject);
    private
       FEdits: array[1..4] of TEdit;
+      FIsExpr: boolean;
       function GetMaxAnswers: integer;
+      procedure UploadChoiceExpr(obj: TEBChoiceExpr);
+      procedure DownloadChoiceExpr(obj: TEBChoiceExpr);
    protected
       procedure UploadObject(obj: TEbObject); override;
       procedure DownloadObject(obj: TEbObject); override;
       function NewClassType: TEbClass; override;
       function ValidateForm: boolean; override;
+      procedure PrepareNewObject(obj: TEBObject); override;
    end;
 
 implementation
 uses
-   EB_Messages, EB_RpgScript, EB_Expressions;
+   EB_RpgScript, EB_Expressions;
 
 {$R *.dfm}
 
@@ -76,26 +81,38 @@ begin
    result := TEBChoiceMessage;
 end;
 
+procedure TfrmShowChoice.PrepareNewObject(obj: TEBObject);
+begin
+   assert(obj.ChildCount = 0);
+   TEBChoiceExpr.Create(obj);
+end;
+
+procedure TfrmShowChoice.UploadChoiceExpr(obj: TEBChoiceExpr);
+var
+   i: integer;
+begin
+   grpCancel.ItemIndex := obj.values[0];
+   txtLines.Text := obj.Text;
+   for i := 0 to high(obj.Choices) do
+      FEdits[i + 1].Text := obj.Choices[i];
+   for i := length(obj.Choices) + 1 to 4 do
+      FEdits[i].Text := '';
+end;
+
 procedure TfrmShowChoice.UploadObject(obj: TEbObject);
 var
    sub: TEbObject;
-   counter: integer;
 begin
-   assert(obj is TEBChoiceMessage);
-   counter := 0;
-   for sub in obj do
+   if (obj.ClassType = TEBChoiceMessage) then
    begin
-      if sub is TEbElseBlock then
-         Continue;
-      if sub is TEBEndCase then
-         Break;
-      assert(sub is TEbCaseBlock);
-      inc(counter);
-      FEdits[counter].text := sub.text;
+      sub := obj.children[0];
+      assert(sub.ClassType = TEBChoiceExpr);
+      UploadChoiceExpr(TEBChoiceExpr(sub));
+   end
+   else begin
+      UploadChoiceExpr(obj as TEBChoiceExpr);
+      FIsExpr := true;
    end;
-   for counter := counter + 1 to 4 do
-      FEdits[counter].text := '';
-   grpCancel.ItemIndex := obj.values[0];
 end;
 
 function TfrmShowChoice.ValidateForm: boolean;
@@ -108,6 +125,23 @@ begin
       ValidateError(txtChoice1, 'Please fill in at least one choice');
    if (grpCancel.ItemIndex > max) and (grpCancel.ItemIndex < grpcancel.Items.count - 1) then
       ValidateError(grpCancel, 'Cancel handler must be a valid choice');
+   if max + txtLines.Lines.Count > 4 then
+      ValidateError(txtLines, 'Number of message lines + number of options should not be more than 4');
+end;
+
+procedure TfrmShowChoice.DownloadChoiceExpr(obj: TEBChoiceExpr);
+var
+   count, i: integer;
+   choices: TArray<string>;
+begin
+   obj.Clear;
+   count := GetMaxAnswers;
+   setLength(choices, count);
+   for i := 1 to count do
+      choices[i - 1] := FEdits[i].Text;
+   obj.Choices := choices;
+   obj.Text := txtLines.Text;
+   obj.values.add(grpCancel.ItemIndex);
 end;
 
 procedure TfrmShowChoice.DownloadObject(obj: TEbObject);
@@ -116,38 +150,39 @@ var
    i: integer;
    elseBlock: TEbElseBlock;
    caseBlock: TEbCaseBlock;
-   text: string;
 begin
-   obj.Values.Clear;
-   obj.Values.Add(grpCancel.ItemIndex);
-   ElseBlock := (obj as TEbCase).GetElseBlock;
-   if assigned(ElseBlock) then
-      obj.Children.Extract(ElseBlock);
-   for I := 1 to GetMaxAnswers do
+   if obj.ClassType = TEBChoiceMessage then
    begin
-      if i > 1 then
-         text := text + '/'
-      else text := '';
-      text := text + FEdits[i].Text;
-      if i <= obj.ChildCount then
-         caseBlock := obj.Children[i - 1] as TEbCaseBlock
-      else caseBlock := TEbCaseBlock.Create(obj);
-      caseBlock.Text := FEdits[i].Text;
-   end;
-   obj.Text := text;
-   for I := GetMaxAnswers + 1 to obj.ChildCount - 1 do
-      obj.Children.Extract(obj.Children[i]);
-   if grpCancel.ItemIndex = CANCEL_ELSE then
-   begin
-      if not assigned(ElseBlock) then
-         ElseBlock := TEbElseBlock.Create(nil);
-      obj.Add(ElseBlock);
+      obj.Values.Clear;
+      obj.Values.Add(grpCancel.ItemIndex);
+      ElseBlock := (obj as TEbCase).GetElseBlock;
+      if assigned(ElseBlock) then
+         obj.Children.Extract(ElseBlock);
+      for I := 1 to GetMaxAnswers do
+      begin
+         if i < obj.ChildCount then
+            caseBlock := obj.Children[i] as TEbCaseBlock
+         else caseBlock := TEbCaseBlock.Create(obj);
+         caseBlock.Text := FEdits[i].Text;
+      end;
+      for I := GetMaxAnswers + 2 to obj.ChildCount - 1 do
+         obj.Children.Extract(obj.Children[i]);
+      if grpCancel.ItemIndex = CANCEL_ELSE then
+      begin
+         if not assigned(ElseBlock) then
+            ElseBlock := TEbElseBlock.Create(nil);
+         obj.Add(ElseBlock);
+      end
+      else elseBlock.Free;
+      DownloadChoiceExpr(obj.children[0] as TEBChoiceExpr);
    end
-   else elseBlock.Free;
+   else DownloadChoiceExpr(obj as TEBChoiceExpr);
 end;
 
 initialization
    RegisterEbEditor(TEBChoiceMessage, TfrmShowChoice);
+   RegisterEbEditor(TEBChoiceExpr, TfrmShowChoice);
 finalization
    UnRegisterEbEditor(TEBChoiceMessage);
+   UnRegisterEbEditor(TEBChoiceExpr);
 end.
