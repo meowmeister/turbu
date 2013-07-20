@@ -808,7 +808,7 @@ begin
 
    FFaceName := filename;
    FFaceNum := index;
-   GSpriteEngine.Images.EnsureImage(filename, 'portrait', PORTRAIT_SIZE);
+   GSpriteEngine.Images.EnsureImage('portrait\' + filename, filename, PORTRAIT_SIZE);
 end;
 
 procedure TRpgHero.setSkill(id: integer; value: boolean);
