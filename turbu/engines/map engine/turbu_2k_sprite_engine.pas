@@ -539,8 +539,8 @@ function T2kSpriteEngine.edgeCheck(const x, y: integer; const direction: TFacing
 begin
    case direction of
       facing_up: result := (y > 0) or (wrVertical in FMap.wraparound);
-      facing_right: result := (x < FMap.width) or (wrHorizontal in FMap.wraparound);
-      facing_down: result := (y < FMap.height) or (wrVertical in FMap.wraparound);
+      facing_right: result := (x < FMap.width - 1) or (wrHorizontal in FMap.wraparound);
+      facing_down: result := (y < FMap.height - 1) or (wrVertical in FMap.wraparound);
       facing_left: result := (x > 0) or (wrHorizontal in FMap.wraparound);
       else raise ESpriteError.CreateFmt('Bad Direction value: %d is out of bounds for TFacing', [ord(direction)]);
    end;
