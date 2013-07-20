@@ -49,6 +49,8 @@ type
       property screenY: integer read getScreenY;
       property screenXP: integer read getScreenXP;
       property screenYP: integer read getScreenYP;
+      property xPos: integer read getX;
+      property yPos: integer read getY;
       [NoImport]
       property base: TMapSprite read getBase;
       property translucency: integer read getTranslucency write setTranslucency;
@@ -93,8 +95,6 @@ type
       property map: integer read getMap;
       property x: integer read getX;
       property y: integer read getY;
-      property xPos: integer read getX;
-      property yPos: integer read getY;
       property facingValue: integer read getFacing;
       property facing: TFacing read GetTFacing;
       property id: integer read FID;
