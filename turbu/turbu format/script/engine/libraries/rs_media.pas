@@ -324,4 +324,8 @@ initialization
    MediaPlayer := LoadDisharmony;
 finalization
    FreeSoundsAndMusic;
+   try
+      mediaPlayer := nil;
+   except //swallow errors caused by Disharmony not finalizing properly
+   end;
 end.
