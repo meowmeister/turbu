@@ -41,7 +41,7 @@ type
       FParty: TRpgParty;
       FMenuEnabled: boolean;
       FSaveEnabled: boolean;
-      FEventMap: TDictionary<TRpgMapObject, TRpgCharacter>;
+      FEventMap: TDictionary<TRpgMapObject, TRpgEvent>;
       FSaveCount: integer;
       FKeyLock: boolean;
       FPreserveSpriteOnTeleport: boolean;
@@ -67,7 +67,7 @@ type
       function GetMapObject(i: integer): TRpgEvent;
       function getTimer: TRpgTimer;
       function getTimer2: TRpgTimer;
-      function GetThisObject: TRpgCharacter;
+      function GetThisObject: TRpgEvent;
       function EvalConditions(value: TRpgEventConditions): boolean;
       function EvalVar(index, value: integer; op: TComparisonOp): boolean;
       function GetInt(const i: integer): integer;
@@ -140,7 +140,7 @@ type
       property levelGainNotify: boolean write notifyOnLevelGain;
       property deathPossible: boolean write canDieOnHpChange;
       property menuEnabled: boolean read isMenuEnabled write enableMenu;
-      property thisObject: TRpgCharacter read GetThisObject;
+      property thisObject: TRpgEvent read GetThisObject;
       property preserveSpriteOnTeleport: boolean read FPreserveSpriteOnTeleport write FPreserveSpriteOnTeleport;
    end;
 
@@ -181,7 +181,7 @@ begin
       FVehicles.Add(TRpgVehicle.Create(database.mapTree, vehicle.id));}
    FMenuEnabled := true;
    TRpgEventConditions.OnEval := Self.EvalConditions;
-   FEventMap := TDictionary<TRpgMapObject, TRpgCharacter>.Create;
+   FEventMap := TDictionary<TRpgMapObject, TRpgEvent>.Create;
 end;
 
 procedure T2kEnvironment.DeleteObject(permanant: boolean);
@@ -610,7 +610,7 @@ begin
       FInts[i] := value;
 end;
 
-function T2kEnvironment.GetThisObject: TRpgCharacter;
+function T2kEnvironment.GetThisObject: TRpgEvent;
 var
    obj: TRpgMapObject;
 begin
