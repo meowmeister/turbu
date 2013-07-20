@@ -796,13 +796,13 @@ var
    tile: TTile;
    i: integer;
 begin
-   result := true;
-   for I := 0 to MaxLayer do
+   for I := MaxLayer downto 0 do
    begin
       tile := GetTile(x, y, i);
       if assigned(tile) then
-         result := result and (TRANSLATE[direction] in tile.attributes);
+         Exit(TRANSLATE[direction] in tile.attributes);
    end;
+   raise Exception.CreateFmt('No tiles at location (%d, %d)!', [x, y]); //should not see this
 end;
 
 function T2kSpriteEngine.Passable(x, y: integer): boolean;
