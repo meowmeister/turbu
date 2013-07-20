@@ -677,8 +677,7 @@ function T2kSpriteEngine.GetTile(x, y, layer: integer): TMapTile;
 var
    i: integer;
 begin
-   normalizePoint(x, y);
-   if outOfBounds(x, y) then
+   if not normalizePoint(x, y) then
       Exit(nil);
    if not assigned(FTiles.First[x, y]) then
       for I := 0 to FTiles.Count - 1 do
