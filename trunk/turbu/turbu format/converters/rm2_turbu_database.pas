@@ -335,7 +335,7 @@ const
       'addExp', 'AddItem', 'AddLevels', 'AddTeleport', 'battle', 'battleCount', 'battleEx',
       'battles', 'changeTileset', 'characters', 'clearPortrait', 'deathPossible',
       'decreaseWeather', 'DeleteTeleport', 'DisableMenu', 'EnableMenu', 'EnableSave', 'eraseScreen',
-      'fadeOutMusic', 'flashEvent', 'flashScreen', 'flees', 'GameOver', 'getEventID',
+      'fadeOutMusic', 'flashEvent', 'flashScreen', 'flees', 'GameOver', 'getObjectID',
       'getTerrainID', 'HeldItems', 'HeroCount', 'Heroes', 'heroJoin', 'heroLeave',
       'Image', 'increaseWeather', 'inn', 'inputNumber', 'inputText', 'itemCount', 'keyScan',
       'levelGainNotify', 'lockScreen', 'losses', 'MapObject', 'maps', 'media',

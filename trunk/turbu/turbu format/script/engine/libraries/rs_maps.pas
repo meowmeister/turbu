@@ -28,7 +28,7 @@ uses
    procedure swapEvents(first, second: TRpgEvent);
    procedure rideVehicle;
    function getTerrainID(x, y: integer): integer;
-   function getEventID(x, y: integer): integer;
+   function getObjectID(x, y: integer): integer;
    procedure setTransition(const which: TTransitionTypes; const newTransition: TTransitions);
    procedure eraseScreen(whichTransition: TTransitions);
    procedure showScreen(whichTransition: TTransitions);
@@ -165,7 +165,7 @@ begin
    else result := GGameEngine.CurrentMap.GetTile(x, y, 0).terrain;
 end;
 
-function getEventID(x, y: integer): integer;
+function getObjectID(x, y: integer): integer;
 var
    events: TArray<TMapSprite>;
    i: integer;
@@ -458,7 +458,7 @@ begin
    input.ImportFunction('procedure teleportMapObject(which: TRpgEvent; x, y: integer);');
    input.ImportFunction('procedure swapEvents(first, second: TRpgEvent);');
    input.ImportFunction('function getTerrainID(x, y: integer): integer;');
-   input.ImportFunction('function getEventID(x, y: integer): integer;');
+   input.ImportFunction('function getObjectID(x, y: integer): integer;');
    input.ImportFunction('procedure setTransition(const which: TTransitionTypes; const newTransition: TTransitions);');
    input.ImportFunction('procedure eraseScreen(whichTransition: TTransitions);');
    input.ImportFunction('procedure showScreen(whichTransition: TTransitions);');
@@ -495,7 +495,7 @@ begin
    RegisterFunction('teleportMapObject', @teleportMapObject);
    RegisterFunction('swapEvents', @swapEvents);
    RegisterFunction('getTerrainID', @getTerrainID);
-   RegisterFunction('getEventID', @getEventID);
+   RegisterFunction('getObjectID', @getObjectID);
    RegisterFunction('setTransition', @SetTransition);
    RegisterFunction('eraseScreen', @eraseScreen);
    RegisterFunction('showScreen', @showScreen);
