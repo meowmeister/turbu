@@ -227,9 +227,9 @@ begin
       self.Records.Add(newRecord);
    end;
    SwapTileGroupData(1, 2);
-   SwapTileGroupData(5, 6);
-   SwapTileGroupData(9, 10);
-   SwapTileGroupData(13, 14);
+   SwapTileGroupData(6, 7);
+   SwapTileGroupData(10, 11);
+   SwapTileGroupData(14, 15);
 end;
 
 procedure T2k2TileSet.SwapTileGroupData(x, y: integer);
