@@ -491,7 +491,7 @@ begin
 end;
 
 function TEBMapObjID.GetScriptText: string;
-const LINE = 'ObjIDAt(%d, %d);';
+const LINE = 'getObjectID(%d, %d);';
 begin
    if boolean(Values[0]) then
       result := stringReplace(LINE, '%d', 'Ints[%d]', [rfReplaceAll])
