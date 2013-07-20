@@ -326,7 +326,7 @@ begin
          if Values[1] <> 0 then
             result := format('callScript(%d, %d);', [Values[1], Values[2]])
          else
-            result := format('callScript(thisEvent.id, %d);', [Values[2]]);
+            result := format('callScript(thisObject.id, %d);', [Values[2]]);
       end;
       2: result := format('callScript(Ints[%d], Ints[%d]);', [Values[1], Values[2]]);
       3: result := format('battleGlobal%.4d;', [Values[1]]);
