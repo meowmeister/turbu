@@ -1266,7 +1266,7 @@ begin
          if children[1] is TEBIntegerValue then
             line := format('%s=integer', [name])
          else if (children[1] is TEBBooleanValue) or (children[1] is TEBComparison)
-                or (children[1] is TEBBooleanBinList) then
+                or (children[1] is TEBBooleanBinList) or (children[1] is TEBNotExpr) then
             line := format('%s=boolean', [name])
          else if children[1] is TEBStringValue then
             line := format('%s=string', [name])
