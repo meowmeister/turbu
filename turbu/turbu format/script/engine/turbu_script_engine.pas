@@ -28,6 +28,7 @@ type
    TRegisterEnvironmentProc = procedure(compiler: TrsCompiler; importer: TrsTypeImporter; exec: TrsExec);
    TThreadWaitEvent = reference to function: boolean;
    TCutsceneEvent = procedure of object;
+   TCallScriptEvent = reference to function(values: TArray<TValue>): TValue;
 
    TScriptEngine = class;
 
@@ -70,6 +71,9 @@ type
       FLeaveCutscene: TCutsceneEvent;
       FThreadPool: TQueue<TScriptThread>;
 
+      FExecs: TObjectList<TrsExec>;
+      FExecCreating: boolean;
+
       procedure AddScriptThread(thread: TScriptThread);
       procedure ClearScriptThread(thread: TScriptThread);
       procedure CreateExec;
@@ -87,7 +91,8 @@ type
       procedure RegisterUnit(const name: string; const comp: TrsCompilerRegisterProc; const exec: TrsExecImportProc);
       procedure RunScript(const name: string); overload;
       procedure RunScript(const name: string; const args: TArray<TValue>); overload;
-      procedure RunObjectScript(obj: TRpgMapObject; page: integer); overload;
+      procedure RunObjectScript(obj: TRpgMapObject; page: integer);
+      function GetScriptRoutine(const name: string): TCallScriptEvent;
       procedure KillAll;
       procedure AbortThread;
       procedure threadSleep(time: integer; block: boolean = false);
@@ -192,6 +197,7 @@ constructor TScriptEngine.Create;
 begin
    assert(GScriptEngine = nil);
    FCompiler := TrsCompiler.Create;
+   FExecs := TObjectList<TrsExec>.Create(false);
    CreateExec;
    GScriptEngine := self;
    FThreads := TList<TScriptThread>.Create;
@@ -209,6 +215,12 @@ begin
    FCompiler.Free;
    FCurrentProgram.Free;
    FExec.Free;
+   while FExecs.Count > 0 do
+   begin
+      FExecs[0].&program.free;
+      FExecs[0].Free;
+   end;
+   FExecs.Free;
    inherited Destroy;
 end;
 
@@ -244,11 +256,21 @@ end;
 
 procedure TScriptEngine.CreateExec;
 begin
-   FExec := TrsExec.Create;
+   TMonitor.Enter(FExecs);
+   FExec := TrsExec.Create(
+      procedure (value: TrsExec)
+      begin
+         TMonitor.Enter(FExecs);
+         if FExecs.Remove(value) < 0 then
+            asm int 3 end;
+         TMonitor.Exit(FExecs);
+      end);
    FExec.RegisterStandardUnit('battles', RegisterBattlesE);
    FExec.RegisterStandardUnit('media', RegisterMediaE);
    FExec.RegisterStandardUnit('settings', RegisterSettingsE);
    FExec.OnLine := self.OnRunLine;
+   FExecs.Add(FExec);
+   TMonitor.Exit(FExecs);
 end;
 
 procedure TScriptEngine.OnRunLine(Sender: TrsVM; const line: TrsDebugLineInfo);
@@ -352,6 +374,8 @@ begin
    {$ENDIF}
    if context is TScriptThread then
    begin
+      if TScriptThread(context).FOwnedExec <> nil then
+         asm int 3 end;
       TScriptThread(context).FOwnedExec := FExec;
       TScriptThread(context).FOwnedProgram := FCurrentProgram;
       CreateExec;
@@ -382,6 +406,15 @@ end;
 procedure TScriptEngine.RunScript(const name: string; const args: TArray<TValue>);
 begin
    FExec.RunProc(name, args);
+end;
+
+function TScriptEngine.GetScriptRoutine(const name: string): TCallScriptEvent;
+begin
+   result :=
+      function(values: TArray<TValue>): TValue
+      begin
+         result := FExec.RunProc(name, values);
+      end;
 end;
 
 procedure TScriptEngine.RunObjectScript(obj: TRpgMapObject; page: integer);
@@ -573,10 +606,10 @@ end;
 
 destructor TScriptThread.Destroy;
 begin
+   FParent.ClearScriptThread(self);
    FSignal.Free;
    FOwnedExec.Free;
    FOwnedProgram.Free;
-   FParent.ClearScriptThread(self);
    FPages.Free;
    inherited Destroy;
 end;
