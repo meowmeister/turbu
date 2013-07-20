@@ -1162,6 +1162,8 @@ end;
 
 procedure TCharSprite.DoUpdatePage(data: TRpgEventPage);
 begin
+   FTiles[1].update(data);
+   FTiles[2].update(data);
    if assigned(data) then
    begin
       FUnderConstruction := true;
