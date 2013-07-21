@@ -627,6 +627,7 @@ begin
             FParent.RunScript(FPage.scriptName);
          end;
       finally
+         Sleep(TRpgTimestamp.FrameLength);
          FPage.parent.playing := false;
          if FPage.startCondition = automatic then
             GScriptEngine.FLeaveCutscene();
