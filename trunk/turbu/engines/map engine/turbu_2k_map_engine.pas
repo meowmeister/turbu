@@ -705,6 +705,12 @@ begin
       msNone, msShared, msExclusiveShared: FCurrentMap.Draw;
       msFull:;
    end;
+   if (GMenuEngine.State <> msFull) then
+   begin
+      if assigned(FImageEngine) then
+         FImageEngine.Draw;
+      FCurrentMap.DrawFlash;
+   end;
    if FSwitchState = sw_ready then
       FSwitchState := sw_switching;
 end;
@@ -829,12 +835,6 @@ begin
 
    DrawRenderTarget(GRenderTargets[RENDERER_MAIN]);
 
-   if (GMenuEngine.State <> msFull) then
-   begin
-      if assigned(FImageEngine) then
-         FImageEngine.Draw;
-      FCurrentMap.DrawFlash;
-   end;
    if GMenuEngine.State <> msNone then
       GMenuEngine.Draw;
 
