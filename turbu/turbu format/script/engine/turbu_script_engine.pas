@@ -264,24 +264,33 @@ end;
 procedure TScriptEngine.KillAll;
 var
    curr: TThread;
-   thread: TScriptThread;
+
+   procedure WakeAllThreads;
+   var
+      thread: TScriptThread;
+   begin
+      FThreadLock.Enter;
+      FThreadPool.Clear;
+      for thread in FThreads do
+         if thread <> curr then
+         begin
+            thread.Terminate;
+            (thread as TScriptThread).FSignal.SetEvent;
+         end;
+      FThreadLock.Leave;
+   end;
+
+var
    done: boolean;
 begin
    curr := TThread.CurrentThread;
    if not (curr is TScriptThread) then
       curr := nil;
-   FThreadLock.Enter;
-   FThreadPool.Clear;
-   for thread in FThreads do
-      if thread <> curr then
-      begin
-         thread.Terminate;
-         (thread as TScriptThread).FSignal.SetEvent;
-      end;
-   FThreadLock.Leave;
+   wakeAllThreads;
 
    repeat
       sleep(10);
+      WakeAllThreads;
       FThreadLock.Enter;
       done := ((curr = nil) and (FThreads.Count = 0)) or ((FThreads.Count = 1) and (FThreads[0] = curr));
       FThreadLock.Leave;
