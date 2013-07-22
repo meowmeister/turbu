@@ -178,12 +178,14 @@ type
       procedure NewLine; virtual;
       procedure DrawSpecialChar(const line: string); virtual;
       function GetIntegerValue(const value: string): integer;
+      function GetHeroName(value: integer): string;
       function GetDrawCoords: TRect;
       procedure ResetText; virtual;
 
       function ParseToken(const input: string; var counter: integer): string;
       function ParseParamToken(const input: string; var counter: integer): string;
       function ParseInt(const input: string; var counter: integer): string;
+      procedure DoParseText(const input: string; list: TStringList);
    public
       constructor Create(parent: TMenuSpriteEngine; const coords: TRect); virtual;
       destructor Destroy; override;
@@ -747,6 +749,19 @@ begin
    result.Top := result.Bottom * ord(FPosition);
 end;
 
+function TCustomMessageBox.GetHeroName(value: integer): string;
+begin
+   if value = 0 then
+   begin
+      if GEnvironment.partySize = 0 then
+         result := ''
+      else result := GEnvironment.party.hero[1].name;
+   end
+   else if clamp(value, 1, GEnvironment.HeroCount) <> value then
+      Abort
+   else result := GEnvironment.Heroes[value].name;
+end;
+
 procedure TCustomMessageBox.DrawLine(const value: string);
 var
    ch: char;
@@ -843,6 +858,7 @@ begin
       '_': FTextPosX := FTextPosX + HALF_CHAR;
       'C': FTextColor := clamp(GetIntegerValue(line), 1, 20);
       'V': DrawLine(IntToStr(GEnvironment.Ints[GetIntegerValue(line)]));
+      'N': DrawLine(GetHeroName(GetIntegerValue(line)));
    end;
 end;
 
@@ -864,6 +880,26 @@ procedure TCustomMessageBox.DoDraw;
 begin
    if boxVisible then
       DrawFrame;
+end;
+
+procedure TCustomMessageBox.DoParseText(const input: string; list: TStringList);
+var
+   counter: integer;
+begin
+   counter := 1;
+   while counter <= length(input) do
+   begin
+      if input[counter] = #13 then
+      begin
+         list.Add(#13#10);
+         if (counter < length(input)) and (input[counter + 1] = #10) then
+            inc(counter);
+      end
+      else if input[counter] <> '\' then
+         list.Add(input[counter])
+      else list.Add(ParseToken(input, counter));
+      inc(counter);
+   end;
 end;
 
 procedure TCustomMessageBox.ClearTarget(target: TSdlRenderTarget);
@@ -909,10 +945,17 @@ begin
 end;
 
 procedure TCustomMessageBox.parseText(const input: string);
+var
+   counter: integer;
 begin
-   FSignal.ResetEvent;
-   FParsedText.Text := input;
-   FMessageText := input;
+   TMonitor.Enter(self);
+   try
+      FParsedText.Clear;
+      ResetText;
+      DoParseText(input, FParsedText);
+   finally
+      TMonitor.Exit(self);
+   end;
 end;
 
 procedure TCustomMessageBox.PlaySound(which: TSfxTypes);
