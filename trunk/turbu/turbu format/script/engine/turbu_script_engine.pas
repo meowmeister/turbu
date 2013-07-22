@@ -271,6 +271,7 @@ begin
    if not (curr is TScriptThread) then
       curr := nil;
    FThreadLock.Enter;
+   FThreadPool.Clear;
    for thread in FThreads do
       if thread <> curr then
       begin
@@ -287,12 +288,6 @@ begin
       if TThread.CurrentThread.ThreadID = MainThreadID then
          CheckSynchronize();
    until done;
-   FThreadLock.Enter;
-   try
-      FThreadPool.Clear;
-   finally
-      FThreadLock.Leave;
-   end;
 end;
 
 procedure TScriptEngine.AbortThread;
