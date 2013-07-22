@@ -721,7 +721,7 @@ begin
       if assigned(event) then
          event.update;
 
-   if assigned(FParty) then
+   if assigned(FParty) and assigned(FParty.base) then
       FParty.base.CheckMoveChange;
    if FKeyLock and (GGameEngine.ReadKeyboardState = []) then
       FKeyLock := false;
