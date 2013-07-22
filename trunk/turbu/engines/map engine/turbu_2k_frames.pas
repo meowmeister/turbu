@@ -77,6 +77,7 @@ type
    TMenuSpriteEngine = class(TSpriteEngine)
    private
       FSystemGraphic: TSystemImages;
+      FGlyphs: TSprite;
       FMenuInt: integer;
       FCursor: TSysFrame;
       FMenuState: TMenuState;
@@ -175,6 +176,7 @@ type
       procedure DrawChar(value: char); overload;
       procedure DrawChar(const value: string); overload;
       procedure DrawLine(const value: string);
+      procedure DrawGlyph(value: char);
       procedure NewLine; virtual;
       procedure DrawSpecialChar(const line: string); virtual;
       function GetIntegerValue(const value: string): integer;
@@ -185,6 +187,7 @@ type
       function ParseToken(const input: string; var counter: integer): string;
       function ParseParamToken(const input: string; var counter: integer): string;
       function ParseInt(const input: string; var counter: integer): string;
+      function ParseGlyph(const input: string; var counter: integer): string;
       procedure DoParseText(const input: string; list: TStringList);
    public
       constructor Create(parent: TMenuSpriteEngine; const coords: TRect); virtual;
@@ -373,6 +376,7 @@ begin
    GMenuEngine := self;
    inherited Create(nil, canvas);
    self.Images := images;
+   GFontEngine.Glyphs := images.EnsureImage('system\glyphs\glyphs.png', 'System Glyphs', sgPoint(12, 12)).surface;
    FSystemGraphic := graphic;
    graphic.Setup(self);
    FCursor := TSysFrame.Create(self, FRAME_DISPLACEMENT, 2, NULLRECT);
@@ -849,17 +853,51 @@ begin
    end;
 end;
 
+function TCustomMessageBox.ParseGlyph(const input: string; var counter: integer): string;
+var
+   token: char;
+begin
+   assert(input[counter] = '$');
+   inc(counter);
+   token := input[counter];
+   case token of
+      'A'..'Z', 'a'..'z': result := '$' + token;
+      '$': result := '$';
+      else begin
+         result := '$';
+         dec(counter);
+      end;
+   end;
+end;
+
+procedure TCustomMessageBox.DrawGlyph(value: char);
+var
+   index: integer;
+   newPos: TSgFloatPoint;
+begin
+   if CharInSet(value, ['A'..'Z']) then
+      index := ord(value) - ord('A')
+   else if CharInSet(value, ['a'..'z']) then
+      index := 26 + ord(value) - ord('a')
+   else raise Exception.Create('Invalid glyph character.');
+   newPos := GFontEngine.drawGlyph(index, FTextPosX, FTextPosY, FTextColor);
+   FTextPosX := newPos.x;
+   FTextPosY := newPos.y;
+end;
+
 procedure TCustomMessageBox.DrawSpecialChar(const line: string);
 const HALF_CHAR = 3;
 begin
-   assert(line[1] = '\');
-   case line[2] of
-      '$': DrawLine(IntToStr(GEnvironment.money));
-      '_': FTextPosX := FTextPosX + HALF_CHAR;
-      'C': FTextColor := clamp(GetIntegerValue(line), 1, 20);
-      'V': DrawLine(IntToStr(GEnvironment.Ints[GetIntegerValue(line)]));
-      'N': DrawLine(GetHeroName(GetIntegerValue(line)));
-   end;
+   assert((line[1] = '\') or (line[1] = '$'));
+   if (line[1] = '\') then
+      case line[2] of
+         '$': DrawLine(IntToStr(GEnvironment.money));
+         '_': FTextPosX := FTextPosX + HALF_CHAR;
+         'C': FTextColor := clamp(GetIntegerValue(line), 1, 20);
+         'V': DrawLine(IntToStr(GEnvironment.Ints[GetIntegerValue(line)]));
+         'N': DrawLine(GetHeroName(GetIntegerValue(line)));
+      end
+   else DrawGlyph(line[2]);
 end;
 
 procedure TCustomMessageBox.Draw;
@@ -876,6 +914,7 @@ begin
       NewLine
    else DrawSpecialChar(value);
 end;
+
 procedure TCustomMessageBox.DoDraw;
 begin
    if boxVisible then
@@ -895,9 +934,11 @@ begin
          if (counter < length(input)) and (input[counter + 1] = #10) then
             inc(counter);
       end
-      else if input[counter] <> '\' then
-         list.Add(input[counter])
-      else list.Add(ParseToken(input, counter));
+      else if (input[counter] = '\') then
+         list.Add(ParseToken(input, counter))
+      else if (input[counter] = '$') then
+         list.Add(ParseGlyph(input, counter))
+      else list.Add(input[counter]);
       inc(counter);
    end;
 end;
