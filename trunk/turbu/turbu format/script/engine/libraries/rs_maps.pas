@@ -383,7 +383,7 @@ begin
    if wait then
       signal := TSimpleEvent.Create
    else signal := nil;
-   TAnimSprite.Create(GSpriteEngine, dummy, target, fullscreen, signal);
+   TAnimSprite.Create(GGameEngine.ImageEngine, dummy, target, fullscreen, signal);
    if wait then
       GScriptEngine.SetWaiting(
          function: boolean
