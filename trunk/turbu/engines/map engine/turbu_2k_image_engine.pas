@@ -30,6 +30,7 @@ begin
    WorldX := FParentEngine.WorldX;
    WorldY := FParentEngine.WorldY;
    inherited Draw;
+   self.Dead;
 end;
 
 end.
