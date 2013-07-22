@@ -26,6 +26,7 @@ type
       FPass2: integer;
       FShaderEngine: TdmShaders;
       FTarget: TSdlRenderTarget;
+      FGlyphs: TSdlTexture;
       FFonts: TObjectList<TRpgFont>;
       FOnGetColor: TFunc<TSdlTexture>;
       FOnGetDrawRect: TFunc<integer, TRect>;
@@ -36,12 +37,14 @@ type
       procedure DrawTargetPass1(x, y: single);
       procedure DrawTargetPass2(x, y: single; index: integer);
       procedure SetCurrent(const Value: TRpgFont);
+      procedure RenderGlyph(index: integer);
    public
       constructor Create(shader: TdmShaders);
       destructor Destroy; override;
 
       function drawText(const text: string; x, y: single; colorIndex: integer): TsgFloatPoint;
       function drawChar(text: char; x, y: single; colorIndex: integer): TSgFloatPoint;
+      function drawGlyph(index: integer; x, y: single; colorIndex: integer): TSgFloatPoint;
       function drawTextRightAligned(const text: string; x, y: single; colorIndex: integer): TsgFloatPoint;
       function drawTextCentered(const text: string; x, y: single;
         width, colorIndex: integer): TsgFloatPoint;
@@ -49,6 +52,7 @@ type
       property Current: TRpgFont read FCurrent write SetCurrent;
       property OnGetColor: TFunc<TSdlTexture> read FOnGetColor write FOnGetColor;
       property OnGetDrawRect: TFunc<integer, TRect> read FOnGetDrawRect write FOnGetDrawRect;
+      property Glyphs: TSdlTexture read FGlyphs write FGlyphs;
    end;
 
    EFontError = class(Exception);
@@ -114,6 +118,22 @@ begin
    FFonts.Free;
    FTarget.Free;
    inherited;
+end;
+
+procedure TFontEngine.RenderGlyph(index: integer);
+const GLYPH_SIZE = 12;
+var
+   srcRect, dstRect: TRect;
+begin
+   FTarget.parent.pushRenderTarget;
+   FTarget.SetRenderer;
+   SDL_SetRenderDrawColor(FTarget.parent.Renderer, 0, 0, 0, 0);
+   glClear(GL_COLOR_BUFFER_BIT);
+   SDL_SetRenderDrawColor(FTarget.parent.Renderer, 255, 255, 255, 255);
+   srcRect := rect((index mod 13) * GLYPH_SIZE, (index div 13) * GLYPH_SIZE, GLYPH_SIZE, GLYPH_SIZE);
+   dstRect := rect(0, 0, GLYPH_SIZE, GLYPH_SIZE);
+   SDL_RenderCopy(FTarget.parent.Renderer, FGlyphs, @srcRect, @dstRect);
+   FTarget.parent.popRenderTarget;
 end;
 
 procedure TFontEngine.RenderChar(text: char);
@@ -207,6 +227,23 @@ begin
    FTarget.handle.bind;
 
    RenderChar(text);
+   DrawTargetPass1(x + 1, y + 1);
+   DrawTargetPass2(x, y, colorIndex);
+   glUseProgram(current);
+end;
+
+function TFontEngine.drawGlyph(index: integer; x, y: single; colorIndex: integer): TSgFloatPoint;
+var
+   current: GLInt;
+begin
+   glGetIntegerv(GL_CURRENT_PROGRAM, @current);
+   result := sgPointF(x + (TEXT_WIDTH * 2), y);
+
+   glActiveTextureARB(GL_TEXTURE0_ARB);
+   glEnable(GL_TEXTURE_RECTANGLE_ARB);
+
+   RenderGlyph(index);
+   FTarget.handle.bind;
    DrawTargetPass1(x + 1, y + 1);
    DrawTargetPass2(x, y, colorIndex);
    glUseProgram(current);

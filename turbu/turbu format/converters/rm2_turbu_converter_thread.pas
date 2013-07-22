@@ -252,6 +252,7 @@ begin
    finally
       specialsList.Free;
    end;
+   ProcessImage(GArchives[BASE_ARCHIVE], 'System\Glyphs', 'glyphs.png', false);
 end;
 
 constructor TConverterThread.Create(report: IConversionReport; fromLoc, toLoc: string; format: TProjectFormat);

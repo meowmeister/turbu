@@ -212,29 +212,33 @@ end;
 procedure TMessageBox.DrawSpecialChar(const line: string);
 const HALF_CHAR = 3;
 begin
-   assert(line[1] = '\');
-   try
-      case line[2] of
-         '$': InsertText(IntToStr(GEnvironment.money));
-         '!':; //TODO: implement this
-         '.': FRemainder := FRemainder - 0.25;  //quarter-second delay
-         '|': FRemainder := FRemainder - 1;     //full-second delay
-         '>': FImmediate := true;
-         '<': FImmediate := false;
-         '^': endMessage;
-         '_': FTextPosX := FTextPosX + HALF_CHAR;
-         'E': Abort; //TODO: implement error reporting
-         'e': Abort; //TODO: implement error reporting
-         'C': FTextColor := clamp(GetIntegerValue(FParsedText[FTextCounter]), 1, 20);
-         'S': SetTextRate(clamp(GetIntegerValue(FParsedText[FTextCounter]), 1, 20));
-         'N': InsertText(GetHeroName(GetIntegerValue(FParsedText[FTextCounter])));
-         'V': InsertText(IntToStr(GEnvironment.Ints[GetIntegerValue(FParsedText[FTextCounter])]));
-         'T': Abort; //TODO: implement string array in Environment
-         'F': Abort; //TODO: implement float array in Environment
-         'O': Abort; //TODO: implement vocab display
+   if line[1] = '$' then
+      inherited DrawSpecialChar(line)
+   else begin
+      assert(line[1] = '\');
+      try
+         case line[2] of
+            '$': InsertText(IntToStr(GEnvironment.money));
+            '!':; //TODO: implement this
+            '.': FRemainder := FRemainder - 0.25;  //quarter-second delay
+            '|': FRemainder := FRemainder - 1;     //full-second delay
+            '>': FImmediate := true;
+            '<': FImmediate := false;
+            '^': endMessage;
+            '_': FTextPosX := FTextPosX + HALF_CHAR;
+            'E': Abort; //TODO: implement error reporting
+            'e': Abort; //TODO: implement error reporting
+            'C': FTextColor := clamp(GetIntegerValue(FParsedText[FTextCounter]), 1, 20);
+            'S': SetTextRate(clamp(GetIntegerValue(FParsedText[FTextCounter]), 1, 20));
+            'N': InsertText(GetHeroName(GetIntegerValue(FParsedText[FTextCounter])));
+            'V': InsertText(IntToStr(GEnvironment.Ints[GetIntegerValue(FParsedText[FTextCounter])]));
+            'T': Abort; //TODO: implement string array in Environment
+            'F': Abort; //TODO: implement float array in Environment
+            'O': Abort; //TODO: implement vocab display
+         end;
+      except
+         on EAbort do ;
       end;
-   except
-      on EAbort do ;
    end;
 end;
 
