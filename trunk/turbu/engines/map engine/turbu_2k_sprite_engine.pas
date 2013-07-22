@@ -55,7 +55,7 @@ type
       FFadeTarget: TGLColor;
       FFadeTime: TRpgTimestamp;
       FSystemGraphic: TSystemImages;
-      FFlashColor: TGLColor;
+      FFlashColor: array[1..4] of byte;
       FFlashTime: TRpgTimestamp;
       FFlashDuration: integer;
 
@@ -94,8 +94,6 @@ type
       function outOfBounds(x, y: integer): boolean; inline;
 
       procedure Tint();
-      procedure Flash;
-      procedure FlashTint;
       procedure adjustCoords(var x, y: integer);
       function IsBlank: boolean;
       procedure SetCurrentParty(const Value: TCharSprite);
@@ -161,6 +159,7 @@ type
       procedure beginTransition;
       procedure endErase;
       procedure endShow;
+      procedure DrawFlash;
 
       //displacement
       procedure displaceTo(x, y: integer);
@@ -633,10 +632,10 @@ end;
 
 procedure T2kSpriteEngine.FlashScreen(r, g, b, power, duration: integer);
 begin
-   FFlashColor[1] := r / 255;
-   FFlashColor[2] := g / 255;
-   FFlashColor[3] := b / 255;
-   FFlashColor[4] := power / 255;
+   FFlashColor[1] := r;
+   FFlashColor[2] := g;
+   FFlashColor[3] := b;
+   FFlashColor[4] := power;
    duration := duration * 100;
    FFlashTime.Free;
    FFlashTime := TRpgTimestamp.Create(duration);
@@ -868,48 +867,32 @@ begin
    end else FSavedState := FGameState;
 end;
 
-procedure T2kSpriteEngine.Flash();
+procedure T2kSpriteEngine.DrawFlash();
 var
-   handle: integer;
-   gla: TGlArrayF4;
+   flashTime: integer;
+   alpha: byte;
 begin
-   handle := FShaderEngine.ShaderProgram('default', 'flash');
-   FShaderEngine.UseShaderProgram(handle);
-   gla[0] := FFlashColor[1];
-   gla[1] := FFlashColor[2];
-   gla[2] := FFlashColor[3];
-   gla[3] := FFlashColor[4] * (FFlashTime.timeRemaining / FFlashDuration);
-   FShaderEngine.SetUniformValue(handle, 'flashColor', gla);
-end;
+   if (FFlashTime = nil) then
+      Exit;
+   flashTime := FFlashTime.timeRemaining;
+   if flashTime = 0 then
+   begin
+      FreeAndNil(FFlashTime);
+      Exit;
+   end;
 
-procedure T2kSpriteEngine.FlashTint();
-var
-   handle: integer;
-   gla: TGlArrayF4;
-begin
-   handle := FShaderEngine.ShaderProgram('default', 'flashtint', 'shift');
-   FShaderEngine.UseShaderProgram(handle);
-   FShaderEngine.SetUniformValue(handle, 'hShift', 0);
-   FShaderEngine.SetUniformValue(handle, 'valMult', 1.0);
-   system.move(FFadeColor[1], gla[0], sizeof(gla));
-   gla[3] := 1;
-   FShaderEngine.SetUniformValue(handle, 'rgbValues', gla);
-   FShaderEngine.SetUniformValue(handle, 'satMult', FFadeColor[4]);
-   gla[0] := (FFlashColor[1] / 255);
-   gla[1] := (FFlashColor[2] / 255);
-   gla[2] := (FFlashColor[3] / 255);
-   gla[3] := (FFlashColor[4] / 255) * (FFlashTime.timeRemaining / FFlashDuration);
-   FShaderEngine.SetUniformValue(handle, 'flashColor', gla);
+   alpha := round(FFlashColor[4] * (flashTime/ FFlashDuration));
+   SDL_SetRenderDrawColor(Canvas.Renderer, FFlashColor[1], FFlashColor[2], FFlashColor[3], alpha);
+   SDL_RenderFillRect(canvas.Renderer, nil);
 end;
 
 function T2kSpriteEngine.Fade: boolean;
 var
    i: integer;
    time: cardinal;
-   fade, flash: boolean;
+   tint: boolean;
 begin
    result := false;
-   flash := false;
    if assigned(FFadeTime) then
    begin
       time := FFadeTime.timeRemaining;
@@ -924,22 +907,9 @@ begin
    end;
    for i := 1 to 4 do
       result := result or (FFadeColor[i] <> 1);
-   fade := result;
-   if assigned(FFlashTime) then
-   begin
-      if FFlashTime.timeRemaining > 0 then
-      begin
-         flash := true;
-         result := true;
-      end
-      else FreeAndNil(FFlashTime);
-   end;
-   if fade and flash then
-      FlashTint()
-   else if fade then
-      Tint
-   else if flash then
-      self.Flash;
+   tint := result;
+   if tint then
+      self.Tint;
 end;
 
 procedure T2kSpriteEngine.moveTo(x, y: integer);

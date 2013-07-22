@@ -829,8 +829,12 @@ begin
 
    DrawRenderTarget(GRenderTargets[RENDERER_MAIN]);
 
-   if (GMenuEngine.State <> msFull) and assigned(FImageEngine) then
-      FImageEngine.Draw;
+   if (GMenuEngine.State <> msFull) then
+   begin
+      if assigned(FImageEngine) then
+         FImageEngine.Draw;
+      FCurrentMap.DrawFlash;
+   end;
    if GMenuEngine.State <> msNone then
       GMenuEngine.Draw;
 
