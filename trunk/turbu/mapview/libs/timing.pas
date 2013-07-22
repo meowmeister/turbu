@@ -25,6 +25,7 @@ type
       FLastFrame: TDateTime;
       FCounter: integer;
       FFrameLength: array[1..10] of integer;
+      class constructor Create;
    private
       FHour: word;
       FMin: word;
@@ -61,6 +62,14 @@ constructor TRpgTimestamp.Create(length: integer);
 begin
    inherited Create;
    setup(length);
+end;
+
+class constructor TRpgTimestamp.Create;
+var
+   i: integer;
+begin
+   for i := Low(FFrameLength) to High(FFrameLength) do
+      FFrameLength[i] := 16;
 end;
 
 class function TRpgTimestamp.GetFrameLength: integer;
