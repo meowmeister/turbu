@@ -74,7 +74,6 @@ type
       FSaveLock: boolean;
       FDontLockEnter: boolean;
       FCutscene: integer;
-      FTransProc: TTransProc;
       procedure OnTimer(Sender: TObject);
       procedure standardRender(Sender: TObject);
       procedure OnProcess(Sender: TObject);
@@ -114,7 +113,6 @@ type
       property PartySprite: THeroSprite read FPartySprite;
       property ImageEngine: TImageEngine read FImageEngine;
       property WeatherEngine: TWeatherSystem read FWeatherEngine;
-      property TransProc: TTransProc write FTransProc;
       property CurrentMap: T2kSpriteEngine read FCurrentMap;
    end;
 
