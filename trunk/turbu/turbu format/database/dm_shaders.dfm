@@ -274,6 +274,25 @@ object dmShaders: TdmShaders
           '')
       end
       item
+        Name = 'flash'
+        Strings.Strings = (
+          'varying vec2 texture_coordinate; '
+          'uniform sampler2DRect baseTexture;'
+          'uniform vec4 flashColor;'
+          ''
+          'void main(void)'
+          '{    '
+          
+            '    vec4 lColor =  texture2DRect(baseTexture, texture_coordinate' +
+            ');'
+          
+            '    vec3 mixColor = mix(lColor.rgb, flashColor.rgb, flashColor.a' +
+            ');'
+          '    gl_FragColor = vec4(mixColor, lColor.a);'
+          '}'
+          '')
+      end
+      item
         Name = 'noAlpha'
         Strings.Strings = (
           'varying vec2 texture_coordinate;'
