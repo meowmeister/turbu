@@ -652,6 +652,7 @@ begin
    GSpriteEngine := FCurrentMap;
    LoadMapSprites(FCurrentMap.mapObj);
    FObjectManager.LoadMap(FWaitingMap, FTeleportThread);
+   FObjectManager.Tick;
    result := FSignal.WaitFor(INFINITE) = wrSignaled;
 end;
 
