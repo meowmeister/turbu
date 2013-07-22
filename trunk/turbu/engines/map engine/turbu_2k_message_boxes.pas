@@ -39,12 +39,10 @@ type
 
       procedure DrawNextChar;
       procedure SetTextRate(value: integer);
-      function GetHeroName(value: integer): string;
    protected
       procedure NewLine; override;
       procedure DrawSpecialChar(const line: string); override;
       procedure InsertText(const text: string);
-      procedure parseText(const input: string); override;
       procedure DoDraw; override;
       procedure ResetText; override;
    public
@@ -203,19 +201,6 @@ begin
    FTextRate := value * 0.01;
 end;
 
-function TMessageBox.GetHeroName(value: integer): string;
-begin
-   if value = 0 then
-   begin
-      if GEnvironment.partySize = 0 then
-         result := ''
-      else result := GEnvironment.party.hero[1].name;
-   end
-   else if clamp(value, 1, GEnvironment.HeroCount) <> value then
-      Abort
-   else result := GEnvironment.Heroes[value].name;
-end;
-
 procedure TMessageBox.InsertText(const text: string);
 var
    i: integer;
@@ -314,32 +299,6 @@ begin
    FImmediate := false;
    FRemainder := 0;
    SetTextRate(1);
-end;
-
-procedure TMessageBox.parseText(const input: string);
-var
-   counter: integer;
-begin
-   TMonitor.Enter(self);
-   try
-      ResetText;
-      counter := 1;
-      while counter <= length(input) do
-      begin
-         if input[counter] = #13 then
-         begin
-            FParsedText.Add(#13#10);
-            if (counter < length(input)) and (input[counter + 1] = #10) then
-               inc(counter);
-         end
-         else if input[counter] <> '\' then
-            FParsedText.Add(input[counter])
-         else FParsedText.Add(ParseToken(input, counter));
-         inc(counter);
-      end;
-   finally
-      TMonitor.Exit(self);
-   end;
 end;
 
 { TInputBox }
@@ -554,7 +513,7 @@ end;
 
 procedure TChoiceBox.PrepareText;
 var
-   value, line: string;
+   value: string;
    i: integer;
 begin
    if not FTextDrawn then
@@ -564,7 +523,7 @@ begin
       try
          ResetText;
          for value in FParsedText do
-            DrawLine(value);
+            DrawChar(value);
          if FParsedText.Count > 0 then
             NewLine;
          FPromptLines:= FTextLine;
@@ -572,9 +531,10 @@ begin
          begin
             value := FChoices[i];
             FOptionEnabled[i] := validate(value);
-            parseText(value);
-            for line in FParsedText do
-               DrawLine(line);
+            FParsedText.Clear;
+            DoParseText(value, FParsedText);
+            for value in FParsedText do
+               DrawChar(value);
             NewLine;
          end;
       finally
@@ -702,10 +662,9 @@ begin
       try
          ResetText;
          for value in FParsedText do
-         begin
-            DrawLine(value);
+            DrawChar(value);
+         if FParsedText.Count > 0 then
             NewLine;
-         end;
          FPromptLines := FTextLine;
          for digit in FInputResult do
             DrawLine(IntToStr(digit) + ' ');
