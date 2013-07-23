@@ -202,6 +202,25 @@ type
       property Signal: TSimpleEvent read FSignal;
    end;
 
+   TGetTimeFunc = function: integer of object;
+
+   TSystemTimer = class(TParentSprite)
+   private
+      FTime: word;
+      FPrevTime: word;
+      FTiles: array[1..5] of TSprite;
+      FPrevState: TGameState;
+      FOnGetTime: TGetTimeFunc;
+
+      procedure updateTime;
+      procedure updatePosition(location: TSgPoint);
+   public
+      constructor Create(parent: TSpriteEngine); reintroduce;
+      destructor Destroy; override;
+      procedure Draw; override;
+      property OnGetTime: TGetTimeFunc read FOnGetTime write FOnGetTime;
+   end;
+
 procedure SetX(sprite: TTiledAreaSprite; x: integer);
 procedure SetY(sprite: TTiledAreaSprite; y: integer);
 
@@ -634,9 +653,6 @@ begin
    FRects[srCursorBG] := rect(72, 8, 16, 16);
 
    FRects[srTimer] := rect(32, 32, 8, 16);
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   TGameMap(parent).systemTimer := TSystemTimer.Create(parent);
-   TGameMap(parent).timer2 := TSystemTimer.Create(parent);}
 
    FRects[srShadows] := rect(128, 32, 32, 16);
    FRects[srColors] := rect(0, 48, 16, 16);
@@ -1018,6 +1034,95 @@ begin
    FCoords.Right := FFrameTarget.parent.Width;
    FCoords.Bottom := FFrameTarget.parent.Height div 3;
    FCoords.Top := FCoords.Bottom * ord(FPosition);
+end;
+
+{ TSystemTimer }
+
+constructor TSystemTimer.Create(parent: TSpriteEngine);
+var
+   I: Integer;
+begin
+   inherited Create(parent);
+   for I := 1 to 5 do
+   begin
+      FTiles[i] := TSprite.Create(self);
+      FTiles[i].ImageName := 'SysTimer';
+   end;
+   FTiles[1].ImageIndex := 11;
+   FTiles[3].ImageIndex := 10;
+   FTime := 0;
+   Visible := false;
+   FPrevTime := 0;
+   z := 12;
+   FPrevState := gs_map;
+end;
+
+destructor TSystemTimer.Destroy;
+var
+   I: Integer;
+begin
+   for I := 1 to 5 do
+      FTiles[i].free;
+   inherited;
+end;
+
+procedure TSystemTimer.Draw;
+var
+   i: integer;
+begin
+   FTime := FOnGetTime();
+   if FTime <> FPrevTime then
+      updateTime;
+   FPrevTime := FTime;
+   if (Engine.WorldX <> X) or (Engine.WorldY <> Y)
+      or (T2kSpriteEngine(Engine).state <> FPrevState) then
+   begin
+      X := Engine.WorldX;
+      Y := Engine.WorldY;
+      updatePosition(point(round(x), round(y)));
+   end;
+   for i := 1 to 5 do
+      FTiles[i].Draw;
+end;
+
+procedure TSystemTimer.updatePosition(location: TSgPoint);
+var
+  I: Integer;
+begin
+   if FPrevState <> GSpriteEngine.state then
+   begin
+      FPrevState := GSpriteEngine.state;
+      case FPrevState of
+         gs_map: ;
+         gs_message:
+            if GMenuEngine.position = mb_top then
+               inc(location.Y, 160);
+         gs_menu: ;
+         gs_battle: ;
+         else raise EFatalError.create('Unable to set timer for current game state!');
+      end;
+   end;
+
+   inc(location.X, 1);
+   inc(location.Y, 10);
+   for I := 1 to 5 do
+   begin
+      FTiles[i].X := location.X + (i * 9);
+      FTiles[i].Y := location.Y;
+   end;
+end;
+
+procedure TSystemTimer.updateTime;
+var min, sec: byte;
+begin
+   min := FTime div 60;
+   sec := FTime mod 60;
+   if min > 10 then
+      FTiles[1].ImageIndex := min div 10
+   else FTiles[1].ImageIndex := 11;
+   FTiles[2].ImageIndex := min mod 10;
+   FTiles[4].ImageIndex := sec div 10;
+   FTiles[5].ImageIndex := sec mod 10;
 end;
 
 end.
