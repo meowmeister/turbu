@@ -655,8 +655,7 @@ end;
 
 procedure TValueInputBox.PrepareText;
 var
-   value, line: string;
-   i: integer;
+   value: string;
    digit: Byte;
 begin
    if not FTextDrawn then

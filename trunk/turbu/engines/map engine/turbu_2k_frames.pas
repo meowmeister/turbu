@@ -77,7 +77,6 @@ type
    TMenuSpriteEngine = class(TSpriteEngine)
    private
       FSystemGraphic: TSystemImages;
-      FGlyphs: TSprite;
       FMenuInt: integer;
       FCursor: TSysFrame;
       FMenuState: TMenuState;
@@ -986,8 +985,6 @@ begin
 end;
 
 procedure TCustomMessageBox.parseText(const input: string);
-var
-   counter: integer;
 begin
    TMonitor.Enter(self);
    try

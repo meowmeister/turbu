@@ -349,8 +349,6 @@ var
    legacy: TLegacySections;
    legacyPair: TPair<word, rawbytestring>;
    key: byte;
-   list: TStringList;
-   op: string;
 begin
    legacy := nil;
    try
@@ -427,14 +425,6 @@ begin
                   FReport.newStep(filename);
                   ConvertMap(filename, FLdb, FLmt, GDatabase.mapTree, fromFolder, toFolder);
                end);
-
-{            if DebugHook <> 0 then
-            begin
-               list := rm2_turbu_event_builder.UnknownOpcodeList;
-               for op in list do
-                  FReport.MakeHint(op);
-               list.free;
-            end;}
 
             if terminated then
                Exit;
