@@ -70,6 +70,7 @@ type
       FEnterCutscene: TCutsceneEvent;
       FLeaveCutscene: TCutsceneEvent;
       FThreadPool: TQueue<TScriptThread>;
+      FTeleportThread: TScriptThread;
 
       procedure AddScriptThread(thread: TScriptThread);
       procedure ClearScriptThread(thread: TScriptThread);
@@ -99,6 +100,7 @@ type
 
       property OnEnterCutscene: TCutsceneEvent read FEnterCutscene write FEnterCutscene;
       property OnLeaveCutscene: TCutsceneEvent read FLeaveCutscene write FLeaveCutscene;
+      property TeleportThread: TScriptThread read FTeleportThread write FTeleportThread;
    end;
 
    TMapObjectManager = class
@@ -322,6 +324,8 @@ procedure TScriptEngine.ClearScriptThread(thread: TScriptThread);
 begin
    FThreadLock.Enter;
    FThreads.Remove(thread);
+   if FTeleportThread = thread then
+      FTeleportThread := nil;
    FThreadLock.Leave;
 end;
 
@@ -360,6 +364,7 @@ begin
    begin
       TScriptThread(context).FOwnedExec := FExec;
       TScriptThread(context).FOwnedProgram := FCurrentProgram;
+      TScriptThread(context).Priority := tpHighest;
       CreateExec;
       for pair in FImports do
          FExec.RegisterStandardUnit(pair.Key, pair.Value);
@@ -566,8 +571,11 @@ begin
    end;
    if assigned(FOnUpdate) then
       FOnUpdate;
-   for page in FPlaylist do
-      RunPageScript(page);
+   if FScriptEngine.TeleportThread = nil then
+   begin
+      for page in FPlaylist do
+         RunPageScript(page);
+   end;
 end;
 
 { TScriptThread }
@@ -590,6 +598,7 @@ destructor TScriptThread.Destroy;
 begin
    FParent.ClearScriptThread(self);
    FSignal.Free;
+   FDelay.Free;
    FOwnedExec.Free;
    FOwnedProgram.Free;
    FPages.Free;
@@ -600,7 +609,7 @@ procedure TScriptThread.Execute;
 begin
    while not Terminated do
    begin
-      if FPage.startCondition = automatic then
+      if FPage.startCondition <> parallel then
          GScriptEngine.FEnterCutscene();
       try
          if FPage.scriptName <> '' then
@@ -611,7 +620,7 @@ begin
       finally
          Sleep(TRpgTimestamp.FrameLength);
          FPage.parent.playing := false;
-         if FPage.startCondition = automatic then
+         if FPage.startCondition <> parallel then
             GScriptEngine.FLeaveCutscene();
       end;
       if not Terminated then

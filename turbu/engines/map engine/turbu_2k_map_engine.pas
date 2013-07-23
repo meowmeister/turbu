@@ -380,30 +380,33 @@ begin
    FObjectManager.ScriptEngine.killAll;
    while not FCurrentMap.blank do
       sleep(10);
-   FreeAndNil(FImageEngine);
-   oldEngine := FCurrentMap;
-   hero := FCurrentMap.CurrentParty;
-   if assigned(hero) then
-      (hero as THeroSprite).packUp;
-   metadata := FDatabase.mapTree[newmap];
    FTeleportThread := TThread.CurrentThread;
    try
-      TThread.Synchronize(TThread.CurrentThread,
-         procedure begin if FInitialized then self.loadMap(metadata) end);
+   runThreadsafe(
+      procedure
+      begin
+         FreeAndNil(FImageEngine);
+         oldEngine := FCurrentMap;
+         hero := FCurrentMap.CurrentParty;
+         if assigned(hero) then
+            (hero as THeroSprite).packUp;
+         metadata := FDatabase.mapTree[newmap];
+         GScriptEngine.TeleportThread := FTeleportThread as TScriptThread;
+         self.loadMap(metadata);
+         if not GEnvironment.preserveSpriteOnTeleport then
+            GEnvironment.Party.ResetSprite;
+         FCurrentMap.CurrentParty := hero;
+         FCurrentMap.CopyState(oldEngine);
+         if assigned(hero) then
+         begin
+            hero.location := newLocation;
+            (hero as THeroSprite).settleDown(FCurrentMap);
+         end;
+         FCurrentMap.centerOn(newLocation.x, newLocation.y);
+      end, true);
    finally
       FTeleportThread := nil;
    end;
-   if not GEnvironment.preserveSpriteOnTeleport then
-      GEnvironment.Party.ResetSprite;
-   FCurrentMap.CurrentParty := hero;
-   FCurrentMap.CopyState(oldEngine);
-   if assigned(hero) then
-   begin
-      hero.location := newLocation;
-      (hero as THeroSprite).settleDown(FCurrentMap);
-   end;
-   TThread.Synchronize(TThread.CurrentThread,
-      procedure begin FCurrentMap.centerOn(newLocation.x, newLocation.y) end);
    PlayMapMusic(metadata);
    FSwitchState := sw_noSwitch;
    FTimer.Enabled := true;
@@ -651,6 +654,7 @@ begin
    LoadMapSprites(FCurrentMap.mapObj);
    FObjectManager.LoadMap(FWaitingMap, FTeleportThread);
    FObjectManager.Tick;
+   FCurrentMap.Dead;
    result := FSignal.WaitFor(INFINITE) = wrSignaled;
 end;
 
