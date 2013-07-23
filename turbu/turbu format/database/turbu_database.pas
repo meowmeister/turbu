@@ -682,7 +682,6 @@ procedure TRpgDatabase.DownloadGlobalEvents(ds: TDataset);
 var
    obj: TRpgMapObject;
    page: TRpgEventPage;
-   idField: TIntegerField;
    nameField: TWideStringField;
    condField: TIntegerField;
    hasSwitchField: TBooleanField;
@@ -690,7 +689,6 @@ var
 begin
    ds.DisableControls;
    try
-      idField := ds.FieldByName('id') as TIntegerField;
       nameField := ds.FieldByName('Name') as TWideStringField;
       condField := ds.FieldByName('StartCondition') as TIntegerField;
       hasSwitchField := ds.FieldByName('HasSwitch') as TBooleanField;

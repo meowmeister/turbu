@@ -169,11 +169,6 @@ begin
       us_battle: result := result and (GSpriteEngine.state = gs_battle);
       us_both: ;
    end;
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   if GEnvironment.heroes[hero].dead then
-      result := result and template.condition[CTN_DEAD]
-   else if template.deadOnly then
-      result := false;}
 end;
 
 procedure TAppliedItem.use(target: TRpgHero);
@@ -209,29 +204,34 @@ begin
       if (med.mpPercent > 0) or (med.mpHeal > 0) then
          result := result or (GEnvironment.Party[hero].mp < GEnvironment.Party[hero].maxMp);
    end;
+   if GEnvironment.heroes[hero].dead then
+      result := result and (CTN_DEAD in med.condition)
+   else if med.deadOnly then
+      result := false;
 end;
 
 procedure TRecoveryItem.use(target: TRpgHero);
-{var
+var
+   med: TMedicineTemplate;
    fraction: single;
-   I: Integer;}
+   I: Integer;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   for i := 1 to GDatabase.conditions + 1 do
-      if template.condition[i] then
+   med := template as TMedicineTemplate;
+   for i := 1 to GDatabase.conditions.Count - 1 do
+      if i in med.condition then
          target.condition[i] := false;
-   if template.hpPercent <> 0 then
+   if med.hpPercent <> 0 then
    begin
-      fraction := template.hpPercent / 100;
+      fraction := med.hpPercent / 100;
       target.hp := target.hp + trunc(target.maxHp * fraction);
    end;
-   if template.mpPercent <> 0 then
+   if med.mpPercent <> 0 then
    begin
-      fraction := template.mpPercent / 100;
+      fraction := med.mpPercent / 100;
       target.mp := target.mp + trunc(target.maxMp * fraction);
    end;
-   target.hp := target.hp + template.hpHeal;
-   target.mp := target.mp + template.mpHeal;}
+   target.hp := target.hp + med.hpHeal;
+   target.mp := target.mp + med.mpHeal;
    inherited use(target);
 end;
 

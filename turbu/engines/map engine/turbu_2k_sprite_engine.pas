@@ -73,7 +73,6 @@ type
       FDispGoalX, FDispGoalY: single;
       FDisplacementX, FDisplacementY: single;
       FDisplacementSpeed: single;
-{$MESSAGE WARN 'Incomplete feature in live unit'}
       FScreenLocked: boolean;
 
       //shake control
@@ -91,7 +90,6 @@ type
       function GetDefTile(layer, x, y: integer): TMapTile; inline;
       procedure DrawBG;
       function GetMapID: integer;
-      function outOfBounds(x, y: integer): boolean; inline;
 
       procedure Tint();
       procedure adjustCoords(var x, y: integer);
@@ -477,7 +475,7 @@ begin
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    try
       FShaderEngine.UseShaderProgram(FShaderEngine.ShaderProgram('default', 'defaultF'));
-      if assigned(FCurrentParty) then
+      if assigned(FCurrentParty) and not FScreenLocked then
       begin
          centerTile := FCurrentParty.tiles[1];
          centerOnWorldCoords(centerTile.x + ((centerTile.Width + TILE_SIZE.x) div 2), centerTile.Y + TILE_SIZE.y);
@@ -782,11 +780,6 @@ begin
          if assigned(newTile) then
             newTile.place(equivX, equivY, index, tileRef, FTileset);
       end;
-end;
-
-function T2kSpriteEngine.outOfBounds(x, y: integer): boolean;
-begin
-   result := (x < 0) or (y < 0) or (x >= FMap.width) or (y >= FMap.height);
 end;
 
 function T2kSpriteEngine.Passable(x, y: integer; direction: TFacing): boolean;

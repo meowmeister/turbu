@@ -79,9 +79,9 @@ procedure glCheckError;
 var
    err: glEnum;
 begin
-{   err := glGetError;
+   err := glGetError;
    if err <> GL_NO_ERROR then
-      asm int 3 end;}
+      asm int 3 end;
 end;
 {$ELSE}
 begin

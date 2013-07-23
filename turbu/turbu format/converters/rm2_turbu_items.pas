@@ -282,6 +282,9 @@ end;
 { T2k2MedicineTemplate }
 
 constructor T2k2MedicineTemplate.Convert(base: TItem);
+var
+   conditions: TByteSet;
+   i: integer;
 begin
    inherited Convert(base);
    self.stat[1] := base.hpHeal;
@@ -289,7 +292,15 @@ begin
    self.hpPercent := base.hpPercent;
    self.mpPercent := base.mpPercent;
    self.deadOnly := base.deadOnly;
+   self.outOfBattle := base.outOfBattle;
    self.areaMedicine := base.areaMedicine;
+
+   conditions := [];
+   for I := 0 to base.conditions do
+      if base.condition[i] then
+         include(conditions, i);
+   self.condition := conditions;
+
    if base.outOfBattle then
       self.usableWhere := us_field;
 end;
