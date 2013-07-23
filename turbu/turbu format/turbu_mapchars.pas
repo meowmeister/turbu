@@ -392,14 +392,14 @@ function TRpgEvent.getX: integer;
 begin
    if FIsChar then
       result := (FBase as TCharSprite).location.X
-   else result := trunc(FBase.baseTile.X) div TILE_SIZE.x;
+   else result := round(FBase.baseTile.X / TILE_SIZE.x);
 end;
 
 function TRpgEvent.getY: integer;
 begin
    if FIsChar then
       result := (FBase as TCharSprite).location.y
-   else result := trunc(FBase.baseTile.y) div TILE_SIZE.y;
+   else result := round(FBase.baseTile.y / TILE_SIZE.y);
 end;
 
 procedure TRpgEvent.setLocation(const Value: TSgPoint);
