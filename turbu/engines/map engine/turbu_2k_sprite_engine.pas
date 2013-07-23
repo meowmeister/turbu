@@ -240,7 +240,7 @@ begin
    opposite := opposite_facing(direction);
 
 //you have to be able to leave the tile you're on
-   if passable(x, y, direction) then
+   if passable(sgPoint(x, y), direction, character) then
    begin
 
 //check to see if you're moving off the edge of the map, and
@@ -825,8 +825,12 @@ begin
    begin
       result := true;
       for sprite in sprites do
+      begin
+         if sprite = character then
+            continue;
          if assigned(sprite.event) and assigned(sprite.event.currentPage) then
             result := result and (sprite.baseTile.z <> character.baseTile.z);
+      end;
    end;
 end;
 
