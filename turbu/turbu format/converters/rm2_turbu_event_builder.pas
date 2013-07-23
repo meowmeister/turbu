@@ -206,6 +206,7 @@ begin
    sub := TEBChoiceExpr.Create(nil);
    sl := TStringList.Create;
    sl.Delimiter := '/';
+   sl.QuoteChar := #0;
    sl.StrictDelimiter := true;
    sl.DelimitedText := string(opcode.name);
    if (sl.Count > 0) and (sl[0] = '') and (opcode.name[1] <> '/') then
