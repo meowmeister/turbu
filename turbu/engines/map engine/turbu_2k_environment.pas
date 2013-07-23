@@ -45,6 +45,8 @@ type
       FSaveCount: integer;
       FKeyLock: boolean;
       FPreserveSpriteOnTeleport: boolean;
+      FTimer: TRpgTimer;
+      FTimer2: TRpgTimer;
 
       function GetSwitch(const i: integer): boolean;
       procedure SetSwitch(const i: integer; const Value: boolean);
@@ -154,7 +156,7 @@ uses
    Windows, SysUtils, Math, RTTI, Classes,
    Commons,
    turbu_characters, turbu_script_engine, turbu_2k_sprite_engine, turbu_constants,
-   turbu_2k_map_engine, turbu_classes, timing,
+   turbu_2k_map_engine, turbu_classes, timing, turbu_2k_frames,
    rsDefs;
 
 { T2kEnvironment }
@@ -182,6 +184,8 @@ begin
    FMenuEnabled := true;
    TRpgEventConditions.OnEval := Self.EvalConditions;
    FEventMap := TDictionary<TRpgMapObject, TRpgEvent>.Create;
+   FTimer := TRpgTimer.create(TSystemTimer.Create(GGameEngine.ImageEngine));
+   FTimer2 := TRpgTimer.create(TSystemTimer.Create(GGameEngine.ImageEngine));
 end;
 
 procedure T2kEnvironment.DeleteObject(permanant: boolean);
@@ -205,6 +209,8 @@ destructor T2kEnvironment.Destroy;
 var
    i: integer;
 begin
+   FTimer.Free;
+   FTimer2.Free;
    FParty.Free;
    ClearEvents;
    FVehicles.Free;
@@ -511,6 +517,16 @@ begin
       writer.CheckWrite('SaveCount', FSaveCount, 0);
       writer.CheckWrite('PreserveSpriteOnTeleport', FPreserveSpriteOnTeleport, false);
       writer.CheckWrite('SaveEnabled', FSaveEnabled, false);
+      if timer.time > 0 then
+      begin
+         writer.WriteName('Timer');
+         timer.serialize(writer);
+      end;
+      if timer2.time > 0 then
+      begin
+         writer.WriteName('Timer2');
+         timer2.serialize(writer);
+      end;
    writer.EndObject;
 end;
 
@@ -530,6 +546,19 @@ begin
    obj.CheckRead('SaveCount', FSaveCount);
    obj.CheckRead('PreserveSpriteOnTeleport', FPreserveSpriteOnTeleport);
    obj.CheckRead('SaveEnabled', FSaveEnabled);
+   value := obj.Items['Timer'];
+   if assigned(value) then
+   begin
+      FTimer.Deserialize(value as TdwsJSONObject);
+      value.Free;
+   end;
+   value := obj.Items['Timer2'];
+   if assigned(value) then
+   begin
+      FTimer2.Deserialize(value as TdwsJSONObject);
+      value.Free;
+   end;
+
    obj.checkEmpty;
    self.UpdateEvents;
 end;
@@ -620,14 +649,12 @@ end;
 
 function T2kEnvironment.getTimer: TRpgTimer;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-   result := nil; //TODO: implement this
+   result := FTimer;
 end;
 
 function T2kEnvironment.getTimer2: TRpgTimer;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-   result := nil; //TODO: implement this
+   result := FTimer2;
 end;
 
 function T2kEnvironment.GetVehicle(i: integer): TRpgVehicle;

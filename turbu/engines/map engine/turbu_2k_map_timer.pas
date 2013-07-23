@@ -2,13 +2,15 @@ unit turbu_2k_map_timer;
 
 interface
 uses
+   turbu_2k_frames,
    rsImport,
-   sdl_sprite;
+   sdl_sprite,
+   dwsJSON;
 
 type
    TRpgTimer = class(TObject)
    private
-      FTimerSprite: TSprite;
+      FTimerSprite: TSystemTimer;
       FSecs: word;
       FTimeRemaining: integer;
       FActivated: boolean;
@@ -18,7 +20,12 @@ type
       procedure setVisible(value: boolean);
    public
       [NoImport]
-      constructor create(sprite: TSprite);
+      constructor create(sprite: TSystemTimer);
+      destructor Destroy; override;
+      [NoImport]
+      procedure Serialize(writer: TdwsJSONWriter);
+      [NoImport]
+      procedure Deserialize(obj: TdwsJSONObject);
 
       [NoImport]
       procedure start; overload;
@@ -27,6 +34,8 @@ type
       procedure reset;
       [NoImport]
       procedure tick;
+      [NoImport]
+      function GetTime: integer;
 
       property time: integer read FTimeRemaining write FTimeRemaining;
       property visible: boolean read FVisible write setVisible;
@@ -37,19 +46,50 @@ type
 
 implementation
 uses
-   SysUtils;
+   SysUtils,
+   turbu_classes;
 
 { TRpgTimer }
 
-constructor TRpgTimer.create(sprite: TSprite);
+constructor TRpgTimer.create(sprite: TSystemTimer);
 var
    dummy, msec: word;
 begin
-//   assert(sprite is TSystemTimer);
    FTimerSprite := sprite;
-   decodeTime(GetTime, dummy, dummy, FSecs, msec);
+   decodeTime(SysUtils.GetTime, dummy, dummy, FSecs, msec);
    if MSec >= 500 then
       inc(FSecs);
+   sprite.OnGetTime := self.GetTime;
+end;
+
+destructor TRpgTimer.Destroy;
+begin
+   FTimerSprite.Dead;
+   inherited;
+end;
+
+procedure TRpgTimer.Serialize(writer: TdwsJSONWriter);
+begin
+   writer.BeginObject;
+      writer.CheckWrite('TimeRemaining', FTimeRemaining, 0);
+      writer.CheckWrite('Activated', FActivated, false);
+      writer.CheckWrite('Visible', FVisible, false);
+      writer.CheckWrite('InBattle', FInBattle, false);
+   writer.EndObject;
+end;
+
+procedure TRpgTimer.Deserialize(obj: TdwsJSONObject);
+begin
+   obj.CheckRead('TimeRemaining', FTimeRemaining);
+   obj.CheckRead('Activated', FActivated);
+   obj.CheckRead('Visible', FVisible);
+   obj.CheckRead('InBattle', FInBattle);
+   obj.CheckEmpty;
+end;
+
+function TRpgTimer.GetTime: integer;
+begin
+   result := FTimeRemaining;
 end;
 
 procedure TRpgTimer.pause;
@@ -92,7 +132,7 @@ begin
    if not FActivated then
       Exit;
 
-   decodeTime(GetTime, dummy, dummy, secs, dummy);
+   decodeTime(SysUtils.GetTime, dummy, dummy, secs, dummy);
    if (secs = 0) and (FSecs = 59) then
       secs := 60;
    if (secs - FSecs > 0) and (FTimeRemaining > 0) then
