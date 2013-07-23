@@ -249,7 +249,6 @@ end;
 
 procedure DeserializeSystemSound(obj: TdwsJSONObject);
 var
-   item: TdwsJSONValue;
    arr: TdwsJSONArray;
    sfx: TSfxTypes;
    bgm: TBgmTypes;

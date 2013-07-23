@@ -190,6 +190,9 @@ type
       FHPPercent: shortint;
       FMPPercent: shortint;
       FDeadHeroesOnly: boolean;
+      FOutOfBattle: boolean;
+      [TUploadByteSet]
+      FConditions: TByteSet;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
@@ -200,6 +203,8 @@ type
       property hpHeal: integer read FStat[1] write FStat[1];
       property mpHeal: integer read FStat[2] write FStat[2];
       property deadOnly: boolean read FDeadHeroesOnly write FDeadHeroesOnly;
+      property outOfBattle: boolean read FOutOfBattle write FOutOfBattle;
+      property condition: TByteSet read FConditions write FConditions;
    end;
 
    [ItemType(it_book)]

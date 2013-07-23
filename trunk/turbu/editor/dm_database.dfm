@@ -526,6 +526,9 @@ object dmDatabase: TdmDatabase
     object itemsdeadHeroesOnly: TBooleanField
       FieldName = 'deadHeroesOnly'
     end
+    object itemsoutOfBattle: TBooleanField
+      FieldName = 'outOfBattle'
+    end
     object itemsskill: TIntegerField
       FieldName = 'skill'
     end
@@ -2813,6 +2816,14 @@ object dmDatabase: TdmDatabase
       item
         Name = 'deadHeroesOnly'
         DataType = ftBoolean
+      end
+      item
+        Name = 'conditions'
+        DataType = ftBlob
+      end
+      item
+        Name = 'outOfBattle'
+        DataType = ftBoolean
       end>
     IndexDefs = <>
     Params = <>
@@ -2821,7 +2832,7 @@ object dmDatabase: TdmDatabase
     Left = 184
     Top = 224
     Data = {
-      C70100009619E0BD010000001800000016000000000003000000C70102696404
+      030200009619E0BD010000001800000018000000000003000000030202696404
       00010000000000046E616D6501004A0000000100055749445448020002004000
       0B6465736372697074696F6E01004A0000000100055749445448020002006400
       04636F73740400010000000000057461675F310400010000000000057461675F
@@ -2835,7 +2846,9 @@ object dmDatabase: TdmDatabase
       5F35040001000000000006737461745F3604000100000000000C617265614D65
       646963696E65020003000000000009687050657263656E740400010000000000
       096D7050657263656E7404000100000000000E646561644865726F65734F6E6C
-      7902000300000000000000}
+      7902000300000000000A636F6E646974696F6E7304004B000000010007535542
+      5459504502004900070042696E617279000B6F75744F66426174746C65020003
+      00000000000000}
     object items_medicineid: TIntegerField
       FieldName = 'id'
     end
@@ -2903,6 +2916,12 @@ object dmDatabase: TdmDatabase
     end
     object items_medicinedeadOnly: TBooleanField
       FieldName = 'deadHeroesOnly'
+    end
+    object items_medicineConditions: TBlobField
+      FieldName = 'conditions'
+    end
+    object items_medicineOutOfBattle: TBooleanField
+      FieldName = 'outOfBattle'
     end
   end
   object items_book: TClientDataSet
