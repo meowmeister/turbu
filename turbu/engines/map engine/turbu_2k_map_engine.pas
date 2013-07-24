@@ -55,6 +55,7 @@ type
       FShaderEngine: TdmShaders;
       FImageEngine: TImageEngine;
       FWeatherEngine: TWeatherSystem;
+      FPlaying: boolean;
 
       function retrieveImage(const folder, filename: string): TRpgSdlImage;
 
@@ -657,7 +658,8 @@ begin
    GSpriteEngine := FCurrentMap;
    LoadMapSprites(FCurrentMap.mapObj);
    FObjectManager.LoadMap(FWaitingMap, FTeleportThread);
-   FObjectManager.Tick;
+   if FPlaying then
+      FObjectManager.Tick;
    FCurrentMap.Dead;
    result := FSignal.WaitFor(INFINITE) = wrSignaled;
 end;
@@ -891,6 +893,7 @@ begin
    FTimer.OnTimer := self.OnTimer;
    FTimer.OnProcess := self.OnProcess;
    FTimer.Enabled := true;
+   FPlaying := true;
 end;
 
 function T2kMapEngine.Playing: boolean;

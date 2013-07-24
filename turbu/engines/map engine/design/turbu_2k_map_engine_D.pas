@@ -1039,6 +1039,7 @@ end;
 procedure T2kMapEngineD.Pause;
 begin
    FTimer.Enabled := false;
+   FPlaying := false;
 end;
 
 procedure T2kMapEngineD.PrepareContainers;
