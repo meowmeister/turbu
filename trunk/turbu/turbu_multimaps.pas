@@ -67,6 +67,7 @@ begin
          FLast := TList<TValue>.Create;
          inherited Add(key, FLast);
       end;
+      FLastKey := key;
    end;
 end;
 
