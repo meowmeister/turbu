@@ -1071,6 +1071,8 @@ var
    i: integer;
 begin
    FTime := FOnGetTime();
+   if FTime = 0 then
+      Exit;
    if FTime <> FPrevTime then
       updateTime;
    FPrevTime := FTime;
