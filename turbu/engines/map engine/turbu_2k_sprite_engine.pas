@@ -134,7 +134,7 @@ type
       procedure EnsureImage(const filename: string);
       procedure Draw; override;
       function canExit(const x, y: integer; direction: TFacing; character: TMapSprite): boolean;
-      function SpritesAt(location: TSgPoint): TArray<TMapSprite>;
+      function SpritesAt(location: TSgPoint; exceptFor: TMapSprite = nil): TArray<TMapSprite>;
       procedure AddLocation(const position: TSgPoint; character: TMapSprite);
       procedure LeaveLocation(const position: TSgPoint; character: TMapSprite);
       function normalizePoint(var x, y: integer): boolean;
@@ -811,22 +811,21 @@ var
    sprites: TArray<TMapSprite>;
    sprite: TMapSprite;
 begin
-   sprites := self.SpritesAt(location);
-   result := passable(location, direction) and ((sprites = nil) or
-     ((length(sprites) = 1) and (sprites[0] = character)));
-   if (result = false) and (length(sprites) > 0) then
+   sprites := self.SpritesAt(location, character);
+   if length(sprites) > 0 then
    begin
       result := true;
       for sprite in sprites do
       begin
-         if sprite = character then
-            continue;
          if assigned(sprite.event) and assigned(sprite.event.currentPage) then
             result := result and ((sprite.baseTile.z <> character.baseTile.z)
                                    or ((character is TCharSprite) and (sprite is TEventSprite)
-                                       and (sprite.event.currentPage.Zorder <> 1)));
+                                       and (sprite.event.currentPage.Zorder <> 1)))
+         else if sprite.event = nil then
+            result := result and (sprite.baseTile.z <> character.baseTile.z);
       end;
-   end;
+   end
+   else result := passable(location, direction);
 end;
 
 function T2kSpriteEngine.Passable(location: TSgPoint; direction: TFacing): boolean;
@@ -1133,11 +1132,22 @@ begin
    FShakeTime := duration;
 end;
 
-function T2kSpriteEngine.SpritesAt(location: TSgPoint): TArray<TMapSprite>;
+function T2kSpriteEngine.SpritesAt(location: TSgPoint; exceptFor: TMapSprite = nil): TArray<TMapSprite>;
+var
+   i, j: integer;
 begin
    if not FSpriteLocations.ContainsKey(location) then
       result := nil
    else result := FSpriteLocations[location].ToArray;
+   if assigned(exceptFor) and assigned(result) then
+      for i := High(result) downto 0 do
+         if result[i] = exceptFor then
+         begin
+            for j := i to High(result) - 1 do
+               result[j] := result[j + 1];
+            SetLength(result, length(result) - 1);
+            break;
+         end;
 end;
 
 function T2kSpriteEngine.tileInFrontOf(var location: TSgPoint; direction: TFacing): TMapTile;
