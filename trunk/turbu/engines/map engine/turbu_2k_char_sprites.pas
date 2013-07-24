@@ -522,6 +522,7 @@ procedure THeroSprite.packUp;
 begin
    FEngine.Remove(FTiles[1]);
    FEngine.Remove(FTiles[2]);
+   (FEngine as T2kSpriteEngine).LeaveLocation(FLocation, self);
 end;
 
 procedure THeroSprite.setMovement(direction: TFacing);

@@ -838,6 +838,7 @@ begin
       FTiles[1].Dead;
    if assigned(FTiles[2]) then
       FTiles[2].Dead;
+   (FEngine as T2kSpriteEngine).LeaveLocation(FLocation, self);
    FFlashTimer.Free;
    FPause.free;
    FMoveTime.Free;
