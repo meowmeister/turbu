@@ -460,8 +460,8 @@ end;
 destructor T2kSpriteEngine.Destroy;
 begin
    FreeAndNil(FFadeTime);
-   FSpriteLocations.Free;
    FMapObjects.Free;
+   FSpriteLocations.Free;
    FTiles.Free;
    FMap.Free;
    inherited;
@@ -792,7 +792,11 @@ begin
    begin
       tile := GetTile(x, y, i);
       if assigned(tile) then
+      begin
+         if ((taCeiling in tile.attributes) and (i > 0) and (TRANSLATE[direction] in tile.attributes)) then
+            Continue;
          Exit(TRANSLATE[direction] in tile.attributes);
+      end;
    end;
    raise Exception.CreateFmt('No tiles at location (%d, %d)!', [x, y]); //should not see this
 end;
