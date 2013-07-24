@@ -261,6 +261,7 @@ begin
       if dmDatabase = nil then
       begin
          FDatabaseOwner := true;
+         GGameEngine := self;
          dmDatabase := TdmDatabase.Create(nil);
          dmDatabase.Connect(database, self.GetValidateProc());
          FDatabase := TRpgDatabase.Load(dmDatabase);
@@ -274,7 +275,6 @@ begin
          SetupScriptImports;
          FObjectManager.LoadGlobalScripts(GDatabase.globalEvents);
          FObjectManager.OnUpdate := GEnvironment.UpdateEvents;
-         GGameEngine := self;
       end
       else begin
          FDatabase := GDatabase;
@@ -557,6 +557,7 @@ begin
    FCurrentMap.CurrentParty := hero;
    FreeAndNil(FImageEngine);
    FImageEngine := TImageEngine.Create(GSpriteEngine, FCanvas, FImages);
+   GEnvironment.CreateTimers;
    Play;
 end;
 
@@ -649,7 +650,10 @@ function T2kMapEngine.doneLoadingMap: boolean;
 begin
    FCurrentMap := FMaps[FWaitingMap.id];
    if FImageEngine = nil then
+   begin
       FImageEngine := TImageEngine.Create(FCurrentMap, FCanvas, FImages);
+      GEnvironment.CreateTimers;
+   end;
    GSpriteEngine := FCurrentMap;
    LoadMapSprites(FCurrentMap.mapObj);
    FObjectManager.LoadMap(FWaitingMap, FTeleportThread);

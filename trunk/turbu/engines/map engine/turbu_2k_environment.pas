@@ -92,6 +92,8 @@ type
       [NoImport]
       constructor Create(database: TRpgDatabase);
       destructor Destroy; override;
+      [NoImport]
+      procedure CreateTimers;
 
       function keyScan(mask: TButtonCodes; wait: boolean): integer;
       procedure wait(duration: integer);
@@ -184,8 +186,15 @@ begin
    FMenuEnabled := true;
    TRpgEventConditions.OnEval := Self.EvalConditions;
    FEventMap := TDictionary<TRpgMapObject, TRpgEvent>.Create;
-   FTimer := TRpgTimer.create(TSystemTimer.Create(GGameEngine.ImageEngine));
-   FTimer2 := TRpgTimer.create(TSystemTimer.Create(GGameEngine.ImageEngine));
+end;
+
+procedure T2kEnvironment.CreateTimers;
+begin
+   if FTimer = nil then
+   begin
+      FTimer := TRpgTimer.create(TSystemTimer.Create(GGameEngine.ImageEngine));
+      FTimer2 := TRpgTimer.create(TSystemTimer.Create(GGameEngine.ImageEngine));
+   end;
 end;
 
 procedure T2kEnvironment.DeleteObject(permanant: boolean);

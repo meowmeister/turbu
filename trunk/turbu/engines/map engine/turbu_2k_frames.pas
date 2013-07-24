@@ -1046,7 +1046,7 @@ begin
    for I := 1 to 5 do
    begin
       FTiles[i] := TSprite.Create(self);
-      FTiles[i].ImageName := 'SysTimer';
+      FTiles[i].ImageName := GMenuEngine.SystemGraphic.filename;
    end;
    FTiles[1].ImageIndex := 11;
    FTiles[3].ImageIndex := 10;
