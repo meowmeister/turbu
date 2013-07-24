@@ -647,6 +647,8 @@ begin
       dummy := min(DELAY_SLICE, timeleft);
       SDL_Delay(dummy);
    until (timeleft = dummy) or (self.Terminated);
+   if Terminated then
+      Abort;
 end;
 
 procedure TScriptThread.PushPage(value: TRpgEventPage);
