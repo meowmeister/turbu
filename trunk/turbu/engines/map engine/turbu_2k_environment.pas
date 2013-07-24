@@ -714,7 +714,7 @@ begin
    assert(TThread.CurrentThread.ThreadID <> MainThreadID);
    thread := TThread.CurrentThread as TScriptThread;
    while wait and FKeyLock do
-      GScriptEngine.threadSleep(TRpgTimestamp.FrameLength);
+      GScriptEngine.threadWait;
    scan := GGameEngine.ReadKeyboardState;
    Sleep(TRpgTimestamp.FrameLength);
    scan := scan + GGameEngine.ReadKeyboardState;
