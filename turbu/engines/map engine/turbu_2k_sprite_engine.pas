@@ -74,13 +74,13 @@ type
       FDisplacementX, FDisplacementY: single;
       FDisplacementSpeed: single;
       FScreenLocked: boolean;
+      FDispBaseX, FDispBaseY: single;
 
       //shake control
       FShakePower: byte;
       FShakeSpeed: byte;
       FShakeCounter: byte;
       FShakeTime: integer;
-      FBaseX: single;
 
       procedure SetViewport(const viewport: TRect);
       procedure loadTileMatrix(const value: TTileList; const index: integer; const viewport: TRect);
@@ -93,6 +93,7 @@ type
 
       procedure Tint();
       procedure adjustCoords(var x, y: integer);
+      procedure adjustCoordsForDisplacement(var x, y: integer);
       function IsBlank: boolean;
       procedure SetCurrentParty(const Value: TCharSprite);
       procedure EndTransition;
@@ -290,6 +291,16 @@ begin
       x := clamp(x, 0, (self.width * TILE_SIZE.x) - canvas.Width);
    if not (wrVertical in FMap.wraparound) then
       y := clamp(y, 0, (self.height * TILE_SIZE.Y) - Canvas.Height);
+end;
+
+procedure T2kSpriteEngine.adjustCoordsForDisplacement(var x, y: integer);
+var
+   halfwidth, halfheight, maxwidth, maxheight: integer;
+begin
+   halfwidth := min(round(canvas.width / 2), (width + 1) * 8);
+   halfheight := min(round(canvas.height / 2), (height + 1) * 8);
+   dec(x, halfwidth);
+   dec(y, halfheight);
 end;
 
 function T2kSpriteEngine.updateBorders(x, y, layer: integer): boolean;
@@ -587,6 +598,8 @@ begin
    self.SetViewport(rect(aX, aY, ax + (canvas.width div TILE_SIZE.x), ay + (canvas.Height div TILE_SIZE.y)));
    self.WorldX := px;
    self.WorldY := py;
+   FDispBaseX := WorldX;
+   FDispBaseY := WorldY;
 end;
 
 procedure T2kSpriteEngine.centerOn(x, y: integer);
@@ -933,7 +946,6 @@ begin
    worldX := commons.round(worldX);
    worldY := commons.round(worldY);
    moveTo(trunc(FCurrentParty.baseTile.X), trunc(FCurrentParty.baseTile.Y));
-   FBaseX := worldX;
 end;
 
 procedure T2kSpriteEngine.ApplyDisplacement;
@@ -991,9 +1003,9 @@ begin
       delta := min(abs(FDispGoalX), FDisplacementSpeed);
       if FDispGoalX < 0 then
          delta := delta * -1;
-      FBaseX := FBaseX + delta;
       FDispGoalX := FDispGoalX - delta;
       FDisplacementX := FDisplacementX + delta;
+      clamp(FDisplacementX, -FDispBaseX, (width * TILE_SIZE.x) - canvas.width);
       panned := true;
    end;
    if FDispGoalY <> 0 then
@@ -1001,9 +1013,9 @@ begin
       delta := min(abs(FDispGoalY), FDisplacementSpeed);
       if FDispGoalY < 0 then
          delta := delta * -1;
-      worldY := worldY + delta;
       FDispGoalY := FDispGoalY - delta;
       FDisplacementY := FDisplacementY + delta;
+      clamp(FDisplacementY, -FDispBaseY, (height * TILE_SIZE.y) - canvas.Height);
       panned := true;
    end;
    FDisplacing := panned;
@@ -1129,7 +1141,6 @@ begin
    else if viewport.Top > self.Height then
       include(FOverlapping, facing_down);
    ResizeCanvas;
-   FBaseX := worldX;
 end;
 
 procedure T2kSpriteEngine.shakeScreen(power, speed, duration: integer);
@@ -1172,7 +1183,7 @@ end;
 
 procedure T2kSpriteEngine.displaceTo(x, y: integer);
 begin
-   adjustCoords(x, y);
+   adjustCoordsForDisplacement(x, y);
    FDispGoalX := FDispGoalX + x - worldX;
    FDispGoalY := FDispGoalY + y - worldY;
    FDisplacing := true;
