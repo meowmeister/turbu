@@ -207,14 +207,14 @@ begin
    glColor4f(1, 1, 1, self.alpha / 255);
    halfWidth := (self.Width / 2);
    halfheight := (self.Height / 2);
-   if Pinned then
+   if Pinned then //pinned TO THE MAP
    begin
-      cx := FCenterX;
-      cy := FCenterY;
-   end
-   else begin
       cx := FCenterX + engine.WorldX - FBaseWX;
       cy := FCenterY + Engine.WorldY - FBaseWY;
+   end
+   else begin     //pinned TO THE SCREEN
+      cx := FCenterX;
+      cy := FCenterY;
    end;
 
    drawrect := self.GetDrawRect;
