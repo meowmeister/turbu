@@ -1071,7 +1071,7 @@ begin
       Exit;
 
    inc(FWhichFrame);
-   if FWhichFrame = FOOTSTEP_CONSTANT[FMoveRate] then
+   if FWhichFrame >= FOOTSTEP_CONSTANT[FMoveRate] then
    begin
       FWhichFrame := 0;
       newFrame := (FMoveFrame + 1) mod length(FActionMatrix[FAction]);
