@@ -91,6 +91,7 @@ type
       procedure setStat(which: integer; value: integer);
       procedure setTransparent(const Value: boolean);
       procedure updateLevel(const gain: boolean);
+      function GetTemplate: TClassTemplate;
 
    protected
       class function templateClass: TDatafileClass; override;
@@ -145,6 +146,8 @@ type
       property highCondition: integer read getHighCondition;
       property AIControlled: boolean read FComputerControlled;
       property StrongDefense: boolean read FStrongDefense;
+      [NoImport]
+      property template: TClassTemplate read GetTemplate;
    end;
 
    TRpgParty = class(TRpgCharacter)
@@ -634,6 +637,11 @@ begin
       inc(result, FStat[i, which]);
    if result < 0 then
       result := 0;
+end;
+
+function TRpgHero.GetTemplate: TClassTemplate;
+begin
+   result := inherited template as TClassTemplate;
 end;
 
 function TRpgHero.inParty: boolean;
