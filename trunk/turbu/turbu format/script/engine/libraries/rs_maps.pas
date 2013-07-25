@@ -287,8 +287,6 @@ begin
       facing_down: inc(Y, distance);
       facing_left: dec(x, distance);
    end;
-   X := clamp(x, 0, GSpriteEngine.width);
-   Y := clamp(y, 0, GSpriteEngine.height);
    panScreenTo(x, y, speed, wait);
 end;
 
