@@ -84,6 +84,7 @@ type
       function GetFlashColor: TGlArrayF4;
       procedure SetMovePause;
       procedure SetMoveQueue(const Value: TPath);
+    procedure opChangeFacing(dir: TFacing);
 
       property dirLocked: boolean read isDirLocked write FDirLocked;
    protected
@@ -201,7 +202,7 @@ type
 
 const
    BASE_MOVE_DELAY = 133;
-   MOVE_DELAY: array[1..6] of integer = (333, 243, 177, 133, 111, 67);
+   MOVE_DELAY: array[1..6] of integer = (1064, 532, 266, 133, 67, 33);
    WIDTH_BIAS = 4;
    FOOTSTEP_CONSTANT: array[1..6] of integer = (11, 10, 8, 6, 5, 5); //yay for fudge factors!
    MAX_TRANSPARENCY = 7;
@@ -702,6 +703,13 @@ begin
    end;
 end;
 
+procedure TMapSprite.opChangeFacing(dir: TFacing);
+begin
+   self.facing := dir;
+   FMoveTime.Free;
+   FMoveTime := TRpgTimestamp.Create(100);
+end;
+
 function TMapSprite.doMove(which: TPath): boolean;
 var
    unchanged: boolean;
@@ -724,17 +732,17 @@ begin
       9: unchanged := not ((self = GSpriteEngine.CurrentParty) or (TryMoveTowardsHero));
       $A: unchanged := not ((self = GSpriteEngine.CurrentParty) or (TryMoveAwayFromHero));
       $B: unchanged := not tryMove(FFacing);
-      $C: self.facing := facing_up;
-      $D: self.facing := facing_right;
-      $E: self.facing := facing_down;
-      $F: self.facing := facing_left;
-      $10: self.facing := TFacing((ord(self.facing) + 1) mod 4);
-      $11: self.facing := TFacing((ord(self.facing) + ord(pred(high(TFacing)))) mod 4);
-      $12: self.facing := opposite_facing(self.facing);
-      $13: self.facing := TFacing((ord(self.facing) + system.random(3) + 1) mod 4);
-      $14: self.facing := TFacing(system.random(4));
-      $15: self.facing := towardsHero;
-      $16: self.facing := opposite_facing(towardsHero);
+      $C: opChangeFacing(facing_up);
+      $D: opChangeFacing(facing_right);
+      $E: opChangeFacing(facing_down);
+      $F: opChangeFacing(facing_left);
+      $10: opChangeFacing(TFacing((ord(self.facing) + 1) mod 4));
+      $11: opChangeFacing(TFacing((ord(self.facing) + ord(pred(high(TFacing)))) mod 4));
+      $12: opChangeFacing(opposite_facing(self.facing));
+      $13: opChangeFacing(TFacing((ord(self.facing) + system.random(3) + 1) mod 4));
+      $14: opChangeFacing(TFacing(system.random(4)));
+      $15: opChangeFacing(towardsHero);
+      $16: opChangeFacing(opposite_facing(towardsHero));
       $17:
       begin
          assert(not assigned(FPause));
