@@ -21,7 +21,6 @@ type
    public
       [NoImport]
       constructor create(sprite: TSystemTimer);
-      destructor Destroy; override;
       [NoImport]
       procedure Serialize(writer: TdwsJSONWriter);
       [NoImport]
@@ -60,12 +59,6 @@ begin
    if MSec >= 500 then
       inc(FSecs);
    sprite.OnGetTime := self.GetTime;
-end;
-
-destructor TRpgTimer.Destroy;
-begin
-   FTimerSprite.Dead;
-   inherited;
 end;
 
 procedure TRpgTimer.Serialize(writer: TdwsJSONWriter);
