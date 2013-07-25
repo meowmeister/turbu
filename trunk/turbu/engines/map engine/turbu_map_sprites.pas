@@ -364,6 +364,8 @@ begin
       end;
       else assert(false);
    end;
+   if data.animType in [at_sentry, at_fixedDir] then
+      FreeAndNil(FMoveTime);
 end;
 
 procedure TMapSprite.CheckMoveChange;
