@@ -110,6 +110,7 @@ type
       FScriptEngine: TScriptEngine;
       FPlaylist: TList<TRpgEventPage>;
       FOnUpdate: TProc;
+      FInCutscene: boolean;
    public
       constructor Create;
       destructor Destroy; override;
@@ -121,6 +122,7 @@ type
 
       property ScriptEngine: TScriptEngine read FScriptEngine;
       property OnUpdate: TProc read FOnUpdate write FOnUpdate;
+      property InCutscene: boolean read FInCutscene write FInCutscene;
    end;
 
 var

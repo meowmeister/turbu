@@ -106,6 +106,8 @@ var
    I: Integer;
    lEvent: TArray<TMapSprite>;
 begin
+   if GMapObjectManager.InCutscene then
+      Exit;
    bumper := character as TMapSprite;
    lEvent := self.event;
    if assigned(bumper.event) and (bumper.event.playing) then
