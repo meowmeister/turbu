@@ -39,6 +39,7 @@ var
    glUseProgram: procedure(programObj: GLhandle); stdcall;
    glActiveTextureARB: procedure(texture: GLenum); stdcall;
    glMultiTexCoord2iARB: procedure(target: GLenum; s: GLint; t: GLint); stdcall;
+   glBlendFuncSeparate: procedure(srcRGB, dstRGB, srcAlpha, dstAlpha: GLenum); stdcall;
 
    ImplementationRead: boolean;
 
@@ -60,6 +61,7 @@ begin
    glUseProgram := SDL_GL_GetProcAddress('glUseProgram');
    glActiveTextureARB := SDL_GL_GetProcAddress('glActiveTextureARB');
    glMultiTexCoord2iARB := SDL_GL_GetProcAddress('glMultiTexCoord2iARB');
+   glBlendFuncSeparate := SDL_GL_GetProcAddress('glBlendFuncSeparate');
 end;
 
 end.

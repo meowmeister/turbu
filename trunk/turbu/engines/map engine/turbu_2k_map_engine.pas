@@ -77,12 +77,13 @@ type
       FCutscene: integer;
       procedure OnTimer(Sender: TObject);
       procedure standardRender(Sender: TObject);
+      procedure RenderImages(sender: TObject);
       procedure OnProcess(Sender: TObject);
       procedure PressButton(button: TButtonCode);
       procedure PartyButton(button: TButtonCode);
       procedure Validate(query: TSqlQuery);
       procedure PlayMapMusic(metadata: TMapMetadata);
-      procedure DrawRenderTarget(target: TSdlRenderTarget);
+      procedure DrawRenderTarget(target: TSdlRenderTarget; canTint: boolean);
       procedure SetupScriptImports;
    protected
       FDatabaseOwner: boolean;
@@ -135,8 +136,9 @@ uses
 const
    RENDERER_MAIN = 0;
    RENDERER_ALT = 1;
-   TRAN_1 = 2;
-   TRAN_2 = 3;
+   RENDERER_IMAGE = 2;
+   TRAN_1 = 3;
+   TRAN_2 = 4;
 
 { Callbacks }
 
@@ -167,7 +169,7 @@ var
    i: integer;
 begin
    GRenderTargets.Clear;
-   for i := 1 to 4 do
+   for i := 1 to 5 do
       GRenderTargets.Add(TSdlRenderTarget.Create(FCanvas.size));
 end;
 
@@ -714,14 +716,14 @@ begin
       msNone, msShared, msExclusiveShared: FCurrentMap.Draw;
       msFull:;
    end;
-   if (GMenuEngine.State <> msFull) then
-   begin
-      if assigned(FImageEngine) then
-         FImageEngine.Draw;
-      FCurrentMap.DrawFlash;
-   end;
    if FSwitchState = sw_ready then
       FSwitchState := sw_switching;
+end;
+
+procedure T2kMapEngine.RenderImages(sender: TObject);
+begin
+   if assigned(FImageEngine) then
+      FImageEngine.Draw;
 end;
 
 procedure T2kMapEngine.TitleScreen;
@@ -740,7 +742,7 @@ begin
    end;
 end;
 
-procedure T2kMapEngine.DrawRenderTarget(target: TSdlRenderTarget);
+procedure T2kMapEngine.DrawRenderTarget(target: TSdlRenderTarget; canTint: boolean);
 var
    current: integer;
    r, g, b, a: byte;
@@ -750,7 +752,7 @@ begin
 //   glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TEXTURE_BIT);
    glColor4f(1, 1, 1, 1);
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
-   if not FCurrentMap.Fade then
+   if not (canTint and FCurrentMap.Fade) then
       FShaderEngine.UseShaderProgram(FShaderEngine.ShaderProgram('default', 'defaultF') {4});
    glEnable(GL_ALPHA_TEST);
    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -842,7 +844,11 @@ begin
    FCanvas.Clear;
    GRenderTargets.RenderOn(RENDERER_MAIN, standardRender, 0, true);
 
-   DrawRenderTarget(GRenderTargets[RENDERER_MAIN]);
+   DrawRenderTarget(GRenderTargets[RENDERER_MAIN], true);
+
+   GRenderTargets.RenderOn(RENDERER_IMAGE, RenderImages, 0, true, true);
+   DrawRenderTarget(GRenderTargets[RENDERER_IMAGE],  false);
+   FCurrentMap.DrawFlash;
 
    if GMenuEngine.State <> msNone then
       GMenuEngine.Draw;
