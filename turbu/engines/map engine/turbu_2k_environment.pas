@@ -106,6 +106,7 @@ type
       procedure DeleteObject(permanant: boolean);
       function HeroPresent(id: integer): boolean;
       procedure CallScript(objectID, pageID: integer);
+      function ImageIndex(img: TRpgImage): integer;
 
       [NoImport]
       procedure RemoveImage(image: TRpgImage);
@@ -601,13 +602,25 @@ end;
 
 procedure T2kEnvironment.SetImage(i: integer; const Value: TRpgImage);
 begin
-   i := clamp(i, 0, 250);
-   if i >= length(FImages) then
-      SetLength(FImages, i + 1)
-   else if assigned(FImages[i]) then
-      commons.runThreadsafe(procedure begin FImages[i].Destroy; end, true);
+   commons.runThreadsafe(
+      procedure
+      begin
+         i := clamp(i, 0, 250);
+         if i >= length(FImages) then
+            SetLength(FImages, i + 1)
+         else FImages[i].Free;
+         FImages[i] := value;
+      end, true);
+end;
 
-   FImages[i] := value;
+function T2kEnvironment.ImageIndex(img: TRpgImage): integer;
+var
+   i: integer;
+begin
+   for i := 0 to High(FImages) do
+      if FImages[i] = img then
+         Exit(i);
+   result := -1
 end;
 
 function T2kEnvironment.GetMapObject(i: integer): TRpgEvent;

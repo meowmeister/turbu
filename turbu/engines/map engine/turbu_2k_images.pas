@@ -28,7 +28,7 @@ type
       FTag: Integer;
       FCenterX, FCenterY: single;
       FMasked: boolean;
-      FImage: TRpgImage;
+      FRpgImage: TRpgImage;
       FBaseWX, FBaseWY: single;
 
       function getTimer: integer;
@@ -123,7 +123,7 @@ begin
    self.applyImageColors(100, 100, 100, 100);
    self.Alpha := 255;
    FAlphaTarget := 255;
-   FImage := image;
+   FRpgImage := image;
    FBaseWX := baseWX;
    FBaseWY := baseWY;
 end;
@@ -137,7 +137,7 @@ end;
 destructor TRpgImageSprite.Destroy;
 begin
    FTransitionTimer.Free;
-   FImage.FSprite := nil;
+   FRpgImage.FSprite := nil;
    inherited;
 end;
 
@@ -195,6 +195,8 @@ var
    shaders: TdmShaders;
    xScale, yScale: single;
 begin
+   if self.image = nil then
+      Exit;
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    glPushAttrib(GL_CURRENT_BIT);
    shaders := GSpriteEngine.ShaderEngine;
@@ -517,15 +519,9 @@ end;
 
 procedure TRpgImage.Waitfor;
 var
-   i, idx: integer;
+   idx: integer;
 begin
-   idx := -1;
-   for i := 1 to GEnvironment.ImageCount do
-      if GEnvironment.Image[i] = self then
-      begin
-         idx := i;
-         break;
-      end;
+   idx := GEnvironment.ImageIndex(self);
    if idx = -1 then
       Exit;
    GScriptEngine.SetWaiting(
