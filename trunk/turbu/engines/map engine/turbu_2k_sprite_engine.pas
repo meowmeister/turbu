@@ -202,7 +202,7 @@ uses
    sdl_13;
 
 const
-   BASESPEED = 3.8;
+   BASESPEED = 2.2;
    MOVESPEED: array[1..6] of single = (BASESPEED / 8, BASESPEED / 4, BASESPEED / 2, BASESPEED, BASESPEED * 2, BASESPEED * 4);
    SHAKE_MAX = 23;
 var
