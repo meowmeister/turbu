@@ -234,6 +234,7 @@ begin
    Self.Image.surface.bind;
    glEnable(GL_BLEND);
    glEnable(GL_ALPHA_TEST);
+   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA,GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
    glBegin(GL_QUADS);
       glTexCoord2i(spriteRect.Left,                    spriteRect.Top);
       glVertex2f(center.x - halfWidth * Self.ScaleX,   center.y - halfHeight * Self.ScaleY);

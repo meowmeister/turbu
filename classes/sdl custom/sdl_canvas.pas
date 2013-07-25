@@ -59,7 +59,8 @@ type
 
    TSdlRenderTargets = class(TObjectList<TSdlRenderTarget>)
    public
-      function RenderOn(Index: Integer; Event: TNotifyEvent; Bkgrnd: Cardinal = 0; FillBk: Boolean = true): Boolean;
+      function RenderOn(Index: Integer; Event: TNotifyEvent; Bkgrnd: Cardinal = 0;
+        FillBk: Boolean = true; composite: boolean = false): Boolean;
    end;
 
    TRenderStack = class(TStack<TSdlRenderSurface>);
@@ -455,7 +456,7 @@ end;
 { TSdlRenderTargets }
 
 function TSdlRenderTargets.RenderOn(Index: Integer; Event: TNotifyEvent;
-  Bkgrnd: Cardinal; FillBk: Boolean): Boolean;
+  Bkgrnd: Cardinal; FillBk, composite: Boolean): Boolean;
 var
    Target: TSdlRenderTarget;
    color: TSgColor;
@@ -471,9 +472,13 @@ begin
       if (FillBk) then
       begin
          color := TSgColor(bkgrnd);
-         color.rgba[4] := 255;
+         if composite then
+            color.rgba[4] := 0
+         else color.rgba[4] := 255;
          target.SetBgColor(color);
+         glDisable(GL_BLEND);
          target.Clear;
+         glEnable(GL_BLEND);
       end;
       Event(Self);
       result := true;
