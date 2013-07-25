@@ -821,7 +821,10 @@ begin
       result := true;
       for sprite in sprites do
       begin
-         if assigned(sprite.event) and assigned(sprite.event.currentPage) then
+         if ((character is TCharSprite) and (sprite is TCharSprite)
+              and (character.location = sprite.location)) then
+            result := true
+         else if assigned(sprite.event) and assigned(sprite.event.currentPage) then
             result := result and ((sprite.baseTile.z <> character.baseTile.z)
                                    or ((character is TCharSprite) and (sprite is TEventSprite)
                                        and (sprite.event.currentPage.Zorder <> 1)))
