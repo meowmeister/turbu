@@ -803,7 +803,7 @@ begin
       0, $16, $17, $19, $1F, $21, $23, $24, $33: theResult := 0;
       $18: theResult := 1;
       $20: theResult := 3;
-      $25: theResult := 2;
+      $25: theResult := 3;
    else
       begin
          msgBox ('No case implemented for x' + IntToHex(expected, 2) + '!', 'fillInEPageInt says:', MB_OK);
