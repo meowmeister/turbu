@@ -561,6 +561,7 @@ begin
    FreeAndNil(FImageEngine);
    FImageEngine := TImageEngine.Create(GSpriteEngine, FCanvas, FImages);
    GEnvironment.CreateTimers;
+   GMapObjectManager.InCutscene := false;
    Play;
 end;
 
@@ -780,6 +781,7 @@ end;
 
 procedure T2kMapEngine.EnterCutscene;
 begin
+   GMapObjectManager.InCutscene := true;
    Inc(FCutscene);
 end;
 
@@ -788,6 +790,7 @@ begin
    if FCutscene <= 0 then
       raise Exception.Create('Mismatched call to T2kMapEngine.LeaveCutscene');
    dec(FCutscene);
+   GMapObjectManager.InCutscene := FCutscene <> 0;
 end;
 
 procedure T2kMapEngine.loadMap(id: integer);
