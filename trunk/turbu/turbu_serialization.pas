@@ -97,6 +97,12 @@ type
       procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
    end;
 
+   OneIndexedAttribute = class(TDBUploadAttribute)
+   protected
+      procedure upload(db: TDataset; field: TRttiField; instance: TObject); override;
+      procedure download(db: TDataset; field: TRttiField; instance: TObject); override;
+   end;
+
    TIsUploadableAttribute = class abstract(TCustomAttribute)
    protected
       function IsUploadable(instance: TValue): boolean; virtual; abstract;
@@ -1001,6 +1007,18 @@ var
 begin
    for i := 0 to High(FSteps) do
       FSteps[i].Upload(value, db);
+end;
+
+{ OneIndexedAttribute }
+
+procedure OneIndexedAttribute.download(db: TDataset; field: TRttiField; instance: TObject);
+begin
+   field.SetValue(instance, TDatasetSerializer.getField(db, field).AsInteger + 1);
+end;
+
+procedure OneIndexedAttribute.upload(db: TDataset; field: TRttiField; instance: TObject);
+begin
+   TDatasetSerializer.getField(db, field).AsInteger := field.GetValue(instance).AsInteger - 1;
 end;
 
 end.

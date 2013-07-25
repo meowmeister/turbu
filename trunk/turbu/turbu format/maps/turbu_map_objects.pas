@@ -165,6 +165,7 @@ type
       FEventHeight: byte;
       FNoOverlap: boolean;
       FAnimType: TAnimType;
+      [OneIndexed]
       FMoveSpeed: byte;
       [NoUpload]
       FPath: TPath;
