@@ -60,10 +60,7 @@ type
       FFlashDuration: integer;
 
       //transition control
-      FTransProc: TTransProc;
-      FTransitionProgress: integer;
-      FRenderProc: TRenderProc;
-      FInitialRender: boolean;
+      FErasing: boolean;
 
       //displacement control
       FPanSpeed: single;
@@ -94,7 +91,6 @@ type
       procedure Tint();
       procedure adjustCoords(var x, y: integer);
       procedure adjustCoordsForDisplacement(var x, y: integer);
-      function IsBlank: boolean;
       procedure SetCurrentParty(const Value: TCharSprite);
       procedure EndTransition;
 
@@ -104,9 +100,6 @@ type
       procedure InternalCenterOn(px, py: integer);
 
       procedure DrawNormal;
-      procedure DrawFading;
-      procedure transDrawSelf(sender: TObject);
-      procedure transDrawProc(sender: TObject);
    protected
       function GetHeight: integer; override;
       function GetWidth: integer; override;
@@ -155,7 +148,7 @@ type
       procedure FlashScreen(r, g, b, power, duration: integer);
       procedure fadeOut(time: integer);
       procedure fadeIn(time: integer);
-      procedure beginTransition;
+      procedure beginTransition(erasing: boolean);
       procedure endErase;
       procedure endShow;
       procedure DrawFlash;
@@ -166,6 +159,8 @@ type
       procedure shakeScreen(power, speed: integer; duration: integer);
       procedure moveTo(x, y: integer);
 
+      procedure Wake;
+
       property overlapping: TFacingSet read FOverlapping;
       property viewport: TRect read FViewport write SetViewport;
       property mapRect: TRect read FMapRect;
@@ -173,8 +168,7 @@ type
       property currentLayer: integer read FCurrentLayer write FCurrentLayer;
       property maxLayer: integer read GetMaxLayer;
       property mapObj: TRpgMap read FMap;
-      property blank: boolean read IsBlank write FBlank;
-      property initialRender: boolean read FInitialRender write FInitialRender;
+      property blank: boolean read FBlank write FBlank;
       property mapObjects: TMapSpriteList read FMapObjects;
       property CurrentParty: TCharSprite read FCurrentParty write SetCurrentParty;
       property Tile[layer, x, y: integer]: TMapTile read GetDefTile; default;
@@ -188,8 +182,6 @@ type
       property DisplacementX: single read FDisplacementX;
       property DisplacementY: single read FDisplacementY;
       property State: TGameState read FGameState;
-      property transProc: TTransProc read FTransProc write FTransProc;
-      property renderProc: TRenderProc read FRenderProc write FRenderProc;
    end;
 
 var
@@ -352,6 +344,11 @@ begin
    end;
 end;
 
+procedure T2kSpriteEngine.Wake;
+begin
+   FGameState := gs_map;
+end;
+
 procedure T2kSpriteEngine.AddLocation(const position: TSgPoint; character: TMapSprite);
 begin
    FSpriteLocations.Add(position, character);
@@ -500,30 +497,15 @@ begin
    end;
 end;
 
-procedure T2kSpriteEngine.DrawFading;
-begin
-   if assigned(FTransProc) then
-   begin
-      if GCurrentTarget = -1 then
-      begin
-         GCurrentTarget := 0;
-         FTransitionProgress := 0;
-      end;
-      if FInitialRender then
-      begin
-         GRenderTargets.RenderOn(2, transDrawSelf);
-         FInitialRender := false;
-      end else GRenderTargets.RenderOn(GCurrentTarget, self.transDrawProc);
-   end
-   else transDrawSelf(self);
-end;
-
 procedure T2kSpriteEngine.Draw;
 begin
    case self.state of
       gs_map, gs_message: DrawNormal;
+      gs_fading:
+         if FErasing then
+            Self.Canvas.Clear(SDL_BLACK)
+         else DrawNormal;
       gs_menu, gs_battle, gs_minigame, gs_sleeping: raise Exception.Create('Unsupported game state');
-      gs_fading: DrawFading;
    end;
 end;
 
@@ -554,19 +536,18 @@ begin
    end;
 end;
 
-procedure T2kSpriteEngine.beginTransition;
+procedure T2kSpriteEngine.beginTransition(erasing: boolean);
 begin
    FSavedState := FGameState;
    FGameState := gs_fading;
    FBlank := false;
+   FErasing := erasing;
+   FreeAndNil(FFadeTime);
 end;
 
 procedure T2kSpriteEngine.EndTransition;
 begin
    FGameState := FSavedState;
-   GCurrentTarget := -1;
-   FRenderProc := nil;
-   FTransProc := nil;
 end;
 
 procedure T2kSpriteEngine.endErase;
@@ -712,11 +693,6 @@ begin
       mb_bottom: result := yPos > third * 2;
       else raise Exception.Create('Invalid mbox location.');
    end;
-end;
-
-function T2kSpriteEngine.IsBlank: boolean;
-begin
-   result := FBlank or ((FFadeColor[1] = 0) and (FFadeColor[2] = 0) and (FFadeColor[3] = 0));
 end;
 
 function T2kSpriteEngine.CreateNewTile(value: TTileRef): TMapTile;
@@ -866,23 +842,6 @@ begin
    gla[3] := 1;
    FShaderEngine.SetUniformValue(handle, 'rgbValues', gla);
    FShaderEngine.SetUniformValue(handle, 'satMult', FFadeColor[4]);
-end;
-
-procedure T2kSpriteEngine.transDrawProc(sender: TObject);
-begin
-   FTransProc(FTransitionProgress);
-end;
-
-procedure T2kSpriteEngine.transDrawSelf(sender: TObject);
-begin
-   FGameState := FSavedState;
-   FSavedState := gs_fading;
-   self.Draw;
-   if not FBlank then
-   begin
-      FSavedState := FGameState;
-      FGameState := gs_fading;
-   end else FSavedState := FGameState;
 end;
 
 procedure T2kSpriteEngine.DrawFlash();

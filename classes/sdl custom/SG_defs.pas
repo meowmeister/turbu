@@ -48,8 +48,6 @@ const ORIGIN: TSgPoint = (x: 0; y: 0);
 function sgPoint(x, y: integer): TSgPoint;
 function sgPointF(x, y: single): TSgFloatPoint;
 
-function TRectToSdlRect(const input: TRect): TRect;
-
 const
 //TODO: AsphyreDefs backwards compatibility. Replace this when possible
  fxOneColor    = $7FFFFFF6;
@@ -210,15 +208,6 @@ end;
 class operator TSgColor.Implicit(a: TSgcolor): Cardinal;
 begin
    result := a.color;
-end;
-
-{ Classless }
-
-function TRectToSdlRect(const input: TRect): TRect;
-begin
-   result.TopLeft := input.TopLeft;
-   result.Right := input.Right - input.Left;
-   result.Bottom := input.Bottom - input.Top;
 end;
 
 end.

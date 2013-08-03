@@ -95,6 +95,7 @@
 			<DCCReference Include="turbu_2k_weather.pas"/>
 			<DCCReference Include="turbu_2k_savegames.pas"/>
 			<DCCReference Include="turbu_2k_item_types.pas"/>
+			<DCCReference Include="turbu_transition_interface.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

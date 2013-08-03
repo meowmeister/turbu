@@ -24,7 +24,7 @@ uses
    turbu_database_interface, turbu_map_interface, turbu_sdl_image, turbu_2k_char_sprites,
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine, turbu_defs,
    turbu_2k_environment, turbu_script_engine, turbu_map_metadata, dm_shaders,
-   turbu_2k_image_engine, turbu_2k_weather,
+   turbu_2k_image_engine, turbu_2k_weather, turbu_transition_interface,
    timing, AsphyreTimer, SG_defs, SDL_ImageManager, sdl_canvas, SDL, sdl_13;
 
 type
@@ -41,6 +41,8 @@ type
       FTeleportThread: TThread;
       FTitleScreen: TRpgTimestamp;
       FHWND: HWND;
+      FTransition: ITransition;
+      FTransitionFirstFrameDrawn: boolean;
    protected
       FDatabase: TRpgDatabase;
       FCanvas: TSdlCanvas;
@@ -85,6 +87,8 @@ type
       procedure PlayMapMusic(metadata: TMapMetadata);
       procedure DrawRenderTarget(target: TSdlRenderTarget; canTint: boolean);
       procedure SetupScriptImports;
+      procedure RenderFrame(Sender: TObject);
+      procedure SetTransition(const Value: ITransition);
    protected
       FDatabaseOwner: boolean;
       procedure cleanup; override;
@@ -116,6 +120,7 @@ type
       property ImageEngine: TImageEngine read FImageEngine;
       property WeatherEngine: TWeatherSystem read FWeatherEngine;
       property CurrentMap: T2kSpriteEngine read FCurrentMap;
+      property Transition: ITransition read FTransition write SetTransition;
    end;
 
 var
@@ -132,13 +137,6 @@ uses
    rs_maps, rs_message, rs_characters, rs_media, archiveUtils, project_folder,
    logs, EventBuilder,
    sdlstreams, sdl_sprite, sg_utils;
-
-const
-   RENDERER_MAIN = 0;
-   RENDERER_ALT = 1;
-   RENDERER_IMAGE = 2;
-   TRAN_1 = 3;
-   TRAN_2 = 4;
 
 { Callbacks }
 
@@ -608,6 +606,12 @@ begin
    result := FImages.Image[filename] as TRpgSdlImage;
 end;
 
+procedure T2kMapEngine.SetTransition(const Value: ITransition);
+begin
+   FTransition := Value;
+   FTransitionFirstFrameDrawn := false;
+end;
+
 procedure T2kMapEngine.SetupScriptImports;
 var
    script: string;
@@ -813,6 +817,19 @@ end;
 
 //var newAG: integer;
 
+procedure T2kMapEngine.RenderFrame(Sender: TObject);
+begin
+   GRenderTargets.RenderOn(RENDERER_MAP, standardRender, 0, true);
+
+   DrawRenderTarget(GRenderTargets[RENDERER_MAP], true);
+
+   RenderImages(self);
+   FCurrentMap.DrawFlash;
+
+   if GMenuEngine.State <> msNone then
+      GMenuEngine.Draw;
+end;
+
 {$R-}
 procedure T2kMapEngine.OnTimer(Sender: TObject);
 begin
@@ -833,28 +850,27 @@ begin
    FastMM4.PushAllocationGroup(newAG);
 }
 
-   //TODO: Remove commented-out code blocks when transitions and script events are implemented
    inc(FFrame);
    TRpgTimeStamp.NewFrame;
-{   if assigned(FTransProc) then
-      FCurrentMap.Draw
-   else if FCurrentMap.blank then
-      //do nothing
+   if assigned(FTransition) then
+   begin
+      if not FTransitionFirstFrameDrawn then
+      begin
+         GRenderTargets.RenderOn(RENDERER_ALT, RenderFrame, 0, true);
+         FTransitionFirstFrameDrawn := true;
+      end;
+      if not FTransition.Draw then
+      begin
+         FTransitionFirstFrameDrawn := false;
+         FTransition := nil;
+      end;
+   end
    else begin
-      GRenderTargets.RenderOn(2, standardRender, 0, true);
-   end; }
-   SDL_SetRenderDrawColor(FCanvas.renderer, 0, 0, 0, 255);
-   FCanvas.Clear;
-   GRenderTargets.RenderOn(RENDERER_MAIN, standardRender, 0, true);
-
-   DrawRenderTarget(GRenderTargets[RENDERER_MAIN], true);
-
-   GRenderTargets.RenderOn(RENDERER_IMAGE, RenderImages, 0, true, true);
-   DrawRenderTarget(GRenderTargets[RENDERER_IMAGE],  false);
-   FCurrentMap.DrawFlash;
-
-   if GMenuEngine.State <> msNone then
-      GMenuEngine.Draw;
+      if FCurrentMap.blank then
+         GRenderTargets.RenderOn(RENDERER_MAIN, nil, 0, true) //just clear the target
+      else GRenderTargets.RenderOn(RENDERER_MAIN, RenderFrame, 0, true);
+      DrawRenderTarget(GRenderTargets[RENDERER_MAIN], false);
+   end;
 
    FCanvas.Flip;
 //   WriteTimestamp;
