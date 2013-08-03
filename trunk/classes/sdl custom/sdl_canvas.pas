@@ -480,7 +480,8 @@ begin
          target.Clear;
          glEnable(GL_BLEND);
       end;
-      Event(Self);
+      if assigned(event) then
+         Event(Self);
       result := true;
    finally
       CurrentRenderTarget.FParent.popRenderTarget;

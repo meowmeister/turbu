@@ -186,29 +186,29 @@ begin
    rect := FOnGetDrawRect(index);
    FShaderEngine.UseShaderProgram(FPass2);
    glEnable(GL_MULTISAMPLE);
-   glActiveTextureARB(GL_TEXTURE1_ARB);
+   glActiveTextureARB(GL_TEXTURE1);
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
    FOnGetColor().bind;
-   glActiveTextureARB(GL_TEXTURE0_ARB);
+   glActiveTextureARB(GL_TEXTURE0);
 
    FShaderEngine.SetUniformValue(FPass2, 'texAlpha', 0);
    FShaderEngine.SetUniformValue(FPass2, 'texRGB', 1);
 glCheckError;
    glBegin(GL_QUADS);
-      glMultiTexCoord2iARB(GL_TEXTURE0_ARB, 0, 0);
-      glMultiTexCoord2iARB(GL_TEXTURE1_ARB, rect.Left, rect.Top);
+      glMultiTexCoord2iARB(GL_TEXTURE0, 0, 0);
+      glMultiTexCoord2iARB(GL_TEXTURE1, rect.Left, rect.Top);
       glVertex2f(x, y);
 
-      glMultiTexCoord2iARB(GL_TEXTURE0_ARB, 0, FTarget.Height);
-      glMultiTexCoord2iARB(GL_TEXTURE1_ARB, rect.Left, rect.Top + rect.Bottom);
+      glMultiTexCoord2iARB(GL_TEXTURE0, 0, FTarget.Height);
+      glMultiTexCoord2iARB(GL_TEXTURE1, rect.Left, rect.Top + rect.Bottom);
       glVertex2f(x, y + FTarget.Height);
 
-      glMultiTexCoord2iARB(GL_TEXTURE0_ARB, FTarget.Width, FTarget.Height);
-      glMultiTexCoord2iARB(GL_TEXTURE1_ARB, rect.Left + rect.right, rect.Top + rect.Bottom);
+      glMultiTexCoord2iARB(GL_TEXTURE0, FTarget.Width, FTarget.Height);
+      glMultiTexCoord2iARB(GL_TEXTURE1, rect.Left + rect.right, rect.Top + rect.Bottom);
       glVertex2f(x + FTarget.Width, y + FTarget.Height);
 
-      glMultiTexCoord2iARB(GL_TEXTURE0_ARB, FTarget.Width, 0);
-      glMultiTexCoord2iARB(GL_TEXTURE1_ARB, rect.Left + rect.right, rect.top);
+      glMultiTexCoord2iARB(GL_TEXTURE0, FTarget.Width, 0);
+      glMultiTexCoord2iARB(GL_TEXTURE1, rect.Left + rect.right, rect.top);
       glVertex2f(x + FTarget.Width, y);
    glEnd;
    glDisable(GL_MULTISAMPLE);
@@ -222,7 +222,7 @@ begin
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    result := sgPointF(x + TEXT_WIDTH, y);
 
-   glActiveTextureARB(GL_TEXTURE0_ARB);
+   glActiveTextureARB(GL_TEXTURE0);
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
    FTarget.handle.bind;
 
@@ -239,7 +239,7 @@ begin
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    result := sgPointF(x + (TEXT_WIDTH * 2), y);
 
-   glActiveTextureARB(GL_TEXTURE0_ARB);
+   glActiveTextureARB(GL_TEXTURE0);
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
 
    RenderGlyph(index);

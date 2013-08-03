@@ -336,6 +336,49 @@ object dmShaders: TdmShaders
           ''
           '   gl_FragColor = vec4(1, 1, 1, 1);'
           '}')
+      end
+      item
+        Name = 'MaskF'
+        Strings.Strings = (
+          'uniform sampler2DRect before;'
+          'uniform sampler2DRect after;'
+          'uniform sampler2DRect mask;'
+          'varying vec2 texture_coordinate; '
+          ''
+          'void main()'
+          '{   '
+          '   vec3 maskValue = texture2DRect(mask, texture_coordinate).rgb;'
+          
+            '   float alpha = maskValue.r; //(maskValue.r + maskValue.g + mas' +
+            'kValue.b) / 3.0;'
+          '   vec4 beforeValue = texture2DRect(before, texture_coordinate);'
+          '   vec4 afterValue = texture2DRect(after, texture_coordinate);'
+          ''
+          '   gl_FragColor = mix(beforeValue, afterValue, alpha);'
+          '}'
+          '')
+      end
+      item
+        Name = 'mosaic'
+        Strings.Strings = (
+          'varying vec4 v_color;'
+          'varying vec2 texture_coordinate; '
+          'uniform sampler2DRect baseTexture; '
+          'uniform float blockSize;'
+          ' '
+          'void main() '
+          '{ '
+          
+            '    float blockStartX = (floor(texture_coordinate.x / blockSize)' +
+            ' * blockSize) + (blockSize / 2);'
+          
+            '    float blockStartY = (floor(texture_coordinate.y / blockSize)' +
+            ' * blockSize) + (blockSize / 2);'
+          
+            '    gl_FragColor = texture2DRect(baseTexture, vec2(blockStartX, ' +
+            'blockStartY));'
+          '}'
+          '')
       end>
     Left = 136
     Top = 16
