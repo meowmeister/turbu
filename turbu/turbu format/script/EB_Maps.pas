@@ -92,6 +92,12 @@ type
       function GetScriptText: string; override;
    end;
 
+   TEBRenderPause = class(TEBMapObject)
+   public
+      function GetNodeText: string; override;
+      function GetScriptText: string; override;
+   end;
+
    TEBEraseScreen = class(TEBMapObject)
    public
       function GetNodeText: string; override;
@@ -1046,6 +1052,18 @@ begin
    result := format('EnableSave(%s);', [BOOL_STR[Values[0]]]);
 end;
 
+{ TEBRenderPause }
+
+function TEBRenderPause.GetNodeText: string;
+begin
+   result := 'Pause Map Rendering';
+end;
+
+function TEBRenderPause.GetScriptText: string;
+begin
+   result := 'RenderPause;';
+end;
+
 initialization
    TEBObject.RegisterClasses([TEBTransition, TEBTeleport, TEBMemorizeLocation, TEBMemoTeleport,
                     TEBRideVehicle, TEBTeleportVehicle, TEBSwapObjects, TEBTerrainID,
@@ -1055,5 +1073,5 @@ initialization
                     TEBMoveMapObj, TEBWaitMove, TEBStopMove, TEBChangeTileset,
                     TEBChangeBG, TEBEncounterRate, TEBTileSub, TEBTeleLoc, TEBTeleEnable,
                     TEBEscapeLoc, TEBEscapeEnable, TEBSaveEnable, TEBTeleportMapObj,
-                    TEBEndFlash, TEBEndShake]);
+                    TEBEndFlash, TEBEndShake, TEBRenderPause]);
 end.

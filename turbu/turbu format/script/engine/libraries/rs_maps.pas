@@ -51,6 +51,7 @@ uses
    procedure waitUntilMoved;
    procedure stopMoveScripts;
    procedure changeTileset(which: integer);
+   procedure renderPause;
 
    procedure RegisterScriptUnit(engine: TScriptEngine);
 
@@ -444,6 +445,11 @@ begin
       end, true);
 end;
 
+procedure renderPause;
+begin
+   GGameEngine.RenderPause;
+end;
+
 procedure RegisterMapsC(input: TrsTypeImporter);
 begin
    input.ImportType(TypeInfo(TTransitionTypes));
@@ -482,6 +488,7 @@ begin
    input.ImportFunction('procedure AddTeleport(mapID, x, y, switchID: integer);');
    input.ImportFunction('procedure DeleteTeleport(mapID, x, y: integer);');
    input.ImportFunction('procedure EnableTeleport(value: boolean);');
+   input.ImportFunction('procedure RenderPause;');
 end;
 
 procedure RegisterMapsE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
@@ -519,6 +526,7 @@ begin
    RegisterFunction('AddTeleport', nil);
    RegisterFunction('DeleteTeleport', nil);
    RegisterFunction('EnableTeleport', nil);
+   RegisterFunction('RenderPause', @RenderPause);
 end;
 
 procedure RegisterScriptUnit(engine: TScriptEngine);

@@ -83,6 +83,7 @@ contains
   EB_ObjectHelper in 'script\EB_ObjectHelper.pas',
   EB_Expressions_RM in 'script\EB_Expressions_RM.pas',
   db_create in 'design\db_create.pas',
-  EB_MessagePromptCollapser in 'script\EB_MessagePromptCollapser.pas';
+  EB_MessagePromptCollapser in 'script\EB_MessagePromptCollapser.pas',
+  EB_FadeInImageOptimization in 'script\EB_FadeInImageOptimization.pas';
 
 end.
