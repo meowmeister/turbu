@@ -63,7 +63,8 @@ implementation
 uses
    SysUtils, Types, Generics.Collections,
    charset_data, rm2_turbu_maps, rm2_turbu_event_builder, turbu_operators,
-   EventBuilder, EB_GotoRemoval, EB_NestedIfOptimization, EB_MessagePromptCollapser;
+   EventBuilder, EB_GotoRemoval, EB_NestedIfOptimization, EB_MessagePromptCollapser,
+   EB_FadeInImageOptimization;
 
 { T2k2RpgMapObject }
 
@@ -315,6 +316,7 @@ begin
       end;
       ChoiceMerge(result);
       InputMerge(result);
+      FadeInImageOptimization(result);
    except
       result.SaveScript;
       result.free;

@@ -71,6 +71,7 @@ type
       FLeaveCutscene: TCutsceneEvent;
       FThreadPool: TQueue<TScriptThread>;
       FTeleportThread: TScriptThread;
+      FRenderUnpause: TCutsceneEvent;
 
       procedure AddScriptThread(thread: TScriptThread);
       procedure ClearScriptThread(thread: TScriptThread);
@@ -100,6 +101,7 @@ type
 
       property OnEnterCutscene: TCutsceneEvent read FEnterCutscene write FEnterCutscene;
       property OnLeaveCutscene: TCutsceneEvent read FLeaveCutscene write FLeaveCutscene;
+      property OnRenderUnpause: TCutsceneEvent read FRenderUnpause write FRenderUnpause;
       property TeleportThread: TScriptThread read FTeleportThread write FTeleportThread;
    end;
 
@@ -184,7 +186,7 @@ begin
    RegisterFunction('SetSystemSound', @rs_Media.SetSystemSound);
    RegisterFunction('PlaySystemSound', @rs_Media.PlaySystemSound);
    RegisterFunction('SetSystemMusic', @rs_media.SetSystemMusic);
-   RegisterFunction('playMovie', nil);
+   RegisterFunction('playMovie', @rs_media.PlayMovie);
 end;
 
 procedure RegisterSettingsE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
@@ -455,6 +457,7 @@ procedure TScriptEngine.SetWaiting(value: TThreadWaitEvent);
 var
    st: TScriptThread;
 begin
+   FRenderUnpause();
    st := TThread.CurrentThread as TScriptThread;
    st.FWaiting := value;
 end;
@@ -463,6 +466,7 @@ procedure TScriptEngine.threadSleep(time: integer; block: boolean = false);
 var
    st: TScriptThread;
 begin
+   FRenderUnpause();
    st := TThread.CurrentThread as TScriptThread;
    st.FDelay.Free;
    st.FDelay := TRpgTimestamp.Create(time);
@@ -480,6 +484,7 @@ procedure TScriptEngine.ThreadWait;
 var
    st: TScriptThread;
 begin
+   FRenderUnpause();
    st := TThread.CurrentThread as TScriptThread;
    st.scriptOnLine(nil);
 end;

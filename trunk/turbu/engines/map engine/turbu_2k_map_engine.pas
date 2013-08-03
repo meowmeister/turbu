@@ -43,6 +43,8 @@ type
       FHWND: HWND;
       FTransition: ITransition;
       FTransitionFirstFrameDrawn: boolean;
+      FRenderPause: TRpgTimestamp;
+      FRenderPauseLock: TCriticalSection;
    protected
       FDatabase: TRpgDatabase;
       FCanvas: TSdlCanvas;
@@ -115,6 +117,8 @@ type
       procedure LeaveCutscene;
       function ReadKeyboardState: TButtonCodes;
       function EnsureTileset(id: integer): boolean;
+      procedure RenderPause;
+      procedure RenderUnpause;
 
       property PartySprite: THeroSprite read FPartySprite;
       property ImageEngine: TImageEngine read FImageEngine;
@@ -212,6 +216,7 @@ begin
    self.data := TMapEngineData.Create('TURBU basic map engine', TVersion.Create(0, 1, 0));
    FTimer := TAsphyreTimer.Create;
    FTimer.MaxFPS := 60;
+   FRenderPauseLock := TCriticalSection.Create;
 end;
 
 function T2kMapEngine.CreateViewport(map: TRpgMap; center: TSgPoint): TRect;
@@ -242,6 +247,8 @@ destructor T2kMapEngine.Destroy;
 begin
    FTimer.Free;
    FTitleScreen.Free;
+   FRenderPause.Free;
+   FRenderPauseLock.Free;
    inherited;
 end;
 
@@ -272,6 +279,7 @@ begin
          FObjectManager := TMapObjectManager.Create;
          GScriptEngine.OnEnterCutscene := self.EnterCutscene;
          GScriptEngine.OnLeaveCutscene := self.LeaveCutscene;
+         GScriptEngine.OnRenderUnpause := self.RenderUnpause;
          GEnvironment := T2kEnvironment.Create(FDatabase);
          SetupScriptImports;
          FObjectManager.LoadGlobalScripts(GDatabase.globalEvents);
@@ -610,6 +618,7 @@ procedure T2kMapEngine.SetTransition(const Value: ITransition);
 begin
    FTransition := Value;
    FTransitionFirstFrameDrawn := false;
+   RenderUnpause;
 end;
 
 procedure T2kMapEngine.SetupScriptImports;
@@ -731,6 +740,21 @@ begin
       FImageEngine.Draw;
 end;
 
+procedure T2kMapEngine.RenderPause;
+begin
+   FRenderPauseLock.Enter;
+   FRenderPause.Free;
+   FRenderPause := TRpgTimestamp.Create(50);
+   FRenderPauseLock.Leave;
+end;
+
+procedure T2kMapEngine.RenderUnpause;
+begin
+   FRenderPauseLock.Enter;
+   FreeAndNil(FRenderPause);
+   FRenderPauseLock.Leave;
+end;
+
 procedure T2kMapEngine.TitleScreen;
 var
    cls: TSdlImageClass;
@@ -850,29 +874,40 @@ begin
    FastMM4.PushAllocationGroup(newAG);
 }
 
+   //TODO: Remove commented-out code blocks when transitions are implemented
    inc(FFrame);
    TRpgTimeStamp.NewFrame;
-   if assigned(FTransition) then
-   begin
-      if not FTransitionFirstFrameDrawn then
+   FRenderPauseLock.Enter;
+   try
+      if assigned(FRenderPause) and (FRenderPause.timeRemaining = 0) then
+         FreeAndNil(FRenderPause);
+      if FRenderPause = nil then
       begin
-         GRenderTargets.RenderOn(RENDERER_ALT, RenderFrame, 0, true);
-         FTransitionFirstFrameDrawn := true;
-      end;
-      if not FTransition.Draw then
-      begin
-         FTransitionFirstFrameDrawn := false;
-         FTransition := nil;
-      end;
-   end
-   else begin
-      if FCurrentMap.blank then
-         GRenderTargets.RenderOn(RENDERER_MAIN, nil, 0, true) //just clear the target
-      else GRenderTargets.RenderOn(RENDERER_MAIN, RenderFrame, 0, true);
-      DrawRenderTarget(GRenderTargets[RENDERER_MAIN], false);
-   end;
+         if assigned(FTransition) then
+         begin
+            if not FTransitionFirstFrameDrawn then
+            begin
+               GRenderTargets.RenderOn(RENDERER_ALT, RenderFrame, 0, true);
+               FTransitionFirstFrameDrawn := true;
+            end;
+            if not FTransition.Draw then
+            begin
+               FTransitionFirstFrameDrawn := false;
+               FTransition := nil;
+            end;
+         end
+         else begin
+            if FCurrentMap.blank then
+               GRenderTargets.RenderOn(RENDERER_MAIN, nil, 0, true) //just clear the target
+            else GRenderTargets.RenderOn(RENDERER_MAIN, RenderFrame, 0, true);
+            DrawRenderTarget(GRenderTargets[RENDERER_MAIN], false);
+         end;
 
-   FCanvas.Flip;
+         FCanvas.Flip;
+      end;
+   finally
+      FRenderPauseLock.Leave;
+   end;
 //   WriteTimestamp;
    if FFrame > FHeartbeat then
    begin
