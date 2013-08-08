@@ -43,16 +43,22 @@ var
    files: TStringDynArray;
 begin
    result := ArchiveFileExists(SFX_ARCHIVE, filename, '');
-   if (result = false) and (ExtractFileExt(filename) = '') then
-   begin
-      files := TDirectory.GetFiles(GArchives[SFX_ARCHIVE].root, filename + '.*');
-      if length(files) = 1 then
+   if (result = false) then
+      if (ExtractFileExt(filename) = '') then
       begin
-         filename := ExtractFileName(files[0]);
-         Exit(true);
+         files := TDirectory.GetFiles(GArchives[SFX_ARCHIVE].root, filename + '.*');
+         if length(files) = 1 then
+         begin
+            filename := ExtractFileName(files[0]);
+            Exit(true);
+         end
+         else result := false;
       end
-      else result := false;
-   end;
+      else if ArchiveFileExists(SFX_ARCHIVE, filename + '.wav', '') then
+      begin
+         result := true;
+         filename := filename + '.wav';
+      end;
 end;
 
 function MusicExists(var filename: string): boolean;
