@@ -197,8 +197,8 @@ implementation
 uses
    types, math, SysUtils, OpenGL,
    commons, turbu_2k_transitions, turbu_2k_sprite_engine, timing, turbu_2k_distortions,
-   turbu_OpenGL, dm_shaders, turbu_2k_environment, turbu_2k_map_engine,
-   sg_utils;
+   turbu_OpenGL, dm_shaders, turbu_2k_environment, turbu_2k_map_engine, tiles,
+   sdl_sprite, sg_utils;
 
 const
    FADETIME: array[0..2] of integer = (800, 1200, 5200);
@@ -794,13 +794,15 @@ end; {$ENDREGION}
 { TZoomTransition }
 
 constructor TZoomTransition.Create(zoomIn: boolean);
+var
+   base: TSprite;
 begin
    inherited Create;
    FZoomIn := zoomIn;
    FMinimum := round(GSpriteEngine.Canvas.Width / MAXZOOM);
    FRatio := GSpriteEngine.Canvas.Width / GSpriteEngine.Canvas.Height;
-   with GSpriteEngine.currentParty.baseTile do
-      FCenter := sgPoint(trunc(x) + 8, trunc(y) + 8);
+   base := GSpriteEngine.currentParty.baseTile;
+      FCenter := sgPoint(trunc(base.x) + 8, trunc(base.y) + 8);
    dec(FCenter.x, round(GSpriteEngine.WorldX));
    dec(FCenter.Y, round(GSpriteEngine.WorldY));
 
