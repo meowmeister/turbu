@@ -417,10 +417,10 @@ function TMapSprite.canJump(which: TPath): boolean;
 
    procedure processJumpMove(const opcode: TMoveStep; var location: TSgPoint);
    const
-      UP_LEFT: TSgPoint = (x: 1; y: -1);
-      UP_RIGHT: TSgPoint = (x: 1; y: 1);
-      DOWN_LEFT: TSgPoint = (x: -1; y: -1);
-      DOWN_RIGHT: TSgPoint = (x: -1; y: 1);
+      UP_LEFT: TSgPoint = (x: -1; y: -1);
+      UP_RIGHT: TSgPoint = (x: 1; y: -1);
+      DOWN_LEFT: TSgPoint = (x: -1; y: 1);
+      DOWN_RIGHT: TSgPoint = (x: 1; y: 1);
    var
       dummy: byte;
       op: byte;
@@ -438,10 +438,10 @@ function TMapSprite.canJump(which: TPath): boolean;
          1: inc(location.X, magnitude);
          2: inc(location.y, magnitude);
          3: dec(location.x, magnitude);
-         4: location := location + UP_LEFT;
-         5: location := location + UP_RIGHT;
-         6: location := location + DOWN_LEFT;
-         7: location := location + DOWN_RIGHT;
+         4: location := location + (UP_RIGHT * magnitude);
+         5: location := location + (DOWN_RIGHT * magnitude);
+         6: location := location + (DOWN_LEFT * magnitude);
+         7: location := location + (UP_LEFT * magnitude);
          8:
          begin
             dummy := 0;
