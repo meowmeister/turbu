@@ -562,6 +562,7 @@ begin
    initializeParty;
    hero := GEnvironment.Party.Sprite as THeroSprite;
    hero.packUp;
+   FPlaying := false;
    turbu_2k_savegames.Load(savefile);
    hero.settleDown(FCurrentMap);
    FCurrentMap.CurrentParty := hero;
