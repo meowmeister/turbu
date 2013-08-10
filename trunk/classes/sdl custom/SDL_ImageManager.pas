@@ -128,9 +128,9 @@ type
       * Invalid values for DrawSprite result in nothing being drawn.
       ************************************************************************}
       procedure Draw; overload; virtual;
-      procedure Draw(dest: TSgPoint); overload;
-      procedure DrawRect(dest: TSgPoint; source: TRect);
-      procedure DrawSprite(dest: TSgPoint; index: integer);
+      procedure Draw(dest: TSgPoint; flip: TSdlFlipAxes); overload;
+      procedure DrawRect(dest: TSgPoint; source: TRect; flip: TSdlFlipAxes);
+      procedure DrawSprite(dest: TSgPoint; index: integer; flip: TSdlFlipAxes);
 
       procedure DrawTo(dest: TRect);
       procedure DrawRectTo(dest: TRect; source: TRect);
@@ -701,15 +701,15 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-procedure TSdlImage.draw(dest: TSgPoint);
+procedure TSdlImage.draw(dest: TSgPoint; flip: TSdlFlipAxes);
 begin
-   currentRenderTarget.parent.draw(self, dest);
+   currentRenderTarget.parent.draw(self, dest, flip);
 end;
 
 //---------------------------------------------------------------------------
 procedure TSdlImage.Draw;
 begin
-   self.Draw(EMPTY);
+   self.Draw(EMPTY, []);
 end;
 
 //---------------------------------------------------------------------------
@@ -719,9 +719,9 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-procedure TSdlImage.drawRect(dest: TSgPoint; source: TRect);
+procedure TSdlImage.drawRect(dest: TSgPoint; source: TRect; flip: TSdlFlipAxes);
 begin
-   currentRenderTarget.parent.drawRect(self, dest, source);
+   currentRenderTarget.parent.drawRect(self, dest, source, flip);
 end;
 
 //---------------------------------------------------------------------------
@@ -731,12 +731,12 @@ begin
 end;
 
 //---------------------------------------------------------------------------
-procedure TSdlImage.DrawSprite(dest: TSgPoint; index: integer);
+procedure TSdlImage.DrawSprite(dest: TSgPoint; index: integer; flip: TSdlFlipAxes);
 begin
    if index >= count then
       Exit;
 
-   currentRenderTarget.parent.drawRect(self, dest, self.spriteRect[index]);
+   currentRenderTarget.parent.drawRect(self, dest, self.spriteRect[index], flip);
 end;
 
 //---------------------------------------------------------------------------
