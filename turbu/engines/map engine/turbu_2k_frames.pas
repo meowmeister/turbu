@@ -473,8 +473,7 @@ begin
    begin
       assert(obj.ElementCount = 4);
       portrait.Visible := true;
-      portrait.ImageName := obj.Items['Name'].AsString;
-      portrait.ImageIndex := obj.Items['Index'].AsInteger;
+      SetPortrait(obj.Items['Name'].AsString, obj.Items['Index'].AsInteger);
       portrait.MirrorX := obj.Items['Flipped'].AsBoolean;
       SetRightside(obj.Items['Rightside'].AsBoolean);
       obj.Items['Name'].Free;
