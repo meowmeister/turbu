@@ -66,10 +66,10 @@ uses
 
 const
    WEATHER_POWER: array[TWeatherEffects] of byte = (0, 20, 45, 0, 0);
-   RAINFALLX = -1.6;
-   RAINFALLY = 5.1;
-   SNOWFALL = 2.3;
-   RAIN_DECAYRATE = 0.035;
+   RAINFALLX = -0.9;
+   RAINFALLY = 3.6;
+   SNOWFALL = 1.1;
+   RAIN_DECAYRATE = 0.055;
    SNOW_DECAYRATE = 0.004;
    SANDRAIN_DECAYRATE = 0.06;
    FOGSIZE: TsgPoint = (x: 64; y: 64);
@@ -148,7 +148,7 @@ begin
       if result.MustLock then
          result.LockSurface;
       result.Fill(nil, SDL_MapRGBA(result.Format, 0, 0, 0, 0));
-      pixel := SDL_MapRGBA(result.Format, r, g, b, 128);
+      pixel := SDL_MapRGBA(result.Format, r, g, b, 180);
       for y := 1 to 18 do
          putPixel(result, 7 - (y div 3), y, pixel);
       if result.MustLock then
@@ -167,7 +167,7 @@ begin
    try
       if result.MustLock then
          result.LockSurface;
-      pixel := SDL_MapRGBA(result.Format, r, g, b, 190);
+      pixel := SDL_MapRGBA(result.Format, r, g, b, 255);
       putPixel(result, 0, 0, pixel);
       putPixel(result, 0, 1, pixel);
       putPixel(result, 1, 0, pixel);
@@ -198,12 +198,12 @@ begin
          sprite.VelocityX := RAINFALLX;
          sprite.VelocityY := RAINFALLY;
          sprite.Decay := RAIN_DECAYRATE;
-         sprite.LifeTime := 0.5;
+         sprite.LifeTime := 2.5;
          sprite.ImageName := 'rain'
       end;
       we_snow:
       begin
-         sprite.VelocityX := random + random - 1;
+         sprite.VelocityX := ((random + random) / 2) - 1;
          sprite.VelocityY := SNOWFALL;
          sprite.Decay := SNOW_DECAYRATE;
          sprite.ImageName := 'snow';
@@ -214,7 +214,7 @@ begin
          sprite.VelocityX := (random() - 0.5) * RAINFALLY * 2;
          sprite.VelocityY := RAINFALLY;
          sprite.Decay := SANDRAIN_DECAYRATE;
-         sprite.LifeTime := 0.5;
+         sprite.LifeTime := 2.5;
          sprite.ImageName := 'sandrain';
          sprite.Y := -10;
       end
@@ -360,7 +360,7 @@ end;
 procedure TWeatherSprite.Move(const MoveCount: Single);
 begin
    inherited Move(MoveCount);
-   Alpha := max(round(255 * LifeTime), 0);
+   Alpha := min(max(round(255 * LifeTime), 0), 255);
    if FErratic then
       self.X := self.X + random + random - 1;
    if (x < 0) or (y > Engine.Canvas.Height) then
