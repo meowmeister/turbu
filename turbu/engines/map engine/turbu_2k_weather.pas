@@ -26,6 +26,8 @@ type
    TWeatherSprite = class(TParticleSprite)
    private
       FErratic: boolean;
+   protected
+      procedure DoDraw; override;
    public
       procedure Move(const MoveCount: Single); override;
 
@@ -48,6 +50,7 @@ type
       procedure LoadFog;
       procedure WrapFog;
       procedure EnsureFogSprite;
+      procedure CreateWeatherImage(surface: PSdlSurface; const name: string);
    public
       constructor Create(parent: TSpriteEngine; images: TSdlImages; canvas: TSdlCanvas);
       procedure Draw; override;
@@ -82,12 +85,21 @@ begin
    self.Z := 21; //one higher than TRpgImage's 20
    self.Images := images;
    for i := 1 to 6 do
-      TSdlImage.Create(self.Canvas.Renderer, CreateFog(242, 255, 242), 'fog' + intToStr(i), images);
+      CreateWeatherImage(CreateFog(242, 255, 242), 'fog' + intToStr(i));
    for i := 1 to 6 do
-      TSdlImage.Create(self.Canvas.Renderer, CreateFog(255, 240, 183), 'sand' + intToStr(i), images);
-   TSdlImage.Create(self.Canvas.Renderer, CreateRain(255, 255, 255), 'rain', images);
-   TSdlImage.Create(self.Canvas.Renderer, CreateRain(180, 170, 92), 'sandrain', images);
-   TSdlImage.Create(self.Canvas.Renderer, CreateSnow(255, 255, 255), 'snow', images);
+      CreateWeatherImage(CreateFog(255, 240, 183), 'sand' + intToStr(i));
+   CreateWeatherImage(CreateRain(255, 255, 255), 'rain');
+   CreateWeatherImage(CreateRain(180, 170, 92), 'sandrain');
+   CreateWeatherImage(CreateSnow(255, 255, 255), 'snow');
+end;
+
+procedure TWeatherSystem.CreateWeatherImage(surface: PSdlSurface; const name: string);
+var
+   img: TSdlImage;
+begin
+   surface.BlendMode := [sdlbBlend];
+   img := TSdlImage.Create(self.Canvas.Renderer, surface, name, self.Images);
+   SDL_SetTextureBlendMode(img.surface, [sdlbBlend]);
 end;
 
 procedure putPixel(surface: PSdlSurface; x, y, pixel: integer);
@@ -131,15 +143,14 @@ function TWeatherSystem.CreateRain(r, g, b: byte): PSdlSurface;
 var
    y, pixel: integer;
 begin
-   result := TSdlSurface.Create(8, 20, 32);
+   result := TSdlSurface.Create(8, 20, 32, $FF0000, $FF00, $FF, $FF000000);
    try
       if result.MustLock then
          result.LockSurface;
+      result.Fill(nil, SDL_MapRGBA(result.Format, 0, 0, 0, 0));
+      pixel := SDL_MapRGBA(result.Format, r, g, b, 128);
       for y := 1 to 18 do
-      begin
-         pixel := SDL_MapRGBA(result.Format, r, g, b, 128);
          putPixel(result, 7 - (y div 3), y, pixel);
-      end;
       if result.MustLock then
          result.UnlockSurface;
    except
@@ -179,6 +190,7 @@ begin
    sprite.x := random(canvas.Width) + random(60);
    sprite.Y := random(canvas.Height) - 30;
    sprite.pinned := true;
+   sprite.Moves := true;
    case FType of
       we_none: assert(false);
       we_rain:
@@ -212,13 +224,16 @@ end;
 
 procedure TWeatherSystem.Draw;
 var
-   i: integer;
+   i, count: integer;
 begin
    if (FType = we_none) then
       Exit;
 
    self.Dead;
-   for I := FSpriteList.Count to min(FSize - 1, FSpriteList.Count + (SPAWN_RATE[FType] * FIntensity)) do
+   if FSpriteList = nil then
+      count := 0
+   else count := FSpriteList.Count;
+   for I := count to min(FSize - 1, count + (SPAWN_RATE[FType] * FIntensity)) do
       self.addSprite;
    if FType in [we_fog, we_sand] then
       LoadFog;
@@ -306,8 +321,9 @@ begin
       Exit;
 
    FType := Value;
-   for i := 0 to FSpriteList.Count - 1 do
-      TSprite(FSpriteList[i]).dead;
+   if assigned(FSpriteList) then
+      for i := 0 to FSpriteList.Count - 1 do
+         TSprite(FSpriteList[i]).dead;
    FSize := FIntensity * WEATHER_POWER[FType];
    if value = we_none then
       self.dead;
@@ -316,6 +332,30 @@ begin
 end;
 
 { TWeatherSprite }
+
+procedure TWeatherSprite.DoDraw;
+var
+   followX, followY: single;
+   topleft: TSgPoint;
+   flip: TSdlFlipAxes;
+   a: byte;
+begin
+   if (FImage = nil) then
+      Exit;
+   if FEngine.Images[FImageIndex].name <> FImageName then
+   begin
+      setImageName(FImageName);
+      if FImage = nil then
+         Exit;
+   end;
+
+   topleft := sgPoint(round(FX), round(FY));
+
+   SDL_GetTextureAlphaMod(FImage.surface, a);
+   SDL_SetTextureAlphaMod(FImage.surface, self.Alpha);
+   FImage.Draw(topleft, flip);
+   SDL_SetTextureAlphaMod(FImage.surface, a);
+end;
 
 procedure TWeatherSprite.Move(const MoveCount: Single);
 begin

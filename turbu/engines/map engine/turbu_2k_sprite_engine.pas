@@ -29,8 +29,7 @@ uses
 type
    TTileMatrix = TMatrix<TMapTile>;
    TTileMatrixList = class(TObjectList<TTileMatrix>);
-   TTransProc = procedure(var location: integer);
-   TRenderProc = procedure;
+   TRenderProc = procedure of object;
 
    T2kSpriteEngine = class(TSpriteEngine)
    private
@@ -58,6 +57,7 @@ type
       FFlashColor: array[1..4] of byte;
       FFlashTime: TRpgTimestamp;
       FFlashDuration: integer;
+      FOnDrawWeather: TRenderProc;
 
       //transition control
       FErasing: boolean;
@@ -182,6 +182,7 @@ type
       property DisplacementX: single read FDisplacementX;
       property DisplacementY: single read FDisplacementY;
       property State: TGameState read FGameState;
+      property OnDrawWeather: TRenderProc read FOnDrawWeather write FOnDrawWeather;
    end;
 
 var
@@ -492,6 +493,8 @@ begin
       if assigned(FBgImage) then
          DrawBG;
       inherited Draw;
+      if assigned(FOnDrawWeather) then
+         FOnDrawWeather();
    finally
       glUseProgram(current);
    end;
