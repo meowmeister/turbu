@@ -36,6 +36,7 @@ uses
    procedure SetSystemSoundData(style: TSfxTypes; sound: TRpgSound);
    procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);
    procedure SetSystemMusicData(style: TBgmTypes; music: TRpgMusic);
+   procedure playMovie(name: string; posX, posY, width, height: integer);
 
    procedure SerializeSound(writer: TdwsJSONWriter);
    procedure DeserializeSound(obj: TdwsJSONObject);
@@ -44,6 +45,7 @@ implementation
 uses
    SysUtils,
    commons, ArchiveInterface, ArchiveUtils, turbu_script_engine, turbu_classes,
+   logs,
    Disharmony;
 
 var
@@ -54,10 +56,7 @@ begin
    if ArchiveUtils.SoundExists(name) then
    begin
       name := IncludeTrailingPathDelimiter(GArchives[SFX_ARCHIVE].root) + name;
-      commons.runThreadsafe(
-         procedure begin
-            MediaPlayer.PlaySoundEx(name, volume, tempo, balance);
-         end, true);
+      MediaPlayer.PlaySoundEx(name, volume, tempo, balance);
    end;
 end;
 
@@ -201,6 +200,12 @@ begin
       LFadedBGM.fadeIn := time;
       PlayMusicData(LFadedBGM);
    end;
+end;
+
+procedure playMovie(name: string; posX, posY, width, height: integer);
+begin
+   {$MESSAGE WARN 'Unimplemented feature in live unit'}
+   logs.logText(format('Called PlayMovie(%s, %d, %d, %d, %d). Not supported yet.', [name, posX, posY, width, height]));
 end;
 
 procedure SerializeSystemSound(writer: TdwsJSONWriter);
