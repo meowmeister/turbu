@@ -33,6 +33,7 @@ uses
    function choiceBox(const msg: string; const choices: TArray<string>; const handler: integer): integer;
    function inputNumber(const msg: string; digits: integer): integer;
    function inn(messageStyle, cost: integer): boolean;
+   procedure setSkin(const name: string; tiled: boolean);
 
    procedure RegisterScriptUnit(engine: TScriptEngine);
    procedure SerializeMessageState(writer: TdwsJSONWriter);
@@ -203,6 +204,11 @@ begin
    else result := false;
 end;
 
+procedure setSkin(const name: string; tiled: boolean);
+begin
+   GMenuEngine.SetSkin(name, not tiled);
+end;
+
 procedure RegisterMessagesC(input: TrsTypeImporter);
 begin
    input.ImportType(TypeInfo(TMboxLocation));
@@ -219,6 +225,7 @@ begin
    input.ImportFunction('procedure EnableMenu;');
    input.ImportFunction('procedure DisableMenu;');
    input.ImportFunction('procedure SaveMenu;');
+   input.ImportFunction('procedure setSkin(const name: string; tiled: boolean);');
 end;
 
 procedure RegisterMessagesE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
@@ -235,6 +242,7 @@ begin
    RegisterFunction('EnableMenu', nil);
    RegisterFunction('DisableMenu', nil);
    RegisterFunction('SaveMenu', nil);
+   RegisterFunction('setSkin', @setSkin);
 end;
 
 procedure RegisterScriptUnit(engine: TScriptEngine);

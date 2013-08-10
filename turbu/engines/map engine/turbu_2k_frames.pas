@@ -19,7 +19,7 @@ unit turbu_2k_frames;
 
 interface
 uses
-   Types, Classes, SyncObjs,
+   Types, Classes, SyncObjs, Generics.Collections,
    turbu_defs, timing,
    sg_defs, sdl_sprite, sdl_ImageManager, sdl_canvas,
    sdl_13,
@@ -73,10 +73,13 @@ type
 
    TMessageBoxTypes = (mbtMessage, mbtChoice, mbtPrompt, mbtInput);
    TValidateEvent = reference to function(const text: string): boolean;
+   TSkinChangedEvent = procedure(const name: string) of object;
 
    TMenuSpriteEngine = class(TSpriteEngine)
    private
       FSystemGraphic: TSystemImages;
+      FWallpapers: TDictionary<string, TSystemImages>;
+      FBoxNotifications: TDictionary<TObject, TSkinChangedEvent>;
       FMenuInt: integer;
       FCursor: TSysFrame;
       FMenuState: TMenuState;
@@ -89,6 +92,7 @@ type
       procedure SetBoxVisible(const Value: boolean);
       function GetPortrait: TSprite;
       procedure WaitForCurrentBox;
+      procedure NotifySystemGraphicChanged(const name: string);
    protected
       procedure EndMessage;
       function InnVocab(style: integer; const name: string; value: integer = 0): string;
@@ -106,6 +110,10 @@ type
       procedure button(const input: TButtonCode);
       procedure SetPortrait(const filename: string; index: integer);
       procedure SetRightside(value: boolean);
+      procedure SetSkin(const name: string; stretch: boolean);
+
+      procedure AddSkinNotification(obj: TObject; notify: TSkinChangedEvent);
+      procedure RemoveSkinNotification(obj: TObject);
 
       property MenuInt: integer read FMenuInt write FMenuInt;
       property Cursor: TSysFrame read FCursor;
@@ -126,8 +134,10 @@ type
       FBorders: array[TFacing] of TTiledAreaSprite;
       FBackground: TTiledAreaSprite;
       FBounds: TRect;
+      procedure SkinChanged(const name: string); virtual;
    public
       constructor Create(parent: TMenuSpriteEngine; displacement: TSgPoint; length: integer; const coords: TRect); reintroduce;
+      destructor Destroy; override;
       procedure layout(const coords: TRect);
       procedure moveTo(coords: TRect); virtual;
 
@@ -170,6 +180,7 @@ type
       procedure ClearTarget(target: TSdlRenderTarget);
       procedure SetPosition(const Value: TMboxLocation);
       procedure EndMessage;
+      procedure SkinChanged(const name: string); override;
 
       procedure DoDraw; override;
       procedure DrawChar(value: char); overload;
@@ -234,7 +245,8 @@ uses
    Windows, SysUtils, StrUtils, Math, OpenGL, Character,
    commons, turbu_text_utils, turbu_2k_environment, turbu_OpenGL, turbu_database,
    turbu_2k_message_boxes, turbu_2k_sprite_engine, turbu_script_engine, rs_media,
-   turbu_classes;
+   turbu_classes,
+   sg_utils;
 
 const
    ARROW_DISPLACEMENT: TSgPoint = (x: 8; y: 0);
@@ -266,6 +278,7 @@ begin
    inherited create(parent, NULLRECT, ORIGIN, 0);
    self.Z := 1;
    graphic := parent.FSystemGraphic;
+   parent.AddSkinNotification(self, self.skinChanged);
    FBackground := TTiledAreaSprite.create(self, graphic.FRects[srWallpaper], displacement, length);
    FBackground.Z := 1;
    FBackground.name := 'background';
@@ -294,6 +307,12 @@ begin
    end;
    visible := false;
    layout(coords);
+end;
+
+destructor TSysFrame.Destroy;
+begin
+   (self.Engine as TMenuSpriteEngine).RemoveSkinNotification(self);
+   inherited Destroy;
 end;
 
 procedure TSysFrame.layout(const coords: TRect);
@@ -383,6 +402,15 @@ begin
    FBounds := coords;
 end;
 
+procedure TSysFrame.SkinChanged(const name: string);
+var
+   sprite: TSprite;
+begin
+   for sprite in self.FList do
+      sprite.ImageName := name;
+   self.ImageName := name;
+end;
+
 { TMenuSpriteEngine }
 
 constructor TMenuSpriteEngine.Create(graphic: TSystemImages; canvas: TSdlCanvas; images: TSdlImages);
@@ -395,8 +423,11 @@ begin
    inherited Create(nil, canvas);
    self.Images := images;
    GFontEngine.Glyphs := images.EnsureImage('system\glyphs\glyphs.png', 'System Glyphs', sgPoint(12, 12)).surface;
+   FWallpapers := TDictionary<string, TSystemImages>.Create;
+   FBoxNotifications := TDictionary<TObject, TSkinChangedEvent>.Create;
    FSystemGraphic := graphic;
    graphic.Setup(self);
+   FWallpapers.Add(graphic.FFilename, graphic);
    FCursor := TSysFrame.Create(self, FRAME_DISPLACEMENT, 2, NULLRECT);
    size := rect(0, 0, 320, 80);
    FPosition := mb_bottom;
@@ -413,9 +444,11 @@ begin
    GMenuEngine := nil;
    GFontEngine.OnGetColor := nil;
    GFontEngine.OnGetDrawRect := nil;
+   FWallpapers.Free;
    FSystemGraphic.Free;
    EndMessage;
    inherited Destroy;
+   FBoxNotifications.Free;
 end;
 
 procedure TMenuSpriteEngine.SerializePortrait(writer: TdwsJSONWriter);
@@ -585,6 +618,41 @@ end;
 procedure TMenuSpriteEngine.SetRightside(value: boolean);
 begin
    (FBoxes[mbtMessage] as TMessageBox).rightside := value;
+end;
+
+procedure TMenuSpriteEngine.NotifySystemGraphicChanged(const name: string);
+var
+   notify: TSkinChangedEvent;
+begin
+   for notify in FBoxNotifications.Values do
+      notify(name);
+end;
+
+procedure TMenuSpriteEngine.AddSkinNotification(obj: TObject; notify: TSkinChangedEvent);
+begin
+   FBoxNotifications.AddOrSetValue(obj, notify);
+end;
+
+procedure TMenuSpriteEngine.RemoveSkinNotification(obj: TObject);
+begin
+   FBoxNotifications.Remove(obj);
+end;
+
+procedure TMenuSpriteEngine.SetSkin(const name: string; stretch: boolean);
+var
+   dummy: string;
+   newPaper: TSystemImages;
+   I: Integer;
+begin
+   if name = FSystemGraphic.filename then
+      Exit;
+   if not FWallpapers.TryGetValue(name, newPaper) then
+   begin
+      newPaper := TSystemImages.Create(self.Images, name, stretch, FSystemGraphic.translucent);
+      FWallpapers.Add(name, newPaper);
+   end;
+   FSystemGraphic := newPaper;
+   NotifySystemGraphicChanged(name);
 end;
 
 procedure TMenuSpriteEngine.ShowMessage(const msg: string; modal: boolean);
@@ -1034,6 +1102,12 @@ begin
    FCoords.Right := FFrameTarget.parent.Width;
    FCoords.Bottom := FFrameTarget.parent.Height div 3;
    FCoords.Top := FCoords.Bottom * ord(FPosition);
+end;
+
+procedure TCustomMessageBox.SkinChanged(const name: string);
+begin
+   inherited SkinChanged(name);
+   FFrameDrawn := false;
 end;
 
 { TSystemTimer }

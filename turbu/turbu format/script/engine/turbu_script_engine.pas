@@ -163,13 +163,6 @@ begin
    input.ImportFunction('procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);');
 end;
 
-procedure RegisterSettingsC(input: TrsTypeImporter);
-begin
-   input.ImportType(TypeInfo(TBgmTypes));
-   input.ImportType(TypeInfo(TSfxTypes));
-   input.ImportFunction('procedure SetSkin(filename: string);');
-end;
-
 procedure RegisterBattlesE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
 begin
    RegisterFunction('battle', nil);
@@ -187,11 +180,6 @@ begin
    RegisterFunction('PlaySystemSound', @rs_Media.PlaySystemSound);
    RegisterFunction('SetSystemMusic', @rs_media.SetSystemMusic);
    RegisterFunction('playMovie', @rs_media.PlayMovie);
-end;
-
-procedure RegisterSettingsE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
-begin
-   RegisterFunction('SetSkin', nil);
 end;
 
 { TScriptEngine }
@@ -255,7 +243,6 @@ begin
    FExec := TrsExec.Create;
    FExec.RegisterStandardUnit('battles', RegisterBattlesE);
    FExec.RegisterStandardUnit('media', RegisterMediaE);
-   FExec.RegisterStandardUnit('settings', RegisterSettingsE);
    FExec.OnLine := self.OnRunLine;
 end;
 
@@ -428,7 +415,6 @@ procedure TScriptEngine.RegisterImports;
 begin
    FCompiler.RegisterStandardUnit('battles', RegisterBattlesC);
    FCompiler.RegisterStandardUnit('media', RegisterMediaC);
-   FCompiler.RegisterStandardUnit('settings', RegisterSettingsC);
 end;
 
 procedure TScriptEngine.RegisterUnit(const name: string;

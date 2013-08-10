@@ -23,16 +23,14 @@ uses
    EventBuilder, EB_RpgScript;
 
 type
-   [UsesUnit('Settings')]
-   TEBSettingsObject = class(TEBObject);
-
-   TEBVehicleBGM = class(TEBSettingsObject)
+   TEBVehicleBGM = class(TEBObject)
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
    end;
 
-   TEBSysSkin = class(TEBSettingsObject)
+   [UsesUnit('Messages')]
+   TEBSysSkin = class(TEBObject)
    public
       function GetNodeText: string; override;
       function GetScriptText: string; override;
@@ -68,7 +66,7 @@ end;
 
 function TEBSysSkin.GetScriptText: string;
 begin
-   result := format('SetSkin(%s);', [QuotedStr(Text)]);
+   result := format('SetSkin(%s, %s);', [QuotedStr(Text), BOOL_STR[values[0]]]);
 end;
 
 initialization
