@@ -91,6 +91,7 @@ type
       procedure SetupScriptImports;
       procedure RenderFrame(Sender: TObject);
       procedure SetTransition(const Value: ITransition);
+      procedure DrawWeather;
    protected
       FDatabaseOwner: boolean;
       procedure cleanup; override;
@@ -666,6 +667,7 @@ end;
 function T2kMapEngine.doneLoadingMap: boolean;
 begin
    FCurrentMap := FMaps[FWaitingMap.id];
+   FCurrentMap.OnDrawWeather := self.DrawWeather;
    if FImageEngine = nil then
    begin
       FImageEngine := TImageEngine.Create(FCurrentMap, FCanvas, FImages);
@@ -769,6 +771,11 @@ begin
    finally
       FImages.SpriteClass := cls;
    end;
+end;
+
+procedure T2kMapEngine.DrawWeather;
+begin
+   FWeatherEngine.Draw;
 end;
 
 procedure T2kMapEngine.DrawRenderTarget(target: TSdlRenderTarget; canTint: boolean);
