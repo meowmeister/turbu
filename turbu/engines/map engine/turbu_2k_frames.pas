@@ -646,13 +646,17 @@ var
 begin
    if name = FSystemGraphic.filename then
       Exit;
-   if not FWallpapers.TryGetValue(name, newPaper) then
-   begin
-      newPaper := TSystemImages.Create(self.Images, name, stretch, FSystemGraphic.translucent);
-      FWallpapers.Add(name, newPaper);
-   end;
-   FSystemGraphic := newPaper;
-   NotifySystemGraphicChanged(name);
+   runThreadsafe(
+      procedure
+      begin
+         if not FWallpapers.TryGetValue(name, newPaper) then
+         begin
+            newPaper := TSystemImages.Create(self.Images, name, stretch, FSystemGraphic.translucent);
+            FWallpapers.Add(name, newPaper);
+         end;
+         FSystemGraphic := newPaper;
+         NotifySystemGraphicChanged(name);
+      end, true);
 end;
 
 procedure TMenuSpriteEngine.ShowMessage(const msg: string; modal: boolean);
