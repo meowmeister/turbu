@@ -94,7 +94,7 @@ type
       * Draws a TSdlImage to the current render target.  The dest parameter
       * represents the position of the top-left corner.
       ************************************************************************}
-      procedure Draw(image: TSdlImage; dest: TSgPoint); overload;
+      procedure Draw(image: TSdlImage; dest: TSgPoint; flip: TSdlFlipAxes); overload;
       procedure Draw(target: TSdlRenderTarget; dest: TSgPoint); overload;
       procedure DrawTo(image: TSdlImage; dest: TRect);
 
@@ -102,7 +102,7 @@ type
       * Like Draw, but only draws a portion of the image, as defined by the
       * source parameter.
       ************************************************************************}
-      procedure DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect); overload;
+      procedure DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect; flip: TSdlFlipAxes); overload;
       procedure DrawRect(target: TSdlRenderTarget; dest: TSgPoint; source: TRect); overload;
       procedure DrawRectTo(image: TSdlImage; dest, source: TRect); overload;
       procedure DrawRectTo(target: TSdlRenderTarget; dest, source: TRect); overload;
@@ -289,13 +289,15 @@ begin
    inherited Destroy;
 end;
 
-procedure TSdlCanvas.Draw(image: TSdlImage; dest: TSgPoint);
+procedure TSdlCanvas.Draw(image: TSdlImage; dest: TSgPoint; flip: TSdlFlipAxes);
 var
    dummy: TSDLRect;
 begin
    dummy.TopLeft := dest;
    dummy.BottomRight := image.surface.size;
-   assert(SDL_RenderCopy(FRenderer, image.surface, nil, @dummy) = 0);
+   if flip = [] then
+      assert(SDL_RenderCopy(FRenderer, image.surface, nil, @dummy) = 0)
+   else assert(SDL_RenderCopyFlipped(FRenderer, image.surface, nil, @dummy, flip) = 0)
 end;
 
 procedure TSdlCanvas.Draw(target: TSdlRenderTarget; dest: TSgPoint);
@@ -365,13 +367,15 @@ begin
    SDL_RenderFillRect(FRenderer, nil);
 end;
 
-procedure TSdlCanvas.DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect);
+procedure TSdlCanvas.DrawRect(image: TSdlImage; dest: TSgPoint; source: TRect; flip: TSdlFlipAxes);
 var
    dummy: TSDLRect;
 begin
    dummy.TopLeft := dest;
    dummy.BottomRight := source.BottomRight;
-   assert(SDL_RenderCopy(FRenderer, image.surface, @source, @dummy) = 0);
+   if flip = [] then
+      assert(SDL_RenderCopy(FRenderer, image.surface, @source, @dummy) = 0)
+   else assert(SDL_RenderCopyFlipped(FRenderer, image.surface, @source, @dummy, flip) = 0);
 end;
 
 procedure TSdlCanvas.DrawRect(target: TSdlRenderTarget; dest: TSgPoint;

@@ -412,6 +412,7 @@ procedure TSprite.DoDraw;
 var
    followX, followY: single;
    topleft: TSgPoint;
+   flip: TSdlFlipAxes;
 begin
    if (not FVisible) or (FImage = nil) then
       Exit;
@@ -435,11 +436,16 @@ begin
       end;
       topleft := point(trunc(FX + FOffsetX - followX), trunc(FY + FOffsetY - followY));
 
+      flip := [];
+      if MirrorX then
+         include(flip, sdlfHoriz);
+      if MirrorY then
+         include(flip, sdlfVert);
       case FImageType of
-         itSingleImage: FImage.Draw(topleft);
-         itSpriteSheet: FImage.DrawSprite(topleft, FPatternIndex);
-         itRectSet: FImage.DrawRect(topleft, Self.DrawRect);
-      end;
+         itSingleImage: FImage.Draw(topleft, flip);
+         itSpriteSheet: FImage.DrawSprite(topleft, FPatternIndex, flip);
+         itRectSet: FImage.DrawRect(topleft, Self.DrawRect, flip);
+      end
    end;
 end;
 
