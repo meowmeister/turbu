@@ -47,10 +47,11 @@ type
       function CreateFog(r, g, b: byte): PSdlSurface;
       function CreateRain(r, g, b: byte): PSdlSurface;
       function CreateSnow(r, g, b: byte): PSdlSurface;
+      function CreateSand(r, g, b: byte): PSdlSurface;
       procedure LoadFog;
       procedure WrapFog;
       procedure EnsureFogSprite;
-      procedure CreateWeatherImage(surface: PSdlSurface; const name: string);
+      procedure CreateWeatherImage(surface: PSdlSurface; const name: string; addblend: boolean = true);
    public
       constructor Create(parent: TSpriteEngine; images: TSdlImages; canvas: TSdlCanvas);
       procedure Draw; override;
@@ -65,15 +66,15 @@ uses
    sg_defs;
 
 const
-   WEATHER_POWER: array[TWeatherEffects] of byte = (0, 20, 45, 0, 0);
+   WEATHER_POWER: array[TWeatherEffects] of byte = (0, 20, 45, 0, 20);
    RAINFALLX = -0.9;
    RAINFALLY = 3.6;
    SNOWFALL = 1.1;
    RAIN_DECAYRATE = 0.055;
-   SNOW_DECAYRATE = 0.004;
+   SNOW_DECAYRATE = 0.002;
    SANDRAIN_DECAYRATE = 0.06;
    FOGSIZE: TsgPoint = (x: 64; y: 64);
-   SPAWN_RATE: array[TWeatherEffects] of byte = (0, 3, 2, 0, 0);
+   SPAWN_RATE: array[TWeatherEffects] of byte = (0, 3, 2, 0, 1);
 
 { TWeatherSystem }
 
@@ -89,17 +90,22 @@ begin
    for i := 1 to 6 do
       CreateWeatherImage(CreateFog(255, 240, 183), 'sand' + intToStr(i));
    CreateWeatherImage(CreateRain(255, 255, 255), 'rain');
-   CreateWeatherImage(CreateRain(180, 170, 92), 'sandrain');
+   CreateWeatherImage(CreateSand(180, 170, 92), 'sandrain0', false);
+   CreateWeatherImage(CreateSand(155, 4, 0), 'sandrain1', false);
+   CreateWeatherImage(CreateSand(255, 114, 0), 'sandrain2', false);
+   CreateWeatherImage(CreateSand(255, 255, 255), 'sandrain3', false);
    CreateWeatherImage(CreateSnow(255, 255, 255), 'snow');
 end;
 
-procedure TWeatherSystem.CreateWeatherImage(surface: PSdlSurface; const name: string);
+procedure TWeatherSystem.CreateWeatherImage(surface: PSdlSurface; const name: string; addblend: boolean);
 var
    img: TSdlImage;
 begin
    surface.BlendMode := [sdlbBlend];
    img := TSdlImage.Create(self.Canvas.Renderer, surface, name, self.Images);
-   SDL_SetTextureBlendMode(img.surface, [sdlbBlend]);
+   if addblend then
+      SDL_SetTextureBlendMode(img.surface, [sdlbBlend, sdlbAdd])
+   else SDL_SetTextureBlendMode(img.surface, [sdlbBlend]);
 end;
 
 procedure putPixel(surface: PSdlSurface; x, y, pixel: integer);
@@ -121,14 +127,14 @@ function TWeatherSystem.CreateFog(r, g, b: byte): PSdlSurface;
 var
    x, y, pixel: integer;
 begin
-   result := TSdlSurface.Create(FOGSIZE.x, FOGSIZE.y, 32);
+   result := TSdlSurface.Create(FOGSIZE.x, FOGSIZE.y, 32, $FF0000, $FF00, $FF, $FF000000);
    try
       if result.MustLock then
          result.LockSurface;
       for y := 0 to 63 do
          for x := 0 to 63 do
          begin
-            pixel := SDL_MapRGBA(result.Format, r, g, b, random(9) + 74);
+            pixel := SDL_MapRGBA(result.Format, r, g, b, random(9) + 40);
             putPixel(result, x, y, pixel);
          end;
       if result.MustLock then
@@ -148,9 +154,28 @@ begin
       if result.MustLock then
          result.LockSurface;
       result.Fill(nil, SDL_MapRGBA(result.Format, 0, 0, 0, 0));
-      pixel := SDL_MapRGBA(result.Format, r, g, b, 180);
+      pixel := SDL_MapRGBA(result.Format, r, g, b, 128);
       for y := 1 to 18 do
          putPixel(result, 7 - (y div 3), y, pixel);
+      if result.MustLock then
+         result.UnlockSurface;
+   except
+      result.Free;
+      raise;
+   end;
+end;
+
+function TWeatherSystem.CreateSand(r, g, b: byte): PSdlSurface;
+var
+   pixel: integer;
+begin
+   result := TSdlSurface.Create(1, 2, 32);
+   try
+      if result.MustLock then
+         result.LockSurface;
+      pixel := SDL_MapRGBA(result.Format, r, g, b, 185);
+      putPixel(result, 0, 0, pixel);
+      putPixel(result, 0, 1, pixel);
       if result.MustLock then
          result.UnlockSurface;
    except
@@ -214,8 +239,9 @@ begin
          sprite.VelocityX := (random() - 0.5) * RAINFALLY * 2;
          sprite.VelocityY := RAINFALLY;
          sprite.Decay := SANDRAIN_DECAYRATE;
-         sprite.LifeTime := 2.5;
-         sprite.ImageName := 'sandrain';
+         sprite.LifeTime := 3.5;
+         sprite.ImageName := 'sandrain' +  IntToStr(random(4));
+         sprite.X := (canvas.Width div 2) + sprite.VelocityX * 50;
          sprite.Y := -10;
       end
       else ;
@@ -327,8 +353,7 @@ begin
    FSize := FIntensity * WEATHER_POWER[FType];
    if value = we_none then
       self.dead;
-   if not (value in [we_fog, we_sand]) then
-      FFogSprite := nil;
+   FFogSprite := nil;
 end;
 
 { TWeatherSprite }
