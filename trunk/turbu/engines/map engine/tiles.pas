@@ -336,7 +336,6 @@ begin
    handle := shaders.ShaderProgram('default', 'flash');
    shaders.UseShaderProgram(handle);
    shaders.SetUniformValue(handle, 'flashColor', FOnGetFlashColor());
-   glClearStencil(0);
 end;
 
 procedure TEventTile.DrawSelf(SpriteRect: TRect);
