@@ -850,6 +850,8 @@ end;
 //var newAG: integer;
 
 procedure T2kMapEngine.RenderFrame(Sender: TObject);
+var
+   current: Integer;
 begin
    GRenderTargets.RenderOn(RENDERER_MAP, standardRender, 0, true);
 
@@ -858,8 +860,11 @@ begin
    RenderImages(self);
    FCurrentMap.DrawFlash;
 
+   glGetIntegerv(GL_CURRENT_PROGRAM, @current);
+   FShaderEngine.UseShaderProgram(FShaderEngine.ShaderProgram('default', 'defaultF'));
    if GMenuEngine.State <> msNone then
       GMenuEngine.Draw;
+   glUseProgram(current);
 end;
 
 {$R-}
