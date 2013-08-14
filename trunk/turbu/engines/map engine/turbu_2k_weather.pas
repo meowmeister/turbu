@@ -108,7 +108,7 @@ begin
    else SDL_SetTextureBlendMode(img.surface, [sdlbBlend]);
 end;
 
-procedure putPixel(surface: PSdlSurface; x, y, pixel: integer);
+procedure putPixel(surface: PSdlSurface; x, y, pixel: TSdlColor32);
 var
    bpp: integer;
    p: PByte;
@@ -119,7 +119,7 @@ begin
       1: p^ := byte(pixel);
       2: PWord(p)^ := word(pixel);
       3: assert(false);
-      4: PInteger(p)^ := pixel;
+      4: PCardinal(p)^ := pixel;
    end;
 end;
 
@@ -147,7 +147,8 @@ end;
 
 function TWeatherSystem.CreateRain(r, g, b: byte): PSdlSurface;
 var
-   y, pixel: integer;
+   y: integer;
+   pixel: TSdlColor32;
 begin
    result := TSdlSurface.Create(8, 20, 32, $FF0000, $FF00, $FF, $FF000000);
    try
