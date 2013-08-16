@@ -786,7 +786,6 @@ var
 begin
    glCheckError;
    glPushAttrib(GL_ALL_ATTRIB_BITS);
-//   glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TEXTURE_BIT);
    glColor4f(1, 1, 1, 1);
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    if not (canTint and FCurrentMap.Fade) then
@@ -852,6 +851,7 @@ end;
 procedure T2kMapEngine.RenderFrame(Sender: TObject);
 var
    current: Integer;
+   colors: array[0..3] of GLfloat;
 begin
    GRenderTargets.RenderOn(RENDERER_MAP, standardRender, 0, true);
 
@@ -862,9 +862,13 @@ begin
 
    glGetIntegerv(GL_CURRENT_PROGRAM, @current);
    FShaderEngine.UseShaderProgram(FShaderEngine.ShaderProgram('default', 'defaultF'));
+   glGetFloatv(GL_CURRENT_COLOR, @colors[0]);
+   glColor4f(1, 1, 1, 1);
+   SDL_SetRenderDrawColor(FCanvas.Renderer, SDL_WHITE);
    if GMenuEngine.State <> msNone then
       GMenuEngine.Draw;
    glUseProgram(current);
+   glColor4fv(@colors[0]);
 end;
 
 {$R-}
