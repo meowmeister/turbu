@@ -144,8 +144,8 @@ begin
    input.ImportType(TypeInfo(TBattleResult));
    input.ImportType(TypeInfo(TBattleResultSet));
    input.ImportType(TypeInfo(TBattleFormation));
-   input.ImportFunction('procedure battle(which: integer; const background: string; results: TBattleResultSet; firstStrike: boolean)');
-   input.ImportFunction('procedure battleEx(which: integer; const background: string; formation: TBattleFormation; results: TBattleResultSet; bgMode, terrain: integer)');
+   input.ImportFunction('function battle(which: integer; const background: string; results: TBattleResultSet; firstStrike: boolean): TBattleResult');
+   input.ImportFunction('function battleEx(which: integer; const background: string; formation: TBattleFormation; results: TBattleResultSet; bgMode, terrain: integer): TBattleResult');
 end;
 
 procedure RegisterMediaC(input: TrsTypeImporter);
@@ -163,10 +163,20 @@ begin
    input.ImportFunction('procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);');
 end;
 
+function Nullbattle(which: integer; const background: string; results: TBattleResultSet; firstStrike: boolean): TBattleResult;
+begin
+   result := br_victory
+end;
+
+function NullbattleEx(which: integer; const background: string; formation: TBattleFormation; results: TBattleResultSet; bgMode, terrain: integer): TBattleResult;
+begin
+   result := br_victory
+end;
+
 procedure RegisterBattlesE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
 begin
-   RegisterFunction('battle', nil);
-   RegisterFunction('battleEx', nil);
+   RegisterFunction('battle', @NullBattle);
+   RegisterFunction('battleEx', @NullBattleEx);
 end;
 
 procedure RegisterMediaE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
