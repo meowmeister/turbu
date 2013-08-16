@@ -926,7 +926,11 @@ begin
    end else shakeBias := 0;
 
    WorldX := WorldX + FDisplacementX - shakeBias;
+   if not (wrHorizontal in FMap.wraparound) then
+      worldX := clamp(round(worldX), 0, (width * TILE_SIZE.x) - canvas.width);
    WorldY := WorldY + FDisplacementY;
+   if not (wrVertical in FMap.wraparound) then
+      worldY := clamp(round(worldY), 0, (height * TILE_SIZE.y) - canvas.Height);
    if (FDisplacementX - shakeBias <> 0) or (FDisplacementY <> 0) then
       for i := low(FMap.tileMap) to high(FMap.tileMap) do
          loadTileMatrix(FMap.tileMap[i], i, rect(trunc(WorldX / TILE_SIZE.x), trunc(WorldY / TILE_SIZE.y), FViewport.Bottom, FViewport.Right));
