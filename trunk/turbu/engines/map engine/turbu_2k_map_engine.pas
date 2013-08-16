@@ -902,6 +902,8 @@ begin
       begin
          if assigned(FTransition) then
          begin
+            glPushAttrib(GL_COLOR_BUFFER_BIT);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             if not FTransitionFirstFrameDrawn then
             begin
                GRenderTargets.RenderOn(RENDERER_ALT, RenderFrame, 0, true);
@@ -912,6 +914,7 @@ begin
                FTransitionFirstFrameDrawn := false;
                FTransition := nil;
             end;
+            glPopAttrib;
          end
          else begin
             if FCurrentMap.blank then
