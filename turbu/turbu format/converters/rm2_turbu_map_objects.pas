@@ -267,6 +267,19 @@ begin
       include(result, pc_timer2);
 end;
 
+procedure PerformOptimizations(script: TEBProcedure; gotoCount: integer);
+begin
+   NestedIfOptimization(script);
+   if GotoCount > 0 then
+   begin
+      GotoRemoval(script);
+      NestedIfOptimization(script);
+   end;
+   ChoiceMerge(script);
+   InputMerge(script);
+   FadeInImageOptimization(script);
+end;
+
 function ConvertEventScript(base: TEventCommandList; name: string): TEBProcedure;
 const
    REMFUDGE: array[1..5] of integer = (20141, 20151, 20713, 20722, 20732);
@@ -308,15 +321,7 @@ begin
       end;
       assert(stack.Count = 1);
       assert(fudgeFactor = 0);
-      NestedIfOptimization(result);
-      if converter.LabelGotoCount > 0 then
-      begin
-         GotoRemoval(result);
-         NestedIfOptimization(result);
-      end;
-      ChoiceMerge(result);
-      InputMerge(result);
-      FadeInImageOptimization(result);
+      PerformOptimizations(result, converter.LabelGotoCount);
    except
       result.SaveScript;
       result.free;
