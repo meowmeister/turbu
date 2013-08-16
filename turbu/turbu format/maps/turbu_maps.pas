@@ -213,6 +213,7 @@ procedure TRpgMap.LoadScripts(const scriptFile: string);
 var
    scriptStream: TStream;
 begin
+   FScriptFile := scriptfile;
    FScriptSignal := TSimpleEvent.Create;
    TThread.CreateAnonymousThread(
       procedure

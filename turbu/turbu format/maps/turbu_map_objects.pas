@@ -436,6 +436,7 @@ begin
    FParent := parent;
    FId := id;
    FPath := TPath.Create;
+   FMoveSpeed := 1;
    FConditions := TRpgEventConditions.Create;
 end;
 
