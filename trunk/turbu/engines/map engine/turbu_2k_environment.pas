@@ -547,11 +547,11 @@ begin
    DeserializeVariables(obj);
    DeserializeHeroes(obj);
    DeserializeImages(obj);
-   DeserializeMapObjects(obj);
    value := obj.Items['Party'];
    assert(assigned(value));
    FParty.Deserialize(value as TdwsJSONObject);
    value.Free;
+   DeserializeMapObjects(obj);
    obj.CheckRead('MenuEnabled', FMenuEnabled);
    obj.CheckRead('SaveCount', FSaveCount);
    obj.CheckRead('PreserveSpriteOnTeleport', FPreserveSpriteOnTeleport);
