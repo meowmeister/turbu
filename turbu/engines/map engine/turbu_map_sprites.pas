@@ -757,7 +757,7 @@ begin
       $1A: self.dirLocked := true;
       $1B: self.dirLocked := false;
       $1C: FMoveRate := min(6, FMoveRate + 1);
-      $1D: FMoveRate := max(0, FMoveRate - 1);
+      $1D: FMoveRate := max(1, FMoveRate - 1);
       $1E: FMoveFreq := min(8, FMoveFreq + 1);
       $1F: FMoveFreq := min(0, FMoveFreq - 1);
       $20: GEnvironment.Switch[FOrder.data[1]] := true;
