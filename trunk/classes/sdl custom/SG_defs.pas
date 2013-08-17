@@ -38,6 +38,7 @@ type
    TSgColor = record
       class operator Implicit(a: Cardinal): TSgcolor; inline; static;
       class operator Implicit(a: TSgcolor): Cardinal; inline; static;
+      class operator Implicit(a: TSgcolor): SDL_Color; inline; static;
    case boolean of
       false: (color: Cardinal);
       true: (rgba: packed array[1..4] of byte);
@@ -208,6 +209,14 @@ end;
 class operator TSgColor.Implicit(a: TSgcolor): Cardinal;
 begin
    result := a.color;
+end;
+
+class operator TSgColor.Implicit(a: TSgcolor): SDL_Color;
+begin
+   result.r := a.rgba[1];
+   result.g := a.rgba[2];
+   result.b := a.rgba[3];
+   result.unused := a.rgba[4];
 end;
 
 end.
