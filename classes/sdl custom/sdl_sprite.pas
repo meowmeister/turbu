@@ -413,10 +413,12 @@ var
    followX, followY: single;
    topleft: TSgPoint;
    flip: TSdlFlipAxes;
+   img: TSdlImage;
 begin
    if (not FVisible) or (FImage = nil) then
       Exit;
-   if FEngine.Images[FImageIndex].name <> FImageName then
+   img := FEngine.Images[FImageIndex];
+   if (img = nil) or (img.name <> FImageName) then
    begin
       setImageName(FImageName);
       if FImage = nil then
