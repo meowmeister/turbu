@@ -1096,6 +1096,7 @@ begin
    FTextCounter := 0;
    FTextLine := -1;
    NewLine;
+   FTextColor := 1;
 end;
 
 procedure TCustomMessageBox.SetPosition(const Value: TMboxLocation);
