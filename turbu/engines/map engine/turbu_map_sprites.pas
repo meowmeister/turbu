@@ -371,13 +371,18 @@ end;
 
 procedure TMapSprite.CheckMoveChange;
 begin
-   if assigned(FMoveChange) then
-   begin
-      SetMoveOrder(FMoveChange.FPath);
-      self.canSkip := FMoveChange.FSkip;
-      self.moveLoop := FMoveChange.FLoop;
-      self.moveFreq := FMoveChange.Ffrequency;
-      FreeAndNil(FMoveChange);
+   TMonitor.Enter(self);
+   try
+      if assigned(FMoveChange) then
+      begin
+         SetMoveOrder(FMoveChange.FPath);
+         self.canSkip := FMoveChange.FSkip;
+         self.moveLoop := FMoveChange.FLoop;
+         self.moveFreq := FMoveChange.Ffrequency;
+         FreeAndNil(FMoveChange);
+      end;
+   finally
+      TMonitor.Exit(self);
    end;
 end;
 
@@ -561,8 +566,13 @@ end;
 procedure TMapSprite.MoveChange(path: TPath; frequency: integer; loop,
   skip: boolean);
 begin
-   FreeAndNil(FMoveChange);
-   FMoveChange := TMoveChange.Create(path, frequency, loop, skip);
+   TMonitor.Enter(self);
+   try
+      FreeAndNil(FMoveChange);
+      FMoveChange := TMoveChange.Create(path, frequency, loop, skip);
+   finally
+      TMonitor.Exit(self);
+   end;
 end;
 
 function TMapSprite.moveDiag(one, two: TFacing): boolean;
