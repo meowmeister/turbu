@@ -1002,8 +1002,7 @@ begin
       for sprite in FMapObjects do
       begin
          sprite.place;
-         if GMenuEngine.state <> msExclusiveShared then
-            sprite.MoveTick;
+         sprite.MoveTick(GMenuEngine.state = msExclusiveShared);
       end;
    finally
       TMonitor.Exit(FMapObjects);
@@ -1011,7 +1010,7 @@ begin
    if assigned(FCurrentParty) then
    begin
       FCurrentParty.place;
-      FCurrentParty.MoveTick;
+      FCurrentParty.MoveTick(GMenuEngine.state = msExclusiveShared);
    end;
 
    CheckDisplacement;

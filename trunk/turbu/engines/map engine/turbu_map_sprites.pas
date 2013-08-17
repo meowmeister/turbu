@@ -136,7 +136,7 @@ type
       function inFrontTile: TTile; inline;
       function hasPage: boolean; inline;
       procedure flash(r, g, b, power: byte; time: cardinal);
-      procedure moveTick; virtual;
+      procedure moveTick(moveBlocked: boolean); virtual;
       procedure update(filename: string; transparent: boolean); virtual; abstract;
       procedure pause;
       procedure resume;
@@ -195,7 +195,7 @@ type
       procedure place; override;
       procedure update(filename: string; transparent: boolean); override;
       procedure action(const button: TButtonCode = btn_enter); virtual;
-      procedure moveTick; override;
+      procedure moveTick(moveBlocked: boolean); override;
 
       property frame: smallint read FWhichFrame;
    end;
@@ -784,7 +784,9 @@ begin
       TMapTile(self.inFrontTile).bump(self);
 end;
 
-procedure TMapSprite.moveTick;
+procedure TMapSprite.moveTick(moveBlocked: boolean);
+var
+   canMove: boolean;
 begin
    if assigned(FMoveTime) then
       Exit;
@@ -795,17 +797,18 @@ begin
       else FreeAndNil(FPause);
    end;
 
+   canMove := not (FPaused or moveBlocked);
    if assigned(FMoveAssignment) then
    begin
       if not doMove(FMoveAssignment) then
          freeAndNil(FMoveAssignment);
    end
-   else if assigned(FMoveQueue) and not FPaused then
+   else if assigned(FMoveQueue) and canMove then
    begin
       if not doMove(FMoveQueue) then
          freeAndNil(FMoveQueue);
    end
-   else if (not FPaused) and self.hasPage then
+   else if canMove and self.hasPage then
       case FMapObj.currentPage.moveType of
          mt_still: ;
          mt_cycleUD:
@@ -1062,9 +1065,9 @@ begin
       end, true);
 end;
 
-procedure TCharSprite.moveTick;
+procedure TCharSprite.moveTick(moveBlocked: boolean);
 begin
-   inherited moveTick;
+   inherited moveTick(moveBlocked);
    UpdateTiles;
 end;
 
