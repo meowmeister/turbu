@@ -87,6 +87,7 @@ type
       function GetDefTile(layer, x, y: integer): TMapTile; inline;
       procedure DrawBG;
       function GetMapID: integer;
+      function OverhangPassable(x, y: integer; direction: TFacing): boolean;
 
       procedure Tint();
       procedure adjustCoords(var x, y: integer);
@@ -774,6 +775,14 @@ begin
       end;
 end;
 
+function T2kSpriteEngine.OverhangPassable(x, y: integer; direction: TFacing): boolean;
+var
+   u: TTile;
+begin
+   u := GetTile(x, y - 1, 0);
+   result := (assigned(u) and not (taOverhang in u.attributes));
+end;
+
 function T2kSpriteEngine.Passable(x, y: integer; direction: TFacing): boolean;
 const TRANSLATE: array[TFacing] of TTileAttribute = (taUp, taRight, taDown, taLeft);
 var
@@ -787,7 +796,9 @@ begin
       begin
          if ((taCeiling in tile.attributes) and (i > 0) and (TRANSLATE[direction] in tile.attributes)) then
             Continue;
-         Exit(TRANSLATE[direction] in tile.attributes);
+         if taOverhang in tile.attributes then
+            Exit(OverhangPassable(x, y, direction))
+         else Exit(TRANSLATE[direction] in tile.attributes);
       end;
    end;
    raise Exception.CreateFmt('No tiles at location (%d, %d)!', [x, y]); //should not see this
