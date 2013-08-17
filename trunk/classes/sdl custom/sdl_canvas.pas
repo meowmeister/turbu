@@ -364,6 +364,8 @@ end;
 procedure TSdlCanvas.Clear(const color: SDL_Color; const alpha: byte);
 begin
    assert(SDL_SetRenderDrawColor(FRenderer, color.r, color.g, color.b, alpha) = 0);
+   //keep SDL state in sync with GL state
+   glColor4f(color.r / 255, color.g / 255, color.b / 255, alpha / 255);
    SDL_RenderFillRect(FRenderer, nil);
 end;
 
@@ -479,9 +481,8 @@ begin
          if composite then
             color.rgba[4] := 0
          else color.rgba[4] := 255;
-         target.SetBgColor(color);
          glDisable(GL_BLEND);
-         target.Clear;
+         target.parent.Clear(color);
          glEnable(GL_BLEND);
       end;
       if assigned(event) then
