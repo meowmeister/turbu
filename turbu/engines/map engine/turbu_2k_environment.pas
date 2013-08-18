@@ -478,8 +478,11 @@ begin
       image := sub.Elements[i] as TdwsJSONObject;
       masked := image.items['Masked'].AsBoolean;
       name := image.items['name'].AsString;
-      GGameEngine.loadRpgImage(name, masked);
-      self.Image[StrToInt(sub.Names[i])] := TRpgImage.Deserialize(GGameEngine.ImageEngine, image);
+      if name <> '' then
+      begin
+         GGameEngine.loadRpgImage(name, masked);
+         self.Image[StrToInt(sub.Names[i])] := TRpgImage.Deserialize(GGameEngine.ImageEngine, image);
+      end;
    end;
    sub.Free;
 end;
