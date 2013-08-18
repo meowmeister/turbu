@@ -106,7 +106,7 @@ procedure TConverterThread.ConvertMap(const filename: string;
    var
       dummy: string;
    begin
-      dummy := StringReplace(filename, 'map', '', [rfIgnoreCase]);
+      dummy := StringReplace(ExtractFileName(filename), 'map', '', [rfIgnoreCase]);
       result := StrToIntDef(stringReplace(dummy, '.lmu', '', [rfIgnoreCase]), -1);
    end;
 
@@ -143,7 +143,6 @@ begin
 
       scanEventsForResources(map.eventBlock);
 
-      output.currentFolder := 'maps';
       dummy := 1;
       metadata[id].internalFilename := output.MakeValidFilename(format('%s.tmf', [cmap.name]), dummy);
       output.writeFile(format('maps\%s', [metadata[id].internalFilename.name]), outFile);
@@ -176,7 +175,6 @@ var
          filelist.Delete(index);
       if fileList.Find('(OFF)', index) then
          filelist.Delete(index);
-      rtpInput.currentFolder := folderName;
       if stepname <> '' then
          FReport.newStep(stepname);
       try
@@ -419,12 +417,11 @@ begin
             if terminated then
                Exit;
             FReport.setCurrentTask('Converting maps', fromFolder.countFiles('*.lmu'));
-            TFunctional.Map<string>(fromFolder.allFiles,
-               procedure(const filename: string)
-               begin
-                  FReport.newStep(filename);
-                  ConvertMap(filename, FLdb, FLmt, GDatabase.mapTree, fromFolder, toFolder);
-               end);
+            for filename in fromFolder.allFiles('*.lmu') do
+            begin
+               FReport.newStep(filename);
+               ConvertMap(filename, FLdb, FLmt, GDatabase.mapTree, fromFolder, toFolder);
+            end;
 
             if terminated then
                Exit;

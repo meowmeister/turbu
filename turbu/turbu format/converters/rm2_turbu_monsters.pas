@@ -214,14 +214,11 @@ var
    archive: IArchive;
 begin
    archive := GArchives[SCRIPT_ARCHIVE];
-   folder := archive.currentFolder;
    saver := TStringStream.Create(global.Serialize);
    try
       archive.createFolder('global');
-      archive.currentFolder := 'global';
-      archive.writeFile('BattleGlobalScripts.trs', saver);
+      archive.writeFile('global\BattleGlobalScripts.trs', saver);
    finally
-      archive.currentFolder := folder;
       saver.Free;
    end;
 end;

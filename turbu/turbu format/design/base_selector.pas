@@ -106,7 +106,7 @@ class procedure TfrmBaseSelector.DoSelection(var current: string; const folder: 
   var frame: integer; selector: TSelectorClass; extra: TSelectorSetupProc);
 var
    form: TfrmBaseSelector;
-   enum: TEnumerable<string>;
+   enum: TArray<string>;
    filename: string;
 begin
    form := selector.Create(nil);
@@ -121,7 +121,6 @@ begin
       form.FFrame := frame;
       if assigned(extra) then
          extra(form);
-      GArchives[IMAGE_ARCHIVE].currentFolder := '';
       if form.ShowModal = mrOK then
       begin
          current := form.FFilename;

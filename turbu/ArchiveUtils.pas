@@ -12,16 +12,8 @@ uses
    ArchiveInterface;
 
 function ArchiveFileExists(archive: integer; const filename, folder: string): boolean;
-var
-   current: string;
 begin
-   current := GArchives[archive].currentFolder;
-   try
-      GArchives[archive].currentFolder := folder;
-      result := GArchives[archive].fileExists(filename);
-   finally
-      GArchives[archive].currentFolder := current;
-   end;
+   result := GArchives[archive].fileExists(format('%s\%s', [folder, filename]));
 end;
 
 function GraphicExists(var filename: string; const folder: string): boolean;

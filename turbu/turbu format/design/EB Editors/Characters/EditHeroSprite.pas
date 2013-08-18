@@ -78,7 +78,6 @@ var
 begin
    for filename in GArchives[IMAGE_ARCHIVE].allFiles('mapsprite') do
      lstFilenames.Items.Add(ChangeFileExt(ExtractFileName(filename), ''));
-   GArchives[IMAGE_ARCHIVE].currentFolder := '';
 end;
 
 procedure TfrmEBEditHeroSprite.FormShow(Sender: TObject);
