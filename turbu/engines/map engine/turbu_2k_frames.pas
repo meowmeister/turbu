@@ -638,15 +638,13 @@ begin
 end;
 
 procedure TMenuSpriteEngine.SetSkin(const name: string; stretch: boolean);
-var
-   dummy: string;
-   newPaper: TSystemImages;
-   I: Integer;
 begin
    if name = FSystemGraphic.filename then
       Exit;
    runThreadsafe(
       procedure
+      var
+         newPaper: TSystemImages;
       begin
          if not FWallpapers.TryGetValue(name, newPaper) then
          begin
