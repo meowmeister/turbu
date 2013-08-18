@@ -34,6 +34,9 @@ uses
    function inputNumber(const msg: string; digits: integer): integer;
    function inn(messageStyle, cost: integer): boolean;
    procedure setSkin(const name: string; tiled: boolean);
+   procedure SaveMenu;
+   procedure EnableMenu;
+   procedure DisableMenu;
 
    procedure RegisterScriptUnit(engine: TScriptEngine);
    procedure SerializeMessageState(writer: TdwsJSONWriter);
@@ -50,6 +53,7 @@ uses
 var
    FMboxCautious: boolean;
    FMboxModal: boolean;
+   FMenuEnabled: boolean;
    FMessageLock: TCriticalSection;
 
 const
@@ -209,6 +213,21 @@ begin
    GMenuEngine.SetSkin(name, not tiled);
 end;
 
+procedure SaveMenu;
+begin
+   //not implemented yet
+end;
+
+procedure EnableMenu;
+begin
+   FMenuEnabled := true;
+end;
+
+procedure DisableMenu;
+begin
+   FMenuEnabled := false;
+end;
+
 procedure RegisterMessagesC(input: TrsTypeImporter);
 begin
    input.ImportType(TypeInfo(TMboxLocation));
@@ -239,9 +258,9 @@ begin
    RegisterFunction('inn', @inn);
    RegisterFunction('inputText', nil);
    RegisterFunction('OpenMenu', nil);
-   RegisterFunction('EnableMenu', nil);
-   RegisterFunction('DisableMenu', nil);
-   RegisterFunction('SaveMenu', nil);
+   RegisterFunction('EnableMenu', @enableMenu);
+   RegisterFunction('DisableMenu', @disableMenu);
+   RegisterFunction('SaveMenu', @SaveMenu);
    RegisterFunction('setSkin', @setSkin);
 end;
 
@@ -257,6 +276,7 @@ begin
       writer.WriteName('Position'); writer.WriteInteger(ord(GMenuEngine.position));
       writer.WriteName('Cautious'); writer.WriteBoolean(FMboxCautious);
       writer.WriteName('Modal'); writer.WriteBoolean(FMboxModal);
+      writer.WriteName('MenuEnabled'); writer.WriteBoolean(FMenuEnabled);
       writer.WriteName('Portrait');
       writer.BeginObject;
          GMenuEngine.SerializePortrait(writer);
@@ -274,6 +294,7 @@ begin
    obj.Items['Position'].Free;
    obj.CheckRead('Cautious', FMboxCautious);
    obj.CheckRead('Modal', FMboxModal);
+   obj.CheckRead('MenuEnabled', FMenuEnabled);
    portrait := obj.Items['Portrait'] as TdwsJSONObject;
    GMenuEngine.DeserializePortrait(portrait);
    portrait.Free;
