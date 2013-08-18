@@ -33,15 +33,12 @@ type
       function fileExists(name: string): boolean;
       function getFile(key: string): TStream;
       procedure writeFile(key: string; theFile: TStream);
-      function allFiles(folder: string = ''): TEnumerable<string>;
+      function allFiles(folder: string = ''): TArray<string>;
       function countFiles(filter: string): integer;
       function makeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;
-      procedure setCurrentFolder(const value: string);
-      function getCurrentFolder: string;
       function getRoot: string;
       procedure deleteFile(name: string);
       procedure createFolder(name: string);
-      property currentFolder: string read getCurrentFolder write setCurrentFolder;
       property root: string read getRoot;
    end;
 

@@ -26,43 +26,19 @@ uses
 
 implementation
 uses
-   classes, sysUtils, Windows, Generics.Collections,
-   findfile;
+   Types, classes, sysUtils, Windows, Generics.Collections, IOUtils;
 
 type
-   TFileCollection = class(TEnumerable<string>)
-   private
-      FRoot: string;
-      FPath: string;
-      FFinder: TFindFile;
-      FList: TList<string>;
-
-      procedure pureSetPath(const Value: string);
-      procedure setPath(const Value: string);
-      function getPath: string;
-   protected
-      function DoGetEnumerator: TEnumerator<string>; override;
-   public
-      constructor Create(root: string);
-      destructor Destroy; override;
-
-      property path: string read getPath write setPath;
-   end;
-
    TDiscArchive = class(TInterfacedObject, IArchive)
    private
       FRoot: string;
-      FCollection: TFileCollection;
-      procedure setFilter(filter: string);
       function adjustFilename(name: string): string;
    private //IArchive implementation
       function getFile(key: string): TStream;
       procedure writeFile(key: string; theFile: TStream);
-      function allFiles(folder: string = ''): TEnumerable<string>;
+      function allFiles(folder: string = ''): TArray<string>;
       function countFiles(filter: string): integer;
       function MakeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;
-      procedure setCurrentFolder(const value: string);
-      function getCurrentFolder: string;
       procedure deleteFile(name: string);
       function FileExists(key: string): boolean;
       procedure createFolder(name: string);
@@ -156,8 +132,6 @@ constructor TDiscArchive.Create(root: string);
 begin
    inherited Create;
    FRoot := root;
-   FCollection := TFileCollection.Create(FRoot);
-   FCollection.path := '';
 end;
 
 procedure TDiscArchive.createFolder(name: string);
@@ -167,48 +141,41 @@ end;
 
 destructor TDiscArchive.Destroy;
 begin
-   FCollection.Free;
    inherited;
 end;
 
-procedure TDiscArchive.setCurrentFolder(const value: string);
+function TDiscArchive.allFiles(folder: string = ''): TArray<string>;
+var
+   filter, path: string;
+   strings: TStringDynArray;
+   i: integer;
 begin
-   if value <> '' then
-      FCollection.pureSetPath(IncludeTrailingPathDelimiter(value))
-   else FCollection.pureSetPath('');
-end;
-
-function TDiscArchive.getCurrentFolder: string;
-begin
-   result := FCollection.FPath;
-end;
-
-procedure TDiscArchive.setFilter(filter: string);
-begin
-   FCollection.path := filter;
-end;
-
-function TDiscArchive.allFiles(folder: string = ''): TEnumerable<string>;
-begin
-   if folder <> '' then
-      setFilter(IncludeTrailingPathDelimiter(folder));
-   result := FCollection;
+   if pos('.', folder) > 0 then
+   begin
+      filter := ExtractFileName(folder);
+      folder := ExtractFilePath(folder);
+   end
+   else filter := '*.*';
+   path := IncludeTrailingPathDelimiter(TPath.Combine(FRoot, folder));
+   strings := TDirectory.GetFiles(path, filter);
+   SetLength(result, length(strings));
+   for i := 0 to high(strings) do
+      result[i] := copy(strings[i], length(path) + 1);
 end;
 
 function TDiscArchive.countFiles(filter: string): integer;
 begin
-   setFilter(filter);
-   result := FCollection.FList.Count;
+   result := length(TDirectory.GetFiles(TPath.Combine(FRoot, ExtractFilePath(filter)), ExtractFileName(filter)));
 end;
 
 function TDiscArchive.adjustFilename(name: string): string;
 var
    path: string;
 begin
-   path := ExtractFilePath(FCollection.path);
+   path := FRoot;
    if pos(path, name) <> 1 then
    begin
-      if pos(FCollection.FPath, name) = 1 then
+      if pos(path, name) = 1 then
          result := FRoot + name
       else result := path + name;
    end
@@ -293,7 +260,7 @@ begin
                                 + checkname + format(' (%d)', [expectedNumber]) + ext)) then
    begin
       duplicates := 1;
-      baseFolder := IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(FRoot) + ExcludeTrailingPathDelimiter(getCurrentFolder));
+      baseFolder := IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(FRoot));
       while fileExists(baseFolder + checkname + ext) do
       begin
          inc(duplicates);
@@ -356,67 +323,6 @@ begin
          raise EArchiveError.CreateFmt('Unable to create folder %s: %s', [filename, E.Message]);
    end;
    result := TDiscArchive.Create(IncludeTrailingPathDelimiter(filename));
-end;
-
-{ TFileCollection }
-
-constructor TFileCollection.Create(root: string);
-begin
-   inherited Create;
-   FRoot := IncludeTrailingPathDelimiter(root);
-   FList := TList<string>.create;
-   FFinder := TFindFile.Create(FRoot);
-end;
-
-destructor TFileCollection.Destroy;
-begin
-   FList.Free;
-   FFinder.Free;
-   inherited Destroy;
-end;
-
-function TFileCollection.DoGetEnumerator: TEnumerator<string>;
-begin
-   result := FList.GetEnumerator;
-end;
-
-function TFileCollection.getPath: string;
-var
-   lPath: string;
-begin
-   result := IncludeTrailingPathDelimiter(FRoot);
-   if FPath <> '' then
-   begin
-      if pos('*', FPath) = 0 then
-         lPath := FPath
-      else lPath := ExtractFilePath(ExcludeTrailingPathDelimiter(FPath));
-      result := result + IncludeTrailingPathDelimiter(lPath);
-   end;
-end;
-
-procedure TFileCollection.pureSetPath(const Value: string);
-var
-   fullPath: string;
-begin
-   FPath := Value;
-   fullPath := FRoot + ExtractFilePath(FPath);
-   if DirectoryExists(fullPath) then
-      FFinder.Path := fullPath
-   else raise EFileNotFoundException.CreateFmt('Folder %s does not exist', [Value]);
-end;
-
-procedure TFileCollection.setPath(const Value: string);
-var
-   dummy: string;
-begin
-   pureSetPath(value);
-   dummy := ExtractFileName(FPath);
-   if dummy <> '' then
-      FFinder.FileMask := dummy
-   else FFinder.FileMask := '*.*';
-   FList.clear;
-   for dummy in FFinder.SearchForFiles do
-      FList.Add(dummy);
 end;
 
 end.
