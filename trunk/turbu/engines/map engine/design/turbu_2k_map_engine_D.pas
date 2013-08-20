@@ -876,6 +876,7 @@ begin
          sprite := FCurrentMap.AddMapObject(obj);
          FCurrentMap.mapObj.mapObjects.Add(obj);
          sprite.location := FCursorPosition;
+         obj.location := FCursorPosition;
          FObjectContainers.Add(TMapObjectContainer.Create(sprite, FCanvas));
          self.repaint;
       end;
