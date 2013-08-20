@@ -601,10 +601,8 @@ end;
 
 procedure T2kMapEngine.repaint;
 begin
-   FCanvas.SetRenderer;
-   SDL_SetRenderDrawColor(FCanvas.renderer, 0, 0, 0, 255);
-   FCanvas.Clear;
-   FCurrentMap.Draw;
+   GRenderTargets.RenderOn(RENDERER_MAIN, RenderFrame, 0, true);
+   DrawRenderTarget(GRenderTargets[RENDERER_MAIN], false);
    self.AfterPaint;
    FCanvas.Flip;
 end;
