@@ -484,12 +484,15 @@ var
    idx: integer;
    child: TEBObject;
 begin
-   idx := FNameDic.IndexOf(name);
-   if idx <> -1 then
+   if assigned(FNameDic) then
    begin
-      child := FNameDic.Objects[idx] as TEBObject;
-      FNameDic.Delete(idx);
-      FChildren.Remove(child);
+      idx := FNameDic.IndexOf(name);
+      if idx <> -1 then
+      begin
+         child := FNameDic.Objects[idx] as TEBObject;
+         FNameDic.Delete(idx);
+         FChildren.Remove(child);
+      end;
    end;
 end;
 
