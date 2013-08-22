@@ -24,7 +24,7 @@ uses
    turbu_map_engine, turbu_2k_map_engine, turbu_database_interface,
    turbu_map_interface, turbu_tilesets, turbu_maps, turbu_2k_sprite_engine,
    turbu_map_sprites, mapobject_container,
-   sdl_13, SG_defs;
+   sdl_13, SG_defs, sdl_canvas;
 
 type
    T2kMapEngineD = class(T2kMapEngine, IDesignMapEngine, IBreakable)
@@ -36,6 +36,35 @@ type
       end;
 
       TUndoFrame = TArray<TPair<TTriple, TTileRef>>;
+
+      TCell = array[0..1] of TTileRef;
+
+      TSelection = class
+      private
+         FParent: T2kMapEngineD;
+         FArea: types.TRect;
+         FTiles: TArray<TCell>;
+         FHook: TsgPoint;
+         FHooked: boolean;
+         FDirty: boolean;
+         FSnapshot: TSdlRenderTarget;
+        function GetPixArea: TRect;
+      public
+         constructor Create(parent: T2kMapEngineD);
+         destructor Destroy; override;
+         function Contains(const point: TsgPoint): boolean;
+         procedure hook(const point: TsgPoint);
+         procedure drag(const point: TsgPoint);
+         procedure unhook;
+         function Copy: string;
+         constructor Paste(const json: string; origin: TsgPoint);
+
+         property tiles: TArray<TCell> read FTiles;
+         property area: TRect read FArea;
+         property pixArea: TRect read GetPixArea;
+         property hooked: boolean read FHooked;
+         property dirty: boolean read FDirty;
+      end;
 
    private
       FTilesetListD: TList<TTileGroupPair>;
@@ -58,6 +87,8 @@ type
       FBeingDrawn: TDictionary<TTriple, TTileRef>;
       FUndoStack: TStack<TUndoFrame>;
 
+      FSelection: TSelection;
+
       function loadTilesetD(const value: TTileSet): TList<TTileGroupPair>;
       procedure saveMap(value: TRpgMap);
       procedure saveAndClearMapCache;
@@ -78,6 +109,7 @@ type
       procedure InternalDrawRect(const position: TSgPoint; new: boolean);
       procedure InternalDrawPen(const position: TsgPoint; new: boolean);
       procedure InternalDrawFlood(const position: TSgPoint; new: boolean);
+      procedure InternalDrawSelect(const position: TSgPoint; new: boolean);
       procedure DetermineFlood(const position: TsgPoint; out bounds: TRect;
          out floodSet: TDictionary<TsgPoint, boolean>);
       function FloodCompatible(const position: TsgPoint; tv: TTileRef): boolean;
@@ -129,6 +161,9 @@ type
 
       procedure IDesignMapEngine.loadMap = DesignLoadMap;
       function IDesignMapEngine.Initialize = InitializeDesigner;
+      procedure ClearSelection;
+      procedure PasteSelection;
+      procedure DrawSelection;
    protected
       procedure cleanup; override;
       procedure AfterPaint; override;
@@ -139,12 +174,14 @@ type
 
 implementation
 uses
-   commons, math, windows, Dialogs, Controls, Forms,
+   commons, math, windows, Dialogs, Controls, Forms, clipbrd,
    logs, database,
    turbu_map_metadata, archiveInterface, turbu_constants, turbu_sdl_image, turbu_database,
    turbu_functional, turbu_plugin_interface, turbu_containers, turbu_map_objects,
+   turbu_2k_transitions_graphics,
    eval, MapObject_Editor, dm_database, db_upgrade,
-   sdl, sg_utils, sdlstreams;
+   sdl, sg_utils, sdlstreams,
+   dwsJSON;
 
 const
    MAX_WIDTH: byte = 6; //assumed to be 6, but we can't be sure beforetime
@@ -156,7 +193,29 @@ begin
    result := true;
 end;
 
+procedure T2kMapEngineD.PasteSelection;
+var
+   sel: TSelection;
+   center: TsgPoint;
+begin
+   try
+      center := CenterPoint(FCurrentMap.viewport);
+      sel := TSelection.paste(clipboard.AsText, center);
+   except
+      Exit; //swallow exceptions from the paste not working; this means it was invalid
+   end;
+   ClearSelection;
+   FSelection := sel;
+   FDrawFrom := FSelection.area.TopLeft;
+   FDrawTo := FSelection.area.BottomRight;
+   repaint;
+end;
+
 procedure T2kMapEngineD.KeyDown(key: word; Shift: TShiftState);
+const
+   VK_C = 67;
+   VK_X = 88;
+   VK_V = 86;
 begin
    if FTimer.Enabled or (FCurrentLayer >= 0) then
       Exit;
@@ -164,6 +223,14 @@ begin
       VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT: ArrowKey(key);
       VK_RETURN: DoubleClick;
       VK_BACK, VK_DELETE: DoDelete;
+   end;
+   if (FPaintMode = pmSelect) and (shift = [ssCtrl]) then
+   begin
+      case key of
+         VK_C: if assigned(FSelection) then
+            Clipboard.AsText := FSelection.Copy;
+         VK_V: PasteSelection;
+      end;
    end;
 end;
 
@@ -237,6 +304,8 @@ begin
    end
    else if FDrawGuide then
    begin
+      if assigned(FSelection) then
+         DrawSelection;
       guideRect := GetDelayDrawRect;
       inc(guideRect.Right);
       inc(guideRect.Bottom);
@@ -493,7 +562,6 @@ end;
 
 procedure T2kMapEngineD.SetPaintMode(value: TPaintMode);
 begin
-   {$MESSAGE WARN 'T2kMapEngineD.SetPaintMode: Not implemented yet'}
    FPaintMode := value;
 end;
 
@@ -663,6 +731,58 @@ begin
    end;
 end;
 
+procedure T2kMapEngineD.ClearSelection;
+var
+   x, y, z, counter: integer;
+   cell: TCell;
+   area: TRect;
+begin
+   if assigned(FSelection) then
+   begin
+      if FSelection.dirty then
+      begin
+         counter := 0;
+         for y := FSelection.area.Top to FSelection.area.Bottom do
+            for x := FSelection.area.Left to FSelection.area.Right do
+            begin
+               if (x >= 0) and (y >= 0) and (x < FCurrentMap.Width) and (y < FCurrentMap.Height) then
+               begin
+                  cell := FSelection.tiles[counter];
+                  for z := Low(TCell) to High(TCell) do
+                     FCurrentMap.assignTile(x, y, z, cell[z]);
+               end;
+               inc(counter);
+            end;
+
+         area := sg_utils.expandRect(FSelection.area, 1);
+         for y := area.Top to area.Bottom do
+            for x := area.Left to area.Right do
+            begin
+               FCurrentMap.updateBorders(x, y, 0);
+               FCurrentMap.updateBorders(x, y, 1);
+            end;
+      end;
+      FreeAndNil(FSelection);
+   end;
+end;
+
+procedure T2kMapEngineD.InternalDrawSelect(const position: TSgPoint; new: boolean);
+begin
+   if assigned(FSelection) and FSelection.contains(position) and not FSelection.hooked then
+      FSelection.hook(position)
+   else if assigned(FSelection) and FSelection.hooked then
+   begin
+      FSelection.drag(position);
+      FDrawFrom := FSelection.area.TopLeft;
+      FDrawTo := FSelection.area.BottomRight;
+   end
+   else begin
+      if new then
+         ClearSelection;
+      InternalDrawRect(position, new);
+   end;
+end;
+
 procedure T2kMapEngineD.InternalDraw(const position: TSgPoint; new: boolean);
 begin
    case FPaintMode of
@@ -670,6 +790,7 @@ begin
       pmFlood: InternalDrawFlood(position, new);
       pmRect: InternalDrawRect(position, new);
 //      pmEllipse: InternalDrawEllipse(position, new);
+      pmSelect: InternalDrawSelect(position, new);
    end;
 end;
 
@@ -840,6 +961,14 @@ begin
       begin
          FillRect(GetDelayDrawRect, nil);
          repaint;
+      end
+      else if FPaintMode = pmSelect then
+      begin
+         FDrawGuide := true;
+         if FSelection = nil then
+            FSelection := TSelection.Create(self)
+         else FSelection.Unhook;
+         repaint;
       end;
       NewUndoFrame;
    end;
@@ -946,6 +1075,11 @@ function T2kMapEngineD.GetDelayDrawRect: TRect;
 begin
    result := rect(min(FDrawFrom.x, FDrawTo.x), min(FDrawFrom.y, FDrawTo.y),
            max(FDrawFrom.x, FDrawTo.x), max(FDrawFrom.y, FDrawTo.y));
+end;
+
+procedure T2kMapEngineD.DrawSelection;
+begin
+   FCanvas.Draw(FSelection.FSnapshot, FSelection.GetPixArea.TopLeft);
 end;
 
 function T2kMapEngineD.GetTilesetImage(const index: byte): PSdlSurface;
@@ -1094,6 +1228,156 @@ begin
    self.x := x;
    self.y := y;
    self.z := layer;
+end;
+
+{ T2kMapEngineD.TSelection }
+
+constructor T2kMapEngineD.TSelection.Create(parent: T2kMapEngineD);
+var
+   size: TsgPoint;
+   x, y, z, counter: integer;
+   pixArea: TRect;
+begin
+   FArea := parent.GetDelayDrawRect;
+   FParent := T2kMapEngineD;
+   size := sgPoint((FArea.Right + 1) - FArea.Left, (FArea.Bottom + 1) - FArea.Top);
+   SetLength(FTiles, size.x * size.y);
+   counter := 0;
+   for y := FArea.Top to FArea.Bottom do
+      for x := FArea.Left to FArea.Right do
+      begin
+         for z := Low(TCell) to High(TCell) do
+            FTiles[counter][z] := parent.FCurrentMap.mapObj.getTile(x, y, z);
+         inc(counter);
+      end;
+   pixArea := self.GetPixArea;
+   FSnapshot := TSdlRenderTarget.Create(pixArea.BottomRight);
+   FSnapshot.parent.pushRenderTarget;
+   FSnapshot.SetRenderer;
+   try
+      FSnapshot.parent.DrawRect(GRenderTargets[RENDERER_MAIN], ORIGIN, pixArea);
+   finally
+      FSnapshot.parent.popRenderTarget;
+   end;
+end;
+
+destructor T2kMapEngineD.TSelection.Destroy;
+begin
+   FSnapshot.Free;
+   inherited;
+end;
+
+function T2kMapEngineD.TSelection.GetPixArea: TRect;
+begin
+   pixArea := TRectToSdlRect(multiplyRect(FArea, SPRITE_SIZE));
+   pixArea.TopLeft := pixArea.TopLeft - FParent.FScrollPosition;
+end;
+
+function T2kMapEngineD.TSelection.Contains(const point: TsgPoint): boolean;
+begin
+   Result := (point.x >= FArea.Left) and (point.x <= FArea.Right)
+     and (point.y >= FArea.Top) and (point.y <= FArea.Bottom);
+end;
+
+procedure T2kMapEngineD.TSelection.drag(const point: TsgPoint);
+var
+   offset: TsgPoint;
+begin
+   offset := point - FArea.TopLeft;
+   if offset <> FHook then
+   begin
+      offset := offset - FHook;
+      inc(FArea.Left, offset.x);
+      inc(FArea.Right, offset.x);
+      inc(FArea.Top, offset.y);
+      inc(FArea.Bottom, offset.y);
+      FDirty := true;
+   end;
+end;
+
+procedure T2kMapEngineD.TSelection.hook(const point: TsgPoint);
+begin
+   FHook := point - FArea.TopLeft;
+   FHooked := true;
+end;
+
+procedure T2kMapEngineD.TSelection.unhook;
+begin
+   FHooked := false;
+end;
+
+function T2kMapEngineD.TSelection.Copy: string;
+var
+   writer: TdwsJSONWriter;
+   cell: TCell;
+   tile: TTileRef;
+begin
+   writer := TdwsJSONWriter.Create(nil);
+   try
+      writer.BeginObject;
+         writer.WriteName('CLASS');
+         writer.WriteString('Selection');
+         writer.WriteName('WIDTH');
+         writer.WriteInteger((FArea.Right - FArea.Left) + 1);
+         writer.WriteName('HEIGHT');
+         writer.WriteInteger((FArea.Bottom - FArea.Top) + 1);
+         writer.WriteName('TILES');
+         writer.BeginArray;
+            for cell in FTiles do
+            begin
+               writer.BeginArray;
+                  for tile in cell do
+                     writer.WriteInteger(tile.value);
+               writer.EndArray;
+            end;
+         writer.EndArray;
+      writer.EndObject;
+
+      result := writer.ToString;
+   finally
+      writer.Free;
+   end;
+end;
+
+constructor T2kMapEngineD.TSelection.Paste(const json: string;
+  origin: TsgPoint);
+var
+   obj: TdwsJSONObject;
+   val: TdwsJSONValue;
+   tile, tiles: TdwsJSONArray;
+   i, w, h, z: integer;
+begin
+   obj := nil; //shut up, compiler warnings...
+   if json = '' then
+      Abort;
+   try
+      obj := TdwsJSONObject.ParseString(json) as TdwsJSONObject;
+   except
+      Abort;
+   end;
+   try
+      val := obj.Items['CLASS'];
+      if (val = nil) or (val.Value.AsString <> 'Selection') then
+         Abort;
+      w := obj.Items['WIDTH'].Value.AsInteger;
+      h := obj.Items['HEIGHT'].Value.AsInteger;
+      dec(origin.x, w div 2);
+      dec(origin.y, h div 2);
+      FArea.TopLeft := origin;
+      FArea.Right := origin.x + w - 1;
+      FArea.Bottom := origin.y + h - 1;
+      tiles := obj.Items['TILES'] as TdwsJSONArray;
+      setLength(FTiles, tiles.ElementCount);
+      for i := 0 to high(FTiles) do
+      begin
+         tile := tiles.Elements[i] as TdwsJSONArray;
+         for z := Low(TCell) to High(TCell) do
+            FTiles[i][z].value := tile.Elements[z].Value.AsInteger;
+      end;
+   finally
+      obj.Free;
+   end;
+   FDirty := true;
 end;
 
 end.
