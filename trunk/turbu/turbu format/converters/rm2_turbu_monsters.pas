@@ -210,7 +210,6 @@ end;
 procedure SaveGlobalScript(global: TEBUnit);
 var
    saver: TStringStream;
-   folder: string;
    archive: IArchive;
 begin
    archive := GArchives[SCRIPT_ARCHIVE];
