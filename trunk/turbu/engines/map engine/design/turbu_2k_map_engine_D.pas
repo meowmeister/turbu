@@ -76,6 +76,7 @@ type
       FPaletteList: TArray<integer>;
       FCurrentLayer: shortint;
       FAutosaveMaps: boolean;
+      FExactDrawMode: boolean;
       FObjectContainers: TMapObjectContainerList;
       FCursorPosition: TSgPoint;
       FHookedObject: TMapSprite;
@@ -557,7 +558,7 @@ end;
 
 procedure T2kMapEngineD.SetExactDrawMode(value: boolean);
 begin
-   {$MESSAGE WARN 'T2kMapEngineD.SetExactDrawMode: Not implemented yet'}
+   FExactDrawMode := value;
 end;
 
 procedure T2kMapEngineD.SetPaintMode(value: TPaintMode);
@@ -633,13 +634,14 @@ begin
    for i := bounds.Top to bounds.Bottom do
       DrawRow(i, bounds, predicate);
    bounds := sg_utils.expandRect(bounds, 1);
-   for j := bounds.Top to bounds.Bottom do
-      for I := bounds.Left to bounds.Right do
-      begin
-         tileRef := FCurrentMap.mapObj.GetTile(i, j, FCurrentLayer);
-         if FCurrentMap.updateBorders(i, j, FCurrentLayer) then
-            BeingDrawn(i, j, tileRef);
-      end;
+   if not FExactDrawMode then
+      for j := bounds.Top to bounds.Bottom do
+         for I := bounds.Left to bounds.Right do
+         begin
+            tileRef := FCurrentMap.mapObj.GetTile(i, j, FCurrentLayer);
+            if FCurrentMap.updateBorders(i, j, FCurrentLayer) then
+               BeingDrawn(i, j, tileRef);
+         end;
    FCurrentMap.Dead;
 end;
 
@@ -755,12 +757,13 @@ begin
             end;
 
          area := sg_utils.expandRect(FSelection.area, 1);
-         for y := area.Top to area.Bottom do
-            for x := area.Left to area.Right do
-            begin
-               FCurrentMap.updateBorders(x, y, 0);
-               FCurrentMap.updateBorders(x, y, 1);
-            end;
+         if not FExactDrawMode then
+            for y := area.Top to area.Bottom do
+               for x := area.Left to area.Right do
+               begin
+                  FCurrentMap.updateBorders(x, y, 0);
+                  FCurrentMap.updateBorders(x, y, 1);
+               end;
       end;
       FreeAndNil(FSelection);
    end;
@@ -1239,7 +1242,7 @@ var
    pixArea: TRect;
 begin
    FArea := parent.GetDelayDrawRect;
-   FParent := T2kMapEngineD;
+   FParent := parent;
    size := sgPoint((FArea.Right + 1) - FArea.Left, (FArea.Bottom + 1) - FArea.Top);
    SetLength(FTiles, size.x * size.y);
    counter := 0;
@@ -1269,8 +1272,8 @@ end;
 
 function T2kMapEngineD.TSelection.GetPixArea: TRect;
 begin
-   pixArea := TRectToSdlRect(multiplyRect(FArea, SPRITE_SIZE));
-   pixArea.TopLeft := pixArea.TopLeft - FParent.FScrollPosition;
+   result := TRectToSdlRect(multiplyRect(FArea, SPRITE_SIZE));
+   result.TopLeft := result.TopLeft - FParent.FScrollPosition;
 end;
 
 function T2kMapEngineD.TSelection.Contains(const point: TsgPoint): boolean;
