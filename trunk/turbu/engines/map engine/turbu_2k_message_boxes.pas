@@ -49,11 +49,7 @@ type
       constructor Create(parent: TMenuSpriteEngine; const coords: TRect); override;
       procedure button(const input: TButtonCode); override;
       procedure moveTo(coords: TRect); override;
-{      procedure realign; inline;
-      procedure placeCursor(position: smallint); override;
-      procedure tick;}
       procedure setPortrait(const filename: string; const index: byte);
-//      procedure setupInput(const digits: byte);
 
       property portrait: TSprite read FPortrait;
       property rightside: boolean read FRightPortrait write setRightside;
@@ -63,8 +59,6 @@ type
    private
       FAcceptCancel: boolean;
       FOnValidate: TValidateEvent;
-      FCursorPosition: smallint;
-      FPromptLines: integer;
       FTextDrawn: boolean;
       function Validate(const text: string): boolean;
    protected
@@ -73,8 +67,6 @@ type
       procedure DoDraw; override;
       procedure BasicDrawText;
    public
-      procedure button(const input: TButtonCode); override;
-      procedure placeCursor(position: smallint); virtual;
       property OnValidate: TValidateEvent read FOnValidate write FOnValidate;
       property canCancel: boolean  read FAcceptCancel write FAcceptCancel;
    end;
@@ -325,128 +317,12 @@ begin
    SDL_RenderCopy(FTextTarget.parent.Renderer, FTextTarget.handle, nil, @dest);
 end;
 
-procedure TInputBox.button(const input: TButtonCode);
-var
-   max, absMax, lPosition: smallint;
-   ratio: byte;
-begin
-   if (FCursorPosition = -1) and (input in [btn_up, btn_down, btn_left, btn_right]) then
-      Exit;
-   if length(FOptionEnabled) = 0 then
-      Exit;
-   if assigned(FButtonLock) then
-   begin
-      if FButtonLock.timeRemaining = 0 then
-         freeAndNil(FButtonLock)
-      else Exit;
-   end;
-
-   lPosition := FCursorPosition;
-   max := high(FOptionEnabled) - FLastLineColumns;
-   absMax := max + FLastLineColumns;
-   case input of
-      btn_enter:
-      begin
-         if FOptionEnabled[FCursorPosition] then
-         begin
-            TMenuSpriteEngine(FEngine).MenuInt := FCursorPosition;
-            PlaySound(sfxAccept);
-         end
-         else PlaySound(sfxBuzzer);
-      end;
-      btn_down:
-      begin
-         if FCursorPosition <= max - FColumns then
-            lPosition := FCursorPosition + FColumns
-         else if FColumns = 1 then
-            lPosition := 0
-         else if (FLastLineColumns > 0) and (FCursorPosition <= max) then
-         begin
-            lPosition := FCursorPosition mod FColumns;
-            ratio := FColumns div FLastLineColumns;
-            lPosition := (lPosition div ratio) + max + 1;
-         end;
-      end;
-      btn_up:
-      begin
-         if FCursorPosition > max then
-         begin
-            ratio := FColumns div FLastLineColumns;
-            lPosition := FCursorPosition - (max + 1);
-            lPosition := (max + 1 - FColumns) + (lPosition * ratio) + (ratio div 2);
-         end else if FCursorPosition >= FColumns then
-            lPosition := FCursorPosition - FColumns
-         else if FColumns = 1 then
-            lPosition := high(FOptionEnabled);
-      end;
-      btn_right:
-      begin
-         if (FColumns > 1) and (FCursorPosition < absMax) then
-            lPosition := FCursorPosition + 1;
-      end;
-      btn_left:
-      begin
-         if (FColumns > 1) and (FCursorPosition > 0) then
-            lPosition := FCursorPosition - 1;
-      end;
-      else ;
-   end;
-   if (input in [btn_up, btn_down, btn_left, btn_right]) and (lPosition <> FCursorPosition) then
-   begin
-      FButtonLock := TRpgTimestamp.Create(180);
-      placeCursor(lPosition);
-      PlaySound(sfxCursor);
-   end;
-end;
-
 procedure TInputBox.DoDraw;
 begin
    inherited DoDraw;
    PrepareText;
    TMenuSpriteEngine(Engine).cursor.Draw;
    DrawText;
-end;
-
-procedure TInputBox.placeCursor(position: smallint);
-var
-   coords: TRect;
-   column, columns: byte;
-   width: word;
-   max: smallint;
-begin
-   if self.FDontChangeCursor then
-      position := (self.FCursorPosition);
-   FCursorPosition := position;
-   max := length(FOptionEnabled) - (FPromptLines + FLastLineColumns);
-   if (position > max) and (FLastLineColumns > 0) then
-   begin
-      columns := FLastLineColumns;
-      width := lastColumnWidth;
-   end else
-   begin
-      columns := FColumns;
-      width := columnWidth;
-   end;
-   if length(FOptionEnabled) = 0 then
-      position := 0
-   else position := min(position, high(FOptionEnabled));
-   if position > max then
-      dec(position, max + 1);
-   column := position mod columns;
-   inc(position, FPromptLines * columns);
-   coords := rect(8 + (column * (width + SEPARATOR)),
-                  (position div columns) * 15 + FBounds.Top + (ord(FPosition) * 80) + 8,
-                  width, 18);
-   inc(coords.Bottom, coords.Top);
-   if FCursorPosition > max then
-      inc(coords.top, (FCursorPosition div FColumns) * 15);
-
-   with TMenuSpriteEngine(FEngine).cursor do
-   begin
-      Visible := true;
-      layout(coords);
-   end;
-   FDontChangeCursor := false;
 end;
 
 function TInputBox.Validate(const text: string): boolean;
