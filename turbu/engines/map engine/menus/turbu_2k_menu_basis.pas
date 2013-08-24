@@ -40,6 +40,7 @@ type
    TCursorFunc = procedure (position: smallint; theMenu: TGameMenuBox; parent: TMenuPage) of object;
 
    TSetupFunc = procedure (value: integer; theMenu: TGameMenuBox; parent: TMenuPage) of object;
+   TCloseMessageEvent = procedure of object;
 
    TGameMenuBox = class abstract(TCustomMessageBox)
    private
@@ -136,6 +137,7 @@ type
       FState: TMenuState;
       FOrigin: TsgPoint;
       FMenus: TDictionary<string, TMenuPage>;
+      FCloseMenu: TCloseMessageEvent;
 
       procedure setVisible(const Value: boolean);
 
@@ -145,7 +147,7 @@ type
       procedure OpenMenu(const name: string; cursorValue: integer = 0);
       procedure button(const input: TButtonCode);
    public
-      constructor Create(parent: TMenuSpriteEngine);
+      constructor Create(parent: TMenuSpriteEngine; callback: TCloseMessageEvent);
       destructor Destroy; override;
       procedure focusMenu(sender, which: TMenuPage); overload;
       procedure focusMenu(sender: TMenuPage; const which: string; cursorValue: integer); overload;
@@ -328,7 +330,7 @@ begin
    FMenuLayouts.Free;
 end;
 
-constructor TMenuEngine.Create(parent: TMenuSpriteEngine);
+constructor TMenuEngine.Create(parent: TMenuSpriteEngine; callback: TCloseMessageEvent);
 var
    i: integer;
 begin
@@ -346,6 +348,7 @@ begin
                          rect(0, 0, FParent.Canvas.Width, FParent.Canvas.Height),
                          self,
                          FMenuLayouts.ValueFromIndex[i]));
+   FCloseMenu := callback;
 end;
 
 destructor TMenuEngine.Destroy;
@@ -441,15 +444,17 @@ begin
    FState := ms_fading;
    self.visible := false;
    GGameEngine.CurrentMap.wake;
+   FCloseMenu();
 end;
 
 procedure TMenuEngine.return;
-var page: TMenuPage;
+var
+   page: TMenuPage;
 begin
-   page := FStack.pop;
-   if page = nil then
+   if FStack.Count = 0 then
       self.leave(false)
    else begin
+      page := FStack.pop;
       FCurrentPage := page;
       page.setup(CURSOR_UNCHANGED);
    end;

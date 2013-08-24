@@ -456,7 +456,7 @@ begin
    FBoxes[mbtPrompt] := TPromptBox.Create(self, size);
    FBoxes[mbtInput] := TValueInputBox.Create(self, size);
    TCustomMessageBox.OnPlaySound := rs_media.PlaySystemSound;
-   FMenuEngine := TMenuEngine.Create(self);
+   FMenuEngine := TMenuEngine.Create(self, Self.EndMessage);
 end;
 
 destructor TMenuSpriteEngine.Destroy;
