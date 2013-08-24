@@ -63,7 +63,7 @@ type
    private
       FSorted: boolean;
       FList: TObjectList<TRpgItem>;
-      function Count: integer;
+      function GetItem(id: integer): TRpgItem;
    public
       constructor Create;
       destructor Destroy; override;
@@ -79,6 +79,8 @@ type
       function contains(id: integer): boolean;
       procedure Remove(const id, number: integer);
       procedure sort;
+      function Count: integer;
+      property Item[id: integer]: TRpgItem read GetItem; default;
    end;
 
 const
@@ -166,6 +168,12 @@ destructor TRpgInventory.Destroy;
 begin
    FList.Free;
    inherited Destroy;
+end;
+
+function TRpgInventory.GetItem(id: integer): TRpgItem;
+begin
+   Sort;
+   result := FList[id];
 end;
 
 procedure TRpgInventory.Serialize(writer: TdwsJSONWriter);

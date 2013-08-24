@@ -1,9 +1,11 @@
 unit turbu_2k_savegames;
 
 interface
+type
+   TSimpleMethod = procedure of object;
 
 procedure SaveTo(const filename: string; mapID: integer; explicit: boolean);
-procedure Load(const filename: string);
+procedure Load(const filename: string; OnInitializeParty: TSimpleMethod);
 
 implementation
 uses
@@ -39,7 +41,7 @@ begin
    end;
 end;
 
-procedure Load(const filename: string);
+procedure Load(const filename: string; OnInitializeParty: TSimpleMethod);
 var
    obj: TdwsJSONObject;
    value: TdwsJSONValue;
@@ -51,6 +53,7 @@ begin
       value := obj.Items['Map'];
       GGameEngine.loadMap(value.AsInteger);
       value.Free;
+      OnInitializeParty();
       value := obj.Items['Environment'];
       GEnvironment.Deserialize(value as TdwsJSONObject);
       if value.ElementCount = 0 then

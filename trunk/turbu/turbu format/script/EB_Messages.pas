@@ -94,7 +94,7 @@ type
       function GetNodeText: string; override;
    end;
 
-   TEBMenuEnable = class(TEBMessageObject)
+   TEBMenuEnable = class(TEBObject)
    public
       function GetScriptText: string; override;
       function GetNodeText: string; override;

@@ -34,9 +34,8 @@ uses
    function inputNumber(const msg: string; digits: integer): integer;
    function inn(messageStyle, cost: integer): boolean;
    procedure setSkin(const name: string; tiled: boolean);
+   procedure OpenMenu;
    procedure SaveMenu;
-   procedure EnableMenu;
-   procedure DisableMenu;
 
    procedure RegisterScriptUnit(engine: TScriptEngine);
    procedure SerializeMessageState(writer: TdwsJSONWriter);
@@ -53,7 +52,6 @@ uses
 var
    FMboxCautious: boolean;
    FMboxModal: boolean;
-   FMenuEnabled: boolean;
    FMessageLock: TCriticalSection;
 
 const
@@ -213,19 +211,14 @@ begin
    GMenuEngine.SetSkin(name, not tiled);
 end;
 
+procedure OpenMenu;
+begin
+   GMenuEngine.OpenMenu('Main');
+end;
+
 procedure SaveMenu;
 begin
    //not implemented yet
-end;
-
-procedure EnableMenu;
-begin
-   FMenuEnabled := true;
-end;
-
-procedure DisableMenu;
-begin
-   FMenuEnabled := false;
 end;
 
 procedure RegisterMessagesC(input: TrsTypeImporter);
@@ -241,8 +234,6 @@ begin
 
    input.ImportFunction('function inputText(const base: string; portrait: integer): string');
    input.ImportFunction('procedure OpenMenu;');
-   input.ImportFunction('procedure EnableMenu;');
-   input.ImportFunction('procedure DisableMenu;');
    input.ImportFunction('procedure SaveMenu;');
    input.ImportFunction('procedure setSkin(const name: string; tiled: boolean);');
 end;
@@ -257,9 +248,7 @@ begin
    RegisterFunction('inputNumber', @inputNumber);
    RegisterFunction('inn', @inn);
    RegisterFunction('inputText', nil);
-   RegisterFunction('OpenMenu', nil);
-   RegisterFunction('EnableMenu', @enableMenu);
-   RegisterFunction('DisableMenu', @disableMenu);
+   RegisterFunction('OpenMenu', @OpenMenu);
    RegisterFunction('SaveMenu', @SaveMenu);
    RegisterFunction('setSkin', @setSkin);
 end;
@@ -276,7 +265,6 @@ begin
       writer.WriteName('Position'); writer.WriteInteger(ord(GMenuEngine.position));
       writer.WriteName('Cautious'); writer.WriteBoolean(FMboxCautious);
       writer.WriteName('Modal'); writer.WriteBoolean(FMboxModal);
-      writer.WriteName('MenuEnabled'); writer.WriteBoolean(FMenuEnabled);
       writer.WriteName('Portrait');
       writer.BeginObject;
          GMenuEngine.SerializePortrait(writer);
@@ -294,7 +282,6 @@ begin
    obj.Items['Position'].Free;
    obj.CheckRead('Cautious', FMboxCautious);
    obj.CheckRead('Modal', FMboxModal);
-   obj.CheckRead('MenuEnabled', FMenuEnabled);
    portrait := obj.Items['Portrait'] as TdwsJSONObject;
    GMenuEngine.DeserializePortrait(portrait);
    portrait.Free;

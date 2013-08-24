@@ -77,7 +77,6 @@ type
       FHeartbeat: integer;
       FEnterLock: boolean;
       FSaveLock: boolean;
-      FDontLockEnter: boolean;
       FCutscene: integer;
       procedure OnTimer(Sender: TObject);
       procedure standardRender(Sender: TObject);
@@ -125,6 +124,7 @@ type
       property ImageEngine: TImageEngine read FImageEngine;
       property WeatherEngine: TWeatherSystem read FWeatherEngine;
       property CurrentMap: T2kSpriteEngine read FCurrentMap;
+      property EnterLock: boolean read FEnterLock write FEnterLock;
       property Transition: ITransition read FTransition write SetTransition;
    end;
 
@@ -426,6 +426,11 @@ procedure T2kMapEngine.loadMap(map: IMapMetadata);
 var
    viewport: TRect;
 begin
+   if assigned(FCurrentMap) then
+   begin
+      freeAndNil(FMaps[FCurrentMap.mapObj.id]);
+      FCurrentMap := nil;
+   end;
    prepareMap(map);
    viewport := createViewport(FWaitingMap, FScrollPosition);
    if assigned(FMaps[FWaitingMap.id]) then
@@ -490,8 +495,7 @@ begin
    case button of
       btn_enter:
       begin
-         if not FDontLockEnter then
-            FEnterLock := true;
+         FEnterLock := true;
          GEventLock.enter;
          try
             FPartySprite.action;
@@ -517,13 +521,11 @@ begin
       msNone:
          if FCutscene > 0 then
             Exit
-         else if (button = btn_cancel) {and FMenuEnabled} then
+         else if (button = btn_cancel) and GEnvironment.menuEnabled then
          begin
-{            if not FDontLockEnter then
-               FEnterLock := true;
-            frmConsole.newScript := TConsoleEventThread.Create(SCRIPT_HEADER + 'openMenu;' + SCRIPT_FOOTER);
-            FScriptEngine.registerConsoleThread(frmConsole.newScript);
-            FScriptEngine.mediaPlayer.playSystemSound(sfxAccept); }
+            FEnterLock := true;
+            rs_media.PlaySystemSound(sfxAccept);
+            rs_message.OpenMenu;
          end
          else if assigned(FPartySprite) then
             PartyButton(button);
@@ -559,13 +561,9 @@ begin
    GEnvironment := T2kEnvironment.Create(FDatabase);
    GScriptEngine.Reset;
    SetupScriptImports;
-   initializeParty;
-   hero := GEnvironment.Party.Sprite as THeroSprite;
-   hero.packUp;
    FPlaying := false;
-   turbu_2k_savegames.Load(savefile);
-   hero.settleDown(FCurrentMap);
-   FCurrentMap.CurrentParty := hero;
+   turbu_2k_savegames.Load(savefile, self.initializeParty);
+   FCurrentMap.CurrentParty := GEnvironment.Party.Sprite as TCharSprite;
    FreeAndNil(FImageEngine);
    FImageEngine := TImageEngine.Create(GSpriteEngine, FCanvas, FImages);
    GEnvironment.CreateTimers;
