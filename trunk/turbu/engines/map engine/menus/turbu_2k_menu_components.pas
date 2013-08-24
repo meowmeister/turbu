@@ -55,10 +55,11 @@ type
    TOnelineLabelBox = class(TCustomOnelineBox)
    private
       FText: string;
+      procedure SetText(const Value: string);
    public
       procedure moveTo(coords: TRect); override;
       procedure DrawText; override;
-      property text: string write FText;
+      property text: string write SetText;
    end;
 
    TOnelineCharReadout = class(TCustomOnelineBox)
@@ -80,7 +81,7 @@ type
       procedure doCursor(position: smallint); override;
    end;
 
-   TGameItemMenu = class(TCustomScrollBox)
+   TCustomGameItemMenu = class(TCustomScrollBox)
    private
       FInventory: TRpgInventory;
 
@@ -88,7 +89,7 @@ type
    protected
       procedure drawItem(id, x, y: word; color: byte); override;
    public
-      constructor Create(parent: TmenuSpriteEngine; coords: TRect;
+      constructor Create(parent: TMenuSpriteEngine; coords: TRect;
         main: TMenuEngine; owner: TMenuPage); override;
       procedure doSetup(value: integer); override;
       procedure doCursor(position: smallint); override;
@@ -145,27 +146,25 @@ end;
 
 procedure TCustomScrollBox.DrawText;
 var
-  I: Integer;
-  j, color: byte;
-  max: smallint;
+   i, j, color, max: Integer;
 begin
    max := FParsedText.count - (FLastLineColumns + 1);
-   for I := FTopPosition to min(max, FTopPosition + FDisplayCapacity - 1) do
+   for i := FTopPosition to min(max, FTopPosition + FDisplayCapacity - 1) do
    begin
       j := i - FTopPosition;
       if FOptionEnabled[i] then
-         color := 0
-      else color := 3;
-      drawItem(i, 13 + (j mod FColumns) * (columnWidth + SEPARATOR),
-               (j div FColumns) * 15 + origin.y + 12, color)
+         color := 1
+      else color := 4;
+      drawItem(i, 5 + (j mod FColumns) * (columnWidth + SEPARATOR),
+               (j div FColumns) * 15 + origin.y + 4, color)
    end;
    if FLastLineColumns > 0 then
-      for I := max + 1 to FParsedText.count - 1 do
+      for i := max + 1 to FParsedText.count - 1 do
       begin
          j := i - (max + 1);
          if FOptionEnabled[i] then
-            color := 0
-         else color := 3;
+            color := 1
+         else color := 4;
          GFontEngine.drawTextCentered(FParsedText[i],
                           13 + (j mod FLastLineColumns) * (lastColumnWidth + SEPARATOR),
                           ((j div FLastLineColumns) + (i div FColumns)) * 15 + origin.y + 12,
@@ -212,13 +211,19 @@ procedure TOnelineLabelBox.DrawText;
 begin
    if origin.x < 0 then
       assert(false);
-   GFontEngine.drawText(FText, origin.x + 2, origin.y + 2, 0);
+   GFontEngine.drawText(FText, origin.x + 2, origin.y + 2, 1);
 end;
 
 procedure TOnelineLabelBox.moveTo(coords: TRect);
 begin
    assert(coords.bottom = 32);
    inherited moveTo(coords);
+end;
+
+procedure TOnelineLabelBox.SetText(const Value: string);
+begin
+   FText := value;
+   InvalidateText;
 end;
 
 { TOnelineCharReadout }
@@ -329,18 +334,19 @@ begin
    end;
 end;
 
-{ TGameItemMenu }
+{ TCustomGameItemMenu }
 
-constructor TGameItemMenu.Create(parent: TMenuSpriteEngine; coords: TRect;
+constructor TCustomGameItemMenu.Create(parent: TMenuSpriteEngine; coords: TRect;
   main: TMenuEngine; owner: TMenuPage);
 begin
    assert(coords.bottom mod 16 = 0);
    inherited Create(parent, coords, main, owner);
    FDisplayCapacity := trunc((coords.bottom - 16) / 8);
    FColumns := 2;
+   self.inventory := GEnvironment.Party.inventory;
 end;
 
-procedure TGameItemMenu.doCursor(position: smallint);
+procedure TCustomGameItemMenu.doCursor(position: smallint);
 begin
    if self.FDontChangeCursor then
       position := self.FCursorPosition;
@@ -348,34 +354,31 @@ begin
    FDontChangeCursor := false;
 end;
 
-procedure TGameItemMenu.drawItem(id, x, y: word; color: byte);
+procedure TCustomGameItemMenu.drawItem(id, x, y: word; color: byte);
 begin
    GFontEngine.drawText(FParsedText[id], x, y, color);
    GFontEngine.drawText(':', x + 120, y, color);
    GFontEngine.drawTextRightAligned(intToStr((FInventory[id] as TRpgItem).quantity), x + 136, y, color)
 end;
 
-procedure TGameItemMenu.setInventory(const Value: TRpgInventory);
+procedure TCustomGameItemMenu.setInventory(const Value: TRpgInventory);
 begin
    FInventory := Value;
    self.setup(0);
 end;
 
-procedure TGameItemMenu.doSetup(value: integer);
+procedure TCustomGameItemMenu.doSetup(value: integer);
 var
   i: Integer;
 begin
    inherited doSetup(value);
-   self.Visible := true;
    FParsedText.Clear;
-   if assigned(FInventory) then
-   begin
-      SetLength(FOptionEnabled, FInventory.Count);
-      FInventory.sort;
-      for i := 0 to FInventory.Count - 1 do
-         FParsedText.Add(TRpgItem(FInventory[i]).template.name);
-      self.placeCursor(FSetupValue);
-   end;
+   FInventory := GEnvironment.Party.inventory;
+   SetLength(FOptionEnabled, FInventory.Count);
+   FInventory.sort;
+   for i := 0 to FInventory.Count - 1 do
+      FParsedText.Add(TRpgItem(FInventory[i]).template.name);
+   self.placeCursor(FSetupValue);
 end;
 
 { Classless}
@@ -394,4 +397,6 @@ begin
    result.ImageIndex := index;
 end;
 
+initialization
+   TMenuEngine.RegisterMenuBoxClass(TOnelineLabelBox);
 end.
