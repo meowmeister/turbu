@@ -128,6 +128,7 @@ type
       procedure UploadGlobalEvents(db: TdmDatabase);
       procedure DownloadGlobalEvents(ds: TDataset);
       procedure UploadVocab(db: TdmDatabase);
+      procedure DownloadVocab(db: TdmDatabase);
       procedure UploadTileGroups(db: TdmDatabase);
 
       function GetMapTree: IMapTree;
@@ -402,6 +403,7 @@ begin
    LoadSounds;
    DownloadStringList(dm.Switches, FSwitches);
    DownloadStringList(dm.Variables, FVariables);
+   DownloadVocab(dm);
    DownloadGlobalEvents(dm.GlobalScripts);
 end;
 
@@ -728,6 +730,24 @@ begin
       db.Vocab.AppendRecord([FSysVocab.Names[i], FSysVocab.ValueFromIndex[i]]);
    for I := 0 to FCustomVocab.Count - 1 do
       db.CustomVocab.AppendRecord([FCustomVocab.Names[i], FCustomVocab.ValueFromIndex[i]]);
+end;
+
+procedure TRpgDatabase.DownloadVocab(db: TdmDatabase);
+var
+   line: variant;
+   k, v: TField;
+begin
+   k := db.Vocab.FieldByName('Key');
+   v := db.Vocab.FieldByName('Val');
+   db.Vocab.First;
+   for line in db.vocab do
+      FSysVocab.Values[K.AsString] := v.AsString;
+
+   k := db.CustomVocab.FieldByName('Key');
+   v := db.CustomVocab.FieldByName('Val');
+   db.CustomVocab.First;
+   for line in db.CustomVocab do
+      FCustomVocab.Values[K.AsString] := v.AsString;
 end;
 
 procedure TRpgDatabase.copyTypeToDB(db: TdmDatabase; value: TRpgDataTypes);

@@ -75,6 +75,10 @@ type
    TValidateEvent = reference to function(const text: string): boolean;
    TSkinChangedEvent = procedure(const name: string) of object;
 
+   IMenuEngine = interface
+      procedure OpenMenu(const name: string; cursorValue: integer = 0);
+   end;
+
    TMenuSpriteEngine = class(TSpriteEngine)
    private
       FSystemGraphic: TSystemImages;
@@ -85,6 +89,7 @@ type
       FMenuState: TMenuState;
       FBoxes: array[TMessageBoxTypes] of TCustomMessageBox;
       FCurrentBox: TCustomMessageBox;
+      FMenuEngine: IMenuEngine;
       FPosition: TMboxLocation;
       FBoxVisible: boolean;
       FEnding: boolean;
@@ -111,6 +116,7 @@ type
       procedure SetPortrait(const filename: string; index: integer);
       procedure SetRightside(value: boolean);
       procedure SetSkin(const name: string; stretch: boolean);
+      procedure OpenMenu(const name: string);
 
       procedure AddSkinNotification(obj: TObject; notify: TSkinChangedEvent);
       procedure RemoveSkinNotification(obj: TObject);
@@ -154,7 +160,6 @@ type
       FPlaySound: TPlaySoundEvent;
       FFrameTarget: TSdlRenderTarget;
       FFrameDrawn: boolean;
-      FCoords: TRect;
 
       procedure DrawFrame;
    protected
@@ -172,6 +177,7 @@ type
       FTextCounter: integer;
       FTextColor: integer;
       FTextLine: integer;
+      FCoords: TRect;
 
       function columnWidth: word;
       function lastColumnWidth: word;
@@ -244,8 +250,8 @@ implementation
 uses
    Windows, SysUtils, StrUtils, Math, OpenGL, Character,
    commons, turbu_text_utils, turbu_2k_environment, turbu_OpenGL, turbu_database,
-   turbu_2k_message_boxes, turbu_2k_sprite_engine, turbu_script_engine, rs_media,
-   turbu_classes,
+   turbu_2k_message_boxes, turbu_2k_sprite_engine, turbu_2k_menu_basis,
+   turbu_classes, turbu_script_engine, rs_media,
    sg_utils;
 
 const
@@ -284,13 +290,21 @@ begin
    FBackground.name := 'background';
    FBackground.stretch := graphic.FStretch;
    FBorders[facing_up] := TTiledAreaSprite.Create(self, graphic.FRects[srFrameT], displacement, length);
+   FBorders[facing_up].Name := 'Upper border';
    FBorders[facing_down] := TTiledAreaSprite.Create(self, graphic.FRects[srFrameB], displacement, length);
+   FBorders[facing_down].Name := 'Lower border';
    FBorders[facing_left] := TTiledAreaSprite.Create(self, graphic.FRects[srFrameL], displacement, length);
+   FBorders[facing_left].Name := 'Left border';
    FBorders[facing_right] := TTiledAreaSprite.Create(self, graphic.FRects[srFrameR], displacement, length);
+   FBorders[facing_right].Name := 'Right border';
    FCorners[topLeft] := TSystemTile.create(self, graphic.FRects[srFrameTL], displacement, length);
+   FCorners[topLeft].Name := 'Top Left corner';
    FCorners[bottomLeft] := TSystemTile.create(self, graphic.FRects[srFrameBL], displacement, length);
+   FCorners[bottomLeft].Name := 'Bottom Left corner';
    FCorners[topRight] := TSystemTile.create(self, graphic.FRects[srFrameTR], displacement, length);
+   FCorners[topRight].Name := 'Top Right corner';
    FCorners[bottomRight] := TSystemTile.create(self, graphic.FRects[srFrameBR], displacement, length);
+   FCorners[bottomRight].Name := 'Bottom Right corner';
    for I := 0 to ord(high(TFacing)) do
    begin
       FBorders[TFacing(i)].Z := 2;
@@ -437,6 +451,7 @@ begin
    FBoxes[mbtInput] := TValueInputBox.Create(self, size);
    for boxtype := Low(TMessageBoxTypes) to High(TMessageBoxTypes) do
       FBoxes[boxtype].OnPlaySound := rs_media.PlaySystemSound;
+   FMenuEngine := TMenuEngine.Create(self);
 end;
 
 destructor TMenuSpriteEngine.Destroy;
@@ -447,6 +462,7 @@ begin
    FWallpapers.Free;
    FSystemGraphic.Free;
    EndMessage;
+   FMenuEngine := nil;
    inherited Destroy;
    FBoxNotifications.Free;
 end;
@@ -625,6 +641,12 @@ var
 begin
    for notify in FBoxNotifications.Values do
       notify(name);
+end;
+
+procedure TMenuSpriteEngine.OpenMenu(const name: string);
+begin
+   FMenuEngine.OpenMenu(name, FMenuInt);
+   FMenuState := msFull;
 end;
 
 procedure TMenuSpriteEngine.AddSkinNotification(obj: TObject; notify: TSkinChangedEvent);

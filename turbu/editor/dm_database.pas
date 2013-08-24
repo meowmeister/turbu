@@ -99,7 +99,9 @@ type
       Variables: TSimpleDataSet;
       [VitalDataset]
       GlobalScripts: TSimpleDataSet;
+      [VitalDataset]
       Vocab: TSimpleDataSet;
+      [VitalDataset]
       CustomVocab: TSimpleDataSet;
       [VitalDataset]
       vehicles: TSimpleDataSet;
