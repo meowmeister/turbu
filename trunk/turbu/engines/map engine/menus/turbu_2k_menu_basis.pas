@@ -577,11 +577,7 @@ begin
 end;
 
 procedure TMenuPage.move;
-var
-   frame: TSysFrame;
 begin
-   for frame in FComponents.Values do
-      frame.realign;
    if assigned(FCurrentMenu) then
       placeCursor(CURSOR_UNCHANGED);
 end;
