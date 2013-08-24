@@ -998,7 +998,8 @@ begin
    coords := rect(8 + (column * (width + SEPARATOR)),
                   (position div columns) * 15 + FBounds.Top + (ord(FPosition) * 80) + 8,
                   width, 18);
-   inc(coords.Bottom, coords.Top);
+   coords := SdlRectToTRect(coords);
+//   inc(coords.Bottom, coords.Top);
    if FCursorPosition > max then
       inc(coords.top, (FCursorPosition div FColumns) * 15);
 
