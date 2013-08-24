@@ -156,8 +156,7 @@ end;
 
 procedure TGameMainMenu.DrawText;
 var
-   i: Integer;
-   yVal: smallint;
+   i, yVal: Integer;
 begin
    if self.Visible then
       for i := 0 to min(FParsedText.count - 1, 4) do

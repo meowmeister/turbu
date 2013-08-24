@@ -52,13 +52,11 @@ type
       procedure setOptionEnabled(which: word; const Value: boolean);
       function getCursorPosition: smallint;
    protected
-      FCursorPosition: smallint;
       FMenuEngine: TMenuEngine;
       FOwner: TMenuPage;
       FReferrer: TGameMenuBox;
       FSetupValue: integer;
       FBlank: boolean;
-      FPlacingCursor: boolean;
 
       procedure return; inline;
       function focused: boolean; inline;
@@ -74,7 +72,7 @@ type
       procedure Draw; override;
       procedure setup(value: integer);
       procedure button(const input: TButtonCode); override; final;
-      procedure placeCursor(position: smallint);
+      procedure placeCursor(position: smallint); override; final;
       procedure focusPage(const which: string; cursorValue: integer);
       procedure focusMenu(const which: string; setupValue: integer);
 
@@ -136,7 +134,6 @@ type
       FStack: TMenuPageStack;
       FCurrentPage: TMenuPage;
       FState: TMenuState;
-      FButtonLock: boolean;
       FOrigin: TsgPoint;
       FMenus: TDictionary<string, TMenuPage>;
 
@@ -146,6 +143,7 @@ type
       procedure initialize;
    private //IMenuEngine implementation
       procedure OpenMenu(const name: string; cursorValue: integer = 0);
+      procedure button(const input: TButtonCode);
    public
       constructor Create(parent: TMenuSpriteEngine);
       destructor Destroy; override;
@@ -154,7 +152,6 @@ type
       procedure return;
       procedure placeCursor(value: smallint);
       procedure leave(const playSound: boolean = true);
-      procedure button(const input: TButtonCode);
 
       procedure activate;
       procedure shutdown;
@@ -165,7 +162,6 @@ type
       property visible: boolean read FVisible write setVisible;
       property currentMenu: TMenuPage read FCurrentPage;
       property cursor: TSysFrame read FCursor;
-      property buttonLock: boolean read FButtonLock write FButtonLock;
    end;
 
 implementation
@@ -192,7 +188,7 @@ end;
 
 procedure TGameMenuBox.doButton(const input: TButtonCode);
 begin
-   inherited button(input);
+   inherited Button(input);
    if input = btn_cancel then
    begin
       playSystemSound(sfxCancel);
@@ -236,19 +232,12 @@ end;
 
 procedure TGameMenuBox.placeCursor(position: smallint);
 begin
-   if FPlacingCursor then
-      Exit;
-   FPlacingCursor := true;
-   try
-      assert(self <> nil);
-      if position = CURSOR_UNCHANGED then
-         position := FCursorPosition;
-      self.doCursor(position);
-      if assigned(onCursor) then
-         onCursor(FCursorPosition, self, FOwner);
-   finally
-      FPlacingCursor := false;
-   end;
+   assert(self <> nil);
+   if position = CURSOR_UNCHANGED then
+      position := FCursorPosition;
+   self.doCursor(position);
+   if assigned(onCursor) then
+      onCursor(FCursorPosition, self, FOwner);
 end;
 
 procedure TGameMenuBox.doCursor(position: smallint);
@@ -256,7 +245,7 @@ begin
 //checkpoint to keep entire-page setups from placing the cursor
 //in the wrong box.
    if self.focused then
-      placeCursor(position);
+      inherited placeCursor(position);
 end;
 
 procedure TGameMenuBox.DoDraw;
@@ -421,10 +410,6 @@ end;
 
 procedure TMenuEngine.button(const input: TButtonCode);
 begin
-   if FButtonLock then
-      Exit;
-
-   FButtonLock := true;
    case FState of
       ms_off: raise EParseMessage.create('Tried to send a menu command when the menu was not active!');
       else FCurrentPage.button(input);
@@ -590,6 +575,7 @@ end;
 procedure TMenuPage.registerComponent(const name: string; which: TSysFrame);
 begin
    FComponents.Add(name, which);
+   which.Name := name;
    if (FMainMenu = nil) and (which is TGameMenuBox) then
       FMainMenu := TGameMenuBox(which);
 end;

@@ -529,12 +529,11 @@ begin
          end
          else if assigned(FPartySprite) then
             PartyButton(button);
-      msShared, msExclusiveShared:
+      msShared, msExclusiveShared, msFull:
       begin
          GMenuEngine.button(button);
          FEnterLock := true;
       end;
-      msFull:;
    end;
 end;
 
