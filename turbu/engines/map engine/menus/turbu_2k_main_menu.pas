@@ -184,8 +184,7 @@ const MAIN_LAYOUT =
 
 initialization
    TMenuEngine.RegisterMenuPage('Main', MAIN_LAYOUT);
-   TMenuENgine.RegisterMenuBoxClass(TGameMainMenu);
-   TMenuENgine.RegisterMenuBoxClass(TGamePartyPanel);
-   TMenuENgine.RegisterMenuBoxClass(TGameCashMenu);
-   TMenuENgine.RegisterMenuBoxClass(TGameItemMenu);
+   TMenuEngine.RegisterMenuBoxClass(TGameMainMenu);
+   TMenuEngine.RegisterMenuBoxClass(TGamePartyPanel);
+   TMenuEngine.RegisterMenuBoxClass(TGameCashMenu);
 end.
