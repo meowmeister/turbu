@@ -60,7 +60,8 @@ contains
   turbu_transition_interface in 'turbu_transition_interface.pas',
   turbu_2k_menu_basis in 'menus\turbu_2k_menu_basis.pas',
   turbu_2k_menu_components in 'menus\turbu_2k_menu_components.pas',
-  turbu_2k_main_menu in 'menus\turbu_2k_main_menu.pas';
+  turbu_2k_main_menu in 'menus\turbu_2k_main_menu.pas',
+  turbu_2k_inventory_menu in 'menus\turbu_2k_inventory_menu.pas';
 
 end.
 

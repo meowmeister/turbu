@@ -99,6 +99,7 @@
 			<DCCReference Include="menus\turbu_2k_menu_basis.pas"/>
 			<DCCReference Include="menus\turbu_2k_menu_components.pas"/>
 			<DCCReference Include="menus\turbu_2k_main_menu.pas"/>
+			<DCCReference Include="menus\turbu_2k_inventory_menu.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
