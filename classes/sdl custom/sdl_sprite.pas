@@ -310,7 +310,7 @@ type
 
 implementation
 uses
-   Generics.Defaults,
+   Generics.Defaults, Classes,
    turbu_OpenGL, dm_shaders,
    SDL, SDL_13;
 
@@ -1026,7 +1026,10 @@ begin
             self.y := drawpoint.y;
             inherited DoDraw;
             inc(drawpoint.x, FWidth);
-         until drawpoint.x >= endpoint.x;
+         until drawpoint.x + FWidth > endpoint.x;
+         if drawpoint.x < endpoint.x then
+            FImage.DrawRectTo(rect(drawpoint, endpoint - drawpoint),
+                              rect(DrawRect.Left, DrawRect.Top, endpoint.x - drawpoint.x, DrawRect.Bottom));
          inc(drawpoint.y, FHeight);
       until drawpoint.y >= endpoint.y;
       self.x := FFillArea.Left;
