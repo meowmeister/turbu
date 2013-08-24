@@ -70,7 +70,7 @@ type
       procedure InvalidateText;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage); reintroduce; virtual;
-      procedure Draw; override;
+      procedure Draw; override; final;
       procedure setup(value: integer);
       procedure button(const input: TButtonCode); override; final;
       procedure placeCursor(position: smallint); override; final;
@@ -111,11 +111,12 @@ type
         unchanged: boolean = false); overload; virtual;
       procedure focusPage(const which: string; cursorValue: integer); inline;
       procedure backTo(which: TGameMenuBox); inline;
-      procedure Draw; virtual;
+      procedure Draw;
       procedure placeCursor(value: integer); virtual;
       procedure setup(value: integer); virtual;
       procedure move; virtual;
       procedure button(input: TButtonCode); virtual;
+      function menu(const name: string): TSysFrame;
 
       property currentMenu: TGameMenuBox read FCurrentMenu;
       property visible: boolean read FVisible write setVisible;
@@ -166,6 +167,9 @@ type
       property cursor: TSysFrame read FCursor;
    end;
 
+const
+   CURSOR_UNCHANGED = 9999;
+
 implementation
 uses
    SysUtils, SyncObjs,
@@ -173,8 +177,6 @@ uses
    rs_media,
    sg_utils;
 
-const
-   CURSOR_UNCHANGED = 9999;
 var
    GSetupDrawLock: TCriticalSection;
 
@@ -371,8 +373,11 @@ end;
 
 procedure TMenuEngine.focusMenu(sender, which: TMenuPage);
 begin
+   assert(sender <> which);
    FStack.Push(sender);
    self.FCurrentPage := which;
+   sender.visible := false;
+   which.visible := true;
 end;
 
 procedure TMenuEngine.initialize;
@@ -455,6 +460,8 @@ begin
       self.leave(false)
    else begin
       page := FStack.pop;
+      FCurrentPage.Visible := false;
+	  page.visible := true;
       FCurrentPage := page;
       page.setup(CURSOR_UNCHANGED);
    end;
@@ -501,13 +508,18 @@ begin
    end;
 end;
 
+function TMenuPage.menu(const name: string): TSysFrame;
+begin
+   if not FComponents.TryGetValue(name, result) then
+      raise Exception.CreateFmt('No menu box named "%s" is available.', [name]);
+end;
+
 procedure TMenuPage.focusMenu(referrer: TGameMenuBox; const which: string;
   setupValue: integer; unchanged: boolean);
 var
    frame: TSysFrame;
 begin
-   if not FComponents.TryGetValue(which, frame) then
-      raise Exception.CreateFmt('No menu box named "%s" is available.', [which]);
+   frame := self.menu(which);
    if not (frame is TGameMenuBox) then
       raise Exception.CreateFmt('Menu box "%s" can''t be focused.', [which]);
    FocusMenu(referrer, TGameMenuBox(frame), unchanged);

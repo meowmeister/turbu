@@ -303,7 +303,7 @@ end;
 
 function TSwitchItem.getOnField: boolean;
 begin
-   result := TUsableItemTemplate(template).usableWhere = us_field;
+   result := TUsableItemTemplate(template).usableWhere in [us_field, us_both];
 end;
 
 function TSwitchItem.usableBy(hero: integer): boolean;
