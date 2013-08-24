@@ -260,6 +260,7 @@ begin
    begin
       FTextTarget.parent.pushRenderTarget;
       FTextTarget.SetRenderer;
+      FTextTarget.parent.Clear(SDL_BLACK, 0);
       DrawText;
       FTextTarget.parent.popRenderTarget;
       FTextDrawn := true;
