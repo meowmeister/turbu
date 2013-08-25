@@ -184,7 +184,7 @@ var
                Exit;
             lFilename := ChangeFileExt(ExtractFileName(filename), '');
             try
-               if processor(input, outFolderName, filename, false) then
+               if processor(input, outFolderName, format('%s\%s', [foldername, filename]), false) then
                begin
                   if fileList.Find(lFilename, index) then
                      fileList.Delete(index);
@@ -196,7 +196,7 @@ var
             end;
          end;
       except
-         on EFileNotFoundException do ;
+         on EDirectoryNotFoundException do ;
          //Project folder doesn't exist. Swallow the error and continue
       end;
       for filename in fileList do
