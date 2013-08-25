@@ -64,7 +64,7 @@ uses
    SysUtils, Types, Generics.Collections,
    charset_data, rm2_turbu_maps, rm2_turbu_event_builder, turbu_operators,
    EventBuilder, EB_GotoRemoval, EB_NestedIfOptimization, EB_MessagePromptCollapser,
-   EB_FadeInImageOptimization;
+   EB_FadeInImageOptimization, EB_ConsecutiveImageOptimization;
 
 { T2k2RpgMapObject }
 
@@ -278,6 +278,7 @@ begin
    ChoiceMerge(script);
    InputMerge(script);
    FadeInImageOptimization(script);
+   ConsecutiveImageOptimization(script);
 end;
 
 function ConvertEventScript(base: TEventCommandList; name: string): TEBProcedure;

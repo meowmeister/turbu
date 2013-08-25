@@ -122,6 +122,7 @@
 			<DCCReference Include="design\db_create.pas"/>
 			<DCCReference Include="script\EB_MessagePromptCollapser.pas"/>
 			<DCCReference Include="script\EB_FadeInImageOptimization.pas"/>
+			<DCCReference Include="script\EB_ConsecutiveImageOptimization.pas"/>
 			<RcItem Include="design\Turbu.cdb">
 				<ContainerId>ResourceItem</ContainerId>
 				<ResourceType>RCDATA</ResourceType>
