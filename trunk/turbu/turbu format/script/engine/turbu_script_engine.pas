@@ -81,6 +81,7 @@ type
       function GetThread(page: TRpgEventPage): TScriptThread;
       procedure SaveToPool(thread: TScriptThread);
       procedure RegisterImports;
+      function OnDivideByZero(Sender: TrsVM; l: integer; var handled: boolean): integer;
    public
       constructor Create;
       destructor Destroy; override;
@@ -254,6 +255,14 @@ begin
    FExec.RegisterStandardUnit('battles', RegisterBattlesE);
    FExec.RegisterStandardUnit('media', RegisterMediaE);
    FExec.OnLine := self.OnRunLine;
+   FExec.OnDivideByZero := self.OnDivideByZero;
+end;
+
+function TScriptEngine.OnDivideByZero(Sender: TrsVM; l: integer;
+  var handled: boolean): integer;
+begin
+   result := l;
+   handled := true;
 end;
 
 procedure TScriptEngine.OnRunLine(Sender: TrsVM; const line: TrsDebugLineInfo);
