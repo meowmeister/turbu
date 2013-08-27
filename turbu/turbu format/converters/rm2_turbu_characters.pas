@@ -234,11 +234,10 @@ end;
 
 procedure T2kCharClass.loadEq(base: THeroRecord);
 var
-   i: byte;
+   slot: TSlot;
 begin
-   self.eq[1] := base.initialEq[1];
-   for I := 2 to TOTAL_SLOTS do
-      self.eq[i] := base.initialEq[i];
+   for slot := Low(TSlot) to High(TSlot) do
+      self.eq[slot] := base.initialEq[ord(slot) + 1];
 end;
 
 { T2k2Hero }
