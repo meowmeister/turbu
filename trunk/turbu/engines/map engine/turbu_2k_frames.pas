@@ -1011,7 +1011,6 @@ begin
    FDontChangeCursor := false;
 end;
 
-
 function TCustomMessageBox.ParseGlyph(const input: string; var counter: integer): string;
 var
    token: char;

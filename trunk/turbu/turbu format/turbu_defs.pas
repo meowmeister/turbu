@@ -98,7 +98,7 @@ type
 
    TMboxLocation = (mb_top, mb_middle, mb_bottom);
 
-   TSlot = (eq_weapon, eq_shield, eq_armor, eq_helmet, eq_relic, eq_all);
+   TSlot = (eq_weapon, eq_shield, eq_armor, eq_helmet, eq_relic);
 
 implementation
 

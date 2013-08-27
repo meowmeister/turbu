@@ -50,7 +50,7 @@ type
 
       FExpTable: TArray<integer>;
       FExpTotal: integer;
-      FEquipment: array[1..5] of TRpgItem;
+      FEquipment: array[TSlot] of TRpgItem;
       FStat: array[TStatComponents, 1..4] of integer;
       FConditionModifier: TArray<integer>;
       FCondition: TArray<boolean>;
@@ -68,7 +68,7 @@ type
       procedure die;
       procedure gainLevel;
       function getCondition(x: integer): boolean;
-      function getEquipment(which: integer): integer;
+      function getEquipment(which: TSlot): integer;
       function getExpNeeded: integer;
       function getHighCondition: integer;
       function getLevelUpdatedStatus: boolean;
@@ -105,15 +105,16 @@ type
       procedure Deserialize(obj: TdwsJSONObject);
 
       procedure equip(id: integer);
-      procedure equipSlot(id, slot: integer);
+      procedure equipSlot(id: integer; slot: TSlot);
       procedure Unequip(slot: TSlot);
+      procedure UnequipAll();
       function equipped(id: integer): boolean;
       procedure fullheal;
       function takeDamage(power: integer; defense, mDefense, variance: integer): integer;
       procedure setSprite(filename: string; translucent: boolean);
       procedure setPortrait(filename: string; index: integer);
       function inParty: boolean;
-      function potentialStat(item, slot, whichStat: integer): integer;
+      function potentialStat(item, whichStat: integer; slot: TSlot): integer;
       procedure ChangeHP(quantity: integer; deathPossible: boolean);
       procedure ChangeMP(quantity: integer);
       procedure ChangeClass(id: integer; retainLevel: boolean; skillChange, statChange: integer; showMessage: boolean);
@@ -135,7 +136,7 @@ type
       property defense: integer index 2 read getStat write setStat;
       property mind: integer index 3 read getStat write setStat;
       property agility: integer index 4 read getStat write setStat;
-      property equipment[x: integer]: integer read getEquipment;
+      property equipment[x: TSlot]: integer read getEquipment;
       property expNeeded: integer read getExpNeeded;
       property levelUpdated: boolean read getLevelUpdatedStatus;
       property skill[x: integer]: boolean read getSkill write setSkill;
@@ -255,6 +256,7 @@ const
 constructor TRpgHero.Create(base: TClassTemplate; party: TRpgParty);
 var
    I: Integer;
+   slot: TSlot;
 {  calc: TExpCalcEvent;}
    template: THeroTemplate absolute base;
    cond: TPoint;
@@ -287,9 +289,9 @@ begin
    self.levelAdjustUp(0);
    level := template.minLevel;
    FExpTotal := FExpTable[FLevel];
-   for I := low(FEquipment) to high(FEquipment) do
-      if template.eq[i] <> 0 then
-         self.equip(template.eq[i]);
+   for slot := low(FEquipment) to high(FEquipment) do
+      if template.eq[slot] <> 0 then
+         self.equip(template.eq[slot]);
    i := GDatabase.conditions.Count;
    setLength(FConditionModifier, i);
    setLength(FCondition, i);
@@ -313,6 +315,7 @@ procedure TRpgHero.Serialize(writer: TdwsJSONWriter);
 var
    base: THeroTemplate;
    i: integer;
+   slot: TSlot;
 begin
    base := self.Template as THeroTemplate;
    writer.BeginObject;
@@ -326,10 +329,10 @@ begin
       writer.CheckWrite('ExpTotal', FExpTotal, 0);
       writer.WriteName('Equipment');
       writer.BeginArray;
-         for i := 1 to 5 do
-            if FEquipment[i] = nil then
+         for slot := low(TSlot) to high(TSlot) do
+            if FEquipment[slot] = nil then
                writer.WriteNull
-            else writer.WriteInteger(FEquipment[i].id);
+            else writer.WriteInteger(FEquipment[slot].id);
       writer.EndArray;
       writer.WriteName('Stat');
       writer.BeginArray;
@@ -354,6 +357,7 @@ procedure TRpgHero.Deserialize(obj: TdwsJSONObject);
 var
    arr: TdwsJSONArray;
    i: integer;
+   slot: TSlot;
 begin
    obj.CheckRead('Name', FName);
    obj.CheckRead('Class', FClass);
@@ -368,10 +372,10 @@ begin
    obj.CheckRead('HpModifier', FHpModifier);
    obj.CheckRead('MpModifier', FMpModifier);
    arr := obj.Items['Equipment'] as TdwsJSONArray;
-   for i := 1 to 5 do
-      if arr.Elements[i - 1].ValueType = jvtNull then
-         self.Unequip(TSlot(i - 1))
-      else self.equipSlot(arr.Elements[i - 1].AsInteger, i);
+   for slot := low(TSlot) to high(TSlot) do
+      if arr.Elements[ord(slot)].ValueType = jvtNull then
+         self.Unequip(slot)
+      else self.equipSlot(arr.Elements[ord(slot)].AsInteger, slot);
    arr.Free;
    arr := obj.Items['Stat'] as TdwsJSONArray;
    for i := 1 to 4 do
@@ -427,12 +431,11 @@ end;
 
 destructor TRpgHero.Destroy;
 var
-   i: integer;
-   j: integer;
+   i, j: TSlot;
 begin
-   for i := 1 to 5 do
+   for i := low(TSlot) to high(TSlot) do
    begin
-      for j := i + 1 to 5 do
+      for j := succ(i) to high(TSlot) do
          if FEquipment[j] = FEquipment[i] then
             FEquipment[j] := nil;
       FEquipment[i].free;
@@ -450,7 +453,7 @@ procedure TRpgHero.equip(id: integer);
 var
    theItem: TRpgItem;
    dummy: TItemType;
-   slot: integer;
+   slot: TSlot;
 begin
    if not IsBetween(id, 0, GDatabase.items) then
       Exit;
@@ -467,14 +470,12 @@ begin
    begin
       unequip(eq_weapon);
       unequip(eq_shield);
-      FEquipment[WEAPON_SLOT] := theItem;
-      FEquipment[SHIELD_SLOT] := theItem;
+      FEquipment[eq_weapon] := theItem;
+      FEquipment[eq_shield] := theItem;
    end
    else begin
-      if dummy = it_weapon then
-         slot := WEAPON_SLOT
-      else slot := (theItem.template as TArmorTemplate).slot;
-      unequip(TSlot(slot - 1));
+      slot := (theItem.template as TEquipmentTemplate).slot;
+      unequip(slot);
       FEquipment[slot] := theItem;
    end;
    FParty.inventory.Remove(id, 1);
@@ -484,7 +485,7 @@ begin
    inc(FStat[stat_eq_mod, 4], TEquipment(theItem).speed);
 end;
 
-procedure TRpgHero.equipSlot(id, slot: integer);
+procedure TRpgHero.equipSlot(id: integer; slot: TSlot);
 var
    theItem: TRpgItem;
    itemType: TItemType;
@@ -502,11 +503,11 @@ begin
    begin
       unequip(eq_weapon);
       unequip(eq_shield);
-      FEquipment[ord(eq_weapon) + 1] := theItem;
-      FEquipment[ord(eq_shield) + 1] := theItem;
+      FEquipment[eq_weapon] := theItem;
+      FEquipment[eq_shield] := theItem;
    end
    else begin
-      unequip(TSlot(slot - 1));
+      unequip(slot);
       FEquipment[slot] := theItem;
    end;
    GEnvironment.Party.inventory.Remove(id, 1);
@@ -517,37 +518,37 @@ begin
 end;
 
 procedure TRpgHero.unequip(slot: TSlot);
-var
-   I: TSlot;
-   id: integer;
 begin
-   if slot = eq_all then
+   if FEquipment[slot] <> nil then
    begin
-      for I := eq_weapon to eq_relic do
-         unequip(i);
-      Exit;
+      FParty.inventory.AddItem(FEquipment[slot]);
+      dec(FStat[stat_eq_mod, 1], TEquipment(FEquipment[slot]).attack);
+      dec(FStat[stat_eq_mod, 2], TEquipment(FEquipment[slot]).defense);
+      dec(FStat[stat_eq_mod, 3], TEquipment(FEquipment[slot]).mind);
+      dec(FStat[stat_eq_mod, 4], TEquipment(FEquipment[slot]).speed);
+      if (slot in [eq_weapon, eq_shield]) and ((FEquipment[slot].template as TWeaponTemplate).twoHanded) then
+      begin
+         FEquipment[eq_weapon] := nil;
+         FEquipment[eq_shield] := nil;
+      end
+      else FEquipment[slot] := nil;
    end;
+end;
 
-   id := ord(slot) + 1;
-   if FEquipment[id] <> nil then
-   begin
-      FParty.inventory.AddItem(FEquipment[id]);
-      dec(FStat[stat_eq_mod, 1], TEquipment(FEquipment[id]).attack);
-      dec(FStat[stat_eq_mod, 2], TEquipment(FEquipment[id]).defense);
-      dec(FStat[stat_eq_mod, 3], TEquipment(FEquipment[id]).mind);
-      dec(FStat[stat_eq_mod, 4], TEquipment(FEquipment[id]).speed);
-      if (id in [1, 2]) and ((FEquipment[id].template as TWeaponTemplate).twoHanded) then
-         FEquipment[3 - id] := nil;
-      FEquipment[id] := nil;
-   end;
+procedure TRpgHero.UnequipAll;
+var
+   slot: TSlot;
+begin
+   for slot := low(TSlot) to high(TSlot) do
+      unequip(slot)
 end;
 
 function TRpgHero.equipped(id: integer): boolean;
 var
-   i: Integer;
+   i: TSlot;
 begin
    result := false;
-   for I := low(FEquipment) to high(FEquipment) do
+   for i := low(FEquipment) to high(FEquipment) do
       if (FEquipment[i] <> nil) and (FEquipment[i].template.id = id) then
          result := true;
 end;
@@ -569,7 +570,7 @@ begin
    else result := false;
 end;
 
-function TRpgHero.getEquipment(which: integer): integer;
+function TRpgHero.getEquipment(which: TSlot): integer;
 begin
    if assigned(FEquipment[which]) then
       result := FEquipment[which].template.id
@@ -760,7 +761,7 @@ begin
    levelAdjustDown(FLevel + 1);
 end;
 
-function TRpgHero.potentialStat(item, slot, whichStat: integer): integer;
+function TRpgHero.potentialStat(item, whichStat: integer; slot: TSlot): integer;
 var
    theItem: TItemTemplate;
 begin
@@ -768,11 +769,14 @@ begin
    assert((item = 0) or (theItem.itemType in [it_weapon, it_armor]));
    result := self.stat[whichStat];
    if self.FEquipment[slot] <> nil then
-      result := result - (FEquipment[slot].template as TUsableItemTemplate).stat[whichStat];
-   if assigned(theItem) and (theItem.itemType = it_weapon) and (TWeaponTemplate(theItem).twoHanded) and (FEquipment[3 - slot] <> nil) then
-      result := result - TUsableItemTemplate(FEquipment[3 - slot].template).stat[whichStat];
+      result := result - (FEquipment[slot].template as TUsableItemTemplate).stat[whichStat + 2];
    if item <> 0 then
-      result := result + TUsableItemTemplate(GDatabase.findItem(item)).stat[whichStat];
+   begin
+      result := result + (theItem as TUsableItemTemplate).stat[whichStat + 2];
+      if assigned(theItem) and (theItem.itemType = it_weapon) and
+        (TWeaponTemplate(theItem).twoHanded) and (FEquipment[TSlot(2 - ord(slot))] <> nil) then
+         result := result - TUsableItemTemplate(FEquipment[TSlot(2 - ord(slot))].template).stat[whichStat + 2];
+   end;
 end;
 
 procedure TRpgHero.gainLevel;

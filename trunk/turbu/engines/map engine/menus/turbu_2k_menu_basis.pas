@@ -94,11 +94,11 @@ type
    protected
       FMainMenu: TGameMenuBox;
       FCurrentMenu: TGameMenuBox;
-      FComponents: TDictionary<string, TSysFrame>;
+      FComponents: TDictionary<string, TGameMenuBox>;
       FBounds: TRect;
 
       procedure setVisible(const value: boolean); virtual;
-      procedure registerComponent(const name: string; which: TSysFrame);
+      procedure registerComponent(const name: string; which: TGameMenuBox);
       procedure LoadComponent(obj: TdwsJSONObject);
       procedure LoadComponents(const layout: string);
    public
@@ -116,7 +116,7 @@ type
       procedure setup(value: integer); virtual;
       procedure move; virtual;
       procedure button(input: TButtonCode); virtual;
-      function menu(const name: string): TSysFrame;
+      function menu(const name: string): TGameMenuBox;
 
       property currentMenu: TGameMenuBox read FCurrentMenu;
       property visible: boolean read FVisible write setVisible;
@@ -484,7 +484,7 @@ begin
    inherited Create;
    FBounds := coords;
    FOwner := main;
-   FComponents := TObjectDictionary<string, TSysFrame>.Create([doOwnsValues]);
+   FComponents := TDictionary<string, TGameMenuBox>.Create;
    loadComponents(layout);
 end;
 
@@ -496,7 +496,7 @@ end;
 
 procedure TMenuPage.Draw;
 var
-   frame: TSysframe;
+   frame: TGameMenuBox;
 begin
    GSetupDrawLock.Enter;
    try
@@ -509,7 +509,7 @@ begin
    end;
 end;
 
-function TMenuPage.menu(const name: string): TSysFrame;
+function TMenuPage.menu(const name: string): TGameMenuBox;
 begin
    if not FComponents.TryGetValue(name, result) then
       raise Exception.CreateFmt('No menu box named "%s" is available.', [name]);
@@ -518,7 +518,7 @@ end;
 procedure TMenuPage.focusMenu(referrer: TGameMenuBox; const which: string;
   setupValue: integer; unchanged: boolean);
 var
-   frame: TSysFrame;
+   frame: TGameMenuBox;
 begin
    frame := self.menu(which);
    if not (frame is TGameMenuBox) then
@@ -590,7 +590,7 @@ begin
    FCurrentMenu.placeCursor(value);
 end;
 
-procedure TMenuPage.registerComponent(const name: string; which: TSysFrame);
+procedure TMenuPage.registerComponent(const name: string; which: TGameMenuBox);
 begin
    FComponents.Add(name, which);
    which.Name := name;
@@ -600,7 +600,7 @@ end;
 
 procedure TMenuPage.setup(value: integer);
 var
-   frame: TSysFrame;
+   frame: TGameMenuBox;
 begin
    GSetupDrawLock.Enter;
    try
@@ -616,7 +616,7 @@ end;
 
 procedure TMenuPage.setVisible(const value: boolean);
 var
-   frame: TSysFrame;
+   frame: TGameMenuBox;
 begin
    for frame in FComponents.Values do
       frame.Visible := value;
@@ -634,3 +634,4 @@ begin
 end;
 
 end.
+
