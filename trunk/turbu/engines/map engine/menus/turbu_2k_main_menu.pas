@@ -186,5 +186,4 @@ initialization
    TMenuEngine.RegisterMenuPage('Main', MAIN_LAYOUT);
    TMenuEngine.RegisterMenuBoxClass(TGameMainMenu);
    TMenuEngine.RegisterMenuBoxClass(TGamePartyPanel);
-   TMenuEngine.RegisterMenuBoxClass(TGameCashMenu);
 end.

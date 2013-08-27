@@ -48,7 +48,7 @@ type
       FChar: TRpgHero;
       FCurrentSlot: TSlot;
    protected
-      procedure drawItem(id, x, y: word; color: byte); override;
+      procedure drawItem(id, x, y, color: integer); override;
       procedure DrawText; override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage); override;
@@ -104,7 +104,7 @@ begin
    inherited DrawText;
 end;
 
-procedure TEqInventoryMenu.drawItem(id, x, y: word; color: byte);
+procedure TEqInventoryMenu.drawItem(id, x, y, color: integer);
 begin
    if id < FParsedText.Count - 1 then
    begin

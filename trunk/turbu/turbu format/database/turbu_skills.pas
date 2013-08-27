@@ -62,6 +62,7 @@ type
       FUseString2: string;
       FFailureMessage: word;
       FUsableWhere: TUsableWhere;
+      FRange: TSkillRange;
       FTag: T4IntArray;
    protected
       class function keyChar: ansiChar; override;
@@ -76,12 +77,12 @@ type
       property useString2: string read FUseString2 write FUseString2;
       property failureMessage: word read FFailureMessage write FFailureMessage;
       property usableWhere: TUsableWhere read FUsableWhere write FUsableWhere;
+      property range: TSkillRange read FRange write FRange;
       property tag: T4IntArray read FTag write FTag;
    end;
 
    TNormalSkillTemplate = class(TSkillTemplate)
    private
-      FRange: TSkillRange;
       FOffensive: boolean;
       FAnim: word;
       FSkillPower: T4IntArray;
@@ -105,7 +106,6 @@ type
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
 
-      property range: TSkillRange read FRange write FRange;
       property offensive: boolean read FOffensive write FOffensive;
       property animation: word read FAnim write FAnim;
       property skillPower[x: byte]: integer read getSkillPower write setSkillPower;
