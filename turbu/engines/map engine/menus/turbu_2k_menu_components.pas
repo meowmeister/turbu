@@ -39,7 +39,7 @@ type
       FDisplayCapacity: byte;
       FTopPosition: smallint;
 
-      procedure drawItem(id, x, y: word; color: byte); virtual; abstract;
+      procedure drawItem(id, x, y, color: integer); virtual; abstract;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage); override;
 
@@ -56,7 +56,6 @@ type
       FText: string;
       procedure SetText(const Value: string);
    public
-      procedure moveTo(coords: TRect); override;
       procedure DrawText; override;
       property text: string write SetText;
    end;
@@ -86,7 +85,7 @@ type
 
       procedure setInventory(const Value: TRpgInventory);
    protected
-      procedure drawItem(id, x, y: word; color: byte); override;
+      procedure drawItem(id, x, y, color: integer); override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect;
         main: TMenuEngine; owner: TMenuPage); override;
@@ -206,12 +205,6 @@ begin
    GFontEngine.drawText(FText, origin.x + 2, origin.y + 2, 1);
 end;
 
-procedure TOnelineLabelBox.moveTo(coords: TRect);
-begin
-   assert(coords.bottom = 32);
-   inherited moveTo(coords);
-end;
-
 procedure TOnelineLabelBox.SetText(const Value: string);
 begin
    FText := value;
@@ -226,21 +219,21 @@ var
    yPos: integer;
 begin
    dummy := GEnvironment.Heroes[FChar];
-   yPos := origin.Y + 2;
-   GFontEngine.drawText(dummy.name, origin.x, yPos, 0);
-   GFontEngine.drawText(GDatabase.vocab['StatShort-Lv'], origin.x + 78, yPos, 1);
-   GFontEngine.drawTextRightAligned(IntToStr(dummy.level), origin.x + 108, yPos, 0);
+   yPos := 2;
+   GFontEngine.drawText(dummy.name, 0, yPos, 1);
+   GFontEngine.drawText(GDatabase.vocab['StatShort-Lv'], 78, yPos, 2);
+   GFontEngine.drawTextRightAligned(IntToStr(dummy.level), 108, yPos, 1);
    if dummy.highCondition = 0 then
-      GFontEngine.drawText(GDatabase.vocab['Normal Status'], origin.X + 118, yPos, 0)
-   else GFontEngine.drawText(name, origin.X + 118, yPos, GDatabase.conditions[dummy.highCondition].color);
-   GFontEngine.drawText(GDatabase.vocab['StatShort-HP'], origin.X + 178, yPos, 1);
-   GFontEngine.drawTextRightAligned(intToStr(dummy.hp), origin.x + 220, yPos, 0);
-   GFontEngine.drawText('/', origin.x + 217, yPos, 0);
-   GFontEngine.drawTextRightAligned(intToStr(dummy.maxHp), origin.X + 238, yPos, 0);
-   GFontEngine.drawText(GDatabase.vocab['StatShort-MP'], origin.X + 246, yPos, 1);
-   GFontEngine.drawTextRightAligned(intToStr(dummy.mp), origin.x + 282, yPos, 0);
-   GFontEngine.drawText('/', origin.x + 282, yPos, 0);
-   GFontEngine.drawTextRightAligned(intToStr(dummy.maxMp), origin.X + 306, yPos, 0);
+      GFontEngine.drawText(GDatabase.vocab['Normal Status'], 118, yPos, 1)
+   else GFontEngine.drawText(name, 118, yPos, GDatabase.conditions[dummy.highCondition].color);
+   GFontEngine.drawText(GDatabase.vocab['StatShort-HP'], 178, yPos, 2);
+   GFontEngine.drawTextRightAligned(intToStr(dummy.hp), 216, yPos, 1);
+   GFontEngine.drawText('/', 216, yPos, 1);
+   GFontEngine.drawTextRightAligned(intToStr(dummy.maxHp), 240, yPos, 1);
+   GFontEngine.drawText(GDatabase.vocab['StatShort-MP'], 246, yPos, 2);
+   GFontEngine.drawTextRightAligned(intToStr(dummy.mp), 280, yPos, 1);
+   GFontEngine.drawText('/', 280, yPos, 1);
+   GFontEngine.drawTextRightAligned(intToStr(dummy.maxMp), 304, yPos, 1);
 end;
 
 { TCustomPartyPanel }
@@ -348,7 +341,7 @@ begin
    FDontChangeCursor := false;
 end;
 
-procedure TCustomGameItemMenu.drawItem(id, x, y: word; color: byte);
+procedure TCustomGameItemMenu.drawItem(id, x, y, color: integer);
 begin
    GFontEngine.drawText(FParsedText[id], x, y, color);
    GFontEngine.drawText(':', x + 120, y, color);
@@ -392,5 +385,7 @@ begin
 end;
 
 initialization
+   TMenuEngine.RegisterMenuBoxClass(TGameCashMenu);
    TMenuEngine.RegisterMenuBoxClass(TOnelineLabelBox);
+   TMenuEngine.RegisterMenuBoxClass(TOnelineCharReadout);
 end.
