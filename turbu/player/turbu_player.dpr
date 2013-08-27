@@ -11,6 +11,7 @@ uses
   madListModules,
   FastMM4Messages in '..\..\classes\FastMM4\FastMM4Messages.pas',
   Forms,
+  Variants,
   mainform in 'mainform.pas' {frmMain},
   dm_ProjectBoot in '..\editor\dm_ProjectBoot.pas' {dmProjectBoot: TDataModule},
   discInterface in '..\discInterface.pas',
@@ -19,6 +20,7 @@ uses
 {$R *.res}
 
 begin
+  Variants.NullStrictConvert := false;
   {$IFDEF RELEASE}
   ReportMemoryLeaksOnShutdown := false;
   {$ENDIF}

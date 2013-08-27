@@ -796,7 +796,7 @@ end;
 
 function ReadHeroEQ(const selfValue: TValue; const index: TArray<TValue>): TValue;
 begin
-   result := (selfValue.AsObject as TRpgHero).equipment[index[0].AsInteger];
+   result := (selfValue.AsObject as TRpgHero).equipment[TSlot(index[0].AsInteger)];
 end;
 
 function ReadHeroSkill(const selfValue: TValue; const index: TArray<TValue>): TValue;

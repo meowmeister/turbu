@@ -108,7 +108,7 @@ type
    end;
 
    TCommandSet = packed array[1..COMMAND_COUNT] of smallint;
-   TEqArray = packed array[1..TOTAL_SLOTS] of smallint;
+   TEqArray = packed array[TSlot] of smallint;
 
    TClassTemplate = class(TRpgDatafile)
    private
@@ -143,8 +143,8 @@ type
       procedure setStatBlock(x: byte; const Value: IStatBlock); inline;
       function getExpVar(x: byte): integer;
       procedure setExpVar(x: byte; const Value: integer);
-      function getEq(x: byte): smallint;
-      procedure setEq(x: byte; const Value: smallint);
+      function getEq(x: TSlot): smallint;
+      procedure setEq(x: TSlot; const Value: smallint);
    protected
       class function getDatasetName: string; override;
       class function keyChar: ansiChar; override;
@@ -161,7 +161,7 @@ type
       property command[x: byte]: smallint read getCommand write setCommand;
       property statblock[x: byte]: IStatBlock read getStatBlock write setStatBlock;
       property expVars[x: byte]: integer read getExpVar write setExpVar;
-      property eq[x: byte]: smallint read getEq write setEq;
+      property eq[x: TSlot]: smallint read getEq write setEq;
       property skillset: TSkillsetList read FSkillset write FSkillset;
       property clsName: string read FName write FName;
       property mapSprite: string read FMapSprite write FMapSprite;
@@ -412,12 +412,12 @@ end;
 
 constructor TClassTemplate.Create;
 var
-   i: integer;
+   i: TSlot;
 begin
    inherited Create;
    FSkillset := TSkillsetList.Create;
    FSkillSet.add(TSkillGainInfo.Create);
-   for I := 1 to TOTAL_SLOTS do
+   for I := low(TSlot) to high(TSlot) do
       self.eq[i] := -1;
 end;
 
@@ -455,7 +455,7 @@ begin
    if length(FConditions) > 0 then
       savefile.readBuffer(FConditions[0], sizeof(TPoint) * length(FConditions));
    lassert(savefile.readByte = TOTAL_SLOTS);
-   savefile.readBuffer(FEquip[1], sizeof(smallint) * TOTAL_SLOTS);
+//   savefile.readBuffer(FEquip[1], sizeof(smallint) * TOTAL_SLOTS);
    savefile.readBuffer(FDualWield, sizeof(TWeaponStyle));
    FStaticEq := savefile.readBool;
    FStrongDef := savefile.readBool;
@@ -495,7 +495,7 @@ begin
    if length(FConditions) > 0 then
       savefile.WriteBuffer(FConditions[0], sizeof(TPoint) * length(FConditions));
    savefile.writeByte(TOTAL_SLOTS);
-   savefile.WriteBuffer(FEquip[1], sizeof(smallint) * TOTAL_SLOTS);
+//   savefile.WriteBuffer(FEquip[1], sizeof(smallint) * TOTAL_SLOTS);
    savefile.WriteBuffer(FDualWield, sizeof(TWeaponStyle));
    savefile.writeBool(FStaticEq);
    savefile.writeBool(FStrongDef);
@@ -541,7 +541,7 @@ begin
    result := 'charClasses';
 end;
 
-function TClassTemplate.getEq(x: byte): smallint;
+function TClassTemplate.getEq(x: TSlot): smallint;
 begin
    result := FEquip[x];
 end;
@@ -566,7 +566,7 @@ begin
    FCommand[x] := value;
 end;
 
-procedure TClassTemplate.setEq(x: byte; const Value: smallint);
+procedure TClassTemplate.setEq(x: TSlot; const Value: smallint);
 begin
    FEquip[x] := value;
 end;

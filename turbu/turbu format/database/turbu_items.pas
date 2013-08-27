@@ -125,6 +125,7 @@ type
       FInvokeSkill: boolean;
       FCursed: boolean;
       FInflictReversed: boolean;
+      FSlot: TSlot;
    protected
       FAttributes: TPointArray;
    public
@@ -145,6 +146,7 @@ type
       property skill: integer read FSkill write FSkill;
       property InvokeSkill: boolean read FInvokeSkill write FInvokeSkill;
       property inflictReversed: boolean read FInflictReversed write FInflictReversed;
+      property slot: TSlot read FSlot write FSlot;
    end;
 
    [ItemType(it_weapon)]
@@ -174,13 +176,9 @@ type
 
    [ItemType(it_armor)]
    TArmorTemplate = class(TEquipmentTemplate)
-   private
-      FSlot: byte;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
-
-      property slot: byte read FSlot write FSlot;
    end;
 
    [ItemType(it_medicine)]
@@ -445,14 +443,12 @@ end;
 constructor TArmorTemplate.Load(savefile: TStream);
 begin
    inherited Load(savefile);
-   FSlot := savefile.readByte;
    lassert(savefile.readChar = 'A');
 end;
 
 procedure TArmorTemplate.save(savefile: TStream);
 begin
    inherited save(savefile);
-   savefile.writeByte(FSlot);
    savefile.writeChar('A');
 end;
 

@@ -4,7 +4,7 @@
 			<ProjectVersion>12.3</ProjectVersion>
 			<MainSource>turbu_player.dpr</MainSource>
 			<Base>True</Base>
-			<Config Condition="'$(Config)'==''">Release</Config>
+			<Config Condition="'$(Config)'==''">Debug</Config>
 			<Platform>Win32</Platform>
 			<AppType>Application</AppType>
 			<FrameworkType>VCL</FrameworkType>
@@ -41,6 +41,8 @@
 			<DCC_ExeOutput>..\bin</DCC_ExeOutput>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_RangeChecking>true</DCC_RangeChecking>
+			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
 			<DCC_MapFile>3</DCC_MapFile>
 			<DCC_DebugDCUs>true</DCC_DebugDCUs>
 			<DCC_Define>DEBUG;FullDebugMode;LogMemoryLeakDetailToFile;madExcept;$(DCC_Define)</DCC_Define>
@@ -128,14 +130,14 @@
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>
-						<Excluded_Packages Name="C:\Users\Public\Documents\RAD Studio\8.0\Bpl\JclVersionControlExpert150.bpl">JCL Integration of version control systems in the IDE</Excluded_Packages>
+						<Excluded_Packages Name="C:\Users\Mason\Documents\RAD Studio\Projects\madCollection\madBasic\BDS8\madHelp_.bpl">madHelp 1.1.1  -  www.madshi.net</Excluded_Packages>
 					</Excluded_Packages>
 					<Source>
 						<Source Name="MainSource">turbu_player.dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="RunParams">&quot;C:\Users\Mason\Documents\TURBU Projects\Lavie&quot;</Parameters>
-						<Parameters Name="DebugCWD">&quot;C:\Users\Mason\Documents\TURBU Projects\Lavie&quot;</Parameters>
+						<Parameters Name="RunParams">&quot;C:\Users\Mason\Documents\TURBU Projects\Love And War - Act 1&quot;</Parameters>
+						<Parameters Name="DebugCWD">&quot;C:\Users\Mason\Documents\TURBU Projects\Love And War - Act 1&quot;</Parameters>
 					</Parameters>
 				</Delphi.Personality>
 				<Platforms>

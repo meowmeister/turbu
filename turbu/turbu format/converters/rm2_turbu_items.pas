@@ -275,8 +275,7 @@ begin
             y := GLcfDatabase.attribute[i].average;
          end;
       end;
-   //end for
-   self.slot := ord(base.itemType);
+   self.slot := TSlot(ord(base.itemType) - 1);
 end;
 
 { T2k2MedicineTemplate }

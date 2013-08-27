@@ -42,7 +42,6 @@ type
       procedure drawItem(id, x, y: word; color: byte); virtual; abstract;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage); override;
-      destructor Destroy; override;
 
       procedure doCursor(position: smallint); override;
       procedure DrawText; override;
@@ -106,7 +105,7 @@ uses
    commons, ArchiveUtils,
    turbu_text_utils, turbu_2k_environment, turbu_database, turbu_constants,
    turbu_heroes, turbu_characters,
-   SDL_ImageManager, SG_defs,
+   SDL_ImageManager, SG_defs, sg_utils,
    SDL_13;
 
 { TGameCashMenu }
@@ -135,13 +134,6 @@ begin
    FPrevArrow.Visible := false;
    FNextArrow.Visible := false;
    inherited Create(parent, coords, main, owner);
-end;
-
-destructor TCustomScrollBox.Destroy;
-begin
-   FNextArrow.free;
-   FPrevArrow.free;
-   inherited;
 end;
 
 procedure TCustomScrollBox.DrawText;
@@ -287,21 +279,22 @@ begin
    if self.FDontChangeCursor then
       position := self.FCursorPosition;
 
-   origin2.X := round(FCorners[topLeft].x - engine.WorldX) + 58;
+   SetLength(FOptionEnabled, GEnvironment.Party.size);
+   origin2.X := FOrigin.x + 4;
    if position <> -1 then
    begin
-      origin2.Y := trunc(FCorners[topLeft].Y - engine.worldY + (position * 56)) + 6;
-      coords := rect(origin2.x, origin2.Y, self.width - 66, 52)
+      origin2.Y := FOrigin.y + (position * 56) + 4;
+      coords := rect(origin2.x, origin2.Y, self.width - 8, 56)
    end
    else begin
-      origin2.Y := trunc(FCorners[topLeft].Y - engine.worldY) + 6;
+      origin2.Y := FOrigin.Y + 4;
       dummy := GEnvironment.Party.openSlot - 1;
       dummy := 56 * dummy;
       coords := rect(origin2.x, origin2.Y, self.width - 66, dummy);
    end;
    cursor := (Engine as TMenuSpriteEngine).cursor;
    cursor.Visible := true;
-   cursor.layout(coords);
+   cursor.layout(SdlRectToTRect(coords));
    FCursorPosition := position;
    FDontChangeCursor := false;
 end;
@@ -330,7 +323,8 @@ begin
    for I := i to 4 do
    begin
       freeAndNil(FPortrait[i]);
-      FOptionEnabled[i - 1] := false;
+      if i < length(FOptionEnabled) then
+         FOptionEnabled[i - 1] := false;
    end;
 end;
 
