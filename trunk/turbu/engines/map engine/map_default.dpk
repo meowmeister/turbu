@@ -63,7 +63,9 @@ contains
   turbu_2k_main_menu in 'menus\turbu_2k_main_menu.pas',
   turbu_2k_inventory_menu in 'menus\turbu_2k_inventory_menu.pas',
   turbu_2k_equipment_menu in 'menus\turbu_2k_equipment_menu.pas',
-  turbu_2k_skill_menu in 'menus\turbu_2k_skill_menu.pas';
+  turbu_2k_skill_menu in 'menus\turbu_2k_skill_menu.pas',
+  turbu_2k_party_target_menu in 'menus\turbu_2k_party_target_menu.pas',
+  turbu_2k_skills in 'turbu_2k_skills.pas';
 
 end.
 

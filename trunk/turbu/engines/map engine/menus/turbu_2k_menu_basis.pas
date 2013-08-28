@@ -20,7 +20,7 @@ unit turbu_2k_menu_basis;
 interface
 uses
    Types, Classes, Generics.collections,
-   commons, turbu_2k_frames, turbu_defs,
+   commons, turbu_2k_frames, turbu_defs, turbu_heroes,
    SDL_sprite, sg_defs,
    dwsJSON;
 
@@ -139,6 +139,7 @@ type
       FOrigin: TsgPoint;
       FMenus: TDictionary<string, TMenuPage>;
       FCloseMenu: TCloseMessageEvent;
+      FCurrentHero: TRpgHero;
 
       procedure setVisible(const Value: boolean);
 
@@ -165,6 +166,7 @@ type
       property visible: boolean read FVisible write setVisible;
       property currentMenu: TMenuPage read FCurrentPage;
       property cursor: TSysFrame read FCursor;
+      property CurrentHero: TRpgHero read FCurrentHero write FCurrentHero;
    end;
 
 const

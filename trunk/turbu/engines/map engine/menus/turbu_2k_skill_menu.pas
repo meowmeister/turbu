@@ -95,6 +95,7 @@ begin
    assert(FSetupValue > 0);
    FWhichHero := FSetupValue;
    ourHero := GEnvironment.heroes[FWhichHero];
+   FMenuEngine.currentHero := ourHero;
    (FOwner.menu('CharData') as TOnelineCharReadout).character := FWhichHero;
    SetLength(FOptionEnabled, ourHero.skills);
    FParsedText.Clear;

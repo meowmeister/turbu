@@ -64,6 +64,7 @@ type
       FUsableWhere: TUsableWhere;
       FRange: TSkillRange;
       FTag: T4IntArray;
+      function getSound1: TRpgSound; virtual;
    protected
       class function keyChar: ansiChar; override;
    public
@@ -79,6 +80,7 @@ type
       property usableWhere: TUsableWhere read FUsableWhere write FUsableWhere;
       property range: TSkillRange read FRange write FRange;
       property tag: T4IntArray read FTag write FTag;
+      property firstSound: TRpgSound read getSound1;
    end;
 
    TNormalSkillTemplate = class(TSkillTemplate)
@@ -96,10 +98,11 @@ type
       FInflictReversed: boolean;
       FDisplaySprite: integer;
 
-      function getStat(x: byte): boolean;
-      procedure setStat(x: byte; const Value: boolean);
-      procedure setSkillPower(x: byte; const Value: integer);
-      function getSkillPower(x: byte): integer;
+      function getStat(x: integer): boolean;
+      procedure setStat(x: integer; const Value: boolean);
+      procedure setSkillPower(x: integer; const Value: integer);
+      function getSkillPower(x: integer): integer;
+      function getSound1: TRpgSound; override;
    protected
       FAttributes: TPointArray;
    public
@@ -108,9 +111,19 @@ type
 
       property offensive: boolean read FOffensive write FOffensive;
       property animation: word read FAnim write FAnim;
-      property skillPower[x: byte]: integer read getSkillPower write setSkillPower;
+      property skillPower[x: integer]: integer read getSkillPower write setSkillPower;
+      property strEffect: integer index 1 read getSkillPower;
+      property mindEffect: integer index 2 read getSkillPower;
+      property variance: integer index 3 read getSkillPower;
+      property base: integer index 4 read getSkillPower;
       property successRate: integer read FSuccessRate write FSuccessRate;
-      property stat[x: byte]: boolean read getStat write setStat;
+      property stat[x: integer]: boolean read getStat write setStat;
+      property hp: boolean index 1 read getStat;
+      property mp: boolean index 2 read getStat;
+      property attack: boolean index 3 read getStat;
+      property defense: boolean index 4 read getStat;
+      property mind: boolean index 5 read getStat;
+      property speed: boolean index 6 read getStat;
       property drain: boolean read FVampire write FVampire;
       property phased: boolean read FPhased write FPhased;
       property condition: TByteSet read FCondition write FCondition;
@@ -122,13 +135,14 @@ type
 
    TSpecialSkillTemplate = class(TSkillTemplate)
    private
-      FSfx: TSoundTemplate;
+      FSfx: TRpgSound;
+      function getSound1: TRpgSound; override;
    public
       constructor Load(savefile: TStream); override;
       procedure save(savefile: TStream); override;
       destructor Destroy; override;
-      
-      property sfx: TSoundTemplate read FSfx write FSfx;
+
+      property sfx: TRpgSound read FSfx write FSfx;
    end;
 
    TTeleportSkillTemplate = class(TSpecialSkillTemplate)
@@ -170,9 +184,14 @@ type
 implementation
 uses
    sysutils,
-   turbu_database;
+   turbu_database, turbu_animations;
 
 { TSkillTemplate }
+
+function TSkillTemplate.getSound1: TRpgSound;
+begin
+   result := nil;
+end;
 
 class function TSkillTemplate.keyChar: ansiChar;
 begin
@@ -259,25 +278,39 @@ begin
    savefile.writeChar('n');
 end;
 
-function TNormalSkillTemplate.getStat(x: byte): boolean;
+function TNormalSkillTemplate.getSound1: TRpgSound;
+var
+   anim: TAnimTemplate;
+   i: Integer;
+begin
+   result := nil;
+   anim := GDatabase.anim[self.animation];
+   i := 1;
+   while (i < anim.effect.Count) and ((anim.effect[i].sound = nil) or (anim.effect[i].sound.filename = '')) do
+      inc(i);
+   if i <= anim.effect.Count then
+      result := anim.effect[i].sound;
+end;
+
+function TNormalSkillTemplate.getStat(x: integer): boolean;
 begin
    assert(x in [1..STAT_COUNT]);
    result := FStat[x];
 end;
 
-function TNormalSkillTemplate.getSkillPower(x: byte): integer;
+function TNormalSkillTemplate.getSkillPower(x: integer): integer;
 begin
    assert(x in [1..4]);
    result := FSkillPower[x];
 end;
 
-procedure TNormalSkillTemplate.setSkillPower(x: byte; const Value: integer);
+procedure TNormalSkillTemplate.setSkillPower(x: integer; const Value: integer);
 begin
    assert(x in [1..4]);
    FSkillPower[x] := value;
 end;
 
-procedure TNormalSkillTemplate.setStat(x: byte; const Value: boolean);
+procedure TNormalSkillTemplate.setStat(x: integer; const Value: boolean);
 begin
    assert(x in [1..STAT_COUNT]);
    FStat[x] := value;
@@ -289,6 +322,11 @@ destructor TSpecialSkillTemplate.Destroy;
 begin
    FSfx.Free;
    inherited Destroy;
+end;
+
+function TSpecialSkillTemplate.getSound1: TRpgSound;
+begin
+   result := FSfx;
 end;
 
 constructor TSpecialSkillTemplate.Load(savefile: TStream);
