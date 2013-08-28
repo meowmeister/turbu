@@ -117,7 +117,8 @@ end;
 
 procedure PlaySoundData(sound: TRpgSound);
 begin
-   playSound(sound.filename, sound.volume, sound.tempo, sound.balance);
+   if assigned(sound) then
+      playSound(sound.filename, sound.volume, sound.tempo, sound.balance);
 end;
 
 var

@@ -63,7 +63,7 @@ begin
    begin
       if inventory[cursorPosition] is TAppliedItem then
       begin
-         focusPage('Target', cursorPosition * -1);
+         focusPage('PartyTarget', cursorPosition * -1);
          if TAppliedItem(inventory[cursorPosition]).areaItem then
             parent.placeCursor(-1)
          else parent.placeCursor(0);
