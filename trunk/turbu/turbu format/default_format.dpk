@@ -85,6 +85,7 @@ contains
   db_create in 'design\db_create.pas',
   EB_MessagePromptCollapser in 'script\EB_MessagePromptCollapser.pas',
   EB_FadeInImageOptimization in 'script\EB_FadeInImageOptimization.pas',
-  EB_ConsecutiveImageOptimization in 'script\EB_ConsecutiveImageOptimization.pas';
+  EB_ConsecutiveImageOptimization in 'script\EB_ConsecutiveImageOptimization.pas',
+  turbu_shops in 'turbu_shops.pas';
 
 end.
