@@ -59,6 +59,7 @@ type
       FSetupValue: integer;
       FBlank: boolean;
 
+      function getRightSide: integer;
       procedure return; inline;
       function focused: boolean; inline;
       procedure doButton(const input: TButtonCode); virtual;
@@ -112,21 +113,31 @@ type
       procedure focusPage(const which: string; cursorValue: integer); inline;
       procedure backTo(which: TGameMenuBox); inline;
       procedure Draw;
-      procedure placeCursor(value: integer); virtual;
+      procedure placeCursor(value: integer);
       procedure setup(value: integer); virtual;
+      procedure setupEx(const data: TObject); virtual;
       procedure move; virtual;
-      procedure button(input: TButtonCode); virtual;
+      procedure button(input: TButtonCode);
       function menu(const name: string): TGameMenuBox;
 
       property currentMenu: TGameMenuBox read FCurrentMenu;
       property visible: boolean read FVisible write setVisible;
    end;
 
+   TMenuPageClass = class of TMenuPage;
+
    TMenuEngine = class(TInterfacedObject, IMenuEngine)
    private
+      type
+         TMenuPageData = record
+            cls: TMenuPageClass;
+            layout: string;
+            constructor Create(aClass: TMenuPageClass; const aLayout: string);
+         end;
+
       class var
          FMenuBoxes: TDictionary<string, TGameMenuBoxClass>;
-         FMenuLayouts: TStringList;
+         FMenuLayouts: TDictionary<string, TMenuPageData>;
       class constructor Create;
       class destructor Destroy;
    private
@@ -147,6 +158,7 @@ type
       procedure initialize;
    private //IMenuEngine implementation
       procedure OpenMenu(const name: string; cursorValue: integer = 0);
+      procedure OpenMenuEx(const name: string; const data: TObject);
       procedure button(const input: TButtonCode);
    public
       constructor Create(parent: TMenuSpriteEngine; callback: TCloseMessageEvent);
@@ -162,6 +174,7 @@ type
 
       class procedure RegisterMenuBoxClass(cls: TGameMenuBoxClass);
       class procedure RegisterMenuPage(const name, layout: string);
+      class procedure RegisterMenuPageEx(cls: TMenuPageClass; const name, layout: string);
 
       property visible: boolean read FVisible write setVisible;
       property currentMenu: TMenuPage read FCurrentPage;
@@ -277,6 +290,11 @@ begin
    result := FOptionEnabled[which];
 end;
 
+function TGameMenuBox.getRightSide: integer;
+begin
+   result := FTextTarget.width;
+end;
+
 procedure TGameMenuBox.InvalidateText;
 begin
    FTextDrawn := false;
@@ -326,7 +344,7 @@ end;
 class constructor TMenuEngine.Create;
 begin
    FMenuBoxes := TDictionary<string, TGameMenuBoxClass>.Create;
-   FMenuLayouts := TStringList.Create;
+   FMenuLayouts := TDictionary<string, TMenuPageData>.Create;
 end;
 
 class destructor TMenuEngine.Destroy;
@@ -338,6 +356,7 @@ end;
 constructor TMenuEngine.Create(parent: TMenuSpriteEngine; callback: TCloseMessageEvent);
 var
    i: integer;
+   pair: TPair<string, TMenuPageData>;
 begin
    inherited Create;
    FParent := parent;
@@ -347,12 +366,12 @@ begin
    GSetupDrawLock := TCriticalSection.Create;
    FMenus := TObjectDictionary<string, TMenuPage>.Create([doOwnsValues]);
 
-   for i := 0 to FMenuLayouts.Count - 1 do
-      FMenus.Add(FMenuLayouts.Names[i],
-        TMenuPage.Create(FParent,
+   for pair in FMenuLayouts do
+      FMenus.Add(pair.Key,
+        pair.Value.cls.Create(FParent,
                          rect(0, 0, FParent.Canvas.Width, FParent.Canvas.Height),
                          self,
-                         FMenuLayouts.ValueFromIndex[i]));
+                         pair.Value.layout));
    FCloseMenu := callback;
 end;
 
@@ -411,6 +430,14 @@ begin
    FCurrentPage.move;
 end;
 
+procedure TMenuEngine.OpenMenuEx(const name: string; const data: TObject);
+begin
+   if not FMenus.TryGetValue(name, FCurrentPage) then
+      raise Exception.CreateFmt('No menu named "%s" is registered.', [name]);
+   FCurrentPage.setupEx(data);
+   self.initialize;
+end;
+
 procedure TMenuEngine.OpenMenu(const name: string; cursorValue: integer);
 begin
    if not FMenus.TryGetValue(name, FCurrentPage) then
@@ -436,7 +463,13 @@ end;
 
 class procedure TMenuEngine.RegisterMenuPage(const name, layout: string);
 begin
-   FMenuLayouts.Values[name] := layout;
+   FMenuLayouts.Add(name, TMenuPageData.Create(TMenuPage, layout));
+end;
+
+class procedure TMenuEngine.RegisterMenuPageEx(cls: TMenuPageClass;
+  const name, layout: string);
+begin
+   FMenuLayouts.Add(name, TMenuPageData.Create(cls, layout));
 end;
 
 class procedure TMenuEngine.RegisterMenuBoxClass(cls: TGameMenuBoxClass);
@@ -616,6 +649,11 @@ begin
    end;
 end;
 
+procedure TMenuPage.setupEx(const data: TObject);
+begin
+   //this method intentionally left blank
+end;
+
 procedure TMenuPage.setVisible(const value: boolean);
 var
    frame: TGameMenuBox;
@@ -633,6 +671,15 @@ end;
 procedure TMenuPage.button(input: TButtonCode);
 begin
    FCurrentMenu.button(input);
+end;
+
+{ TMenuEngine.TMenuPageData }
+
+constructor TMenuEngine.TMenuPageData.Create(aClass: TMenuPageClass;
+  const aLayout: string);
+begin
+   Self.cls := aClass;
+   self.layout := aLayout;
 end;
 
 end.

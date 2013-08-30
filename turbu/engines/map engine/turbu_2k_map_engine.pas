@@ -315,6 +315,7 @@ begin
       FStretchRatio.x := layout.physWidth / layout.width;
       FStretchRatio.y := layout.physHeight / layout.height;
       SDL_RenderSetLogicalSize(SDL_GetRenderer(window), layout.width, layout.height);
+      FCanvas.Resize;
       FImages := TSdlImages.Create(renderer);
       FImages.ArchiveCallback := aCallback;
       FImages.ArchiveLoader := aLoader;
@@ -514,6 +515,7 @@ end;
 
 procedure T2kMapEngine.PressButton(button: TButtonCode);
 begin
+//   ScanMemoryPoolForCorruptions;
    if FEnterLock and (button in [btn_enter, btn_cancel]) then
       Exit;
 

@@ -183,6 +183,8 @@ type
       function HasTileGroup(const filename: string): boolean;
 
       procedure AddLegacy(const name: string; id, section: integer; const data: RawByteString);
+      function VocabNum(const key: string; num: integer): string;
+
 
       property charClasses: integer read getClassCount;
       property charClass: TCharClassList read FClass write FClass;
@@ -870,6 +872,14 @@ begin
    result := FSysVocab.Values[key];
    if result = '' then
       result := FCustomVocab.Values[key];
+end;
+
+function TRpgDatabase.VocabNum(const key: string;
+  num: integer): string;
+begin
+   result := GetVocab(format(key, [num]));
+   if result = '' then
+      result := GetVocab(format(key, [1]));
 end;
 
 function TRpgDatabase.HasTileGroup(const filename: string): boolean;

@@ -77,6 +77,7 @@ type
 
    IMenuEngine = interface
       procedure OpenMenu(const name: string; cursorValue: integer = 0);
+      procedure OpenMenuEx(const name: string; const data: TObject);
       procedure button(const input: TButtonCode);
    end;
 

@@ -93,6 +93,18 @@ const
     V_EQ_HELMET      = 'EQ-Helmet';
     V_EQ_ACCESSORY   = 'EQ-Accessory';
 
+    V_SHOP_NUM_GREET      = 'Shop%d-Greet';
+    V_SHOP_NUM_CONTINUE   = 'Shop%d-Continue';
+    V_SHOP_NUM_BUY        = 'Shop%d-Buy';
+    V_SHOP_NUM_SELL       = 'Shop%d-Sell';
+    V_SHOP_NUM_LEAVE      = 'Shop%d-Leave';
+    V_SHOP_NUM_BUY_WHAT   = 'Shop%d-Buy What';
+    V_SHOP_NUM_HOW_MANY   = 'Shop%d-Buy Quantity';
+    V_SHOP_NUM_BOUGHT     = 'Shop%d-Bought';
+    V_SHOP_NUM_SELL_WHAT  = 'Shop%d-Sell What';
+    V_SHOP_NUM_SELL_QUANT = 'Shop%d-Sell Quantity';
+    V_SHOP_NUM_SOLD       = 'Shop%d-Sold';
+
 
 
 resourcestring
