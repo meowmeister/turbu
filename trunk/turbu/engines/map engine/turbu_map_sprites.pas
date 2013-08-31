@@ -946,6 +946,7 @@ begin
    if assigned(FMoveAssignment) then
       freeAndNil(FMoveAssignment);
    FMoveAssignment := value;
+   FOrder.opcode := OP_CLEAR;
 end;
 
 procedure TMapSprite.setTranslucency(const value: byte);
