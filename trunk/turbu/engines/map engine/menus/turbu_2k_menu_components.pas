@@ -272,7 +272,6 @@ begin
    if self.FDontChangeCursor then
       position := self.FCursorPosition;
 
-   SetLength(FOptionEnabled, GEnvironment.Party.size);
    origin2.X := FOrigin.x + 4;
    if position <> -1 then
    begin
@@ -300,6 +299,7 @@ begin
    inherited doSetup(value);
    i := 1;
    FParsedText.Clear;
+   SetLength(FOptionEnabled, GEnvironment.Party.size);
    while GEnvironment.Party[i] <> GEnvironment.Heroes[0] do
    begin
       template := TClassTemplate(GEnvironment.Party[i].template);
@@ -312,6 +312,7 @@ begin
       FOptionEnabled[i - 1] := true;
       inc(i);
    end;
+   InvalidateText;
    FCount := i - 1;
    for I := i to 4 do
    begin

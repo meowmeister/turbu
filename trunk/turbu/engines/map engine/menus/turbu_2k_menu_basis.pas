@@ -664,7 +664,11 @@ begin
 end;
 
 procedure TMenuPage.backTo(which: TGameMenuBox);
+var
+   frame: TGameMenuBox;
 begin
+   for frame in FComponents.Values do
+      frame.InvalidateText;
    self.focusMenu(nil, which, true);
 end;
 
