@@ -564,6 +564,7 @@ begin
    GScriptEngine.KillAll;
    GEnvironment.Free;
    FPartySprite.Free;
+   GSpriteEngine := nil;
    GEnvironment := T2kEnvironment.Create(FDatabase);
    GScriptEngine.Reset;
    SetupScriptImports;
