@@ -50,8 +50,9 @@ type
       FCanvas: TSdlCanvas;
       FCurrentMap: T2kSpriteEngine;
       FWaitingMap: TRpgMap;
+      FWaitingMapEngine: T2kSpriteEngine;
       FImages: TSdlImages;
-      FMaps: array of T2kSpriteEngine;
+
       FScrollPosition: TSgPoint;
       FTimer: TAsphyreTimer;
       FPartySprite: THeroSprite;
@@ -195,9 +196,6 @@ begin
    FreeAndNil(FSignal);
    FreeAndNil(FImageEngine);
    FreeAndNil(FWeatherEngine);
-   for I := 0 to high(FMaps) do
-      FMaps[i].Free;
-   setLength(FMaps, 0);
    if FDatabaseOwner then
    begin
       GGameEngine := nil;
@@ -321,7 +319,6 @@ begin
       FImages.ArchiveLoader := aLoader;
       FImages.SpriteClass := TRpgSdlImage;
       FWeatherEngine := TWeatherSystem.Create(nil, FImages, FCanvas);
-      setLength(FMaps, FDatabase.mapTree.lookupCount);
       FSignal := TSimpleEvent.Create;
       FSignal.SetEvent;
       FShaderEngine := TdmShaders.Create(nil);
@@ -432,18 +429,14 @@ procedure T2kMapEngine.loadMap(map: IMapMetadata);
 var
    viewport: TRect;
 begin
-   if assigned(FCurrentMap) then
-   begin
-      FMaps[FCurrentMap.mapObj.id] := nil;
-      FCurrentMap := nil;
-   end;
+   FCurrentMap := nil;
    prepareMap(map);
    viewport := createViewport(FWaitingMap, FScrollPosition);
-   if assigned(FMaps[FWaitingMap.id]) then
-      FMaps[FWaitingMap.id].ReloadMapObjects
+   if assigned(FWaitingMapEngine) then
+      FWaitingMapEngine.ReloadMapObjects
    else begin
       ensureTileset(FWaitingMap.tileset);
-      FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
+      FWaitingMapEngine := T2kSpriteEngine.Create(FWaitingMap, viewport,
                                FShaderEngine, FCanvas, FDatabase.tileset[FWaitingMap.tileset],
                                FImages);
    end;
@@ -479,18 +472,12 @@ begin
    if not assigned(map) then
       raise ERpgPlugin.Create('Incompatible metadata object.');
 
-   if map.id > high(FMaps) then
-      setLength(FMaps, map.id + 1);
-   if not assigned(FMaps[map.id]) then
-   begin
-      mapStream := GArchives[MAP_ARCHIVE].getFile(map.internalFilename.name);
-      try
-         FWaitingMap := TRpgMap.Load(mapStream);
-      finally
-         mapStream.Free;
-      end;
-   end
-   else FWaitingMap := FMaps[map.id].mapObj;
+   mapStream := GArchives[MAP_ARCHIVE].getFile(map.internalFilename.name);
+   try
+      FWaitingMap := TRpgMap.Load(mapStream);
+   finally
+      mapStream.Free;
+   end;
    FScrollPosition := map.scrollPosition;
 end;
 
@@ -670,7 +657,8 @@ end;
 
 function T2kMapEngine.doneLoadingMap: boolean;
 begin
-   FCurrentMap := FMaps[FWaitingMap.id];
+   FCurrentMap := FWaitingMapEngine;
+   FWaitingMapEngine := nil;
    FCurrentMap.OnDrawWeather := self.DrawWeather;
    if FImageEngine = nil then
    begin

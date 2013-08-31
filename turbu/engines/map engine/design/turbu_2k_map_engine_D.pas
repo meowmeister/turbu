@@ -83,6 +83,7 @@ type
       FTopLeft: TSgPoint;
       FDBFilename: string;
       FController: ITurbuController;
+      FMaps: TDictionary<integer, T2kSpriteEngine>;
 
       //undo data
       FBeingDrawn: TDictionary<TTriple, TTileRef>;
@@ -286,6 +287,7 @@ begin
 
       FBeingDrawn := TDictionary<TTriple, TTileRef>.Create;
       FUndoStack := TStack<TUndoFrame>.Create;
+      FMaps := TObjectDictionary<integer, T2kSpriteEngine>.Create([doOwnsValues]);
       //do more
    except
       if FInitialized then
@@ -335,6 +337,7 @@ begin
    FreeAndNil(FTilesetListD);
    FBeingDrawn.Free;
    FUndoStack.Free;
+   FMaps.Free;
 end;
 
 procedure T2kMapEngineD.ClearButtons;
@@ -426,11 +429,11 @@ begin
       FUndoStack.Clear;
       FreeAndNil(FPartySprite);
       if not FCurrentMap.mapObj.modified then
-         freeAndNil(FMaps[FCurrentMap.mapObj.id])
+         Fmaps.Remove(FCurrentMap.mapObj.id)
       else if FAutosaveMaps then
       begin
          saveMap(FCurrentMap.mapObj);
-         freeAndNil(FMaps[FCurrentMap.mapObj.id])
+         Fmaps.Remove(FCurrentMap.mapObj.id);
       end;
    end;
 
@@ -439,13 +442,14 @@ begin
    viewport := createViewport(FWaitingMap, FScrollPosition);
    FTopLeft := viewport.TopLeft;
    viewport := DoResize(FWaitingMap, viewport);
-   if not assigned(FMaps[FWaitingMap.id]) then
+   if not FMaps.ContainsKey(FWaitingMap.id) then
    begin
       FTilesetListD.Free;
       FTilesetListD := loadTilesetD(FDatabase.tileset[FWaitingMap.tileset]);
-      FMaps[FWaitingMap.id] := T2kSpriteEngine.Create(FWaitingMap, viewport,
-                                FShaderEngine, FCanvas, FDatabase.tileset[FWaitingMap.tileset],
-                                FImages);
+      FWaitingMapEngine := T2kSpriteEngine.Create(FWaitingMap, viewport,
+                           FShaderEngine, FCanvas, FDatabase.tileset[FWaitingMap.tileset],
+                           FImages);
+      FMaps.Add(FWaitingMap.id, FWaitingMapEngine);
    end;
    FCurrentLayer := 0;
    UploadMapObjects;
@@ -483,17 +487,24 @@ end;
 
 procedure T2kMapEngineD.saveAndClearMapCache;
 var
+   list: TList<integer>;
    i: integer;
    map: T2kSpriteEngine;
 begin
-   for i := low(FMaps) to high(FMaps) do
-   begin
-      map := FMaps[i];
-      if assigned(map) and (map <> FCurrentMap) then
+   list := TList<integer>.Create;
+   try
+      for map in FMaps.Values do
       begin
-         saveMap(map.mapObj);
-         FreeAndNil(FMaps[i]);
+         if map <> FCurrentMap then
+         begin
+            saveMap(map.mapObj);
+            list.Add(map.mapObj.id);
+         end;
       end;
+      for i in list do
+         FMaps.Remove(i);
+   finally
+      list.Free;
    end;
 end;
 
@@ -868,7 +879,7 @@ begin
    if eval.TfrmMapProperties.EditMap(meta, newMap) then
    begin
       result := meta;
-      meta.internalFilename := GArchives[MAP_ARCHIVE].MakeValidFilename(format('%s.tmf', [meta.name]));
+      meta.internalFilename := GArchives[MAP_ARCHIVE].MakeValidFilename('', format('%s.tmf', [meta.name]));
       saveMap(newMap);
       designLoadMap(result);
       FDatabase.save;
