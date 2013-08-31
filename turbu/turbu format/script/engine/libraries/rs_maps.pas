@@ -25,7 +25,7 @@ uses
    procedure teleportVehicle(which: TRpgVehicle; map, x, y: integer);
    procedure teleportMapObject(which: TRpgEvent; x, y: integer);
    procedure memorizeLocation(map, x, y: integer);
-   procedure swapEvents(first, second: TRpgEvent);
+   procedure swapMapObjects(first, second: TRpgEvent);
    procedure rideVehicle;
    function getTerrainID(x, y: integer): integer;
    function getObjectID(x, y: integer): integer;
@@ -142,7 +142,7 @@ begin
    end;
 end;
 
-procedure swapEvents(first, second: TRPgEvent);
+procedure swapMapObjects(first, second: TRPgEvent);
 var swapper: TPoint;
 begin
    first.base.leaveTile;
@@ -460,7 +460,7 @@ begin
    input.ImportFunction('procedure rideVehicle;');
    input.ImportFunction('procedure teleportVehicle(which, map, x, y: integer);');
    input.ImportFunction('procedure teleportMapObject(which: TRpgEvent; x, y: integer);');
-   input.ImportFunction('procedure swapEvents(first, second: TRpgEvent);');
+   input.ImportFunction('procedure swapMapObjects(first, second: TRpgEvent);');
    input.ImportFunction('function getTerrainID(x, y: integer): integer;');
    input.ImportFunction('function getObjectID(x, y: integer): integer;');
    input.ImportFunction('procedure setTransition(const which: TTransitionTypes; const newTransition: TTransitions);');
@@ -498,7 +498,7 @@ begin
    RegisterFunction('rideVehicle', @rideVehicle);
    RegisterFunction('teleportVehicle', @teleportVehicle);
    RegisterFunction('teleportMapObject', @teleportMapObject);
-   RegisterFunction('swapEvents', @swapEvents);
+   RegisterFunction('swapMapObjects', @swapMapObjects);
    RegisterFunction('getTerrainID', @getTerrainID);
    RegisterFunction('getObjectID', @getObjectID);
    RegisterFunction('setTransition', @SetTransition);
