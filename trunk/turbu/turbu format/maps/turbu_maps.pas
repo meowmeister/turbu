@@ -570,8 +570,8 @@ var
    map: TRpgMap absolute instance;
 begin
    assert(instance is TRpgMap);
-   db.FieldByName('size.x').AsInteger := map.FSize.x;
-   db.FieldByName('size.y').AsInteger := map.FSize.y;
+   db.FieldByName('size_x').AsInteger := map.FSize.x;
+   db.FieldByName('size_y').AsInteger := map.FSize.y;
 end;
 
 end.

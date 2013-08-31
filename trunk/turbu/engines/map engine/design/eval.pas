@@ -37,6 +37,7 @@ type
       metadatatreeOpen: TBooleanField;
       metadatabgmState: TByteField;
       metadatamapEngine: TShortintField;
+      metadata_regions: TClientDataSet;
       procedure FormShow(Sender: TObject);
       procedure btnApplyClick(Sender: TObject);
       procedure btnOKClick(Sender: TObject);
