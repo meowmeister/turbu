@@ -1297,4 +1297,144 @@ object frmMapProperties: TfrmMapProperties
       Required = True
     end
   end
+  object metadata_regions: TClientDataSet
+    Active = True
+    Aggregates = <>
+    Filtered = True
+    FieldDefs = <
+      item
+        Name = 'master'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'id'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'name'
+        Attributes = [faRequired]
+        DataType = ftWideString
+        Size = 20
+      end
+      item
+        Name = 'bounds_left'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'bounds_right'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'bounds_top'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'bounds_bottom'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'encounterScript'
+        Attributes = [faRequired]
+        DataType = ftWideString
+        Size = 255
+      end
+      item
+        Name = 'encounters_1'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'encounters_2'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'encounters_3'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'encounters_4'
+        Attributes = [faRequired]
+        DataType = ftInteger
+      end
+      item
+        Name = 'battles'
+        DataType = ftBlob
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 88
+    Top = 488
+    Data = {
+      3C0100009619E0BD01000000180000000D0000000000030000003C01066D6173
+      74657204000100040000000269640400010004000000046E616D6501004A0004
+      0001000557494454480200020028000B626F756E64735F6C6566740400010004
+      0000000C626F756E64735F726967687404000100040000000A626F756E64735F
+      746F7004000100040000000D626F756E64735F626F74746F6D04000100040000
+      000F656E636F756E74657253637269707402004A000400010005574944544802
+      000200FE010C656E636F756E746572735F3104000100040000000C656E636F75
+      6E746572735F3204000100040000000C656E636F756E746572735F3304000100
+      040000000C656E636F756E746572735F34040001000400000007626174746C65
+      7304004B0000000100075355425459504502004900070042696E617279000000}
+    object metadata_regionsMaster: TIntegerField
+      FieldName = 'master'
+      Required = True
+    end
+    object IntegerField29: TIntegerField
+      FieldName = 'id'
+      Required = True
+    end
+    object WideStringField12: TWideStringField
+      FieldName = 'name'
+      Required = True
+    end
+    object metadata_regionsbounds_left: TIntegerField
+      FieldName = 'bounds_left'
+      Required = True
+    end
+    object metadata_regionsbounds_right: TIntegerField
+      FieldName = 'bounds_right'
+      Required = True
+    end
+    object metadata_regionsbounds_top: TIntegerField
+      FieldName = 'bounds_top'
+      Required = True
+    end
+    object metadata_regionsbounds_bottom: TIntegerField
+      FieldName = 'bounds_bottom'
+      Required = True
+    end
+    object metadata_regionsencounterScript: TWideStringField
+      FieldName = 'encounterScript'
+      Required = True
+      Size = 255
+    end
+    object metadata_regionsencounters_1: TIntegerField
+      FieldName = 'encounters_1'
+      Required = True
+    end
+    object metadata_regionsencounters_2: TIntegerField
+      FieldName = 'encounters_2'
+      Required = True
+    end
+    object metadata_regionsencounters_3: TIntegerField
+      FieldName = 'encounters_3'
+      Required = True
+    end
+    object metadata_regionsencounters_4: TIntegerField
+      FieldName = 'encounters_4'
+      Required = True
+    end
+    object metadata_regionsbattles: TBlobField
+      FieldName = 'battles'
+    end
+  end
 end
