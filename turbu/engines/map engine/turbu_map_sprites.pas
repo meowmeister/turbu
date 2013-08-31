@@ -938,6 +938,7 @@ procedure TMapSprite.setLocation(data: TSgPoint);
 begin
    FLocation := data;
    FTarget := data * TILE_SIZE;
+   dec(FTarget.x, WIDTH_BIAS);
 end;
 
 procedure TMapSprite.setMoveOrder(const Value: TPath);
