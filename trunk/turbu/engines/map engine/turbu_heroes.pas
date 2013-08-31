@@ -972,7 +972,9 @@ end;
 
 function TRpgParty.getMap: integer;
 begin
-   result := GSpriteEngine.mapID;
+   if assigned(GSpriteEngine) then
+      result := GSpriteEngine.mapID
+   else result := 0;
 end;
 
 function TRpgParty.GetTFacing: TFacing;
