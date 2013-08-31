@@ -807,7 +807,7 @@ begin
       else FreeAndNil(FPause);
    end;
 
-   canMove := not (FPaused or moveBlocked);
+   canMove := not (FPaused or moveBlocked or (assigned(FMapObj) and (FMapObj.playing)));
    if assigned(FMoveAssignment) then
    begin
       if not doMove(FMoveAssignment) then
