@@ -148,8 +148,6 @@ type
       function midRightTRect(input: TRect): TRect; inline;
       function midRightMRect(input: TRect): TRect; inline;
       function midRightBRect(input: TRect): TRect; inline;
-   protected
-      procedure setVisible(const value: boolean); override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine;
         const layout: string); override;
@@ -712,12 +710,6 @@ begin
    FFormat := shopData.messageStyle;
 end;
 
-procedure TShopMenuPage.setVisible(const value: boolean);
-begin
-   FMainBox.Visible := value;
-   FDescBox.Visible := value;
-end;
-
 constructor TShopMenuPage.Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine;
   const layout: string);
 begin
@@ -732,32 +724,25 @@ begin
    registerComponent('Prompt', FPromptBox);
 
    FInventoryBox := TShopItemMenu.Create(parent, midRect(coords), main, self);
-//   FInventoryBox.onSetup := TSetupFunc(GScriptExec.GetProcAsMethodN('shop_item_setup'));
-//   FInventoryBox.onCursor := TCursorFunc(GScriptExec.GetProcAsMethodN('shop_item_cursor'));
-//   FInventoryBox.onButton := TButtonFunc(GScriptExec.GetProcAsMethodN('shop_item_button'));
    registerComponent('Inventory', FInventoryBox);
 
    FStockBox := TStockMenu.Create(parent, midLeftRect(coords), main, self);
-   FStockBox.Visible := false;
    registerComponent('Stock', FStockBox);
 
    FCompat := TShopCompatBox.Create(parent, midRightTRect(coords), main, self);
-   FCompat.Visible := false;
    registerComponent('Compat', FCompat);
 
    FQuantities := TShopQuantityBox.Create(parent, midRightMRect(coords), main, self);
-   FQuantities.Visible := false;
    registerComponent('Quantities', FQuantities);
 
    FCash := TGameCashMenu.Create(parent, midRightBRect(coords), main, self);
-   FCash.Visible := false;
    registerComponent('Cash', FCash);
 
    FTransactionBox := TTransactionMenu.Create(parent, midLeftRect(coords), main, self);
-   FTransactionBox.Visible := false;
    registerComponent('Transaction', FTransactionBox);
 
    self.state := st_sell;
+   self.visible := false;
 end;
 
 procedure TShopMenuPage.focusMenu(referrer, which: TGameMenuBox; unchanged: boolean = false);
