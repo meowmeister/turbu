@@ -42,6 +42,7 @@ type
       FDelay: TRpgTimestamp;
       FWaiting: TThreadWaitEvent;
       FSignal: TSimpleEvent;
+      FOnCleanup: TProc;
 
       procedure scriptOnLine(Sender: TrsVM);
       procedure InternalThreadSleep();
@@ -93,7 +94,7 @@ type
       procedure RunScript(const name: string; const args: TArray<TValue>); overload;
       procedure RunObjectScript(obj: TRpgMapObject; page: integer);
       function GetScriptRoutine(const name: string): TCallScriptEvent;
-      procedure KillAll;
+      procedure KillAll(const Cleanup: TProc = nil);
       procedure AbortThread;
       procedure threadSleep(time: integer; block: boolean = false);
       procedure SetWaiting(value: TThreadWaitEvent);
@@ -135,7 +136,7 @@ var
 implementation
 uses
    Math,
-   turbu_defs, turbu_battle_engine, {$IFDEF DEBUG}logs,{$ENDIF}
+   turbu_defs, turbu_battle_engine, {$IFDEF DEBUG}logs,{$ENDIF} delayedAction,
    rs_media,
    rsDefs,
    SDL;
@@ -273,7 +274,7 @@ begin
    st.scriptOnLine(sender);
 end;
 
-procedure TScriptEngine.KillAll;
+procedure TScriptEngine.KillAll(const Cleanup: TProc = nil);
 var
    curr: TThread;
 
@@ -298,6 +299,13 @@ begin
    curr := TThread.CurrentThread;
    if not (curr is TScriptThread) then
       curr := nil;
+   if assigned(Cleanup) then
+   begin
+      assert(assigned(curr));
+      if assigned(TScriptThread(curr).FOnCleanup) then
+         DelayExec(Cleanup)
+      else TScriptThread(curr).FOnCleanup := cleanup;
+   end;
    wakeAllThreads;
 
    repeat
@@ -614,6 +622,8 @@ begin
    FOwnedExec.Free;
    FOwnedProgram.Free;
    FPages.Free;
+   if assigned(FOnCleanup) then
+      DelayExec(FOnCleanup);
    inherited Destroy;
 end;
 
