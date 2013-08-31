@@ -145,6 +145,7 @@ type
       property levelGainNotify: boolean write notifyOnLevelGain;
       property deathPossible: boolean write canDieOnHpChange;
       property menuEnabled: boolean read isMenuEnabled write enableMenu;
+      property saveEnabled: boolean read FSaveEnabled write FSaveEnabled;
       property thisObject: TRpgEvent read GetThisObject;
       property preserveSpriteOnTeleport: boolean read FPreserveSpriteOnTeleport write FPreserveSpriteOnTeleport;
    end;
