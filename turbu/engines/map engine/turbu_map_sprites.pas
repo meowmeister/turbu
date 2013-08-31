@@ -510,7 +510,7 @@ begin
    assert((ord(one) mod 2 = 0) and (ord(two) mod 2 = 1));
    temp := FFacing;
    FFacing := one;
-   result := T2kSpriteEngine(FEngine).canExit(FLocation.x, FLocation.y, one, self);
+   result := FSlipThrough or T2kSpriteEngine(FEngine).canExit(FLocation.x, FLocation.y, one, self);
    if not result then
    begin
       FFacing := two;
@@ -587,7 +587,7 @@ begin
 
    if (not self.dirLocked)and (not (facing in [one, two])) then
       facing := two;
-   if FSlipThrough or (self.canMoveDiagonal(one, two, destination)) then
+   if self.canMoveDiagonal(one, two, destination) then
    begin
       self.leaveTile;
       self.startMoveTo(destination);
