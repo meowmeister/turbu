@@ -520,7 +520,7 @@ begin
    stream := TMemoryStream.Create;
    try
       stream.WriteBuffer(script[1], length(script));
-      filename := GArchives[SCRIPT_ARCHIVE].MakeValidFilename('globalevents.trs');
+      filename := GArchives[SCRIPT_ARCHIVE].MakeValidFilename('', 'globalevents.trs');
       GArchives[SCRIPT_ARCHIVE].writeFile(filename.name, stream);
       self.scriptFile := filename.name;
    finally

@@ -38,7 +38,7 @@ type
       procedure writeFile(key: string; theFile: TStream);
       function allFiles(folder: string = ''): TArray<string>;
       function countFiles(filter: string): integer;
-      function MakeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;
+      function MakeValidFilename(const path, value: string; expectedNumber: integer = 1): TFilenameData;
       procedure deleteFile(name: string);
       function FileExists(key: string): boolean;
       procedure createFolder(name: string);
@@ -222,7 +222,7 @@ begin
       raise EArchiveError.CreateFmt('Could not delete file %s: file not found.', [name]);
 end;
 
-function TDiscArchive.MakeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;
+function TDiscArchive.MakeValidFilename(const path, value: string; expectedNumber: integer = 1): TFilenameData;
 
    function FindInvalidCharacters(const fileName : string): TSysCharset;
    const
@@ -260,7 +260,10 @@ begin
                                 + checkname + format(' (%d)', [expectedNumber]) + ext)) then
    begin
       duplicates := 1;
-      baseFolder := IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(FRoot));
+      if path = '' then
+         baseFolder := FRoot
+      else baseFolder := TPath.Combine(FRoot, path);
+      baseFolder := IncludeTrailingPathDelimiter(baseFolder);
       while fileExists(baseFolder + checkname + ext) do
       begin
          inc(duplicates);

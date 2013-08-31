@@ -485,7 +485,7 @@ end;
 
 function TRpgMap.ScriptFilename: string;
 begin
-   result := GArchives[SCRIPT_ARCHIVE].MakeValidFilename(self.name + '.trs').name;
+   result := GArchives[SCRIPT_ARCHIVE].MakeValidFilename('', self.name + '.trs').name;
 end;
 
 procedure TRpgMap.SetBattleCount(const Value: integer);
