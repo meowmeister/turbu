@@ -72,6 +72,7 @@ type
       FDisplacementSpeed: single;
       FScreenLocked: boolean;
       FDispBaseX, FDispBaseY: single;
+      FCenter: TsgPoint;
 
       //shake control
       FShakePower: byte;
@@ -99,6 +100,7 @@ type
       procedure clearDisplacement;
       procedure ApplyDisplacement;
       procedure InternalCenterOn(px, py: integer);
+      procedure SetScreenLocked(const Value: boolean);
 
       procedure DrawNormal;
    protected
@@ -179,7 +181,7 @@ type
       property ShaderEngine: TdmShaders read FShaderEngine;
       property Displacing: boolean read FDisplacing;
       property Returning: boolean read FReturning write FReturning;
-      property ScreenLocked: boolean read FScreenLocked write FScreenLocked;
+      property ScreenLocked: boolean read FScreenLocked write SetScreenLocked;
       property DisplacementX: single read FDisplacementX;
       property DisplacementY: single read FDisplacementY;
       property State: TGameState read FGameState;
@@ -261,7 +263,6 @@ end;
 procedure T2kSpriteEngine.adjustCoords(var x, y: integer);
 var
    halfwidth, halfheight, maxwidth, maxheight: integer;
-//   dx, dy: integer;
 begin
    halfwidth := min(round(canvas.width / 2), (width + 1) * 8);
    halfheight := min(round(canvas.height / 2), (height + 1) * 8);
@@ -289,7 +290,7 @@ end;
 
 procedure T2kSpriteEngine.adjustCoordsForDisplacement(var x, y: integer);
 var
-   halfwidth, halfheight, maxwidth, maxheight: integer;
+   halfwidth, halfheight: integer;
 begin
    halfwidth := min(round(canvas.width / 2), (width + 1) * 8);
    halfheight := min(round(canvas.height / 2), (height + 1) * 8);
@@ -489,7 +490,9 @@ begin
       begin
          centerTile := FCurrentParty.tiles[1];
          centerOnWorldCoords(centerTile.x + ((centerTile.Width + TILE_SIZE.x) div 2), centerTile.Y + TILE_SIZE.y);
-      end;
+      end
+      else if FScreenLocked then
+         centerOnWorldCoords(FCenter.x, FCenter.y);
       ApplyDisplacement;
       if assigned(FBgImage) then
          DrawBG;
@@ -1093,6 +1096,18 @@ begin
       value.tiles[1].Engine := self;
       value.tiles[2].Engine := self;
    end;
+end;
+
+procedure T2kSpriteEngine.SetScreenLocked(const Value: boolean);
+var
+   halfWidth, halfHeight: integer;
+begin
+   halfwidth := min(round(canvas.width / 2), (width + 1) * 8);
+   halfheight := min(round(canvas.height / 2), (height + 1) * 8);
+
+   FScreenLocked := Value;
+   if value then
+      FCenter := sgPoint(round(worldx -  FDisplacementX) + halfWidth, round(worldY - FDisplacementY) + halfHeight);
 end;
 
 procedure T2kSpriteEngine.SetViewport(const viewport: TRect);
