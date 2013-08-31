@@ -196,6 +196,7 @@ begin
    FreeAndNil(FSignal);
    FreeAndNil(FImageEngine);
    FreeAndNil(FWeatherEngine);
+   FreeAndNil(FCurrentMap);
    if FDatabaseOwner then
    begin
       GGameEngine := nil;
@@ -556,6 +557,7 @@ begin
    GScriptEngine.Reset;
    SetupScriptImports;
    FPlaying := false;
+   FreeAndNil(FCurrentMap);
    turbu_2k_savegames.Load(savefile, self.initializeParty);
    FCurrentMap.CurrentParty := GEnvironment.Party.Sprite as TCharSprite;
    FreeAndNil(FImageEngine);
