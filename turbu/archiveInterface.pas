@@ -35,7 +35,7 @@ type
       procedure writeFile(key: string; theFile: TStream);
       function allFiles(folder: string = ''): TArray<string>;
       function countFiles(filter: string): integer;
-      function makeValidFilename(const value: string; expectedNumber: integer = 1): TFilenameData;
+      function makeValidFilename(const path, value: string; expectedNumber: integer = 1): TFilenameData;
       function getRoot: string;
       procedure deleteFile(name: string);
       procedure createFolder(name: string);

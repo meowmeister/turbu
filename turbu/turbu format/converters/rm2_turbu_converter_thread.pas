@@ -144,7 +144,7 @@ begin
       scanEventsForResources(map.eventBlock);
 
       dummy := 1;
-      metadata[id].internalFilename := output.MakeValidFilename(format('%s.tmf', [cmap.name]), dummy);
+      metadata[id].internalFilename := output.MakeValidFilename('maps', format('%s.tmf', [cmap.name]), dummy);
       output.writeFile(format('maps\%s', [metadata[id].internalFilename.name]), outFile);
    finally
       mapFile.Free;
