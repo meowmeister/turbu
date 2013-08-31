@@ -384,11 +384,16 @@ var
    hero: TCharSprite;
    oldEngine: T2kSpriteEngine;
    metadata: TMapMetadata;
+   currentMap: T2kSpriteEngine;
 begin
    assert(newmap <> FCurrentMap.mapID);
-
+   currentMap := FCurrentMap;
    FSwitchState := sw_ready;
-   FObjectManager.ScriptEngine.killAll;
+   FObjectManager.ScriptEngine.killAll(
+      procedure
+      begin
+         currentMap.Free;
+      end);
    while not FCurrentMap.blank do
       sleep(10);
    FTeleportThread := TThread.CurrentThread;
@@ -429,7 +434,7 @@ var
 begin
    if assigned(FCurrentMap) then
    begin
-      freeAndNil(FMaps[FCurrentMap.mapObj.id]);
+      FMaps[FCurrentMap.mapObj.id] := nil;
       FCurrentMap := nil;
    end;
    prepareMap(map);
