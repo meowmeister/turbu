@@ -60,6 +60,8 @@ begin
    result := ArchiveFileExists(MUSIC_ARCHIVE, filename, '');
    if (result = false) and (ExtractFileExt(filename) = '') then
    begin
+      if pos('[', filename) > 0 then
+         filename := StringReplace(filename, '[', '[[]', [rfReplaceAll]);
       files := TDirectory.GetFiles(GArchives[MUSIC_ARCHIVE].root, filename + '.*');
       if length(files) = 1 then
       begin
