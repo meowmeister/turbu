@@ -38,6 +38,8 @@ begin
    if (result = false) then
       if (ExtractFileExt(filename) = '') then
       begin
+         if pos('[', filename) > 0 then
+            filename := StringReplace(filename, '[', '[[]', [rfReplaceAll]);
          files := TDirectory.GetFiles(GArchives[SFX_ARCHIVE].root, filename + '.*');
          if length(files) = 1 then
          begin
