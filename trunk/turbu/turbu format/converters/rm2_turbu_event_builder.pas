@@ -334,9 +334,9 @@ begin
       end;
       4:
       begin
-         left := TEBCall.Create('Contains');
+         left := TEBCall.Create('HasItem');
          left.Add(TEBLookupValue.Create(opcode.data[1], 'items'));
-         left := TEBObjExpr.Create('party', TEBPropExpr.Create('inventory', TEBCall(left)));
+         left := TEBObjExpr.Create('party', TEBCall(left));
          right := TEBBooleanValue.Create(not boolean(opcode.data[2]));
       end;
       5:

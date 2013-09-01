@@ -191,6 +191,7 @@ type
 
       procedure addItem(const id, number: integer);
       procedure removeItem(const id, number: integer);
+      function hasItem(id: integer): boolean;
       procedure addExp(const id: integer; number: integer);
       procedure removeExp(const id: integer; number: integer);
       procedure addLevels(const id: integer; number: integer);
@@ -1001,6 +1002,19 @@ begin
    if assigned(FSprite) then
       result := FSprite.location.y
    else result := 0;
+end;
+
+function TRpgParty.hasItem(id: integer): boolean;
+var
+   i: integer;
+begin
+   result := self.inventory.contains(id);
+   if not result then
+      for i := low(FParty) to High(FParty) do
+      begin
+         if assigned(FParty[i]) and FParty[i].equipped(id) then
+            Exit(true);
+      end;
 end;
 
 function TRpgParty.indexOf(who: TRpgHero): integer;
