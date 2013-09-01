@@ -94,7 +94,7 @@ type
       procedure RunScript(const name: string; const args: TArray<TValue>); overload;
       procedure RunObjectScript(obj: TRpgMapObject; page: integer);
       function GetScriptRoutine(const name: string): TCallScriptEvent;
-      procedure KillAll(const Cleanup: TProc = nil);
+      procedure KillAll(Cleanup: TProc = nil);
       procedure AbortThread;
       procedure threadSleep(time: integer; block: boolean = false);
       procedure SetWaiting(value: TThreadWaitEvent);
@@ -274,7 +274,7 @@ begin
    st.scriptOnLine(sender);
 end;
 
-procedure TScriptEngine.KillAll(const Cleanup: TProc = nil);
+procedure TScriptEngine.KillAll(Cleanup: TProc = nil);
 var
    curr: TThread;
 
@@ -295,6 +295,7 @@ var
 
 var
    done: boolean;
+   oldCleanup, lCleanup: TProc;
 begin
    curr := TThread.CurrentThread;
    if not (curr is TScriptThread) then
@@ -303,8 +304,17 @@ begin
    begin
       assert(assigned(curr));
       if assigned(TScriptThread(curr).FOnCleanup) then
-         DelayExec(Cleanup)
-      else TScriptThread(curr).FOnCleanup := cleanup;
+      begin
+         oldCleanup := TScriptThread(curr).FOnCleanup;
+         lCleanup := cleanup;
+         cleanup :=
+            procedure
+            begin
+               oldCleanup();
+               lCleanup();
+            end;
+      end;
+      TScriptThread(curr).FOnCleanup := cleanup;
    end;
    wakeAllThreads;
 

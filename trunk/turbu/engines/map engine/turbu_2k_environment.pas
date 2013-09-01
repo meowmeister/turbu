@@ -458,7 +458,7 @@ begin
    writer.WriteName('Images');
    writer.BeginObject;
       for i := 1 to high(FImages) do
-         if assigned(FImages[i]) then
+         if assigned(FImages[i]) and assigned(FImages[i].base) then
          begin
             writer.WriteName(IntToStr(i));
             FImages[i].Serialize(writer);

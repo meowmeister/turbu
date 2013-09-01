@@ -548,7 +548,7 @@ begin
    if not self.dirLocked then
       facing := whichDir
    else FMoveDir := whichDir;
-   if FSlipThrough or (self.canMoveForward) then
+   if FSlipThrough or self.canMoveForward then
    begin
       self.leaveTile;
       target := SgPoint(FLocation.X, FLocation.Y);
@@ -558,6 +558,9 @@ begin
          facing_down: inc(target.Y);
          facing_left: dec(target.X);
       end;
+      if FSlipThrough then
+         if not GSpriteEngine.normalizePoint(target.x, target.y) then
+            Exit(false);
       startMoveTo(target);
       result := true;
    end;
