@@ -367,6 +367,7 @@ begin
    for i := 0 to FInventory.Count - 1 do
       FParsedText.Add(TRpgItem(FInventory[i]).template.name);
    self.placeCursor(FSetupValue);
+   InvalidateText;
 end;
 
 { Classless}

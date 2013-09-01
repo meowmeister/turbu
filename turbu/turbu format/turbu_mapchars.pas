@@ -423,6 +423,7 @@ begin
       if FEvent.isTile then
          FBase := TEventSprite.create(FEvent, GSpriteEngine)
       else FBase := TCharSprite.create(FEvent, GSpriteEngine);
+      FIsChar := (base is TCharSprite);
       FBase.OnChangeSprite := self.ChangeSprite;
       FBase.CopyDrawState(old);
       GSpriteEngine.SwapMapSprite(old, FBase);
