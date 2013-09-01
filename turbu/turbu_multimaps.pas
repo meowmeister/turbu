@@ -80,6 +80,7 @@ end;
 function TMultimap<TKey, TValue>.KeyHasValue(const key: TKey;
   const value: TValue): boolean;
 begin
+   EnsureComparer;
    result := self.ContainsKey(key) and self[key].Contains(value);
 end;
 
