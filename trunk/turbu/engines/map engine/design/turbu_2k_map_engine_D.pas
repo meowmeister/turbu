@@ -332,6 +332,7 @@ begin
    //FObjectContainers needs to be cleaned up before the sprite engine is
    //destroyed in the call to inherited
    self.ClearContainers;
+   FCurrentMap := nil;
    inherited cleanup;
    FreeAndNil(FObjectContainers);
    FreeAndNil(FTilesetListD);
