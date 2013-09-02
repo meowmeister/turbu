@@ -330,7 +330,7 @@ begin
       createProjectFolder;
    FPaletteTexture := -1;
    FPaletteImages := TDictionary<integer, integer>.Create;
-   FZoom := 1;
+   FZoom := 0;
    self.pluginManager := dmEngineManager.pluginManager;
 end;
 
@@ -733,6 +733,7 @@ begin
    trvMapTree.buildMapTree(FMapEngine.mapTree);
    if trvMapTree.Selected.IsFirstNode then
       trvMapTree.Select(trvMapTree.Selected.getFirstChild);
+   sldZoomChanged(self);
 end;
 
 procedure TfrmTurbuMain.pnlZoomResize(Sender: TObject);
