@@ -211,9 +211,15 @@ begin
    GMenuEngine.SetSkin(name, not tiled);
 end;
 
+function WaitForMenuClosed: boolean;
+begin
+   result := GMenuEngine.State = msNone;
+end;
+
 procedure OpenMenu;
 begin
    GMenuEngine.OpenMenu('Main');
+   GScriptEngine.SetWaiting(WaitForMenuClosed);
 end;
 
 procedure SaveMenu;
