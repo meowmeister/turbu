@@ -81,6 +81,7 @@ type
 implementation
 uses
    sysUtils,
+   timing,
    turbu_constants, turbu_text_utils, turbu_database,
    turbu_2k_item_types, turbu_2k_environment,
    sg_utils;
@@ -239,7 +240,8 @@ begin
       if input = btn_left then
          newChar := prevChar
       else newChar := nextChar;
-         self.doSetup(newChar.template.id);
+      self.doSetup(newChar.template.id);
+      FButtonLock := TRpgTimestamp.Create(180);
    end;
 end;
 
