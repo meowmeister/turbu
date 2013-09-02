@@ -49,7 +49,6 @@ type
       FCurrentSlot: TSlot;
    protected
       procedure drawItem(id, x, y, color: integer); override;
-      procedure DrawText; override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage); override;
       procedure show(slot: TSlot);
@@ -96,15 +95,6 @@ begin
    FDisplayCapacity := 12;
 end;
 
-procedure TEqInventoryMenu.DrawText;
-var
-   i: Integer;
-   color: byte;
-   origin2: TsgPoint;
-begin
-   inherited DrawText;
-end;
-
 procedure TEqInventoryMenu.drawItem(id, x, y, color: integer);
 begin
    if id < FParsedText.Count - 1 then
@@ -116,7 +106,6 @@ end;
 
 procedure TEqInventoryMenu.doCursor(position: smallint);
 var
-   i: Integer;
    coords: TRect;
    stat: TCharStatBox;
 begin
