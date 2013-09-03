@@ -65,7 +65,6 @@ type
       procedure doButton(const input: TButtonCode); virtual;
       procedure doCursor(position: smallint); virtual;
       procedure doSetup(value: integer); virtual;
-      procedure moveTo(coords: TRect); override;
       procedure DrawText; virtual; abstract;
       procedure DoDraw; override; final;
       procedure InvalidateText;
@@ -77,6 +76,7 @@ type
       procedure placeCursor(position: smallint); override; final;
       procedure focusPage(const which: string; cursorValue: integer);
       procedure focusMenu(const which: string; setupValue: integer);
+      procedure moveTo(coords: TRect); override;
 
       property cursorPosition: smallint read getCursorPosition;
       property parent: TMenuEngine read FMenuEngine;
@@ -355,7 +355,6 @@ end;
 
 constructor TMenuEngine.Create(parent: TMenuSpriteEngine; callback: TCloseMessageEvent);
 var
-   i: integer;
    pair: TPair<string, TMenuPageData>;
 begin
    inherited Create;
@@ -651,7 +650,7 @@ end;
 
 procedure TMenuPage.setupEx(const data: TObject);
 begin
-   //this method intentionally left blank
+   setup(GMenuEngine.MenuInt);
 end;
 
 procedure TMenuPage.setVisible(const value: boolean);

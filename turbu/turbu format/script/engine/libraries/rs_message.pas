@@ -219,7 +219,8 @@ end;
 procedure OpenMenu;
 begin
    GMenuEngine.OpenMenu('Main');
-   GScriptEngine.SetWaiting(WaitForMenuClosed);
+   if TThread.CurrentThread.ThreadID <> MainThreadID then
+      GScriptEngine.SetWaiting(WaitForMenuClosed);
 end;
 
 procedure SaveMenu;

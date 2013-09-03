@@ -437,7 +437,6 @@ end;
 constructor TMenuSpriteEngine.Create(graphic: TSystemImages; canvas: TSdlCanvas; images: TSdlImages);
 var
    size: TRect;
-   boxtype: TMessageBoxTypes;
 begin
    assert(GMenuEngine = nil);
    GMenuEngine := self;

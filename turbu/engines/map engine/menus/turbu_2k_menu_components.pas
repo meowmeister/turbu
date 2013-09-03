@@ -378,7 +378,7 @@ var
 begin
    engine := GMenuEngine;
    if not ArchiveUtils.GraphicExists(filename, 'portrait') then
-      Exit;
+      Exit(nil);
    Engine.Images.EnsureImage(format('portrait\%s', [filename]), filename);
    result := TSprite.Create(Engine);
    result.Visible := true;

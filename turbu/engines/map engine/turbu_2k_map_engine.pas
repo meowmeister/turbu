@@ -178,7 +178,6 @@ begin
 end;
 
 procedure T2kMapEngine.cleanup;
-var i: integer;
 begin
    assert(FInitialized);
    FInitialized := false;
@@ -543,7 +542,6 @@ end;
 procedure T2kMapEngine.Quickload;
 var
    savefile: string;
-   hero: THeroSprite;
 begin
    savefile := TPath.Combine(GProjectFolder, 'quicksave.tsg');
    if not FileExists(savefile) then

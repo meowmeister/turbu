@@ -27,7 +27,9 @@ type
    TRpgSkill = class(TRpgObject)
    private
       function getSound1: TRpgSound;
-    function GetTemplate: TSkillTemplate;
+      function GetTemplate: TSkillTemplate;
+   protected
+      class function templateClass: TDatafileClass; override;
    public
       constructor Create(id: word);
       procedure useHero(caster, target: TRpgHero);
@@ -79,6 +81,11 @@ end;
 function TRpgSkill.GetTemplate: TSkillTemplate;
 begin
    result := TSkillTemplate(inherited template);
+end;
+
+class function TRpgSkill.templateClass: TDatafileClass;
+begin
+   result := TSkillTemplate;
 end;
 
 function TRpgSkill.usableParty: boolean;

@@ -37,7 +37,7 @@ type
 
    TGameMainMenu = class(TGameMenuBox)
    protected
-      procedure ParseText(const input: string); override;
+      procedure parseText(const input: string); override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage); override;
       procedure DrawText; override;
@@ -144,7 +144,11 @@ begin
          2: self.focusMenu('Party', 2); //equip
          {$MESSAGE WARN 'Incomplete feature in live unit'}
          3:; //save
-         4:; //quit
+         4:
+         begin
+            self.return;
+            GEnvironment.TitleScreen;
+         end;
       end;
    end;
 end;
