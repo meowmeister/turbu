@@ -25,7 +25,7 @@ uses
    SDL_sprite;
 
 type
-   TStoreInventory = TArray<integer>;
+   TStoreInventory = TIntArray;
 
    TShopModeBox = class(TGameMenuBox)
    private
@@ -37,6 +37,7 @@ type
       procedure doSetup(value: integer); override;
       procedure DrawText; override;
       procedure doButton(const input: TButtonCode); override;
+      procedure doCursor(position: smallint); override;
    end;
 
    TStockMenu = class(TCustomScrollBox)
@@ -120,6 +121,8 @@ type
         main: TMenuEngine; owner: TMenuPage); override;
    end;
 
+   TShopState = (ss_selling, ss_buying, ss_transaction);
+
    TShopMenuPage = class(TMenuPage)
    private
       FMainBox: TShopModeBox;
@@ -131,7 +134,8 @@ type
       FCompat: TShopCompatBox;
       FQuantities: TShopQuantityBox;
       FCash: TGameCashMenu;
-      FState: TShopTypes;
+      FStyle: TShopTypes;
+      FState: TShopState;
       FInventory: TStoreInventory;
       FFormat: byte;
       FShopStyle: byte;
@@ -139,7 +143,7 @@ type
       FTransactionComplete: boolean;
       FOngoing: boolean;
 
-      procedure setState(const Value: TShopTypes);
+      procedure setState(const Value: TShopState);
       function topRect(input: TRect): TRect; inline;
       function midRect(input: TRect): TRect; inline;
       function bottomRect(input: TRect): TRect; inline;
@@ -148,6 +152,8 @@ type
       function midRightTRect(input: TRect): TRect; inline;
       function midRightMRect(input: TRect): TRect; inline;
       function midRightBRect(input: TRect): TRect; inline;
+   protected
+      procedure setVisible(const value: boolean); override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine;
         const layout: string); override;
@@ -159,7 +165,7 @@ type
       property itemMenu: TShopItemMenu read FInventoryBox;
       property mainBox: TShopModeBox read FMainBox;
       property transactionBox: TTransactionMenu read FTransactionBox;
-      property state: TShopTypes read FState write setState;
+      property state: TShopState read FState write setState;
       property inventory: TStoreInventory read FInventory;
    end;
 
@@ -176,6 +182,19 @@ uses
 
 { TShopModeBox }
 
+constructor TShopModeBox.Create(parent: TMenuSpriteEngine; coords: TRect;
+  main: TMenuEngine; owner: TMenuPage);
+var
+   I: Integer;
+begin
+   inherited Create(parent, coords, main, owner);
+   setLength(FOptionEnabled, 4);
+   for I := 0 to 3 do
+      FOptionEnabled[i] := true;
+   FColumns := 2;
+   FPromptLines := 1;
+end;
+
 procedure TShopModeBox.doButton(const input: TButtonCode);
 var owner: TShopMenuPage;
 begin
@@ -186,7 +205,7 @@ begin
       case FCursorPosition of
          0: //buy
          begin
-            owner.state := st_buy;
+            owner.state := ss_buying;
             self.focusMenu('Stock', 0);
          end;
          1: //sell
@@ -206,35 +225,25 @@ begin
       self.return;
 end;
 
-constructor TShopModeBox.Create(parent: TMenuSpriteEngine; coords: TRect;
-  main: TMenuEngine; owner: TMenuPage);
-var
-   I: Integer;
-const
-   MENUTEXT: string = 'Buy' + #13#10 + 'Sell' + #13#10 + 'Equip' + #13#10 + 'Leave';
+procedure TShopModeBox.doCursor(position: smallint);
 begin
-   inherited Create(parent, coords, main, owner);
-   self.text := MENUTEXT;
-   setLength(FOptionEnabled, 4);
-   for I := 0 to 3 do
-      FOptionEnabled[i] := true;
-   FColumns := 2;
-   FPromptLines := 1;
+   inherited doCursor(position);
 end;
 
 procedure TShopModeBox.DrawText;
+const lOrigin: TsgPoint = (x: 4; y: 2);
 var
   I, j, color: Integer;
 begin
-   GFontEngine.drawText(FParsedText[0], 13, 12, 1);
+   GFontEngine.drawText(FParsedText[0], lOrigin.x, lOrigin.y, 1);
    for I := 1 to FParsedText.count - 1 do
    begin
       j := i + 1;
       if FOptionEnabled[i - 1] then
          color := 1
       else color := 4;
-      GFontEngine.drawText(FParsedText[i], 13 + (j mod FColumns) * (columnWidth + SEPARATOR),
-               ((j div 2)) * 15 + 12, color);
+      GFontEngine.drawText(FParsedText[i], lOrigin.x + (j mod FColumns) * (columnWidth + SEPARATOR),
+               (j div 2) * 15 + lOrigin.y, color);
    end;
 end;
 
@@ -291,14 +300,14 @@ begin
    owner := TShopMenuPage(FOwner);
    if input = btn_cancel then
    begin
-      owner.state := st_sell;
+      owner.state := ss_selling;
       owner.FDescBox.text := '';
    end
    else if (input = btn_enter) and (FOptionEnabled[FCursorPosition]) then
    begin
       owner.FTransactionBox.FState := ts_buying;
       owner.FTransactionBox.item := TRpgItem.newItem(NativeInt(FParsedText.Objects[FCursorPosition]), 1);
-      owner.state := st_BuySell;
+      owner.state := ss_transaction;
       self.focusMenu('Transaction', 0);
    end;
 end;
@@ -451,9 +460,9 @@ begin
    if input in [btn_cancel, btn_enter] then
    begin
       if FState = ts_selling then
-         owner.state := st_sell
+         owner.state := ss_selling
       else if FState = ts_buying then
-         owner.state := st_buy
+         owner.state := ss_buying
       else assert(false);
       self.state := ts_off;
       if input = btn_enter then
@@ -670,20 +679,20 @@ begin
    result := SdlRectToTRect(result);
 end;
 
-procedure TShopMenuPage.setState(const Value: TShopTypes);
+procedure TShopMenuPage.setState(const Value: TShopState);
 var
    comp: TGameMenuBox;
 begin
    FState := Value;
    for comp in FComponents.Values do
       comp.Visible := comp = FMainBox;
-   if value = st_sell then
+   if value = ss_selling then
       FInventoryBox.Visible := true
    else begin
       FCompat.Visible := true;
       FQuantities.Visible := true;
       FCash.Visible := true;
-      if value = st_buy then
+      if value = ss_buying then
          FStockBox.Visible := true
       else FTransactionBox.Visible := true;
    end;
@@ -695,19 +704,26 @@ begin
    if not FOngoing then
       FTransactionComplete := false;
    FOngoing := true;
-   FPromptBox.Visible := false;
    FMainBox.FAccessed := false;
    inherited setup(value);
+   FPromptBox.visible := FCurrentMenu <> FMainBox;
 end;
 
 procedure TShopMenuPage.setupEx(const data: TObject);
 var
    shopData: TShopData;
 begin
+   inherited setupEx(data);
    shopData := data as TShopData;
    FInventory := shopData.inventory;
-   FState := shopData.shopType;
+   FStyle := shopData.shopType;
    FFormat := shopData.messageStyle;
+   self.state := ss_selling;
+end;
+
+procedure TShopMenuPage.setVisible(const value: boolean);
+begin
+   //
 end;
 
 constructor TShopMenuPage.Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine;
@@ -741,7 +757,6 @@ begin
    FTransactionBox := TTransactionMenu.Create(parent, midLeftRect(coords), main, self);
    registerComponent('Transaction', FTransactionBox);
 
-   self.state := st_sell;
    self.visible := false;
 end;
 
