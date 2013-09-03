@@ -108,7 +108,7 @@ begin
    else SDL_SetTextureBlendMode(img.surface, [sdlbBlend]);
 end;
 
-procedure putPixel(surface: PSdlSurface; x, y, pixel: TSdlColor32);
+procedure putPixel(surface: PSdlSurface; x, y: integer; pixel: TSdlColor32);
 var
    bpp: integer;
    p: PByte;
@@ -361,7 +361,6 @@ end;
 
 procedure TWeatherSprite.DoDraw;
 var
-   followX, followY: single;
    topleft: TSgPoint;
    flip: TSdlFlipAxes;
    a: byte;

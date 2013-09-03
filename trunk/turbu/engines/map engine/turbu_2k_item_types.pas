@@ -19,7 +19,7 @@ unit turbu_2k_item_types;
 
 interface
 uses
-   turbu_2k_items, turbu_heroes, turbu_skills;
+   turbu_2k_items, turbu_heroes, turbu_2k_skills;
 
 type
    TJunkItem = class(TRpgItem)
@@ -80,17 +80,18 @@ type
 
    TSkillItem = class(TAppliedItem)
    private
-      FSkill: TSkillTemplate;
+      FSkill: TRpgSkill;
    protected
       function getOnField: boolean; override;
    public
       constructor create(const item, quantity: integer); override;
+      destructor Destroy; override;
 
       function usableBy(hero: integer): boolean; override;
       function areaItem: boolean; override;
       procedure use(target: TRpgHero); override;
 
-      property skill: TSkillTemplate read FSkill;
+      property skill: TRpgSkill read FSkill;
    end;
 
    TSwitchItem = class(TRpgItem)
@@ -270,32 +271,36 @@ end;
 
 { TSkillItem }
 
-function TSkillItem.areaItem: boolean;
-begin
-   result := TNormalSkillTemplate(FSkill).range = sr_area;
-end;
-
 constructor TSkillItem.Create(const item, quantity: integer);
 begin
-   inherited;
-   FSkill := GDatabase.skill[TSkillItemTemplate(template).skill];
+   inherited Create(item, quantity);
+   FSkill := TRpgSkill.Create(TSkillItemTemplate(template).skill);
+end;
+
+destructor TSkillItem.Destroy;
+begin
+   FSkill.Free;
+   inherited Destroy;
+end;
+
+function TSkillItem.areaItem: boolean;
+begin
+   result := FSkill.areaSkill;
 end;
 
 function TSkillItem.getOnField: boolean;
 begin
-   result := self.skill.usableWhere = us_field;
+   result := FSkill.template.usableWhere = us_field;
 end;
 
 function TSkillItem.usableBy(hero: integer): boolean;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-   result := inherited usableBy(hero) {and FSkill.usableOn(hero)};
+   result := inherited usableBy(hero) and FSkill.usableOn(hero);
 end;
 
 procedure TSkillItem.use(target: TRpgHero);
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-//   FSkill.useHero(target, target);
+   FSkill.useHero(target, target);
    inherited;
 end;
 

@@ -475,7 +475,7 @@ type
    TVhSpriteClass = class of TVehicleSprite;
 var
    loc: TLocation;
-   newSprite: TVhSpriteClass;
+//   newSprite: TVhSpriteClass;
 begin
    inherited Create;
    FVehicleIndex := which;
