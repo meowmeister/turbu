@@ -119,6 +119,7 @@ type
       procedure SetRightside(value: boolean);
       procedure SetSkin(const name: string; stretch: boolean);
       procedure OpenMenu(const name: string);
+      procedure OpenMenuEx(const name: string; data: TObject);
 
       procedure AddSkinNotification(obj: TObject; notify: TSkinChangedEvent);
       procedure RemoveSkinNotification(obj: TObject);
@@ -655,6 +656,12 @@ end;
 procedure TMenuSpriteEngine.OpenMenu(const name: string);
 begin
    FMenuEngine.OpenMenu(name, FMenuInt);
+   FMenuState := msFull;
+end;
+
+procedure TMenuSpriteEngine.OpenMenuEx(const name: string; data: TObject);
+begin
+   FMenuEngine.OpenMenuEx(name, data);
    FMenuState := msFull;
 end;
 

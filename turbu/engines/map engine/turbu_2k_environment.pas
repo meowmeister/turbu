@@ -160,7 +160,7 @@ uses
    Windows, SysUtils, Math, RTTI, Classes,
    Commons,
    turbu_characters, turbu_script_engine, turbu_2k_sprite_engine, turbu_constants,
-   turbu_2k_map_engine, turbu_classes, timing, turbu_2k_frames,
+   turbu_2k_map_engine, turbu_classes, timing, turbu_2k_frames, turbu_shops,
    rsDefs;
 
 { T2kEnvironment }
@@ -754,9 +754,20 @@ begin
 end;
 
 procedure T2kEnvironment.Shop(shopType: TShopTypes; messageSet: integer; inventory: TIntArray);
+var
+   data: TShopData;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
-   //TODO: implement this
+   data := TShopData.Create(shopType, messageSet, inventory);
+   try
+      GMenuEngine.OpenMenuEx('Shop', data);
+      GScriptEngine.SetWaiting(
+         function: boolean
+         begin
+            result := GMenuEngine.State = msNone
+         end);
+   finally
+      data.Free;
+   end;
 end;
 
 procedure T2kEnvironment.TitleScreen;

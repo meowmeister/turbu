@@ -26,12 +26,12 @@ type
    private
       FShopType: TShopTypes;
       FMessageStyle: integer;
-      FInventory: TArray<integer>;
+      FInventory: TIntArray;
    public
-      constructor Create(shopType: TShopTypes; messageStyle: integer; inventory: TArray<integer>);
+      constructor Create(shopType: TShopTypes; messageStyle: integer; inventory: TIntArray);
       property shopType: TShopTypes read FShopType;
       property messageStyle: integer read FMessageStyle;
-      property inventory: TArray<integer> read FInventory;
+      property inventory: TIntArray read FInventory;
    end;
 
 implementation
@@ -39,7 +39,7 @@ implementation
 { TShopData }
 
 constructor TShopData.Create(shopType: TShopTypes; messageStyle: integer;
-  inventory: TArray<integer>);
+  inventory: TIntArray);
 begin
    FShopType := shopType;
    FMessageStyle := messageStyle;
