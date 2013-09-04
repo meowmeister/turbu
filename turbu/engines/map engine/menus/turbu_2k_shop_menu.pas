@@ -174,7 +174,7 @@ const SELLBACK_RATIO = 0.5;
 implementation
 
 uses
-   classes, sysUtils, OpenGL,
+   classes, sysUtils, OpenGL, Math,
    dm_shaders, turbu_2k_map_engine,
    turbu_text_utils, turbu_database, turbu_items, turbu_shops, turbu_OpenGL,
    turbu_2k_environment,
@@ -317,9 +317,12 @@ var
    item: TRpgItem;
 begin
    inherited doCursor(position);
-   item := TRpgItem.newItem(NativeInt(FParsedText.Objects[position]), 1);
-   TShopMenuPage(FOwner).FCompat.item := item;
-   TShopMenuPage(FOwner).FDescBox.text := item.desc;
+   if position < FParsedText.count then
+   begin
+      item := TRpgItem.newItem(NativeInt(FParsedText.Objects[position]), 1);
+      TShopMenuPage(FOwner).FCompat.item := item;
+      TShopMenuPage(FOwner).FDescBox.text := item.desc;
+   end;
 end;
 
 procedure TStockMenu.doSetup(value: integer);
@@ -346,7 +349,7 @@ var
 begin
    dummy := GDatabase.findItem(NativeInt(FParsedText.Objects[id]));
    GFontEngine.drawText(dummy.name, x, y, color);
-   GFontEngine.drawTextRightAligned(intToStr(dummy.cost), FBounds.Right - 10, y, color);
+   GFontEngine.drawTextRightAligned(intToStr(dummy.cost), FBounds.Right - 22, y, color);
 end;
 
 procedure TStockMenu.update(cash: integer);
@@ -397,13 +400,14 @@ begin
    inherited doButton(input);
    owner := TShopMenuPage(FOwner);
    maximum := 0; //to suppress a compiler warning
-   case fstate of
+   case FState of
       ts_off: assert(false);
       ts_buying:
       begin
          dummy := GEnvironment.Party.inventory.indexOf(FItem.id);
          if dummy <> -1 then
-            maximum := MAXITEMS - (GEnvironment.Party.inventory[dummy] as TRpgItem).quantity
+            maximum := min(MAXITEMS - (GEnvironment.Party.inventory[dummy] as TRpgItem).quantity,
+                           GEnvironment.money div FItem.cost)
          else maximum := MAXITEMS;
       end;
       ts_selling: maximum := FItem.quantity;
@@ -424,8 +428,8 @@ begin
                   owner.FPromptBox.text := GDatabase.vocabNum(V_SHOP_NUM_BOUGHT, owner.FFormat);
                   sleep(750);
                   GEnvironment.Party.inventory.Add(FItem.id, FExistingQuantity);
-                  assert(GEnvironment.Party.money >= FItem.quantity * FItem.cost);
-                  GEnvironment.Party.money := GEnvironment.Party.money - FItem.quantity * FItem.cost;
+                  assert(GEnvironment.Party.money >= FExistingQuantity * FItem.cost);
+                  GEnvironment.Party.money := GEnvironment.Party.money - FExistingQuantity * FItem.cost;
                end;
                ts_selling:
                begin
@@ -440,12 +444,8 @@ begin
             end;
             owner.FTransactionComplete := true;
          end;
-      btn_up:
-         if FExistingQuantity + 10 <= maximum then
-            inc(FExistingQuantity, 10);
-      btn_down:
-         if FExistingQuantity >= 10 then
-            dec(FExistingQuantity, 10);
+      btn_up: FExistingQuantity := min(FExistingQuantity + 10, maximum);
+      btn_down: FExistingQuantity := max(FExistingQuantity - 10, 0);
       btn_right:
          if FExistingQuantity < maximum then
             inc(FExistingQuantity);
@@ -455,7 +455,10 @@ begin
       else assert(false);
    end;
    if FExistingQuantity <> current then
+   begin
       playSound(sfxCursor);
+      InvalidateText;
+   end;
 
    if input in [btn_cancel, btn_enter] then
    begin
@@ -477,9 +480,9 @@ var
 begin
    if self.focused then
    begin
-      coords := rect(origin.X + 150, origin.y + 38, 22, 20);
+      coords := rect(FBounds.left + 158, FBounds.Top + 46, 22, 20);
       GMenuEngine.cursor.visible := true;
-      GMenuEngine.cursor.layout(coords);
+      GMenuEngine.cursor.layout(SdlRectToTRect(coords));
    end;
 end;
 
@@ -524,7 +527,7 @@ begin
       gla[2] := 1;
       gla[3] := 1;
       shaders.SetUniformValue(handle, 'rgbValues', gla);
-      shaders.SetUniformValue(handle, 'satMult', 0);
+      shaders.SetUniformValue(handle, 'satMult', 0.0);
       inherited Draw;
    finally
       glUseProgram(current);
@@ -623,10 +626,10 @@ begin
    if not assigned(FItem) then
       Exit;
 
-   GFontEngine.drawText(GDatabase.vocab[V_ITEMS_OWNED], origin.x + 10, origin.y + 10, 2);
-   GFontEngine.drawTextRightAligned(intToStr(GEnvironment.heldItems(FItem.id, false)), self.getRightside, 10, 1);
-   GFontEngine.drawText(GDatabase.vocab[V_ITEMS_EQUIPPED], origin.X + 10, origin.Y + 26, 2);
-   GFontEngine.drawTextRightAligned(intToStr(GEnvironment.heldItems(FItem.id, true)), self.getRightside, 26, 1);
+   GFontEngine.drawText(GDatabase.vocab[V_ITEMS_OWNED], 2, 2, 2);
+   GFontEngine.drawTextRightAligned(intToStr(GEnvironment.heldItems(FItem.id, false)), self.getRightside, 2, 1);
+   GFontEngine.drawText(GDatabase.vocab[V_ITEMS_EQUIPPED], 2, 18, 2);
+   GFontEngine.drawTextRightAligned(intToStr(GEnvironment.heldItems(FItem.id, true)), self.getRightside, 18, 1);
 end;
 
 { TShopMenuPage }
@@ -680,23 +683,9 @@ begin
 end;
 
 procedure TShopMenuPage.setState(const Value: TShopState);
-var
-   comp: TGameMenuBox;
 begin
    FState := Value;
-   for comp in FComponents.Values do
-      comp.Visible := comp = FMainBox;
-   if value = ss_selling then
-      FInventoryBox.Visible := true
-   else begin
-      FCompat.Visible := true;
-      FQuantities.Visible := true;
-      FCash.Visible := true;
-      if value = ss_buying then
-         FStockBox.Visible := true
-      else FTransactionBox.Visible := true;
-   end;
-   FPromptBox.visible := FCurrentMenu <> FMainBox;
+   SetVisible(true);
 end;
 
 procedure TShopMenuPage.setup(value: integer);
@@ -706,7 +695,7 @@ begin
    FOngoing := true;
    FMainBox.FAccessed := false;
    inherited setup(value);
-   FPromptBox.visible := FCurrentMenu <> FMainBox;
+   SetVisible(true);
 end;
 
 procedure TShopMenuPage.setupEx(const data: TObject);
@@ -723,7 +712,24 @@ end;
 
 procedure TShopMenuPage.setVisible(const value: boolean);
 begin
-   //
+   inherited setVisible(false);
+   if value then
+   begin
+      FVisible := true;
+      FMainBox.Visible := true;
+      FDescBox.Visible := true;
+      if FState = ss_selling then
+         FInventoryBox.Visible := true
+      else begin
+         FCompat.Visible := true;
+         FQuantities.Visible := true;
+         FCash.Visible := true;
+         if FState = ss_buying then
+            FStockBox.Visible := true
+         else FTransactionBox.Visible := true;
+      end;
+      FPromptBox.visible := FCurrentMenu <> FMainBox;
+   end;
 end;
 
 constructor TShopMenuPage.Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine;
@@ -763,7 +769,7 @@ end;
 procedure TShopMenuPage.focusMenu(referrer, which: TGameMenuBox; unchanged: boolean = false);
 begin
    inherited focusMenu(referrer, which, unchanged);
-   FPromptBox.Visible := which <> FMainBox;
+   SetVisible(true);
 end;
 
 { TShopItemMenu }
@@ -788,6 +794,7 @@ begin
 
    if (which = btn_enter) and (optionEnabled[cursorPosition]) then
    begin
+      owner.setState(ss_transaction);
       owner.transactionBox.state := ts_selling;
       owner.transactionBox.item := inventory[cursorPosition];
       focusMenu('Transaction', CURSOR_UNCHANGED);
@@ -804,7 +811,7 @@ var
    owner: TShopMenuPage;
 begin
    owner := TShopMenuPage(theOwner);
-   if inventory.Count > 0 then
+   if assigned(inventory) and (inventory.Count > 0) then
       owner.descBox.text := inventory[position].desc;
 end;
 
