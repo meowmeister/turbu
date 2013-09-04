@@ -90,9 +90,9 @@ type
 
    TMenuPage = class abstract (TObject)
    private
-      FVisible: boolean;
       FOwner: TMenuEngine;
    protected
+      FVisible: boolean;
       FMainMenu: TGameMenuBox;
       FCurrentMenu: TGameMenuBox;
       FComponents: TDictionary<string, TGameMenuBox>;

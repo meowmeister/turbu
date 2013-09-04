@@ -32,6 +32,8 @@ type
         theOwner: TMenuPage);
       procedure itemSetup(position: integer; theMenu: TGameMenuBox;
         theOwner: TMenuPage);
+   protected
+      procedure doSetup(value: integer); override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect;
         main: TMenuEngine; owner: TMenuPage); override;
@@ -40,7 +42,7 @@ type
 implementation
 
 uses
-   turbu_2k_item_types;
+   turbu_2k_item_types, turbu_2k_environment;
 
 { TGameItemMenu }
 
@@ -51,6 +53,12 @@ begin
    self.onButton := ItemButton;
    self.onCursor := itemCursor;
    self.onSetup := itemSetup;
+end;
+
+procedure TGameItemMenu.doSetup(value: integer);
+begin
+   self.Inventory := GEnvironment.Party.Inventory;
+   inherited doSetup(value);
 end;
 
 procedure TGameItemMenu.ItemButton(which: TButtonCode; theMenu: TGameMenuBox;

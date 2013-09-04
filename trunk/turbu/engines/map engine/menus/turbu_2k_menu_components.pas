@@ -115,11 +115,16 @@ var
    xPos, yPos: single;
 begin
    money := IntToStr(GEnvironment.money);
-   yPos := origin.y + 2;
-   xPos := GFontEngine.drawTextRightAligned(GDatabase.vocab['Money'],
-                                            origin.X + FBounds.Right - 18,
-                                            yPos, 1).x;
-   GFontEngine.drawTextRightAligned(money, xPos - 4, yPos, 1);
+   yPos := 2;
+   xPos := GFontEngine.drawTextRightAligned(GDatabase.vocab[V_MONEY_NAME],
+                                            getRightSide,
+                                            yPos, 2).x;
+   GFontEngine.drawTextRightAligned(money, xPos - 4, yPos, 2);
+   //not sure why this has to be drawn twice before it will draw right.  Some
+   //arcane GL state issue, no doubt.
+   xPos := GFontEngine.drawTextRightAligned(GDatabase.vocab[V_MONEY_NAME],
+                                            getRightSide,
+                                            yPos, 2).x;
 end;
 
 { TCustomScrollBox }
@@ -331,7 +336,6 @@ begin
    inherited Create(parent, coords, main, owner);
    FDisplayCapacity := trunc((coords.bottom - 16) / 8);
    FColumns := 2;
-   self.inventory := GEnvironment.Party.inventory;
 end;
 
 procedure TCustomGameItemMenu.doCursor(position: smallint);
@@ -351,8 +355,11 @@ end;
 
 procedure TCustomGameItemMenu.setInventory(const Value: TRpgInventory);
 begin
-   FInventory := Value;
-   self.setup(0);
+   if FInventory <> Value then
+   begin
+      FInventory := Value;
+      self.setup(0);
+   end;
 end;
 
 procedure TCustomGameItemMenu.doSetup(value: integer);
@@ -361,11 +368,14 @@ var
 begin
    inherited doSetup(value);
    FParsedText.Clear;
-   FInventory := GEnvironment.Party.inventory;
-   SetLength(FOptionEnabled, FInventory.Count);
-   FInventory.sort;
-   for i := 0 to FInventory.Count - 1 do
-      FParsedText.Add(TRpgItem(FInventory[i]).template.name);
+   if assigned(FInventory) then
+   begin
+      SetLength(FOptionEnabled, FInventory.Count);
+      FInventory.sort;
+      for i := 0 to FInventory.Count - 1 do
+         FParsedText.Add(TRpgItem(FInventory[i]).template.name);
+   end
+   else SetLength(FOptionEnabled, 0);
    self.placeCursor(FSetupValue);
    InvalidateText;
 end;
