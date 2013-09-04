@@ -137,7 +137,6 @@ type
       FState: TShopState;
       FInventory: TStoreInventory;
       FFormat: byte;
-      FShopStyle: byte;
 
       FTransactionComplete: boolean;
       FOngoing: boolean;
@@ -275,10 +274,10 @@ begin
    FAccessed := true;
    for I := 0 to 3 do
       FOptionEnabled[i] := true;
-   case TShopMenuPage(FOwner).FShopStyle of
-      0: ;
-      1: FOptionEnabled[1] := false;
-      2: FOptionEnabled[0] := false;
+   case TShopMenuPage(FOwner).FStyle of
+      st_BuySell: ;
+      st_Buy: FOptionEnabled[1] := false;
+      st_Sell: FOptionEnabled[0] := false;
       else raise Exception.Create('Bad shop style!');
    end;
 end;
@@ -707,12 +706,12 @@ procedure TShopMenuPage.setupEx(const data: TObject);
 var
    shopData: TShopData;
 begin
-   inherited setupEx(data);
    shopData := data as TShopData;
    FInventory := shopData.inventory;
    FStyle := shopData.shopType;
    FFormat := shopData.messageStyle;
    self.state := ss_selling;
+   inherited setupEx(data);
 end;
 
 procedure TShopMenuPage.setVisible(const value: boolean);
