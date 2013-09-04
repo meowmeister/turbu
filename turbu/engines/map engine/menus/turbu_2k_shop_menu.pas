@@ -95,7 +95,6 @@ type
    public
       procedure DrawText; override;
       procedure doSetup(value: integer); override;
-      procedure moveTo(coords: TRect); override;
 
       property item: TRpgItem write setItem;
    end;
@@ -178,6 +177,7 @@ uses
    dm_shaders, turbu_2k_map_engine,
    turbu_text_utils, turbu_database, turbu_items, turbu_shops, turbu_OpenGL,
    turbu_2k_environment,
+   delayedAction,
    sg_defs, sg_utils;
 
 { TShopModeBox }
@@ -537,26 +537,33 @@ end;
 procedure TCompatSprite.Draw;
 var
    frame: integer;
+   tSize: TSgPoint;
 begin
    FHeartbeat := not FHeartbeat;
    if FHeartbeat then
       inc(FTickCount);
-   if FTickCount = 16 then
+   if FTickCount = 48 then
       FTickCount := 0;
-   frame := 6;
-   if FItem.usableBy(FTemplate.template.id) then
-   begin
-      case FTickCount div 4 of
-         0,2: inc(frame);
-         1: ;
-         3: inc(frame, 2);
+   frame := 7;
+   tSize := FImage.textureSize;
+   FImage.textureSize := FImage.textureSize * sgPoint(1, 2);
+   try
+      if FItem.usableByHypothetical(FTemplate.template.id) then
+      begin
+         case FTickCount div 12 of
+            0: dec(frame);
+            1, 3: ;
+            2: inc(frame);
+         end;
+         imageIndex := frame;
+         inherited Draw;
+      end
+      else begin
+         imageIndex := frame;
+         DrawGrayscale;
       end;
-      imageIndex := frame;
-      inherited Draw;
-   end
-   else begin
-      imageIndex := frame;
-      DrawGrayscale;
+   finally
+      FImage.textureSize := tSize;
    end;
 end;
 
@@ -574,37 +581,35 @@ begin
       if GEnvironment.Party[i] <> GEnvironment.heroes[0] then
       begin
          FParty[i] := TCompatSprite.Create(self.engine, GEnvironment.Party[i]);
-         FParty[i].X := FBounds.Left + 8 + ((i - 1) * 32);
-         FParty[i].Y := FBounds.Top + 8;
+         FParty[i].X := 8 + ((i - 1) * 32);
+         FParty[i].Y := 0;
          FParty[i].item := self.FItem;
       end;
    end;
 end;
 
 procedure TShopCompatBox.DrawText;
+const ONE_PIXEL: TRect = (Right: 1; Bottom: 1);
 var
-  i: integer;
+   i: integer;
+   first: boolean;
 begin
    if not assigned(FItem) then
       Exit;
 
+   first := false;
    for I := 1 to MAXPARTYSIZE do
-      if assigned(FParty[i]) then
-         FParty[i].Draw;
-end;
-
-procedure TShopCompatBox.moveTo(coords: TRect);
-var i: byte;
-begin
-   inherited moveTo(coords);
-   for I := 1 to MAXPARTYSIZE do
-   begin
       if assigned(FParty[i]) then
       begin
-         FParty[i].X := FBounds.Left + 8 + ((i - 1) * 32);
-         FParty[i].Y := FBounds.Top + 8;
+         //make SDL set the RGB shader
+         if not first then
+         begin
+            first := true;
+            FParty[i].Image.DrawRectTo(ONE_PIXEL, ONE_PIXEL);
+         end;
+         FParty[i].Draw;
       end;
-   end;
+   DelayExec(procedure begin InvalidateText; end); //redraw this every frame
 end;
 
 procedure TShopCompatBox.setItem(const Value: TRpgItem);
