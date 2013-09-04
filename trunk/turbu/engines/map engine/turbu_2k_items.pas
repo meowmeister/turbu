@@ -46,6 +46,7 @@ type
       [NoImport]
       class function newItem(const item, quantity: integer): TRpgItem;
       function usableBy(hero: integer): boolean; virtual; abstract;
+      function usableByHypothetical(hero: integer): boolean; virtual;
 
       [NoImport]
       property template: TItemTemplate read FTemplate;
@@ -149,6 +150,11 @@ end;
 procedure TRpgItem.setUses(const Value: integer);
 begin
    //this method deliberately left blank
+end;
+
+function TRpgItem.usableByHypothetical(hero: integer): boolean;
+begin
+   result := usableBy(hero);
 end;
 
 procedure TRpgItem.useOnce;

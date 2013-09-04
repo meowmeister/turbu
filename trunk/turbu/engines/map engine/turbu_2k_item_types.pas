@@ -51,6 +51,7 @@ type
       function getOnField: boolean; override;
    public
       function usableBy(hero: integer): boolean; override;
+      function usableByHypothetical(hero: integer): boolean; override;
       function usableArea: boolean;
       function areaItem: boolean; virtual;
       procedure use(target: TRpgHero); virtual;
@@ -163,8 +164,13 @@ end;
 
 function TAppliedItem.usableBy(hero: integer): boolean;
 begin
+   result := usableByHypothetical(hero);
+end;
+
+function TAppliedItem.usableByHypothetical(hero: integer): boolean;
+begin
    result := hero in TUsableItemTemplate(template).usableByHero;
-   case (template as TUsableItemTemplate).usableWhere of
+   case TUsableItemTemplate(template).usableWhere of
       us_none: result := false;
       us_field: result := result and (GSpriteEngine.state <> gs_battle);
       us_battle: result := result and (GSpriteEngine.state = gs_battle);
