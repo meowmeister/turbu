@@ -24,7 +24,6 @@ uses
    turbu_serialization, turbu_sounds;
 
 type
-   TExpCalcFunc = function(int1, int2, int3, int4, int5: integer): integer of object;
    TStatCalcFunc = function(a, b, c: smallint; d: shortint): integer of object;
 
    TCommandStyle = (cs_weapon, cs_skill, cs_defend, cs_item, cs_flee, cs_skillgroup, cs_special, cs_script);

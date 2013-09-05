@@ -19,7 +19,7 @@ unit turbu_heroes;
 
 interface
 uses
-   types,
+   Types, Generics.Collections,
    rsImport,
    turbu_classes, turbu_containers, turbu_defs, turbu_mapchars,
    turbu_characters, turbu_map_sprites, turbu_2k_items, turbu_constants,
@@ -30,8 +30,13 @@ type
 
    TRpgParty = class;
 
-   //stub declaration that will be filled in later.
    TRpgHero = class(TRpgObject)
+   private
+      //temporary hack until I'm able to support this in scripts
+      class var
+         FLevelScripts: TDictionary<string, TExpCalcEvent>;
+      class constructor Create;
+      class destructor Destroy;
    private
       FName: string;
       FClass: string;
@@ -62,6 +67,8 @@ type
       FHpModifier: integer;
       FMpModifier: integer;
       FSkill: TArray<boolean>;
+
+      FBattleCommands: TList<integer>;
 
       FLevelUpdated: boolean;
       function countSkills: integer;
@@ -103,6 +110,8 @@ type
       procedure Serialize(writer: TdwsJSONWriter);
       [NoImport]
       procedure Deserialize(obj: TdwsJSONObject);
+      [NoImport]
+      class procedure RegisterExpFunc(const name: string; routine: TExpCalcEvent);
 
       procedure equip(id: integer);
       procedure equipSlot(id: integer; slot: TSlot);
@@ -254,15 +263,24 @@ const
 
 { TRpgHero }
 
+class constructor TRpgHero.Create;
+begin
+   FLevelScripts := TDictionary<string, TExpCalcEvent>.Create;
+end;
+
+class destructor TRpgHero.Destroy;
+begin
+   FLevelScripts.free;
+end;
+
 constructor TRpgHero.Create(base: TClassTemplate; party: TRpgParty);
 var
    I: Integer;
    slot: TSlot;
-{  calc: TExpCalcEvent;}
+   calc: TExpCalcEvent;
    template: THeroTemplate absolute base;
    cond: TPoint;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
    inherited Create(base);
    if base = nil then
       Exit;
@@ -273,11 +291,11 @@ begin
    FSprite := template.MapSprite;
    FTransparent := template.translucent;
    setLength(FExpTable, max(template.maxLevel, 1) + 1);
-{   calc := TExpCalcEvent(GScriptEngine.GetExecMethod(template.expFunc));
+   FLevelScripts.TryGetValue(template.expFunc, calc);
    if assigned(calc) then
-      for I := 2 to 50 do
-         FExpTable[i] := calc(i, template.expVars[1], template.expVars[2], template.expVars[3], template.expVars[4]);
-}
+      for I := 2 to high(FExpTable) do
+         FExpTable[i] := calc(i, template.expVars[1], template.expVars[2],
+                              template.expVars[3], template.expVars[4]);
    if template.canCrit then
       FCritRate := template.critRate
    else FCritRate := 0;
@@ -305,6 +323,22 @@ begin
    FManaPoints := maxMp;
    FComputerControlled := template.guest;
    FStrongDefense := template.strongDef;
+   FBattleCommands := TList<integer>.Create;
+end;
+
+destructor TRpgHero.Destroy;
+var
+   i, j: TSlot;
+begin
+   for i := low(TSlot) to high(TSlot) do
+   begin
+      for j := succ(i) to high(TSlot) do
+         if FEquipment[j] = FEquipment[i] then
+            FEquipment[j] := nil;
+      FEquipment[i].free;
+   end;
+   FBattleCommands.Free;
+   inherited Destroy;
 end;
 
 class function TRpgHero.templateClass: TDatafileClass;
@@ -390,16 +424,21 @@ begin
    obj.checkEmpty;
 end;
 
+class procedure TRpgHero.RegisterExpFunc(const name: string;
+  routine: TExpCalcEvent);
+begin
+   FLevelScripts.Add(name, routine);
+end;
+
 procedure TRpgHero.AddBattleCommand(which: integer);
 begin
-{$MESSAGE WARN 'Missing feature in live unit'}
-   //TODO: Implement this
+   if not FBattleCommands.Contains(which) then
+      FBattleCommands.Add(which);
 end;
 
 procedure TRpgHero.RemoveBattleCommand(which: integer);
 begin
-{$MESSAGE WARN 'Missing feature in live unit'}
-   //TODO: Implement this
+   FBattleCommands.Remove(which);
 end;
 
 procedure TRpgHero.ChangeClass(id: integer; retainLevel: boolean; skillChange,
@@ -428,20 +467,6 @@ begin
    for i := 1 to high(FSkill) do
       if FSkill[i] then
          inc(result);
-end;
-
-destructor TRpgHero.Destroy;
-var
-   i, j: TSlot;
-begin
-   for i := low(TSlot) to high(TSlot) do
-   begin
-      for j := succ(i) to high(TSlot) do
-         if FEquipment[j] = FEquipment[i] then
-            FEquipment[j] := nil;
-      FEquipment[i].free;
-   end;
-   inherited Destroy;
 end;
 
 procedure TRpgHero.die;
