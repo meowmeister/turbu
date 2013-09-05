@@ -27,7 +27,7 @@ type
    TDamageCalcEvent = function(character, target: TObject; var1, var2, var3, var4: integer; offensive: boolean): integer of object;
    TToHitEvent = function(character, target: TObject; effectiveness: integer; offensive: boolean): boolean of object;
    TCondOnTurnEvent = procedure(character, condition: TObject; var1, var2, var3, var4: integer) of object;
-   TExpCalcEvent = function(level, var1, var2, var3, var4: integer): integer of object;
+   TExpCalcEvent = function(level, var1, var2, var3, var4: integer): integer;
 
    TStringSetProc = procedure (header: string) of object;
 
