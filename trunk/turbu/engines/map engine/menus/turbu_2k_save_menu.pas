@@ -288,6 +288,7 @@ begin
    try
       party := obj.Items['Environment'].Items['Party'].Items['Heroes'] as TdwsJSONArray;
       heroes := obj.Items['Environment'].Items['Heroes'] as TdwsJSONArray;
+      hp := 0; LV := 0; //to suppress warnings
       for i := 0 to party.ElementCount - 1 do
       begin
          if party.Elements[i].IsNull then

@@ -27,8 +27,8 @@ type
    TTitleMenu = class(TGameMenuBox)
    protected
       procedure DrawText; override;
-      procedure DoCursor(position: smallint); override;
-      procedure DoButton(const input: TButtonCode); override;
+      procedure doCursor(position: smallint); override;
+      procedure doButton(const input: TButtonCode); override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect;
         main: TMenuEngine; owner: TMenuPage); override;
