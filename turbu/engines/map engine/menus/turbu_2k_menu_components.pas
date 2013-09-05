@@ -40,10 +40,10 @@ type
       FTopPosition: smallint;
 
       procedure drawItem(id, x, y, color: integer); virtual; abstract;
+      procedure doCursor(position: smallint); override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage); override;
 
-      procedure doCursor(position: smallint); override;
       procedure DrawText; override;
       procedure moveTo(coords: TRect); override;
    end;
@@ -72,11 +72,11 @@ type
    protected
       FPortrait: array[1..4] of TSprite;
       FCount: byte;
+      procedure doSetup(value: integer); override;
+      procedure doCursor(position: smallint); override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage); override;
       procedure moveTo(coords: TRect); override;
-      procedure doSetup(value: integer); override;
-      procedure doCursor(position: smallint); override;
    end;
 
    TCustomGameItemMenu = class(TCustomScrollBox)
@@ -86,11 +86,11 @@ type
       procedure setInventory(const Value: TRpgInventory);
    protected
       procedure drawItem(id, x, y, color: integer); override;
+      procedure doSetup(value: integer); override;
+      procedure doCursor(position: smallint); override;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect;
         main: TMenuEngine; owner: TMenuPage); override;
-      procedure doSetup(value: integer); override;
-      procedure doCursor(position: smallint); override;
 
       property inventory: TRpgInventory read FInventory write setInventory;
    end;
@@ -119,12 +119,12 @@ begin
    xPos := GFontEngine.drawTextRightAligned(GDatabase.vocab[V_MONEY_NAME],
                                             getRightSide,
                                             yPos, 2).x;
-   GFontEngine.drawTextRightAligned(money, xPos - 4, yPos, 2);
+   GFontEngine.drawTextRightAligned(money, xPos - 4, yPos, 1);
    //not sure why this has to be drawn twice before it will draw right.  Some
    //arcane GL state issue, no doubt.
-   xPos := GFontEngine.drawTextRightAligned(GDatabase.vocab[V_MONEY_NAME],
+   GFontEngine.drawTextRightAligned(GDatabase.vocab[V_MONEY_NAME],
                                             getRightSide,
-                                            yPos, 2).x;
+                                            yPos, 2);
 end;
 
 { TCustomScrollBox }

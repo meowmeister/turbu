@@ -61,8 +61,8 @@ var
    deviation: integer;
    template: TNormalSkillTemplate;
 begin
-   assert(template is TNormalSkillTemplate);
-   template := TNormalSkillTemplate(template);
+   assert(self.template is TNormalSkillTemplate);
+   template := TNormalSkillTemplate(self.template);
    result := round((caster.attack * template.strEffect / 20) + (caster.mind * template.mindEffect / 40)) + template.base;
    deviation := random(template.variance * 5 + 1) - (template.variance * 5);
    result := round(result * (1 + (deviation / 100)));
@@ -108,7 +108,7 @@ begin
    hero := GEnvironment.Heroes[id];
    if self.template is TNormalSkillTemplate then
    begin
-      template := TNormalSkillTemplate(template);
+      template := TNormalSkillTemplate(self.template);
       result := template.offensive = false;
       if template.hp and template.mp then
          result := result and ((hero.hp < hero.maxHp) or (hero.mp < hero.maxMp))
@@ -134,9 +134,9 @@ procedure TRpgSkill.useHero(caster, target: TRpgHero);
 var
    template: TNormalSkillTemplate;
 begin
-   if template is TNormalSkillTemplate then
+   if self.template is TNormalSkillTemplate then
    begin
-      template := TNormalSkillTemplate(template);
+      template := TNormalSkillTemplate(self.template);
       if template.hp then
          target.hp := target.hp + baseDamage(caster);
       if template.mp then
