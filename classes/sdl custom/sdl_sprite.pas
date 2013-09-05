@@ -506,9 +506,11 @@ begin
       if assigned(FImage) then
       begin
          if FImageType <> itRectSet then
+         begin
             if FImage.count > 1 then
                FImageType := itSpriteSheet
             else FImageType := itSingleImage;
+         end;
          FImageIndex := FEngine.FImages.IndexOf(FImageName);
       end
       else asm int 3 end;
@@ -1088,6 +1090,11 @@ begin
          right := left + sprite.FImage.textureSize.x;
          bottom := top + sprite.FImage.textureSize.Y;
       end;
+      itRectSet:
+      begin
+         right := left + sprite.DrawRect.right;
+         bottom := top + sprite.DrawRect.bottom;
+      end
       else raise ESpriteError.Create('RectSet not supported for vertex array drawing');
    end;
    vertices[counter] := left; vertices[counter + 1] := top;

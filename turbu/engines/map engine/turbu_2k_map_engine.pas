@@ -863,11 +863,11 @@ begin
 
    DrawRenderTarget(GRenderTargets[RENDERER_MAP], true);
 
+   glGetIntegerv(GL_CURRENT_PROGRAM, @current);
+   FShaderEngine.UseShaderProgram(FShaderEngine.ShaderProgram('default', 'defaultF'));
    RenderImages(self);
    FCurrentMap.DrawFlash;
 
-   glGetIntegerv(GL_CURRENT_PROGRAM, @current);
-   FShaderEngine.UseShaderProgram(FShaderEngine.ShaderProgram('default', 'defaultF'));
    glGetFloatv(GL_CURRENT_COLOR, @colors[0]);
    glColor4f(1, 1, 1, 1);
    SDL_SetRenderDrawColor(FCanvas.Renderer, SDL_WHITE);
