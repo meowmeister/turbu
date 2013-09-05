@@ -66,7 +66,7 @@ type
       procedure Play;
       function Playing: boolean;
       function mapTree: IMapTree;
-      procedure NewGame;
+      procedure Start;
 
       function getData: TMapEngineData;
       property data: TMapEngineData read getData;
@@ -133,6 +133,7 @@ type
       function Playing: boolean; virtual; abstract;
       function MapTree: IMapTree; virtual; abstract;
       procedure NewGame; virtual; abstract;
+      procedure Start; virtual; abstract;
 
       property data: TMapEngineData read GetData write FData;
    end;

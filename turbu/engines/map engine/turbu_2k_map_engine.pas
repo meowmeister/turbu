@@ -39,7 +39,7 @@ type
       FButtonState: TButtonCodes;
       FSwitchState: TSwitchState;
       FTeleportThread: TThread;
-      FTitleScreen: TRpgTimestamp;
+      FTitleScreen: boolean;
       FHWND: HWND;
       FTransition: ITransition;
       FTransitionFirstFrameDrawn: boolean;
@@ -109,6 +109,7 @@ type
       function Playing: boolean; override;
       function MapTree: IMapTree; override;
       procedure NewGame; override;
+      procedure Start; override;
       procedure changeMaps(newmap: word; newLocation: TSgPoint);
 
       //script-accessible functions
@@ -120,6 +121,7 @@ type
       function EnsureTileset(id: integer): boolean;
       procedure RenderPause;
       procedure RenderUnpause;
+      function Load(const savefile: string): boolean;
 
       property PartySprite: THeroSprite read FPartySprite;
       property ImageEngine: TImageEngine read FImageEngine;
@@ -245,7 +247,6 @@ end;
 destructor T2kMapEngine.Destroy;
 begin
    FTimer.Free;
-   FTitleScreen.Free;
    FRenderPause.Free;
    FRenderPauseLock.Free;
    inherited;
@@ -539,13 +540,10 @@ begin
    turbu_2k_savegames.SaveTo(savefile, GEnvironment.Party.mapID, false);
 end;
 
-procedure T2kMapEngine.Quickload;
-var
-   savefile: string;
+function T2kMapEngine.Load(const savefile: string): boolean;
 begin
-   savefile := TPath.Combine(GProjectFolder, 'quicksave.tsg');
    if not FileExists(savefile) then
-      Exit;
+      Exit(false);
    FTimer.Enabled := false;
    GScriptEngine.KillAll;
    GEnvironment.Free;
@@ -562,7 +560,14 @@ begin
    FImageEngine := TImageEngine.Create(GSpriteEngine, FCanvas, FImages);
    GEnvironment.CreateTimers;
    GMapObjectManager.InCutscene := false;
+   FTitleScreen := false;
    Play;
+   result := true;
+end;
+
+procedure T2kMapEngine.Quickload;
+begin
+   load(TPath.Combine(GProjectFolder, 'quicksave.tsg'));
 end;
 
 function KeyIsPressed(value: integer): boolean;
@@ -696,6 +701,8 @@ var
    loc: TLocation;
    metadata: TMapMetadata;
 begin
+   assert(FPlaying = false);
+   FTitleScreen := false;
    loc := FDatabase.mapTree.location[-1];
    metadata := FDatabase.mapTree[loc.map];
    self.loadMap(metadata);
@@ -728,6 +735,14 @@ begin
       FSwitchState := sw_switching;
 end;
 
+procedure T2kMapEngine.Start;
+begin
+   FTimer.OnTimer := self.OnTimer;
+   FTimer.OnProcess := self.OnProcess;
+   FTitleScreen := true;
+   FTimer.Enabled := true;
+end;
+
 procedure T2kMapEngine.RenderImages(sender: TObject);
 begin
    if assigned(FImageEngine) then
@@ -750,19 +765,16 @@ begin
 end;
 
 procedure T2kMapEngine.TitleScreen;
-var
-   cls: TSdlImageClass;
 begin
-   cls := FImages.SpriteClass;
-   FImages.SpriteClass := TSdlImage;
-   try
-      FImageEngine.Clear;
-      FImages.EnsureImage(format('Special Images\%s.png', [FDatabase.layout.titleScreen]), '*TitleScreen');
-      GEnvironment.Image[0] := TRpgImage.Create(FImageEngine, '*TitleScreen', FCanvas.Width div 2, FCanvas.Height div 2, 0, 0, 100, false, false);
-      FTitleScreen := TRpgTimestamp.Create(5000);
-   finally
-      FImages.SpriteClass := cls;
-   end;
+   FTitleScreen := true;
+   FPlaying := false;
+   runThreadsafe(
+      procedure
+      begin
+         FreeAndNil(FPartySprite);
+         FreeAndNil(FCurrentMap);
+         FCanvas.DrawBox(rect(0, 0, 1, 1), SDL_WHITE); //force SDL to sync shaders
+      end, true);
 end;
 
 procedure T2kMapEngine.DrawWeather;
@@ -862,25 +874,32 @@ begin
    glColor4fv(@colors[0]);
 end;
 
-{$R-}
-procedure T2kMapEngine.OnTimer(Sender: TObject);
+procedure MemoryCheck;
 begin
-   if assigned(FTitleScreen) and (FTitleScreen.timeRemaining = 0) then
-   begin
-      FTimer.Enabled := false;
-      FreeAndNil(FTitleScreen);
-      Application.Terminate;
-      Exit;
-   end;
-
-{   if newAG > 0 then
+   {$IFDEF MEM_CHECK}
+   if newAG > 0 then
    begin
       FastMM4.LogAllocatedBlocksToFile(newAG, newAG);
       FastMM4.PopAllocationGroup;
    end;
    inc(newAG);
    FastMM4.PushAllocationGroup(newAG);
-}
+   {$ENDIF}
+end;
+
+{$R-}
+procedure T2kMapEngine.OnTimer(Sender: TObject);
+begin
+   if FTitleScreen then
+   begin
+      if GMenuEngine.State = msNone then
+         GMenuEngine.OpenMenu('Title');
+      GMenuEngine.Draw;
+      FCanvas.Flip;
+      FTimer.Process;
+      Exit;
+   end;
+   MemoryCheck;
 
    //TODO: Remove commented-out code blocks when transitions are implemented
    inc(FFrame);
@@ -933,7 +952,7 @@ procedure T2kMapEngine.OnProcess(Sender: TObject);
 var
    button: TButtonCode;
 begin
-   if assigned(FTitleScreen) or (FSwitchState <> sw_noSwitch) then
+   if FSwitchState <> sw_noSwitch then
       Exit;
    FButtonState := ReadKeyboardState;
    for button in FButtonState do
@@ -952,8 +971,11 @@ begin
       end;
    end
    else FSaveLock := KeyIsPressed(VK_F2) or KeyIsPressed(VK_F6);
-   GMapObjectManager.Tick;
-   FCurrentMap.Process(sender);
+   if not FTitleScreen then
+   begin
+      GMapObjectManager.Tick;
+      FCurrentMap.Process(sender);
+   end;
 end;
 
 procedure T2kMapEngine.Play;
@@ -961,8 +983,6 @@ begin
    assert(assigned(FCurrentMap));
    if FPartySprite = nil then
       initializeParty;
-   FTimer.OnTimer := self.OnTimer;
-   FTimer.OnProcess := self.OnProcess;
    FTimer.Enabled := true;
    FPlaying := true;
 end;

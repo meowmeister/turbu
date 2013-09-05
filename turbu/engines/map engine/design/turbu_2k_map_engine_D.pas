@@ -163,6 +163,9 @@ type
 
       procedure IMapEngine.loadMap = DesignLoadMap;
       function IMapEngine.Initialize = InitializeDesigner;
+      procedure IDesignMapEngine.loadMap = DesignLoadMap;
+      function IDesignMapEngine.Initialize = InitializeDesigner;
+
       procedure ClearSelection;
       procedure PasteSelection;
       procedure DrawSelection;
@@ -332,7 +335,7 @@ begin
    //FObjectContainers needs to be cleaned up before the sprite engine is
    //destroyed in the call to inherited
    self.ClearContainers;
-   if not FMaps.ContainsKey(FCurrentMap.mapObj.id) then
+   if assigned(FCurrentMap) and not FMaps.ContainsKey(FCurrentMap.mapObj.id) then
       FMaps.Add(FCurrentMap.mapObj.id, FCurrentMap);
    FCurrentMap := nil;
    inherited cleanup;
