@@ -438,7 +438,7 @@ const
    (id: $73; name: 'Menu-Load Game'), (id: $75; name: 'Menu-Quit Game'),
    (id: $7B; name: V_STAT_LV),
    (id: $7C; name: V_STAT_HP), (id: $7D; name: V_STAT_MP),
-   (id: $92; name: 'Save-Save Where'), (id: $93; name: 'Save-Load Where'),
+   (id: $92; name: V_SAVE_WHERE), (id: $93; name: V_LOAD_WHERE),
    (id: $94; name: 'Save-File'), (id: $97; name: 'Confirm-Quit'),
    (id: $98; name: 'Confirm-Yes'), (id: $99; name: 'Confirm-No')
   );

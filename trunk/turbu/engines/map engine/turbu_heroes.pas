@@ -346,8 +346,8 @@ begin
             if FCondition[i] then
                writer.WriteInteger(i);
       writer.EndArray;
-      writer.CheckWrite('HitPoints', FHitPoints, FMaxHitPoints + FHpModifier);
-      writer.CheckWrite('ManaPoints', FManaPoints, FMaxManaPoints + FMpModifier);
+      writer.CheckWrite('HitPoints', FHitPoints, 0);
+      writer.CheckWrite('ManaPoints', FManaPoints, 0);
       writer.CheckWrite('HpModifier', FHpModifier, 0);
       writer.CheckWrite('MpModifier', FMpModifier, 0);
       writer.WriteArray('Skill', FSkill);

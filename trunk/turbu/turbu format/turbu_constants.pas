@@ -40,6 +40,8 @@ const
    MAXGOLD = 999999;
    MAXLEVEL = 50;
 
+   MAX_SAVE_SLOTS = 15;
+
    //sizes
    PORTRAIT_SIZE: TSgPoint    = (X: 48;  Y: 48);
    SPRITE_SIZE: TSgPoint      = (X: 24;  Y: 16);
@@ -92,6 +94,9 @@ const
     V_EQ_ARMOR       = 'EQ-Armor';
     V_EQ_HELMET      = 'EQ-Helmet';
     V_EQ_ACCESSORY   = 'EQ-Accessory';
+
+    V_SAVE_WHERE     = 'Save-Save Where';
+    V_LOAD_WHERE     = 'Save-Load Where';
 
     V_SHOP_NUM_GREET      = 'Shop%d-Greet';
     V_SHOP_NUM_CONTINUE   = 'Shop%d-Continue';

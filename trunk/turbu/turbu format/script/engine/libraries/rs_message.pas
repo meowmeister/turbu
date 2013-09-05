@@ -225,7 +225,9 @@ end;
 
 procedure SaveMenu;
 begin
-   //not implemented yet
+   GMenuEngine.OpenMenu('Save');
+   if TThread.CurrentThread.ThreadID <> MainThreadID then
+      GScriptEngine.SetWaiting(WaitForMenuClosed);
 end;
 
 procedure RegisterMessagesC(input: TrsTypeImporter);

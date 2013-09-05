@@ -394,6 +394,7 @@ begin
    result.Visible := true;
    result.ImageName := filename;
    result.ImageIndex := index;
+   result.SetSpecialRender;
 end;
 
 initialization
