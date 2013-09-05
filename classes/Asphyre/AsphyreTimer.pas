@@ -231,7 +231,7 @@ begin
  if (LatencyFP < MinLatency) then
  begin
    WaitAmount:= (MinLatency - LatencyFP) div FixedHigh;
-   SleepEx(WaitAmount, True);
+   SleepEx(max(WaitAmount, 0), True);
  end
  else WaitAmount:= 0;
 
