@@ -243,6 +243,7 @@ type
       FPrevState: TGameState;
       FOnGetTime: TGetTimeFunc;
 
+      procedure SetDrawRect(tile: TSprite; index: integer);
       procedure updateTime;
       procedure updatePosition(location: TSgPoint);
    public
@@ -1285,8 +1286,8 @@ begin
       FTiles[i] := TSprite.Create(self);
       FTiles[i].ImageName := GMenuEngine.SystemGraphic.filename;
    end;
-   FTiles[1].ImageIndex := 11;
-   FTiles[3].ImageIndex := 10;
+   SetDrawRect(FTiles[1], 11);
+   SetDrawRect(FTiles[3], 10);
    FTime := 0;
    Visible := false;
    FPrevTime := 0;
@@ -1351,17 +1352,24 @@ begin
    end;
 end;
 
+procedure TSystemTimer.SetDrawRect(tile: TSprite; index: integer);
+begin
+   tile.DrawRect := rect(32 + (8 * index), 32, 8, 16)
+end;
+
 procedure TSystemTimer.updateTime;
-var min, sec: byte;
+var
+   min, sec: integer;
 begin
    min := FTime div 60;
    sec := FTime mod 60;
+
    if min > 10 then
-      FTiles[1].ImageIndex := min div 10
-   else FTiles[1].ImageIndex := 11;
-   FTiles[2].ImageIndex := min mod 10;
-   FTiles[4].ImageIndex := sec div 10;
-   FTiles[5].ImageIndex := sec mod 10;
+      SetDrawRect(FTiles[1], min div 10)
+   else SetDrawRect(FTiles[1], 11);
+   SetDrawRect(FTiles[2], min mod 10);
+   SetDrawRect(FTiles[4], sec div 10);
+   SetDrawRect(FTiles[5], sec mod 10);
 end;
 
 { TMenuCursor }

@@ -18,6 +18,7 @@ type
       FInBattle: boolean;
 
       procedure setVisible(value: boolean);
+      procedure tick;
    public
       [NoImport]
       constructor create(sprite: TSystemTimer);
@@ -31,8 +32,6 @@ type
       procedure start(const visible, inBattle: boolean); overload;
       procedure pause;
       procedure reset;
-      [NoImport]
-      procedure tick;
       [NoImport]
       function GetTime: integer;
 
@@ -82,6 +81,7 @@ end;
 
 function TRpgTimer.GetTime: integer;
 begin
+   Tick;
    result := FTimeRemaining;
 end;
 
