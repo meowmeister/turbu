@@ -121,7 +121,7 @@ begin
    imgGame.ClearTextures;
    Boot;
    FMapEngine.initialize(imgGame.SdlWindow, FDatabaseName);
-   FMapEngine.NewGame;
+   FMapEngine.Start;
 end;
 
 procedure TfrmMain.Boot;

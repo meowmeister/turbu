@@ -73,11 +73,8 @@ end;
 
 destructor TRpgSdlImage.Destroy;
 begin
-   try
+   if assigned(FOrigSurface.Tag) then
       GetTBIInfo(FOrigSurface).Free;
-   except
-      on ETbiError do ; //it's OK if there's no TBI info
-   end;
    FOrigSurface.Free;
    inherited;
 end;

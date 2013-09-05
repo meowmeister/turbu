@@ -73,6 +73,7 @@ type
       destructor Destroy; override;
       function saveData(index: integer): TSaveData;
       procedure button(input: TButtonCode); override;
+      procedure setup(value: integer); override;
    end;
 
 implementation
@@ -80,7 +81,7 @@ uses
    SysUtils, IOUtils,
    commons, project_folder,
    turbu_database, turbu_text_utils,
-   turbu_2k_savegames, turbu_2k_sprite_engine,
+   turbu_2k_savegames, turbu_2k_sprite_engine, turbu_2k_map_engine,
    rs_media,
    sg_utils,
    dwsJSON;
@@ -107,13 +108,19 @@ end;
 { TSaveBox }
 
 procedure TSaveBox.doButton(const input: TButtonCode);
+var
+   filename: string;
 begin
    inherited doButton(input);
    if input = btn_enter then
    begin
-      SaveTo(TPath.Combine(GProjectFolder, format('save%.2d.tsg', [FIndex])),
-             GSpriteEngine.mapObj.id,
-             true);
+      filename := TPath.Combine(GProjectFolder, format('save%.2d.tsg', [FIndex]));
+      if FSetupValue = 0 then
+         SaveTo(filename, GSpriteEngine.mapObj.id, true)
+      else begin
+         GGameEngine.Load(filename);
+         FMenuEngine.leave(false);
+      end;
       self.return;
    end;
 end;
@@ -190,7 +197,6 @@ begin
    end;
    FTitle := TOnelineLabelBox.Create(parent, rect(0, 0, 320, 32), main, self);
    registerComponent('Title', FTitle);
-   FTitle.text := GDatabase.vocab[V_SAVE_WHERE];
 end;
 
 destructor TSaveMenuPage.Destroy;
@@ -320,6 +326,14 @@ begin
    if FSaveData[index] = nil then
       FSaveData[index] := ReadSaveData(index);
    result := FSaveData[index];
+end;
+
+procedure TSaveMenuPage.setup(value: integer);
+begin
+   inherited setup(value);
+   if value = 0 then
+      FTitle.text := GDatabase.vocab[V_SAVE_WHERE]
+   else FTitle.text := GDatabase.vocab[V_LOAD_WHERE];
 end;
 
 initialization

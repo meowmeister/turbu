@@ -431,12 +431,12 @@ const
    'Battle-Fight', 'Battle-Auto', 'Battle-Flee', 'Battle-Attack',
    'Battle-Defend', 'Battle-Item', 'Battle-Skill'
   );
-  VOCAB_LIST: array[0..16] of TVocabPair = (
+  VOCAB_LIST: array[0..17] of TVocabPair = (
    (id: 2; name: 'Battle-Surprise Attack'), (id: 4; name: 'Battle-Failed Escape'),
    (id: 5; name: 'Battle-Victory'), (id: 6; name: 'Battle-Defeat'),
-   (id: $6C; name: 'Menu-Equip'), (id: $6E; name: 'Menu-Save'),
-   (id: $73; name: 'Menu-Load Game'), (id: $75; name: 'Menu-Quit Game'),
-   (id: $7B; name: V_STAT_LV),
+   (id: $6C; name: V_MENU_EQUIP), (id: $6E; name: V_MENU_SAVE),
+   (id: $72; name: V_MENU_NEW), (id: $73; name: V_MENU_LOAD),
+   (id: $75; name: V_MENU_QUIT), (id: $7B; name: V_STAT_LV),
    (id: $7C; name: V_STAT_HP), (id: $7D; name: V_STAT_MP),
    (id: $92; name: V_SAVE_WHERE), (id: $93; name: V_LOAD_WHERE),
    (id: $94; name: 'Save-File'), (id: $97; name: 'Confirm-Quit'),
@@ -466,9 +466,9 @@ const
    (id: $20; name: 'Battle-Ally Absorb'), (id: $21; name: 'Battle-Enemy Absorb'),
    (id: $22; name: 'Battle-Defense Up'), (id: $23; name: 'Battle-Defense Down')
   );
-  VOCAB_LIST_2K3: array[0..8] of TVocabPair = (
+  VOCAB_LIST_2K3: array[0..7] of TVocabPair = (
    (id: $26; name: 'Battle-Begin'), (id: $27; name: 'Battle-Miss'),
-   (id: $70; name: 'Menu-Quit 2k3'), (id: $72; name: 'Menu-New Game'),
+   (id: $70; name: 'Menu-Quit 2k3'),
    (id: $76; name: 'Menu-Status'), (id: $77; name: 'Menu-Row'),
    (id: $78; name: 'Menu-Order'),
    (id: $79; name: 'ATB-Wait'), (id: $7A; name: 'ATB-Active')

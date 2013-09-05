@@ -97,6 +97,11 @@ const
 
     V_SAVE_WHERE     = 'Save-Save Where';
     V_LOAD_WHERE     = 'Save-Load Where';
+    V_MENU_EQUIP     = 'Menu-Equip';
+    V_MENU_SAVE      = 'Menu-Save';
+    V_MENU_LOAD      = 'Menu-Load Game';
+    V_MENU_QUIT      = 'Menu-Quit Game';
+    V_MENU_NEW       = 'Menu-New Game';
 
     V_SHOP_NUM_GREET      = 'Shop%d-Greet';
     V_SHOP_NUM_CONTINUE   = 'Shop%d-Continue';

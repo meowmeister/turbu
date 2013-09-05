@@ -197,6 +197,14 @@ var
 
 { TGameMenuBox }
 
+constructor TGameMenuBox.Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage);
+begin
+   FMenuEngine := main;
+   FOwner := owner;
+   inherited Create(parent, rect(ORIGIN, TRectToSdlRect(coords).BottomRight));
+   self.moveTo(coords);
+end;
+
 procedure TGameMenuBox.button(const input: TButtonCode);
 begin
    assert(self <> nil);
@@ -213,14 +221,6 @@ begin
       playSystemSound(sfxCancel);
       self.return;
    end;
-end;
-
-constructor TGameMenuBox.Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage);
-begin
-   FMenuEngine := main;
-   FOwner := owner;
-   inherited Create(parent, rect(ORIGIN, TRectToSdlRect(coords).BottomRight));
-   self.moveTo(coords);
 end;
 
 procedure TGameMenuBox.Draw;
@@ -478,6 +478,8 @@ end;
 
 procedure TMenuEngine.leave(const playSound: boolean = true);
 begin
+   while FStack.Count > 0 do
+      return;
    GGameEngine.enterLock := true;
    if playSound then
       rs_media.playSystemSound(sfxCancel);
@@ -496,7 +498,7 @@ begin
    else begin
       page := FStack.pop;
       FCurrentPage.Visible := false;
-	  page.visible := true;
+      page.visible := true;
       FCurrentPage := page;
       page.setup(CURSOR_UNCHANGED);
    end;
@@ -582,6 +584,7 @@ var
    boxClass: TGameMenuBoxClass;
    coordsArr: TdwsJSONArray;
    coords: TRect;
+   box: TGameMenuBox;
 begin
    cls := obj.Items['Class'].AsString;
    if not TMenuEngine.FMenuBoxes.TryGetValue(cls, boxClass) then
@@ -592,7 +595,10 @@ begin
    coords.Top    := coordsArr.Elements[1].AsInteger;
    coords.Right  := coordsArr.Elements[2].AsInteger;
    coords.Bottom := coordsArr.Elements[3].AsInteger;
-   self.registerComponent(name, boxClass.Create(FOwner.FParent, coords, FOwner, self));
+   box := boxClass.Create(FOwner.FParent, coords, FOwner, self);
+   self.registerComponent(name, box);
+   if not obj.Items['Background'].AsBoolean then
+      box.Z := box.Z + 1;
 end;
 
 procedure TMenuPage.LoadComponents(const layout: string);
@@ -686,4 +692,3 @@ begin
 end;
 
 end.
-

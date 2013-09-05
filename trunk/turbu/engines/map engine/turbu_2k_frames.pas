@@ -46,6 +46,7 @@ type
    TMenuSpriteEngine = class;
    TSysFrame = class;
    TCustomMessageBox = class;
+   TMenuCursor = class;
 
    TSystemImages = class(TObject)
    private type TSystemRectArray = array[TSystemRects] of TRect;
@@ -87,7 +88,7 @@ type
       FWallpapers: TDictionary<string, TSystemImages>;
       FBoxNotifications: TDictionary<TObject, TSkinChangedEvent>;
       FMenuInt: integer;
-      FCursor: TSysFrame;
+      FCursor: TMenuCursor;
       FMenuState: TMenuState;
       FBoxes: array[TMessageBoxTypes] of TCustomMessageBox;
       FCurrentBox: TCustomMessageBox;
@@ -125,7 +126,7 @@ type
       procedure RemoveSkinNotification(obj: TObject);
 
       property MenuInt: integer read FMenuInt write FMenuInt;
-      property Cursor: TSysFrame read FCursor;
+      property Cursor: TMenuCursor read FCursor;
       property State: TMenuState read FMenuState;
       property SystemGraphic: TSystemImages read FSystemGraphic;
       property position: TMboxLocation read FPosition write SetPosition;
@@ -151,6 +152,11 @@ type
       procedure moveTo(coords: TRect); virtual;
 
       property bounds: TRect read FBounds;
+   end;
+
+   TMenuCursor = class(TSysFrame)
+   protected
+      procedure DoDraw; override;
    end;
 
    TMessageState = (mb_display, mb_choice, mb_input, mb_prompt);
@@ -449,7 +455,7 @@ begin
    FSystemGraphic := graphic;
    graphic.Setup(self);
    FWallpapers.Add(graphic.FFilename, graphic);
-   FCursor := TSysFrame.Create(self, FRAME_DISPLACEMENT, 2, NULLRECT);
+   FCursor := TMenuCursor.Create(self, FRAME_DISPLACEMENT, 2, NULLRECT);
    size := rect(0, 0, 320, 80);
    FPosition := mb_bottom;
    FBoxes[mbtMessage] := TMessageBox.Create(self, size);
@@ -1002,9 +1008,9 @@ begin
       dec(position, max + 1);
    column := position mod columns;
    inc(position, FPromptLines * columns);
-   coords := rect(8 + (column * (width + SEPARATOR)),
+   coords := rect(8 + (column * (width + SEPARATOR)) + FBounds.Left,
                   (position div columns) * 15 + FBounds.Top + (ord(FPosition) * 80) + 8,
-                  width, 18);
+                  width - FBounds.Left, 18);
    coords := SdlRectToTRect(coords);
 //   inc(coords.Bottom, coords.Top);
    if FCursorPosition > max then
@@ -1356,6 +1362,13 @@ begin
    FTiles[2].ImageIndex := min mod 10;
    FTiles[4].ImageIndex := sec div 10;
    FTiles[5].ImageIndex := sec mod 10;
+end;
+
+{ TMenuCursor }
+
+procedure TMenuCursor.DoDraw;
+begin
+   inherited DoDraw;
 end;
 
 end.
