@@ -86,7 +86,7 @@ type
       procedure PressButton(button: TButtonCode);
       procedure PartyButton(button: TButtonCode);
       procedure Validate(query: TSqlQuery);
-      procedure PlayMapMusic(metadata: TMapMetadata);
+      procedure PlayMapMusic(metadata: TMapMetadata; clear: boolean);
       procedure DrawRenderTarget(target: TSdlRenderTarget; canTint: boolean);
       procedure SetupScriptImports;
       procedure RenderFrame(Sender: TObject);
@@ -356,7 +356,7 @@ begin
    FPartySprite := THeroSprite.create(FCurrentMap, party.hero[1], party);
 end;
 
-procedure T2kMapEngine.PlayMapMusic(metadata: TMapMetadata);
+procedure T2kMapEngine.PlayMapMusic(metadata: TMapMetadata; clear: boolean);
 var
    id: smallint;
 begin
@@ -372,7 +372,9 @@ begin
          else if FDatabase.mapTree[id].bgmState = id_yes then
             rs_media.playMusicData(FDatabase.mapTree[id].bgmData);
       end;
-      id_no: ;
+      id_no:
+         if clear then
+            rs_media.fadeOutMusic(1000);
       id_yes: rs_media.playMusicData(FDatabase.mapTree[id].bgmData);
    end;
 end;
@@ -421,7 +423,7 @@ begin
    finally
       FTeleportThread := nil;
    end;
-   PlayMapMusic(metadata);
+   PlayMapMusic(metadata, false);
    FSwitchState := sw_noSwitch;
    FTimer.Enabled := true;
 end;
@@ -710,7 +712,7 @@ begin
    FPartySprite.leaveTile;
    FCurrentMap.CurrentParty := FPartySprite;
    FPartySprite.location := sgPoint(loc.x, loc.y);
-   PlayMapMusic(metadata);
+   PlayMapMusic(metadata, true);
    self.Play;
 end;
 
