@@ -148,6 +148,11 @@ type
 
    TSdlImageClass = class of TSdlImage;
 
+   TSdlOpaqueImage = class(TSdlImage)
+   protected
+      procedure processImage(image: PSdlSurface); override;
+   end;
+
    {***************************************************************************
    * Adaptation of TAsphyreImages for SDL images.  This class is a specialized
    * container class, much like a TList, for storing and easily accessing
@@ -798,6 +803,14 @@ procedure TSdlBackgroundImage.processImage(image: PSdlSurface);
 begin
   SDL_SetColorKey(image, false, 0);
   integer(FColorKey) := 0;
+end;
+
+{ TSdlOpaqueImage }
+
+procedure TSdlOpaqueImage.processImage(image: PSdlSurface);
+begin
+   SDL_SetColorKey(image, false, 0);
+   image.BlendMode := [];
 end;
 
 initialization
