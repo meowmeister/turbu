@@ -72,6 +72,7 @@ type
       function GetThisObject: TRpgEvent;
       function EvalConditions(value: TRpgEventConditions): boolean;
       function EvalVar(index, value: integer; op: TComparisonOp): boolean;
+      function EvalValue(l, r: integer; op: TComparisonOp): boolean;
       function GetInt(const i: integer): integer;
       procedure SetInt(const i, Value: integer);
       function GetMapObjectCount: integer;
@@ -315,28 +316,28 @@ begin
    FSaveEnabled := value;
 end;
 
-function T2kEnvironment.EvalVar(index, value: integer; op: TComparisonOp): boolean;
-var
-   varValue: integer;
+function T2kEnvironment.EvalValue(l, r: integer; op: TComparisonOp): boolean;
 begin
-   result := false;
-   varValue := self.ints[index];
    case op of
-      co_equals: result := varValue = value;
-      co_gtE: result := varValue >= value;
-      co_ltE: result := varValue <= value;
-      co_gt: result := varValue > value;
-      co_lt: result := varValue < value;
-      co_notEquals: result := varValue <> value;
+      co_equals: result := l = r;
+      co_gtE: result := l >= r;
+      co_ltE: result := l <= r;
+      co_gt: result := l > r;
+      co_lt: result := l < r;
+      co_notEquals: result := l <> r;
       else assert(false);
    end;
+end;
+
+function T2kEnvironment.EvalVar(index, value: integer; op: TComparisonOp): boolean;
+begin
+   result := EvalValue(self.ints[index], value, op);
 end;
 
 function T2kEnvironment.EvalConditions(value: TRpgEventConditions): boolean;
 var
    cond: TPageConditions;
 begin
-{$MESSAGE WARN 'Incomplete feature in live unit'}
    result := true;
    for cond in value.conditions do
    begin
@@ -347,8 +348,8 @@ begin
          pc_var2: result := EvalVar(value.variable2Set, value.variable2Value, value.variable2Op);
          pc_item: result := self.HeldItems(value.itemNeeded, false) > 0;
          pc_hero: result := self.HeroPresent(value.heroNeeded);
-         pc_timer1: result := true; //TODO: Fix this
-         pc_timer2: result := true; //TODO: Fix this
+         pc_timer1: result := EvalValue(FTimer.time, value.timeRemaining, value.timer1Op);
+         pc_timer2: result := EvalValue(FTimer2.time, value.timeRemaining2, value.timer2Op);
       end;
       if not result then
          Exit;
