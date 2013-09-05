@@ -104,6 +104,7 @@
 			<DCCReference Include="menus\turbu_2k_party_target_menu.pas"/>
 			<DCCReference Include="turbu_2k_skills.pas"/>
 			<DCCReference Include="menus\turbu_2k_shop_menu.pas"/>
+			<DCCReference Include="menus\turbu_2k_save_menu.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>

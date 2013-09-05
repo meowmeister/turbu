@@ -116,8 +116,8 @@ type
       procedure placeCursor(value: integer);
       procedure setup(value: integer); virtual;
       procedure setupEx(const data: TObject); virtual;
-      procedure move; virtual;
-      procedure button(input: TButtonCode);
+      procedure move;
+      procedure button(input: TButtonCode); virtual;
       function menu(const name: string): TGameMenuBox;
 
       property currentMenu: TGameMenuBox read FCurrentMenu;

@@ -51,7 +51,7 @@ uses
    sysUtils, math, OpenGL,
    turbu_2k_environment, turbu_heroes, turbu_text_utils, turbu_database,
    turbu_constants, turbu_resists,
-   commons;
+   commons, rs_message;
 
 { TGamePartyPanel }
 
@@ -142,8 +142,8 @@ begin
          0: self.focusPage('Inventory', 0); //Item
          1: self.focusMenu('Party', 1); //skill
          2: self.focusMenu('Party', 2); //equip
-         {$MESSAGE WARN 'Incomplete feature in live unit'}
-         3:; //save
+         3: if optionEnabled[3] then
+            SaveMenu;
          4:
          begin
             self.return;
