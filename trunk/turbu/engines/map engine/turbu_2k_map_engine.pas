@@ -739,7 +739,7 @@ procedure T2kMapEngine.Start;
 begin
    FTimer.OnTimer := self.OnTimer;
    FTimer.OnProcess := self.OnProcess;
-   FTitleScreen := true;
+   TitleScreen;
    FTimer.Enabled := true;
 end;
 
@@ -775,6 +775,7 @@ begin
          FreeAndNil(FCurrentMap);
          FCanvas.DrawBox(rect(0, 0, 1, 1), SDL_WHITE); //force SDL to sync shaders
       end, true);
+   PlaySystemMusic(bgmTitle);
 end;
 
 procedure T2kMapEngine.DrawWeather;
