@@ -666,10 +666,10 @@ var
 begin
    stream := TBytesStream.Create((db.FieldByName('battles') as TBlobField).AsBytes);
    try
-      list := (instance as TMapRegion).FBattles;
       setLength(list, stream.Size div sizeof(word));
       if length(list) > 0 then
          stream.Read(list[0], stream.Size);
+      (instance as TMapRegion).FBattles := list;
    finally
       stream.Free;
    end;
@@ -686,7 +686,7 @@ begin
       list := (instance as TMapRegion).FBattles;
       if length(list) > 0 then
          stream.Write(list[0], length(list) * sizeof(word));
-      (db.FieldByName('battles') as TBlobField).AsBytes := stream.Bytes;
+      (db.FieldByName('battles') as TBlobField).AsBytes := copy(stream.Bytes, 0, length(list) * sizeof(word));
    finally
       stream.Free;
    end;

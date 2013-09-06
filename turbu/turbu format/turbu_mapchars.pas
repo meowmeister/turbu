@@ -22,7 +22,7 @@ uses
    sdl_sprite, sg_defs,
    rsImport,
    charset_data,
-   turbu_map_sprites, turbu_map_objects, turbu_map_metadata, turbu_defs,
+   turbu_map_sprites, turbu_map_objects, turbu_map_metadata, turbu_defs, turbu_characters,
    dwsJSON;
 
 type
@@ -107,8 +107,10 @@ type
 
    TRpgVehicle = class(TRpgCharacter)
    private
+      FTemplate: TVehicleTemplate;
       FSprite: string;
       FSpriteIndex: integer;
+      FTranslucent: boolean;
       FMap: integer;
       FX: integer;
       FY: integer;
@@ -123,11 +125,13 @@ type
       procedure setMap(const Value: integer);
       function getFacing: integer;
       procedure setFacing(const Value: integer);
+      procedure CreateSprite;
    protected
       function getX: integer; override;
       function getY: integer; override;
       function getBase: TMapSprite; override;
       procedure doFlash(r, g, b, power: integer; time: integer); override;
+      procedure setTranslucency(const Value: integer); virtual;
    public
       [NoImport]
       constructor Create(mapTree: TMapTree; which: integer);
@@ -137,6 +141,8 @@ type
       procedure ChangeSprite(name: string; translucent: boolean); override;
       procedure SetMusic(name: string; fadeIn, volume, tempo, balance: integer);
       function inUse: boolean;
+      [NoImport]
+      procedure CheckSprite;
 
       property sprite: string read FSprite;
       property spriteIndex: integer read FSpriteIndex;
@@ -149,6 +155,8 @@ type
       property gamesprite: TMapSprite read FGameSprite write FGameSprite;
       property vehicleIndex: integer read FVehicleIndex;
       property carrying: TRpgCharacter read FCarrying write FCarrying;
+      [NoImport]
+      property template: TVehicleTemplate read FTemplate;
    end;
 
 implementation
@@ -460,22 +468,10 @@ end;
 
 { TRpgVehicle }
 
-procedure TRpgVehicle.ChangeSprite(name: string; translucent: boolean);
-begin
-   TMonitor.Enter(self);
-   try
-      Self.setSprite(name, translucent);
-   finally
-      TMonitor.Exit(self);
-   end;
-end;
-
 constructor TRpgVehicle.Create(mapTree: TMapTree; which: integer);
-type
-   TVhSpriteClass = class of TVehicleSprite;
 var
    loc: TLocation;
-//   newSprite: TVhSpriteClass;
+   template: TVehicleTemplate;
 begin
    inherited Create;
    FVehicleIndex := which;
@@ -486,27 +482,43 @@ begin
       FX := loc.x;
       FY := loc.y;
    end;
-   setSprite(GDatabase.vehicles[which].mapSprite, self.translucency > 3);
-
-{$MESSAGE WARN 'Commented out code in live unit'}
-{   case which of
-      vh_boat, vh_ship: newSprite := TGroundVehicleSprite;
-      vh_airship: newSprite := TAirshipSprite;
-      else raise ESpriteError.Create('Bad vehicle type');
-   end;
-   FGameSprite := newSprite.Create(GSpriteEngine, self, nil);
-   if FMap = GSpriteEngine.mapID then
-      FGameSprite.location := point(FX, FY)
-   else FGameSprite.location := point(0, -1);
-   FGameSprite.facing := facing_left;
-   (FGameSprite as TVehicleSprite).update(FSprite, false);
-}
+   template := GDatabase.vehicles[which];
+   FTemplate := template;
 end;
 
 destructor TRpgVehicle.Destroy;
 begin
    FGameSprite.Free;
    inherited;
+end;
+
+procedure TRpgVehicle.ChangeSprite(name: string; translucent: boolean);
+begin
+   TMonitor.Enter(self);
+   try
+      Self.setSprite(name, translucent);
+   finally
+      TMonitor.Exit(self);
+   end;
+end;
+
+procedure TRpgVehicle.CheckSprite;
+begin
+   FreeAndNil(FGameSprite);
+   if FMap = GSpriteEngine.mapID then
+      CreateSprite;
+end;
+
+procedure TRpgVehicle.CreateSprite;
+begin
+   assert(FMap = GSpriteEngine.mapID);
+   FGameSprite := TVehicleSprite.Create(GSpriteEngine, self,
+      procedure begin FGameSprite := nil; end);
+   setSprite(template.mapSprite, FTranslucent);
+
+   FGameSprite.location := point(FX, FY);
+   FGameSprite.facing := facing_left;
+   (FGameSprite as TVehicleSprite).update(FSprite, false);
 end;
 
 procedure TRpgVehicle.doFlash(r, g, b, power: integer; time: integer);
@@ -522,13 +534,15 @@ end;
 
 function TRpgVehicle.getFacing: integer;
 begin
-   result := 0;
-   case FGameSprite.facing of
-      facing_up: result := 8;
-      facing_right: result := 6;
-      facing_down: result := 2;
-      facing_left: result := 4;
-   end;
+   if assigned(FGameSprite) then
+      case FGameSprite.facing of
+         facing_up: result := 8;
+         facing_right: result := 6;
+         facing_down: result := 2;
+         facing_left: result := 4;
+         else raise Exception.Create('Invalid facing');
+      end
+   else result := 4;
 end;
 
 function TRpgVehicle.getLocation: TSgPoint;
@@ -538,13 +552,15 @@ end;
 
 function TRpgVehicle.getX: integer;
 begin
-   FX := FGameSprite.location.x;
+   if assigned(FGameSprite) then
+      FX := FGameSprite.location.x;
    result := FX;
 end;
 
 function TRpgVehicle.getY: integer;
 begin
-   FY := FGameSprite.location.Y;
+   if assigned(FGameSprite) then
+      FY := FGameSprite.location.Y;
    result := FY;
 end;
 
@@ -552,19 +568,22 @@ procedure TRpgVehicle.setLocation(const Value: TSgPoint);
 begin
    FX := value.x;
    FY := value.Y;
-   FGameSprite.location := value;
+   if assigned(FGameSprite) then
+      FGameSprite.location := value;
 end;
 
 procedure TRpgVehicle.setX(const Value: integer);
 begin
    FX := value;
-   FGameSprite.location := point(FX, FGameSprite.location.Y);
+   if assigned(FGameSprite) then
+      FGameSprite.location := point(FX, FGameSprite.location.Y);
 end;
 
 procedure TRpgVehicle.setY(const Value: integer);
 begin
    FY := value;
-   FGameSprite.location := point(FGameSprite.location.x, FY);
+   if assigned(FGameSprite) then
+      FGameSprite.location := point(FGameSprite.location.x, FY);
 end;
 
 function TRpgVehicle.inUse: boolean;
@@ -574,23 +593,26 @@ end;
 
 procedure TRpgVehicle.setFacing(const Value: integer);
 begin
-   case value of
-      8: FGameSprite.facing := facing_up;
-      6: FGameSprite.facing := facing_right;
-      4: FGameSprite.facing := facing_left;
-      2: FGameSprite.facing := facing_down;
-   end;
+   if assigned(FGameSprite) then
+      case value of
+         8: FGameSprite.facing := facing_up;
+         6: FGameSprite.facing := facing_right;
+         4: FGameSprite.facing := facing_left;
+         2: FGameSprite.facing := facing_down;
+      end;
 end;
 
 procedure TRpgVehicle.setMap(const Value: integer);
 begin
    FMap := Value;
-   FGameSprite.visible := (map = GSpriteEngine.mapID);
+   if assigned(FGameSprite) then
+      FGameSprite.visible := (map = GSpriteEngine.mapID);
 end;
 
 procedure TRpgVehicle.SetMusic(name: string; fadeIn, volume, tempo,
   balance: integer);
 begin
+{$MESSAGE WARN 'Incomplete feature in live unit'}
    //TODO: Implement this
 end;
 
@@ -598,8 +620,17 @@ procedure TRpgVehicle.setSprite(filename: string; translucent: boolean);
 begin
    if not GraphicExists(filename, 'mapsprite') then
       Exit;
-   FSprite := filename;
-   self.translucency := 3 * ord(translucent);
+   FSprite := ChangeFileExt(filename, '');
+   FTranslucent := translucent;
+   if assigned(FGameSprite) then
+      FGameSprite.update(FSprite, translucent);
+end;
+
+procedure TRpgVehicle.setTranslucency(const Value: integer);
+begin
+   FTranslucent := value >= 3;
+   if assigned(FGameSprite) then
+      inherited setTranslucency(value);
 end;
 
 end.

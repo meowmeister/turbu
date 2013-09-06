@@ -30,6 +30,7 @@ type
    TTileMatrix = TMatrix<TMapTile>;
    TTileMatrixList = class(TObjectList<TTileMatrix>);
    TRenderProc = procedure of object;
+   TPartySpriteChangedEvent = procedure(value: TCharSprite) of object;
 
    T2kSpriteEngine = class(TSpriteEngine)
    private
@@ -47,6 +48,7 @@ type
       FCurrentParty: TCharSprite;
       FGameState: TGameState;
       FSavedState: TGameState;
+      FPartySpritechanged: TPartySpriteChangedEvent;
 
       //visual effects
       FShaderEngine: TdmShaders;
@@ -186,6 +188,7 @@ type
       property DisplacementY: single read FDisplacementY;
       property State: TGameState read FGameState;
       property OnDrawWeather: TRenderProc read FOnDrawWeather write FOnDrawWeather;
+      property OnPartySpriteChanged: TPartySpriteChangedEvent read FPartySpriteChanged write FPartySpriteChanged;
    end;
 
 var
@@ -1096,6 +1099,8 @@ begin
       value.tiles[1].Engine := self;
       value.tiles[2].Engine := self;
    end;
+   if assigned(FPartySpriteChanged) then
+      FPartySpriteChanged(value);
 end;
 
 procedure T2kSpriteEngine.SetScreenLocked(const Value: boolean);

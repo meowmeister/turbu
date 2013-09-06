@@ -420,7 +420,7 @@ var
    enum: TRttiEnumerator;
    rmResult: TReferenceResult;
 begin
-   assert(value.Kind = tkClass);
+   assert((value.Kind = tkClass) or (value.IsEmpty and (value.TypeInfo.Kind = tkClass)));
    val := FCurrentField.FieldType as TRttiInstanceType;
 
    rmResult := handleReferenceManagement(db, value, fieldname);
@@ -541,6 +541,12 @@ begin
       tkInt64: result := db.FieldByName(fieldname).AsLargeInt;
       tkUString: result := downloadString(db, fieldname);
       tkFloat: result := db.FieldByName(fieldname).AsExtended;
+      tkUnknown:
+      begin
+         if value.TypeInfo.Kind = tkClass then
+            result := downloadClass(db, value, fieldName)
+         else assert(false);
+      end;
       else assert(false);
    end;
 end;

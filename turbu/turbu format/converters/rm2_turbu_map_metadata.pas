@@ -106,8 +106,9 @@ begin
       self.currentMap := base.items[base.currentMap].parent
    else self.currentMap := base.currentMap;
    FStartLocs.Add(-1, TLocation.Create(base.heroStartMap, base.heroStartX, base.heroStartY));
+   FStartLocs.Add(0, TLocation.Create(0, 0, 0));
    for v := Low(TVehicleSet) to High(TVehicleSet) do
-      FStartLocs.Add(ord(v), TLocation.Create(base.vhStartMap[v], base.vhStartX[v], base.vhStartY[v]));
+      FStartLocs.Add(ord(v) + 1, TLocation.Create(base.vhStartMap[v], base.vhStartX[v], base.vhStartY[v]));
 end;
 
 end.

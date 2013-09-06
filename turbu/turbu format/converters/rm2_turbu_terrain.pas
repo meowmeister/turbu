@@ -28,9 +28,9 @@ begin
    FDamage := base.damage;
    FEncounterMultiplier := base.encounterMultiplier;
    FBattleBg := string(base.battleBg);
-   setLength(FVehiclePass, ord(high(TVehicleSet)) + 1);
+   setLength(FVehiclePass, ord(high(TVehicleSet)) + 2);
    for vh := Low(TVehicleSet) to High(TVehicleSet) do
-      FVehiclePass[ord(vh)] := base.vehiclePass[vh];
+      FVehiclePass[ord(vh) + 1] := base.vehiclePass[vh];
    FAirshipLanding := base.airshipLanding;
    FConcealment := base.Concealment;
    if assigned(FSoundEffect) then
