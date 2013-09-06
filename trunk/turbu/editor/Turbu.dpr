@@ -37,7 +37,6 @@ uses
   rm2_turbu_resists in '..\turbu format\converters\rm2_turbu_resists.pas',
   discInterface in '..\discInterface.pas',
   frame_params in 'frame_params.pas' {frameParams: TFrame},
-  turbu_script_basis in '..\turbu format\turbu_script_basis.pas',
   findfile in '..\..\classes\findfile\findfile.pas',
   function_header in 'function_header.pas' {frmFuncHeader},
   rm2_turbu_map_metadata in '..\turbu format\converters\rm2_turbu_map_metadata.pas',

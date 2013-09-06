@@ -119,7 +119,6 @@
 				<Form>frameParams</Form>
 				<DesignClass>TFrame</DesignClass>
 			</DCCReference>
-			<DCCReference Include="..\turbu format\turbu_script_basis.pas"/>
 			<DCCReference Include="..\..\classes\findfile\findfile.pas"/>
 			<DCCReference Include="function_header.pas">
 				<Form>frmFuncHeader</Form>
