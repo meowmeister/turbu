@@ -68,11 +68,11 @@ var
 begin
    stream := TBytesStream.Create((db.FieldByName('VehiclePass') as TBlobField).AsBytes);
    try
-      list := (instance as TRpgTerrain).FVehiclePass;
       setLength(list, stream.Size);
       if length(list) > 0 then
          for i := 0 to High(list) do
             stream.Read(list[i], 1);
+      (instance as TRpgTerrain).FVehiclePass := list;
    finally
       stream.Free;
    end;
@@ -91,7 +91,7 @@ begin
       if length(list) > 0 then
          for i := 0 to High(list) do
             stream.Write(list[i], 1);
-      (db.FieldByName('VehiclePass') as TBlobField).AsBytes := stream.Bytes;
+      (db.FieldByName('VehiclePass') as TBlobField).AsBytes := copy(stream.Bytes, 0, length(list));
    finally
       stream.Free;
    end;

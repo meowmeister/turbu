@@ -68,7 +68,7 @@ type
       function towardsHero: TFacing; inline;
       function canJump(which: TPath): boolean;
       function isDirLocked: boolean;
-      procedure startMoveTo(target: TSgPoint); overload;
+      procedure startMoveTo(target: TSgPoint);
       procedure setMoveOrder(const Value: TPath);
       procedure beginJump;
       procedure endJump;
@@ -118,6 +118,8 @@ type
       procedure SetFlashEvents(tile: TEventTile);
       procedure updateMove(data: TRpgEventPage);
       procedure DoUpdatePage(data: TRpgEventPage); virtual; abstract;
+      procedure bump(bumper: TMapSprite); virtual;
+      procedure SetTarget(const value: TsgPoint); virtual;
 
       property animFix: boolean read getAnimFix write FAnimFix;
       property moveQueue: TPath read FMoveQueue write SetMoveQueue;
@@ -180,7 +182,7 @@ type
       FMoved: boolean;
       FActionMatrix: TMoveMatrix;
       FAction: integer;
-      FMoveFrame: byte;
+      FMoveFrame: integer;
       procedure setFacing(data: TFacing); override;
       procedure updateTiles;
       procedure setLocation(data: TSgPoint); override;
@@ -399,7 +401,7 @@ begin
    FJumpAnimateOverride := true;
    midpoint := ((FJumpTarget - FLocation) * TILE_SIZE) / 2;
    dec(midpoint.Y, TILE_SIZE.Y div 2);
-   FTarget := (FLocation * TILE_SIZE) + midpoint;
+   setTarget((FLocation * TILE_SIZE) + midpoint);
    dec(FTarget.x, WIDTH_BIAS);
    if not self.dirLocked and (FLocation <> FJumpTarget) then
       self.facing := towards(FLocation, FJumpTarget);
@@ -411,11 +413,16 @@ end;
 
 procedure TMapSprite.endJump;
 begin
-   FTarget := FLocation * TILE_SIZE;
+   setTarget(FLocation * TILE_SIZE);
    dec(FTarget.x, WIDTH_BIAS);
    FJumping := false;
    assert(not assigned(FMoveTime));
    FMoveTime := TRpgTimestamp.Create(FJumpTime);
+end;
+
+procedure TMapSprite.bump(bumper: TMapSprite);
+begin
+   //this virtual method intentionally left blank
 end;
 
 function TMapSprite.canJump(which: TPath): boolean;
@@ -605,7 +612,7 @@ begin
    FLocation := target;
    lTarget := target;
    GSpriteEngine.normalizePoint(lTarget.x, lTarget.y);
-   FTarget := lTarget * TILE_SIZE;
+   setTarget(lTarget * TILE_SIZE);
    if lTarget <> target then
    begin
       case FMoveDir of
@@ -659,6 +666,9 @@ procedure TMapSprite.SetMovePause;
 var
    frequency: integer;
 begin
+   if not (FMoveFreq in [1..8]) then
+      raise Exception.CreateFmt('Invalid move frequency: %d', [FMoveFreq]);
+
    if (FMoveFreq < 8) then
    begin
       FPause.Free;
@@ -672,6 +682,11 @@ procedure TMapSprite.SetMoveQueue(const Value: TPath);
 begin
    FMoveQueue.Free;
    FMoveQueue := Value;
+end;
+
+procedure TMapSprite.SetTarget(const value: TsgPoint);
+begin
+   FTarget := value;
 end;
 
 procedure TMapSprite.place;
@@ -940,7 +955,7 @@ end;
 procedure TMapSprite.setLocation(data: TSgPoint);
 begin
    FLocation := data;
-   FTarget := data * TILE_SIZE;
+   setTarget(data * TILE_SIZE);
    dec(FTarget.x, WIDTH_BIAS);
 end;
 
@@ -1021,15 +1036,20 @@ procedure TCharSprite.activateEvents(where: TTile);
 var
    eventList: TArray<TMapSprite>;
    i: integer;
-   eventPtr: TRpgMapObject;
+   mapObj: TRpgMapObject;
+   sprite: TMapSprite;
 begin
    eventList := (where as TMapTile).event;
-   for i := 0 to high(eventlist) do
+   for sprite in eventlist do
    begin
-      eventPtr := (eventList[i]).event;
-      if (eventList[i] <> self) and assigned(eventPtr.currentPage) and (eventPtr.currentPage.hasScript)
-         and (eventPtr.currentPage.startCondition = by_key) then
-         GMapObjectManager.runPageScript(eventPtr.currentPage);
+      if sprite = self then
+         Continue;
+      mapObj := sprite.event;
+      if mapObj = nil then
+         sprite.bump(self)
+      else if assigned(mapObj.currentPage) and (mapObj.currentPage.hasScript)
+         and (mapObj.currentPage.startCondition = by_key) then
+         GMapObjectManager.runPageScript(mapObj.currentPage);
    end;
 end;
 

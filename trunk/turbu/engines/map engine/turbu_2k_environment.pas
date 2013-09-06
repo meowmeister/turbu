@@ -118,6 +118,8 @@ type
       [NoImport]
       procedure UpdateEvents;
       [NoImport]
+      procedure CheckVehicles;
+      [NoImport]
       procedure Serialize(writer: TdwsJSONWriter; explicitSave: boolean);
       [NoImport]
       procedure Deserialize(obj: TdwsJSONObject);
@@ -169,7 +171,7 @@ uses
 constructor T2kEnvironment.Create(database: TRpgDatabase);
 var
    hero: THeroTemplate;
-//   vehicle: TVehicleTemplate;
+   vehicle: TVehicleTemplate;
 begin
    assert(GEnvironment = nil);
    GEnvironment := self;
@@ -182,10 +184,9 @@ begin
    setLength(FSwitches, database.switch.count + 1);
    setLength(FInts, database.variable.Count + 1);
    FVehicles := TVehicleList.Create;
-{$MESSAGE WARN 'Commented out code in live unit'}
-   //TODO: Add vehicle support
-{   for vehicle in database.vehicles.Values do
-      FVehicles.Add(TRpgVehicle.Create(database.mapTree, vehicle.id));}
+   database.vehicles.download;
+   for vehicle in database.vehicles.Values do
+      FVehicles.Add(TRpgVehicle.Create(database.mapTree, vehicle.id));
    FMenuEnabled := true;
    TRpgEventConditions.OnEval := Self.EvalConditions;
    FEventMap := TDictionary<TRpgMapObject, TRpgEvent>.Create;
@@ -238,6 +239,15 @@ end;
 function T2kEnvironment.getBattleCount: integer;
 begin
    result := 0;
+end;
+
+procedure T2kEnvironment.CheckVehicles;
+var
+   vehicle: TRpgVehicle;
+begin
+   for vehicle in FVehicles do
+      if vehicle.template.id <> 0 then
+         vehicle.CheckSprite;
 end;
 
 procedure T2kEnvironment.ClearEvents();
@@ -325,7 +335,7 @@ begin
       co_gt: result := l > r;
       co_lt: result := l < r;
       co_notEquals: result := l <> r;
-      else assert(false);
+      else raise Exception.CreateFmt('T2kEnvironment.EvalValue: Invalid op: %d', [ord(op)]);
    end;
 end;
 
@@ -359,7 +369,7 @@ end;
 
 procedure T2kEnvironment.GameOver;
 begin
-{$MESSAGE WARN 'Commented out code in live unit'}
+{$MESSAGE WARN 'Incomplete feature in live unit'}
    //TODO: implement this
 end;
 

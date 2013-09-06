@@ -42,7 +42,7 @@ type
       class procedure EnsureBroadcastList;
    private
       FGridLoc: TSgPoint; //where this tile is located on the map
-      FTerrainID: word;
+      FTerrainID: integer;
       FAttributes: TTileAttributes;
    protected
       FTileID: word; // which tile from the overall x,y grid of the chipset
@@ -63,7 +63,7 @@ type
 
       property id: word read FTileID write FTileID;
       property location: TSgPoint read FGridLoc write FGridLoc;
-      property terrain: word read FTerrainID write FTerrainID;
+      property terrain: integer read FTerrainID write FTerrainID;
       property attributes: TTileAttributes read FAttributes write FAttributes;
    end;
 
@@ -296,6 +296,7 @@ begin
    tileGroup := chip_data.Records[tiledata.group];
    imageName := tileGroup.group.filename;
    result := tileGroup.attributes[tileData.tile];
+   FTerrainID := tileGroup.terrain[tileData.tile];
    fAttributes := result;
    z := decodeZOrder(result) + layer;
 end;

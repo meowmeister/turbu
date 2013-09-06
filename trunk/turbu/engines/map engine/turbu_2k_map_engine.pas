@@ -45,6 +45,7 @@ type
       FTransitionFirstFrameDrawn: boolean;
       FRenderPause: TRpgTimestamp;
       FRenderPauseLock: TCriticalSection;
+      procedure UpdatePartySprite(value: TCharSprite);
    protected
       FDatabase: TRpgDatabase;
       FCanvas: TSdlCanvas;
@@ -55,7 +56,7 @@ type
 
       FScrollPosition: TSgPoint;
       FTimer: TAsphyreTimer;
-      FPartySprite: THeroSprite;
+      FPartySprite: TCharSprite;
       FObjectManager: TMapObjectManager;
       FShaderEngine: TdmShaders;
       FImageEngine: TImageEngine;
@@ -123,7 +124,7 @@ type
       procedure RenderUnpause;
       function Load(const savefile: string): boolean;
 
-      property PartySprite: THeroSprite read FPartySprite;
+      property PartySprite: TCharSprite read FPartySprite;
       property ImageEngine: TImageEngine read FImageEngine;
       property WeatherEngine: TWeatherSystem read FWeatherEngine;
       property CurrentMap: T2kSpriteEngine read FCurrentMap;
@@ -460,6 +461,7 @@ begin
          if not page.isTile then
             loadSprite(page.name);
    end;
+   GEnvironment.CheckVehicles
 end;
 
 procedure T2kMapEngine.prepareMap(const data: IMapMetadata);
@@ -666,6 +668,7 @@ function T2kMapEngine.doneLoadingMap: boolean;
 begin
    FCurrentMap := FWaitingMapEngine;
    FWaitingMapEngine := nil;
+   FCurrentMap.OnPartySpriteChanged := self.UpdatePartySprite;
    FCurrentMap.OnDrawWeather := self.DrawWeather;
    if FImageEngine = nil then
    begin
@@ -778,6 +781,12 @@ begin
          FCanvas.DrawBox(rect(0, 0, 1, 1), SDL_WHITE); //force SDL to sync shaders
       end, true);
    PlaySystemMusic(bgmTitle);
+end;
+
+procedure T2kMapEngine.UpdatePartySprite(value: TCharSprite);
+begin
+   if assigned(value) then
+      FPartySprite := value;
 end;
 
 procedure T2kMapEngine.DrawWeather;

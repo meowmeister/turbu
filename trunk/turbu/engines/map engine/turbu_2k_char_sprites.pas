@@ -2,7 +2,7 @@ unit turbu_2k_char_sprites;
 
 interface
 uses
-   types,
+   Types, SysUtils,
    commons, tiles, turbu_2k_map_tiles, turbu_map_sprites, turbu_mapchars,
    turbu_defs, turbu_heroes, turbu_pathing,
    sdl_sprite, SG_defs;
@@ -14,26 +14,27 @@ type
 
    TVehicleTile = class(TEventTile)
    protected
-      FState: TVehicleState;
       FOwner: TVehicleSprite;
-      FOffset: TPoint;
+      FOffset: TsgPoint;
 
-      procedure offsetTowards(const offset: TPoint; const state: TVehicleState);
+      procedure offsetTowards(const offset: TsgPoint; const state: TVehicleState);
    public
       constructor Create(const base: TEventTile; parent: TSpriteEngine); reintroduce;
+      procedure Draw; override;
    end;
 
    THeroSprite = class;
 
-   TTileClass = class of TVehicleTile;
-
    TUnloadMethod = (um_here, um_front);
 
-   TVehicleSprite = class abstract(TCharSprite)
+   TVehicleSprite = class (TCharSprite)
    private
       FTemplate: TRpgVehicle;
       FCarrying: THeroSprite;
-      FStateCounter: byte;
+      FStateCounter: integer;
+      FAltitude: integer;
+      FShadow: TSprite;
+      FOnCleanup: TProc;
 
       procedure setState(const Value: TVehicleState);
       function unloadLocation: TSgPoint;
@@ -46,39 +47,21 @@ type
 
       function canMoveForward: boolean; override;
       procedure reportState(which: TVehicleState);
-      function unload: boolean; virtual;
-      procedure doAction(const button: TButtonCode); virtual;
+      function unload: boolean;
+      procedure doAction(const button: TButtonCode);
+      procedure bump(bumper: TMapSprite); override;
+      procedure SetTarget(const value: TsgPoint); override;
    public
-      constructor Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle; tileClass: TTileClass); reintroduce; virtual;
+      constructor Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle;
+         const cleanup: TProc); reintroduce;
       destructor Destroy; override;
-      procedure launch; virtual;
+      procedure launch;
       procedure place; override;
       procedure action(const button: TButtonCode = btn_enter); override; final;
+      procedure setLocation(data: TSgPoint); override;
 
       property state: TVehicleState read FState write setState;
       property template: TRpgVehicle read FTemplate;
-   end;
-
-   TGroundVehicleSprite = class(TVehicleSprite)
-   protected
-      function canMoveForward: boolean; override;
-      procedure doAction(const button: TButtonCode = btn_enter); override;
-   public
-      constructor Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle; tileClass: TTileClass); override;
-      procedure launch; override;
-   end;
-
-   TAirshipSprite = class(TVehicleSprite)
-   private
-      FShadow: TTile;
-   protected
-      function unload: boolean; override;
-   public
-      constructor Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle; tileClass: TTileClass); override;
-      destructor Destroy; override;
-      procedure launch; override;
-      procedure place; override;
-      procedure setLocation(data: TSgPoint); override;
    end;
 
    THeroSprite = class(TCharSprite)
@@ -109,34 +92,24 @@ type
 
 implementation
 uses
-   charset_data, turbu_2k_sprite_engine, timing, turbu_database, turbu_sprites,
+   turbu_2k_sprite_engine, timing, turbu_database, turbu_sprites,
+   turbu_characters, turbu_terrain,
    turbu_2k_environment;
 
 const
-   AIRSHIP_OFFSET: TPoint = (x: 0; y: -16);
+   AIRSHIP_OFFSET: TsgPoint = (x: 0; y: -16);
    VEHICLE_ANIM_RATE = 10;
-
-type
-   TGroundVehicleTile = class(TVehicleTile)
-   public
-      procedure Draw; override;
-   end;
-
-   TAirshipTile = class(TVehicleTile)
-   public
-      procedure Draw; override;
-   end;
 
 { TVehicleTile }
 
 constructor TVehicleTile.Create(const base: TEventTile; parent: TSpriteEngine);
 begin
    inherited Create(base.event, parent as T2kSpriteEngine);
-   self.z := base.z;
+   self.z := 3;
    self.Assign(base);
 end;
 
-procedure TVehicleTile.offsetTowards(const offset: TPoint; const state: TVehicleState);
+procedure TVehicleTile.offsetTowards(const offset: TsgPoint; const state: TVehicleState);
 var displacement: shortint;
 begin
    if FOffset.x <> offset.x then
@@ -159,50 +132,62 @@ end;
 
 { TVehicleSprite }
 
-procedure TVehicleSprite.action(const button: TButtonCode);
-begin
-   if FState = vs_active then
-      doAction(button);
-end;
-
-function TVehicleSprite.canMoveForward: boolean;
+constructor TVehicleSprite.Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle;
+   const cleanup: TProc);
 var
-   engine: T2kSpriteEngine;
-begin
-   engine := FEngine as T2kSpriteEngine;
-   result := engine.edgeCheck(FLocation.X, FLocation.Y, self.facing) and
-      GDatabase.terrains[TTile(engine[0, inFront.x, inFront.y]).terrain].vehiclePass[FTemplate.vehicleIndex];
-end;
-
-constructor TVehicleSprite.Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle; tileClass: TTileClass);
-var dummy: TVehicleTile;
+   newTile: TVehicleTile;
 begin
    inherited Create(nil, parent);
    self.OnChangeSprite := whichVehicle.ChangeSprite;
    whichVehicle.gamesprite := self;
    self.FTemplate := whichVehicle;
    //update char tiles to vehicle tiles
-   dummy := tileClass.Create(FTiles[2] as TEventTile, parent);
-   dummy.FOwner := self;
+   newTile := TVehicleTile.Create(FTiles[2] as TEventTile, parent);
+   newTile.FOwner := self;
    FTiles[2].Free;
-   FTiles[2] := dummy;
-   dummy := tileClass.Create(FTiles[1] as TEventTile, parent);
-   dummy.FOwner := self;
+   FTiles[2] := newTile;
+   newTile := TVehicleTile.Create(FTiles[1] as TEventTile, parent);
+   newTile.FOwner := self;
    FTiles[1].Free;
-   FTiles[1] := dummy;
+   FTiles[1] := newTile;
+
    visible := (whichVehicle.map = T2kSpriteEngine(FEngine).mapObj.id);
-//   FMapObj := TEvent.create(SCRIPT_HEADER + 'rideVehicle;' + SCRIPT_FOOTER);
-   FAnimated := true;
+   FAnimated := false;
+   FAltitude := whichVehicle.template.altitude;
+   if FAltitude = 0 then
+      FUnloadMethod := um_front
+   else FUnloadMethod := um_here;
+   FShadow := TSprite.Create(FTiles[1]);
+//   FShadow.ImageName := 'SysShadow';
+   FShadow.Alpha := 160;
+   FShadow.Z := 1;
+   FShadow.Visible := false;
+   FOnCleanup := cleanup;
+   FMoveFreq := 8;
 end;
 
 destructor TVehicleSprite.Destroy;
 begin
    FMapObj.free;
+   if assigned(FOnCleanup) then
+      FOnCleanup();
    inherited Destroy;
 end;
 
 procedure TVehicleSprite.doAction(const button: TButtonCode);
+var
+   ground: TMapTile;
 begin
+   if FAltitude = 0 then
+   begin
+      ground := T2kSpriteEngine(FEngine)[0, unloadLocation.x, unloadLocation.y];
+      if (button = btn_enter) and (not ground.open(nil)) then
+      begin
+         self.activateEvents(ground);
+         Exit;
+      end;
+   end;
+
    case button of
       btn_enter: self.state := vs_landing;
       btn_cancel: ;
@@ -211,15 +196,40 @@ begin
    end;
 end;
 
+procedure TVehicleTile.Draw;
+begin
+   case FOwner.FState of
+      vs_empty, vs_emptying, vs_active: ;
+      vs_launching: offsetTowards(sgPoint(0, -FOwner.FAltitude), vs_active);
+      vs_landing: offsetTowards(commons.origin, vs_emptying);
+      else assert(false);
+   end;
+   inherited Draw;
+end;
+
 procedure TVehicleSprite.launch;
 begin
    self.state := vs_launching;
    FTiles[1].Z := 13;
    FTiles[2].Z := 13;
+   FAnimated := true;
+
+   if FTemplate.template.movementStyle <> msSurface then
+   begin
+      if self.facing = facing_up then
+         self.facing := facing_right
+      else if self.facing = facing_down then
+         self.facing := facing_left;
+      FShadow.visible := true;
+      FShadow.x := FTiles[1].x + 4;
+      FShadow.y := FTiles[1].y;
+      FShadow.Z := 13;
+   end;
 end;
 
 procedure TVehicleSprite.place;
-var kept: word;
+var
+   kept: integer;
 begin
    kept := FMoveFrame;
    inherited place;
@@ -234,6 +244,17 @@ begin
    if (GEnvironment.Party.base = self) and (FMoved) and (not GSpriteEngine.screenLocked) then
       T2kSpriteEngine(FEngine).moveTo(trunc(FTiles[1].X + GSpriteEngine.DisplacementX),
                                trunc(FTiles[1].Y + GSpriteEngine.Displacementy));
+
+   if FMoved and (FTemplate.template.movementStyle <> msSurface) then
+   begin
+      case self.facing of
+         facing_up: FShadow.Y := FShadow.Y - 4;
+         facing_right: FShadow.x := FShadow.x + 4;
+         facing_down: FShadow.Y := FShadow.Y + 4;
+         facing_left: FShadow.x := FShadow.x - 4;
+      end;
+   end;
+
 end;
 
 procedure TVehicleSprite.reportState(which: TVehicleState);
@@ -249,10 +270,15 @@ end;
 procedure TVehicleSprite.setState(const Value: TVehicleState);
 begin
    FState := Value;
-   TVehicleTile(FTiles[1]).FState := value;
-   TVehicleTile(FTiles[2]).FState := value;
    if FState = vs_emptying then
       self.unload;
+end;
+
+procedure TVehicleSprite.SetTarget(const value: TsgPoint);
+begin
+   if FState = vs_active then
+      FTarget := value + TVehicleTile(FTiles[1]).FOffset
+   else inherited SetTarget(value);
 end;
 
 function TVehicleSprite.unload: boolean;
@@ -269,6 +295,9 @@ begin
       FCarrying.location := self.unloadLocation;
       FCarrying.visible := true;
       T2kSpriteEngine(FEngine).currentParty := FCarrying;
+      FShadow.Visible := false;
+      FTiles[1].Z := 3;
+      FTiles[2].Z := 3;
    end else self.state := vs_launching;
 end;
 
@@ -280,105 +309,32 @@ begin
    end;
 end;
 
-{ TAirshipSprite }
-
-constructor TAirshipSprite.Create(parent: TSpriteEngine; whichVehicle: TRpgVehicle; tileClass: TTileClass);
+procedure TVehicleSprite.action(const button: TButtonCode);
 begin
-   inherited Create(parent, whichVehicle, TAirshipTile);
-   FShadow := TTile.Create(parent);
-   FShadow.ImageName := 'SysShadow';
-   FShadow.Alpha := 160;
-   FShadow.Visible := false;
-   FAnimated := false;
-   FTiles[2].Z := 3;
-   FTiles[1].Z := 3;
+   if FState = vs_active then
+      doAction(button);
 end;
 
-destructor TAirshipSprite.Destroy;
+procedure TVehicleSprite.bump(bumper: TMapSprite);
 begin
-   FShadow.Free;
-   inherited;
+   if bumper is THeroSprite then
+      THeroSprite(bumper).boardVehicle;
 end;
 
-procedure TAirshipSprite.launch;
-begin
-   inherited launch;
-   FAnimated := true;
-   if self.facing = facing_up then
-      self.facing := facing_right
-   else if self.facing = facing_down then
-      self.facing := facing_left;
-   FShadow.visible := true;
-   FShadow.x := FTiles[1].x + 4;
-   FShadow.y := FTiles[1].y;
-   FShadow.Z := 13;
-end;
-
-procedure TAirshipSprite.place;
-begin
-   inherited place;
-   if FMoved then
-   begin
-      case self.facing of
-         facing_up: FShadow.Y := FShadow.Y - 4;
-         facing_right: FShadow.x := FShadow.x + 4;
-         facing_down: FShadow.Y := FShadow.Y + 4;
-         facing_left: FShadow.x := FShadow.x - 4;
-      end;
-   end;
-end;
-
-procedure TAirshipSprite.setLocation(data: TSgPoint);
-begin
-   inherited setLocation(data);
-   if assigned(FShadow) then
-   begin
-      FShadow.x := FTiles[1].x + 4;
-      FShadow.Y := FTiles[1].y;
-   end;
-   FTiles[1].x := FTiles[1].x + TAirshipTile(FTiles[1]).FOffset.x;
-   FTiles[1].y := FTiles[1].y + TAirshipTile(FTiles[1]).FOffset.y;
-   FTiles[2].x := FTiles[2].x + TAirshipTile(FTiles[2]).FOffset.x;
-   FTiles[2].y := FTiles[2].y + TAirshipTile(FTiles[2]).FOffset.y;
-end;
-
-{$WARN NO_RETVAL OFF}
-function TAirshipSprite.unload: boolean;
-begin
-   if inherited unload then
-   begin
-      FShadow.Visible := false;
-      FTiles[1].Z := 3;
-      FTiles[2].Z := 3;
-   end;
-end;
-{$WARN NO_RETVAL ON}
-
-{ TGroundVehicleSprite }
-
-constructor TGroundVehicleSprite.Create(parent: TSpriteEngine;
-  whichVehicle: TRpgVehicle; tileClass: TTileClass);
-begin
-   inherited Create(parent, whichVehicle, TGroundVehicleTile);
-   FUnloadMethod := um_front;
-end;
-
-procedure TGroundVehicleSprite.doAction(const button: TButtonCode);
+function TVehicleSprite.canMoveForward: boolean;
 var
-   ground: TMapTile;
+   engine: T2kSpriteEngine;
+   sprite: TMapSprite;
+   terrain: TRpgTerrain;
 begin
-   ground := T2kSpriteEngine(FEngine)[0, unloadLocation.x, unloadLocation.y];
-   if (button = btn_enter) and (not ground.open(nil)) then
-      self.activateEvents(ground)
-   else inherited doAction(button);
-end;
-
-function TGroundVehicleSprite.canMoveForward: boolean;
-var
-  sprite: TMapSprite;
-begin
-   result := inherited canMoveForward;
+   engine := FEngine as T2kSpriteEngine;
+   result := engine.edgeCheck(FLocation.X, FLocation.Y, self.facing);
    if result then
+   begin
+      terrain := GDatabase.terrains[engine[0, inFront.x, inFront.y].terrain];
+      result := terrain.vehiclePass[FTemplate.vehicleIndex];
+   end;
+   if result and (FAltitude = 0) then
    begin
       for sprite in (inFrontTile as TMapTile).event do
       begin
@@ -391,10 +347,19 @@ begin
    end;
 end;
 
-procedure TGroundVehicleSprite.launch;
+procedure TVehicleSprite.setLocation(data: TSgPoint);
 begin
-   inherited launch;
-   FState := vs_active;
+   inherited setLocation(data);
+   place;
+   if assigned(FShadow) then
+   begin
+      FShadow.x := FTiles[1].x + 4;
+      FShadow.Y := FTiles[1].y;
+   end;
+   FTiles[1].x := FTiles[1].x + TVehicleTile(FTiles[1]).FOffset.x;
+   FTiles[1].y := FTiles[1].y + TVehicleTile(FTiles[1]).FOffset.y;
+   FTiles[2].x := FTiles[2].x + TVehicleTile(FTiles[2]).FOffset.x;
+   FTiles[2].y := FTiles[2].y + TVehicleTile(FTiles[2]).FOffset.y;
 end;
 
 { THeroSprite }
@@ -552,28 +517,6 @@ procedure THeroSprite.queueMove(direction: TFacing);
 begin
    FNextMove := direction;
    FMoveQueued := true;
-end;
-
-{ TGroundVehicleTile }
-
-procedure TGroundVehicleTile.Draw;
-begin
-   inherited Draw;
-   if FState = vs_landing then
-      FOwner.reportState(vs_emptying);
-end;
-
-{ TAirshipTile }
-
-procedure TAirshipTile.Draw;
-begin
-   case FState of
-      vs_empty, vs_emptying, vs_active: ;
-      vs_launching: offsetTowards(AIRSHIP_OFFSET, vs_active);
-      vs_landing: offsetTowards(commons.origin, vs_emptying);
-      else assert(false);
-   end;
-   inherited Draw;
 end;
 
 end.
