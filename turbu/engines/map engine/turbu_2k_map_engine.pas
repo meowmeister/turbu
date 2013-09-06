@@ -33,19 +33,22 @@ type
    TSwitchState = (sw_noSwitch, sw_ready, sw_switching);
 
    T2kMapEngine = class(TMapEngine)
+   private type
+      TGameState = (gsTitle, gsPlaying, gsGameOver);
    private
       FStretchRatio: TSgFloatPoint;
       FSignal: TSimpleEvent;
       FButtonState: TButtonCodes;
       FSwitchState: TSwitchState;
       FTeleportThread: TThread;
-      FTitleScreen: boolean;
+      FGameState: TGameState;
       FHWND: HWND;
       FTransition: ITransition;
       FTransitionFirstFrameDrawn: boolean;
       FRenderPause: TRpgTimestamp;
       FRenderPauseLock: TCriticalSection;
       procedure UpdatePartySprite(value: TCharSprite);
+      procedure StopPlaying;
    protected
       FDatabase: TRpgDatabase;
       FCanvas: TSdlCanvas;
@@ -93,6 +96,9 @@ type
       procedure RenderFrame(Sender: TObject);
       procedure SetTransition(const Value: ITransition);
       procedure DrawWeather;
+      procedure RenderGameOver;
+      procedure RenderPlaying;
+      procedure RenderTitle;
    protected
       FDatabaseOwner: boolean;
       procedure cleanup; override;
@@ -116,6 +122,7 @@ type
       //script-accessible functions
       procedure loadRpgImage(filename: string; mask: boolean);
       procedure TitleScreen; virtual;
+      procedure GameOver; virtual;
       procedure EnterCutscene;
       procedure LeaveCutscene;
       function ReadKeyboardState: TButtonCodes;
@@ -515,7 +522,12 @@ begin
 //   ScanMemoryPoolForCorruptions;
    if FEnterLock and (button in [btn_enter, btn_cancel]) then
       Exit;
-
+   if FGameState = gsGameOver then
+   begin
+      if button = btn_enter then
+         TitleScreen;
+      Exit;
+   end;
    case GMenuEngine.State of
       msNone:
          if FCutscene > 0 then
@@ -564,7 +576,7 @@ begin
    FImageEngine := TImageEngine.Create(GSpriteEngine, FCanvas, FImages);
    GEnvironment.CreateTimers;
    GMapObjectManager.InCutscene := false;
-   FTitleScreen := false;
+   FGameState := gsPlaying;
    Play;
    result := true;
 end;
@@ -707,7 +719,7 @@ var
    metadata: TMapMetadata;
 begin
    assert(FPlaying = false);
-   FTitleScreen := false;
+   FGameState := gsPlaying;
    loc := FDatabase.mapTree.location[-1];
    metadata := FDatabase.mapTree[loc.map];
    self.loadMap(metadata);
@@ -769,9 +781,8 @@ begin
    FRenderPauseLock.Leave;
 end;
 
-procedure T2kMapEngine.TitleScreen;
+procedure T2kMapEngine.StopPlaying;
 begin
-   FTitleScreen := true;
    FPlaying := false;
    runThreadsafe(
       procedure
@@ -780,7 +791,20 @@ begin
          FreeAndNil(FCurrentMap);
          FCanvas.DrawBox(rect(0, 0, 1, 1), SDL_WHITE); //force SDL to sync shaders
       end, true);
+end;
+
+procedure T2kMapEngine.TitleScreen;
+begin
+   FGameState := gsTitle;
+   StopPlaying;
    PlaySystemMusic(bgmTitle);
+end;
+
+procedure T2kMapEngine.GameOver;
+begin
+   FGameState := gsGameOver;
+   StopPlaying;
+   PlaySystemMusic(bgmGameOver);
 end;
 
 procedure T2kMapEngine.UpdatePartySprite(value: TCharSprite);
@@ -861,8 +885,6 @@ begin
    commons.OutputFormattedString('Frame timestamp: %d:%d:%d.%d', [hour, min, sec, msec]);
 end;
 
-//var newAG: integer;
-
 procedure T2kMapEngine.RenderFrame(Sender: TObject);
 var
    current: Integer;
@@ -886,6 +908,10 @@ begin
    glColor4fv(@colors[0]);
 end;
 
+{$IFDEF MEM_CHECK}
+var newAG: integer;
+{$ENDIF}
+
 procedure MemoryCheck;
 begin
    {$IFDEF MEM_CHECK}
@@ -899,58 +925,87 @@ begin
    {$ENDIF}
 end;
 
+procedure T2kMapEngine.RenderTitle;
+begin
+   if GMenuEngine.State = msNone then
+      GMenuEngine.OpenMenu('Title');
+   GMenuEngine.Draw;
+   FCanvas.Flip;
+   FTimer.Process;
+end;
+
+procedure T2kMapEngine.RenderGameOver;
+var
+   imageName: string;
+   image: TSdlImage;
+   cls: TSdlImageClass;
+begin
+   cls := FImages.SpriteClass;
+   FImages.SpriteClass := TSdlOpaqueImage;
+   try
+      imagename := format('Special Images\%s.png', [GDatabase.layout.gameOverScreen]);
+      image := FImages.EnsureImage(imagename,
+                                   '*GameOver',
+                                   sgPoint(GDatabase.layout.width, GDatabase.layout.height));
+   finally
+      FImages.SpriteClass := cls;
+   end;
+   SDL_SetTextureBlendMode(image.surface, []);
+   image.Draw;
+   FCanvas.Flip;
+   FTimer.Process;
+end;
+
+procedure T2kMapEngine.RenderPlaying;
+begin
+   if assigned(FRenderPause) and (FRenderPause.timeRemaining = 0) then
+      FreeAndNil(FRenderPause);
+   if FRenderPause = nil then
+   begin
+      if assigned(FTransition) then
+      begin
+         glPushAttrib(GL_COLOR_BUFFER_BIT);
+         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+         if not FTransitionFirstFrameDrawn then
+         begin
+            GRenderTargets.RenderOn(RENDERER_ALT, RenderFrame, 0, true);
+            FTransitionFirstFrameDrawn := true;
+         end;
+         if not FTransition.Draw then
+         begin
+            FTransitionFirstFrameDrawn := false;
+            FTransition := nil;
+         end;
+         glPopAttrib;
+      end
+      else begin
+         if FCurrentMap.blank then
+            GRenderTargets.RenderOn(RENDERER_MAIN, nil, 0, true) //just clear the target
+         else GRenderTargets.RenderOn(RENDERER_MAIN, RenderFrame, 0, true);
+         DrawRenderTarget(GRenderTargets[RENDERER_MAIN], false);
+      end;
+
+      FCanvas.Flip;
+   end;
+end;
+
 {$R-}
 procedure T2kMapEngine.OnTimer(Sender: TObject);
 begin
-   if FTitleScreen then
-   begin
-      if GMenuEngine.State = msNone then
-         GMenuEngine.OpenMenu('Title');
-      GMenuEngine.Draw;
-      FCanvas.Flip;
-      FTimer.Process;
-      Exit;
-   end;
    MemoryCheck;
 
-   //TODO: Remove commented-out code blocks when transitions are implemented
    inc(FFrame);
    TRpgTimeStamp.NewFrame;
    FRenderPauseLock.Enter;
    try
-      if assigned(FRenderPause) and (FRenderPause.timeRemaining = 0) then
-         FreeAndNil(FRenderPause);
-      if FRenderPause = nil then
-      begin
-         if assigned(FTransition) then
-         begin
-            glPushAttrib(GL_COLOR_BUFFER_BIT);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            if not FTransitionFirstFrameDrawn then
-            begin
-               GRenderTargets.RenderOn(RENDERER_ALT, RenderFrame, 0, true);
-               FTransitionFirstFrameDrawn := true;
-            end;
-            if not FTransition.Draw then
-            begin
-               FTransitionFirstFrameDrawn := false;
-               FTransition := nil;
-            end;
-            glPopAttrib;
-         end
-         else begin
-            if FCurrentMap.blank then
-               GRenderTargets.RenderOn(RENDERER_MAIN, nil, 0, true) //just clear the target
-            else GRenderTargets.RenderOn(RENDERER_MAIN, RenderFrame, 0, true);
-            DrawRenderTarget(GRenderTargets[RENDERER_MAIN], false);
-         end;
-
-         FCanvas.Flip;
+      case FGameState of
+         gsTitle: RenderTitle;
+         gsPlaying: RenderPlaying;
+         gsGameOver: RenderGameOver;
       end;
    finally
       FRenderPauseLock.Leave;
    end;
-//   WriteTimestamp;
    if FFrame > FHeartbeat then
    begin
       FCurrentMap.advanceFrame;
@@ -983,7 +1038,7 @@ begin
       end;
    end
    else FSaveLock := KeyIsPressed(VK_F2) or KeyIsPressed(VK_F6);
-   if not FTitleScreen then
+   if FGameState = gsPlaying then
    begin
       GMapObjectManager.Tick;
       FCurrentMap.Process(sender);
