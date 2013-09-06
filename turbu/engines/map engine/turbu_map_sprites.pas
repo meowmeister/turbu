@@ -1035,7 +1035,6 @@ end;
 procedure TCharSprite.activateEvents(where: TTile);
 var
    eventList: TArray<TMapSprite>;
-   i: integer;
    mapObj: TRpgMapObject;
    sprite: TMapSprite;
 begin
