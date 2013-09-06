@@ -131,7 +131,7 @@ type
       function getY: integer; override;
       function getBase: TMapSprite; override;
       procedure doFlash(r, g, b, power: integer; time: integer); override;
-      procedure setTranslucency(const Value: integer); virtual;
+      procedure setTranslucency(const Value: integer); override;
    public
       [NoImport]
       constructor Create(mapTree: TMapTree; which: integer);
