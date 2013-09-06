@@ -369,8 +369,7 @@ end;
 
 procedure T2kEnvironment.GameOver;
 begin
-{$MESSAGE WARN 'Incomplete feature in live unit'}
-   //TODO: implement this
+   GGameEngine.GameOver;
 end;
 
 function T2kEnvironment.isMenuEnabled: boolean;
