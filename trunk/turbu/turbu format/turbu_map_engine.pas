@@ -136,6 +136,7 @@ type
       procedure Start; virtual; abstract;
 
       property data: TMapEngineData read GetData write FData;
+      property defaultBattleEngine: IBattleEngine read FDefaultBattleEngine;
    end;
 
    TMatrix<T> = class(TObject)

@@ -69,6 +69,7 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="EngineBasis.dcp"/>
+			<DCCReference Include="map_default.dcp"/>
 			<DCCReference Include="battle_default_plugin.pas">
 				<Form>RpgBasicBattlePlugin</Form>
 			</DCCReference>

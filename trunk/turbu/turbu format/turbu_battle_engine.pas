@@ -27,7 +27,6 @@ type
    TBattleResultSet = set of TBattleResult;
    TBattleView = (bv_firstPerson = 1, bv_side, bv_top);
    TBattleTiming = (bt_turns = 1, bt_atb, bt_counter);
-   TBattleConditions = class;
    TBattleEngineData = class;
 
    TBattleResultData = record
@@ -37,20 +36,10 @@ type
 
    IBattleEngine = interface(IInterface)
    ['{B4F083F0-B3F3-465D-930F-C9542CF1B9C0}']
-      function startBattle(party: {TRpgParty} TObject; foes: TObject; conditions: TBattleConditions): TBattleResultData;
+      function startBattle(party: {TRpgParty} TObject; foes, conditions: TObject): TBattleResultData;
       procedure initialize(window: TSdlWindow);
       function getData: TBattleEngineData;
       property data: TBattleEngineData read getData;
-   end;
-
-   TBattleConditions = class(TObject)
-   private
-      FTimer: TObject;
-      FCanFlee: boolean;
-   public
-      constructor Create(timer: TObject; canFlee: boolean);
-      property timer: TObject read FTimer;
-      property canFlee: boolean read FCanFlee;
    end;
 
    {TBattleEngineData is used to describe metadata about the type of battle
@@ -82,7 +71,7 @@ type
       destructor Destroy; override;
       procedure AfterConstruction; override;
       procedure initialize(window: TSdlWindow); virtual; abstract;
-      function startBattle(party: {TRpgParty} TObject; foes: TObject; conditions: TBattleConditions): TBattleResultData; virtual; abstract;
+      function startBattle(party: {TRpgParty} TObject; foes, conditions: TObject): TBattleResultData; virtual; abstract;
 
       property data: TBattleEngineData read getData write FData;
    end;
@@ -124,15 +113,6 @@ begin
    inherited Create(name, version);
    FView := view;
    FTiming := timing;
-end;
-
-{ TBattleConditions }
-
-constructor TBattleConditions.Create(timer: TObject; canFlee: boolean);
-begin
-   inherited Create;
-   FTimer := timer;
-   FCanFlee := canFlee;
 end;
 
 end.

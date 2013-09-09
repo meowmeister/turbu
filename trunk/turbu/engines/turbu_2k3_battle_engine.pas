@@ -28,7 +28,7 @@ type
    public
       constructor Create; override;
       procedure initialize(window: TSdlWindow); override;
-      function startBattle(party: {TRpgParty} TObject; foes: TObject; conditions: TBattleConditions): TBattleResultData; override;
+      function startBattle(party: {TRpgParty} TObject; foes, conditions: TObject): TBattleResultData; override;
    end;
 
 implementation
@@ -48,7 +48,7 @@ begin
    FInitialized := true;
 end;
 
-function T2k3BattleEngine.startBattle(party: {TRpgParty} TObject; foes: TObject; conditions: TBattleConditions): TBattleResultData;
+function T2k3BattleEngine.startBattle(party: {TRpgParty} TObject; foes, conditions: TObject): TBattleResultData;
 begin
    result.result := br_victory;
    result.data := nil;

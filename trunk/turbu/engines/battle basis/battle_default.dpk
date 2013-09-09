@@ -26,7 +26,8 @@ package battle_default;
 {$IMPLICITBUILD ON}
 
 requires
-  EngineBasis;
+  EngineBasis,
+  map_default;
 
 contains
   battle_default_plugin in 'battle_default_plugin.pas' {RpgBasicBattlePlugin},
