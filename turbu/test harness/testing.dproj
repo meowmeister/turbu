@@ -84,9 +84,9 @@
 			<DCCReference Include="..\turbu format\database\turbu_database.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_skills.pas"/>
 			<DCCReference Include="..\turbu format\turbu_constants.pas"/>
-			<DCCReference Include="..\engines\turbu_2k3_battle_engine.pas"/>
+			<DCCReference Include="..\engines\battle engine\turbu_2k3_battle_engine.pas"/>
 			<DCCReference Include="..\engines\basis\project_folder.pas"/>
-			<DCCReference Include="..\engines\turbu_2k_battle_engine.pas"/>
+			<DCCReference Include="..\engines\battle engine\turbu_2k_battle_engine.pas"/>
 			<DCCReference Include="..\turbu format\turbu_decl_utils.pas"/>
 			<DCCReference Include="..\turbu format\database\turbu_characters.pas"/>
 			<DCCReference Include="..\turbu format\turbu_script_basis.pas"/>
