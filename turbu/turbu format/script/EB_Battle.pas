@@ -320,7 +320,7 @@ begin
       first := format('ints[%d]', [Values[1]])
    else first := IntToStr(values[1]);
    resultsStr := SetToString(PTypeInfo(TypeInfo(TBattleResultSet)), byte(self.results), true);
-   result := format(LINE, [first, QuotedStr(self.Text), resultsStr, BOOL_STR[values[2]]]);
+   result := format(LINE, [first, QuotedStr(self.Text), BOOL_STR[values[2]], resultsStr]);
 end;
 
 { TEBBattleEx }

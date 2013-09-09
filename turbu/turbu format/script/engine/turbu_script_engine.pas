@@ -146,7 +146,7 @@ begin
    input.ImportType(TypeInfo(TBattleResult));
    input.ImportType(TypeInfo(TBattleResultSet));
    input.ImportType(TypeInfo(TBattleFormation));
-   input.ImportFunction('function battle(which: integer; const background: string; results: TBattleResultSet; firstStrike: boolean): TBattleResult');
+   input.ImportFunction('function battle(which: integer; const background: string; firstStrike: boolean; results: TBattleResultSet): TBattleResult');
    input.ImportFunction('function battleEx(which: integer; const background: string; formation: TBattleFormation; results: TBattleResultSet; bgMode, terrain: integer): TBattleResult');
 end;
 
@@ -165,12 +165,14 @@ begin
    input.ImportFunction('procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);');
 end;
 
-function Nullbattle(which: integer; const background: string; results: TBattleResultSet; firstStrike: boolean): TBattleResult;
+function Nullbattle(which: integer; const background: string; firstStrike: boolean;
+  results: TBattleResultSet): TBattleResult;
 begin
    result := br_victory
 end;
 
-function NullbattleEx(which: integer; const background: string; formation: TBattleFormation; results: TBattleResultSet; bgMode, terrain: integer): TBattleResult;
+function NullbattleEx(which: integer; const background: string; formation: TBattleFormation;
+  results: TBattleResultSet; bgMode, terrain: integer): TBattleResult;
 begin
    result := br_victory
 end;

@@ -25,6 +25,7 @@ uses
    turbu_database, turbu_maps, turbu_tilesets, turbu_2k_sprite_engine, turbu_defs,
    turbu_2k_environment, turbu_script_engine, turbu_map_metadata, dm_shaders,
    turbu_2k_image_engine, turbu_2k_weather, turbu_transition_interface,
+   turbu_engines, turbu_battle_engine,
    timing, AsphyreTimer, SG_defs, SDL_ImageManager, sdl_canvas, SDL, sdl_13;
 
 type
@@ -292,6 +293,8 @@ begin
          SetupScriptImports;
          FObjectManager.LoadGlobalScripts(GDatabase.globalEvents);
          FObjectManager.OnUpdate := GEnvironment.UpdateEvents;
+         registerBattleEngine(retrieveEngine(et_battle, FDatabase.battleStyle[0]) as IBattleEngine);
+         setDefaultBattleEngine(FDatabase.battleStyle[0].name);
       end
       else begin
          FDatabase := GDatabase;

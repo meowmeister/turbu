@@ -69,7 +69,8 @@ contains
   turbu_2k_shop_menu in 'menus\turbu_2k_shop_menu.pas',
   turbu_2k_save_menu in 'menus\turbu_2k_save_menu.pas',
   turbu_2k_title_menu in 'menus\turbu_2k_title_menu.pas',
-  turbu_script_algorithms in 'turbu_script_algorithms.pas';
+  turbu_script_algorithms in 'turbu_script_algorithms.pas',
+  rs_battle in '..\..\turbu format\script\engine\libraries\rs_battle.pas';
 
 end.
 
