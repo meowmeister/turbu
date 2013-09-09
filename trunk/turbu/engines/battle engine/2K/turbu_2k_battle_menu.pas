@@ -1,4 +1,3 @@
-unit turbu_2k_battle_engine;
 {*****************************************************************************
 * The contents of this file are used with permission, subject to
 * the Mozilla Public License Version 1.1 (the "License"); you may
@@ -16,41 +15,10 @@ unit turbu_2k_battle_engine;
 * This file was created by Mason Wheeler.  He can be reached for support at
 * www.turbu-rpg.com.
 *****************************************************************************}
+unit turbu_2k_battle_menu;
 
 interface
-uses
-   turbu_battle_engine, sdl_13;
-
-type
-   T2kBattleEngine = class(TBattleEngine)
-   private
-   public
-      constructor Create; override;
-      procedure initialize(window: TSdlWindow); override;
-      function startBattle(party: {TRpgParty} TObject; foes, conditions: TObject): TBattleResultData; override;
-   end;
 
 implementation
-uses
-   turbu_versioning;
-
-{ T2kBattleEngine }
-
-constructor T2kBattleEngine.Create;
-begin
-   self.data := TBattleEngineData.Create('First-person battle engine', TVersion.Create(0, 1, 1), bv_firstPerson, bt_turns);
-end;
-
-procedure T2kBattleEngine.initialize(window: TSdlWindow);
-begin
-   //fill this in
-   FInitialized := true;
-end;
-
-function T2kBattleEngine.startBattle(party: {TRpgParty} TObject; foes, conditions: TObject): TBattleResultData;
-begin
-   result.result := br_victory;
-   result.data := nil;
-end;
 
 end.

@@ -31,7 +31,8 @@ requires
 
 contains
   battle_default_plugin in 'battle_default_plugin.pas' {RpgBasicBattlePlugin},
-  turbu_2k3_battle_engine in '..\turbu_2k3_battle_engine.pas',
-  turbu_2k_battle_engine in '..\turbu_2k_battle_engine.pas';
+  turbu_2k3_battle_engine in '..\battle engine\turbu_2k3_battle_engine.pas',
+  turbu_2k_battle_engine in '..\battle engine\turbu_2k_battle_engine.pas',
+  turbu_2k_battle_menu in '..\battle engine\2K\turbu_2k_battle_menu.pas';
 
 end.
