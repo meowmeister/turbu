@@ -141,15 +141,6 @@ uses
    rsDefs,
    SDL;
 
-procedure RegisterBattlesC(input: TrsTypeImporter);
-begin
-   input.ImportType(TypeInfo(TBattleResult));
-   input.ImportType(TypeInfo(TBattleResultSet));
-   input.ImportType(TypeInfo(TBattleFormation));
-   input.ImportFunction('function battle(which: integer; const background: string; firstStrike: boolean; results: TBattleResultSet): TBattleResult');
-   input.ImportFunction('function battleEx(which: integer; const background: string; formation: TBattleFormation; results: TBattleResultSet; bgMode, terrain: integer): TBattleResult');
-end;
-
 procedure RegisterMediaC(input: TrsTypeImporter);
 begin
    input.ImportType(TypeInfo(TSfxTypes));
@@ -163,24 +154,6 @@ begin
    input.ImportFunction('procedure SetSystemSound(style: TSfxTypes; filename: string; volume, tempo, balance: integer);');
    input.ImportFunction('procedure PlaySystemSound(sound: TSfxTypes);');
    input.ImportFunction('procedure SetSystemMusic(style: TBgmTypes; filename: string; fadeIn, volume, tempo, balance: integer);');
-end;
-
-function Nullbattle(which: integer; const background: string; firstStrike: boolean;
-  results: TBattleResultSet): TBattleResult;
-begin
-   result := br_victory
-end;
-
-function NullbattleEx(which: integer; const background: string; formation: TBattleFormation;
-  results: TBattleResultSet; bgMode, terrain: integer): TBattleResult;
-begin
-   result := br_victory
-end;
-
-procedure RegisterBattlesE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
-begin
-   RegisterFunction('battle', @NullBattle);
-   RegisterFunction('battleEx', @NullBattleEx);
 end;
 
 procedure RegisterMediaE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
@@ -255,7 +228,6 @@ end;
 procedure TScriptEngine.CreateExec;
 begin
    FExec := TrsExec.Create;
-   FExec.RegisterStandardUnit('battles', RegisterBattlesE);
    FExec.RegisterStandardUnit('media', RegisterMediaE);
    FExec.OnLine := self.OnRunLine;
    FExec.OnDivideByZero := self.OnDivideByZero;
@@ -452,7 +424,6 @@ end;
 
 procedure TScriptEngine.RegisterImports;
 begin
-   FCompiler.RegisterStandardUnit('battles', RegisterBattlesC);
    FCompiler.RegisterStandardUnit('media', RegisterMediaC);
 end;
 
