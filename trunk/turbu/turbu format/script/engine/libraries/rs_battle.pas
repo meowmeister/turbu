@@ -19,17 +19,21 @@ unit rs_battle;
 
 interface
 uses
-   turbu_defs, turbu_battle_engine;
+   turbu_defs, turbu_battle_engine, turbu_script_engine;
 
 function battle(which: integer; const background: string; firstStrike: boolean;
   results: TBattleResultSet): TBattleResult;
 function battleEx(which: integer; background: string; formation: TBattleFormation;
   results: TBattleResultSet; bgMode, terrain: integer): TBattleResult;
 
+
+procedure RegisterScriptUnit(engine: TScriptEngine);
+
 implementation
 uses
    turbu_database, turbu_monsters, turbu_battles, turbu_map_metadata,
    turbu_2k_map_engine, turbu_2k_environment, turbu_2k_sprite_engine,
+   rsCompiler, rsExec,
    sg_defs;
 
 function battle(which: integer; const background: string; firstStrike: boolean;
@@ -99,6 +103,26 @@ begin
    finally
       conditions.free;
    end;
+end;
+
+procedure RegisterBattlesC(input: TrsTypeImporter);
+begin
+   input.ImportType(TypeInfo(TBattleResult));
+   input.ImportType(TypeInfo(TBattleResultSet));
+   input.ImportType(TypeInfo(TBattleFormation));
+   input.ImportFunction('function battle(which: integer; const background: string; firstStrike: boolean; results: TBattleResultSet): TBattleResult');
+   input.ImportFunction('function battleEx(which: integer; const background: string; formation: TBattleFormation; results: TBattleResultSet; bgMode, terrain: integer): TBattleResult');
+end;
+
+procedure RegisterBattlesE(RegisterFunction: TExecImportCall; RegisterArrayProp: TArrayPropImport);
+begin
+   RegisterFunction('battle', @Battle);
+   RegisterFunction('battleEx', @BattleEx);
+end;
+
+procedure RegisterScriptUnit(engine: TScriptEngine);
+begin
+   engine.RegisterUnit('battles', RegisterBattlesC, RegisterBattlesE);
 end;
 
 end.
