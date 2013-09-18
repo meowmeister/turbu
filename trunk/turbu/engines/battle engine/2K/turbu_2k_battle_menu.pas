@@ -18,7 +18,34 @@
 unit turbu_2k_battle_menu;
 
 interface
+uses
+   Types,
+   turbu_2k_frames, turbu_2k_menu_basis;
+
+type
+   T2kBattleMainMenu = class(TGameMenuBox)
+   public
+      constructor Create(parent: TMenuSpriteEngine; coords: TRect;
+        main: TMenuEngine; owner: TMenuPage); override;
+   end;
+
+   T2kBattlePage = class(TMenuPage);
 
 implementation
+uses
+   turbu_constants, turbu_database;
+
+{ T2kBattleMainMenu }
+
+constructor T2kBattleMainMenu.Create(parent: TMenuSpriteEngine; coords: TRect;
+  main: TMenuEngine; owner: TMenuPage);
+begin
+   inherited create(parent, coords, main, owner);
+   FParsedText.Add(GDatabase.vocab[V_BATTLE_FIGHT]);
+   FParsedText.Add(GDatabase.vocab[V_BATTLE_AUTO]);
+   FParsedText.Add(GDatabase.vocab[V_BATTLE_FLEE]);
+   SetLength(FOptionEnabled, 3);
+   FOptionEnabled[0] := true;
+end;
 
 end.

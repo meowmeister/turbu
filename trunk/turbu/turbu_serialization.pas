@@ -338,8 +338,9 @@ var
    enumerableManager: TEnumerableManagerAttribute;
    iType: TRttiInstanceType;
 
-   function downloadNonObjectEnum: TValue;
+   function downloadNonObjectEnum(dataType: PTypeInfo): TValue;
    begin
+      result := result.Cast(dataType);
       result := downloadValue(db, result, fieldname);
    end;
 
@@ -397,7 +398,7 @@ begin
       begin
          if assigned(iType) then
             newval := downloadObjectEnum
-         else newval := downloadNonObjectEnum;
+         else newval := downloadNonObjectEnum(enumType.handle);
 
          if assigned(enumerableManager) then
             enumerableManager.Add(value, newval)
