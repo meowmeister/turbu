@@ -37,7 +37,7 @@
 				<Dependencies/>
 			</Projects>
 			<Projects Include="player\turbu_player.dproj">
-				<Dependencies>engines\basis\EngineBasis.dproj;turbu format\default_format.dproj;engines\map engine\map_default.dproj;engines\map engine\design\map_default_design.dproj</Dependencies>
+				<Dependencies>engines\basis\EngineBasis.dproj;turbu format\default_format.dproj;engines\map engine\map_default.dproj;engines\battle basis\battle_default.dproj;engines\map engine\design\map_default_design.dproj</Dependencies>
 			</Projects>
 		</ItemGroup>
 		<ProjectExtensions>
@@ -148,13 +148,13 @@
 		<Target Name="testing:Make">
 			<MSBuild Targets="Make" Projects="test harness\testing.dproj"/>
 		</Target>
-		<Target Name="turbu_player" DependsOnTargets="EngineBasis;default_format;map_default;map_default_design">
+		<Target Name="turbu_player" DependsOnTargets="EngineBasis;default_format;map_default;battle_default;map_default_design">
 			<MSBuild Projects="player\turbu_player.dproj"/>
 		</Target>
-		<Target Name="turbu_player:Clean" DependsOnTargets="EngineBasis:Clean;default_format:Clean;map_default:Clean;map_default_design:Clean">
+		<Target Name="turbu_player:Clean" DependsOnTargets="EngineBasis:Clean;default_format:Clean;map_default:Clean;battle_default:Clean;map_default_design:Clean">
 			<MSBuild Targets="Clean" Projects="player\turbu_player.dproj"/>
 		</Target>
-		<Target Name="turbu_player:Make" DependsOnTargets="EngineBasis:Make;default_format:Make;map_default:Make;map_default_design:Make">
+		<Target Name="turbu_player:Make" DependsOnTargets="EngineBasis:Make;default_format:Make;map_default:Make;battle_default:Make;map_default_design:Make">
 			<MSBuild Targets="Make" Projects="player\turbu_player.dproj"/>
 		</Target>
 		<Target Name="Build">

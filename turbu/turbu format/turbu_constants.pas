@@ -115,7 +115,9 @@ const
     V_SHOP_NUM_SELL_QUANT = 'Shop%d-Sell Quantity';
     V_SHOP_NUM_SOLD       = 'Shop%d-Sold';
 
-
+    V_BATTLE_FIGHT        = 'Battle-Fight';
+    V_BATTLE_AUTO         = 'Battle-Auto';
+    V_BATTLE_FLEE         = 'Battle-Flee';
 
 resourcestring
    DESIGN_DB = 'design';

@@ -43,7 +43,7 @@ type
       property tag: T4IntArray read FTag;
    end;
 
-   TRpgMonsterElement = record
+   TRpgMonsterElement = class(TObject)
       id: integer;
       monster: integer;
       position: TSgPoint;
@@ -67,7 +67,7 @@ type
    end;
 
    TBattleEventList = class(TRpgObjectList<TBattleEventPage>);
-   TMonsterElementList = class(TList<TRpgMonsterElement>);
+   TMonsterElementList = class(TObjectList<TRpgMonsterElement>);
 
    HabitatUploadAttribute = class(TDBUploadAttribute)
    public
@@ -147,12 +147,12 @@ end;
 
 procedure HabitatUploadAttribute.download(db: TDataset; field: TRttiField; instance: TObject);
 begin
-   db.FieldByName('habitats').AsBytes := (instance as TRpgMonsterParty).FHabitats;
+   (instance as TRpgMonsterParty).FHabitats := db.FieldByName('habitats').AsBytes;
 end;
 
 procedure HabitatUploadAttribute.upload(db: TDataset; field: TRttiField; instance: TObject);
 begin
-   (instance as TRpgMonsterParty).FHabitats := db.FieldByName('habitats').AsBytes;
+   db.FieldByName('habitats').AsBytes := (instance as TRpgMonsterParty).FHabitats;
 end;
 
 end.

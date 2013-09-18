@@ -35,7 +35,6 @@
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_RangeChecking>true</DCC_RangeChecking>
 			<DCC_Optimize>false</DCC_Optimize>
-			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
 			<GenDll>true</GenDll>
 			<GenPackage>true</GenPackage>
@@ -60,9 +59,7 @@
 			<DCC_Optimize>False</DCC_Optimize>
 			<DCC_IntegerOverflowCheck>True</DCC_IntegerOverflowCheck>
 			<DCC_RangeChecking>True</DCC_RangeChecking>
-			<DCC_DebugInfoInExe>True</DCC_DebugInfoInExe>
 			<DCC_DebugVN>True</DCC_DebugVN>
-			<DCC_RemoteDebug>True</DCC_RemoteDebug>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="battle_default.dpk">
