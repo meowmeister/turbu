@@ -120,6 +120,8 @@ type
       [NoImport]
       procedure CheckVehicles;
       [NoImport]
+      procedure ClearVehicles;
+      [NoImport]
       procedure Serialize(writer: TdwsJSONWriter; explicitSave: boolean);
       [NoImport]
       procedure Deserialize(obj: TdwsJSONObject);
@@ -248,6 +250,11 @@ begin
    for vehicle in FVehicles do
       if vehicle.template.id <> 0 then
          vehicle.CheckSprite;
+end;
+
+procedure T2kEnvironment.ClearVehicles;
+begin
+   FVehicles.Clear;
 end;
 
 procedure T2kEnvironment.ClearEvents();
