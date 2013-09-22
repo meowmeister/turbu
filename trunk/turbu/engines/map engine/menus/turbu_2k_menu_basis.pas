@@ -103,6 +103,7 @@ type
       procedure registerComponent(const name: string; which: TGameMenuBox);
       procedure LoadComponent(obj: TdwsJSONObject);
       procedure LoadComponents(const layout: string);
+      procedure SetBG(const filename, imagename: string);
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine;
         const layout: string); virtual;
@@ -192,7 +193,7 @@ uses
    SysUtils, SyncObjs,
    turbu_script_engine, turbu_2k_map_engine, turbu_2k_environment,
    rs_media,
-   sg_utils;
+   sg_utils, SDL_ImageManager;
 
 var
    GSetupDrawLock: TCriticalSection;
@@ -645,6 +646,25 @@ begin
    which.Name := name;
    if (FMainMenu = nil) and (which is TGameMenuBox) then
       FMainMenu := TGameMenuBox(which);
+end;
+
+procedure TMenuPage.SetBG(const filename, imagename: string);
+var
+   cls: TSdlImageClass;
+   images: TSdlImages;
+begin
+   images := FOwner.FParent.Images;
+   if not images.Contains(imagename) then
+   begin
+      cls := Images.SpriteClass;
+      Images.SpriteClass := TSdlOpaqueImage;
+      try
+         Images.EnsureImage(filename, imagename);
+      finally
+         Images.SpriteClass := cls;
+      end;
+   end;
+   FBackground := imagename;
 end;
 
 procedure TMenuPage.setup(value: integer);

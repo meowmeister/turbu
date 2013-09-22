@@ -36,6 +36,7 @@ uses
    procedure setSkin(const name: string; tiled: boolean);
    procedure OpenMenu;
    procedure SaveMenu;
+   function WaitForMenuClosed: boolean;
 
    procedure RegisterScriptUnit(engine: TScriptEngine);
    procedure SerializeMessageState(writer: TdwsJSONWriter);

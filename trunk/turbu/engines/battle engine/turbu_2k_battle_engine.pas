@@ -16,7 +16,7 @@ unit  turbu_2k_battle_engine;
 * This file was created by Mason Wheeler.  He can be reached for support at
 * www.turbu-rpg.com.
 *****************************************************************************}
-
+{$D+}
 interface
 uses
    turbu_battle_engine, sdl_13;
@@ -32,7 +32,9 @@ type
 
 implementation
 uses
-   turbu_versioning;
+   turbu_versioning, turbu_defs, turbu_monsters, turbu_battles,
+   turbu_2k_frames, turbu_2k_battle_menu, turbu_script_engine,
+   rs_message, rs_maps;
 
 { T2kBattleEngine }
 
@@ -48,9 +50,26 @@ begin
 end;
 
 function T2kBattleEngine.startBattle(party: {TRpgParty} TObject; foes, conditions: TObject): TBattleResultData;
+var
+   monsters: TRpgMonsterParty;
+   cond: TBattleConditions;
+   battleData: T2kBattleData;
 begin
-   result.result := br_victory;
-   result.data := nil;
+   monsters := foes as TRpgMonsterParty;
+   cond := conditions as TBattleConditions;
+   battleData := T2kBattleData.Create(monsters, cond);
+   try
+      renderPause;
+      GMenuEngine.OpenMenuEx('Battle 2K', battleData);
+      rs_maps.showScreenDefault(trnBattleStartShow);
+      GScriptEngine.SetWaiting(rs_message.waitForMenuClosed);
+      GScriptEngine.ThreadWait;
+      result.result := br_victory;
+      result.data := nil;
+      rs_maps.eraseScreenDefault(trnBattleEndErase);
+   finally
+      battleData.Free;
+   end;
 end;
 
 end.

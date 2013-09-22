@@ -107,20 +107,11 @@ constructor TTitleMenuPage.Create(parent: TMenuSpriteEngine; coords: TRect;
 const TITLE_SCREEN = '*TitleScreen';
 var
    cls: TSdlImageClass;
-   imageName: string;
+   filename: string;
 begin
    inherited Create(parent, coords, main, layout);
-   imageName := format('Special Images\%s.png', [GDatabase.layout.titleScreen]);
-   cls := parent.Images.SpriteClass;
-   parent.Images.SpriteClass := TSdlOpaqueImage;
-   try
-      parent.Images.EnsureImage(imageName ,
-                                TITLE_SCREEN,
-                                sgPoint(GDatabase.layout.width, GDatabase.layout.height));
-   finally
-      parent.Images.SpriteClass := cls;
-   end;
-   FBackground := TITLE_SCREEN;
+   filename := format('Special Images\%s.png', [GDatabase.layout.titleScreen]);
+   SetBG(filename, TITLE_SCREEN);
 end;
 
 const
