@@ -80,6 +80,7 @@ type
       procedure OpenMenu(const name: string; cursorValue: integer = 0);
       procedure OpenMenuEx(const name: string; const data: TObject);
       procedure button(const input: TButtonCode);
+      procedure Draw;
    end;
 
    TMenuSpriteEngine = class(TSpriteEngine)
@@ -110,6 +111,7 @@ type
       procedure SerializePortrait(writer: TdwsJSONWriter);
       procedure DeserializePortrait(obj: TdwsJSONObject);
 
+      procedure Draw; override;
       procedure ShowMessage(const msg: string; modal: boolean);
       procedure inn(style, cost: integer);
       procedure ChoiceBox(const msg: string; const responses: TArray<string>;
@@ -478,6 +480,15 @@ begin
    FMenuEngine := nil;
    inherited Destroy;
    FBoxNotifications.Free;
+end;
+
+procedure TMenuSpriteEngine.Draw;
+begin
+   case FMenuState of
+      msNone: ;
+      msShared, msExclusiveShared: inherited Draw;
+      msFull: FMenuEngine.draw;
+   end;
 end;
 
 procedure TMenuSpriteEngine.SerializePortrait(writer: TdwsJSONWriter);
@@ -1009,9 +1020,9 @@ begin
       dec(position, max + 1);
    column := position mod columns;
    inc(position, FPromptLines * columns);
-   coords := rect(8 + (column * (width + SEPARATOR)) + FBounds.Left,
+   coords := rect(4 + (column * (width + SEPARATOR)) + FBounds.Left,
                   (position div columns) * 15 + FBounds.Top + (ord(FPosition) * 80) + 8,
-                  width - FBounds.Left, 18);
+                  width + 8 - FBounds.Left, 18);
    coords := SdlRectToTRect(coords);
 //   inc(coords.Bottom, coords.Top);
    if FCursorPosition > max then
