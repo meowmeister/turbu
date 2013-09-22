@@ -258,7 +258,7 @@ begin
    FTimer.Free;
    FRenderPause.Free;
    FRenderPauseLock.Free;
-   inherited;
+   inherited Destroy;
 end;
 
 function T2kMapEngine.initialize(window: TSdlWindow; const database: string): TSdlWindow;
@@ -792,6 +792,7 @@ begin
       procedure
       begin
          FreeAndNil(FPartySprite);
+         GEnvironment.ClearVehicles;
          FreeAndNil(FCurrentMap);
          FCanvas.DrawBox(rect(0, 0, 1, 1), SDL_WHITE); //force SDL to sync shaders
       end, true);

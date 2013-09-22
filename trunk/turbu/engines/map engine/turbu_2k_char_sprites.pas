@@ -16,10 +16,13 @@ type
    protected
       FOwner: TVehicleSprite;
       FOffset: TsgPoint;
+      FOnCleanup: TProc;
 
       procedure offsetTowards(const offset: TsgPoint; const state: TVehicleState);
    public
-      constructor Create(const base: TEventTile; parent: TSpriteEngine); reintroduce;
+      constructor Create(const base: TEventTile; parent: TSpriteEngine;
+         const onCleanup: TProc); reintroduce;
+      destructor Destroy; override;
       procedure Draw; override;
    end;
 
@@ -80,6 +83,7 @@ type
       function getCanSkip: boolean; override;
    public
       constructor create(const AParent: TSpriteEngine; whichHero: TRpgHero; party: TRpgParty); reintroduce;
+      destructor Destroy; override;
       procedure action(const button: TButtonCode = btn_enter); override; final;
       procedure place; override;
       procedure boardVehicle;
@@ -102,11 +106,13 @@ const
 
 { TVehicleTile }
 
-constructor TVehicleTile.Create(const base: TEventTile; parent: TSpriteEngine);
+constructor TVehicleTile.Create(const base: TEventTile; parent: TSpriteEngine;
+   const onCleanup: TProc);
 begin
    inherited Create(base.event, parent as T2kSpriteEngine);
    self.z := 3;
    self.Assign(base);
+   FOnCleanup := onCleanup;
 end;
 
 procedure TVehicleTile.offsetTowards(const offset: TsgPoint; const state: TVehicleState);
@@ -142,11 +148,13 @@ begin
    whichVehicle.gamesprite := self;
    self.FTemplate := whichVehicle;
    //update char tiles to vehicle tiles
-   newTile := TVehicleTile.Create(FTiles[2] as TEventTile, parent);
+   newTile := TVehicleTile.Create(FTiles[2] as TEventTile, parent,
+      procedure begin FTiles[2] := nil end);
    newTile.FOwner := self;
    FTiles[2].Free;
    FTiles[2] := newTile;
-   newTile := TVehicleTile.Create(FTiles[1] as TEventTile, parent);
+   newTile := TVehicleTile.Create(FTiles[1] as TEventTile, parent,
+      procedure begin FTiles[1] := nil end);
    newTile.FOwner := self;
    FTiles[1].Free;
    FTiles[1] := newTile;
@@ -194,6 +202,13 @@ begin
       btn_up, btn_down, btn_left, btn_right: ;
       else assert(false);
    end;
+end;
+
+destructor TVehicleTile.destroy;
+begin
+   if assigned(FOnCleanup) then
+      FOnCleanup();
+   inherited Destroy;
 end;
 
 procedure TVehicleTile.Draw;
@@ -364,6 +379,31 @@ end;
 
 { THeroSprite }
 
+constructor THeroSprite.create(const AParent: TSpriteEngine; whichHero: TRpgHero; party: TRpgParty);
+const x = 1; y = 1;
+begin
+   inherited create(nil, AParent);
+   FTiles[2].Z := 5;
+   FTiles[1].Z := 4;
+   party.SetSprite(self);
+   self.OnChangeSprite := party.ChangeSprite;
+   FTemplate := whichHero;
+   if assigned(FTemplate) and (FTemplate.sprite <> '') then
+      update(FTemplate.sprite, FTemplate.transparent);
+   setLocation(point(x, y));
+   FParty := party;
+   FMoveFreq := 8;
+   FCanSkip := true;
+   self.facing := facing_down;
+end;
+
+destructor THeroSprite.Destroy;
+begin
+   if FParty.Sprite = self then
+      FParty.SetSprite(nil);
+   inherited Destroy;;
+end;
+
 procedure THeroSprite.action(const button: TButtonCode = btn_enter);
 var
    currentTile: TMapTile;
@@ -430,24 +470,6 @@ begin
       if (theSprite is TVehicleSprite) and (TVehicleSprite(theSprite).state = vs_empty) then
          rideVehicle(TVehicleSprite(theSprite));
    end;
-end;
-
-constructor THeroSprite.create(const AParent: TSpriteEngine; whichHero: TRpgHero; party: TRpgParty);
-const x = 1; y = 1;
-begin
-   inherited create(nil, AParent);
-   FTiles[2].Z := 5;
-   FTiles[1].Z := 4;
-   party.SetSprite(self);
-   self.OnChangeSprite := party.ChangeSprite;
-   FTemplate := whichHero;
-   if assigned(FTemplate) and (FTemplate.sprite <> '') then
-      update(FTemplate.sprite, FTemplate.transparent);
-   setLocation(point(x, y));
-   FParty := party;
-   FMoveFreq := 8;
-   FCanSkip := true;
-   self.facing := facing_down;
 end;
 
 function THeroSprite.doMove(which: TPath): boolean;

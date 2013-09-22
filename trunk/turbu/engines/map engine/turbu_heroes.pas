@@ -916,6 +916,18 @@ end;
 
 { TRpgParty }
 
+constructor TRpgParty.Create;
+begin
+   FInventory := TRpgInventory.Create();
+   FLevelNotify := true;
+end;
+
+destructor TRpgParty.Destroy;
+begin
+   FInventory.free;
+   inherited Destroy;
+end;
+
 procedure TRpgParty.addExp(const id: integer; number: integer);
 var
   I: Integer;
@@ -959,18 +971,6 @@ procedure TRpgParty.ChangeSprite(name: string; translucent: boolean);
 begin
    if assigned(FSprite) then
       FSprite.update(name, translucent);
-end;
-
-constructor TRpgParty.Create;
-begin
-   FInventory := TRpgInventory.Create();
-   FLevelNotify := true;
-end;
-
-destructor TRpgParty.Destroy;
-begin
-   FInventory.free;
-   inherited Destroy;
 end;
 
 function TRpgParty.getBase: TMapSprite;
