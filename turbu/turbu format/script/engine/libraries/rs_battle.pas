@@ -33,6 +33,7 @@ implementation
 uses
    turbu_database, turbu_monsters, turbu_battles, turbu_map_metadata,
    turbu_2k_map_engine, turbu_2k_environment, turbu_2k_sprite_engine,
+   rs_media, rs_maps,
    rsCompiler, rsExec,
    sg_defs;
 
@@ -97,7 +98,15 @@ begin
    engine := GGameEngine.DefaultBattleEngine;
    conditions := TBattleConditions.Create(background, formation, results);
    try
+      rs_media.fadeOutMusic(0);
+      rs_media.PlaySystemMusic(bgmBattle);
+      rs_maps.eraseScreenDefault(trnBattleStartErase);
+      GScriptEngine.ThreadWait;
       battleResult := engine.StartBattle(GEnvironment.Party, mParty, conditions);
+      rs_maps.showScreenDefault(trnBattleEndShow);
+      GScriptEngine.ThreadWait;
+      rs_media.fadeOutMusic(0);
+      rs_media.fadeInLastMusic(0);
       assert(battleResult.data = nil);
       result := battleResult.result;
    finally

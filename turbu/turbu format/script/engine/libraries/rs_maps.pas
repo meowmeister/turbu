@@ -32,6 +32,8 @@ uses
    procedure setTransition(const which: TTransitionTypes; const newTransition: TTransitions);
    procedure eraseScreen(whichTransition: TTransitions);
    procedure showScreen(whichTransition: TTransitions);
+   procedure eraseScreenDefault(whichTransition: TTransitionTypes);
+   procedure showScreenDefault(whichTransition: TTransitionTypes);
    procedure tintScreen(r, g, b, sat: integer; duration: integer; wait: boolean);
    procedure flashScreen(r, g, b, power: integer; duration: integer; wait, continuous: boolean);
    procedure endFlashScreen;
@@ -60,7 +62,7 @@ const
 
 implementation
 uses
-   Windows, SysUtils, types, math, SyncObjs,
+   Windows, SysUtils, types, math, SyncObjs, Classes,
    rsExec, rsCompiler,
    commons, turbu_2k_environment, turbu_2k_sprite_engine, turbu_constants,
    turbu_database, turbu_2k_map_engine, turbu_animations, turbu_2k_animations,
@@ -215,6 +217,20 @@ begin
       turbu_2k_transitions.show(LDefaultTransitions[trnMapEnter])
    else turbu_2k_transitions.show(whichTransition);
    GScriptEngine.SetWaiting(waitForFadeEnd);
+end;
+
+procedure eraseScreenDefault(whichTransition: TTransitionTypes);
+begin
+   eraseScreen(LDefaultTransitions[whichTransition]);
+   if TThread.CurrentThread.ThreadID <> MainThreadID then
+      GScriptEngine.ThreadWait;
+end;
+
+procedure showScreenDefault(whichTransition: TTransitionTypes);
+begin
+   showScreen(LDefaultTransitions[whichTransition]);
+   if TThread.CurrentThread.ThreadID <> MainThreadID then
+      GScriptEngine.ThreadWait;
 end;
 
 procedure tintScreen(r, g, b, sat: integer; duration: integer; wait: boolean);
