@@ -34,9 +34,10 @@ type
         main: TMenuEngine; owner: TMenuPage); override;
    end;
 
-   TTitleScreen = class(TGameMenuBox)
-   protected
-      procedure DrawText; override;
+   TTitleMenuPage = class(TMenuPage)
+   public
+      constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine;
+        const layout: string); override;
    end;
 
 implementation
@@ -99,35 +100,34 @@ begin
    GFontEngine.drawText(GDatabase.vocab[V_MENU_QUIT], 0, 32, 1);
 end;
 
-{ TTitleScreen }
+{ TTitleMenuPage }
 
-procedure TTitleScreen.DrawText;
+constructor TTitleMenuPage.Create(parent: TMenuSpriteEngine; coords: TRect;
+  main: TMenuEngine; const layout: string);
+const TITLE_SCREEN = '*TitleScreen';
 var
-   imageName: string;
-   image: TSdlImage;
    cls: TSdlImageClass;
+   imageName: string;
 begin
-   cls := FEngine.Images.SpriteClass;
-   FEngine.Images.SpriteClass := TSdlOpaqueImage;
+   inherited Create(parent, coords, main, layout);
+   imageName := format('Special Images\%s.png', [GDatabase.layout.titleScreen]);
+   cls := parent.Images.SpriteClass;
+   parent.Images.SpriteClass := TSdlOpaqueImage;
    try
-      imagename := format('Special Images\%s.png', [GDatabase.layout.titleScreen]);
-      image := FEngine.Images.EnsureImage(imagename,
-                                          '*TitleScreen',
-                                          sgPoint(GDatabase.layout.width, GDatabase.layout.height));
+      parent.Images.EnsureImage(imageName ,
+                                TITLE_SCREEN,
+                                sgPoint(GDatabase.layout.width, GDatabase.layout.height));
    finally
-      FEngine.Images.SpriteClass := cls;
+      parent.Images.SpriteClass := cls;
    end;
-   SDL_SetTextureBlendMode(image.surface, []);
-   image.Draw;
+   FBackground := TITLE_SCREEN;
 end;
 
 const
    TITLE_LAYOUT =
-  '[{"Name": "Main", "Class": "TTitleMenu",   "Coords": [128, 148, 192, 212]},' +
-   '{"Name": "BG",   "Class": "TTitleScreen", "Coords": [-8,  -8,  328, 248], "Background": true}]';
+  '[{"Name": "Main", "Class": "TTitleMenu",   "Coords": [128, 148, 192, 212]}]';
 
 initialization
    TMenuEngine.RegisterMenuBoxClass(TTitleMenu);
-   TMenuEngine.RegisterMenuBoxClass(TTitleScreen);
-   TMenuEngine.RegisterMenuPage('Title', TITLE_LAYOUT);
+   TMenuEngine.RegisterMenuPageEx(TTitleMenuPage, 'Title', TITLE_LAYOUT);
 end.

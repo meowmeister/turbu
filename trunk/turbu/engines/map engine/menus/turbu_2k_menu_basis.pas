@@ -97,6 +97,7 @@ type
       FCurrentMenu: TGameMenuBox;
       FComponents: TDictionary<string, TGameMenuBox>;
       FBounds: TRect;
+      FBackground: string;
 
       procedure setVisible(const value: boolean); virtual;
       procedure registerComponent(const name: string; which: TGameMenuBox);
@@ -160,6 +161,7 @@ type
       procedure OpenMenu(const name: string; cursorValue: integer = 0);
       procedure OpenMenuEx(const name: string; const data: TObject);
       procedure button(const input: TButtonCode);
+      procedure Draw;
    public
       constructor Create(parent: TMenuSpriteEngine; callback: TCloseMessageEvent);
       destructor Destroy; override;
@@ -382,6 +384,11 @@ begin
    inherited;
 end;
 
+procedure TMenuEngine.Draw;
+begin
+   FCurrentPage.Draw;
+end;
+
 procedure TMenuEngine.focusMenu(sender: TMenuPage; const which: string; cursorValue: integer);
 var
    menu: TMenuPage;
@@ -537,6 +544,8 @@ begin
    GSetupDrawLock.Enter;
    try
       assert(FOwner.FCurrentPage = self);
+      if FBackground <> '' then
+         FOwner.FParent.Images.Image[FBackground].Draw;
       for frame in FComponents.Values do
          if frame.Visible then
             frame.draw;
