@@ -104,6 +104,7 @@ type
       procedure LoadComponent(obj: TdwsJSONObject);
       procedure LoadComponents(const layout: string);
       procedure SetBG(const filename, imagename: string);
+      procedure LoadFullImage(const filename, imagename: string);
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine;
         const layout: string); virtual;
@@ -648,7 +649,7 @@ begin
       FMainMenu := TGameMenuBox(which);
 end;
 
-procedure TMenuPage.SetBG(const filename, imagename: string);
+procedure TMenuPage.LoadFullImage(const filename, imagename: string);
 var
    cls: TSdlImageClass;
    images: TSdlImages;
@@ -664,6 +665,11 @@ begin
          Images.SpriteClass := cls;
       end;
    end;
+end;
+
+procedure TMenuPage.SetBG(const filename, imagename: string);
+begin
+   LoadFullImage(filename, imagename);
    FBackground := imagename;
 end;
 

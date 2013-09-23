@@ -66,6 +66,7 @@
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="EngineBasis.dcp"/>
+			<DCCReference Include="default_format.dcp"/>
 			<DCCReference Include="map_default.dcp"/>
 			<DCCReference Include="battle_default_plugin.pas">
 				<Form>RpgBasicBattlePlugin</Form>
@@ -96,7 +97,9 @@
 			<BorlandProject>
 				<Delphi.Personality>
 					<Parameters>
-						<Parameters Name="HostApplication">C:\Documents and Settings\Owner\My Documents\Borland Studio Projects\turbu\editor\Turbu.exe</Parameters>
+						<Parameters Name="HostApplication">C:\Users\Mason\Documents\RAD Studio\Projects\turbu\turbu\bin\turbu_player.exe</Parameters>
+						<Parameters Name="RunParams">&quot;C:\Users\Mason\Documents\TURBU Projects\Testing&quot;</Parameters>
+						<Parameters Name="DebugCWD">&quot;C:\Users\Mason\Documents\TURBU Projects\Testing&quot;</Parameters>
 					</Parameters>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>

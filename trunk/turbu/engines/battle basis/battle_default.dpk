@@ -27,6 +27,7 @@ package battle_default;
 
 requires
   EngineBasis,
+  default_format,
   map_default;
 
 contains
