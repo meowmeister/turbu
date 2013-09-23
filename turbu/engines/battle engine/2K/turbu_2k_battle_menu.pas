@@ -19,7 +19,7 @@ unit turbu_2k_battle_menu;
 
 interface
 uses
-   Types,
+   Types, Classes,
    turbu_heroes, turbu_defs, turbu_monsters, turbu_battles,
    turbu_2k_frames, turbu_2k_menu_basis;
 
@@ -51,6 +51,9 @@ type
    end;
 
    T2kBattlePage = class(TMenuPage)
+  private
+    procedure LoadMonster(element: TRpgMonsterElement; list: TStringList;
+      var IDs: TArray<integer>);
    public
       procedure setupEx(const data: TObject); override;
    end;
@@ -134,19 +137,50 @@ end;
 
 { T2kBattlePage }
 
+procedure T2kBattlePage.LoadMonster(element: TRpgMonsterElement;
+  list: TStringList; var IDs: TArray<integer>);
+var
+   id: integer;
+begin
+   for id in IDs do
+      if id = element.monster then
+         Exit;
+   id := element.monster;
+   list.add(GDatabase.monsters[id].filename);
+   setLength(IDs, length(IDs) + 1);
+   IDs[high(IDs)] := id;
+end;
+
 procedure T2kBattlePage.setupEx(const data: TObject);
 var
    battleData: T2kBattleData;
-   bg, imagename: string;
+   bg: string;
+   element: TRpgMonsterElement;
+   list: TStringList;
+   IDs: TArray<integer>;
 begin
    battleData := data as T2kBattleData;
    bg := battleData.cond.background;
-   RunThreadsafe(
-      procedure
-      begin
-         self.setBG(format('Battle BG\%s.png', [bg]), format('BATTLE*%s', [bg]));
-      end, true);
-   inherited setupEx(data);
+   IDs := nil;
+   list := TStringList.Create;
+   list.Sorted := true;
+   list.Duplicates := dupIgnore;
+   try
+      for element in battleData.monsters.monsters do
+         LoadMonster(element, list, IDs);
+      RunThreadsafe(
+         procedure
+         var
+            imagename: string;
+         begin
+            self.setBG(format('Battle BG\%s.png', [bg]), format('BATTLE*%s', [bg]));
+            for imagename in list do
+               LoadFullImage(format('Monsters\%s.png', [imagename]), format('MONSTER*%s', [imagename]));
+         end, true);
+      inherited setupEx(data);
+   finally
+      list.Free;
+   end;
 end;
 
 const BATTLE_LAYOUT =

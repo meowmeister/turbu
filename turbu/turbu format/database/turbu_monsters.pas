@@ -44,12 +44,18 @@ type
    end;
 
    TRpgMonsterElement = class(TObject)
-      id: integer;
-      monster: integer;
-      position: TSgPoint;
-      invisible: boolean;
+   private
+      FId: integer;
+      FMonster: integer;
+      FPosition: TSgPoint;
+      FInvisible: boolean;
+   public
+      property id: integer read Fid;
+      property monster: integer read Fmonster;
+      property position: TSgPoint read Fposition;
+      property invisible: boolean read Finvisible;
       constructor Create(id: integer; monster: integer; position: TSgPoint;
-         invisible: boolean);
+         invisible: boolean); overload;
    end;
 
    TBattleEventPage = class
@@ -137,10 +143,10 @@ end;
 constructor TRpgMonsterElement.Create(id, monster: integer; position: TSgPoint;
   invisible: boolean);
 begin
-   self.id := id;
-   self.monster := monster;
-   self.position := position;
-   self.invisible := invisible;
+   FId := id;
+   FMonster := monster;
+   FPosition := position;
+   FInvisible := invisible;
 end;
 
 { HabitatUploadAttribute }

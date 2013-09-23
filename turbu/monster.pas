@@ -69,6 +69,7 @@ uses
    BER, Commons, FileIO;
 
 procedure fillInMonsterInt(const expected: byte; out theResult: integer); forward;
+procedure fillInMonsterElementInt(const expected: byte; out theResult: integer); forward;
 
 { TMonster }
 
@@ -121,9 +122,8 @@ end;
 constructor TMonsterElement.Create(theLDB: TStream; i: integer);
 begin
    assert(TBerConverter.Create(theLDB).getData = i);
-   id := getNumSec(1, theLDB, fillInZeroInt);
-   if id = 0 then
-      id := i;
+   id := getNumSec(1, theLDB, fillInMonsterElementInt);
+   assert(id > 0);
    position.X := getNumSec(2, theLDB, fillInZeroInt);
    position.Y := getNumSec(3, theLDB, fillInZeroInt);
    invisible := getChboxSec(4, theLDB, fillInZeroInt);
@@ -197,6 +197,16 @@ begin
          raise EMessageAbort.Create;
       end;
    end; // end of CASE statement
+end;
+
+procedure fillInMonsterElementInt(const expected: byte; out theResult: integer);
+begin
+   if expected = 1 then
+      theResult := 1
+   else begin
+      msgBox ('No case implemented for x' + IntToHex(expected, 2) + '!', 'fillInMonsterElementInt says:', MB_OK);
+      raise EMessageAbort.Create;
+   end;
 end;
 
 end.
