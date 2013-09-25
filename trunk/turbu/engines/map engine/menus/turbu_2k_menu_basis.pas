@@ -104,7 +104,8 @@ type
       procedure LoadComponent(obj: TdwsJSONObject);
       procedure LoadComponents(const layout: string);
       procedure SetBG(const filename, imagename: string);
-      procedure LoadFullImage(const filename, imagename: string);
+      procedure LoadFullImage(const filename, imagename: string; opaque: boolean = true);
+      procedure DoDraw; virtual;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine;
         const layout: string); virtual;
@@ -539,6 +540,12 @@ begin
    inherited;
 end;
 
+procedure TMenuPage.DoDraw;
+begin
+   if FBackground <> '' then
+      FOwner.FParent.Images.Image[FBackground].Draw;
+end;
+
 procedure TMenuPage.Draw;
 var
    frame: TGameMenuBox;
@@ -546,8 +553,7 @@ begin
    GSetupDrawLock.Enter;
    try
       assert(FOwner.FCurrentPage = self);
-      if FBackground <> '' then
-         FOwner.FParent.Images.Image[FBackground].Draw;
+      DoDraw;
       for frame in FComponents.Values do
          if frame.Visible then
             frame.draw;
@@ -649,7 +655,7 @@ begin
       FMainMenu := TGameMenuBox(which);
 end;
 
-procedure TMenuPage.LoadFullImage(const filename, imagename: string);
+procedure TMenuPage.LoadFullImage(const filename, imagename: string; opaque: boolean = true);
 var
    cls: TSdlImageClass;
    images: TSdlImages;
@@ -658,7 +664,9 @@ begin
    if not images.Contains(imagename) then
    begin
       cls := Images.SpriteClass;
-      Images.SpriteClass := TSdlOpaqueImage;
+      if opaque then
+         Images.SpriteClass := TSdlOpaqueImage
+      else Images.SpriteClass := TSdlImage;
       try
          Images.EnsureImage(filename, imagename);
       finally
