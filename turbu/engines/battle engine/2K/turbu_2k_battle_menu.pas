@@ -21,7 +21,7 @@ interface
 uses
    Types, Classes,
    turbu_heroes, turbu_defs, turbu_monsters, turbu_battles,
-   turbu_2k_frames, turbu_2k_menu_basis;
+   turbu_2k_frames, turbu_2k_menu_basis, turbu_2k_monster_party;
 
 type
    T2kBattleData = class
@@ -51,9 +51,12 @@ type
    end;
 
    T2kBattlePage = class(TMenuPage)
-  private
-    procedure LoadMonster(element: TRpgMonsterElement; list: TStringList;
-      var IDs: TArray<integer>);
+   private
+      FMonsters: T2kMonsterParty;
+      procedure LoadMonster(element: TRpgMonsterElement; list: TStringList;
+        var IDs: TArray<integer>);
+   protected
+      procedure DoDraw; override;
    public
       procedure setupEx(const data: TObject); override;
    end;
@@ -137,6 +140,12 @@ end;
 
 { T2kBattlePage }
 
+procedure T2kBattlePage.DoDraw;
+begin
+   inherited DoDraw;
+   FMonsters.Draw;
+end;
+
 procedure T2kBattlePage.LoadMonster(element: TRpgMonsterElement;
   list: TStringList; var IDs: TArray<integer>);
 var
@@ -175,8 +184,11 @@ begin
          begin
             self.setBG(format('Battle BG\%s.png', [bg]), format('BATTLE*%s', [bg]));
             for imagename in list do
-               LoadFullImage(format('Monsters\%s.png', [imagename]), format('MONSTER*%s', [imagename]));
+               LoadFullImage(format('Monsters\%s.png', [imagename]),
+                             format('MONSTER*%s', [imagename]),
+                             false);
          end, true);
+      FMonsters := T2kMonsterParty.Create(battleData.monsters, GMenuEngine.Images);
       inherited setupEx(data);
    finally
       list.Free;
