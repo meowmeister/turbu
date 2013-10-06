@@ -115,9 +115,13 @@ const
     V_SHOP_NUM_SELL_QUANT = 'Shop%d-Sell Quantity';
     V_SHOP_NUM_SOLD       = 'Shop%d-Sold';
 
-    V_BATTLE_FIGHT        = 'Battle-Fight';
-    V_BATTLE_AUTO         = 'Battle-Auto';
-    V_BATTLE_FLEE         = 'Battle-Flee';
+    V_BATTLE_FIGHT  = 'Battle-Fight';
+    V_BATTLE_AUTO   = 'Battle-Auto';
+    V_BATTLE_FLEE   = 'Battle-Flee';
+    V_BATTLE_ATTACK = 'Battle-Attack';
+    V_BATTLE_DEFEND = 'Battle-Defend';
+    V_BATTLE_ITEM   = 'Battle-Item';
+    V_BATTLE_SKILL  = 'Battle-Skill';
 
 resourcestring
    DESIGN_DB = 'design';

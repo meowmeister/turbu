@@ -428,8 +428,8 @@ const
   );
   BATTLE_VOCAB: array [TBattleVocabSet] of string =
   (
-   V_BATTLE_FIGHT, V_BATTLE_AUTO, V_BATTLE_FLEE, 'Battle-Attack',
-   'Battle-Defend', 'Battle-Item', 'Battle-Skill'
+   V_BATTLE_FIGHT, V_BATTLE_AUTO, V_BATTLE_FLEE, V_BATTLE_ATTACK,
+   V_BATTLE_DEFEND, V_BATTLE_ITEM, V_BATTLE_SKILL
   );
   VOCAB_LIST: array[0..17] of TVocabPair = (
    (id: 2; name: 'Battle-Surprise Attack'), (id: 4; name: 'Battle-Failed Escape'),

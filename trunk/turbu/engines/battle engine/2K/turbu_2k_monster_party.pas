@@ -20,16 +20,12 @@ unit turbu_2k_monster_party;
 interface
 uses
    Generics.Collections,
-   turbu_monsters, turbu_classes,
+   turbu_monsters, turbu_classes, turbu_heroes,
    sg_defs, SDL_ImageManager;
 
 type
-   T2KMonster = class(TRpgObject)
+   T2kMonster = class(TRpgBattleCharacter)
    private
-      FHP: integer;
-      FMP: integer;
-      FMaxHP: integer;
-      FMaxMP: integer;
       FSprite: TSdlImage;
       FVisible: boolean;
       FPosition: TsgPoint;
@@ -42,10 +38,6 @@ type
       procedure Draw;
 
       property template: TRpgMonster read getTemplate;
-      property HP: integer read FHP write FHP;
-      property MP: integer read FMP write FMP;
-      property maxHP: integer read FMaxHP;
-      property maxMP: integer read FMaxMP;
       property sprite: TSdlImage read FSprite;
       property visible: boolean read FVisible write FVisible;
       property dead: boolean read IsDead;
@@ -76,11 +68,12 @@ uses
 constructor T2KMonster.Create(template: TRpgMonster; element: TRpgMonsterElement; images: TSdlImages);
 begin
    inherited Create(template);
+   self.name := template.name;
    FVisible := not element.invisible;
-   FHP := template.stat[1];
-   FMaxHP := FHP;
-   FMP := template.stat[2];
-   FMaxMP := FMP;
+   FHitPoints := template.stat[1];
+   FMaxHitPoints := FHitPoints;
+   FManaPoints := template.stat[2];
+   FMaxManaPoints := FManaPoints;
    FSprite := images.Image[format('MONSTER*%s', [template.filename])];
    FPosition := element.position;
 end;
@@ -99,7 +92,7 @@ end;
 
 function T2KMonster.IsDead: boolean;
 begin
-   result := FHp <= 0;
+   result := FHitPoints <= 0;
 end;
 
 class function T2KMonster.templateClass: TDatafileClass;

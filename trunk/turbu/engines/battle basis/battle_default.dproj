@@ -68,6 +68,7 @@
 			<DCCReference Include="EngineBasis.dcp"/>
 			<DCCReference Include="default_format.dcp"/>
 			<DCCReference Include="map_default.dcp"/>
+			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="battle_default_plugin.pas">
 				<Form>RpgBasicBattlePlugin</Form>
 			</DCCReference>
@@ -75,6 +76,7 @@
 			<DCCReference Include="..\battle engine\turbu_2k_battle_engine.pas"/>
 			<DCCReference Include="..\battle engine\2K\turbu_2k_battle_menu.pas"/>
 			<DCCReference Include="..\battle engine\2K\turbu_2k_monster_party.pas"/>
+			<DCCReference Include="..\battle engine\turbu_battle_logic.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
