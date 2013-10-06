@@ -25,6 +25,11 @@ uses
    turbu_defs, sg_Defs, SDL_Sprite;
 
 type
+   IAnimTarget = interface
+      function position(sign: integer): TSgPoint;
+      procedure flash(r, g, b, power: integer; time: integer);
+   end;
+
    TAnimSpriteCell = class(TSprite)
    private
       FSaturation: integer;
@@ -40,7 +45,7 @@ type
    private
       FBase: TAnimTemplate;
       FTimer: TRpgTimestamp;
-      FTarget: TRpgCharacter;
+      FTarget: IAnimTarget;
       FLastFrame: integer;
       FLastEffect: integer;
       FFullScreen: boolean;
@@ -54,7 +59,7 @@ type
       function InVisibleRect: boolean; override;
    public
       constructor Create(parent: TSpriteEngine; base: TAnimTemplate;
-        target: TRpgCharacter; fullscreen: boolean; signal: TSimpleEvent); reintroduce;
+        const target: IAnimTarget; fullscreen: boolean; signal: TSimpleEvent); reintroduce;
       destructor Destroy; override;
       procedure Draw; override;
    end;
@@ -69,7 +74,7 @@ uses
 { TAnimSprite }
 
 constructor TAnimSprite.Create(parent: TSpriteEngine; base: TAnimTemplate;
-  target: TRpgCharacter; fullscreen: boolean; signal: TSimpleEvent);
+  const target: IAnimTarget; fullscreen: boolean; signal: TSimpleEvent);
 begin
    inherited Create(parent);
    FBase := base;
@@ -107,6 +112,7 @@ procedure TAnimSprite.SetupFrame(currFrame: TAnimCell);
 var
    newSprite: TAnimSpriteCell;
    sign: shortint;
+   position: TSgPoint;
 begin
    newSprite := TAnimSpriteCell.Create(self);
 
@@ -119,16 +125,15 @@ begin
       newSprite.x := currFrame.position.x + (engine.Canvas.Width div 2);
       newSprite.y := currFrame.position.y + (engine.Canvas.Height div 2);
    end else begin
-      newSprite.x := (currFrame.position.x + FTarget.screenXP
-        + FTarget.base.tiles[1].width div 2) - (newSprite.Width div 2);
       case FBase.yTarget of
          at_top: sign := -1;
          at_center: sign := 0;
          at_bottom: sign := 1;
          else raise ESpriteError.Create('Bad yTarget value');
       end;
-      newSprite.y := (currFrame.position.y + FTarget.screenYP
-        + (FTarget.base.tiles[1].height * sign)) - (newSprite.Height div 2);
+      position := FTarget.position(sign);
+      newSprite.x := (currFrame.position.x + position.x) - (newSprite.Width div 2);
+      newSprite.y := (currFrame.position.y + position.y) - (newSprite.Height div 2);
    end;
    newSprite.Z := 1;
    newSprite.scaleX := currFrame.zoom.x / 100;
@@ -164,7 +169,7 @@ begin
          begin
             extractColors(currEffect, r, g, b, a);
             if assigned(FTarget) then
-               FTarget.flash(r, g, b, a, 2, false)
+               FTarget.flash(r, g, b, a, 2)
             else rs_maps.flashScreen(r, g, b, a, 2, false, false);
          end;
          fl_screen:

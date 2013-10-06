@@ -20,7 +20,7 @@ unit turbu_2k_monster_party;
 interface
 uses
    Generics.Collections,
-   turbu_monsters, turbu_classes, turbu_heroes,
+   turbu_monsters, turbu_classes, turbu_heroes, turbu_battle_logic,
    sg_defs, SDL_ImageManager;
 
 type
@@ -33,14 +33,18 @@ type
       function IsDead: boolean; inline;
    protected
       class function templateClass: TDatafileClass; override;
+      procedure setHP(value: integer); override;
+      procedure setMP(value: integer); override;
    public
       constructor Create(template: TRpgMonster; element: TRpgMonsterElement; images: TSdlImages);
       procedure Draw;
+      function GetMove: TBattleCommand;
 
       property template: TRpgMonster read getTemplate;
       property sprite: TSdlImage read FSprite;
       property visible: boolean read FVisible write FVisible;
       property dead: boolean read IsDead;
+      property position: TsgPoint read FPosition;
    end;
 
    T2kMonsterParty = class(TRpgObject)
@@ -53,6 +57,7 @@ type
       constructor Create(template: TRpgMonsterParty; images: TSdlImages);
       destructor Destroy; override;
       procedure Draw;
+      function GetMoves: TArray<TBattleCommand>;
 
       property template: TRpgMonsterParty read getTemplate;
       property monsters: TObjectList<T2kMonster> read FMonsters;
@@ -61,7 +66,8 @@ type
 implementation
 uses
    SysUtils,
-   turbu_database;
+   turbu_database,
+   turbu_2k_environment;
 
 { T2KMonster }
 
@@ -85,6 +91,14 @@ begin
    FSprite.Draw(self.FPosition, []);
 end;
 
+function T2kMonster.GetMove: TBattleCommand;
+var
+   target: integer;
+begin
+   target := random(GEnvironment.partySize) + 1;
+   result := TAttackCommand.Create(self, GEnvironment.Party.hero[target]);
+end;
+
 function T2KMonster.getTemplate: TRpgMonster;
 begin
    Result := inherited template as TRpgMonster;
@@ -93,6 +107,16 @@ end;
 function T2KMonster.IsDead: boolean;
 begin
    result := FHitPoints <= 0;
+end;
+
+procedure T2kMonster.setHP(value: integer);
+begin
+   FHitPoints := value;
+end;
+
+procedure T2kMonster.setMP(value: integer);
+begin
+   FManaPoints := value;
 end;
 
 class function T2KMonster.templateClass: TDatafileClass;
@@ -124,6 +148,15 @@ var
 begin
    for monster in FMonsters do
       monster.draw;
+end;
+
+function T2kMonsterParty.GetMoves: TArray<TBattleCommand>;
+var
+   i: integer;
+begin
+   setLength(result, FMonsters.Count);
+   for i := 0 to High(result) do
+      result[i] := FMonsters[i].GetMove;
 end;
 
 function T2kMonsterParty.getTemplate: TRpgMonsterParty;

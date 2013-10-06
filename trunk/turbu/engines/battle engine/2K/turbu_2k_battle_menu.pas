@@ -19,11 +19,11 @@ unit turbu_2k_battle_menu;
 
 interface
 uses
-   Types, Classes, Generics.Collections,
+   Types, Classes, Generics.Collections, SyncObjs,
    turbu_heroes, turbu_defs, turbu_monsters, turbu_battles, turbu_battle_logic,
    turbu_2k_frames, turbu_2k_menu_basis, turbu_2k_monster_party,
    turbu_2k_menu_components,
-   sg_defs;
+   sg_defs, sdl_sprite;
 
 type
    T2kBattleData = class
@@ -74,14 +74,27 @@ type
    T2kBattlePage = class(TMenuPage)
    private type
       TTransitionMode = (tmNone, tmOpening, tmClosing);
+      TBattleState = (bsMenu, bsScriptCheck, bsScript, bsBattle);
    private
       FMonsters: T2kMonsterParty;
-      FTransitionMode: TTransitionMode;
       FMoves: TObjectList<TBattleCommand>;
+      FTransitionMode: TTransitionMode;
+      FBattleState: TBattleState;
+      FMoveIndex: integer;
+      FRound: integer;
+      FSignal: TSimpleEvent;
+      FAnims: TSpriteEngine;
       procedure LoadMonster(element: TRpgMonsterElement; list: TStringList;
         var IDs: TArray<integer>);
-      procedure CheckTransition;
+      procedure CheckState;
       procedure AddMove(value: TBattleCommand);
+      procedure TargetComplete;
+      procedure InputComplete;
+      procedure Reset(newBattle: boolean);
+      procedure CheckTransition;
+      procedure CheckScripts;
+      procedure CheckBattleCommand;
+      procedure EndRound;
    protected
       procedure setVisible(const value: boolean); override;
       procedure DoDraw; override;
@@ -92,12 +105,12 @@ type
       destructor Destroy; override;
 
       procedure setupEx(const data: TObject); override;
-      procedure BeginRound;
+      procedure BeginInput;
    end;
 
 implementation
 uses
-   SysUtils, Math,
+   SysUtils, Math, Generics.Defaults,
    Commons,
    turbu_constants, turbu_database, turbu_text_utils,
    turbu_2k_environment;
@@ -124,7 +137,7 @@ begin
    if input = btn_enter then
    begin
       case FCursorPosition of
-         0: (FOwner as T2kBattlePage).BeginRound; //fight
+         0: (FOwner as T2kBattlePage).BeginInput; //fight
          1:; //auto
          2:; //flee
       end;
@@ -239,13 +252,16 @@ end;
 procedure TBattleTargetMenu.doButton(const input: TButtonCode);
 var
    cmd: TTargetCommand;
+   owner: T2kBattlePage;
 begin
    inherited doButton(input);
    if input = btn_enter then
    begin
       cmd := TAttackCommand.Create(GEnvironment.Party[FSetupValue],
                                    FParsedText.Objects[FCursorPosition] as T2kMonster);
-      (FOwner as T2kBattlePage).AddMove(cmd);
+      owner := FOwner as T2kBattlePage;
+      owner.AddMove(cmd);
+      owner.TargetComplete;
    end;
 end;
 
@@ -284,16 +300,28 @@ end;
 
 { T2kBattlePage }
 
+function SpeedOrder(const Left, Right: TBattleCommand): Integer;
+begin
+   //*descending* sort by priority
+   result := right.priority - left.priority;
+end;
+
 constructor T2kBattlePage.Create(parent: TMenuSpriteEngine; coords: TRect;
   main: TMenuEngine; const layout: string);
 begin
-   FMoves := TObjectList<TBattleCommand>.Create;
+   FMoves := TObjectList<TBattleCommand>.Create(TComparer<TBattleCommand>.Construct(SpeedOrder));
+   FSignal := TSimpleEvent.Create;
+   FSignal.SetEvent;
+   FAnims := TSpriteEngine.Create(nil, GMenuEngine.Canvas);
+   FAnims.Images := GMenuEngine.Images;
    inherited Create(parent, coords, main, layout);
 end;
 
 destructor T2kBattlePage.Destroy;
 begin
    FMoves.Free;
+   FSignal.Free;
+   FAnims.Free;
    inherited Destroy;
 end;
 
@@ -302,7 +330,7 @@ begin
    FMoves.Add(value);
 end;
 
-procedure T2kBattlePage.BeginRound;
+procedure T2kBattlePage.BeginInput;
 begin
    FTransitionMode := tmOpening;
    Self.menu('Select').setup(1);
@@ -336,6 +364,32 @@ begin
    end;
 end;
 
+procedure T2kBattlePage.CheckScripts;
+begin
+   FBattleState := bsBattle; //TODO: implement this
+end;
+
+procedure T2kBattlePage.CheckBattleCommand;
+begin
+   if FSignal.WaitFor(0) = wrSignaled then
+   begin
+      inc(FMoveIndex);
+      if FMoveIndex >= FMoves.Count then
+         EndRound
+      else FMoves[FMoveIndex].Execute(FSignal, FAnims);
+   end;
+end;
+
+procedure T2kBattlePage.CheckState;
+begin
+   case FBattleState of
+      bsMenu: CheckTransition;
+      bsScriptCheck: CheckScripts;
+      bsScript: ; //do nothing; let the script run
+      bsBattle: CheckBattleCommand;
+   end;
+end;
+
 procedure T2kBattlePage.Cleanup;
 begin
    FreeAndNil(FMonsters);
@@ -343,9 +397,11 @@ end;
 
 procedure T2kBattlePage.DoDraw;
 begin
-   CheckTransition;
+   CheckState;
    inherited DoDraw;
    FMonsters.Draw;
+   FAnims.Draw;
+   FAnims.Dead;
 end;
 
 procedure T2kBattlePage.LoadMonster(element: TRpgMonsterElement;
@@ -362,16 +418,23 @@ begin
    IDs[high(IDs)] := id;
 end;
 
+procedure T2kBattlePage.Reset(newBattle: boolean);
+begin
+   FMoveIndex := -1;
+   FBattleState := bsMenu;
+   FMoves.Clear;
+   if newBattle then
+      FRound := 0;
+end;
+
 procedure T2kBattlePage.setupEx(const data: TObject);
 var
    battleData: T2kBattleData;
-   bg: string;
    element: TRpgMonsterElement;
    list: TStringList;
    IDs: TArray<integer>;
 begin
    battleData := data as T2kBattleData;
-   bg := battleData.cond.background;
    IDs := nil;
    list := TStringList.Create;
    list.Sorted := true;
@@ -382,8 +445,9 @@ begin
       RunThreadsafe(
          procedure
          var
-            imagename: string;
+            bg, imagename: string;
          begin
+            bg := battleData.cond.background;
             self.setBG(format('Battle BG\%s.png', [bg]), format('BATTLE*%s', [bg]));
             for imagename in list do
                LoadFullImage(format('Monsters\%s.png', [imagename]),
@@ -392,6 +456,7 @@ begin
          end, true);
       FMonsters := T2kMonsterParty.Create(battleData.monsters, GMenuEngine.Images);
       (self.menu('Target') as TBattleTargetMenu).SetMonsters(FMonsters);
+      reset(true);
       inherited setupEx(data);
    finally
       list.Free;
@@ -406,6 +471,32 @@ begin
       menu('Main').Visible := true;
       menu('Select').Visible := true;
       menu('Party').Visible := true;
+   end;
+end;
+
+procedure T2kBattlePage.InputComplete;
+begin
+   FTransitionMode := tmClosing;
+//   FMoves.AddRange(FMonsters.GetMoves);
+   FMoves.Sort;
+   FBattleState := bsScriptCheck;
+end;
+
+procedure T2kBattlePage.EndRound;
+begin
+   FBattleState := bsMenu;
+   FTransitionMode := tmClosing;
+   reset(false);
+end;
+
+procedure T2kBattlePage.TargetComplete;
+begin
+   Self.menu('Target').Visible := false;
+   if FMoves.Count = GEnvironment.partySize then
+      InputComplete
+   else begin
+       backTo(menu('Select'));
+       menu('Select').setup(FMoves.Count + 1);
    end;
 end;
 
