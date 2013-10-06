@@ -30,7 +30,45 @@ type
 
    TRpgParty = class;
 
-   TRpgHero = class(TRpgObject)
+   TRpgBattleCharacter = class(TRpgObject)
+   protected
+      FName: string;
+      FHitPoints: integer;
+      FManaPoints: integer;
+      FConditionModifier: TArray<integer>;
+      FCondition: TArray<boolean>;
+      FStat: array[TStatComponents, 1..4] of integer;
+      FMaxHitPoints: integer;
+      FMaxManaPoints: integer;
+      FDtypeModifiers: TArray<integer>;
+
+      procedure setHP(value: integer); virtual; abstract;
+      procedure setMP(value: integer); virtual; abstract;
+      function getCondition(x: integer): boolean;
+      function getHighCondition: integer;
+      procedure setCondition(x: integer; const value: boolean);
+      procedure die;
+      function getStat(which: integer): integer;
+      procedure setStat(which: integer; value: integer);
+      function getMHp: integer; virtual;
+      function getMMp: integer; virtual;
+      procedure setMaxHp(const Value: integer); virtual;
+      procedure setMaxMp(const Value: integer); virtual;
+   public
+
+      property name: string read FName write FName;
+      property hp: integer read FHitPoints write setHP;
+      property mp: integer read FManaPoints write setMP;
+      property maxHp: integer read getMHp write setMaxHp;
+      property maxMp: integer read getMMp write setMaxMp;
+      property stat[x: integer]: integer read getStat write setStat;
+      property attack: integer index 1 read getStat write setStat;
+      property defense: integer index 2 read getStat write setStat;
+      property mind: integer index 3 read getStat write setStat;
+      property agility: integer index 4 read getStat write setStat;
+   end;
+
+   TRpgHero = class(TRpgBattleCharacter)
    private
       //temporary hack until I'm able to support this in scripts
       class var
@@ -38,7 +76,6 @@ type
       class constructor Create;
       class destructor Destroy;
    private
-      FName: string;
       FClass: string;
       FSprite: string;
       FTransparent: boolean;
@@ -56,14 +93,6 @@ type
       FExpTable: TArray<integer>;
       FExpTotal: integer;
       FEquipment: array[TSlot] of TRpgItem;
-      FStat: array[TStatComponents, 1..4] of integer;
-      FConditionModifier: TArray<integer>;
-      FCondition: TArray<boolean>;
-      FDtypeModifiers: TArray<integer>;
-      FHitPoints: integer;
-      FManaPoints: integer;
-      FMaxHitPoints: integer;
-      FMaxManaPoints: integer;
       FHpModifier: integer;
       FMpModifier: integer;
       FSkill: TArray<boolean>;
@@ -72,33 +101,28 @@ type
 
       FLevelUpdated: boolean;
       function countSkills: integer;
-      procedure die;
       procedure gainLevel;
-      function getCondition(x: integer): boolean;
       function getEquipment(which: TSlot): integer;
       function getExpNeeded: integer;
-      function getHighCondition: integer;
       function getLevelUpdatedStatus: boolean;
-      function getMHp: integer;
-      function getMMp: integer;
+      function getMHp: integer; override;
+      function getMMp: integer; override;
       function getSkill(id: integer): boolean;
-      function getStat(which: integer): integer;
       procedure levelAdjustDown(before: integer);
       procedure levelAdjustUp(before: integer);
       procedure levelStatAdjust;
       procedure loseLevel;
-      procedure setCondition(x: integer; const value: boolean);
       procedure setExp(value: integer);
-      procedure setHP(value: integer);
       procedure setLevel(const value: integer);
-      procedure setMaxHp(const Value: integer);
-      procedure setMaxMp(const Value: integer);
-      procedure setMP(value: integer);
+      procedure setMaxHp(const Value: integer); override;
+      procedure setMaxMp(const Value: integer); override;
+      procedure setHP(value: integer); override;
+      procedure setMP(value: integer); override;
       procedure setSkill(id: integer; value: boolean);
-      procedure setStat(which: integer; value: integer);
       procedure setTransparent(const Value: boolean);
       procedure updateLevel(const gain: boolean);
       function GetTemplate: TClassTemplate;
+      function GetSkillCommand: string;
 
    protected
       class function templateClass: TDatafileClass; override;
@@ -130,21 +154,11 @@ type
       procedure AddBattleCommand(which: integer);
       procedure RemoveBattleCommand(which: integer);
 
-      property name: string read FName write FName;
       property sprite: string read FSprite;
       property transparent: boolean read FTransparent write setTransparent;
       property title: string read FClass write FClass;
       property level: integer read FLevel write setLevel;
       property exp: longint read FExpTotal write setExp;
-      property hp: integer read FHitPoints write setHP;
-      property mp: integer read FManaPoints write setMP;
-      property maxHp: integer read getMHp write setMaxHp;
-      property maxMp: integer read getMMp write setMaxMp;
-      property stat[x: integer]: integer read getStat write setStat;
-      property attack: integer index 1 read getStat write setStat;
-      property defense: integer index 2 read getStat write setStat;
-      property mind: integer index 3 read getStat write setStat;
-      property agility: integer index 4 read getStat write setStat;
       property equipment[x: TSlot]: integer read getEquipment;
       property expNeeded: integer read getExpNeeded;
       property levelUpdated: boolean read getLevelUpdatedStatus;
@@ -158,6 +172,7 @@ type
       property StrongDefense: boolean read FStrongDefense;
       [NoImport]
       property template: TClassTemplate read GetTemplate;
+      property SkillCommand: string read GetSkillCommand;
    end;
 
    TRpgParty = class(TRpgCharacter)
@@ -261,6 +276,77 @@ const
    STAT_MIND = 5;
    STAT_AGI = 6;
 
+{ TRpgBattleCharacter }
+
+function TRpgBattleCharacter.getCondition(x: integer): boolean;
+begin
+   if x in [1..high(FCondition)] then
+      result := FCondition[x]
+   else result := false;
+end;
+
+function TRpgBattleCharacter.getHighCondition: integer;
+var
+   i: integer;
+   highPriority: integer;
+begin
+   highPriority := 0;
+   result := 0;
+   for I := high(FCondition) downto 1 do
+      if (FCondition[i]) and (GDatabase.conditions[i].priority >= highPriority) then
+         result := i;
+end;
+
+function TRpgBattleCharacter.getMHp: integer;
+begin
+   result := FMaxHitPoints;
+end;
+
+function TRpgBattleCharacter.getMMp: integer;
+begin
+   result := FMaxManaPoints;
+end;
+
+procedure TRpgBattleCharacter.setCondition(x: integer; const value: boolean);
+begin
+   if (x = CTN_DEAD) and (value = true)then
+      self.die
+   else if x in [1..high(FCondition)] then
+      FCondition[x] := value;
+end;
+
+procedure TRpgBattleCharacter.setMaxHp(const Value: integer);
+begin
+   FMaxHitPoints := value;
+end;
+
+procedure TRpgBattleCharacter.setMaxMp(const Value: integer);
+begin
+   FManaPoints := value;
+end;
+
+procedure TRpgBattleCharacter.die;
+begin
+   FCondition[CTN_DEAD] := true;
+   FHitPoints := 0;
+end;
+
+procedure TRpgBattleCharacter.setStat(which: integer; value: integer);
+begin
+   inc(FStat[stat_bonus, which], self.stat[which] - value);
+end;
+
+function TRpgBattleCharacter.getStat(which: integer): integer;
+var
+   i: TStatComponents;
+begin
+   result := 0;
+   for i := low(TStatComponents) to high(TStatComponents) do
+      inc(result, FStat[i, which]);
+   if result < 0 then
+      result := 0;
+end;
+
 { TRpgHero }
 
 class constructor TRpgHero.Create;
@@ -332,9 +418,10 @@ var
 begin
    for i := low(TSlot) to high(TSlot) do
    begin
-      for j := succ(i) to high(TSlot) do
-         if FEquipment[j] = FEquipment[i] then
-            FEquipment[j] := nil;
+      if i < high(TSlot) then
+         for j := succ(i) to high(TSlot) do
+            if FEquipment[j] = FEquipment[i] then
+               FEquipment[j] := nil;
       FEquipment[i].free;
    end;
    FBattleCommands.Free;
@@ -469,12 +556,6 @@ begin
          inc(result);
 end;
 
-procedure TRpgHero.die;
-begin
-   FCondition[CTN_DEAD] := true;
-   FHitPoints := 0;
-end;
-
 procedure TRpgHero.equip(id: integer);
 var
    theItem: TRpgItem;
@@ -589,13 +670,6 @@ begin
       FCondition[i] := false;
 end;
 
-function TRpgHero.getCondition(x: integer): boolean;
-begin
-   if x in [1..high(FCondition)] then
-      result := FCondition[x]
-   else result := false;
-end;
-
 function TRpgHero.getEquipment(which: TSlot): integer;
 begin
    if assigned(FEquipment[which]) then
@@ -608,18 +682,6 @@ begin
    if FLevel = 50 then
       result := -1
    else result := FExpTable[FLevel + 1] - FExpTotal;
-end;
-
-function TRpgHero.getHighCondition: integer;
-var
-   i: integer;
-   highPriority: integer;
-begin
-   highPriority := 0;
-   result := 0;
-   for I := high(FCondition) downto 1 do
-      if (FCondition[i]) and (GDatabase.conditions[i].priority >= highPriority) then
-         result := i;
 end;
 
 function TRpgHero.getLevelUpdatedStatus: boolean;
@@ -656,14 +718,9 @@ begin
       result := FSkill[id];
 end;
 
-function TRpgHero.getStat(which: integer): integer;
-var i: TStatComponents;
+function TRpgHero.GetSkillCommand: string;
 begin
-   result := 0;
-   for i := low(TStatComponents) to high(TStatComponents) do
-      inc(result, FStat[i, which]);
-   if result < 0 then
-      result := 0;
+   result := GDatabase.command[self.template.command[2]].name;
 end;
 
 function TRpgHero.GetTemplate: TClassTemplate;
@@ -679,14 +736,6 @@ begin
    for I := 1 to MAXPARTYSIZE do
       if FParty[i] = self then
          result := true;
-end;
-
-procedure TRpgHero.setCondition(x: integer; const value: boolean);
-begin
-   if (x = CTN_DEAD) and (value = true)then
-      self.die
-   else if x in [1..high(FCondition)] then
-      FCondition[x] := value;
 end;
 
 procedure TRpgHero.setExp(value: integer);
@@ -864,11 +913,6 @@ begin
    FTransparent := translucent;
    if FParty[1] = self then
       FParty.ChangeSprite(ChangeFileExt(filename, ''), translucent);
-end;
-
-procedure TRpgHero.setStat(which: integer; value: integer);
-begin
-   inc(FStat[stat_bonus, which], self.stat[which] - value);
 end;
 
 procedure TRpgHero.setTransparent(const Value: boolean);

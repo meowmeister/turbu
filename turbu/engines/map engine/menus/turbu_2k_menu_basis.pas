@@ -96,9 +96,11 @@ type
       FMainMenu: TGameMenuBox;
       FCurrentMenu: TGameMenuBox;
       FComponents: TDictionary<string, TGameMenuBox>;
+      FComponentList: TArray<TGameMenuBox>;
       FBounds: TRect;
       FBackground: string;
 
+      class function ShiftX(const value: TRect; distance, cutoff: integer): TRect; static;
       procedure setVisible(const value: boolean); virtual;
       procedure registerComponent(const name: string; which: TGameMenuBox);
       procedure LoadComponent(obj: TdwsJSONObject);
@@ -106,6 +108,7 @@ type
       procedure SetBG(const filename, imagename: string);
       procedure LoadFullImage(const filename, imagename: string; opaque: boolean = true);
       procedure DoDraw; virtual;
+      procedure Cleanup; virtual;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine;
         const layout: string); virtual;
@@ -192,7 +195,7 @@ const
 
 implementation
 uses
-   SysUtils, SyncObjs,
+   SysUtils, SyncObjs, Math,
    turbu_script_engine, turbu_2k_map_engine, turbu_2k_environment,
    rs_media,
    sg_utils, SDL_ImageManager;
@@ -508,6 +511,7 @@ begin
    else begin
       page := FStack.pop;
       FCurrentPage.Visible := false;
+      FCurrentPage.Cleanup;
       page.visible := true;
       FCurrentPage := page;
       page.setup(CURSOR_UNCHANGED);
@@ -524,6 +528,11 @@ end;
 
 { TMenuPage }
 
+procedure TMenuPage.Cleanup;
+begin
+   //this virtual method intentionally left blank
+end;
+
 constructor TMenuPage.Create(parent: TMenuSpriteEngine; coords: TRect;
   main: TMenuEngine; const layout: string);
 begin
@@ -536,6 +545,7 @@ end;
 
 destructor TMenuPage.Destroy;
 begin
+   Cleanup;
    FComponents.free;
    inherited;
 end;
@@ -554,7 +564,7 @@ begin
    try
       assert(FOwner.FCurrentPage = self);
       DoDraw;
-      for frame in FComponents.Values do
+      for frame in FComponentList do
          if frame.Visible then
             frame.draw;
    finally
@@ -583,6 +593,7 @@ end;
 procedure TMenuPage.focusMenu(referrer, which: TGameMenuBox; unchanged: boolean);
 begin
    self.FCurrentMenu := which;
+   which.Visible := true;
    if referrer <> nil then
       FCurrentMenu.FReferrer := referrer;
    if unchanged then
@@ -614,8 +625,6 @@ begin
    coords.Bottom := coordsArr.Elements[3].AsInteger;
    box := boxClass.Create(FOwner.FParent, coords, FOwner, self);
    self.registerComponent(name, box);
-   if not obj.Items['Background'].AsBoolean then
-      box.Z := box.Z + 1;
 end;
 
 procedure TMenuPage.LoadComponents(const layout: string);
@@ -650,6 +659,8 @@ end;
 procedure TMenuPage.registerComponent(const name: string; which: TGameMenuBox);
 begin
    FComponents.Add(name, which);
+   SetLength(FComponentList, length(FComponentList) + 1);
+   FComponentList[high(FComponentList)] := which;
    which.Name := name;
    if (FMainMenu = nil) and (which is TGameMenuBox) then
       FMainMenu := TGameMenuBox(which);
@@ -700,6 +711,14 @@ end;
 procedure TMenuPage.setupEx(const data: TObject);
 begin
    setup(GMenuEngine.MenuInt);
+end;
+
+class function TMenuPage.ShiftX(const value: TRect; distance, cutoff: integer): TRect;
+begin
+   if distance < 0 then
+      distance := max(distance, -(value.Left - cutoff))
+   else distance := min(distance, cutoff - value.Left);
+   result := rect(value.Left + distance, value.Top, value.Right + distance, value.Bottom);
 end;
 
 procedure TMenuPage.setVisible(const value: boolean);
