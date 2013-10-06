@@ -106,7 +106,6 @@ constructor TTitleMenuPage.Create(parent: TMenuSpriteEngine; coords: TRect;
   main: TMenuEngine; const layout: string);
 const TITLE_SCREEN = '*TitleScreen';
 var
-   cls: TSdlImageClass;
    filename: string;
 begin
    inherited Create(parent, coords, main, layout);
