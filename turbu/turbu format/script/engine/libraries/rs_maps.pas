@@ -19,7 +19,11 @@ unit rs_maps;
 
 interface
 uses
-   turbu_mapchars, turbu_defs, turbu_2k_images, turbu_script_engine;
+   SyncObjs,
+   turbu_mapchars, turbu_defs, turbu_2k_images, turbu_script_engine,
+   turbu_2k_animations,
+   commons,
+   sdl_sprite;
 
    procedure Teleport(mapID, x, y, facing: integer);
    procedure teleportVehicle(which: TRpgVehicle; map, x, y: integer);
@@ -50,6 +54,8 @@ uses
    function newImage(name: string; x, y: integer; zoom, transparency: integer; pinned, mask: boolean): TRpgImage;
    procedure setBGImage(name: string; scrollX, scrollY: integer; autoX, autoY: boolean);
    procedure showBattleAnim(which: integer; target: TRpgCharacter; wait, fullscreen: boolean);
+   procedure showBattleAnimT(engine: TSpriteEngine; which: integer; target: IAnimTarget;
+      fullscreen: boolean; signal: TSimpleEvent);
    procedure waitUntilMoved;
    procedure stopMoveScripts;
    procedure changeTileset(which: integer);
@@ -62,13 +68,14 @@ const
 
 implementation
 uses
-   Windows, SysUtils, types, math, SyncObjs, Classes,
+   Windows, SysUtils, types, math, Classes,
    rsExec, rsCompiler,
-   commons, turbu_2k_environment, turbu_2k_sprite_engine, turbu_constants,
-   turbu_database, turbu_2k_map_engine, turbu_animations, turbu_2k_animations,
+   turbu_2k_environment, turbu_2k_sprite_engine, turbu_constants,
+   turbu_database, turbu_2k_map_engine, turbu_animations,
    turbu_pathing, turbu_2k_char_sprites, turbu_map_sprites, turbu_2k_transitions,
    turbu_tilesets,
-   timing;
+   timing,
+   sg_Defs;
 
 var
    LDefaultTransitions: array[TTransitionTypes] of TTransitions;
@@ -374,31 +381,55 @@ end;
 
 procedure LoadAnim(const filename: string);
 begin
-   commons.runThreadsafe(
-      procedure begin
-         GSpriteEngine.Images.EnsureImage(format('animation\%s.png', [filename]), 'Anim '+ filename)
-      end, true);
+   GSpriteEngine.Images.EnsureImage(format('animation\%s.png', [filename]), 'Anim '+ filename);
+end;
+
+procedure showBattleAnimT(engine: TSpriteEngine; which: integer; target: IAnimTarget;
+  fullscreen: boolean; signal: TSimpleEvent);
+var
+   template: TAnimTemplate;
+begin
+   template := GDatabase.anim[which];
+   if (template = nil) then
+      Exit;
+
+   try
+      loadAnim(template.filename);
+   except //if the file doesn't load
+      Exit;
+   end;
+   TAnimSprite.Create(engine, template, target, fullscreen, signal);
+end;
+
+type
+   TCharacterTarget = class(TInterfacedObject, IAnimTarget)
+   private
+      FTarget: TRpgCharacter;
+      function position(sign: integer): TSgPoint;
+      procedure flash(r, g, b, power: integer; time: integer);
+   public
+      constructor Create(target: TRpgCharacter);
+   end;
+
+function CreateTarget(target: TRpgCharacter): IAnimTarget;
+begin
+   if target = nil then
+      result := nil
+   else result := TCharacterTarget.Create(target);
 end;
 
 procedure showBattleAnim(which: integer; target: TRpgCharacter; wait, fullscreen: boolean);
 var
-   dummy: TAnimTemplate;
    signal: TSimpleEvent;
 begin
-   commons.runThreadsafe(
-      procedure begin dummy := GDatabase.anim[which] end, true);
-   if (dummy = nil) then
-      Exit;
-
-   try
-      loadAnim(dummy.filename);
-   except //if the file doesn't load
-      Exit;
-   end;
    if wait then
       signal := TSimpleEvent.Create
    else signal := nil;
-   TAnimSprite.Create(GGameEngine.ImageEngine, dummy, target, fullscreen, signal);
+   commons.runThreadsafe(
+      procedure
+      begin
+         ShowBattleAnimT(GGameEngine.ImageEngine, which, CreateTarget(target), fullscreen, signal)
+      end, true);
    if wait then
       GScriptEngine.SetWaiting(
          function: boolean
@@ -548,6 +579,25 @@ end;
 procedure RegisterScriptUnit(engine: TScriptEngine);
 begin
    engine.RegisterUnit('maps', RegisterMapsC, RegisterMapsE);
+end;
+
+{ TCharacterTarget }
+
+constructor TCharacterTarget.Create(target: TRpgCharacter);
+begin
+   FTarget := target;
+end;
+
+procedure TCharacterTarget.flash(r, g, b, power, time: integer);
+begin
+   FTarget.flash(r, g, b, power, time, false);
+end;
+
+function TCharacterTarget.position(sign: integer): TSgPoint;
+begin
+   assert((sign >= -1) and (sign <= 1));
+   result.x := FTarget.screenXP + FTarget.base.tiles[1].width div 2;
+   result.y := FTarget.screenYP + (FTarget.base.tiles[1].height * sign);
 end;
 
 initialization
