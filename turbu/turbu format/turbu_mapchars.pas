@@ -21,7 +21,7 @@ interface
 uses
    sdl_sprite, sg_defs,
    rsImport,
-   charset_data,
+   charset_data, commons,
    turbu_map_sprites, turbu_map_objects, turbu_map_metadata, turbu_defs, turbu_characters,
    dwsJSON;
 
@@ -162,7 +162,7 @@ type
 implementation
 uses
    types, Classes, SysUtils,
-   commons, turbu_constants, tiles, turbu_2k_char_sprites,
+   turbu_constants, tiles, turbu_2k_char_sprites,
    turbu_database, turbu_2k_sprite_engine, turbu_2k_environment, ArchiveUtils,
    turbu_pathing, turbu_script_engine, turbu_classes;
 
