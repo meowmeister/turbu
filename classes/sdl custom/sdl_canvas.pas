@@ -157,7 +157,7 @@ function currentRenderTarget: TSdlRenderSurface;
 implementation
 uses
    OpenGL,
-   turbu_OpenGL, dm_shaders;
+   turbu_OpenGL;
 
 var
    lCurrentRenderTarget: TSdlRenderSurface;
@@ -194,11 +194,8 @@ procedure TSdlRenderTarget.DrawFull(const TopLeft: TPoint);
 var
    xScale, yScale: single;
 begin
-glCheckError;
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
-glCheckError;
    self.handle.bind;
-glCheckError;
    SDL_RenderGetScale(FParent.FRenderer, xScale, yScale);
    glBegin(GL_QUADS);
       glTexCoord2i(0, 0); glVertex2i(round(topleft.X * xScale), round(topleft.y * yScale));
@@ -206,7 +203,6 @@ glCheckError;
       glTexCoord2i(Width, Height); glVertex2i(round((topleft.X + Width) * xScale), round((topleft.y + Height) * yScale));
       glTexCoord2i(0, Height); glVertex2i(round(topleft.X * xScale), round((topleft.y + Height) * yScale));
    glEnd;
-glCheckError;
 end;
 
 procedure TSdlRenderTarget.DrawFull;
@@ -214,11 +210,8 @@ var
    xScale, yScale: single;
    lHeight, lWidth: integer;
 begin
-glCheckError;
    glEnable(GL_TEXTURE_RECTANGLE_ARB);
-glCheckError;
    self.handle.bind;
-glCheckError;
    SDL_RenderGetScale(FParent.FRenderer, xScale, yScale);
    lWidth := round(width * xScale);
    lHeight := round(height * yScale);
@@ -228,7 +221,6 @@ glCheckError;
       glTexCoord2i(Width, Height); glVertex2i(lWidth, lHeight);
       glTexCoord2i(Width, 0); glVertex2i(lWidth, 0);
    glEnd;
-glCheckError;
 end;
 
 procedure TSdlRenderTarget.SetRenderer;

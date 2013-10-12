@@ -177,6 +177,8 @@ bitfields. Final values ensure that the set will be 32 bits in size.}
     g: UInt8;
     b: UInt8;
     unused: UInt8;
+    class operator Equal(a, b: TSDL_Color): boolean; inline; static;
+    class operator NotEqual(a, b: TSDL_Color): boolean; inline; static;
   end;
   SDL_Color = TSDL_Color;
   {$EXTERNALSYM SDL_Color}
@@ -1653,6 +1655,18 @@ procedure TSdlRenderer.Free;
 begin
    SDL_DestroyRenderer(self);
    FPtr := nil;
+end;
+
+{ TSDL_Color }
+
+class operator TSDL_Color.Equal(a, b: TSDL_Color): boolean;
+begin
+   result := (a.r = b.r) and (a.g = b.g) and (a.b = b.b) and (a.unused = b.unused);
+end;
+
+class operator TSDL_Color.NotEqual(a, b: TSDL_Color): boolean;
+begin
+   result := not (a = b);
 end;
 
 initialization
