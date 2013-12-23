@@ -101,6 +101,8 @@ type
   end;
 
 implementation
+uses
+   Math;
 
 { TCustomDBTabControl }
 
@@ -167,21 +169,18 @@ var
   NewTabIndex: Integer;
 begin
   if (DataSource <> nil) and (FDataLink.Active) then
-    with DataSource do
-    begin
-      if DataSet.RecordCount <> Tabs.Count - StarCount[FShowInsertTab] then
-        RebuildTabs;
-      if (State = dsInsert) and FShowInsertTab then
-        TabIndex := Tabs.Count - 1
-      else if Tabs.Count > 0 then
-      begin
-        NewTabIndex := Tabs.IndexOfObject(TObject(DataSet.RecNo));
-        if (TabIndex = NewTabIndex) and not (State = dsInsert) and
-            (Field <> nil) and (Field.AsString <> Tabs[TabIndex]) then
-          Tabs[TabIndex] := Field.AsString;
-        TabIndex := NewTabIndex;
-      end;
-    end;
+   if DataSource.DataSet.RecordCount <> Tabs.Count - StarCount[FShowInsertTab] then
+     RebuildTabs;
+   if (DataSource.State = dsInsert) and FShowInsertTab then
+     TabIndex := Tabs.Count - 1
+   else if Tabs.Count > 0 then
+   begin
+     NewTabIndex := Tabs.IndexOfObject(TObject(DataSource.DataSet.RecNo));
+     if (NewTabIndex > -1) and (TabIndex = NewTabIndex) and not (DataSource.State = dsInsert) and
+         (Field <> nil) and (Field.AsString <> Tabs[TabIndex]) then
+       Tabs[TabIndex] := Field.AsString;
+     TabIndex := NewTabIndex;
+   end;
 end;
 
 destructor TCustomDBTabControl.Destroy;
@@ -264,7 +263,7 @@ begin
       if FShowInsertTab then
         Tabs.AddObject('*', TObject(-1));
     finally
-      FDataLink.ActiveRecord := ar;
+      FDataLink.ActiveRecord := max(ar, 0);
       Tabs.EndUpdate;
     end;
   end
