@@ -38,6 +38,11 @@ type
    TScriptEvent = procedure(sender: TRpgObject) of object;
 
    {$M+}
+  {$RTTI INHERIT
+      METHODS(DefaultMethodRttiVisibility)
+      FIELDS(DefaultFieldRttiVisibility)
+      PROPERTIES(DefaultPropertyRttiVisibility)}
+
    {If there ever was a time when it would be nice to have multiple inheritance
    in Delphi, this is it.  TRpgObject is the base class for a class tree that
    will mirror the TRpgDatafile tree in many (but not all) cases.  TRpgObjects
@@ -198,6 +203,7 @@ type
       procedure upload;
       procedure download;
       function GetCount: integer;
+      property count: integer read GetCount;
    end;
 
    TRpgDataDict<T: TRpgDatafile, constructor> = class(TRpgDataDict)

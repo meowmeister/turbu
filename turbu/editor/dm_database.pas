@@ -34,6 +34,7 @@ type
    ExclusionAttribute = class(TCustomAttribute);
    VitalDatasetAttribute = class(TCustomAttribute);
 
+   {$RTTI INHERIT}
    TdmDatabase = class(TDataModule, IRpgDatastore)
       [VitalDataset]
       charClasses: TSimpleDataSet;
@@ -65,6 +66,7 @@ type
       [TRelation]
       skills_attributes: TSimpleDataSet;
       attributes: TSimpleDataSet;
+      [VitalDataset]
       conditions: TSimpleDataSet;
       scriptRange: TClientDataSet;
       [TRelation]
