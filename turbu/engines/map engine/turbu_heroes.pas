@@ -55,7 +55,7 @@ type
       procedure setMaxHp(const Value: integer); virtual;
       procedure setMaxMp(const Value: integer); virtual;
    public
-
+      function takeDamage(power: integer; defense, mDefense, variance: integer): integer; virtual;
       property name: string read FName write FName;
       property hp: integer read FHitPoints write setHP;
       property mp: integer read FManaPoints write setMP;
@@ -105,8 +105,6 @@ type
       function getEquipment(which: TSlot): integer;
       function getExpNeeded: integer;
       function getLevelUpdatedStatus: boolean;
-      function getMHp: integer; override;
-      function getMMp: integer; override;
       function getSkill(id: integer): boolean;
       procedure levelAdjustDown(before: integer);
       procedure levelAdjustUp(before: integer);
@@ -114,10 +112,6 @@ type
       procedure loseLevel;
       procedure setExp(value: integer);
       procedure setLevel(const value: integer);
-      procedure setMaxHp(const Value: integer); override;
-      procedure setMaxMp(const Value: integer); override;
-      procedure setHP(value: integer); override;
-      procedure setMP(value: integer); override;
       procedure setSkill(id: integer; value: boolean);
       procedure setTransparent(const Value: boolean);
       procedure updateLevel(const gain: boolean);
@@ -126,6 +120,12 @@ type
 
    protected
       class function templateClass: TDatafileClass; override;
+      function getMHp: integer; override;
+      function getMMp: integer; override;
+      procedure setMaxHp(const Value: integer); override;
+      procedure setMaxMp(const Value: integer); override;
+      procedure setHP(value: integer); override;
+      procedure setMP(value: integer); override;
    public
       [NoImport]
       constructor Create(base: TClassTemplate; party: TRpgParty);
@@ -143,7 +143,7 @@ type
       procedure UnequipAll();
       function equipped(id: integer): boolean;
       procedure fullheal;
-      function takeDamage(power: integer; defense, mDefense, variance: integer): integer;
+      function takeDamage(power: integer; defense, mDefense, variance: integer): integer; override;
       procedure setSprite(filename: string; translucent: boolean);
       procedure setPortrait(filename: string; index: integer);
       function inParty: boolean;
@@ -334,6 +334,20 @@ end;
 procedure TRpgBattleCharacter.setStat(which: integer; value: integer);
 begin
    inc(FStat[stat_bonus, which], self.stat[which] - value);
+end;
+
+function TRpgBattleCharacter.takeDamage(power, defense, mDefense,
+  variance: integer): integer;
+var
+   defFactor, mDefFactor: integer;
+begin
+   defFactor := round(self.defense * defense / 400);
+   mDefFactor := round(self.mind * mDefense / 800);
+   variance := variance * 5;
+   power := round(power * RandomRange(100 - variance, 100 + variance) / 100);
+   power := max(power - (defFactor + mDefFactor), 1);
+   hp := hp - power;
+   result := power;
 end;
 
 function TRpgBattleCharacter.getStat(which: integer): integer;
@@ -933,8 +947,7 @@ end;
 function TRpgHero.takeDamage(power: integer; defense, mDefense, variance: integer): integer;
 begin
    FParty.deathPossible := true;
-   hp := hp - power;
-   result := power;
+   result := inherited takeDamage(power, defense, mDefense, variance);
 end;
 
 procedure TRpgHero.updateLevel(const gain: boolean);

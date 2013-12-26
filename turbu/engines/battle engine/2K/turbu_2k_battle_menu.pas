@@ -487,6 +487,8 @@ begin
    FBattleState := bsMenu;
    FTransitionMode := tmClosing;
    reset(false);
+   if FMonsters.defeated then
+      Self.Return;
 end;
 
 procedure T2kBattlePage.TargetComplete;

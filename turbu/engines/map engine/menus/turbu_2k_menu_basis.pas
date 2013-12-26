@@ -107,6 +107,7 @@ type
       procedure LoadComponents(const layout: string);
       procedure SetBG(const filename, imagename: string);
       procedure LoadFullImage(const filename, imagename: string; opaque: boolean = true);
+      procedure Return;
       procedure DoDraw; virtual;
       procedure Cleanup; virtual;
    public
@@ -664,6 +665,11 @@ begin
    which.Name := name;
    if (FMainMenu = nil) and (which is TGameMenuBox) then
       FMainMenu := TGameMenuBox(which);
+end;
+
+procedure TMenuPage.Return;
+begin
+   FOwner.return;
 end;
 
 procedure TMenuPage.LoadFullImage(const filename, imagename: string; opaque: boolean = true);
