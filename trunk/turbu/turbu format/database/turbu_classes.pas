@@ -1094,7 +1094,7 @@ var
    ds: TCustomSqlDataset;
 begin
    if FDataset.Active then
-      result := FDataset.RecordCount
+      result := FDataset.RecordCount + 1 //+1 to account for element #0
    else if not FDataset.Connection.Connected then
       result := self.Count
    else begin

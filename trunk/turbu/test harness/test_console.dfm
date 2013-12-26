@@ -99,6 +99,10 @@ object frmTestConsole: TfrmTestConsole
         Caption = 'Test &Party Setup'
         OnClick = mnuTestPartySetupClick
       end
+      object mnuTestGameEngine: TMenuItem
+        Caption = 'Test &Game Engine'
+        OnClick = mnuTestGameEngineClick
+      end
     end
     object mnuDatabase: TMenuItem
       Caption = '&Database'

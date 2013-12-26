@@ -43,6 +43,8 @@ type
    end;
 
    TAttackCommand = class(TTargetCommand)
+   private
+      function ToHit: boolean;
    public
       procedure Execute(signal: TSimpleEvent; engine: TSpriteEngine);  override;
    end;
@@ -50,9 +52,10 @@ type
 implementation
 uses
    Math,
-   turbu_defs, turbu_animations, turbu_items, turbu_database,
+   turbu_defs, turbu_constants, turbu_animations, turbu_items, turbu_database,
    turbu_2k_animations, turbu_2k_map_engine, turbu_2k_monster_party,
    turbu_2k_frames,
+   commons,
    rs_maps,
    sg_defs;
 
@@ -89,23 +92,60 @@ end;
 
 procedure TAttackCommand.Execute(signal: TSimpleEvent; engine: TSpriteEngine);
 var
-   weapon, idx: integer;
+   weapon, idx, damage: integer;
    weaponTemplate: TWeaponTemplate;
    fullscreen: boolean;
+   hero: TRpgHero;
 begin
-   weapon := (FCharacter as TRpgHero).equipment[eq_weapon];
+   hero := FCharacter as TRpgHero;
+   weapon := hero.equipment[eq_weapon];
    if weapon = 0 then
    begin
-      idx := TRpgHero(FCharacter).template.unarmedAnim;
+      idx := hero.template.unarmedAnim;
       fullscreen := false;
    end
    else begin
       weaponTemplate := GDatabase.findItem(weapon) as TWeaponTemplate;
       idx := weaponTemplate.battleAnim;
-      fullscreen := weaponTemplate.areaHit
+      fullscreen := weaponTemplate.areaHit;
    end;
    signal.ResetEvent;
-   rs_maps.showBattleAnimT(engine, idx, TMonsterTarget.Create(FTarget as T2kMonster), fullscreen, signal);
+   rs_maps.showBattleAnimT(engine, idx, TMonsterTarget.Create(FTarget as T2kMonster), fullscreen, nil);
+   damage := FTarget.takeDamage(FCharacter.attack div 2, 100, 0, 4);
+   T2kMonster(FTarget).signal := signal;
+end;
+
+function TAttackCommand.ToHit: boolean;
+var
+   hero: TRpgHero;
+   weapon, toHitChance, agiMod, attCondMod, defCondMod: integer;
+   weaponTemplate: TWeaponTemplate;
+begin
+   {$MESSAGE WARN 'Incomplete feature in live code'}
+   if {Target can't move due to condition} false then
+      exit(true);
+   hero := FCharacter as TRpgHero;
+   weapon := hero.equipment[eq_weapon];
+   if weapon = 0 then
+   begin
+      toHitChance := 90;
+      weaponTemplate := nil;
+   end
+   else begin
+      weaponTemplate := GDatabase.findItem(weapon) as TWeaponTemplate;
+      toHitChance := weaponTemplate.toHit;
+   end;
+   if assigned(weaponTemplate) and weaponTemplate.evasion then
+   begin
+      agiMod := 0; attCondMod := 0; defCondMod := 0;
+   end else begin
+      agiMod := round((hero.agility / FTarget.agility) * 50);
+      {$MESSAGE WARN 'Incomplete feature in live code'}
+      attCondMod := {To-hit modification by attacker's conditions} 0;
+      {$MESSAGE WARN 'Incomplete feature in live code'}
+      defCondMod := {To-hit modification by defender's conditions or equipment} 0;
+   end;
+   result := random(100) < toHitChance + agiMod + attCondMod + defCondMod;
 end;
 
 { TMonsterTarget }
@@ -117,7 +157,7 @@ end;
 
 procedure TMonsterTarget.flash(r, g, b, power, time: integer);
 begin
-   //
+   FTarget.Flash(time, TRpgColor.Create(r, g, b, power));
 end;
 
 function TMonsterTarget.position(sign: integer): TSgPoint;

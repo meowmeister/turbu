@@ -1,6 +1,11 @@
 program testing;
 {$SetPeFlags $20}
 
+{$RTTI INHERIT
+      METHODS(DefaultMethodRttiVisibility)
+      FIELDS(DefaultFieldRttiVisibility)
+      PROPERTIES(DefaultPropertyRttiVisibility)}
+
 uses
   FastMM4,
   Forms,
@@ -160,7 +165,44 @@ uses
   turbu_OpenGL in '..\engines\basis\turbu_OpenGL.pas',
   sdl_13 in '..\..\classes\jedi-sdl\SDL\Pas\sdl_13.pas',
   sdl in '..\..\classes\jedi-sdl\SDL\Pas\sdl.pas',
-  sdl_image in '..\..\classes\jedi-sdl\SDL_Image\Pas\sdl_image.pas';
+  sdl_image in '..\..\classes\jedi-sdl\SDL_Image\Pas\sdl_image.pas',
+  turbu_2k_title_menu in '..\engines\map engine\menus\turbu_2k_title_menu.pas',
+  turbu_2k_skill_menu in '..\engines\map engine\menus\turbu_2k_skill_menu.pas',
+  turbu_2k_shop_menu in '..\engines\map engine\menus\turbu_2k_shop_menu.pas',
+  turbu_2k_save_menu in '..\engines\map engine\menus\turbu_2k_save_menu.pas',
+  turbu_2k_party_target_menu in '..\engines\map engine\menus\turbu_2k_party_target_menu.pas',
+  turbu_2k_menu_components in '..\engines\map engine\menus\turbu_2k_menu_components.pas',
+  turbu_2k_menu_basis in '..\engines\map engine\menus\turbu_2k_menu_basis.pas',
+  turbu_2k_main_menu in '..\engines\map engine\menus\turbu_2k_main_menu.pas',
+  turbu_2k_inventory_menu in '..\engines\map engine\menus\turbu_2k_inventory_menu.pas',
+  turbu_2k_equipment_menu in '..\engines\map engine\menus\turbu_2k_equipment_menu.pas',
+  turbu_2k_monster_party in '..\engines\battle engine\2K\turbu_2k_monster_party.pas',
+  turbu_2k_battle_menu in '..\engines\battle engine\2K\turbu_2k_battle_menu.pas',
+  turbu_battle_logic in '..\engines\battle engine\turbu_battle_logic.pas',
+  turbu_2k_savegames in '..\engines\map engine\turbu_2k_savegames.pas',
+  turbu_2k_transitions_graphics in '..\engines\map engine\turbu_2k_transitions_graphics.pas',
+  rs_battle in '..\turbu format\script\engine\libraries\rs_battle.pas',
+  dwsJSON in '..\..\classes\dwscript\Source\dwsJSON.pas',
+  dwsXPlatform in '..\..\classes\dwscript\Source\dwsXPlatform.pas',
+  dwsUtils in '..\..\classes\dwscript\Source\dwsUtils.pas',
+  EB_GotoRemoval in '..\turbu format\script\EB_GotoRemoval.pas',
+  EB_Optimizations in '..\turbu format\script\EB_Optimizations.pas',
+  EB_NestedIfOptimization in '..\turbu format\script\EB_NestedIfOptimization.pas',
+  EB_MessagePromptCollapser in '..\turbu format\script\EB_MessagePromptCollapser.pas',
+  EB_FadeInImageOptimization in '..\turbu format\script\EB_FadeInImageOptimization.pas',
+  EB_ConsecutiveImageOptimization in '..\turbu format\script\EB_ConsecutiveImageOptimization.pas',
+  turbu_2k_item_types in '..\engines\map engine\turbu_2k_item_types.pas',
+  delayedAction in '..\engines\basis\delayedAction.pas',
+  turbu_2k_weather in '..\engines\map engine\turbu_2k_weather.pas',
+  turbu_transition_interface in '..\engines\map engine\turbu_transition_interface.pas',
+  turbu_2k_transitions in '..\engines\map engine\turbu_2k_transitions.pas',
+  turbu_2k_distortions in '..\engines\map engine\turbu_2k_distortions.pas',
+  turbu_2k_skills in '..\engines\map engine\turbu_2k_skills.pas',
+  turbu_2k_message_boxes in '..\engines\map engine\turbu_2k_message_boxes.pas',
+  vmtStructure in '..\..\classes\RPG Script\RTTI Creation\vmtStructure.pas',
+  vmtBuilder in '..\..\classes\RPG Script\RTTI Creation\vmtBuilder.pas',
+  rttiPackage in '..\..\classes\RPG Script\RTTI Creation\rttiPackage.pas',
+  newClass in '..\..\classes\RPG Script\RTTI Creation\newClass.pas';
 
 {$R *.res}
 {$R 'turbures.res' '..\turbures.rc'}

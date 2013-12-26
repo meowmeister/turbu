@@ -55,6 +55,7 @@ type
     txtOutput: TMemo;
     estTextRendering1: TMenuItem;
     mnuTestMessageBox: TMenuItem;
+    mnuTestGameEngine: TMenuItem;
       procedure mnuTestDatasetsClick(Sender: TObject);
       procedure mnuTestLoadingClick(Sender: TObject);
       procedure FormShow(Sender: TObject);
@@ -79,6 +80,7 @@ type
     procedure mnuGenerateDBScriptClick(Sender: TObject);
     procedure estTextRendering1Click(Sender: TObject);
     procedure mnuTestMessageBoxClick(Sender: TObject);
+    procedure mnuTestGameEngineClick(Sender: TObject);
    private
       { Private declarations }
       FEngine: IDesignMapEngine;
@@ -156,7 +158,7 @@ begin
       form := TfrmTesting.Create(self);
       form.Show;
       Application.ProcessMessages;
-      form.SdlFrame1.LogicalSize := point(320, 240);
+      form.SdlFrame1.LogicalSize := point(960, 720);
       lCanvas := TSdlCanvas.CreateFrom(form.SdlFrame1.SdlWindow);
    end;
    if (sender = mnuCreateSdlWindow) and (assigned(lCanvas)) then
@@ -212,7 +214,7 @@ begin
    if not assigned(lCanvas) then
       mnuCreateSdlWindowClick(sender);
 
-   FEngine.loadMap(GDatabase.mapTree[12]);
+   FEngine.loadMap(GDatabase.mapTree[8]);
    FCurrentMap := T2kMapEngineD(FEngine).CurrentMap.mapObj;
 
    if sender = mnuTestMapLoading then
@@ -240,6 +242,15 @@ begin
                                   GDatabase.tileset[map.tileset].name);
    if sender = mnuEventEditor then
       Application.MessageBox('Test concluded successfully!', 'Finished.')
+end;
+
+procedure TfrmTestConsole.mnuTestGameEngineClick(Sender: TObject);
+begin
+   if FEngine = nil then
+      mnuTestLoadingClick(sender);
+   FEngine.Start;
+//   if sender = mnuTestGameEngine then
+//      Application.MessageBox('Test concluded successfully!', 'Finished.')
 end;
 
 procedure TfrmTestConsole.estLDBLoading1Click(Sender: TObject);
@@ -465,6 +476,8 @@ procedure TfrmTestConsole.mnuTestDatasetsClick(Sender: TObject);
 var
    dataset: TCustomClientDataSet;
 begin
+   if dmDatabase = nil then
+      mnuTestLoadingClick(sender);
    for dataset in dmDatabase.datasets do
    try
       dataset.Close;
@@ -546,7 +559,7 @@ begin
    SDL_SetRenderDrawColor(lcanvas.Renderer, $ff, $ff, $ff, $ff);
    lrect := rect(0, 0, 320, 240);
    SDL_RenderFillRect(lcanvas.Renderer, @lrect);
-   lCanvas.Draw(image, ORIGIN);
+   lCanvas.Draw(image, ORIGIN, []);
    image.Free;
 end;
 
