@@ -254,13 +254,19 @@ var
    cmd: TTargetCommand;
    owner: T2kBattlePage;
 begin
+   if (FOwner as T2kBattlePage).FTransitionMode <> tmNone then
+      Exit;
+
    inherited doButton(input);
-   if input = btn_enter then
+   if input in [btn_enter, btn_cancel] then
    begin
-      cmd := TAttackCommand.Create(GEnvironment.Party[FSetupValue],
-                                   FParsedText.Objects[FCursorPosition] as T2kMonster);
       owner := FOwner as T2kBattlePage;
-      owner.AddMove(cmd);
+      if input = btn_enter then
+      begin
+         cmd := TAttackCommand.Create(GEnvironment.Party[FSetupValue],
+                                      FParsedText.Objects[FCursorPosition] as T2kMonster);
+         owner.AddMove(cmd);
+      end;
       owner.TargetComplete;
    end;
 end;
