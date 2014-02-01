@@ -123,6 +123,8 @@ const
     V_BATTLE_ITEM   = 'Battle-Item';
     V_BATTLE_SKILL  = 'Battle-Skill';
 
+    V_BATTLE_APPEAR = 'Battle-Enemy Appears';
+
 resourcestring
    DESIGN_DB = 'design';
    DBNAME = 'turbu.tdb';

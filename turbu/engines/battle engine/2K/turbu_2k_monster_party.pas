@@ -27,6 +27,8 @@ uses
 type
    TLifeState = (lsAlive, lsInjured, lsDying, lsDead);
 
+   T2kMonsterParty = class;
+
    T2kMonster = class(TRpgBattleCharacter)
    private
       FSprite: TSdlImage;
@@ -38,6 +40,7 @@ type
       FLifeState: TLifeState;
       FInjuryCount: integer;
       FSignal: TSimpleEvent;
+      FParty: T2kMonsterParty;
       function getTemplate: TRpgMonster; inline;
       function IsDead: boolean; inline;
       function FlashColor: TGLArrayf4;
@@ -59,6 +62,7 @@ type
       function GetMove: TBattleCommand;
       procedure Flash(time: integer; color: TRpgColor);
       function takeDamage(power: integer; defense, mDefense, variance: integer): integer; override;
+      function retarget: TRpgBattleCharacter; override;
 
       property template: TRpgMonster read getTemplate;
       property sprite: TSdlImage read FSprite;
@@ -96,6 +100,8 @@ uses
 { T2KMonster }
 
 constructor T2KMonster.Create(template: TRpgMonster; element: TRpgMonsterElement; images: TSdlImages);
+var
+   i: integer;
 begin
    inherited Create(template);
    self.name := template.name;
@@ -106,6 +112,8 @@ begin
    FMaxManaPoints := FManaPoints;
    FSprite := images.Image[format('MONSTER*%s', [template.filename])];
    FPosition := element.position;
+   for i := 1 to 4 do
+      FStat[stat_base][i] := template.stat[2 + i];
 end;
 
 destructor T2kMonster.Destroy;
@@ -251,7 +259,7 @@ var
    target: integer;
 begin
    target := random(GEnvironment.partySize) + 1;
-   result := TAttackCommand.Create(self, GEnvironment.Party.hero[target]);
+   result := TMonsterAttackCommand.Create(self, GEnvironment.Party.hero[target]);
 end;
 
 function T2KMonster.getTemplate: TRpgMonster;
@@ -274,6 +282,13 @@ procedure T2kMonster.ResetSignal;
 begin
    FSignal.SetEvent;
    FSignal := nil;
+end;
+
+function T2kMonster.retarget: TRpgBattleCharacter;
+begin
+   repeat
+      result := FParty.monsters[FParty.monsters.Count]
+   until result.hp > 0;
 end;
 
 procedure T2kMonster.Dying;
@@ -311,11 +326,16 @@ end;
 constructor T2kMonsterParty.Create(template: TRpgMonsterParty; images: TSdlImages);
 var
    element: TRpgMonsterElement;
+   monster: T2kMonster;
 begin
    inherited Create(template);
    FMonsters := TObjectList<T2kMonster>.Create;
    for element in template.monsters do
-      FMonsters.Add(T2kMonster.Create(GDatabase.monsters[element.monster], element, images));
+   begin
+      monster := T2kMonster.Create(GDatabase.monsters[element.monster], element, images);
+      monster.FParty := self;
+      FMonsters.Add(monster);
+   end;
 end;
 
 destructor T2kMonsterParty.Destroy;

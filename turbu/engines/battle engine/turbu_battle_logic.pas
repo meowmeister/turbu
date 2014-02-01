@@ -38,25 +38,35 @@ type
    TTargetCommand = class(TBattleCommand)
    private
       FTarget: TRpgBattleCharacter;
+   protected
+      procedure DoExecute(signal: TSimpleEvent; engine: TSpriteEngine); virtual; abstract;
    public
       constructor Create(user, target: TRpgBattleCharacter);
+      procedure Execute(signal: TSimpleEvent; engine: TSpriteEngine); override; final;
    end;
 
    TAttackCommand = class(TTargetCommand)
    private
       function ToHit: boolean;
-   public
-      procedure Execute(signal: TSimpleEvent; engine: TSpriteEngine);  override;
+   protected
+      procedure DoExecute(signal: TSimpleEvent; engine: TSpriteEngine);  override;
+   end;
+
+   TMonsterAttackCommand = class(TTargetCommand)
+   private
+      function ToHit: boolean;
+   protected
+      procedure DoExecute(signal: TSimpleEvent; engine: TSpriteEngine);  override;
    end;
 
 implementation
 uses
-   Math,
+   Math, Windows,
    turbu_defs, turbu_constants, turbu_animations, turbu_items, turbu_database,
    turbu_2k_animations, turbu_2k_map_engine, turbu_2k_monster_party,
    turbu_2k_frames,
    commons,
-   rs_maps,
+   rs_maps, rs_media,
    sg_defs;
 
 type
@@ -88,9 +98,16 @@ begin
    FTarget := target;
 end;
 
+procedure TTargetCommand.Execute(signal: TSimpleEvent; engine: TSpriteEngine);
+begin
+   if FTarget.hp <= 0 then
+      FTarget := FTarget.Retarget;
+   DoExecute(signal, engine);
+end;
+
 { TAttackCommand }
 
-procedure TAttackCommand.Execute(signal: TSimpleEvent; engine: TSpriteEngine);
+procedure TAttackCommand.DoExecute(signal: TSimpleEvent; engine: TSpriteEngine);
 var
    weapon, idx, damage: integer;
    weaponTemplate: TWeaponTemplate;
@@ -165,6 +182,45 @@ begin
    assert((sign >= -1) and (sign <= 1));
    result := FTarget.position + (FTarget.sprite.textureSize / 2);
    inc(result.y, (FTarget.sprite.textureSize.y div 2) * sign);
+end;
+
+{ TMonsterAttackCommand }
+
+procedure TMonsterAttackCommand.DoExecute(signal: TSimpleEvent;
+  engine: TSpriteEngine);
+var
+   weapon, idx, damage: integer;
+   fullscreen: boolean;
+   monster: T2kMonster;
+begin
+   monster := FCharacter as T2kMonster;
+   PlaySystemSound(sfxEnemyAttack);
+   sleep(400);
+   if ToHit then
+   begin
+      damage := FTarget.takeDamage(FCharacter.attack div 2, 100, 0, 4);
+      PlaySystemSound(sfxEnemyDamage);
+      shakeScreen(3, 5, 4, false, false);
+      sleep(400);
+   end
+   else PlaySystemSound(sfxEvade);
+   T2kMonster(FTarget).signal := signal;
+end;
+
+function TMonsterAttackCommand.ToHit: boolean;
+var
+   toHitChance, agiMod, attCondMod, defCondMod: integer;
+begin
+   {$MESSAGE WARN 'Incomplete feature in live code'}
+   if {Target can't move due to condition} false then
+      exit(true);
+   toHitChance := 90;
+   agiMod := round((FCharacter.agility / FTarget.agility) * 50);
+      {$MESSAGE WARN 'Incomplete feature in live code'}
+   attCondMod := {To-hit modification by attacker's conditions} 0;
+      {$MESSAGE WARN 'Incomplete feature in live code'}
+   defCondMod := {To-hit modification by defender's conditions or equipment} 0;
+   result := random(100) < toHitChance + agiMod + attCondMod + defCondMod;
 end;
 
 end.

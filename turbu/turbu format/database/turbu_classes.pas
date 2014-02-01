@@ -1096,7 +1096,7 @@ begin
    if FDataset.Active then
       result := FDataset.RecordCount + 1 //+1 to account for element #0
    else if not FDataset.Connection.Connected then
-      result := self.Count
+      result := inherited Count
    else begin
       if not FCountLoaded then
       begin

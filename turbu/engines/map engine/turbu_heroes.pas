@@ -56,6 +56,8 @@ type
       procedure setMaxMp(const Value: integer); virtual;
    public
       function takeDamage(power: integer; defense, mDefense, variance: integer): integer; virtual;
+      [NoImport]
+      function retarget: TRpgBattleCharacter; virtual; abstract;
       property name: string read FName write FName;
       property hp: integer read FHitPoints write setHP;
       property mp: integer read FManaPoints write setMP;
@@ -144,6 +146,8 @@ type
       function equipped(id: integer): boolean;
       procedure fullheal;
       function takeDamage(power: integer; defense, mDefense, variance: integer): integer; override;
+      [NoImport]
+      function retarget: TRpgBattleCharacter; override;
       procedure setSprite(filename: string; translucent: boolean);
       procedure setPortrait(filename: string; index: integer);
       function inParty: boolean;
@@ -540,6 +544,13 @@ end;
 procedure TRpgHero.RemoveBattleCommand(which: integer);
 begin
    FBattleCommands.Remove(which);
+end;
+
+function TRpgHero.retarget: TRpgBattleCharacter;
+begin
+   repeat
+      result := FParty[random(high(FParty.FParty) + low(FParty.FParty))];
+   until assigned(result) and (result.hp > 0);
 end;
 
 procedure TRpgHero.ChangeClass(id: integer; retainLevel: boolean; skillChange,
