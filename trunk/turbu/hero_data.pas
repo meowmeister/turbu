@@ -19,7 +19,8 @@ unit hero_data;
 
 interface
 uses windows, classes, sysUtils, //windows libs
-     BER, commons, fileIO; //turbu libs
+     BER, commons, fileIO,
+     turbu_defs; //turbu libs
 
 type
    TGameStat = (stat_HP, stat_MP, stat_str, stat_def, stat_mind, stat_agi);
@@ -85,6 +86,7 @@ type
       destructor Destroy; override;
       procedure assign(const data: THeroRecord);
       procedure reviseConditions(size: integer);
+      function StatSlice(low, high: integer): TIntArray;
 
       property filename: ansiString read FGraphic;
       property name: ansiString read FName write FName;
@@ -114,7 +116,6 @@ type
       property conditionModifier[x: word]: byte read getConditionModifier;
       property dtypeModifiers: word read getDModifierCount;
       property dtypeModifier[x: word]: byte read getDtypeModifier;
-      property statBlock: pointer read getCurveSec;
       property statCurve[whichStat: TGameStat; index: byte]: word read getStatCurve;
       property initialEq[x: byte]: word read getInitialEq;
       property unarmedAnim: word read FUnarmedAnim;
@@ -345,6 +346,16 @@ begin
          FConditionModifiers[i] := 2;
       //end FOR
    end;
+end;
+
+function THeroRecord.StatSlice(low, high: integer): TIntArray;
+var
+   i: integer;
+begin
+   assert(high >= low);
+   SetLength(result, (high - low) + 1);
+   for i := Low to High do
+      result[i - low] := FCurveSec[i];
 end;
 
 { TRm2CharClass }

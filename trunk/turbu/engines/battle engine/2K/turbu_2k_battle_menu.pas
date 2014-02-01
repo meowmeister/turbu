@@ -84,6 +84,7 @@ type
       FRound: integer;
       FSignal: TSimpleEvent;
       FAnims: TSpriteEngine;
+//      FMessageText: string;
       procedure LoadMonster(element: TRpgMonsterElement; list: TStringList;
         var IDs: TArray<integer>);
       procedure CheckState;
@@ -91,10 +92,12 @@ type
       procedure TargetComplete;
       procedure InputComplete;
       procedure Reset(newBattle: boolean);
+      procedure SetMonsters(monsters: T2kMonsterParty);
       procedure CheckTransition;
       procedure CheckScripts;
       procedure CheckBattleCommand;
       procedure EndRound;
+      procedure TryExecuteMove(move: TBattleCommand);
    protected
       procedure setVisible(const value: boolean); override;
       procedure DoDraw; override;
@@ -375,6 +378,13 @@ begin
    FBattleState := bsBattle; //TODO: implement this
 end;
 
+procedure T2kBattlePage.TryExecuteMove(move: TBattleCommand);
+begin
+   if move.user.hp <= 0 then
+      Exit;
+   move.Execute(FSignal, FAnims);
+end;
+
 procedure T2kBattlePage.CheckBattleCommand;
 begin
    if FSignal.WaitFor(0) = wrSignaled then
@@ -382,7 +392,7 @@ begin
       inc(FMoveIndex);
       if FMoveIndex >= FMoves.Count then
          EndRound
-      else FMoves[FMoveIndex].Execute(FSignal, FAnims);
+      else TryExecuteMove(FMoves[FMoveIndex]);
    end;
 end;
 
@@ -433,6 +443,12 @@ begin
       FRound := 0;
 end;
 
+procedure T2kBattlePage.SetMonsters(monsters: T2kMonsterParty);
+begin
+   FMonsters := monsters;
+   (self.menu('Target') as TBattleTargetMenu).SetMonsters(monsters);
+end;
+
 procedure T2kBattlePage.setupEx(const data: TObject);
 var
    battleData: T2kBattleData;
@@ -460,8 +476,7 @@ begin
                              format('MONSTER*%s', [imagename]),
                              false);
          end, true);
-      FMonsters := T2kMonsterParty.Create(battleData.monsters, GMenuEngine.Images);
-      (self.menu('Target') as TBattleTargetMenu).SetMonsters(FMonsters);
+      SetMonsters(T2kMonsterParty.Create(battleData.monsters, GMenuEngine.Images));
       reset(true);
       inherited setupEx(data);
    finally
@@ -483,7 +498,7 @@ end;
 procedure T2kBattlePage.InputComplete;
 begin
    FTransitionMode := tmClosing;
-//   FMoves.AddRange(FMonsters.GetMoves);
+   FMoves.AddRange(FMonsters.GetMoves);
    FMoves.Sort;
    FBattleState := bsScriptCheck;
 end;

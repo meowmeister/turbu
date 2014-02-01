@@ -76,8 +76,6 @@ end;
 constructor T2k2StatBlock.Convert(base: THeroRecord; block: byte; statSet: TStatSet);
 var
    blocksize: byte;
-   blockPtr: cardinal;
-   localArray: array of word;
    i: integer;
 begin
    case GProjectFormat of
@@ -90,11 +88,7 @@ begin
       end;
    end;
    self.Create(blocksize, statSet);
-   setLength(localArray, blocksize);
-   blockPtr := cardinal(base.statBlock) + (blocksize * 2 * block);
-   move(pointer(blockPtr)^, localArray[0], blocksize * 2); //2 bytes/element
-   for I := 0 to blocksize - 1 do
-      self.block[i] := localArray[i];
+   self.block := base.StatSlice(blocksize * pred(block), (blocksize * block) - 1);
 end;
 
 { T2kCharClass }
