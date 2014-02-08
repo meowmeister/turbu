@@ -173,6 +173,7 @@ type
       FBoxVisible: boolean;
       FFrameTarget: TSdlRenderTarget;
       FFrameDrawn: boolean;
+      FOnEndMessage: TNotifyEvent;
 
       procedure DrawFrame;
    protected
@@ -200,6 +201,7 @@ type
       procedure parseText(const input: string); virtual;
       procedure ClearTarget(target: TSdlRenderTarget);
       procedure SetPosition(const Value: TMboxLocation);
+      procedure DoSetPosition(const Value: TMboxLocation); virtual;
       procedure EndMessage;
       procedure SkinChanged(const name: string); override;
 
@@ -233,6 +235,7 @@ type
       property position: TMboxLocation read FPosition write SetPosition;
       class property OnPlaySound: TPlaySoundEvent read FPlaySound write FPlaySound;
       property Signal: TSimpleEvent read FSignal;
+      property OnEndMessage: TNotifyEvent read FOnEndMessage write FOnEndMessage;
    end;
 
    TGetTimeFunc = function: integer of object;
@@ -447,6 +450,7 @@ end;
 constructor TMenuSpriteEngine.Create(graphic: TSystemImages; canvas: TSdlCanvas; images: TSdlImages);
 var
    size: TRect;
+   menuEngine: TMenuEngine;
 begin
    assert(GMenuEngine = nil);
    GMenuEngine := self;
@@ -461,12 +465,13 @@ begin
    FCursor := TMenuCursor.Create(self, FRAME_DISPLACEMENT, 2, NULLRECT);
    size := rect(0, 0, 320, 80);
    FPosition := mb_bottom;
-   FBoxes[mbtMessage] := TMessageBox.Create(self, size);
+   menuEngine := TMenuEngine.Create(self, Self.EndMessage);
+   FBoxes[mbtMessage] := TMessageBox.Create(self, size, menuEngine, nil);
    FBoxes[mbtChoice] := TChoiceBox.Create(self, size);
    FBoxes[mbtPrompt] := TPromptBox.Create(self, size);
    FBoxes[mbtInput] := TValueInputBox.Create(self, size);
    TCustomMessageBox.OnPlaySound := rs_media.PlaySystemSound;
-   FMenuEngine := TMenuEngine.Create(self, Self.EndMessage);
+   FMenuEngine := menuEngine;
 end;
 
 destructor TMenuSpriteEngine.Destroy;
@@ -916,7 +921,9 @@ end;
 
 procedure TCustomMessageBox.EndMessage;
 begin
-   TMenuSpriteEngine(Engine).endMessage;
+   if assigned(FOnEndMessage) then
+      FOnEndMessage(self)
+   else TMenuSpriteEngine(Engine).endMessage;
    visible := false;
    FSignal.SetEvent;
 end;
@@ -1126,6 +1133,11 @@ begin
    end;
 end;
 
+procedure TCustomMessageBox.DoSetPosition(const Value: TMboxLocation);
+begin
+   //this virtual method intentionally left blank
+end;
+
 procedure TCustomMessageBox.button(const input: TButtonCode);
 var
    max, absMax, lPosition: smallint;
@@ -1277,6 +1289,7 @@ begin
    FCoords.Right := FFrameTarget.parent.Width;
    FCoords.Bottom := FFrameTarget.parent.Height div 3;
    FCoords.Top := FCoords.Bottom * ord(FPosition);
+   DoSetPosition(value);
 end;
 
 procedure TCustomMessageBox.SkinChanged(const name: string);

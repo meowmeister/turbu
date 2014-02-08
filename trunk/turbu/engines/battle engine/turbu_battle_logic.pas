@@ -156,7 +156,7 @@ begin
    begin
       agiMod := 0; attCondMod := 0; defCondMod := 0;
    end else begin
-      agiMod := round((hero.agility / FTarget.agility) * 50);
+      agiMod := round((hero.agility / FTarget.agility) * 50) - 50;
       {$MESSAGE WARN 'Incomplete feature in live code'}
       attCondMod := {To-hit modification by attacker's conditions} 0;
       {$MESSAGE WARN 'Incomplete feature in live code'}
@@ -189,11 +189,8 @@ end;
 procedure TMonsterAttackCommand.DoExecute(signal: TSimpleEvent;
   engine: TSpriteEngine);
 var
-   weapon, idx, damage: integer;
-   fullscreen: boolean;
-   monster: T2kMonster;
+   damage: integer;
 begin
-   monster := FCharacter as T2kMonster;
    PlaySystemSound(sfxEnemyAttack);
    sleep(400);
    if ToHit then
@@ -204,7 +201,6 @@ begin
       sleep(400);
    end
    else PlaySystemSound(sfxEvade);
-   T2kMonster(FTarget).signal := signal;
 end;
 
 function TMonsterAttackCommand.ToHit: boolean;

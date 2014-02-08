@@ -20,12 +20,12 @@ unit turbu_2k_message_boxes;
 
 interface
 uses
-   types,
+   Types,
    sdl_sprite, sdl_canvas,
-   turbu_defs, turbu_2k_frames;
+   turbu_defs, turbu_2k_frames, turbu_2k_menu_basis;
 
 type
-   TMessageBox = class(TCustomMessageBox)
+   TMessageBox = class(TGameMenuBox)
    private
       FPortrait: TSprite;
       FNextArrow: TTiledAreaSprite;
@@ -43,13 +43,16 @@ type
       procedure NewLine; override;
       procedure DrawSpecialChar(const line: string); override;
       procedure InsertText(const text: string);
-      procedure DoDraw; override;
+      procedure DrawText; override;
+      procedure PostDrawText; override;
       procedure ResetText; override;
+      procedure doButton(const input: TButtonCode); override;
+      procedure DoSetPosition(const Value: TMboxLocation); override;
    public
-      constructor Create(parent: TMenuSpriteEngine; const coords: TRect); override;
-      procedure button(const input: TButtonCode); override;
+      constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage); override;
       procedure moveTo(coords: TRect); override;
       procedure setPortrait(const filename: string; const index: byte);
+      function DoneWriting: boolean;
 
       property portrait: TSprite read FPortrait;
       property rightside: boolean read FRightPortrait write setRightside;
@@ -112,7 +115,7 @@ uses
 
 { TMessageBox }
 
-constructor TMessageBox.Create(parent: TMenuSpriteEngine; const coords: TRect);
+constructor TMessageBox.Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage);
 begin
    //these lines go before the inherited constructor because they're
    //needed (the first, at least) by the virtual MoveTo function that gets
@@ -122,7 +125,7 @@ begin
    FPortrait := TSprite.Create(parent);
    FPortrait.SetSpecialRender;
    FPortrait.Visible := false;
-   inherited Create(parent, coords);
+   inherited Create(parent, coords, main, owner);
    if parent.SystemGraphic.translucent then
    begin
       SDL_SetTextureBlendMode(FBackground.Image.surface, [sdlbBlend]);
@@ -134,34 +137,18 @@ begin
 
 end;
 
-procedure TMessageBox.DoDraw;
-const
-   TEXTV = 0.1;
-   TEXTH = 0.025;
-var
-   xVal, yVal: single;
-   dest: TRect;
+procedure TMessageBox.DrawText;
 begin
-   inherited DoDraw;
-
-   FTextTarget.parent.pushRenderTarget;
-   FTextTarget.SetRenderer;
-   try
+   if FTextCounter = 0 then
       FPortrait.Draw;
-      DrawNextChar;
-   finally
-      FTextTarget.parent.popRenderTarget;
-   end;
-   dest := GetDrawCoords;
-   setX(FNextArrow, dest.Right div 2);
-   xVal := dest.right * TEXTH;
-   yVal := dest.Bottom * TEXTV;
-   inc(dest.Left, round(xVal));
-   dec(dest.right, round(xVal * 2));
-   inc(dest.Top, round(yVal));
-   dec(dest.Bottom, round(yVal * 2));
-   SDL_RenderCopy(FTextTarget.parent.Renderer, FTextTarget.handle, nil, @dest);
-   setY(FNextArrow, dest.Bottom + dest.top);
+   DrawNextChar;
+   if FTextCounter >= FParsedText.Count then
+      DrawingDone
+   else DrawingInProgress;
+end;
+
+procedure TMessageBox.PostDrawText;
+begin
    if FTextCounter >= FParsedText.Count then
       FNextArrow.Draw;
 end;
@@ -255,14 +242,26 @@ begin
       end;
 end;
 
-procedure TMessageBox.button(const input: TButtonCode);
+function TMessageBox.DoneWriting: boolean;
+begin
+   result := FTextCounter >= FParsedText.Count;
+end;
+
+procedure TMessageBox.DoSetPosition(const Value: TMboxLocation);
+begin
+   SetY(FNextArrow, ((ord(value) + 1) * 80) - FNextArrow.Height);
+end;
+
+procedure TMessageBox.doButton(const input: TButtonCode);
 begin
    if assigned(FButtonLock) then
+   begin
       if (FButtonLock.timeRemaining = 0) then
          freeAndNil(FButtonLock)
       else Exit;
+   end;
 
-   if (input in [btn_enter, btn_cancel]) and (FTextCounter >= FParsedText.Count) then
+   if (input in [btn_enter, btn_cancel]) and (self.DoneWriting) then
    begin
       endMessage;
       FButtonLock := TRpgTimestamp.Create(180);
@@ -578,4 +577,6 @@ begin
    setLength(FInputResult, digits);
 end;
 
+initialization
+   TMenuEngine.RegisterMenuBoxClass(TMessageBox);
 end.
