@@ -84,7 +84,8 @@ type
       FRound: integer;
       FSignal: TSimpleEvent;
       FAnims: TSpriteEngine;
-//      FMessageText: string;
+      FShowingMessage: boolean;
+      FMessageText: string;
       procedure LoadMonster(element: TRpgMonsterElement; list: TStringList;
         var IDs: TArray<integer>);
       procedure CheckState;
@@ -97,7 +98,10 @@ type
       procedure CheckScripts;
       procedure CheckBattleCommand;
       procedure EndRound;
-      procedure TryExecuteMove(move: TBattleCommand);
+      procedure ShowMessage(const msg: string);
+
+      procedure MessageBoxEndMessage(Sender: TObject);
+    procedure TryExecuteMove(move: TBattleCommand);
    protected
       procedure setVisible(const value: boolean); override;
       procedure DoDraw; override;
@@ -116,7 +120,7 @@ uses
    SysUtils, Math, Generics.Defaults,
    Commons,
    turbu_constants, turbu_database, turbu_text_utils,
-   turbu_2k_environment;
+   turbu_2k_environment, turbu_2k_sprite_engine, turbu_2k_message_boxes;
 
 { T2kBattleMainMenu }
 
@@ -317,6 +321,8 @@ end;
 
 constructor T2kBattlePage.Create(parent: TMenuSpriteEngine; coords: TRect;
   main: TMenuEngine; const layout: string);
+var
+   msg: TMessageBox;
 begin
    FMoves := TObjectList<TBattleCommand>.Create(TComparer<TBattleCommand>.Construct(SpeedOrder));
    FSignal := TSimpleEvent.Create;
@@ -324,6 +330,9 @@ begin
    FAnims := TSpriteEngine.Create(nil, GMenuEngine.Canvas);
    FAnims.Images := GMenuEngine.Images;
    inherited Create(parent, coords, main, layout);
+   msg := self.menu('Message') as TMessageBox;
+   msg.OnEndMessage := self.MessageBoxEndMessage;
+   msg.position := mb_bottom;
 end;
 
 destructor T2kBattlePage.Destroy;
@@ -434,6 +443,12 @@ begin
    IDs[high(IDs)] := id;
 end;
 
+procedure T2kBattlePage.MessageBoxEndMessage(Sender: TObject);
+begin
+   self.focusMenu(nil, 'Main', 0);
+   FShowingMessage := false;
+end;
+
 procedure T2kBattlePage.Reset(newBattle: boolean);
 begin
    FMoveIndex := -1;
@@ -444,9 +459,20 @@ begin
 end;
 
 procedure T2kBattlePage.SetMonsters(monsters: T2kMonsterParty);
+var
+   intro: TStringList;
+   monster: T2kMonster;
 begin
    FMonsters := monsters;
    (self.menu('Target') as TBattleTargetMenu).SetMonsters(monsters);
+   intro := TStringList.Create;
+   try
+      for monster in monsters.monsters do
+         intro.Add(StringReplace(GDatabase.vocab[V_BATTLE_APPEAR], '\i', monster.name, [rfReplaceAll, rfIgnoreCase]));
+      FMessageText := intro.Text;
+   finally
+      intro.free;
+   end;
 end;
 
 procedure T2kBattlePage.setupEx(const data: TObject);
@@ -479,6 +505,8 @@ begin
       SetMonsters(T2kMonsterParty.Create(battleData.monsters, GMenuEngine.Images));
       reset(true);
       inherited setupEx(data);
+      ShowMessage(FMessageText);
+      FMessageText := '';
    finally
       list.Free;
    end;
@@ -492,7 +520,19 @@ begin
       menu('Main').Visible := true;
       menu('Select').Visible := true;
       menu('Party').Visible := true;
+      menu('Message').Visible := FShowingMessage;
    end;
+end;
+
+procedure T2kBattlePage.ShowMessage(const msg: string);
+var
+   box: TGameMenuBox;
+begin
+   box := menu('Message');
+   box.text := msg;
+   box.Visible := true;
+   FShowingMessage := true;
+   self.focusMenu(FCurrentMenu, box);
 end;
 
 procedure T2kBattlePage.InputComplete;
@@ -524,10 +564,11 @@ begin
 end;
 
 const BATTLE_LAYOUT =
-  '[{"Name": "Main",   "Class": "T2kBattleMainMenu",   "Coords": [0,   160, 72,  240]},' +
-   '{"Name": "Select", "Class": "T2kBattleCommands",   "Coords": [248, 160, 320, 240]},' +
-   '{"Name": "Party",  "Class": "TBattlePartyDisplay", "Coords": [72,  160, 320, 240]},' +
-   '{"Name": "Target", "Class": "TBattleTargetMenu",   "Coords": [0,   160, 100, 240]}]';
+  '[{"Name": "Main",    "Class": "T2kBattleMainMenu",   "Coords": [0,   160, 72,  240]},' +
+   '{"Name": "Select",  "Class": "T2kBattleCommands",   "Coords": [248, 160, 320, 240]},' +
+   '{"Name": "Party",   "Class": "TBattlePartyDisplay", "Coords": [72,  160, 320, 240]},' +
+   '{"Name": "Target",  "Class": "TBattleTargetMenu",   "Coords": [0,   160, 100, 240]},' +
+   '{"Name": "Message", "Class": "TMessageBox",         "Coords": [0,   160, 320, 240]}]';
 
 initialization
    TMenuEngine.RegisterMenuPageEx(T2kBattlePage, 'Battle 2K', BATTLE_LAYOUT);

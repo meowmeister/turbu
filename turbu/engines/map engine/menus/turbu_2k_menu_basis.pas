@@ -43,8 +43,10 @@ type
    TCloseMessageEvent = procedure of object;
 
    TGameMenuBox = class abstract(TCustomMessageBox)
+   protected
+      type TTextDrawState = (tdNone, tdInProgress, tdDone);
    private
-      FTextDrawn: boolean;
+      FTextDrawn: TTextDrawState;
       FOnButton: TButtonFunc;
       FOnCursor: TCursorFunc;
       FOnSetup: TSetupFunc;
@@ -66,8 +68,11 @@ type
       procedure doCursor(position: smallint); virtual;
       procedure doSetup(value: integer); virtual;
       procedure DrawText; virtual; abstract;
+      procedure PostDrawText; virtual;
       procedure DoDraw; override; final;
       procedure InvalidateText;
+      procedure DrawingInProgress;
+      procedure DrawingDone;
    public
       constructor Create(parent: TMenuSpriteEngine; coords: TRect; main: TMenuEngine; owner: TMenuPage); reintroduce; virtual;
       procedure Draw; override; final;
@@ -238,6 +243,16 @@ begin
       inherited Draw;
 end;
 
+procedure TGameMenuBox.DrawingInProgress;
+begin
+   FTextDrawn := tdInProgress;
+end;
+
+procedure TGameMenuBox.DrawingDone;
+begin
+   FTextDrawn := tdDone;
+end;
+
 function TGameMenuBox.focused: boolean;
 begin
    result := (FMenuEngine.FCurrentPage = FOwner) and (FOwner.CurrentMenu = self);
@@ -276,22 +291,30 @@ begin
       inherited placeCursor(position);
 end;
 
+procedure TGameMenuBox.PostDrawText;
+begin
+   //this virtual method intentionally left blank
+end;
+
 procedure TGameMenuBox.DoDraw;
 const TEXT_TARGET: TSgPoint = (x: 8; y: 8);
 begin
    inherited DoDraw;
-   if not FTextDrawn then
+   if FTextDrawn <> tdDone then
    begin
       FTextTarget.parent.pushRenderTarget;
       FTextTarget.SetRenderer;
-      FTextTarget.parent.Clear(SDL_BLACK, 0);
+      if FTextDrawn = tdNone then
+         FTextTarget.parent.Clear(SDL_BLACK, 0);
       DrawText;
       FTextTarget.parent.popRenderTarget;
-      FTextDrawn := true;
+      if FTextDrawn = tdNone then //if you don't set it to in progress, assume
+         FTextDrawn := tdDone;    //all drawing was done in one frame
    end;
    if (self.focused) and (not FBlank) then
       FMenuEngine.FCursor.Draw;
    FTextTarget.parent.Draw(FTextTarget, FOrigin + TEXT_TARGET);
+   PostDrawText;
 end;
 
 function TGameMenuBox.getOptionEnabled(which: word): boolean;
@@ -306,7 +329,7 @@ end;
 
 procedure TGameMenuBox.InvalidateText;
 begin
-   FTextDrawn := false;
+   FTextDrawn := tdNone;
 end;
 
 procedure TGameMenuBox.moveTo(coords: TRect);
